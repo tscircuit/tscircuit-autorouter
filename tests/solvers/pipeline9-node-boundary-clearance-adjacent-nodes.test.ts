@@ -8,7 +8,10 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 
 test("Pipeline9 boundary repair validates current adjacent-node copper", () => {
-  for (const signs of [[1, -1], [-1, 1]]) {
+  for (const signs of [
+    [1, -1],
+    [-1, 1],
+  ]) {
     const nodes: NodeWithPortPoints[] = signs.map((sign) => ({
       capacityMeshNodeId: `node${sign}`,
       center: { x: 0, y: sign },

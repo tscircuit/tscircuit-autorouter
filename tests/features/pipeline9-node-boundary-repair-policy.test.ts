@@ -20,7 +20,10 @@ test("Pipeline9 limits boundary repair to supported clearances and copper", () =
     { overrides: { minTraceToPadEdgeClearance: 0.1 }, enabled: true },
     { overrides: { minTraceToPadEdgeClearance: 0.15 }, enabled: false },
     { overrides: { minViaEdgeToPadEdgeClearance: 0.15 }, enabled: false },
-    { overrides: { minViaHoleEdgeToViaHoleEdgeClearance: 0.15 }, enabled: false },
+    {
+      overrides: { minViaHoleEdgeToViaHoleEdgeClearance: 0.15 },
+      enabled: false,
+    },
     {
       overrides: { minPlatedHoleDrillEdgeToDrillEdgeClearance: 0.15 },
       enabled: false,

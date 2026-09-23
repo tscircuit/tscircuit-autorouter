@@ -434,8 +434,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     routes: RepairHdRoute[],
   ): boolean {
     const copperRadius = Math.max(
-      ...routes.map((route) =>
-        Math.max(route.traceThickness!, route.viaDiameter!) / 2,
+      ...routes.map(
+        (route) => Math.max(route.traceThickness!, route.viaDiameter!) / 2,
       ),
     )
     if (this.boardGeometry) {
@@ -470,9 +470,10 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   }
 
   private initializeBoundaryRepairRoutes(): void {
-    this.boundaryRepairRoutes = this.originalHdRoutes.map((route, index) =>
-      this.repairedCopperByIndex.get(index) ??
-      toRepairRoute(route, this.connMap, this.minimumTraceWidth),
+    this.boundaryRepairRoutes = this.originalHdRoutes.map(
+      (route, index) =>
+        this.repairedCopperByIndex.get(index) ??
+        toRepairRoute(route, this.connMap, this.minimumTraceWidth),
     )
     const nodeByRouteIndex = new Map<number, NodeWithPortPoints>()
     for (const entry of this.sampleEntries) {
@@ -523,8 +524,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       (index) => this.boundaryRepairRoutes![index]!,
     )
     const copperRadius = Math.max(
-      ...routes.map((route) =>
-        Math.max(route.traceThickness!, route.viaDiameter!) / 2,
+      ...routes.map(
+        (route) => Math.max(route.traceThickness!, route.viaDiameter!) / 2,
       ),
     )
     const bounds = getNodeBounds(
@@ -532,8 +533,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       Math.max(this.repairMargin, copperRadius + 0.1),
     )
     const ownedIndexes = new Set(routeIndexes)
-    const fixedRoutes = this.boundaryRepairRouteIndex!
-      .search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+    const fixedRoutes = this.boundaryRepairRouteIndex!.search(
+      bounds.minX,
+      bounds.minY,
+      bounds.maxX,
+      bounds.maxY,
+    )
       .filter(({ routeIndex }) => !ownedIndexes.has(routeIndex))
       .map(({ routeIndex }) => this.boundaryRepairRoutes![routeIndex]!)
     // The buffer is a routing heuristic, not a copper rule. Run after every
@@ -574,7 +579,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       : 0
     this.stats.nodeClearanceFinalConflictCount =
       Number(this.stats.nodeClearanceFinalConflictCount) +
-      boundaryRepair.initialConflictCount - resolvedConflictCount -
+      boundaryRepair.initialConflictCount -
+      resolvedConflictCount -
       previousConflictCount
     this.stats.nodeClearanceCandidateCount =
       Number(this.stats.nodeClearanceCandidateCount) +
