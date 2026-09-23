@@ -88,13 +88,13 @@ test("relaxed DRC catches via-pad clearance violations on different nets sharing
   expect(result.errors[0]).toMatchObject({
     type: "pcb_pad_pad_clearance_error",
     pcb_pad_ids: ["via_0", "pcb_smtpad_220"],
+    pcb_via_id: "via_0",
+    pcb_trace_id: "via_trace",
     minimum_clearance: 0.1,
     actual_clearance: 0,
   })
   expect(result.locationAwareErrors).toHaveLength(1)
-  expect(result.locationAwareErrors[0].center.x).toBeCloseTo(
-    -11.81510994174197,
-  )
+  expect(result.locationAwareErrors[0].center.x).toBeCloseTo(-11.81510994174197)
   expect(result.locationAwareErrors[0].center.y).toBeCloseTo(9.71)
 
   for (const [gap, expectedErrors] of [

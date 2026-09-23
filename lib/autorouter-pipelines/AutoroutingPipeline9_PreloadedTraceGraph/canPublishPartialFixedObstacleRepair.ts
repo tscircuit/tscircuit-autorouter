@@ -1,4 +1,5 @@
 import type { SimpleRouteJson } from "lib/types"
+import { createPcbPadElements } from "lib/testing/utils/convertToCircuitJson"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 /**
@@ -18,12 +19,13 @@ export const canPublishPartialFixedObstacleRepair = ({
 }): boolean => {
   if (remainingErrors.length >= initialErrors.length) return false
   const padIds = new Set(
-    originalSrj.obstacles.flatMap((obstacle) => {
-      const metadata = obstacle.circuitJsonMetadata
-      return [metadata?.pcb_smtpad_id, metadata?.pcb_plated_hole_id].filter(
-        (id): id is string => typeof id === "string",
-      )
-    }),
+    createPcbPadElements(originalSrj).flatMap((pad) =>
+      pad.type === "pcb_smtpad"
+        ? [pad.pcb_smtpad_id]
+        : pad.type === "pcb_plated_hole"
+          ? [pad.pcb_plated_hole_id]
+          : [],
+    ),
   )
   const unmatchedErrors = [...initialErrors]
   for (const error of remainingErrors) {
@@ -35,16 +37,26 @@ export const canPublishPartialFixedObstacleRepair = ({
       error.pcb_trace_error_id.startsWith(prefix)
         ? error.pcb_trace_error_id.slice(prefix.length)
         : undefined
-    const isPadClearance = error.type === "pcb_pad_trace_clearance_error"
-    const padId = isPadClearance ? error.pcb_pad_id : overlapPadId
+    const isViaPadClearance = error.type === "pcb_pad_pad_clearance_error"
+    const isPadClearance =
+      error.type === "pcb_pad_trace_clearance_error" || isViaPadClearance
+    const padId = isViaPadClearance
+      ? Array.isArray(error.pcb_pad_ids) &&
+        error.pcb_pad_ids.find((id) => padIds.has(id))
+      : isPadClearance
+        ? error.pcb_pad_id
+        : overlapPadId
     if (typeof padId !== "string" || !padIds.has(padId)) return false
     const originalIndex = unmatchedErrors.findIndex(
       (original) =>
         original.type === error.type &&
         original.pcb_trace_id === error.pcb_trace_id &&
-        (isPadClearance
-          ? original.pcb_pad_id === padId
-          : original.pcb_trace_error_id === error.pcb_trace_error_id),
+        (isViaPadClearance
+          ? Array.isArray(original.pcb_pad_ids) &&
+            original.pcb_pad_ids.includes(padId)
+          : isPadClearance
+            ? original.pcb_pad_id === padId
+            : original.pcb_trace_error_id === error.pcb_trace_error_id),
     )
     if (originalIndex === -1) return false
     const original = unmatchedErrors.splice(originalIndex, 1)[0]!

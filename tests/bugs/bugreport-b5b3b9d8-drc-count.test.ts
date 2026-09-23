@@ -39,7 +39,8 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
   // Node-local repair may resolve errors before the exact repair stage.
   expect(initialDrcIssueCount).toBeGreaterThanOrEqual(0)
   // Safer upstream widths can leave the baseline unchanged and alter which
-  // repair branch succeeds. Require non-regression and a clean final board.
+  // repair branch succeeds. Require non-regression and report the remaining
+  // via-pad error that was previously absent from the reference checker.
   expect(baselineDrcIssueCount).toBeLessThanOrEqual(initialDrcIssueCount)
   expect(finalDrcIssueCount).toBeLessThanOrEqual(baselineDrcIssueCount)
 
@@ -60,5 +61,10 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
     viaClearance: 0.1,
   })
 
-  expect(errors).toHaveLength(0)
+  expect(errors).toHaveLength(1)
+  expect(errors[0]).toMatchObject({
+    type: "pcb_pad_pad_clearance_error",
+    pcb_pad_ids: ["via_30", "pcb_smtpad_1.000_-2.925"],
+    minimum_clearance: 0.1,
+  })
 })
