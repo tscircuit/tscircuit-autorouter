@@ -1,4 +1,7 @@
-import { validateSimpleRouteJson, PcbTraceLinter } from "@tscircuit/pcb-trace-linter/srj"
+import {
+  validateSimpleRouteJson,
+  PcbTraceLinter,
+} from "@tscircuit/pcb-trace-linter/srj"
 import type { SimpleRouteJson } from "../types/srj-types"
 
 /** Analyze the final routing output without changing its geometry. */

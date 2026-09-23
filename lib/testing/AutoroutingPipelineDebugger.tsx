@@ -1427,7 +1427,9 @@ export const AutoroutingPipelineDebugger = ({
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-bold">
               Trace Linting: {traceLintResult.linter.getOutput().length} style{" "}
-              {traceLintResult.linter.getOutput().length === 1 ? "error" : "errors"}
+              {traceLintResult.linter.getOutput().length === 1
+                ? "error"
+                : "errors"}
             </h3>
             <button
               className="border rounded p-2"
@@ -1445,8 +1447,8 @@ export const AutoroutingPipelineDebugger = ({
             <ol className="list-decimal pl-6">
               {traceLintResult.linter.getOutput().map((issue) => (
                 <li key={issue.issueId}>
-                  {issue.message}: ({issue.start.x}, {issue.start.y}) → ({issue.end.x},{" "}
-                  {issue.end.y})
+                  {issue.message}: ({issue.start.x}, {issue.start.y}) → (
+                  {issue.end.x}, {issue.end.y})
                 </li>
               ))}
             </ol>
