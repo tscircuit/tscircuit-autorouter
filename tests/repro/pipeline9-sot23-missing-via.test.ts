@@ -20,12 +20,15 @@ test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): P
       trace.pcb_trace_id ===
       "source_trace_0__breakout:pcb_breakout_point_2_mst1_0",
   )!
-  const missingTransition = affectedTrace.route.find((point, index, route) => {
+  const missingTransitions = affectedTrace.route.flatMap((point, index, route) => {
     const nextPoint = route[index + 1]
-    return point.route_type === "wire" && nextPoint?.route_type === "wire" &&
+    return point.route_type === "wire" &&
+      nextPoint?.route_type === "wire" &&
       point.layer !== nextPoint.layer
-  })!
-  expect(missingTransition).toBeDefined()
+      ? [{ x: point.x, y: point.y }]
+      : []
+  })
+  expect(missingTransitions).toHaveLength(1)
 
   const inputGraphics = convertSrjToGraphicsObject(input)
   const failedGraphics = convertSrjToGraphicsObject({
@@ -36,14 +39,29 @@ test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): P
   failedGraphics.points = []
   failedGraphics.circles = [
     ...(failedGraphics.circles ?? []),
-    { center: { x: 0.1996162861946772, y: 3.0796535377487517 }, radius: 0.45, stroke: "#b91c1c", fill: "transparent" },
+    {
+      center: missingTransitions[0]!,
+      radius: 0.45,
+      stroke: "#b91c1c",
+      fill: "transparent",
+    },
   ]
-  await expect(getGraphicsSvgFrames({
-    frames: [
-      { name: "INPUT: seven valid breakout traces; the affected route stays on top", pipeline: "start", graphics: inputGraphics },
-      { name: "BUG: red circle marks a top/bottom jump with no via; routing aborts", pipeline: "end", graphics: failedGraphics },
-    ],
-    columns: 2,
-    backgroundColor: "white",
-  })).toMatchSvgSnapshot(import.meta.path)
+  await expect(
+    getGraphicsSvgFrames({
+      frames: [
+        {
+          name: "INPUT: valid top-layer breakout copper",
+          step: "start",
+          graphics: inputGraphics,
+        },
+        {
+          name: "BUG: circled layer change has no via; routing aborts",
+          pipeline: "end",
+          graphics: failedGraphics,
+        },
+      ],
+      columns: 2,
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
