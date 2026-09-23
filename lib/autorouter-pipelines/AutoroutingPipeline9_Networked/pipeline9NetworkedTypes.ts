@@ -11,7 +11,7 @@ export const PIPELINE9_NETWORKED_SOLVE_POLICY =
   "ordinary_then_regional_without_fixed_copper_v1" as const
 
 export const PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY =
-  "ordinary_node_shortcuts_then_regional_without_fixed_copper_v2" as const
+  "ordinary_node_collinear_then_regional_without_fixed_copper_v3" as const
 
 /**
  * Every solution-affecting input for Pipeline9's terminal single-node policy:

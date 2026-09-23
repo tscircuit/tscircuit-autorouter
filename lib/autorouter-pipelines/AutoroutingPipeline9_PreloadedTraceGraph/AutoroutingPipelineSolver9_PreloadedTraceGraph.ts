@@ -102,7 +102,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
-  /** Experimental early shortcuts; disabled because dataset 18 regresses. */
+  /** Remove redundant node-local vertices before repair (enabled by default). */
   enableNodeSimplification?: boolean
   capacityDepth?: number
   targetMinCapacity?: number

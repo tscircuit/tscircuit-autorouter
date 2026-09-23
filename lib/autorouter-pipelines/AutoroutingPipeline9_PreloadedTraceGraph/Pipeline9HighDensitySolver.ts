@@ -353,7 +353,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-  enableNodeSimplification = false,
+  enableNodeSimplification = true,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new (enableNodeSimplification ? Pipeline9RegularNodeSolver : HighDensitySolver)({
     nodePortPoints: [
@@ -438,7 +438,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
-    this.enableNodeSimplification = params.enableNodeSimplification ?? false
+    this.enableNodeSimplification = params.enableNodeSimplification ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort

@@ -1,14 +1,9 @@
-import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { VertexShortcutPathSolver } from "@tscircuit/trace-simplification-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { arePipeline9RoutesOnSameNet, doPipeline9RoutesHaveCopperConflict } from "./pipeline9FixedRouteCopper"
 
 type NodeSimplificationInput = {
   node: NodeWithPortPoints
@@ -20,120 +15,78 @@ type NodeSimplificationInput = {
   boardGeometry?: HighDensityBoardGeometry
 }
 
-type Point = HighDensityRoute["route"][number]
+// Force improvement uses vertices as control points, even on straight copper.
+// Retain a control point at least every 0.25mm, plus all endpoint/via approaches.
+const MAX_SIMPLIFIED_SEGMENT_LENGTH = 0.25
 
-class NodeVertexShortcutSolver extends VertexShortcutPathSolver {
-  constructor(
-    params: ConstructorParameters<typeof VertexShortcutPathSolver>[0],
-    readonly context: NodeSimplificationInput,
-  ) {
-    super(params)
-  }
-
-  override isValidPath(points: Point[]): boolean {
-    const { node, clearance, connMap } = this.context
-    // Leave boundary copper untouched: independently solved neighbors cannot
-    // participate in this index. Grown-node overlaps still need global repair.
-    const inset = clearance + this.inputRoute.traceThickness / 2
-    if (points.some((p) =>
-      Math.abs(p.x - node.center.x) > node.width / 2 - inset ||
-      Math.abs(p.y - node.center.y) > node.height / 2 - inset,
-    )) return false
-    if (!super.isValidPath(points)) return false
-    const candidate = { ...this.inputRoute, route: points, vias: [] }
-    for (const other of this.otherHdRoutes) {
-      if (arePipeline9RoutesOnSameNet(candidate, other, connMap)) continue
-      if (doPipeline9RoutesHaveCopperConflict({ left: candidate, right: other, clearance })) return false
-    }
-    // The upstream shortcut index uses a 0.1mm margin. Check the configured
-    // margin as well, including rotated pads, against this node's local list.
-    for (const obstacle of this.context.obstacles) {
-      const routeName = this.inputRoute.rootConnectionName ?? this.inputRoute.connectionName
-      if (obstacle.connectedTo.some((id) => id === routeName || connMap.areIdsConnected(id, routeName))) continue
-      const zLayers = obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, this.context.layerCount))
-      if (!zLayers.includes(points[0]!.z)) continue
-      const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
-      const cos = Math.cos(angle)
-      const sin = Math.sin(angle)
-      const local = points.map((p) => ({
-        x: (p.x - obstacle.center.x) * cos - (p.y - obstacle.center.y) * sin,
-        y: (p.x - obstacle.center.x) * sin + (p.y - obstacle.center.y) * cos,
-      }))
-      for (let i = 1; i < local.length; i++) {
-        if (segmentToBoxMinDistance(local[i - 1]!, local[i]!, {
-          center: { x: 0, y: 0 }, width: obstacle.width, height: obstacle.height,
-        }) < inset) return false
-      }
-    }
-    return true
-  }
-}
-
-/** One shortcut pass over one node; endpoints, vias and boundary copper stay fixed. */
+/** Removes redundant interior vertices without changing copper or via geometry. */
 export class Pipeline9NodeSimplificationSolver extends BaseSolver {
   readonly routes: HighDensityRoute[]
-  readonly localObstacles: Obstacle[]
   private routeIndex = 0
-  private shortcutSolver: NodeVertexShortcutSolver | null = null
 
   constructor(readonly input: NodeSimplificationInput) {
     super()
-    this.MAX_ITERATIONS = 100e6
-    this.routes = materializePipeline9HdRouteVias(input.routes)
-    const margin = input.clearance + Math.max(0, ...input.routes.map((r) => r.traceThickness / 2))
-    this.localObstacles = input.obstacles.filter((obstacle) => {
-      // A circumscribed radius includes rotated and unrotated obstacle models.
-      const radius = Math.hypot(obstacle.width, obstacle.height) / 2 + margin
-      return Math.abs(obstacle.center.x - input.node.center.x) <= input.node.width / 2 + radius &&
-        Math.abs(obstacle.center.y - input.node.center.y) <= input.node.height / 2 + radius
-    })
+    this.MAX_ITERATIONS = input.routes.length + 1
+    this.routes = [...input.routes]
     this.stats = {
       inputPoints: this.routes.reduce((sum, r) => sum + r.route.length, 0),
       outputPoints: 0,
-      obstacleCount: this.localObstacles.length,
+      obstacleCount: 0,
       routeCount: this.routes.length,
     }
   }
 
   override _step(): void {
-    if (this.shortcutSolver) {
-      this.shortcutSolver.step()
-      if (this.shortcutSolver.failed) throw new Error(this.shortcutSolver.error ?? "Node shortcut failed")
-      if (!this.shortcutSolver.solved) return
-      const original = this.routes[this.routeIndex]!
-      this.routes[this.routeIndex] = { ...original, route: this.shortcutSolver.newRoute }
-      this.stats.outputPoints += this.shortcutSolver.newRoute.length
-      this.routeIndex++
-      this.shortcutSolver = null
-      this.activeSubSolver = null
-      return
-    }
-    const route = this.routes[this.routeIndex]
-    if (!route) {
+    const original = this.routes[this.routeIndex]
+    if (!original) {
       this.solved = true
       return
     }
-    this.shortcutSolver = new NodeVertexShortcutSolver({
-      inputRoute: route,
-      otherHdRoutes: this.routes.filter((_, index) => index !== this.routeIndex),
-      obstacles: this.localObstacles.map((obstacle) => ({
-        ...obstacle,
-        __zLayers: obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, this.input.layerCount)),
-      })),
-      connMap: this.input.connMap,
-      colorMap: {},
-      outline: this.input.boardGeometry?.outline,
-      minBoardEdgeClearance: this.input.boardGeometry?.minBoardEdgeClearance,
-      useTraceWidthAwareClearance: true,
-    }, { ...this.input, obstacles: this.localObstacles })
-    // VertexShortcutPathSolver advances at least one source vertex per step.
-    // Its inherited 1,000-step cap is too small for dense grid routes.
-    this.shortcutSolver.MAX_ITERATIONS = route.route.length + 1
-    this.activeSubSolver = this.shortcutSolver as unknown as BaseSolver
+    const points = original.route
+    const protectedIndexes = new Set<number>([0, 1, points.length - 2, points.length - 1])
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i]!
+      const isVia = original.vias.some((via) => via.x === point.x && via.y === point.y)
+      const hasMetadata = Object.keys(point).some((key) => key !== "x" && key !== "y" && key !== "z")
+      const changesLayer = i > 0 && points[i - 1]!.z !== point.z
+      if (isVia || hasMetadata || changesLayer) {
+        for (let offset = -2; offset <= 2; offset++) protectedIndexes.add(i + offset)
+      }
+    }
+    const retainedIndexes: number[] = []
+    const inset = this.input.clearance + original.traceThickness / 2
+    const node = this.input.node
+    for (let i = 0; i < points.length; i++) {
+      const end = points[i]!
+      while (retainedIndexes.length >= 2) {
+        const middleIndex = retainedIndexes.at(-1)!
+        const start = points[retainedIndexes.at(-2)!]!
+        const middle = points[middleIndex]!
+        if (protectedIndexes.has(middleIndex) || start.z !== middle.z || middle.z !== end.z) break
+        if ([start, middle, end].some((point) =>
+          Math.abs(point.x - node.center.x) > node.width / 2 - inset ||
+          Math.abs(point.y - node.center.y) > node.height / 2 - inset,
+        )) break
+        const ax = middle.x - start.x
+        const ay = middle.y - start.y
+        const bx = end.x - middle.x
+        const by = end.y - middle.y
+        const length = Math.hypot(end.x - start.x, end.y - start.y)
+        // Do not straighten corners or reverse a trace. Only roundoff on an
+        // otherwise straight segment is tolerated (well below copper checks).
+        if (length > MAX_SIMPLIFIED_SEGMENT_LENGTH || ax * bx + ay * by < 0 ||
+          Math.abs(ax * by - ay * bx) > length * 1e-12) break
+        retainedIndexes.pop()
+      }
+      retainedIndexes.push(i)
+    }
+    const route = retainedIndexes.map((index) => points[index]!)
+    this.routes[this.routeIndex] = { ...original, route }
+    this.stats.outputPoints += route.length
+    this.routeIndex++
   }
 
   override visualize(): GraphicsObject {
-    if (this.shortcutSolver) return this.shortcutSolver.visualize()
     return {
       lines: this.routes.flatMap((route) => route.route.slice(1).flatMap((end, index) => {
         const start = route.route[index]!

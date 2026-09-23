@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { createNodeSimplification, createShortcutRoute } from "tests/fixtures/node-simplification"
 import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 
-test("node shortcuts enforce clearance above the upstream simplifier's 0.1mm default", () => {
+test("node simplification retains detours and their configured copper clearance", () => {
   const blocker = {
     ...createShortcutRoute(),
     connectionName: "b",
