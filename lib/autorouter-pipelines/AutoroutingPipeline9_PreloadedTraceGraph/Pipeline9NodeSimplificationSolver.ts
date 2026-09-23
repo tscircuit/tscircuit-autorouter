@@ -4,6 +4,8 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 
 type NodeSimplificationInput = {
   node: NodeWithPortPoints
@@ -15,21 +17,16 @@ type NodeSimplificationInput = {
   boardGeometry?: HighDensityBoardGeometry
 }
 
-// Force improvement uses vertices as control points, even on straight copper.
-// Retain a control point at least every 0.25mm, plus all endpoint/via approaches.
-const MAX_SIMPLIFIED_SEGMENT_LENGTH = 0.25
-
-/** Removes redundant interior vertices without changing copper or via geometry. */
+/** Runs the established pre-force grid reduction within one routing node. */
 export class Pipeline9NodeSimplificationSolver extends BaseSolver {
-  readonly routes: HighDensityRoute[]
-  private routeIndex = 0
+  routes: HighDensityRoute[]
 
   constructor(readonly input: NodeSimplificationInput) {
     super()
-    this.MAX_ITERATIONS = input.routes.length + 1
+    this.MAX_ITERATIONS = 2
     this.routes = [...input.routes]
     this.stats = {
-      inputPoints: this.routes.reduce((sum, r) => sum + r.route.length, 0),
+      inputPoints: 0,
       outputPoints: 0,
       obstacleCount: 0,
       routeCount: this.routes.length,
@@ -37,53 +34,19 @@ export class Pipeline9NodeSimplificationSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const original = this.routes[this.routeIndex]
-    if (!original) {
-      this.solved = true
-      return
-    }
-    const points = original.route
-    const protectedIndexes = new Set<number>([0, 1, points.length - 2, points.length - 1])
-    for (let i = 0; i < points.length; i++) {
-      const point = points[i]!
-      const isVia = original.vias.some((via) => via.x === point.x && via.y === point.y)
-      const hasMetadata = Object.keys(point).some((key) => key !== "x" && key !== "y" && key !== "z")
-      const changesLayer = i > 0 && points[i - 1]!.z !== point.z
-      if (isVia || hasMetadata || changesLayer) {
-        for (let offset = -2; offset <= 2; offset++) protectedIndexes.add(i + offset)
-      }
-    }
-    const retainedIndexes: number[] = []
-    const inset = this.input.clearance + original.traceThickness / 2
-    const node = this.input.node
-    for (let i = 0; i < points.length; i++) {
-      const end = points[i]!
-      while (retainedIndexes.length >= 2) {
-        const middleIndex = retainedIndexes.at(-1)!
-        const start = points[retainedIndexes.at(-2)!]!
-        const middle = points[middleIndex]!
-        if (protectedIndexes.has(middleIndex) || start.z !== middle.z || middle.z !== end.z) break
-        if ([start, middle, end].some((point) =>
-          Math.abs(point.x - node.center.x) > node.width / 2 - inset ||
-          Math.abs(point.y - node.center.y) > node.height / 2 - inset,
-        )) break
-        const ax = middle.x - start.x
-        const ay = middle.y - start.y
-        const bx = end.x - middle.x
-        const by = end.y - middle.y
-        const length = Math.hypot(end.x - start.x, end.y - start.y)
-        // Do not straighten corners or reverse a trace. Only roundoff on an
-        // otherwise straight segment is tolerated (well below copper checks).
-        if (length > MAX_SIMPLIFIED_SEGMENT_LENGTH || ax * bx + ay * by < 0 ||
-          Math.abs(ax * by - ay * bx) > length * 1e-12) break
-        retainedIndexes.pop()
-      }
-      retainedIndexes.push(i)
-    }
-    const route = retainedIndexes.map((index) => points[index]!)
-    this.routes[this.routeIndex] = { ...original, route }
-    this.stats.outputPoints += route.length
-    this.routeIndex++
+    // Use the same via representation and reduction policy as the existing
+    // pre-force stage. Ordinary control points must remain available to repair.
+    const canonicalRoutes = materializePipeline9HdRouteVias(this.input.routes)
+    this.stats.inputPoints = canonicalRoutes.reduce(
+      (sum, route) => sum + route.route.length,
+      0,
+    )
+    this.routes = simplifyPipeline9CollinearRoutePoints(canonicalRoutes)
+    this.stats.outputPoints = this.routes.reduce(
+      (sum, route) => sum + route.route.length,
+      0,
+    )
+    this.solved = true
   }
 
   override visualize(): GraphicsObject {

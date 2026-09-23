@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { createNodeSimplification, createShortcutRoute } from "tests/fixtures/node-simplification"
 
-test("collinear reduction preserves via approaches and segment metadata while removing remote redundant points", () => {
+test("node simplification preserves ordinary via approaches and metadata anchors", () => {
   const route = {
     ...createShortcutRoute(),
     vias: [{ x: 0, y: 0 }],
@@ -14,7 +14,7 @@ test("collinear reduction preserves via approaches and segment metadata while re
   const solver = createNodeSimplification({ routes: [route] })
   solver.solve()
   const output = solver.getOutput()[0]!
-  expect(output.route.length).toBeLessThan(route.route.length)
+  expect(output.route).toEqual(route.route)
   for (const point of [...route.route.slice(8, 13), ...route.route.slice(38, 44)]) {
     expect(output.route).toContainEqual(point)
   }

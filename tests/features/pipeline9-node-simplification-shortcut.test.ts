@@ -1,23 +1,37 @@
 import { expect, test } from "bun:test"
-import { createNodeSimplification, createShortcutRoute } from "tests/fixtures/node-simplification"
+import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { materializePipeline9HdRouteVias } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializePipeline9HdRouteVias"
+import { simplifyPipeline9CollinearRoutePoints } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/simplifyPipeline9CollinearRoutePoints"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { createNodeSimplification } from "tests/fixtures/node-simplification"
+import input from "../fixtures/am3352-force-improve-dense-grid.json"
 
-test("node-local simplification removes redundant vertices while preserving copper and endpoint segments", () => {
-  const route = {
-    ...createShortcutRoute(),
-    route: Array.from({ length: 41 }, (_, i) => ({ x: -1 + i * 0.05, y: 0, z: 0 })),
-  }
-  const solver = createNodeSimplification({ routes: [route] })
-  const original = structuredClone(route)
+test("node-local grid reduction preserves the established force-improvement result", () => {
+  const routes = input.hdRoutes as HighDensityRoute[]
+  const original = structuredClone(routes)
+  const solver = createNodeSimplification({
+    routes,
+    node: input.nodeWithPortPoints[0]!,
+  })
   solver.solve()
-  const output = solver.getOutput()[0]!
-  expect(output.route.length).toBeLessThan(original.route.length)
-  expect(output.route.slice(0, 2)).toEqual(original.route.slice(0, 2))
-  expect(output.route.slice(-2)).toEqual(original.route.slice(-2))
-  expect(output.route.every((p) => p.y === 0 && p.z === 0)).toBeTrue()
-  for (let i = 1; i < output.route.length; i++) {
-    expect(output.route[i]!.x - output.route[i - 1]!.x).toBeLessThanOrEqual(0.25)
-  }
-  expect(output.regionId).toBe(original.regionId)
-  expect(output.startPcbPortId).toBe(original.startPcbPortId)
-  expect(route).toEqual(original)
+  expect(solver.stats.inputPoints).toBe(4735)
+  expect(solver.stats.outputPoints).toBeLessThan(1000)
+  expect(routes).toEqual(original)
+  const baseline = new HighDensityForceImproveSolver({
+    ...input,
+    hdRoutes: simplifyPipeline9CollinearRoutePoints(
+      materializePipeline9HdRouteVias(routes),
+    ),
+  })
+  const early = new HighDensityForceImproveSolver({
+    ...input,
+    hdRoutes: simplifyPipeline9CollinearRoutePoints(
+      materializePipeline9HdRouteVias(solver.getOutput()),
+    ),
+  })
+  baseline.solve()
+  early.solve()
+  expect(early.solved).toBeTrue()
+  expect(baseline.solved).toBeTrue()
+  expect(early.getOutput()).toEqual(baseline.getOutput())
 })
