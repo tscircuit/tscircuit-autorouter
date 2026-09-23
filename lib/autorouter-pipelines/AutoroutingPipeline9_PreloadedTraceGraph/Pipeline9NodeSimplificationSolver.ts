@@ -120,11 +120,12 @@ export class Pipeline9NodeSimplificationSolver extends BaseSolver {
         __zLayers: obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, this.input.layerCount)),
       })),
       connMap: this.input.connMap,
+      colorMap: {},
       outline: this.input.boardGeometry?.outline,
       minBoardEdgeClearance: this.input.boardGeometry?.minBoardEdgeClearance,
       useTraceWidthAwareClearance: true,
     }, { ...this.input, obstacles: this.localObstacles })
-    this.activeSubSolver = this.shortcutSolver
+    this.activeSubSolver = this.shortcutSolver as unknown as BaseSolver
   }
 
   override getConstructorParams(): [NodeSimplificationInput] {
