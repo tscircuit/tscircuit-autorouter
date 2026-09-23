@@ -22,7 +22,9 @@ test("Pipeline9 node and global repairs produce identical SRJ18 output over HTTP
     await networked.solveAsync()
     expect(networked.solved).toBeTrue()
     expect(server.solveRequests.length).toBeGreaterThan(0)
-    expect(networked.highDensityRouteSolver!.stats.remoteSolvedResults).toBeGreaterThan(0)
+    expect(
+      networked.highDensityRouteSolver!.stats.remoteSolvedResults,
+    ).toBeGreaterThan(0)
     // HTTP serializes negative zero as zero; compare the exact JSON output.
     expect(JSON.stringify(networked.highDensityRepairSolver!.getOutput())).toBe(
       JSON.stringify(local.highDensityRepairSolver!.getOutput()),

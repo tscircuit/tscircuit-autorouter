@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
+import { segmentDistance } from "high-density-repair02/lib/high-density-repair-solver/functions/segmentDistance"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { segmentDistance } from "high-density-repair02/lib/high-density-repair-solver/functions/segmentDistance"
 
-test("Pipeline9 boundary-buffer repair preserves foreign fixed copper clearance", () => {
+test("Pipeline9 node boundary repair preserves fixed copper clearance", () => {
   const route: HighDensityRoute = {
     connectionName: "trace",
     regionId: "node",
@@ -26,23 +26,27 @@ test("Pipeline9 boundary-buffer repair preserves foreign fixed copper clearance"
   }
   const original = structuredClone([route, fixed])
   const solver = new Pipeline4HighDensityRepairSolver({
-    nodeWithPortPoints: [{
-      capacityMeshNodeId: "node",
-      center: { x: 0, y: 0 },
-      width: 2,
-      height: 2,
-      availableZ: [0, 1],
-      portPoints: [],
-    }],
+    nodeWithPortPoints: [
+      {
+        capacityMeshNodeId: "node",
+        center: { x: 0, y: 0 },
+        width: 2,
+        height: 2,
+        availableZ: [0, 1],
+        portPoints: [],
+      },
+    ],
     hdRoutes: [route, fixed],
-    obstacles: [{
-      type: "rect",
-      center: { x: -0.3, y: -0.54 },
-      width: 0.8,
-      height: 0.4,
-      layers: ["top"],
-      connectedTo: [],
-    }],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: -0.3, y: -0.54 },
+        width: 0.8,
+        height: 0.4,
+        layers: ["top"],
+        connectedTo: [],
+      },
+    ],
     enableNodeBoundaryClearanceRepair: true,
   })
   solver.solve()
@@ -55,11 +59,13 @@ test("Pipeline9 boundary-buffer repair preserves foreign fixed copper clearance"
   expect(output!.route[0]).toEqual(route.route[0])
   expect(output!.route.at(-1)).toEqual(route.route.at(-1))
   for (let index = 1; index < output!.route.length; index++) {
-    expect(segmentDistance(
-      output!.route[index - 1]!,
-      output!.route[index]!,
-      fixed.route[0]!,
-      fixed.route[1]!,
-    ) - 0.1).toBeGreaterThanOrEqual(0.1 - 1e-9)
+    expect(
+      segmentDistance(
+        output!.route[index - 1]!,
+        output!.route[index]!,
+        fixed.route[0]!,
+        fixed.route[1]!,
+      ) - 0.1,
+    ).toBeGreaterThanOrEqual(0.1 - 1e-9)
   }
 })
