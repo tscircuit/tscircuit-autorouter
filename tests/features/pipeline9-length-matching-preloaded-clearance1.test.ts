@@ -15,12 +15,26 @@ test("Pipeline9 length matching tight-preload safety", (): void => {
     routedTraces: solver.getNewTracesBeforePowerExpansion(),
   })
   expect(before.errors).toHaveLength(0)
-  expect(() => solver.solve()).toThrow(
-    "exhausted all segment/tooth combinations",
+  solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  const after = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  })
+  expect(after.errors).toHaveLength(0)
+  expect(
+    solver
+      .getOutputSimpleRouteJson()
+      .traces?.find((trace): boolean => trace.pcb_trace_id === "fixed"),
+  ).toEqual(srj.traces![0])
+  const lengths: number[] = solver._getOutputHdRoutes().map((route): number =>
+    route.route.slice(1).reduce((length, point, index): number => {
+      const previous = route.route[index]!
+      return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+    }, 0),
   )
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output",
-  )
+  expect(lengths).toHaveLength(2)
+  expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.1 + 1e-6)
 })

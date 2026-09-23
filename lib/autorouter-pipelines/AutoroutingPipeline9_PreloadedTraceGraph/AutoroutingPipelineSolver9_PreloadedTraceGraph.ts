@@ -22,7 +22,6 @@ import {
   CapacityMeshEdge,
   CapacityMeshNode,
   DifferentialPair,
-  Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -32,8 +31,6 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
 import {
   convertSrjToGraphicsObject,
@@ -936,42 +933,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }
           },
         )
-        const hasLengthMatching: boolean =
-          differentialPairs.length > 0 ||
-          (cms.srj.buses ?? []).some(
-            (bus): boolean => bus.maxLengthSkew !== undefined,
-          )
-        const preloadedObstacles: Obstacle[] = hasLengthMatching
-          ? addApproximatingRectsToSrj({
-              ...cms.srj,
-              connections: [],
-              // The matcher consumes axis-aligned rectangles. Use the latest
-              // repaired copper and cover round wire ends before approximation.
-              obstacles: getObstaclesFromSrjTraces({
-                ...cms.srj,
-                traces: cms.getUpdatedPreloadedTraces(),
-              }).map(
-                (obstacle): Obstacle => ({
-                  ...obstacle,
-                  width:
-                    obstacle.ccwRotationDegrees === undefined
-                      ? obstacle.width
-                      : obstacle.width + obstacle.height,
-                }),
-              ),
-            }).obstacles
-          : []
-        const obstacles: Obstacle[] = [
-          ...cms.srj.obstacles,
-          ...preloadedObstacles,
-        ]
         return [
           {
             hdRoutes,
             differentialPairs,
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
-            obstacles,
+            obstacles: cms.srj.obstacles,
+            traces: cms.getUpdatedPreloadedTraces(),
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,

@@ -7,6 +7,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
   DifferentialPair,
   Obstacle,
+  SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
@@ -17,6 +18,7 @@ type LengthMatchingPostProcessingSolverParams = {
   differentialPairs: DifferentialPair[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
+  traces?: SimplifiedPcbTraces
   obstacles: Obstacle[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   layerCount: number
@@ -143,6 +145,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
+      traces: params.traces,
       obstacles: params.obstacles,
       bounds: params.bounds,
       layerCount: params.layerCount,
@@ -184,6 +187,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
           this.params.connections,
         ),
         differentialPairs,
+        traces: this.params.traces,
         obstacles: this.params.obstacles,
         bounds: this.params.bounds,
         layerCount: this.params.layerCount,
