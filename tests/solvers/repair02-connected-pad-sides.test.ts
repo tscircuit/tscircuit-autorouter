@@ -60,4 +60,22 @@ test("repair02 pad sides require a same-layer connected terminal on the boundary
   expect(
     getConnectedPadSides({ ...node, height: 6 }, route, [pad], connMap),
   ).toEqual([])
+  const cornerRoute: HighDensityRoute = {
+    ...route,
+    route: [{ x: -2, y: -2, z: 0 }, { x: 2, y: 2, z: 0 }],
+  }
+  const cornerPads = [
+    { ...pad, center: { x: -2, y: -2 } },
+    { ...pad, center: { x: 2, y: 2 } },
+  ]
+  expect(getConnectedPadSides(node, cornerRoute, cornerPads, connMap)).toEqual([
+    "left", "bottom", "right", "top",
+  ])
+  expect(getConnectedPadSides(
+    node,
+    { ...cornerRoute, route: [...cornerRoute.route].reverse() },
+    cornerPads,
+    connMap,
+  )).toEqual(["right", "top", "left", "bottom"])
+
 })

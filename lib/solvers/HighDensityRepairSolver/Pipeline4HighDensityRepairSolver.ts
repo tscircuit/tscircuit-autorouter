@@ -87,6 +87,7 @@ const isSameNetMultilayerObstacleRoute = (
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
+      isPointInsideObstacle(route.route[0], obstacle) &&
       isObstacleConnectedToRoute(obstacle, route, connMap) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
@@ -94,13 +95,12 @@ const isSameNetMultilayerObstacleRoute = (
 const findNodeIndexForRoute = (
   route: HighDensityRoute,
   nodes: NodeWithPortPoints[],
+  nodeIndexById: ReadonlyMap<string, number>,
   margin: number,
 ): number => {
   if (route.regionId) {
-    const regionNodeIndex = nodes.findIndex(
-      (node) => node.capacityMeshNodeId === route.regionId,
-    )
-    if (regionNodeIndex !== -1) return regionNodeIndex
+    const regionNodeIndex = nodeIndexById.get(route.regionId)
+    if (regionNodeIndex !== undefined) return regionNodeIndex
   }
 
   const routePoints = route.route.map(({ x, y }) => ({ x, y }))
@@ -242,6 +242,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.connMap = params.connMap
 
+    const nodeIndexById = new Map<string, number>()
+    for (const [index, node] of params.nodeWithPortPoints.entries()) {
+      // Preserve the first matching node when region IDs are repeated.
+      if (!nodeIndexById.has(node.capacityMeshNodeId)) {
+        nodeIndexById.set(node.capacityMeshNodeId, index)
+      }
+    }
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
@@ -256,6 +263,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       const nodeIndex = findNodeIndexForRoute(
         params.hdRoutes[i],
         params.nodeWithPortPoints,
+        nodeIndexById,
         this.repairMargin,
       )
       if (nodeIndex === -1) continue
