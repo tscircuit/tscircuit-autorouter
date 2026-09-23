@@ -1,16 +1,20 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 import capturedInput from "./assets/pipeline9-sot23-missing-via.json"
 
-test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): Promise<void> => {
+test("preserves vias while completing SOT-23 breakout routing", async (): Promise<void> => {
   const input = structuredClone(capturedInput) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(() => solver.solve()).toThrow("changes layer without a transition")
+  solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
   const repairedTraces = solver.getUpdatedPreloadedTraces()
   const affectedTrace = repairedTraces.find(
     (trace) =>
@@ -25,23 +29,39 @@ test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): P
       ? [{ x: point.x, y: point.y }]
       : []
   })
-  expect(missingTransitions).toHaveLength(1)
+  expect(missingTransitions).toHaveLength(0)
+  const transitionVias = affectedTrace.route.filter(
+    (point) => point.route_type === "via",
+  )
+  expect(transitionVias).toHaveLength(2)
+
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const snapshotInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  expect(evaluateRelaxedDrc(snapshotInput).errors).toEqual([])
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "routed-board" },
+  )
 
   const inputGraphics = convertSrjToGraphicsObject(input)
-  const failedGraphics = convertSrjToGraphicsObject({
+  const routedGraphics = convertSrjToGraphicsObject({
     ...input,
-    traces: repairedTraces,
+    traces: routedTraces,
   })
   inputGraphics.points = []
-  failedGraphics.points = []
-  failedGraphics.circles = [
-    ...(failedGraphics.circles ?? []),
-    {
-      center: missingTransitions[0]!,
+  routedGraphics.points = []
+  routedGraphics.circles = [
+    ...(routedGraphics.circles ?? []),
+    ...transitionVias.map((via) => ({
+      center: { x: via.x, y: via.y },
       radius: 0.45,
-      stroke: "#b91c1c",
+      stroke: "#166534",
       fill: "transparent",
-    },
+    })),
   ]
   await expect(
     getGraphicsSvgFrames({
@@ -52,9 +72,9 @@ test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): P
           graphics: inputGraphics,
         },
         {
-          name: "BUG: circled layer change has no via; routing aborts",
+          name: "FIXED: both circled transitions have vias; routing completes",
           pipeline: "end",
-          graphics: failedGraphics,
+          graphics: routedGraphics,
         },
       ],
       columns: 2,

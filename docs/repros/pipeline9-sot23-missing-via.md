@@ -11,3 +11,9 @@ Run on Linux:
 ```sh
 bun test tests/repro/pipeline9-sot23-missing-via.test.ts --timeout 9999999
 ```
+
+## Corrected export
+
+The second PR restores the missing via during HD-route serialization. The route itself explicitly changes layers at two pairs of coincident points, but the repair output's separate `vias` list contains only the second via. Pipeline 9's copper geometry already interprets coincident points on different layers as a via. The SRJ exporter now follows that same convention, preserving the first transition instead of emitting disconnected copper. Explicit through-obstacle transitions still use their existing conversion path.
+
+The full-board regression now requires the solver to finish, both transitions in the affected trace to export vias, and the benchmark relaxed DRC check to report zero errors. The comparison snapshot marks the two transitions in green; the additional routed-board snapshot includes the computed DRC count. A small exporter regression shows the same two-transition path with its first via omitted from the separate list and checks both emitted vias and their drill/pad dimensions.
