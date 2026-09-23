@@ -17,10 +17,14 @@ test("Pipeline9 length matching preserves preloaded copper or reports no solutio
     })
     expect(before.errors).toHaveLength(0)
     if (preloadedY === 0.3) {
-      expect(() => solver.solve()).toThrow("exhausted all segment/tooth combinations")
+      expect(() => solver.solve()).toThrow(
+        "exhausted all segment/tooth combinations",
+      )
       expect(solver.failed).toBe(true)
       expect(solver.solved).toBe(false)
-      expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow("Cannot get output")
+      expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
+        "Cannot get output",
+      )
       continue
     }
     solver.solve()
@@ -32,9 +36,11 @@ test("Pipeline9 length matching preserves preloaded copper or reports no solutio
       routedTraces: solver.getOutputSimplifiedPcbTraces(),
     })
     expect(after.errors).toHaveLength(0)
-    expect(solver.getOutputSimpleRouteJson().traces?.find(
-      (trace): boolean => trace.pcb_trace_id === "fixed",
-    )).toEqual(srj.traces![0])
+    expect(
+      solver
+        .getOutputSimpleRouteJson()
+        .traces?.find((trace): boolean => trace.pcb_trace_id === "fixed"),
+    ).toEqual(srj.traces![0])
     const lengths: number[] = solver._getOutputHdRoutes().map((route): number =>
       route.route.slice(1).reduce((length, point, index): number => {
         const previous = route.route[index]!

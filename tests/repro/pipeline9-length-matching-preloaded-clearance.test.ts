@@ -7,28 +7,39 @@ import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createP
 test("length matching rejects unsafe output and preserves clearance", async (): Promise<void> => {
   for (const preloadedY of [0.3, 1]) {
     const srj = createPipeline9LengthMatchingPreloadedInput(preloadedY)
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, { cacheProvider: null })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+      cacheProvider: null,
+    })
     solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
-    expect(evaluateRelaxedDrc({
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getNewTracesBeforePowerExpansion(),
-    }).errors).toHaveLength(0)
+    expect(
+      evaluateRelaxedDrc({
+        inputSrj: srj,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces: solver.getNewTracesBeforePowerExpansion(),
+      }).errors,
+    ).toHaveLength(0)
     if (preloadedY === 0.3) {
       const before = {
         inputSrj: srj,
         srjWithPointPairs: solver.srjWithPointPairs!,
         routedTraces: solver.getNewTracesBeforePowerExpansion(),
       }
-      expect(() => solver.solve()).toThrow("exhausted all segment/tooth combinations")
+      expect(() => solver.solve()).toThrow(
+        "exhausted all segment/tooth combinations",
+      )
       expect(solver.failed).toBe(true)
       expect(solver.solved).toBe(false)
-      expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow("Cannot get output")
+      expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
+        "Cannot get output",
+      )
       // Only the safe pre-match geometry is shown: this is not a solved board.
-      const svg = getBugReportSnapshotSvg(before).replace("</svg>",
+      const svg = getBugReportSnapshotSvg(before).replace(
+        "</svg>",
         '<text x="24" y="86" font-family="Arial, sans-serif" font-size="16" fill="#b91c1c">REJECTED: no output. Pre-match geometry shown.</text></svg>',
       )
-      await expect(svg).toMatchSvgSnapshot(import.meta.path, { svgName: "tight-preload" })
+      await expect(svg).toMatchSvgSnapshot(import.meta.path, {
+        svgName: "tight-preload",
+      })
       continue
     }
     solver.solve()
@@ -39,8 +50,11 @@ test("length matching rejects unsafe output and preserves clearance", async (): 
       routedTraces: solver.getOutputSimplifiedPcbTraces(),
     }
     expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)
-    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(import.meta.path, {
-      svgName: preloadedY === 0.3 ? "tight-preload" : "roomy-preload",
-    })
+    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+      import.meta.path,
+      {
+        svgName: preloadedY === 0.3 ? "tight-preload" : "roomy-preload",
+      },
+    )
   }
 })

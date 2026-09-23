@@ -936,8 +936,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }
           },
         )
-        const hasLengthMatching: boolean = differentialPairs.length > 0 ||
-          (cms.srj.buses ?? []).some((bus): boolean => bus.maxLengthSkew !== undefined)
+        const hasLengthMatching: boolean =
+          differentialPairs.length > 0 ||
+          (cms.srj.buses ?? []).some(
+            (bus): boolean => bus.maxLengthSkew !== undefined,
+          )
         const preloadedObstacles: Obstacle[] = hasLengthMatching
           ? addApproximatingRectsToSrj({
               ...cms.srj,
@@ -947,15 +950,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               obstacles: getObstaclesFromSrjTraces({
                 ...cms.srj,
                 traces: cms.getUpdatedPreloadedTraces(),
-              }).map((obstacle): Obstacle => ({
-                ...obstacle,
-                width: obstacle.ccwRotationDegrees === undefined
-                  ? obstacle.width
-                  : obstacle.width + obstacle.height,
-              })),
+              }).map(
+                (obstacle): Obstacle => ({
+                  ...obstacle,
+                  width:
+                    obstacle.ccwRotationDegrees === undefined
+                      ? obstacle.width
+                      : obstacle.width + obstacle.height,
+                }),
+              ),
             }).obstacles
           : []
-        const obstacles: Obstacle[] = [...cms.srj.obstacles, ...preloadedObstacles]
+        const obstacles: Obstacle[] = [
+          ...cms.srj.obstacles,
+          ...preloadedObstacles,
+        ]
         return [
           {
             hdRoutes,
