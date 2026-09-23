@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
-import { sample003 } from "dataset-srj18"
+import { dataset } from "dataset-srj18"
 import { AutoroutingPipelineSolver9_Networked } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 
 test("Pipeline9 node and global repairs produce identical SRJ18 output over HTTP", async () => {
+  const sample003 = dataset.sample003!
   const local = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(sample003) as SimpleRouteJson,
     { effort: 1 },
