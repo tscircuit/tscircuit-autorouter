@@ -25,8 +25,24 @@ test("exports both path-defined vias when repair omits one from the via list", a
     defaultViaHoleDiameter: 0.2,
   })
   expect(route.filter((point) => point.route_type === "via")).toEqual([
-    { route_type: "via", x: -1, y: 0, from_layer: "top", to_layer: "bottom", via_diameter: 0.3, via_hole_diameter: 0.2 },
-    { route_type: "via", x: 1, y: 0, from_layer: "bottom", to_layer: "top", via_diameter: 0.3, via_hole_diameter: 0.2 },
+    {
+      route_type: "via",
+      x: -1,
+      y: 0,
+      from_layer: "top",
+      to_layer: "bottom",
+      via_diameter: 0.3,
+      via_hole_diameter: 0.2,
+    },
+    {
+      route_type: "via",
+      x: 1,
+      y: 0,
+      from_layer: "bottom",
+      to_layer: "top",
+      via_diameter: 0.3,
+      via_hole_diameter: 0.2,
+    },
   ])
   expect(hdRoute).toEqual(original)
 
@@ -36,13 +52,37 @@ test("exports both path-defined vias when repair omits one from the via list", a
     bounds: { minX: -2.5, maxX: 2.5, minY: -1, maxY: 1 },
     obstacles: [],
     connections: [],
-    traces: [{ type: "pcb_trace", pcb_trace_id: "repaired_signal", connection_name: hdRoute.connectionName, route }],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "repaired_signal",
+        connection_name: hdRoute.connectionName,
+        route,
+      },
+    ],
   }
   const graphics = convertSrjToGraphicsObject(output)
-  graphics.texts = [{ x: -2, y: 0.65, text: "TOP -> VIA -> BOTTOM -> VIA -> TOP", fontSize: 0.18, anchorSide: "center_left", color: "black" }]
-  await expect(getGraphicsSvgFrames({
-    frames: [{ name: "FIXED: both physical layer changes export vias", pipeline: "end", graphics }],
-    columns: 1,
-    backgroundColor: "white",
-  })).toMatchSvgSnapshot(import.meta.path)
+  graphics.texts = [
+    {
+      x: -2,
+      y: 0.65,
+      text: "TOP -> VIA -> BOTTOM -> VIA -> TOP",
+      fontSize: 0.18,
+      anchorSide: "center_left",
+      color: "black",
+    },
+  ]
+  await expect(
+    getGraphicsSvgFrames({
+      frames: [
+        {
+          name: "FIXED: both physical layer changes export vias",
+          pipeline: "end",
+          graphics,
+        },
+      ],
+      columns: 1,
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
