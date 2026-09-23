@@ -65,7 +65,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { AutorouterTraceSimplificationSolver } from "lib/solvers/AutorouterTraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
@@ -231,7 +231,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
-  traceSimplificationSolver?: TraceSimplificationSolver
+  traceSimplificationSolver?: AutorouterTraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -614,7 +614,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "traceSimplificationSolver",
-      TraceSimplificationSolver,
+      AutorouterTraceSimplificationSolver,
       (cms) => [
         {
           hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
@@ -627,7 +627,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
-          iterations: 2,
         },
       ],
     ),
