@@ -31,7 +31,11 @@ test(
     expect(
       new Set(solver._getOutputHdRoutes().map((route) => route.connectionName)),
     ).toEqual(
-      new Set(solver.srjWithPointPairs!.connections.map((connection) => connection.name)),
+      new Set(
+        solver.srjWithPointPairs!.connections.map(
+          (connection) => connection.name,
+        ),
+      ),
     )
 
     const drcInput = {
