@@ -298,16 +298,12 @@ export const convertHdRouteToSimplifiedRoute = (
             : {}),
         })
       } else {
-        // Co-located points on different layers explicitly encode a via, as in
-        // getPipeline9LayerTransitionViaEndpoint. Repaired routes can omit that
-        // position from the separate vias list; preserve the routed copper.
-        const viaExists =
-          areSameXyPoint(previousPoint, point) ||
-          hdRoute.vias.some(
-            (via) =>
-              Math.abs(via.x - point.x) < 0.001 &&
-              Math.abs(via.y - point.y) < 0.001,
-          )
+        // Check if a via exists at this position
+        const viaExists = hdRoute.vias.some(
+          (via) =>
+            Math.abs(via.x - point.x) < 0.001 &&
+            Math.abs(via.y - point.y) < 0.001,
+        )
 
         // Add a via if one exists
         if (viaExists) {
