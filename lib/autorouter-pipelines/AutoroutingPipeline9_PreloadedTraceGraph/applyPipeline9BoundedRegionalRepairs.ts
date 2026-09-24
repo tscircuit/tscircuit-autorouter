@@ -119,7 +119,7 @@ type RepairRegionLocation = {
 
 const REGION_SIZES = [10, 16] as const
 
-/** Publishes complete repairs or guarded improvements with only fixed-pad errors left. */
+/** Retains safe wire nudges; regional reroutes still require guarded publication. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   connMap,
@@ -185,6 +185,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   const projectedRoutes = applyPipeline9ClearanceProjection({
     originalSrj,
     routes: currentRoutes,
+    allowPartialRepair: true,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
       return drcEvaluator(input)
@@ -200,6 +201,11 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.referenceValidationCount++
     currentErrors = Array.isArray(reference) ? reference : reference.errors
     result.finalDrcIssueCount = currentErrors.length
+    // Projection has independently validated every changed wire against all
+    // copper. Keep this checkpoint even if a later regional reroute cannot
+    // satisfy the stricter publication rules for topology-changing repairs.
+    result.routes = currentRoutes
+    result.publishedDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
       result.publishedDrcIssueCount = 0

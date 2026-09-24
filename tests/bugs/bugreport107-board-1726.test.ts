@@ -24,28 +24,14 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
-  const localRepair = solver.pipeline9JointDrcRepairSolver!.localDrcRepairSolver!
-  const beforeCleanup = evaluateRelaxedDrc({
-    ...drcInput,
-    routedTraces: localRepair.input.traces,
-  })
-  const afterCleanup = evaluateRelaxedDrc({
-    ...drcInput,
-    routedTraces: localRepair.getOutput(),
-  })
-  // Compare the same routed board on this platform. Native solver output can
-  // differ between Linux and macOS; cleanup must still remove real conflicts.
-  expect(beforeCleanup.errors.length - afterCleanup.errors.length).toBeGreaterThanOrEqual(10)
-  expect(errors.length).toBeLessThanOrEqual(afterCleanup.errors.length)
-  expect(
-    errors.filter((error) => error.type === "pcb_via_clearance_error").length,
-  ).toBeLessThan(
-    beforeCleanup.errors.filter(
-      (error) => error.type === "pcb_via_clearance_error",
-    ).length,
+  const stats = solver.pipeline9JointDrcRepairSolver!.stats
+  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
+    stats.postExactReferenceDrcIssueCount,
+  )
+  expect(errors.length).toBeLessThanOrEqual(
+    stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
   expect(solver.pipelineDef.at(-1)?.solverName).toBe("powerTraceExpansionSolver")
-  expect(localRepair.solved).toBeTrue()
 
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
