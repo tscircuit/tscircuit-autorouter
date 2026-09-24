@@ -13,9 +13,12 @@ test.skipIf(process.env.RUN_GAMEBOY_THROUGH_VIA_FULL_SOLVE !== "1")(
   "Pipeline9 routes the four-layer Game Boy while respecting through-via copper",
   async (): Promise<void> => {
     const inputSrj = structuredClone(board) as SimpleRouteJson
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-      cacheProvider: null,
-    })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      inputSrj,
+      {
+        cacheProvider: null,
+      },
+    )
 
     expect(inputSrj.layerCount).toBe(4)
     expect(inputSrj.allowBlindAndBuriedVias).toBe(false)
@@ -38,10 +41,8 @@ test.skipIf(process.env.RUN_GAMEBOY_THROUGH_VIA_FULL_SOLVE !== "1")(
       import.meta.path,
     )
 
-    // This is the failure condition. With blind/buried vias disabled, every
-    // generated via occupies all four copper layers, but Pipeline9 currently
-    // pathfinds using only the logical from/to layer span.
+    // Keep the complete-board target strict: routing must preserve connectivity
+    // and clear every DRC, including copper across the full through-via span.
     expect(errors).toHaveLength(0)
   },
-  900_000,
 )
