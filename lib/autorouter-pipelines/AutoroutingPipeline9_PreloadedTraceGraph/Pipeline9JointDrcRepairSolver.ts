@@ -9,6 +9,7 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { LocalDrcRepairSolver } from "lib/solvers/LocalDrcRepairSolver/LocalDrcRepairSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
@@ -36,6 +37,8 @@ import {
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
+import { applyLocalDrcRepairToHdRoute } from "./applyLocalDrcRepairToHdRoute"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
@@ -670,6 +673,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  localDrcRepairSolver?: LocalDrcRepairSolver
+  private localRepairRoutes?: HighDensityRoute[]
+  private localRepairRouteIndices?: number[]
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -1476,6 +1482,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.localDrcRepairSolver) {
+      this.stepLocalDrcRepair()
+      return
+    }
     if (!this.exactRepairSolver) {
       this.solved = true
       return
@@ -1712,6 +1722,100 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
+    if (boundedRegionalRepairResult.publishedDrcIssueCount === 0) {
+      this.solved = true
+      return
+    }
+    this.startLocalDrcRepair()
+  }
+
+  private startLocalDrcRepair(): void {
+    // Repair emitted copper while joint DRC still owns route geometry. Length
+    // matching and power expansion must consume these repaired HD routes.
+    const routes = canonicalizePipeline9HdRoutes(this.getOutput())
+    const convertRoutes = createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+      connections: this.params.newConnections,
+      originalConnections: this.params.originalSrj.connections,
+      layerCount: this.params.layerCount,
+      obstacles: this.params.obstacles,
+      defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
+      connMap: this.params.connMap,
+    })
+    const convertedTraces = convertRoutes(routes)
+    const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+      routes,
+      newConnections: this.params.newConnections,
+      syntheticConnectionNames: new Set(),
+    })
+    this.localRepairRouteIndices = convertedTraces.map((trace) => {
+      const index = routeIndexByTraceId.get(trace.pcb_trace_id)
+      if (index === undefined) {
+        throw new Error(`Joint DRC cannot find HD owner for ${trace.pcb_trace_id}`)
+      }
+      return index
+    })
+    this.localRepairRoutes = routes
+    const fixedTraces = this.getUpdatedPreloadedTraces()
+    const tracesWithTerminalLocks = convertedTraces.map((trace, index) => {
+      const route = routes[this.localRepairRouteIndices![index]!]!
+      const terminals = route.route.filter((point) => point.pcb_port_id)
+      return {
+        ...trace,
+        route: trace.route.map((point) => {
+          if (point.route_type !== "wire") return point
+          const terminal = terminals.find((candidate) =>
+            candidate.x === point.x && candidate.y === point.y &&
+            mapZToLayerName(candidate.z, this.params.layerCount) === point.layer,
+          )
+          return terminal
+            ? { ...point, start_pcb_port_id: terminal.pcb_port_id }
+            : point
+        }),
+      }
+    })
+    this.localDrcRepairSolver = new LocalDrcRepairSolver({
+      originalSrj: this.params.originalSrj,
+      srjWithPointPairs: this.params.srjWithPointPairs,
+      traces: assignUniquePcbTraceIdsToNewTraces(tracesWithTerminalLocks, fixedTraces),
+      fixedTraces,
+    })
+    this.activeSubSolver = this.localDrcRepairSolver
+    // The child sets its error-dependent iteration budget in its setup step.
+    this.MAX_ITERATIONS += this.localDrcRepairSolver.MAX_ITERATIONS + 2
+  }
+
+  private stepLocalDrcRepair(): void {
+    const solver = this.localDrcRepairSolver!
+    solver.step()
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + solver.MAX_ITERATIONS - solver.iterations + 2,
+    )
+    this.stats.localDrcRepair = solver.stats
+    if (solver.failed) {
+      this.failed = true
+      this.error = solver.error
+      return
+    }
+    if (!solver.solved) return
+    const routes = this.localRepairRoutes!
+    const repaired = [...routes]
+    for (const [index, trace] of solver.getOutput().entries()) {
+      const before = solver.input.traces[index]!
+      if (trace === before) continue
+      const routeIndex = this.localRepairRouteIndices![index]!
+      repaired[routeIndex] = applyLocalDrcRepairToHdRoute({
+        hdRoute: routes[routeIndex]!,
+        before,
+        after: trace,
+        layerCount: this.params.layerCount,
+      })
+    }
+    let newRouteIndex = 0
+    this.combinedOutput = this.getCombinedOutput().map((route) => {
+      if (this.syntheticConnectionNames.has(route.connectionName)) return route
+      return repaired[newRouteIndex++]!
+    })
     this.solved = true
   }
 
@@ -1807,6 +1911,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
+    if (this.localDrcRepairSolver) {
+      return this.localDrcRepairSolver.visualize()
+    }
     return this.exactRepairSolver?.visualize() ?? {}
   }
 }

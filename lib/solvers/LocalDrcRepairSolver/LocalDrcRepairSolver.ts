@@ -48,7 +48,7 @@ const keyOf = (p: Point): string => `${p.x},${p.y}`
 const CLEARANCE_MARGIN = 0.01
 
 /**
- * Repairs independent conflicts in emitted copper, after width expansion.
+ * Repairs independent conflicts in emitted copper for the joint DRC phase.
  * Only coordinates of ordinary wire/via routes may change. Every changed wire
  * must be clearance-clean and every existing physical contact must survive.
  */
