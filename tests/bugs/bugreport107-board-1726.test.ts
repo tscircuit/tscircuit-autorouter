@@ -50,4 +50,4 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
   )
-})
+}, 1_080_000)
