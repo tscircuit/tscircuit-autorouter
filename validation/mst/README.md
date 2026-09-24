@@ -136,12 +136,15 @@ CI exposed downstream data-flow problems now covered by focused regressions:
 coincident stitch targets retain their layer identity; borrowed same-net branches
 must be eligible for the requested terminal pair; through-hole via matching
 accepts inner-layer route transitions inside the drill span; and an accepted
-reference-clean repair resets the final DRC error count. The SRJ18 integration
+reference-clean repair resets the final DRC error count. Pipeline9 now materializes
+same-layer coincident point pairs as direct zero-length paths, preserving both
+terminal IDs through SRJ export instead of sending them through congestion
+routing. Cross-layer coincident terminals still require routing. The SRJ18 integration
 tests now check the valid routing/repair result without depending on the old MST
 edge numbering or topology. The deterministic direct legal-layer retry test
 continues to require an actual retry.
 
-Linux validation includes the previously failing SRJ18 samples 8 and 9, the
+Linux validation includes the previously failing SRJ18 samples 2, 8, and 9, the
 Game Boy board, DRC identity checks, and the affected snapshot tests. GitHub CI
 build, formatting, and type checks have passed. Complete CI status is recorded
 on [PR #2717](https://github.com/tscircuit/tscircuit-autorouter/pull/2717).
