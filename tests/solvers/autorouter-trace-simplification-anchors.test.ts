@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { AutorouterTraceSimplificationSolver } from "lib/solvers/AutorouterTraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("autorouter cleanup keeps required vias, splice endpoints and immutable copper", (): void => {
@@ -19,21 +19,32 @@ test("autorouter cleanup keeps required vias, splice endpoints and immutable cop
       { x: 6, y: 0, z: 0 },
       { x: 8, y: 0, z: 0 },
     ],
-    vias: [{ x: 2, y: 0 }, { x: 6, y: 0 }],
+    vias: [
+      { x: 2, y: 0 },
+      { x: 6, y: 0 },
+    ],
   }
   const immutableRoute: HighDensityRoute = {
     connectionName: "barrier",
     traceThickness: 0.6,
     viaDiameter: 0.8,
-    route: [{ x: 4, y: -3, z: 0 }, { x: 4, y: 3, z: 0 }],
+    route: [
+      { x: 4, y: -3, z: 0 },
+      { x: 4, y: 3, z: 0 },
+    ],
     vias: [],
   }
   const originalImmutableRoute = structuredClone(immutableRoute)
-  const solver = new AutorouterTraceSimplificationSolver({
+  const solver = new TraceSimplificationSolver({
     hdRoutes: [route],
     otherHdRoutes: [immutableRoute],
     obstacles: [],
-    outline: [{ x: -1, y: -3 }, { x: 9, y: -3 }, { x: 9, y: 3 }, { x: -1, y: 3 }],
+    outline: [
+      { x: -1, y: -3 },
+      { x: 9, y: -3 },
+      { x: 9, y: 3 },
+      { x: -1, y: 3 },
+    ],
     connMap: new ConnectivityMap({
       signal_net: ["signal"],
       barrier_net: ["barrier"],
@@ -42,6 +53,9 @@ test("autorouter cleanup keeps required vias, splice endpoints and immutable cop
     defaultViaDiameter: 0.8,
     layerCount: 2,
     enableCrossingViaReduction: true,
+    useTraceWidthAwareClearance: true,
+    enableVertexShortcuts: true,
+    iterations: 3,
     preserveRouteEndpoints: true,
   })
   solver.solve()

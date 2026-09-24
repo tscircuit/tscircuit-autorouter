@@ -64,7 +64,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { AutorouterTraceSimplificationSolver } from "lib/solvers/AutorouterTraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -267,8 +267,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
-  traceSimplificationSolver?: AutorouterTraceSimplificationSolver
-  mutatedPreloadedTraceSimplificationSolver?: AutorouterTraceSimplificationSolver
+  traceSimplificationSolver?: TraceSimplificationSolver
+  mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -695,7 +695,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "traceSimplificationSolver",
-      AutorouterTraceSimplificationSolver,
+      TraceSimplificationSolver,
       (cms) => {
         const preloadedHdRoutes = cms
           .getPreloadedTraceUpdatesAfterHighDensity()
@@ -739,18 +739,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            enableVertexShortcuts: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
               cms.srj.layerCount,
             ),
+            iterations: 3,
           },
         ]
       },
     ),
     definePipelineStep(
       "mutatedPreloadedTraceSimplificationSolver",
-      AutorouterTraceSimplificationSolver,
+      TraceSimplificationSolver,
       (cms) => {
         const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
         const editableHdRoutes = preparedSections.sections.map(
@@ -777,7 +780,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            enableVertexShortcuts: true,
             preserveRouteEndpoints: true,
+            iterations: 3,
           },
         ]
       },
