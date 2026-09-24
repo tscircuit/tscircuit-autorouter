@@ -3,7 +3,7 @@ import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "lib/autoro
 import type { SimpleRouteJson } from "lib/types"
 import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
 
-test.failing(
+test(
   "pipeline 9 rejects a terminal outside bounds recomputed from the outline",
   (): void => {
     const input: SimpleRouteJson = {
