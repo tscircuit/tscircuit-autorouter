@@ -17,13 +17,19 @@ test("partial nudges reject new pairs, worsened gaps, and unproven continuity", 
   const before = [clearance, overlap]
   expect(canPublishIndependentClearanceRepairs(before, [overlap])).toBe(true)
   expect(canPublishIndependentClearanceRepairs(before, [clearance])).toBe(true)
-  expect(canPublishIndependentClearanceRepairs(before, [
-    { ...clearance, actual_clearance: 0.08 },
-  ])).toBe(false)
-  expect(canPublishIndependentClearanceRepairs(before, [
-    { ...clearance, pcb_via_id: "new_via" },
-  ])).toBe(false)
-  expect(canPublishIndependentClearanceRepairs(before, [
-    { type: "pcb_trace_error", pcb_trace_error_id: "missing_connection" },
-  ])).toBe(false)
+  expect(
+    canPublishIndependentClearanceRepairs(before, [
+      { ...clearance, actual_clearance: 0.08 },
+    ]),
+  ).toBe(false)
+  expect(
+    canPublishIndependentClearanceRepairs(before, [
+      { ...clearance, pcb_via_id: "new_via" },
+    ]),
+  ).toBe(false)
+  expect(
+    canPublishIndependentClearanceRepairs(before, [
+      { type: "pcb_trace_error", pcb_trace_error_id: "missing_connection" },
+    ]),
+  ).toBe(false)
 })

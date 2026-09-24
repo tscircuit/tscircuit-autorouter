@@ -15,8 +15,14 @@ test("bounded repair retains a pad nudge while an unrelated crossing remains", (
   const original = structuredClone(fixture.routes)
   const before = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
   const beforeErrors = Array.isArray(before) ? before : before.errors
-  expect(beforeErrors.some((error) => error.type === "pcb_pad_trace_clearance_error")).toBe(true)
-  expect(beforeErrors.some((error) => error.type === "pcb_trace_error")).toBe(true)
+  expect(
+    beforeErrors.some(
+      (error) => error.type === "pcb_pad_trace_clearance_error",
+    ),
+  ).toBe(true)
+  expect(beforeErrors.some((error) => error.type === "pcb_trace_error")).toBe(
+    true,
+  )
   const result = applyPipeline9BoundedRegionalRepairs({
     ...fixture,
     budget: { maxRegions: 1, maxCandidateAttempts: 1, maxPathSearchNodes: 1 },
@@ -24,8 +30,12 @@ test("bounded repair retains a pad nudge while an unrelated crossing remains", (
   const after = fixture.drcEvaluator({ traces: [], routes: result.routes })
   const afterErrors = Array.isArray(after) ? after : after.errors
   expect(afterErrors.length).toBeLessThan(beforeErrors.length)
-  expect(afterErrors.some((error) => error.type === "pcb_trace_error")).toBe(true)
-  expect(afterErrors.some((error) => error.type === "pcb_pad_trace_clearance_error")).toBe(false)
+  expect(afterErrors.some((error) => error.type === "pcb_trace_error")).toBe(
+    true,
+  )
+  expect(
+    afterErrors.some((error) => error.type === "pcb_pad_trace_clearance_error"),
+  ).toBe(false)
   expect(result.publishedDrcIssueCount).toBe(afterErrors.length)
   expect(result.repaired).toBe(false)
   expect(fixture.routes).toEqual(original)

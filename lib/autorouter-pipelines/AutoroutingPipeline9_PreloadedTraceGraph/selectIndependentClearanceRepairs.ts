@@ -93,12 +93,8 @@ export const selectIndependentClearanceRepairs = ({
       const b = proposed.route[pi]!
       const oldA = original.route[pi - 1]!
       const oldB = original.route[pi]!
-      if (
-        a.x === oldA.x &&
-        a.y === oldA.y &&
-        b.x === oldB.x &&
-        b.y === oldB.y
-      ) continue
+      if (a.x === oldA.x && a.y === oldA.y && b.x === oldB.x && b.y === oldB.y)
+        continue
       changed = true
       if (a.z !== b.z) {
         throw new Error("Partial clearance projection moved a layer transition")
@@ -122,7 +118,13 @@ export const selectIndependentClearanceRepairs = ({
     if (!changed || blocked) continue
     selected[ri] = proposed
     traces[ri] = toTrace(proposed, ri)
-    index = new SpatialObstacleIndex(indexInput, traces, undefined, [], resolver)
+    index = new SpatialObstacleIndex(
+      indexInput,
+      traces,
+      undefined,
+      [],
+      resolver,
+    )
   }
   return selected
 }

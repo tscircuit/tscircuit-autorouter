@@ -4,11 +4,13 @@ import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounde
 
 test("partial projection cannot independently move a member of a matched group", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
-  fixture.originalSrj.buses = [{
-    busId: "matched",
-    name: "matched",
-    connectionNames: ["signal"],
-  }]
+  fixture.originalSrj.buses = [
+    {
+      busId: "matched",
+      name: "matched",
+      connectionNames: ["signal"],
+    },
+  ]
   const proposedRoutes = structuredClone(fixture.routes)
   proposedRoutes[0]!.route[1]!.y = 1
   const selected = selectIndependentClearanceRepairs({

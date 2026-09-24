@@ -31,7 +31,9 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
-  expect(solver.pipelineDef.at(-1)?.solverName).toBe("powerTraceExpansionSolver")
+  expect(solver.pipelineDef.at(-1)?.solverName).toBe(
+    "powerTraceExpansionSolver",
+  )
 
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,

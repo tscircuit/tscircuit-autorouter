@@ -5,7 +5,8 @@ import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounde
 test("the existing projection opens a via gap without moving drills or unrelated crossings", (): void => {
   const fixture = createBoundedRegionalRepairFixture(2)
   fixture.originalSrj.obstacles = fixture.originalSrj.obstacles.filter(
-    (obstacle) => obstacle.circuitJsonMetadata?.pcb_smtpad_id !== "foreign_pad_0",
+    (obstacle) =>
+      obstacle.circuitJsonMetadata?.pcb_smtpad_id !== "foreign_pad_0",
   )
   fixture.routes[0]!.route = [
     { x: -4, y: 0, z: 0 },
@@ -47,13 +48,20 @@ test("the existing projection opens a via gap without moving drills or unrelated
   })
   const original = structuredClone(fixture.routes)
   const before = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
-  expect((Array.isArray(before) ? before : before.errors).some(
-    (error) => error.type === "pcb_via_trace_clearance_error",
-  )).toBe(true)
-  const routes = applyPipeline9ClearanceProjection({ ...fixture, allowPartialRepair: true })
+  expect(
+    (Array.isArray(before) ? before : before.errors).some(
+      (error) => error.type === "pcb_via_trace_clearance_error",
+    ),
+  ).toBe(true)
+  const routes = applyPipeline9ClearanceProjection({
+    ...fixture,
+    allowPartialRepair: true,
+  })
   const after = fixture.drcEvaluator({ traces: [], routes })
   const errors = Array.isArray(after) ? after : after.errors
-  expect(errors.some((error) => error.type === "pcb_via_trace_clearance_error")).toBe(false)
+  expect(
+    errors.some((error) => error.type === "pcb_via_trace_clearance_error"),
+  ).toBe(false)
   expect(errors.some((error) => error.type === "pcb_trace_error")).toBe(true)
   expect(routes[1]).toEqual(original[1])
   expect(routes[2]).toEqual(original[2])
