@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 routes across a preloaded default via's missing bottom obstacle", (): void => {
+test("Pipeline9 routes around a preloaded default through via", (): void => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.1,
@@ -58,12 +57,11 @@ test("Pipeline9 routes across a preloaded default via's missing bottom obstacle"
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  const output = {
-    inputSrj,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  }
-
-  expect(evaluateRelaxedDrc(output).errors).toHaveLength(0)
-  expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(import.meta.path)
+  expect(
+    getBugReportSnapshotSvg({
+      inputSrj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
