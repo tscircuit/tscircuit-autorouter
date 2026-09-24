@@ -1,0 +1,28 @@
+[
+  {
+    "case": "coincident-distinct-terminals",
+    "terminals": 3,
+    "edges": 1,
+    "reachableTerminals": 2,
+    "solved": true,
+    "failed": false
+  },
+  {
+    "case": "two-separated-clusters",
+    "terminals": 22,
+    "edges": 20,
+    "reachableTerminals": 11,
+    "solved": true,
+    "failed": false
+  }
+]
+{
+  "nonminimal": {
+    "sample": 0,
+    "seed": 1,
+    "terminals": 64,
+    "actual": 6672.322523444581,
+    "expected": 5316.590426306168
+  }
+}
+Confirmed known counterexamples; this is not a passing correctness check.

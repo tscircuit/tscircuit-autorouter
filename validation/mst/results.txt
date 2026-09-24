@@ -1,0 +1,25 @@
+[
+  {
+    "case": "coincident-distinct-terminals",
+    "terminals": 3,
+    "edges": 2,
+    "reachableTerminals": 3,
+    "solved": true,
+    "failed": false
+  },
+  {
+    "case": "two-separated-clusters",
+    "terminals": 22,
+    "edges": 21,
+    "reachableTerminals": 22,
+    "solved": true,
+    "failed": false
+  }
+]
+{
+  "seed": 1,
+  "terminals": 64,
+  "actual": 5316.590426306168,
+  "expected": 5316.590426306168
+}
+All original counterexamples now satisfy connectivity and weight checks.
