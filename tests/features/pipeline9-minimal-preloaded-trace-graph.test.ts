@@ -169,7 +169,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   })
   expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(3)
   expect(
-    solver.mutatedPreloadedTraceSimplificationSolver?.simplificationPipelineLoops,
+    solver.mutatedPreloadedTraceSimplificationSolver
+      ?.simplificationPipelineLoops,
   ).toBe(3)
   expect(immutableRoutes?.length).toBeGreaterThan(0)
   expect(

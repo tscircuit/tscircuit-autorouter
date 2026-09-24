@@ -24,7 +24,9 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
-  expect(errors).toHaveLength(141)
+  // Simplification reduces the previous 141 issues; the optimized route
+  // differs slightly between Linux and macOS, as do other routing snapshots.
+  expect(errors).toHaveLength(process.platform === "linux" ? 55 : 56)
 
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,

@@ -27,7 +27,8 @@ test("Pipeline9 cleans SRJ18 sample 5 bends and revisits removable vias", async 
         point.route_type !== "wire" ||
         next?.route_type !== "wire" ||
         point.layer !== next.layer
-      ) continue
+      )
+        continue
       traceLengthMm += Math.hypot(next.x - point.x, next.y - point.y)
       const afterNext = trace.route[index + 2]
       if (
@@ -37,7 +38,8 @@ test("Pipeline9 cleans SRJ18 sample 5 bends and revisits removable vias", async 
           (next.x - point.x) * (afterNext.y - next.y) -
             (next.y - point.y) * (afterNext.x - next.x),
         ) > 1e-8
-      ) bendCount++
+      )
+        bendCount++
     }
   }
 
@@ -51,5 +53,7 @@ test("Pipeline9 cleans SRJ18 sample 5 bends and revisits removable vias", async 
     routedTraces,
   }
   expect(evaluateRelaxedDrc(output).errors).toEqual([])
-  await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(import.meta.path)
+  await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })

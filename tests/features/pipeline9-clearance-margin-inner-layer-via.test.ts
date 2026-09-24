@@ -22,7 +22,13 @@ test("clearance margin follows an inner-layer transition inside a through-hole v
       route: [
         { route_type: "wire", x: -1, y: 0, layer: "top", width: 0.1 },
         { route_type: "wire", x: 0, y: 0, layer: "top", width: 0.1 },
-        { route_type: "via", x: 0, y: 0, from_layer: "top", to_layer: "inner1" },
+        {
+          route_type: "via",
+          x: 0,
+          y: 0,
+          from_layer: "top",
+          to_layer: "inner1",
+        },
         { route_type: "wire", x: 0, y: 0, layer: "inner1", width: 0.1 },
         { route_type: "wire", x: 1, y: 0, layer: "inner1", width: 0.1 },
       ],
@@ -37,9 +43,15 @@ test("clearance margin follows an inner-layer transition inside a through-hole v
       ],
     },
   ]
-  const originalCircuitJson = convertToCircuitJson(srj, traces, { minViaDiameter: 0.3 })
-  const originalVia = originalCircuitJson.find((element) => element.type === "pcb_via")!
-  expect(originalVia).toMatchObject({ layers: ["top", "inner1", "inner2", "bottom"] })
+  const originalCircuitJson = convertToCircuitJson(srj, traces, {
+    minViaDiameter: 0.3,
+  })
+  const originalVia = originalCircuitJson.find(
+    (element) => element.type === "pcb_via",
+  )!
+  expect(originalVia).toMatchObject({
+    layers: ["top", "inner1", "inner2", "bottom"],
+  })
   const candidateTraces = structuredClone(traces)
   for (const point of candidateTraces[0]!.route) {
     if (point.route_type !== "wire" && point.route_type !== "via") {
@@ -47,20 +59,25 @@ test("clearance margin follows an inner-layer transition inside a through-hole v
     }
     point.y -= 0.0195
   }
-  const circuitJson = convertToCircuitJson(srj, candidateTraces, { minViaDiameter: 0.3 })
+  const circuitJson = convertToCircuitJson(srj, candidateTraces, {
+    minViaDiameter: 0.3,
+  })
   const measurement = getPipeline9ClearanceMarginErrors({
     originalCircuitJson,
     circuitJson,
-    targets: [{
-      type: "pcb_via_trace_clearance_error",
-      pcb_trace_id: "signal",
-      pcb_via_id: "via_0",
-      minimum_clearance: 0.1,
-      actual_clearance: 0.08,
-    }],
+    targets: [
+      {
+        type: "pcb_via_trace_clearance_error",
+        pcb_trace_id: "signal",
+        pcb_via_id: "via_0",
+        minimum_clearance: 0.1,
+        actual_clearance: 0.08,
+      },
+    ],
   })
   expect(measurement.status).toBe("measured")
-  if (measurement.status !== "measured") throw new Error("Expected measurable via identity")
+  if (measurement.status !== "measured")
+    throw new Error("Expected measurable via identity")
   expect(measurement.errors).toHaveLength(1)
   expect(measurement.errors[0]!.actual_clearance).toBeCloseTo(0.0995, 10)
   expect(measurement.errors[0]!.center).toEqual({ x: 0, y: -0.0195 })
