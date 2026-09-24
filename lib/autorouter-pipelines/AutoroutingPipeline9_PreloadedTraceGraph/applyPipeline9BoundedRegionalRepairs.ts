@@ -119,7 +119,7 @@ type RepairRegionLocation = {
 
 const REGION_SIZES = [10, 16] as const
 
-/** Retains safe wire nudges; regional reroutes still require guarded publication. */
+/** Searches coupled repairs before publishing independent wire-only improvements. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   connMap,
@@ -185,7 +185,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   const projectedRoutes = applyPipeline9ClearanceProjection({
     originalSrj,
     routes: currentRoutes,
-    allowPartialRepair: true,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
       return drcEvaluator(input)
@@ -201,11 +200,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.referenceValidationCount++
     currentErrors = Array.isArray(reference) ? reference : reference.errors
     result.finalDrcIssueCount = currentErrors.length
-    // Projection has independently validated every changed wire against all
-    // copper. Keep this checkpoint even if a later regional reroute cannot
-    // satisfy the stricter publication rules for topology-changing repairs.
-    result.routes = currentRoutes
-    result.publishedDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
       result.publishedDrcIssueCount = 0
@@ -550,6 +544,35 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   ) {
     result.routes = currentRoutes
     result.publishedDrcIssueCount = currentErrors.length
+    return result
+  }
+  // Independent wire repairs must not replace the coupled search's geometry:
+  // fixing vias and adding slack can block otherwise feasible regional repairs.
+  // When that search cannot publish, select safe nudges from the original input
+  // so private regional changes cannot leak into the partial result.
+  const independentRoutes = applyPipeline9ClearanceProjection({
+    originalSrj,
+    routes,
+    allowPartialRepair: true,
+    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+      result.referenceValidationCount++
+      return drcEvaluator(input)
+    },
+  })
+  if (independentRoutes !== routes) {
+    const independentReference = drcEvaluator({
+      traces: [],
+      routes: independentRoutes,
+      hdRoutes: independentRoutes,
+    })
+    result.referenceValidationCount++
+    const independentErrors = Array.isArray(independentReference)
+      ? independentReference
+      : independentReference.errors
+    result.routes = independentRoutes
+    result.publishedDrcIssueCount = independentErrors.length
+    result.finalDrcIssueCount = independentErrors.length
+    result.repaired = independentErrors.length === 0
   }
   return result
 }
