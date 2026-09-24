@@ -50,11 +50,13 @@ test("Pipeline9 routes the four-layer Game Boy while respecting through-via copp
     expect(via.layers).toEqual(["top", "inner1", "inner2", "bottom"])
   }
 
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
-
   // Keep the complete-board target strict: routing must preserve connectivity
   // and clear every DRC, including copper across the full through-via span.
   expect(errors).toHaveLength(0)
+
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
 })
