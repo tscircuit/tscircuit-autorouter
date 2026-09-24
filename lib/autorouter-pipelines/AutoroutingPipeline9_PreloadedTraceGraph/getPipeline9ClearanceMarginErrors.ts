@@ -95,11 +95,8 @@ export const getPipeline9ClearanceMarginErrors = ({
             segment.x === originalObstacle.x &&
             segment.y === originalObstacle.y &&
             originalObstacle.layers.includes(segment.from_layer) &&
-            originalObstacle.layers.includes(segment.to_layer) &&
-            ((segment.from_layer === originalObstacle.layers[0] &&
-              segment.to_layer === originalObstacle.layers.at(-1)) ||
-              (segment.to_layer === originalObstacle.layers[0] &&
-                segment.from_layer === originalObstacle.layers.at(-1))),
+            // A through-hole drill can span more layers than this route uses.
+            originalObstacle.layers.includes(segment.to_layer),
         )
         .filter(
           ({ segment }, index, all) =>
