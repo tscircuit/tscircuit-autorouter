@@ -9,29 +9,35 @@ test("MST skips witnessed initial connections while preserving net and terminal 
     layerCount: 2,
     minTraceWidth: 0.15,
     obstacles: [],
-    connections: [{
-      name: "net1",
-      nominalTraceWidth: 0.3,
-      __rootConnectionNames: ["root1", "root2"],
-      __netConnectionName: "supply",
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "top", pointId: "a" },
-        { x: 10, y: 0, layer: "top", pointId: "b" },
-        { x: 11, y: 0, layer: "top", pointId: "c" },
-        { x: 20, y: 0, layer: "top", pointId: "d" },
-      ],
-    }],
-    traces: [{
-      type: "pcb_trace",
-      pcb_trace_id: "existing-trace",
-      connection_name: "net1",
-      connectsTo: ["a", "d"],
-      route: [],
-    }],
+    connections: [
+      {
+        name: "net1",
+        nominalTraceWidth: 0.3,
+        __rootConnectionNames: ["root1", "root2"],
+        __netConnectionName: "supply",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pointId: "a" },
+          { x: 10, y: 0, layer: "top", pointId: "b" },
+          { x: 11, y: 0, layer: "top", pointId: "c" },
+          { x: 20, y: 0, layer: "top", pointId: "d" },
+        ],
+      },
+    ],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "existing-trace",
+        connection_name: "net1",
+        connectsTo: ["a", "d"],
+        route: [],
+      },
+    ],
   }
   const before = structuredClone(srj)
   const solver = new NetToPointPairsSolver(
-    srj, {}, getInitiallyConnectedMapFromSimpleRouteJson(srj),
+    srj,
+    {},
+    getInitiallyConnectedMapFromSimpleRouteJson(srj),
   )
   solver.solve()
 
@@ -51,7 +57,9 @@ test("MST skips witnessed initial connections while preserving net and terminal 
     }
   }
   for (let pass = 0; pass < 4; pass++) {
-    for (const { pointsToConnect: [a, b] } of solver.newConnections) {
+    for (const {
+      pointsToConnect: [a, b],
+    } of solver.newConnections) {
       if (reached.has(a.pointId!)) reached.add(b.pointId!)
       if (reached.has(b.pointId!)) reached.add(a.pointId!)
     }

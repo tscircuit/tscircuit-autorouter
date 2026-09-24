@@ -47,6 +47,28 @@ export function buildMinimumSpanningTree<T extends Point>(
 
   if (points.length <= 1) return []
 
+  // Keep the previous Kruskal output convention: orient edges by stable x
+  // order, then emit them by weight. Downstream routing uses this sequence.
+  const orderedIndices = points
+    .map((_, i) => i)
+    .sort((a, b) => points[a].x - points[b].x)
+  const ranks = points.map(() => 0)
+  orderedIndices.forEach((pointIndex, rank) => {
+    ranks[pointIndex] = rank
+  })
+  const compareEndpoints = (
+    fromA: number,
+    toA: number,
+    fromB: number,
+    toB: number,
+  ): number => {
+    const lowerA = Math.min(ranks[fromA], ranks[toA])
+    const lowerB = Math.min(ranks[fromB], ranks[toB])
+    const upperA = Math.max(ranks[fromA], ranks[toA])
+    const upperB = Math.max(ranks[fromB], ranks[toB])
+    return lowerA - lowerB || upperA - upperB
+  }
+
   const visited = points.map(() => false)
   const bestWeights = points.map(() => Infinity)
   const bestFrom = points.map(() => -1)
@@ -56,7 +78,13 @@ export function buildMinimumSpanningTree<T extends Point>(
   for (let iteration = 0; iteration < points.length; iteration++) {
     let next = -1
     for (let i = 0; i < points.length; i++) {
-      if (!visited[i] && (next === -1 || bestWeights[i] < bestWeights[next])) {
+      if (
+        !visited[i] &&
+        (next === -1 ||
+          bestWeights[i] < bestWeights[next] ||
+          (bestWeights[i] === bestWeights[next] &&
+            compareEndpoints(bestFrom[i], i, bestFrom[next], next) < 0))
+      ) {
         next = i
       }
     }
@@ -69,8 +97,8 @@ export function buildMinimumSpanningTree<T extends Point>(
         throw new Error(`MST point ${next} has no predecessor in the tree`)
       }
       mstEdges.push({
-        from: points[from],
-        to: points[next],
+        from: points[ranks[from] < ranks[next] ? from : next],
+        to: points[ranks[from] < ranks[next] ? next : from],
         weight: bestWeights[next],
       })
     }
@@ -83,20 +111,40 @@ export function buildMinimumSpanningTree<T extends Point>(
         points[next].y - points[i].y,
       )
       if (!Number.isFinite(weight)) {
-        throw new Error(`MST distance between points ${next} and ${i} is non-finite`)
+        throw new Error(
+          `MST distance between points ${next} and ${i} is non-finite`,
+        )
       }
-      if (weight < bestWeights[i]) {
+      if (
+        weight < bestWeights[i] ||
+        (weight === bestWeights[i] &&
+          compareEndpoints(next, i, bestFrom[i], i) < 0)
+      ) {
         bestWeights[i] = weight
         bestFrom[i] = next
       }
     }
     for (const edge of extraEdges[next]) {
-      if (!visited[edge.to] && edge.weight < bestWeights[edge.to]) {
+      if (
+        !visited[edge.to] &&
+        (edge.weight < bestWeights[edge.to] ||
+          (edge.weight === bestWeights[edge.to] &&
+            compareEndpoints(next, edge.to, bestFrom[edge.to], edge.to) < 0))
+      ) {
         bestWeights[edge.to] = edge.weight
         bestFrom[edge.to] = next
       }
     }
   }
 
-  return mstEdges
+  return mstEdges.sort(
+    (a, b) =>
+      a.weight - b.weight ||
+      compareEndpoints(
+        pointIndices.get(a.from)!,
+        pointIndices.get(a.to)!,
+        pointIndices.get(b.from)!,
+        pointIndices.get(b.to)!,
+      ),
+  )
 }

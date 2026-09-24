@@ -12,7 +12,10 @@ function kruskalWeight(points: Point[]): number {
       edges.push({
         from: i,
         to: j,
-        weight: Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y),
+        weight: Math.hypot(
+          points[i].x - points[j].x,
+          points[i].y - points[j].y,
+        ),
       })
     }
   }
@@ -45,7 +48,8 @@ test("MST matches a complete-graph oracle on the seeded KD-tree counterexample",
   const edges = buildMinimumSpanningTree(points)
   expect(edges).toHaveLength(points.length - 1)
   expect(edges.reduce((sum, edge) => sum + edge.weight, 0)).toBeCloseTo(
-    kruskalWeight(points), 8,
+    kruskalWeight(points),
+    8,
   )
   expect(points).toEqual(before)
   for (const edge of edges) {

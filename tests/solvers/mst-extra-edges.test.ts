@@ -19,9 +19,13 @@ test("MST uses cheaper extra edges without losing terminal metadata or mutating 
 
   expect(edges).toHaveLength(3)
   expect(edges.reduce((sum, edge) => sum + edge.weight, 0)).toBe(7)
-  expect(edges.some((edge) => edge.weight === 0 &&
-    new Set([edge.from.pointId, edge.to.pointId]).has("d"),
-  )).toBe(true)
+  expect(
+    edges.some(
+      (edge) =>
+        edge.weight === 0 &&
+        new Set([edge.from.pointId, edge.to.pointId]).has("d"),
+    ),
+  ).toBe(true)
   expect({ points, extraEdges }).toEqual(before)
   for (const edge of edges) {
     expect(points.some((point) => point === edge.from)).toBe(true)

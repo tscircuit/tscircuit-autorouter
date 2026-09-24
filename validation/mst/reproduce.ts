@@ -24,7 +24,9 @@ function audit(name: string, points: ConnectionPoint[]): AuditResult {
   }
   const before = structuredClone(srj)
   const solver = new NetToPointPairsSolver(
-    srj, {}, getInitiallyConnectedMapFromSimpleRouteJson(srj),
+    srj,
+    {},
+    getInitiallyConnectedMapFromSimpleRouteJson(srj),
   )
   solver.solve()
   assert.deepEqual(srj, before, "solver mutated caller input")
@@ -39,8 +41,12 @@ function audit(name: string, points: ConnectionPoint[]): AuditResult {
     }
   }
   return {
-    case: name, terminals: points.length, edges: pairs.length,
-    reachableTerminals: reached.size, solved: solver.solved, failed: solver.failed,
+    case: name,
+    terminals: points.length,
+    edges: pairs.length,
+    reachableTerminals: reached.size,
+    solved: solver.solved,
+    failed: solver.failed,
   }
 }
 
@@ -53,13 +59,17 @@ function densePrimWeight(points: ConnectionPoint[]): number {
   for (let iteration = 0; iteration < points.length; iteration++) {
     let next = -1
     for (let i = 0; i < points.length; i++) {
-      if (!used.has(i) && (next === -1 || distance[i] < distance[next])) next = i
+      if (!used.has(i) && (next === -1 || distance[i] < distance[next]))
+        next = i
     }
     assert(next >= 0 && Number.isFinite(distance[next]))
     used.add(next)
     total += distance[next]
     for (let i = 0; i < points.length; i++) {
-      const weight = Math.hypot(points[next].x - points[i].x, points[next].y - points[i].y)
+      const weight = Math.hypot(
+        points[next].x - points[i].x,
+        points[next].y - points[i].y,
+      )
       if (!used.has(i) && weight < distance[i]) distance[i] = weight
     }
   }
@@ -72,7 +82,10 @@ const coincident: ConnectionPoint[] = [
   { x: 1, y: 0, pointId: "c", layer: "top" },
 ]
 const clusters: ConnectionPoint[] = Array.from({ length: 22 }, (_, i) => ({
-  x: i < 11 ? i : 1000 + i, y: 0, pointId: `p${i}`, layer: "top",
+  x: i < 11 ? i : 1000 + i,
+  y: 0,
+  pointId: `p${i}`,
+  layer: "top",
 }))
 const identityResult = audit("coincident-distinct-terminals", coincident)
 const clusterResult = audit("two-separated-clusters", clusters)
@@ -85,7 +98,7 @@ for (const result of [identityResult, clusterResult]) {
   assert.equal(result.failed, false)
 }
 const clusterEdges = buildMinimumSpanningTree(clusters)
-assert(clusterEdges.some((e) => (e.from.x < 11) !== (e.to.x < 11)))
+assert(clusterEdges.some((e) => e.from.x < 11 !== e.to.x < 11))
 console.log(JSON.stringify([identityResult, clusterResult], null, 2))
 
 // The original deterministic counterexample must now have optimal weight.
@@ -103,6 +116,17 @@ const actual = edges.reduce((sum, e) => sum + e.weight, 0)
 const expected = densePrimWeight(points)
 assert.equal(edges.length, points.length - 1)
 assert(Math.abs(actual - expected) < 1e-8)
-assert.equal(audit("connected-minimal", points).reachableTerminals, points.length)
-console.log(JSON.stringify({ seed: 1, terminals: points.length, actual, expected }, null, 2))
-console.log("All original counterexamples now satisfy connectivity and weight checks.")
+assert.equal(
+  audit("connected-minimal", points).reachableTerminals,
+  points.length,
+)
+console.log(
+  JSON.stringify(
+    { seed: 1, terminals: points.length, actual, expected },
+    null,
+    2,
+  ),
+)
+console.log(
+  "All original counterexamples now satisfy connectivity and weight checks.",
+)

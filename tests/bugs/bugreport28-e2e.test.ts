@@ -13,22 +13,29 @@ test("bugreport28", () => {
 
   solver.solve()
 
-  // Check that the fix worked - mst2 should not have an excessively long path
-  const traces = solver.traceSimplificationSolver?.simplifiedHdRoutes || []
-  const mst2Trace = traces.find(
-    (t: any) => t.connectionName === "source_net_1_mst2",
+  // Identify the original vertical pair by its terminals: MST enumeration can
+  // change when the spanning-tree algorithm changes.
+  const verticalConnection = solver.netToPointPairsSolver?.newConnections.find(
+    (connection) =>
+      connection.pointsToConnect.length === 2 &&
+      connection.pointsToConnect.some(
+        (point) => point.pointId === "pcb_port_34",
+      ) &&
+      connection.pointsToConnect.some(
+        (point) => point.pointId === "pcb_port_38",
+      ),
   )
-  if (mst2Trace) {
-    // mst2 connects points that are close vertically, so it shouldn't need 30+ points
-    // expect(mst2Trace.route.length).toBeLessThan(10)
+  expect(verticalConnection).toBeDefined()
+  const verticalTrace =
+    solver.traceSimplificationSolver?.simplifiedHdRoutes.find(
+      (trace) => trace.connectionName === verticalConnection!.name,
+    )
+  expect(verticalTrace).toBeDefined()
 
-    // Check that the path doesn't deviate too far horizontally
-    const minX = Math.min(...mst2Trace.route.map((p: any) => p.x))
-    const maxX = Math.max(...mst2Trace.route.map((p: any) => p.x))
-    const horizontalSpan = maxX - minX
-    // For a vertical connection, horizontal span should be small
-    expect(horizontalSpan).toBeLessThan(5) // Allow some tolerance
-  }
+  const minX = Math.min(...verticalTrace!.route.map((point) => point.x))
+  const maxX = Math.max(...verticalTrace!.route.map((point) => point.x))
+  const horizontalSpan = maxX - minX
+  expect(horizontalSpan).toBeLessThan(5)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
