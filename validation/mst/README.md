@@ -125,8 +125,23 @@ installation honoring `lean-toolchain` is sufficient.
   `@tscircuit/trace-simplification-solver`, `@tscircuit/repair04`, and
   `@tscircuit/high-density-a13`, plus type errors in
   `PortfolioSingleIntraNodeSolver.ts`. Full build and full-suite validation
-  remain unconfirmed.
+  are covered separately by GitHub CI on the PR.
 
-Prim may choose different edge orientations/order and different trees when
-weights tie, so downstream routing and visual snapshots can change even when
-both old and new trees were optimal. No snapshot updates are included.
+Prim uses a stable coordinate orientation and weight ordering to retain the
+previous downstream routing convention. Exact candidate coverage and terminal
+identity can still change the selected tree. Fifteen snapshots that failed on
+Linux CI were refreshed; passing snapshots were left unchanged.
+
+CI exposed downstream data-flow problems now covered by focused regressions:
+coincident stitch targets retain their layer identity; borrowed same-net branches
+must be eligible for the requested terminal pair; through-hole via matching
+accepts inner-layer route transitions inside the drill span; and an accepted
+reference-clean repair resets the final DRC error count. The SRJ18 integration
+tests now check the valid routing/repair result without depending on the old MST
+edge numbering or topology. The deterministic direct legal-layer retry test
+continues to require an actual retry.
+
+Linux validation includes the previously failing SRJ18 samples 8 and 9, the
+Game Boy board, DRC identity checks, and the affected snapshot tests. GitHub CI
+build, formatting, and type checks have passed. Complete CI status is recorded
+on [PR #2717](https://github.com/tscircuit/tscircuit-autorouter/pull/2717).
