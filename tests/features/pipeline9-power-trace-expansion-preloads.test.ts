@@ -1,3 +1,4 @@
+import { LocalDrcRepairSolver } from "lib/solvers/LocalDrcRepairSolver/LocalDrcRepairSolver"
 import { expect, test } from "bun:test"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
@@ -62,7 +63,7 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   const newlyRoutedTraces: SimplifiedPcbTraces = [
     createTrace("new-route", "NEW", 3),
   ]
-  const powerStep = solver.pipelineDef.at(-1)!
+  const powerStep = solver.pipelineDef.find((step) => step.solverName === "powerTraceExpansionSolver")!
 
   expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
     "Cannot get output before solving is complete",
@@ -71,7 +72,7 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
     "Cannot get output before solving is complete",
   )
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
-  expect(solver.pipelineDef.at(-2)?.solverName).toBe(
+  expect(solver.pipelineDef.at(-3)?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",
   )
   solver.getNewTracesBeforePowerExpansion = () => newlyRoutedTraces
@@ -103,6 +104,13 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   expansionSolver.solve()
   expect(expansionSolver.failed).toBeFalse()
   solver.powerTraceExpansionSolver = expansionSolver
+  solver.localDrcRepairSolver = new LocalDrcRepairSolver({
+    originalSrj: srj,
+    srjWithPointPairs: srj,
+    traces: expansionSolver.getOutput(),
+    fixedTraces: input.fixedTraces,
+  })
+  solver.localDrcRepairSolver.solve()
   solver.solved = true
 
   const simplifiedOutput = solver.getOutputSimplifiedPcbTraces()

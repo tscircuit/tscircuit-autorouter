@@ -1,3 +1,4 @@
+import { LocalDrcRepairSolver } from "lib/solvers/LocalDrcRepairSolver/LocalDrcRepairSolver"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -271,6 +272,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  localDrcRepairSolver?: LocalDrcRepairSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -973,6 +975,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "localDrcRepairSolver",
+      LocalDrcRepairSolver,
+      (cms) => [{
+        originalSrj: cms.originalSrj,
+        srjWithPointPairs: cms.srjWithPointPairs!,
+        traces: cms.powerTraceExpansionSolver!.getOutput(),
+        fixedTraces: cms.getPowerTraceExpansionFixedTraces(),
+      }],
+    ),
   ]
 
   constructor(
@@ -1071,7 +1083,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
-      pipelineStepDef.solverName === "powerTraceExpansionSolver"
+      pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
+      pipelineStepDef.solverName === "localDrcRepairSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1126,7 +1139,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.mutatedPreloadedTraceSimplificationSolver?.visualize()
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
-    const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
+    const powerTraceExpansionViz =
+      this.localDrcRepairSolver?.visualize() ??
+      this.powerTraceExpansionSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -1515,16 +1530,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.localDrcRepairSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the local DRC repair solver",
       )
     }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.localDrcRepairSolver.getOutput(),
     ]
   }
 
@@ -1532,14 +1547,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.localDrcRepairSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the local DRC repair solver",
       )
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.localDrcRepairSolver.getOutput(),
     ]
     return {
       ...this.originalSrj,
