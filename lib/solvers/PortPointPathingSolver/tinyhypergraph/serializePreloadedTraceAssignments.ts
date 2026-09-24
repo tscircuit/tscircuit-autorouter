@@ -145,6 +145,7 @@ const getEndpointRegionId = (
  */
 export const serializePreloadedTraceAssignments = (
   serializedHyperGraph: SerializedHyperGraph,
+  layerCount: number,
 ): SerializedPreloadedTraceStats => {
   const orderedPortsByTraceId = new Map<string, OrderedTracePort[]>()
   const fixedNetIdByTraceId = new Map<string, string>()
@@ -171,9 +172,33 @@ export const serializePreloadedTraceAssignments = (
       })
       .map((region) => region.regionId),
   )
+  const serializedRegionById = new Map(
+    serializedHyperGraph.regions.map((region) => [region.regionId, region]),
+  )
+  const preserveObstacleAdjacentTerminals = layerCount === 1
+  const assignmentRangeByTraceId = new Map<
+    string,
+    { min: number; max: number }
+  >()
+  for (const port of serializedHyperGraph.ports) {
+    const metadata = port.d as PortMetadataWithPreloadedAssignments | undefined
+    for (const assignment of metadata?._preloadedTracePortAssignments ?? []) {
+      const range = assignmentRangeByTraceId.get(assignment.traceId)
+      assignmentRangeByTraceId.set(assignment.traceId, {
+        min: Math.min(
+          range?.min ?? assignment.routePosition,
+          assignment.routePosition,
+        ),
+        max: Math.max(
+          range?.max ?? assignment.routePosition,
+          assignment.routePosition,
+        ),
+      })
+    }
+  }
   let preloadedPortCount = 0
 
-  for (const port of serializedHyperGraph.ports) {
+  for (const port of [...serializedHyperGraph.ports]) {
     const metadata = port.d as PortMetadataWithPreloadedAssignments | undefined
     const assignments = metadata?._preloadedTracePortAssignments ?? []
     if (assignments.length > 0) preloadedPortCount++
@@ -181,6 +206,74 @@ export const serializePreloadedTraceAssignments = (
       removedObstacleRegionIds.has(port.region1Id) ||
       removedObstacleRegionIds.has(port.region2Id)
     ) {
+      if (!preserveObstacleAdjacentTerminals) continue
+      const routableRegionId = getIncidentRegionIds(port).find(
+        (regionId) => !removedObstacleRegionIds.has(regionId),
+      )
+      if (!routableRegionId) continue
+      const routableRegion = serializedRegionById.get(routableRegionId)
+      if (!routableRegion) continue
+
+      // A preloaded trace that terminates at a pad crosses a port shared by a
+      // routable region and a region that the tiny graph removes as an
+      // obstacle. Mirror that crossing onto a private terminal region. This
+      // preserves the terminal-to-boundary copper without making the entire
+      // obstacle region routable or retaining unrelated obstacle ports.
+      for (const assignment of assignments) {
+        const assignmentRange = assignmentRangeByTraceId.get(assignment.traceId)
+        if (
+          !assignmentRange ||
+          (Math.abs(assignment.routePosition - assignmentRange.min) >
+            ROUTE_POSITION_TOLERANCE &&
+            Math.abs(assignment.routePosition - assignmentRange.max) >
+              ROUTE_POSITION_TOLERANCE)
+        ) {
+          continue
+        }
+        const terminalIdentity = JSON.stringify([
+          assignment.traceId,
+          port.portId,
+          assignment.routePosition,
+          assignment.z,
+        ])
+        const terminalRegionId = `tiny-preloaded-terminal-region:${terminalIdentity}`
+        const terminalPortId = `tiny-preloaded-terminal-port:${terminalIdentity}`
+        const terminalPort: SerializedPort = {
+          ...port,
+          portId: terminalPortId,
+          region1Id: routableRegionId,
+          region2Id: terminalRegionId,
+          d: {
+            ...port.d,
+            portId: terminalPortId,
+            _tinyTerminal: true,
+            _preloadedFixedNetIds: [assignment.fixedNetId],
+            _preloadedTracePortAssignments: [assignment],
+          },
+        }
+        const x = Number(port.d?.x ?? 0)
+        const y = Number(port.d?.y ?? 0)
+        const terminalRegion: SerializedRegion = {
+          regionId: terminalRegionId,
+          pointIds: [terminalPortId],
+          d: {
+            capacityMeshNodeId: terminalRegionId,
+            center: { x, y },
+            width: 1e-6,
+            height: 1e-6,
+            availableZ: [assignment.z],
+            _containsTarget: true,
+            _tinyTerminal: true,
+            _tinyTerminalNetId: assignment.fixedNetId,
+          },
+        }
+        serializedHyperGraph.ports.push(terminalPort)
+        serializedHyperGraph.regions.push(terminalRegion)
+        routableRegion.pointIds.push(terminalPortId)
+        const orderedPorts = orderedPortsByTraceId.get(assignment.traceId) ?? []
+        orderedPorts.push({ port: terminalPort, assignment })
+        orderedPortsByTraceId.set(assignment.traceId, orderedPorts)
+      }
       continue
     }
 
