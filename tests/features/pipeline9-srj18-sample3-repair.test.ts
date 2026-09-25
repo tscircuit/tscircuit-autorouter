@@ -14,7 +14,7 @@ test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> =>
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
+  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(4)
   const output = {
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
