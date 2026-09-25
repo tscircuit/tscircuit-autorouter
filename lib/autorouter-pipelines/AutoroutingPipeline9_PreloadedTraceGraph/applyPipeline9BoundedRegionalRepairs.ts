@@ -18,6 +18,7 @@ import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionNa
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
+import { applyPipeline9IndependentWireDetours } from "./applyPipeline9IndependentWireDetours"
 import { applyPipeline9IndependentViaMerges } from "./applyPipeline9IndependentViaMerges"
 
 export type Pipeline9BoundedRegionalRepairResult = {
@@ -181,6 +182,37 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   result.finalDrcIssueCount = currentErrors.length
   if (currentErrors.length === 0) {
     return result
+  }
+
+  // Fixed-endpoint wires have no vertex for the projection to move. Try
+  // their independent paths before coupled searches consume the shared budget.
+  // These candidates clear all foreign copper, so they remain publishable even
+  // when the later coupled search cannot publish its private geometry.
+  const detours = applyPipeline9IndependentWireDetours({
+    originalSrj,
+    routes,
+    maxCandidateAttempts: budget.maxCandidateAttempts,
+    maxPathSearchNodes: budget.maxPathSearchNodes,
+    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+      result.referenceValidationCount++
+      return drcEvaluator(input)
+    },
+  })
+  result.candidateAttemptCount += detours.candidateAttempts
+  result.pathSearchNodeCount += detours.pathSearchNodes
+  if (detours.routes !== routes) {
+    routes = detours.routes
+    currentRoutes = routes
+    result.routes = routes
+    reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
+    result.referenceValidationCount++
+    currentErrors = Array.isArray(reference) ? reference : reference.errors
+    result.publishedDrcIssueCount = currentErrors.length
+    result.finalDrcIssueCount = currentErrors.length
+    if (currentErrors.length === 0) {
+      result.repaired = true
+      return result
+    }
   }
 
   const projectedRoutes = applyPipeline9ClearanceProjection({
