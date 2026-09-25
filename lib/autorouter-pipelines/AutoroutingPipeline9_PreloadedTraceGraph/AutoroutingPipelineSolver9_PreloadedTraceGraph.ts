@@ -64,7 +64,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolverWithEffort } from "lib/solvers/TraceSimplificationSolverWithEffort"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -267,8 +267,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
-  traceSimplificationSolver?: TraceSimplificationSolverWithEffort
-  mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolverWithEffort
+  traceSimplificationSolver?: TraceSimplificationSolver
+  mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -695,7 +695,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "traceSimplificationSolver",
-      TraceSimplificationSolverWithEffort,
+      TraceSimplificationSolver,
       (cms) => {
         const preloadedHdRoutes = cms
           .getPreloadedTraceUpdatesAfterHighDensity()
@@ -744,14 +744,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.srj.obstacles,
               cms.srj.layerCount,
             ),
-            effort: cms.effort,
+            iterations: 2,
           },
         ]
       },
     ),
     definePipelineStep(
       "mutatedPreloadedTraceSimplificationSolver",
-      TraceSimplificationSolverWithEffort,
+      TraceSimplificationSolver,
       (cms) => {
         const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
         const editableHdRoutes = preparedSections.sections.map(
@@ -779,7 +779,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
             enableCrossingViaReduction: true,
             preserveRouteEndpoints: true,
-            effort: cms.effort,
+            iterations: 2,
           },
         ]
       },
@@ -1069,6 +1069,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (this.activeSubSolver instanceof TraceSimplificationSolver) {
+      this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
+      )
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
