@@ -12,7 +12,7 @@ test("rectangular and rotated hole clearance includes the routed copper width", 
   ]) {
     for (const angle of [0, 37, 90]) {
       const srj = structuredClone(fixture) as SimpleRouteJson
-      srj.minTraceToHoleClearance = 0.2
+      srj.minTraceToHoleEdgeClearance = 0.2
       srj.minTraceWidth = 0.4
       srj.connections[0]!.nominalTraceWidth = 0.4
       const hole = srj.obstacles[2]!

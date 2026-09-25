@@ -5,7 +5,7 @@ import fixture from "./fixtures/hole-clearance/npth.srj.json"
 
 test("hole validation measures copper edges on occupied layers including wire-to-via segments", (): void => {
   const srj = structuredClone(fixture) as SimpleRouteJson
-  srj.minTraceToHoleClearance = 0.2
+  srj.minTraceToHoleEdgeClearance = 0.2
   const hole = srj.obstacles[2]!
   hole.isHole = true
   hole.shape = "circle"

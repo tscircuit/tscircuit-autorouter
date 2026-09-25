@@ -10,7 +10,7 @@ test("a saved trace violating NPTH clearance cannot be reported as solved", (): 
     AutoroutingPipelineSolver9_PreloadedTraceGraph,
   ]) {
     const srj = structuredClone(fixture) as SimpleRouteJson
-    srj.minTraceToHoleClearance = 0.2
+    srj.minTraceToHoleEdgeClearance = 0.2
     srj.obstacles[2]!.isHole = true
     srj.obstacles[2]!.shape = "circle"
     srj.traces = [
@@ -30,7 +30,9 @@ test("a saved trace violating NPTH clearance cannot be reported as solved", (): 
     expect(solver.failed).toBe(true)
     expect(solver.error).toContain("saved_trace_too_close_to_hole")
     expect(solver.error).toContain("0.025000 mm")
-    expect(solver.error).toContain("minTraceToHoleClearance requires 0.2 mm")
+    expect(solver.error).toContain(
+      "minTraceToHoleEdgeClearance requires 0.2 mm",
+    )
     expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow()
   }
 })

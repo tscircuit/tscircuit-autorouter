@@ -1,7 +1,7 @@
 # Trace clearance to non-plated holes
 
 Pipeline 7 (the default autorouter) and Pipeline 9 accept
-`minTraceToHoleClearance` in SimpleRouteJson. The value is a finite, non-negative
+`minTraceToHoleEdgeClearance` in SimpleRouteJson. The value is a finite, non-negative
 distance in millimeters, measured from the trace copper edge to the hole edge.
 
 ```ts
@@ -16,7 +16,7 @@ const srj: SimpleRouteJson = {
       { x: 5, y: 0, layer: "top" },
     ],
   }],
-  minTraceToHoleClearance: 0.2,
+  minTraceToHoleEdgeClearance: 0.2,
   obstacles: [
     {
       type: "rect",

@@ -8,11 +8,11 @@ import type { Obstacle, SimpleRouteJson } from "lib/types"
 export function createSrjWithHoleClearance(
   srj: SimpleRouteJson,
 ): SimpleRouteJson {
-  const clearance = srj.minTraceToHoleClearance
+  const clearance = srj.minTraceToHoleEdgeClearance
   if (clearance === undefined) return srj
   if (!Number.isFinite(clearance) || clearance < 0) {
     throw new Error(
-      "minTraceToHoleClearance must be a finite non-negative distance in mm",
+      "minTraceToHoleEdgeClearance must be a finite non-negative distance in mm",
     )
   }
 

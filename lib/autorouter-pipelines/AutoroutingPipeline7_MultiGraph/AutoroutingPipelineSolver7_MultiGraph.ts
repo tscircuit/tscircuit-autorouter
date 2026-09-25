@@ -896,7 +896,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (this.originalSrj.minTraceToHoleClearance !== undefined) {
+      if (this.originalSrj.minTraceToHoleEdgeClearance !== undefined) {
         if (!this.powerTraceExpansionSolver) {
           throw new Error(
             "Hole clearance validation requires final power-trace expansion output",

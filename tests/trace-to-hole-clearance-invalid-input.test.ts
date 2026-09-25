@@ -6,10 +6,10 @@ import fixture from "./fixtures/hole-clearance/npth.srj.json"
 test("invalid NPTH rules and hole geometry fail at the input boundary", (): void => {
   const srj = structuredClone(fixture) as SimpleRouteJson
   for (const value of [-0.2, NaN, Infinity]) {
-    srj.minTraceToHoleClearance = value
+    srj.minTraceToHoleEdgeClearance = value
     expect(() => createSrjWithHoleClearance(srj)).toThrow("finite non-negative")
   }
-  srj.minTraceToHoleClearance = 0.2
+  srj.minTraceToHoleEdgeClearance = 0.2
   const hole = srj.obstacles[2]!
   hole.isHole = true
   hole.connectedTo = ["signal"]

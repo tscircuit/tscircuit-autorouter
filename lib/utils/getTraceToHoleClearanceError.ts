@@ -9,7 +9,7 @@ export function getTraceToHoleClearanceError(
   srj: SimpleRouteJson,
   traces: SimplifiedPcbTraces,
 ): string | null {
-  const required = srj.minTraceToHoleClearance
+  const required = srj.minTraceToHoleEdgeClearance
   if (required === undefined) return null
   const holes = srj.obstacles.filter((obstacle) => obstacle.isHole)
   for (const trace of traces) {
@@ -65,7 +65,7 @@ export function getTraceToHoleClearanceError(
         if (clearance < required - 1e-6) {
           const name =
             hole.obstacleId ?? `hole at (${hole.center.x}, ${hole.center.y})`
-          return `Trace ${trace.pcb_trace_id} segment ${index - 1} on ${wire.layer} has ${clearance.toFixed(6)} mm clearance to ${name}; minTraceToHoleClearance requires ${required} mm`
+          return `Trace ${trace.pcb_trace_id} segment ${index - 1} on ${wire.layer} has ${clearance.toFixed(6)} mm clearance to ${name}; minTraceToHoleEdgeClearance requires ${required} mm`
         }
       }
     }

@@ -16,7 +16,7 @@ test("hole clearance preserves legacy routing and does not identify arbitrary ke
       { clearance: 0.5, isHole: false },
     ]) {
       const srj = structuredClone(fixture) as SimpleRouteJson
-      srj.minTraceToHoleClearance = options.clearance
+      srj.minTraceToHoleEdgeClearance = options.clearance
       srj.obstacles[2]!.isHole = options.isHole
       const solver = new Solver(srj, { cacheProvider: null })
       solver.solve()

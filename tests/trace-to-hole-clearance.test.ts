@@ -13,7 +13,7 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     let previousRoute = ""
     for (const clearance of [0, 0.2, 0.5]) {
       const srj = structuredClone(fixture) as SimpleRouteJson
-      srj.minTraceToHoleClearance = clearance
+      srj.minTraceToHoleEdgeClearance = clearance
       const hole = srj.obstacles.find((o) => o.connectedTo.length === 0)!
       hole.isHole = true
       hole.shape = "circle"

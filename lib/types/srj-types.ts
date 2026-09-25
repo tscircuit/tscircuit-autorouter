@@ -76,7 +76,7 @@ export interface SimpleRouteJson {
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
   /** Minimum trace copper edge to non-plated hole edge distance in mm. */
-  minTraceToHoleClearance?: number
+  minTraceToHoleEdgeClearance?: number
   minBoardEdgeClearance?: number
   minViaEdgeToPadEdgeClearance?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
