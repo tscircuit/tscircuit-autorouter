@@ -739,12 +739,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            enableVertexShortcuts: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
               cms.srj.layerCount,
             ),
-            iterations: 2,
+            iterations: 3,
           },
         ]
       },
@@ -778,8 +780,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            enableVertexShortcuts: true,
             preserveRouteEndpoints: true,
-            iterations: 2,
+            iterations: 3,
           },
         ]
       },
