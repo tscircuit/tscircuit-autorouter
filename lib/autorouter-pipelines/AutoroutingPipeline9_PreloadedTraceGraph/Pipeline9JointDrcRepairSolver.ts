@@ -1556,6 +1556,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         clearancePrecisionCandidateValidationCount,
         clearancePrecisionReferenceValidationCount,
         clearancePrecisionRepaired,
+        boundedRegionalRepairConfiguredMaxRegions: 0,
+        boundedRegionalRepairConfiguredMaxCandidateAttempts: 0,
+        boundedRegionalRepairConfiguredMaxPathSearchNodes: 0,
         boundedRegionalRepairAttemptedRegionCount: 0,
         boundedRegionalRepairAcceptedRegionCount: 0,
         boundedRegionalRepairCandidateAttemptCount: 0,
@@ -1628,12 +1631,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       routes: regionalB01RepairResult.routes,
       hdRoutes: regionalB01RepairResult.routes,
     })
-    const regionalRepairBudget = getPipeline9BoundedRepairBudget(
-      regionalB01RepairResult.routes.length,
-      (Array.isArray(regionalReference)
+    const regionalReferenceDrcIssueCount = (
+      Array.isArray(regionalReference)
         ? regionalReference
         : regionalReference.errors
-      ).length,
+    ).length
+    const regionalRepairBudget = getPipeline9BoundedRepairBudget(
+      regionalB01RepairResult.routes.length,
+      regionalReferenceDrcIssueCount,
       this.params.effort,
     )
     const boundedRegionalRepairStartedAt = performance.now()
@@ -1656,6 +1661,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
+      // If bounded repair is ineligible, it returns its unchanged regional
+      // input. Otherwise report the reference count of its published output.
+      finalDrcIssueCount:
+        boundedRegionalRepairResult.publishedDrcIssueCount !== undefined
+          ? boundedRegionalRepairResult.publishedDrcIssueCount
+          : regionalReferenceDrcIssueCount,
       postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
       postExactReferenceValidationAttempted: true,
       postExactReferenceDrcIssueCount,
@@ -1664,6 +1675,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       clearancePrecisionCandidateValidationCount,
       clearancePrecisionReferenceValidationCount,
       clearancePrecisionRepaired,
+      boundedRegionalRepairConfiguredMaxRegions:
+        regionalRepairBudget.maxRegions,
+      boundedRegionalRepairConfiguredMaxCandidateAttempts:
+        regionalRepairBudget.maxCandidateAttempts,
+      boundedRegionalRepairConfiguredMaxPathSearchNodes:
+        regionalRepairBudget.maxPathSearchNodes,
       boundedRegionalRepairAttemptedRegionCount:
         boundedRegionalRepairResult.attemptedRegionCount,
       boundedRegionalRepairAcceptedRegionCount:

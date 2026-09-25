@@ -284,7 +284,16 @@ export const addTerminalPcbPortIds = (
         )
       }
     }
-    if (startTerminals.length > 1 || endTerminals.length > 1) {
+    const startPortPoints = node.portPoints.filter((point) =>
+      matchesEndpoint(point, start),
+    )
+    const endPortPoints = node.portPoints.filter((point) =>
+      matchesEndpoint(point, end),
+    )
+    if (
+      (startTerminals.length > 0 && startPortPoints.length > 1) ||
+      (endTerminals.length > 0 && endPortPoints.length > 1)
+    ) {
       const matchingPairs = (node.portPointsInPairs ?? []).flatMap(
         ([pairStart, pairEnd]): NodeWithPortPoints["portPoints"][] => {
           if (

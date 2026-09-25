@@ -124,7 +124,7 @@ installation honoring `lean-toolchain` is sufficient.
 - `bun run build` and the full TypeScript check: passed locally after installing
   the repository dependencies.
 - Port-point pathing, coincident terminal, cache identity, MST, stitching, and
-  export regressions: 24 tests passed (275 assertions).
+  export regressions: 27 tests passed (299 assertions).
 - SRJ18 sample 2: the unchanged zero-DRC assertion passes with every point pair
   routed through port-point pathing.
 
@@ -145,8 +145,14 @@ High-density routing preserves terminal and port-point identity when coordinates
 coincide, and its caches include PCB terminal identity. A pinned dependency patch
 preserves the already routed points and vias when simplification receives a
 zero-planar-length path; a clean install was verified to apply the patch.
-The SRJ18 integration
-tests now check the valid routing/repair result without depending on the old MST
+Coincident stitching ties also preserve explicit terminal orientation. Published
+repair statistics describe the final routed board, and work-budget tests enforce
+the existing configured congestion policy rather than the previous topology's
+smaller budget. SRJ18 sample 2 uses 5 regions, 171 candidates, and 567,419 search
+nodes within its existing limits of 8, 495, and 4,838,709, respectively. The duplicate
+sample-2 regressions are combined under the existing ten-minute CI allowance,
+retaining the pathing, zero-DRC, and work-budget assertions.
+The SRJ18 integration tests now check the valid routing/repair result without depending on the old MST
 edge numbering or topology. The deterministic direct legal-layer retry test
 continues to require an actual retry.
 

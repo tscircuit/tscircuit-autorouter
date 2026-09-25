@@ -487,16 +487,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
       const sameY = Math.abs(A.y - B.y) < 1e-6
 
       if (sameX && sameY && A.z === B.z) {
-        if (
-          A.x === B.x &&
-          A.y === B.y &&
-          ((A.portPointId !== undefined &&
-            B.portPointId !== undefined &&
-            A.portPointId !== B.portPointId) ||
-            (A.pcb_port_id !== undefined &&
-              B.pcb_port_id !== undefined &&
-              A.pcb_port_id !== B.pcb_port_id))
-        ) {
+        // Identity deduplication already established that these are distinct
+        // endpoints, including when only one endpoint has PCB metadata.
+        if (A.x === B.x && A.y === B.y) {
           this.solvedRoutes.push({
             connectionName: unsolvedConnection.connectionName,
             rootConnectionName: unsolvedConnection.rootConnectionName,
