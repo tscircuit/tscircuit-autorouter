@@ -317,7 +317,8 @@ export class HighDensitySolver extends BaseSolver {
     const getTerminalPcbPortId = (
       route: HighDensityIntraNodeRoute,
       point: HighDensityIntraNodeRoute["route"][number],
-    ) => {
+      knownPcbPortId: string | undefined,
+    ): string | undefined => {
       const matchingTerminals = terminalPortPoints.filter(
         (terminal) =>
           terminal.connectionName === route.connectionName &&
@@ -325,6 +326,18 @@ export class HighDensitySolver extends BaseSolver {
           terminal.y === point.y &&
           terminal.z === point.z,
       )
+      if (knownPcbPortId !== undefined) {
+        if (
+          !matchingTerminals.some(
+            (terminal) => terminal.pcb_port_id === knownPcbPortId,
+          )
+        ) {
+          throw new Error(
+            `HighDensitySolver found unknown PCB terminal "${knownPcbPortId}" at an endpoint of "${route.connectionName}"`,
+          )
+        }
+        return knownPcbPortId
+      }
       if (matchingTerminals.length > 1) {
         throw new Error(
           `HighDensitySolver found multiple PCB terminals at an endpoint of "${route.connectionName}"`,
@@ -337,11 +350,15 @@ export class HighDensitySolver extends BaseSolver {
     return solver.solvedRoutes.map((route) => ({
       ...route,
       startPcbPortId: route.route[0]
-        ? getTerminalPcbPortId(route, route.route[0])
+        ? getTerminalPcbPortId(route, route.route[0], route.startPcbPortId)
         : undefined,
       endPcbPortId:
         route.route.length > 1
-          ? getTerminalPcbPortId(route, route.route[route.route.length - 1]!)
+          ? getTerminalPcbPortId(
+              route,
+              route.route[route.route.length - 1]!,
+              route.endPcbPortId,
+            )
           : undefined,
     }))
   }

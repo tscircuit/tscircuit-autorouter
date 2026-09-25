@@ -121,11 +121,12 @@ installation honoring `lean-toolchain` is sufficient.
 - `bun validation/mst/reproduce.ts`: passed; both disconnected examples now
   span all terminals and the 64-point case matches the reference weight.
 - Lean 4.34.0: all proofs checked successfully.
-- `bun run build`: blocked by unresolved local dependencies including
-  `@tscircuit/trace-simplification-solver`, `@tscircuit/repair04`, and
-  `@tscircuit/high-density-a13`, plus type errors in
-  `PortfolioSingleIntraNodeSolver.ts`. Full build and full-suite validation
-  are covered separately by GitHub CI on the PR.
+- `bun run build` and the full TypeScript check: passed locally after installing
+  the repository dependencies.
+- Port-point pathing, coincident terminal, cache identity, MST, stitching, and
+  export regressions: 23 tests passed (268 assertions).
+- SRJ18 sample 2: the unchanged zero-DRC assertion passes with every point pair
+  routed through port-point pathing.
 
 Prim uses a stable coordinate orientation and weight ordering to retain the
 previous downstream routing convention. Exact candidate coverage and terminal
@@ -136,15 +137,21 @@ CI exposed downstream data-flow problems now covered by focused regressions:
 coincident stitch targets retain their layer identity; borrowed same-net branches
 must be eligible for the requested terminal pair; through-hole via matching
 accepts inner-layer route transitions inside the drill span; and an accepted
-reference-clean repair resets the final DRC error count. Pipeline9 now materializes
-same-layer coincident point pairs as direct zero-length paths, preserving both
-terminal IDs through SRJ export instead of sending them through congestion
-routing. Cross-layer coincident terminals still require routing. The SRJ18 integration
+reference-clean repair resets the final DRC error count. Every remaining point-pair
+connection, including coincident terminals, goes through port-point pathing.
+Terminal-pair identity must survive high-density routing and SRJ export; no
+connection is filtered out and injected into the output as a direct route.
+High-density routing preserves terminal and port-point identity when coordinates
+coincide, and its caches include PCB terminal identity. A pinned dependency patch
+preserves the already routed points and vias when simplification receives a
+zero-planar-length path; a clean install was verified to apply the patch.
+The SRJ18 integration
 tests now check the valid routing/repair result without depending on the old MST
 edge numbering or topology. The deterministic direct legal-layer retry test
 continues to require an actual retry.
 
 Linux validation includes the previously failing SRJ18 samples 2, 8, and 9, the
 Game Boy board, DRC identity checks, and the affected snapshot tests. GitHub CI
-build, formatting, and type checks have passed. Complete CI status is recorded
+build, formatting, and type checks passed before the port-point-pathing follow-up;
+the latest follow-up CI status is recorded
 on [PR #2717](https://github.com/tscircuit/tscircuit-autorouter/pull/2717).

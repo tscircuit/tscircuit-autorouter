@@ -28,7 +28,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -95,6 +95,7 @@ export class CachedPortfolioSingleIntraNodeSolver
         return {
           connectionName: pp.connectionName,
           portPointId: pp.portPointId,
+          pcb_port_id: pp.pcb_port_id,
           x: roundCoord(pp.x - center.x),
           y: roundCoord(pp.y - center.y),
           z: pp.z ?? 0,

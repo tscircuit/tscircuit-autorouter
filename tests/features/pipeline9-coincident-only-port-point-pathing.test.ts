@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 emits a direct-only net once with length matching enabled", (): void => {
+test("Pipeline9 paths a coincident-only net through port-point pathing with length matching enabled", (): void => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -10,7 +10,7 @@ test("Pipeline9 emits a direct-only net once with length matching enabled", (): 
     obstacles: [],
     connections: [
       {
-        name: "direct",
+        name: "coincident",
         nominalTraceWidth: 0.3,
         pointsToConnect: [
           {
@@ -30,7 +30,7 @@ test("Pipeline9 emits a direct-only net once with length matching enabled", (): 
         ],
       },
     ],
-    buses: [{ busId: "bus", connectionNames: ["direct"], maxLengthSkew: 0 }],
+    buses: [{ busId: "bus", connectionNames: ["coincident"], maxLengthSkew: 0 }],
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -38,7 +38,15 @@ test("Pipeline9 emits a direct-only net once with length matching enabled", (): 
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.routingSrjWithPointPairs!.connections).toHaveLength(0)
+  expect(solver.portPointPathingSolver!.solved).toBe(true)
+  const pathedPairs = solver.portPointPathingSolver!
+    .getOutput()
+    .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
+  expect(pathedPairs).toHaveLength(1)
+  expect(pathedPairs[0].map((point) => point.pcb_port_id).sort()).toEqual([
+    "pcb_a",
+    "pcb_b",
+  ])
   expect(solver._getOutputHdRoutes()).toHaveLength(1)
   const traces = solver.getOutputSimplifiedPcbTraces()
   expect(traces).toHaveLength(1)

@@ -76,7 +76,6 @@ import {
   removeChangedSectionsFromFixedHdRoutes,
 } from "./materializeHypergraphPreloadedTraceSections"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
-import { partitionCoincidentPointPairConnections } from "./partitionCoincidentPointPairConnections"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import {
@@ -297,8 +296,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  routingSrjWithPointPairs?: SimpleRouteJson
-  directHdRoutes: HighDensityRoute[] = []
   originalSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -361,12 +358,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
-          const partition = partitionCoincidentPointPairConnections(
-            cms.srjWithPointPairs!,
-            cms.viaDiameter,
-          )
-          cms.routingSrjWithPointPairs = partition.routingSrj
-          cms.directHdRoutes = partition.directHdRoutes
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -379,7 +370,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       MultiGraphTopologyPlannerSolver,
       (cms) => [
         {
-          inputSrj: cms.routingSrjWithPointPairs!,
+          inputSrj: cms.srjWithPointPairs!,
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
@@ -485,7 +476,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
             }),
-            simpleRouteJson: cms.routingSrjWithPointPairs!,
+            simpleRouteJson: cms.srjWithPointPairs!,
           },
         ]
       },
@@ -511,7 +502,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       PreloadedTraceGraphSolver,
       (cms) => [
         cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
-        cms.routingSrjWithPointPairs!,
+        cms.srjWithPointPairs!,
       ],
     ),
     definePipelineStep(
@@ -529,7 +520,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
-          simpleRouteJsonConnections: cms.routingSrjWithPointPairs!.connections,
+          simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 
         return [
@@ -685,7 +676,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           connections: [
-            ...cms.routingSrjWithPointPairs!.connections,
+            ...cms.srjWithPointPairs!.connections,
             ...cms
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
@@ -894,10 +885,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = [
-          ...cms.pipeline9JointDrcRepairSolver!.getOutput(),
-          ...cms.directHdRoutes,
-        ]
+        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1352,13 +1340,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
       return hdRoutes
     }
-    const routedHdRoutes =
+    return (
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
-    return [...routedHdRoutes, ...this.directHdRoutes]
+    )
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {

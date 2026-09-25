@@ -245,7 +245,7 @@ const convertObstacleToB01Obstacle = ({
   }
 }
 
-const addTerminalPcbPortIds = (
+export const addTerminalPcbPortIds = (
   routes: HighDensityIntraNodeRoute[],
   node: NodeWithPortPoints,
 ): HighDensityIntraNodeRoute[] => {
@@ -255,27 +255,77 @@ const addTerminalPcbPortIds = (
   return routes.map((route) => {
     const start = route.route[0]
     const end = route.route.at(-1)
-    const startTerminal = terminalPortPoints.find(
-      (terminal) =>
-        start !== undefined &&
-        terminal.connectionName === route.connectionName &&
-        terminal.x === start.x &&
-        terminal.y === start.y &&
-        terminal.z === start.z,
+    const matchesEndpoint = (
+      point: NodeWithPortPoints["portPoints"][number],
+      endpoint: HighDensityIntraNodeRoute["route"][number] | undefined,
+    ): boolean =>
+      endpoint !== undefined &&
+      point.connectionName === route.connectionName &&
+      point.x === endpoint.x &&
+      point.y === endpoint.y &&
+      point.z === endpoint.z
+    const startTerminals = terminalPortPoints.filter((point) =>
+      matchesEndpoint(point, start),
     )
-    const endTerminal = terminalPortPoints.find(
-      (terminal) =>
-        end !== undefined &&
-        terminal.connectionName === route.connectionName &&
-        terminal.x === end.x &&
-        terminal.y === end.y &&
-        terminal.z === end.z,
+    const endTerminals = terminalPortPoints.filter((point) =>
+      matchesEndpoint(point, end),
     )
+
+    for (const [knownId, terminals] of [
+      [route.startPcbPortId, startTerminals],
+      [route.endPcbPortId, endTerminals],
+    ] as const) {
+      if (
+        knownId !== undefined &&
+        !terminals.some((terminal) => terminal.pcb_port_id === knownId)
+      ) {
+        throw new Error(
+          `Pipeline9 found unknown PCB terminal "${knownId}" on "${route.connectionName}"`,
+        )
+      }
+    }
+    if (startTerminals.length > 1 || endTerminals.length > 1) {
+      const matchingPairs = (node.portPointsInPairs ?? []).flatMap(
+        ([pairStart, pairEnd]): NodeWithPortPoints["portPoints"][] => {
+          if (
+            matchesEndpoint(pairStart, start) &&
+            matchesEndpoint(pairEnd, end) &&
+            (route.startPcbPortId === undefined ||
+              route.startPcbPortId === pairStart.pcb_port_id) &&
+            (route.endPcbPortId === undefined ||
+              route.endPcbPortId === pairEnd.pcb_port_id)
+          ) {
+            return [[pairStart, pairEnd]]
+          }
+          if (
+            matchesEndpoint(pairEnd, start) &&
+            matchesEndpoint(pairStart, end) &&
+            (route.startPcbPortId === undefined ||
+              route.startPcbPortId === pairEnd.pcb_port_id) &&
+            (route.endPcbPortId === undefined ||
+              route.endPcbPortId === pairStart.pcb_port_id)
+          ) {
+            return [[pairEnd, pairStart]]
+          }
+          return []
+        },
+      )
+      if (matchingPairs.length !== 1) {
+        throw new Error(
+          `Pipeline9 cannot identify distinct PCB terminals for "${route.connectionName}" from its port-point pairs`,
+        )
+      }
+      return {
+        ...route,
+        startPcbPortId: matchingPairs[0]![0]!.pcb_port_id,
+        endPcbPortId: matchingPairs[0]![1]!.pcb_port_id,
+      }
+    }
 
     return {
       ...route,
-      startPcbPortId: startTerminal?.pcb_port_id,
-      endPcbPortId: endTerminal?.pcb_port_id,
+      startPcbPortId: startTerminals[0]?.pcb_port_id,
+      endPcbPortId: endTerminals[0]?.pcb_port_id,
     }
   })
 }

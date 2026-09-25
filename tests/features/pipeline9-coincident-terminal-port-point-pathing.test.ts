@@ -8,7 +8,7 @@ import {
   getInitiallyConnectedMapFromSimpleRouteJson,
 } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 
-test("Pipeline9 materializes coincident terminals as a direct route while preserving full net connectivity", (): void => {
+test("Pipeline9 paths coincident terminals through port-point pathing while preserving full net connectivity", (): void => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -33,18 +33,35 @@ test("Pipeline9 materializes coincident terminals as a direct route while preser
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.srjWithPointPairs!.connections).toHaveLength(2)
-  expect(solver.routingSrjWithPointPairs!.connections).toHaveLength(1)
-  const traces = solver.getOutputSimplifiedPcbTraces()
-  const direct = traces.find(
-    (trace) =>
-      trace.connectsTo?.includes("a") && trace.connectsTo.includes("b"),
+  expect(solver.portPointPathingSolver!.solved).toBe(true)
+  const pathedPairs = solver.portPointPathingSolver!
+    .getOutput()
+    .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
+  const pathedConnectionNames = new Set(
+    pathedPairs.map(([start]) => start.connectionName),
   )
-  expect(direct).toBeDefined()
-  expect(direct!.route).toHaveLength(2)
-  expect(direct!.route[0]).toMatchObject({ start_pcb_port_id: "pcb_a" })
-  expect(direct!.route[1]).toMatchObject({ end_pcb_port_id: "pcb_b" })
+  expect(pathedConnectionNames).toEqual(
+    new Set(
+      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+    ),
+  )
   expect(
-    direct!.route.every(
+    pathedPairs.some(
+      ([start, end]) =>
+        (start.pcb_port_id === "pcb_a" && end.pcb_port_id === "pcb_b") ||
+        (start.pcb_port_id === "pcb_b" && end.pcb_port_id === "pcb_a"),
+    ),
+  ).toBe(true)
+  const traces = solver.getOutputSimplifiedPcbTraces()
+  const coincidentTrace = traces.find(
+    (trace) => trace.connectsTo?.includes("a") && trace.connectsTo.includes("b"),
+  )
+  expect(coincidentTrace).toBeDefined()
+  expect(coincidentTrace!.route).toHaveLength(2)
+  expect(coincidentTrace!.route[0]).toMatchObject({ start_pcb_port_id: "pcb_a" })
+  expect(coincidentTrace!.route[1]).toMatchObject({ end_pcb_port_id: "pcb_b" })
+  expect(
+    coincidentTrace!.route.every(
       (point) =>
         point.route_type === "wire" &&
         point.x === 0 &&
@@ -61,7 +78,7 @@ test("Pipeline9 materializes coincident terminals as a direct route while preser
   const circuitTrace = convertToCircuitJson(srj, traces).find(
     (element) =>
       element.type === "pcb_trace" &&
-      element.pcb_trace_id === direct!.pcb_trace_id,
+      element.pcb_trace_id === coincidentTrace!.pcb_trace_id,
   )
   expect(circuitTrace).toMatchObject({
     route: [
