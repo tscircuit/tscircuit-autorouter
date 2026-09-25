@@ -2,11 +2,11 @@ import { checkSourceTracesHavePcbTraces } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
-import board from "../../fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json" with {
+import board from "../../fixtures/bug-reports/bugreport96-gameboy-four-layer/bugreport96-gameboy-four-layer.srj.json" with {
   type: "json",
 }
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 test("Pipeline9 full Game Boy through-via DRC reproduction", async (): Promise<void> => {
   const inputSrj = structuredClone(board) as SimpleRouteJson
@@ -55,13 +55,13 @@ test("Pipeline9 full Game Boy through-via DRC reproduction", async (): Promise<v
     ),
   })
 
-  // Record the current DRC failures, not a fabrication-ready result. The native
-  // snapshot calculates its error count from this solve, so fixes change it.
+  // The pipeline's final visualization includes the source board outline.
+  // DRC counts are reported above; routing completion is not fabrication approval.
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     snapshotPath,
     { svgName: "routed" },
   )
