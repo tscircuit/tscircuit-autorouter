@@ -18,6 +18,7 @@ import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionNa
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
+import { applyPipeline9IndependentViaMerges } from "./applyPipeline9IndependentViaMerges"
 
 export type Pipeline9BoundedRegionalRepairResult = {
   routes: HighDensityRoute[]
@@ -573,6 +574,30 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.publishedDrcIssueCount = independentErrors.length
     result.finalDrcIssueCount = independentErrors.length
     result.repaired = independentErrors.length === 0
+  }
+  if (connMap) {
+    const mergedRoutes = applyPipeline9IndependentViaMerges({
+      originalSrj,
+      routes: result.routes,
+      connMap,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
+    })
+    if (mergedRoutes !== result.routes) {
+      const reference = drcEvaluator({
+        traces: [],
+        routes: mergedRoutes,
+        hdRoutes: mergedRoutes,
+      })
+      result.referenceValidationCount++
+      const errors = Array.isArray(reference) ? reference : reference.errors
+      result.routes = mergedRoutes
+      result.publishedDrcIssueCount = errors.length
+      result.finalDrcIssueCount = errors.length
+      result.repaired = errors.length === 0
+    }
   }
   return result
 }
