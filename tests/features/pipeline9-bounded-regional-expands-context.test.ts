@@ -39,7 +39,7 @@ test("bounded regional repair clears coupled contacts within its shared work bud
     syntheticConnectionNames: new Set(),
     drcEvaluator,
   })
-  expect(result.initialDrcIssueCount).toBe(4)
+  expect(result.initialDrcIssueCount).toBe(6)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeGreaterThan(0)

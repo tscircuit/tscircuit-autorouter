@@ -10,7 +10,7 @@ import fixture from "../fixtures/pipeline9-stalled-regional-context.json"
 
 // Cropped from SRJ18 sample 15. Fixed points at the smaller region's collar
 // block coupled routes; retrying that context spends the remaining search work.
-test("regional repair expands a stalled context before exhausting its shared budget", (): void => {
+test("regional repair rejects an incomplete SRJ18 sample 15 repair after via-pad checking", (): void => {
   const originalSrj = fixture.originalSrj as SimpleRouteJson
   const routes = structuredClone(fixture.routes) as HighDensityRoute[]
   const originalRoutes = structuredClone(routes)
@@ -51,9 +51,10 @@ test("regional repair expands a stalled context before exhausting its shared bud
     drcEvaluator,
     budget,
   })
-  expect(result.initialDrcIssueCount).toBe(117)
-  expect(result.repaired).toBeTrue()
-  expect(result.finalDrcIssueCount).toBe(0)
+  expect(result.initialDrcIssueCount).toBe(156)
+  expect(result.repaired).toBeFalse()
+  expect(result.finalDrcIssueCount).toBe(8)
+  expect(result.publishedDrcIssueCount).toBe(156)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(budget.maxRegions)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(
     budget.maxCandidateAttempts,
@@ -63,7 +64,12 @@ test("regional repair expands a stalled context before exhausting its shared bud
   )
   expect(routes).toEqual(originalRoutes)
   const validation = drcEvaluator({ traces: [], routes: result.routes })
+  const errors = Array.isArray(validation) ? validation : validation.errors
+  // The candidate still violates DRC, so the existing publication guard keeps
+  // the original geometry. This is a recorded failure, not a clean repair.
+  expect(result.routes).toEqual(originalRoutes)
+  expect(errors).toHaveLength(156)
   expect(
-    Array.isArray(validation) ? validation : validation.errors,
-  ).toHaveLength(0)
+    errors.filter((error) => error.type === "pcb_pad_pad_clearance_error"),
+  ).toHaveLength(39)
 })

@@ -15,7 +15,7 @@ import {
   type GraphicsSvgFrame,
 } from "./fixtures/solver-svg-frames"
 
-test("repairs dataset 18 sample 10's exact DRC errors", async () => {
+test("reports dataset 18 sample 10's remaining via-pad errors after exact repair", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
   const pipeline = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     cacheProvider: null,
@@ -90,7 +90,19 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
 
   // Node-local repair may clear all errors before the exact stage.
   expect(outputDrc.errors.length).toBeLessThanOrEqual(inputDrc.errors.length)
-  expect(outputDrc.errors).toHaveLength(0)
+  expect(outputDrc.errors).toMatchObject([
+    {
+      type: "pcb_pad_pad_clearance_error",
+      pcb_pad_ids: ["via_51", "pcb_smtpad_283"],
+      minimum_clearance: 0.1,
+    },
+    {
+      type: "pcb_pad_pad_clearance_error",
+      pcb_pad_ids: ["via_76", "pcb_plated_hole_10"],
+      minimum_clearance: 0.1,
+    },
+  ])
+  expect(outputDrc.errors).toHaveLength(2)
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
