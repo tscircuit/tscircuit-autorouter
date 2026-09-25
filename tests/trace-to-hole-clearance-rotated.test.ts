@@ -24,7 +24,7 @@ test("rectangular and rotated hole clearance includes the routed copper width", 
       solver.solve()
       expect(solver.error).toBeNull()
       expect(solver.solved).toBe(true)
-      const radians = angle * Math.PI / 180
+      const radians = (angle * Math.PI) / 180
       const cos = Math.cos(radians)
       const sin = Math.sin(radians)
       let minimum = Infinity
@@ -32,13 +32,20 @@ test("rectangular and rotated hole clearance includes the routed copper width", 
         for (let index = 1; index < trace.route.length; index++) {
           const a = trace.route[index - 1]!
           const b = trace.route[index]!
-          if (a.route_type !== "wire" || b.route_type !== "wire" || a.layer !== b.layer) continue
+          if (
+            a.route_type !== "wire" ||
+            b.route_type !== "wire" ||
+            a.layer !== b.layer
+          )
+            continue
           expect(a.width).toBeGreaterThanOrEqual(0.4)
-          const distance = segmentToBoundsMinDistance(
-            { x: a.x * cos + a.y * sin, y: -a.x * sin + a.y * cos },
-            { x: b.x * cos + b.y * sin, y: -b.x * sin + b.y * cos },
-            { minX: -0.25, maxX: 0.25, minY: -1.5, maxY: 1.5 },
-          ) - Math.max(a.width, b.width) / 2
+          const distance =
+            segmentToBoundsMinDistance(
+              { x: a.x * cos + a.y * sin, y: -a.x * sin + a.y * cos },
+              { x: b.x * cos + b.y * sin, y: -b.x * sin + b.y * cos },
+              { minX: -0.25, maxX: 0.25, minY: -1.5, maxY: 1.5 },
+            ) -
+            Math.max(a.width, b.width) / 2
           minimum = Math.min(minimum, distance)
         }
       }

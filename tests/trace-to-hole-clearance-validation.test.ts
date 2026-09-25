@@ -10,13 +10,23 @@ test("hole validation measures copper edges on occupied layers including wire-to
   hole.isHole = true
   hole.shape = "circle"
   hole.layers = ["top"]
-  const traces: SimplifiedPcbTraces = [{
-    type: "pcb_trace", pcb_trace_id: "trace", connection_name: "signal",
-    route: [
-      { route_type: "wire", x: -2, y: 1.3, width: 0.2, layer: "top" },
-      { route_type: "via", x: 2, y: 1.3, from_layer: "top", to_layer: "bottom" },
-    ],
-  }]
+  const traces: SimplifiedPcbTraces = [
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "trace",
+      connection_name: "signal",
+      route: [
+        { route_type: "wire", x: -2, y: 1.3, width: 0.2, layer: "top" },
+        {
+          route_type: "via",
+          x: 2,
+          y: 1.3,
+          from_layer: "top",
+          to_layer: "bottom",
+        },
+      ],
+    },
+  ]
   expect(getTraceToHoleClearanceError(srj, traces)).toBeNull()
   for (const point of traces[0]!.route) {
     if (point.route_type !== "wire" && point.route_type !== "via") {
@@ -29,7 +39,8 @@ test("hole validation measures copper edges on occupied layers including wire-to
   expect(getTraceToHoleClearanceError(srj, traces)).toBeNull()
   hole.layers = ["top", "bottom"]
   const wire = traces[0]!.route[0]!
-  if (wire.route_type !== "wire") throw new Error("Expected wire in test fixture")
+  if (wire.route_type !== "wire")
+    throw new Error("Expected wire in test fixture")
   wire.width = 0.6
   expect(getTraceToHoleClearanceError(srj, traces)).toContain("-0.001000 mm")
   hole.isHole = false

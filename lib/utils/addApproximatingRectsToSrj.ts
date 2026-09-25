@@ -415,10 +415,11 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   }
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
   const useConservativeApproximation =
-    obstacle.isHole ||
-    (obstacle.connectedTo.length > 0 &&
-      !obstacle.obstacleId?.startsWith("trace_obstacle_"))
-  const rects = useConservativeApproximation
+    obstacle.connectedTo.length > 0 &&
+    !obstacle.obstacleId?.startsWith("trace_obstacle_")
+  const needsConservativeApproximation =
+    obstacle.isHole || useConservativeApproximation
+  const rects = needsConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(

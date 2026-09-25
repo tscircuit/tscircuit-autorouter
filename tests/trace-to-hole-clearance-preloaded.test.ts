@@ -13,15 +13,17 @@ test("a saved trace violating NPTH clearance cannot be reported as solved", (): 
     srj.minTraceToHoleClearance = 0.2
     srj.obstacles[2]!.isHole = true
     srj.obstacles[2]!.shape = "circle"
-    srj.traces = [{
-      type: "pcb_trace",
-      pcb_trace_id: "saved_trace_too_close_to_hole",
-      connection_name: "fixed_net",
-      route: [
-        { route_type: "wire", x: -2, y: 1.1, width: 0.15, layer: "bottom" },
-        { route_type: "wire", x: 2, y: 1.1, width: 0.15, layer: "bottom" },
-      ],
-    }]
+    srj.traces = [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "saved_trace_too_close_to_hole",
+        connection_name: "fixed_net",
+        route: [
+          { route_type: "wire", x: -2, y: 1.1, width: 0.15, layer: "bottom" },
+          { route_type: "wire", x: 2, y: 1.1, width: 0.15, layer: "bottom" },
+        ],
+      },
+    ]
     const solver = new Solver(srj, { cacheProvider: null })
     solver.solve()
     expect(solver.solved).toBe(false)

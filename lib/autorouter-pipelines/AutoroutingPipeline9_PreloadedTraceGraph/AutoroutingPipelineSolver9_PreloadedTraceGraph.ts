@@ -1051,7 +1051,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!pipelineStepDef) {
       if (this.originalSrj.minTraceToHoleClearance !== undefined) {
         if (!this.powerTraceExpansionSolver) {
-          throw new Error("Hole clearance validation requires final power-trace expansion output")
+          throw new Error(
+            "Hole clearance validation requires final power-trace expansion output",
+          )
         }
         this.error = getTraceToHoleClearanceError(this.originalSrj, [
           ...this.getPowerTraceExpansionFixedTraces(),

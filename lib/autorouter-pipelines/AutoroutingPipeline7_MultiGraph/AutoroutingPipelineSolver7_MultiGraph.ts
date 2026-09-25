@@ -76,7 +76,10 @@ import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
-import { preparePipeline7PowerTraceExpansionInput, type Pipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
+import {
+  preparePipeline7PowerTraceExpansionInput,
+  type Pipeline7PowerTraceExpansionInput,
+} from "./prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -895,10 +898,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     if (!pipelineStepDef) {
       if (this.originalSrj.minTraceToHoleClearance !== undefined) {
         if (!this.powerTraceExpansionSolver) {
-          throw new Error("Hole clearance validation requires final power-trace expansion output")
+          throw new Error(
+            "Hole clearance validation requires final power-trace expansion output",
+          )
         }
         this.error = getTraceToHoleClearanceError(this.originalSrj, [
-          ...(this.powerTraceExpansionSolver.inputSrj as Pipeline7PowerTraceExpansionInput).fixedTraces,
+          ...(
+            this.powerTraceExpansionSolver
+              .inputSrj as Pipeline7PowerTraceExpansionInput
+          ).fixedTraces,
           ...this.powerTraceExpansionSolver.getOutput(),
         ])
         if (this.error) {

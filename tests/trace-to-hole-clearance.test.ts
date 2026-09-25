@@ -30,13 +30,16 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
           const a = trace.route[i - 1]!
           const b = trace.route[i]!
           if (
-            a.route_type !== "wire" || b.route_type !== "wire" ||
+            a.route_type !== "wire" ||
+            b.route_type !== "wire" ||
             a.layer !== b.layer
-          ) continue
+          )
+            continue
           minimum = Math.min(
             minimum,
             pointToSegmentDistance(hole.center, a, b) -
-              hole.width / 2 - Math.max(a.width, b.width) / 2,
+              hole.width / 2 -
+              Math.max(a.width, b.width) / 2,
           )
         }
       }
@@ -45,7 +48,9 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
       if (clearance === 0) expect(minimum).toBeLessThan(0.2)
       expect(minimum).toBeGreaterThanOrEqual(clearance - 1e-6)
       expect(JSON.stringify(srj)).toBe(before)
-      expect(solver.getOutputSimpleRouteJson().obstacles).toMatchObject(srj.obstacles)
+      expect(solver.getOutputSimpleRouteJson().obstacles).toMatchObject(
+        srj.obstacles,
+      )
       const geometry = JSON.stringify(traces)
       if (previousRoute) expect(geometry).not.toBe(previousRoute)
       previousRoute = geometry
