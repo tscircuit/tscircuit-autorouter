@@ -24,7 +24,9 @@ test("Pipeline9 reports SRJ18 sample 9's reference-clean output after regional r
     boundedRegionalRepairRepaired: true,
     boundedRegionalRepairPublishedDrcIssueCount: 0,
   })
-  expect(Number(repairStats?.postExactReferenceDrcIssueCount)).toBeGreaterThan(0)
+  expect(Number(repairStats?.postExactReferenceDrcIssueCount)).toBeGreaterThan(
+    0,
+  )
   expect(
     Number(repairStats?.boundedRegionalRepairAcceptedRegionCount),
   ).toBeGreaterThan(0)
