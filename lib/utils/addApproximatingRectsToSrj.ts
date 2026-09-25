@@ -415,8 +415,9 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   }
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
   const useConservativeApproximation =
-    obstacle.connectedTo.length > 0 &&
-    !obstacle.obstacleId?.startsWith("trace_obstacle_")
+    obstacle.isHole ||
+    (obstacle.connectedTo.length > 0 &&
+      !obstacle.obstacleId?.startsWith("trace_obstacle_"))
   const rects = useConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
@@ -477,6 +478,7 @@ export const addApproximatingRectsToSrj = (
         converted.width.toFixed(6),
         converted.height.toFixed(6),
         converted.layers.join(","),
+        converted.isHole ? "hole" : "",
       ].join(":")
       const existingObstacle = obstaclesByRect.get(key)
 

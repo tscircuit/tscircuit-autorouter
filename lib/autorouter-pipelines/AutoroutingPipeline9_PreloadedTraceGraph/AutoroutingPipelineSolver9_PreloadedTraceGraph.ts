@@ -36,6 +36,8 @@ import {
   convertSrjToGraphicsObject,
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
+import { createSrjWithHoleClearance } from "lib/utils/createSrjWithHoleClearance"
+import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -297,6 +299,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
+  /** Routing geometry, including NPTH clearance envelopes. */
+  routingSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -309,7 +313,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
       (cms) => [
-        cms.originalSrj,
+        cms.routingSrj,
         { traceColorMode: cms.visualizationTraceColorMode },
       ],
       {
@@ -835,7 +839,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: cms.originalSrj,
+            originalSrj: cms.routingSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
@@ -959,7 +963,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
           preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.originalSrj,
+            originalSrj: cms.routingSrj,
             newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
             currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
             expandedConnectionNames: onlyConnectionNames,
@@ -983,6 +987,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
+    this.routingSrj = createSrjWithHoleClearance(this.originalSrj)
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -993,7 +998,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
+    this.setSimpleRouteJson(this.routingSrj)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
@@ -1028,7 +1033,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getConstructorParams() {
-    return [this.srj, this.opts] as const
+    return [this.originalSrj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -1044,6 +1049,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      if (this.originalSrj.minTraceToHoleClearance !== undefined) {
+        if (!this.powerTraceExpansionSolver) {
+          throw new Error("Hole clearance validation requires final power-trace expansion output")
+        }
+        this.error = getTraceToHoleClearanceError(this.originalSrj, [
+          ...this.getPowerTraceExpansionFixedTraces(),
+          ...this.powerTraceExpansionSolver.getOutput(),
+        ])
+        if (this.error) {
+          this.failed = true
+          return
+        }
+      }
       this.solved = true
       return
     }
@@ -1452,7 +1470,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
       layerCount: this.originalSrj.layerCount,
       defaultViaHoleDiameter: this.viaHoleDiameter,
-      obstacles: this.originalSrj.obstacles,
+      obstacles: this.routingSrj.obstacles,
       connMap: this.connMap,
     })
   }
