@@ -6,7 +6,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport88-9a86ed/bugreport88
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
@@ -46,12 +46,5 @@ test("bugreport88-9a86ed.json with Pipeline 9", (): void => {
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  expect(
-    getBugReportSnapshotSvg({
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-      includeBoardClearance: true,
-    }),
-  ).toMatchSvgSnapshot(snapshotPath)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })

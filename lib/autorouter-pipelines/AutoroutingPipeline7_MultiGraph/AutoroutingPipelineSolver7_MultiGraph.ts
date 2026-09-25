@@ -36,8 +36,6 @@ import {
   type TraceColorMode,
   convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
-import { createSrjWithHoleClearance } from "lib/utils/createSrjWithHoleClearance"
-import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -76,10 +74,7 @@ import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
-import {
-  preparePipeline7PowerTraceExpansionInput,
-  type Pipeline7PowerTraceExpansionInput,
-} from "./prepare-pipeline7-power-trace-expansion-input"
+import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -264,8 +259,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
-  /** Routing geometry, including NPTH clearance envelopes. */
-  routingSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -278,7 +271,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
       (cms) => [
-        cms.routingSrj,
+        cms.originalSrj,
         { traceColorMode: cms.visualizationTraceColorMode },
       ],
       {
@@ -686,7 +679,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaHoleDiameter: cms.viaHoleDiameter,
           connMap: cms.connMap,
           srjWithPointPairs: cms.srjWithPointPairs!,
-          originalSrj: cms.routingSrj,
+          originalSrj: cms.originalSrj,
         })
 
         return [
@@ -812,7 +805,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
           preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.routingSrj,
+            originalSrj: cms.originalSrj,
             newlyRoutedTraces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
             expandedConnectionNames: onlyConnectionNames,
           }),
@@ -834,7 +827,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    this.routingSrj = createSrjWithHoleClearance(this.originalSrj)
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -845,7 +837,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setSimpleRouteJson(this.routingSrj)
+    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
@@ -880,7 +872,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   getConstructorParams() {
-    return [this.originalSrj, this.opts] as const
+    return [this.srj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -896,24 +888,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (this.originalSrj.minTraceToHoleEdgeClearance !== undefined) {
-        if (!this.powerTraceExpansionSolver) {
-          throw new Error(
-            "Hole clearance validation requires final power-trace expansion output",
-          )
-        }
-        this.error = getTraceToHoleClearanceError(this.originalSrj, [
-          ...(
-            this.powerTraceExpansionSolver
-              .inputSrj as Pipeline7PowerTraceExpansionInput
-          ).fixedTraces,
-          ...this.powerTraceExpansionSolver.getOutput(),
-        ])
-        if (this.error) {
-          this.failed = true
-          return
-        }
-      }
       this.solved = true
       return
     }

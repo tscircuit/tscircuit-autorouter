@@ -73,8 +73,7 @@ const simplified = solver.getOutputSimpleRouteJson()
 
 ### Input Format: SimpleRouteJson
 
-For non-plated holes, see [trace-to-hole clearance](docs/minTraceToHoleEdgeClearance.md).
-Pipeline 7 and Pipeline 9 support `minTraceToHoleEdgeClearance` (mm) with `isHole`
+Pipeline 9 supports `minTraceToHoleEdgeClearance` (mm) with `isHole`
 obstacles, independently of pad clearance.
 
 The input to the autorouter is a `SimpleRouteJson` object with the following structure:
