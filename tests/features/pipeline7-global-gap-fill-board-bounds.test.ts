@@ -14,16 +14,20 @@ test("pipeline7 keeps global gap-fill nodes inside the board bounds", (): void =
 
   expect(solver.failed).toBe(false)
   expect(solver.globalTopologyGeneratorSolver?.solved).toBe(true)
-  const gapFillNodes = solver.globalTopologyGeneratorSolver!
-    .getOutput()
+  const gapFillNodes = solver
+    .globalTopologyGeneratorSolver!.getOutput()
     .meshNodes.filter((node) => node.capacityMeshNodeId.startsWith("new-"))
   expect(gapFillNodes.length).toBeGreaterThan(0)
   const { minX, maxX, minY, maxY } = circuit003.bounds
   const epsilon = 1e-8
   for (const node of gapFillNodes) {
-    expect(node.center.x - node.width / 2).toBeGreaterThanOrEqual(minX - epsilon)
+    expect(node.center.x - node.width / 2).toBeGreaterThanOrEqual(
+      minX - epsilon,
+    )
     expect(node.center.x + node.width / 2).toBeLessThanOrEqual(maxX + epsilon)
-    expect(node.center.y - node.height / 2).toBeGreaterThanOrEqual(minY - epsilon)
+    expect(node.center.y - node.height / 2).toBeGreaterThanOrEqual(
+      minY - epsilon,
+    )
     expect(node.center.y + node.height / 2).toBeLessThanOrEqual(maxY + epsilon)
   }
 })
