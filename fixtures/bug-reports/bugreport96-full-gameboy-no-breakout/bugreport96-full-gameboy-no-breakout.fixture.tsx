@@ -1,6 +1,6 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import type { SimpleRouteJson } from "lib/types"
-import simpleRouteJson from "./bugreport96-gameboy-four-layer.srj.json" with {
+import simpleRouteJson from "./bugreport96-full-gameboy-no-breakout.srj.json" with {
   type: "json",
 }
 
