@@ -112,18 +112,25 @@ export const applyPipeline9IndependentWireDetours = ({
     const original = result.routes[routeIndex]!
     // These wires have no movable vertex. Projection cannot create a detour.
     // Other topologies remain with the existing coupled regional search.
-    if (
-      original.route.length !== 2 ||
-      original.vias.length !== 0
-    ) {
+    if (original.route.length < 2 || original.vias.length !== 0) {
       continue
     }
     const start = original.route[0]!
-    const end = original.route[1]!
+    const end = original.route.at(-1)!
     const width = start.traceThickness ?? original.traceThickness
+    // A terminal can be repeated to carry its port metadata. Count physical
+    // segments rather than array entries, and leave those anchors intact.
+    const segmentCount = original.route.slice(1).filter((point, index) => {
+      const previous = original.route[index]!
+      return point.x !== previous.x || point.y !== previous.y
+    }).length
     if (
-      start.z !== end.z ||
-      width !== (end.traceThickness ?? original.traceThickness) ||
+      segmentCount !== 1 ||
+      original.route.some(
+        (point) =>
+          point.z !== start.z ||
+          (point.traceThickness ?? original.traceThickness) !== width,
+      ) ||
       resolver
         .canonicalize([traces[routeIndex]!.pcb_trace_id])
         .some((net) => protectedNets.has(net))
