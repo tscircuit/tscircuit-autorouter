@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+import {
+  averageTraceLintIssues,
+  formatTraceLintTable,
+} from "./trace-lint-metrics.js"
 
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
 import { appendFile, readFile, writeFile } from "node:fs/promises"
@@ -1570,6 +1574,7 @@ export const summarizeSolverResults = (
     p90TimeMs: getPercentileMs(elapsedForPercentiles, 0.9),
     p95TimeMs: getPercentileMs(elapsedForPercentiles, 0.95),
     avgVia,
+    avgTraceLintIssues: averageTraceLintIssues(results),
     networkCache,
   } satisfies SolverRunSummary
 }
@@ -1848,7 +1853,7 @@ const main = async () => {
       }),
     ),
   )
-  const table = formatTable(rows)
+  const table = `${formatTable(rows)}\n\n${formatTraceLintTable(rows)}`
   const solverFailureSummary = summarizeSolverFailures(results)
   const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
   const timeoutSummary = summarizeTimeouts(results)
