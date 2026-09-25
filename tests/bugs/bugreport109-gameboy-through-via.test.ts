@@ -28,7 +28,9 @@ test("Pipeline9 full Game Boy through-via DRC reproduction", async (): Promise<v
     new Set(solver._getOutputHdRoutes().map((route) => route.connectionName)),
   ).toEqual(
     new Set(
-      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+      solver.srjWithPointPairs!.connections.map(
+        (connection) => connection.name,
+      ),
     ),
   )
 
@@ -59,5 +61,7 @@ test("Pipeline9 full Game Boy through-via DRC reproduction", async (): Promise<v
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 })
