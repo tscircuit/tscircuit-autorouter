@@ -92,6 +92,8 @@ interface AutoroutingPipelineMenuBarProps {
   onSetCanSelectObjects: (canSelect: boolean) => void
   onRunDrcChecks: () => void
   onRunRelaxedDrcChecks: () => void
+  onRunTraceLinting: () => void
+  canRunTraceLinting: boolean
   canTogglePcbSvg: boolean
   pcbSvgEnabled: boolean
   onTogglePcbSvg: () => void
@@ -124,6 +126,8 @@ export const AutoroutingPipelineMenuBar = ({
   onSetCanSelectObjects,
   onRunDrcChecks,
   onRunRelaxedDrcChecks,
+  onRunTraceLinting,
+  canRunTraceLinting,
   canTogglePcbSvg,
   pcbSvgEnabled,
   onTogglePcbSvg,
@@ -240,6 +244,12 @@ export const AutoroutingPipelineMenuBar = ({
           <MenubarItem onClick={onRunDrcChecks}>Run DRC Checks</MenubarItem>
           <MenubarItem onClick={onRunRelaxedDrcChecks}>
             Run Relaxed DRC Checks
+          </MenubarItem>
+          <MenubarItem
+            onClick={onRunTraceLinting}
+            disabled={!canRunTraceLinting}
+          >
+            Run Trace Linting
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem

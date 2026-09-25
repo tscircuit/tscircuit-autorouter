@@ -1,3 +1,4 @@
+import { getTraceLintTypes, TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
 import { readFile, writeFile } from "node:fs/promises"
 import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
@@ -229,6 +230,13 @@ export const renderSameMachineBenchmarkResults = ({
       ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
     )
+    for (const type of getTraceLintTypes(mainSummary, prSummary)) {
+      const mainAverage = mainSummary.avgTraceLintIssues?.[type] ?? null
+      const prAverage = prSummary.avgTraceLintIssues?.[type] ?? null
+      lines.push(
+        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(mainAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(mainAverage, prAverage)} |`,
+      )
+    }
   }
 
   const improvementCount = changedOutcomes.filter(
@@ -241,6 +249,7 @@ export const renderSameMachineBenchmarkResults = ({
   )
 
   lines.push(
+    "Style errors are averaged per completed sample with recorded lint counts for that type; historical/unlinted results are n/a. Angled traces counts violating segments.",
     ...renderBenchmarkStageTimings(mainReport, "Main"),
     ...renderBenchmarkStageTimings(prReport, "PR"),
   )

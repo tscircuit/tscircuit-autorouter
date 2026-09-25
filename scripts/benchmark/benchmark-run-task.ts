@@ -1,3 +1,5 @@
+import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
+import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
@@ -533,6 +535,19 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    if (typeof solver.getOutputSimpleRouteJson !== "function") {
+      throw new Error(
+        "Cannot lint a solved benchmark without routed SimpleRouteJson",
+      )
+    }
+    const traceLinter = runTraceLinting(solver.getOutputSimpleRouteJson())
+    const traceLintIssueCounts: Record<string, number> = Object.fromEntries(
+      Object.keys(TRACE_LINT_LABELS).map((type) => [type, 0]),
+    )
+    for (const issue of traceLinter.getOutput()) {
+      traceLintIssueCounts[issue.type] =
+        (traceLintIssueCounts[issue.type] ?? 0) + 1
+    }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,
@@ -568,6 +583,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      traceLintIssueCounts,
       stageTiming,
       routingMetrics,
       benchmarkSnapshot,
