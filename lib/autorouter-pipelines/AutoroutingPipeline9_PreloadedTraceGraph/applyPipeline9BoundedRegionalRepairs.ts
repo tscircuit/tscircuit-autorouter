@@ -551,53 +551,69 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   // fixing vias and adding slack can block otherwise feasible regional repairs.
   // When that search cannot publish, select safe nudges from the original input
   // so private regional changes cannot leak into the partial result.
-  const independentRoutes = applyPipeline9ClearanceProjection({
-    originalSrj,
-    routes,
-    allowPartialRepair: true,
-    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
-      result.referenceValidationCount++
-      return drcEvaluator(input)
-    },
-  })
-  if (independentRoutes !== routes) {
-    const independentReference = drcEvaluator({
-      traces: [],
-      routes: independentRoutes,
-      hdRoutes: independentRoutes,
-    })
-    result.referenceValidationCount++
-    const independentErrors = Array.isArray(independentReference)
-      ? independentReference
-      : independentReference.errors
-    result.routes = independentRoutes
-    result.publishedDrcIssueCount = independentErrors.length
-    result.finalDrcIssueCount = independentErrors.length
-    result.repaired = independentErrors.length === 0
-  }
-  if (connMap) {
-    const mergedRoutes = applyPipeline9IndependentViaMerges({
+  // Accepted wire/via changes invalidate the proposals computed from the old
+  // geometry. Refresh them only after strict reference-DRC progress. Every
+  // round removes at least one error, so the initial error count bounds work.
+  while (true) {
+    const passRoutes = result.routes
+    const passErrorCount = result.publishedDrcIssueCount
+    const independentRoutes = applyPipeline9ClearanceProjection({
       originalSrj,
-      routes: result.routes,
-      connMap,
+      routes: passRoutes,
+      allowPartialRepair: true,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
         return drcEvaluator(input)
       },
     })
-    if (mergedRoutes !== result.routes) {
-      const reference = drcEvaluator({
+    if (independentRoutes !== passRoutes) {
+      const independentReference = drcEvaluator({
         traces: [],
-        routes: mergedRoutes,
-        hdRoutes: mergedRoutes,
+        routes: independentRoutes,
+        hdRoutes: independentRoutes,
       })
       result.referenceValidationCount++
-      const errors = Array.isArray(reference) ? reference : reference.errors
-      result.routes = mergedRoutes
-      result.publishedDrcIssueCount = errors.length
-      result.finalDrcIssueCount = errors.length
-      result.repaired = errors.length === 0
+      const independentErrors = Array.isArray(independentReference)
+        ? independentReference
+        : independentReference.errors
+      result.routes = independentRoutes
+      result.publishedDrcIssueCount = independentErrors.length
+      result.finalDrcIssueCount = independentErrors.length
+      result.repaired = independentErrors.length === 0
     }
+    if (connMap) {
+      const mergedRoutes = applyPipeline9IndependentViaMerges({
+        originalSrj,
+        routes: result.routes,
+        connMap,
+        drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+          result.referenceValidationCount++
+          return drcEvaluator(input)
+        },
+      })
+      if (mergedRoutes !== result.routes) {
+        const reference = drcEvaluator({
+          traces: [],
+          routes: mergedRoutes,
+          hdRoutes: mergedRoutes,
+        })
+        result.referenceValidationCount++
+        const errors = Array.isArray(reference) ? reference : reference.errors
+        result.routes = mergedRoutes
+        result.publishedDrcIssueCount = errors.length
+        result.finalDrcIssueCount = errors.length
+        result.repaired = errors.length === 0
+      }
+    }
+    if (result.routes === passRoutes) break
+    if (
+      passErrorCount === undefined ||
+      result.publishedDrcIssueCount === undefined ||
+      result.publishedDrcIssueCount >= passErrorCount
+    ) {
+      throw new Error("Independent repair changed geometry without DRC progress")
+    }
+    if (result.repaired) break
   }
   return result
 }
