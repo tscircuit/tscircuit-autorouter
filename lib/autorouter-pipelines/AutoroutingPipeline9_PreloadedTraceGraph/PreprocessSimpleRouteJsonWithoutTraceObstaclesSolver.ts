@@ -28,6 +28,12 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
       srjWithApproximatingRects,
     )
 
+    this.error = getConnectionPointOutsideBoundsError(outputSrj)
+    if (this.error) {
+      this.failed = true
+      return
+    }
+
     this.outputSrj = traces === undefined ? outputSrj : { ...outputSrj, traces }
     this.solved = true
   }
