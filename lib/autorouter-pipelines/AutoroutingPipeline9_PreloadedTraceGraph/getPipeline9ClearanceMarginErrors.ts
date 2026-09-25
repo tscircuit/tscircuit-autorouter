@@ -88,8 +88,8 @@ export const getPipeline9ClearanceMarginErrors = ({
       const originalTransitions = originalOwner.route.filter(
         (segment) => segment.route_type === "via",
       )
-      // Drilled copper can span the whole board even when the signal only
-      // transitions between two of its layers.
+      // A through-via drill spans the board even when its route transition
+      // only uses two of the drilled layers.
       const matchingTransitions = originalTransitions
         .map((segment, index) => ({ segment, index }))
         .filter(

@@ -73,8 +73,8 @@ test("Pipeline9 clears a generated through via from an unused signal layer", asy
     })
     expect(checkTracesAreContiguous(result.circuitJson)).toHaveLength(0)
     expect(result.errors).toHaveLength(0)
-    // Use Core's physical copper check independently of the router's checker.
-    // A top-to-inner1 signal still drills through the unrelated bottom pad.
+    // Check via-to-pad clearance independently of the router's checker.
+    // A top-to-inner1 transition does not limit a through via's drill span.
     expect(
       checkViaPadClearance(result.circuitJson, {
         minClearance: inputSrj.minViaEdgeToPadEdgeClearance,
