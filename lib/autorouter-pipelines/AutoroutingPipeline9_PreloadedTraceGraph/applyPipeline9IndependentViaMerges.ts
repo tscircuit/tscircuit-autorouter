@@ -50,7 +50,9 @@ export const applyPipeline9IndependentViaMerges = ({
   )
   if (movable.size === 0) return routes
   const srj = createSrjWithBoardValidObstacleLayers(originalSrj)
-  const movableNames = new Set([...movable].map((route) => route.connectionName))
+  const movableNames = new Set(
+    [...movable].map((route) => route.connectionName),
+  )
   let selected = routes
   const { minX, minY, maxX, maxY } = srj.bounds
   while (errors.length > 0) {
