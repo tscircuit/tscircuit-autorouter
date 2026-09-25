@@ -88,6 +88,7 @@ export const evaluateRelaxedDrc = ({
     circuitJson,
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
+      viaPadClearance: inputSrj.minViaEdgeToPadEdgeClearance,
       ...drcOptions,
     }),
   }

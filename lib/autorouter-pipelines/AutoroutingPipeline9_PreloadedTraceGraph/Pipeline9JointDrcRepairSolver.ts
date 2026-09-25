@@ -149,6 +149,12 @@ export const addAutoroutingViaTraceIds = ({
   )
   return errors.map((error) => {
     const explicitViaIds = [
+      ...(Array.isArray(error.pcb_pad_ids)
+        ? error.pcb_pad_ids.filter(
+            (padId): padId is string =>
+              typeof padId === "string" && traceIdByViaId.has(padId),
+          )
+        : []),
       ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
       ...(Array.isArray(error.pcb_via_ids)
         ? error.pcb_via_ids.filter(
