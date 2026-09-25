@@ -50,41 +50,51 @@ export const applyPipeline9IndependentViaMerges = ({
   )
   if (movable.size === 0) return routes
   const srj = createSrjWithBoardValidObstacleLayers(originalSrj)
+  const movableNames = new Set([...movable].map((route) => route.connectionName))
   let selected = routes
   const { minX, minY, maxX, maxY } = srj.bounds
-  const merger = new SameNetViaMergerSolver({
-    inputHdRoutes: [...movable],
-    otherHdRoutes: routes.filter((route) => !movable.has(route)),
-    netByConnectionName,
-    connMap,
-    obstacles: srj.obstacles,
-    layerCount: srj.layerCount,
-    colorMap: {},
-    preserveRouteEndpoints: true,
-    clearanceConstraints: {
-      traceMargin: Math.max(
-        RELAXED_DRC_OPTIONS.traceClearance!,
-        srj.minTraceToPadEdgeClearance ?? 0,
-        srj.defaultObstacleMargin ?? 0,
+  while (errors.length > 0) {
+    const merger = new SameNetViaMergerSolver({
+      inputHdRoutes: selected.filter((route) =>
+        movableNames.has(route.connectionName),
       ),
-      obstacleMargin: Math.max(
-        RELAXED_DRC_OPTIONS.traceClearance!,
-        srj.minTraceToPadEdgeClearance ?? 0,
-        srj.defaultObstacleMargin ?? 0,
+      otherHdRoutes: selected.filter(
+        (route) => !movableNames.has(route.connectionName),
       ),
-      boardEdgeMargin: srj.minBoardEdgeClearance ?? 0,
-    },
-    outline: srj.outline ?? [
-      { x: minX, y: minY },
-      { x: maxX, y: minY },
-      { x: maxX, y: maxY },
-      { x: minX, y: maxY },
-    ],
-    acceptMerge: (mergedRoutes): boolean => {
+      netByConnectionName,
+      connMap,
+      obstacles: srj.obstacles,
+      layerCount: srj.layerCount,
+      colorMap: {},
+      preserveRouteEndpoints: true,
+      clearanceConstraints: {
+        traceMargin: Math.max(
+          RELAXED_DRC_OPTIONS.traceClearance!,
+          srj.minTraceToPadEdgeClearance ?? 0,
+          srj.defaultObstacleMargin ?? 0,
+        ),
+        obstacleMargin: Math.max(
+          RELAXED_DRC_OPTIONS.traceClearance!,
+          srj.minTraceToPadEdgeClearance ?? 0,
+          srj.defaultObstacleMargin ?? 0,
+        ),
+        boardEdgeMargin: srj.minBoardEdgeClearance ?? 0,
+      },
+      outline: srj.outline ?? [
+        { x: minX, y: minY },
+        { x: maxX, y: minY },
+        { x: maxX, y: maxY },
+        { x: minX, y: maxY },
+      ],
+    })
+    let accepted = false
+    for (const {
+      routes: candidateRoutes,
+    } of merger.getClearancePreservingMergeCandidates()) {
       const byName = new Map(
-        mergedRoutes.map((route) => [route.connectionName, route]),
+        candidateRoutes.map((route) => [route.connectionName, route]),
       )
-      const candidate = routes.map(
+      const candidate = selected.map(
         (route) => byName.get(route.connectionName) ?? route,
       )
       const reference = drcEvaluator({
@@ -98,15 +108,15 @@ export const applyPipeline9IndependentViaMerges = ({
       // The merger checks all changed wires and preserves physical contacts.
       // Via copper only disappears or reuses an equal-diameter occupied site.
       // The reference checker must additionally confirm strict DRC progress.
-      if (candidateErrors.length >= errors.length) return false
+      if (candidateErrors.length >= errors.length) continue
       selected = candidate
       errors = candidateErrors
-      return true
-    },
-  })
-  merger.solve()
-  if (merger.failed || !merger.solved) {
-    throw new Error(`Independent via merge failed: ${merger.error}`)
+      accepted = true
+      break
+    }
+    if (!accepted) break
+    // Accepted copper invalidates earlier proposals. Strict DRC progress
+    // bounds this loop by the initial number of errors.
   }
   return selected
 }
