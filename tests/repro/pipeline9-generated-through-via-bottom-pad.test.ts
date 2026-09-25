@@ -1,4 +1,7 @@
-import { checkTracesAreContiguous, checkViaPadClearance } from "@tscircuit/checks"
+import {
+  checkTracesAreContiguous,
+  checkViaPadClearance,
+} from "@tscircuit/checks"
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
@@ -38,9 +41,12 @@ test("Pipeline9 clears a generated through via from an unused signal layer", asy
         },
       ],
     }
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-      cacheProvider: null,
-    })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      inputSrj,
+      {
+        cacheProvider: null,
+      },
+    )
     solver.solve()
 
     expect(solver.failed, solver.error ?? "").toBeFalse()
