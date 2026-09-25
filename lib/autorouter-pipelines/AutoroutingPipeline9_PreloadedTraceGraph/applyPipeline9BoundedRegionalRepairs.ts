@@ -369,7 +369,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       pathGridSizeScale:
         currentErrors.length > 10 ? budget.pathGridSizeScale : undefined,
       allowLayerChanges: true,
-      traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
+      traceClearance:
+        originalSrj.minTraceToPadEdgeClearance ??
+        RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter,
     })
