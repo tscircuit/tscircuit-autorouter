@@ -1,0 +1,20 @@
+diff --git a/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts b/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts
+--- a/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts
++++ b/lib/solvers/SimplifiedPathSolver/SingleSimplifiedPathSolver5_Deg45.ts
+@@ -111,6 +111,14 @@
+-    // Handle empty or single-point routes
+-    if (this.inputRoute.route.length <= 1) {
++    // No planar path exists to simplify; preserve its routed layer transitions.
++    if (
++      this.inputRoute.route.length <= 1 ||
++      this.inputRoute.route.every(
++        (point) =>
++          point.x === this.inputRoute.route[0].x &&
++          point.y === this.inputRoute.route[0].y,
++      )
++    ) {
+       this.newRoute = [...this.inputRoute.route]
++      this.newVias = [...this.inputRoute.vias]
+       this.solved = true
+       return
+     }

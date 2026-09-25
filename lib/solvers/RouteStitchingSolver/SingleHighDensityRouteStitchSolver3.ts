@@ -236,10 +236,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
+    // Coincident endpoints need their routed identities to resolve a distance tie.
+    const firstMatchesTerminal = Boolean(
+      this.start.pcb_port_id &&
+        firstRoute.startPcbPortId === this.start.pcb_port_id,
+    )
+    const lastMatchesTerminal = Boolean(
+      this.start.pcb_port_id &&
+        firstRoute.endPcbPortId === this.start.pcb_port_id,
+    )
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        (firstMatchesTerminal ||
+          (!lastMatchesTerminal &&
+            comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)))
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =

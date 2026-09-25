@@ -96,17 +96,31 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     rootConnectionName?: string
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: Point3 & { pcb_port_id?: string }
+    end: Point3 & { pcb_port_id?: string }
   }) {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
 
     const currentRouteSet = new Set(params.hdRoutes)
+    const terminalIds = new Set(
+      [params.start.pcb_port_id, params.end.pcb_port_id].filter(
+        (id): id is string => id !== undefined,
+      ),
+    )
     const sameRootRoutes = params.allHdRoutes.filter(
       (route) =>
         (route.rootConnectionName ?? route.connectionName) ===
-        rootConnectionName,
+          rootConnectionName &&
+        // A borrowed branch ending at another PCB terminal cannot represent
+        // this terminal pair. Keep owned routes for the strict stitch solver
+        // to validate, including any unexpected terminal tags on those routes.
+        (currentRouteSet.has(route) ||
+          !this.preserveTerminalPcbPortIds ||
+          terminalIds.size === 0 ||
+          [route.startPcbPortId, route.endPcbPortId].every(
+            (id) => id === undefined || terminalIds.has(id),
+          )),
     )
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {

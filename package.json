@@ -113,5 +113,8 @@
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"
+  },
+  "patchedDependencies": {
+    "@tscircuit/trace-simplification-solver@github:tscircuit/trace-simplification-solver#7adaba0": "patches/trace-simplification-solver-preserve-zero-length-vias.patch"
   }
 }

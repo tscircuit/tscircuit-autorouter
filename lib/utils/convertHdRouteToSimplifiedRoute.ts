@@ -255,6 +255,45 @@ export const convertHdRouteToSimplifiedRoute = (
   const result: SimplifiedPcbTraces[number]["route"] = []
   if (hdRoute.route.length === 0) return result
 
+  const [start, end] = hdRoute.route
+  const startPcbPortId = start.pcb_port_id ?? hdRoute.startPcbPortId
+  const endPcbPortId = end?.pcb_port_id ?? hdRoute.endPcbPortId
+  if (
+    hdRoute.route.length === 2 &&
+    start.x === end.x &&
+    start.y === end.y &&
+    start.z === end.z &&
+    hdRoute.vias.length === 0 &&
+    (hdRoute.jumpers?.length ?? 0) === 0 &&
+    !start.toNextSegmentType &&
+    !end.toNextSegmentType &&
+    !(opts.connectionPoints ?? []).some(
+      (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
+    )
+  ) {
+    // A zero-length path still connects two distinct terminals. Preserve both
+    // endpoint tags instead of deduplicating the path to one anonymous point.
+    const layer = mapZToLayerName(start.z, layerCount)
+    return [
+      {
+        route_type: "wire",
+        x: start.x,
+        y: start.y,
+        layer,
+        width: start.traceThickness ?? hdRoute.traceThickness,
+        ...(startPcbPortId ? { start_pcb_port_id: startPcbPortId } : {}),
+      },
+      {
+        route_type: "wire",
+        x: end.x,
+        y: end.y,
+        layer,
+        width: end.traceThickness ?? hdRoute.traceThickness,
+        ...(endPcbPortId ? { end_pcb_port_id: endPcbPortId } : {}),
+      },
+    ]
+  }
+
   let currentLayerPoints: Point[] = []
   let currentZ = hdRoute.route[0].z
 

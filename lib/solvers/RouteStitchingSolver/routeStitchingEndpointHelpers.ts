@@ -183,17 +183,22 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
-}) => {
+}): Point3 => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
   for (const terminal of sortedTerminals.slice(1)) {
     const terminalDistance = distance(params.islandEndpoint, terminal)
+    // Coincident terminals on different layers are distinct stitch targets.
+    const terminalMatchesLayer = terminal.z === params.islandEndpoint.z
+    const closestMatchesLayer = closestTerminal.z === params.islandEndpoint.z
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(terminal, closestTerminal) < 0)
+        ((terminalMatchesLayer && !closestMatchesLayer) ||
+          (terminalMatchesLayer === closestMatchesLayer &&
+            comparePoints(terminal, closestTerminal) < 0)))
     ) {
       closestTerminal = terminal
       closestDistance = terminalDistance

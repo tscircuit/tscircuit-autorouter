@@ -15,7 +15,13 @@ import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
-type ConnectionPoint = { x: number; y: number; z: number }
+type ConnectionPoint = {
+  x: number
+  y: number
+  z: number
+  pcb_port_id?: string
+  portPointId?: string
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -35,12 +41,18 @@ const connectionLabel = (
 const pointKey = (point: ConnectionPoint) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
-const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
+const dedupeConnectionPoints = (
+  points: ConnectionPoint[],
+): ConnectionPoint[] => {
   const seen = new Set<string>()
   const deduped: ConnectionPoint[] = []
 
   for (const point of points) {
-    const key = pointKey(point)
+    const key = JSON.stringify([
+      pointKey(point),
+      point.portPointId,
+      point.pcb_port_id,
+    ])
     if (seen.has(key)) continue
     seen.add(key)
     deduped.push(point)
@@ -59,7 +71,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   unsolvedConnections: {
     connectionName: string
     rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
+    points: ConnectionPoint[]
   }[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
   rootConnectionNameByConnectionName: Map<string, string>
@@ -123,6 +135,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       x,
       y,
       z,
+      pcb_port_id,
+      portPointId,
     } of nodeWithPortPoints.portPoints) {
       if (rootConnectionName) {
         this.rootConnectionNameByConnectionName.set(
@@ -132,7 +146,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       }
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
-        { x, y, z: z ?? 0 },
+        { x, y, z: z ?? 0, pcb_port_id, portPointId },
       ])
     }
     this.originalConnectionPointsByName = new Map(
@@ -224,7 +238,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   private getSingleRouteSolverOpts(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
+    points: ConnectionPoint[]
   }) {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
     return {
@@ -271,7 +285,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   private trySolveSamePointLayerChange(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
+    points: ConnectionPoint[]
   }) {
     const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
     const obstacleChecker =
@@ -311,7 +325,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
+    points: ConnectionPoint[]
   }) {
     const [origin, ...extraPoints] = dedupeConnectionPoints(
       unsolvedConnection.points,
@@ -473,6 +487,20 @@ export class IntraNodeRouteSolver extends BaseSolver {
       const sameY = Math.abs(A.y - B.y) < 1e-6
 
       if (sameX && sameY && A.z === B.z) {
+        // Identity deduplication already established that these are distinct
+        // endpoints, including when only one endpoint has PCB metadata.
+        if (A.x === B.x && A.y === B.y) {
+          this.solvedRoutes.push({
+            connectionName: unsolvedConnection.connectionName,
+            rootConnectionName: unsolvedConnection.rootConnectionName,
+            route: [A, B],
+            traceThickness: this.traceWidth,
+            viaDiameter: this.viaDiameter,
+            vias: [],
+            startPcbPortId: A.pcb_port_id,
+            endPcbPortId: B.pcb_port_id,
+          })
+        }
         return
       }
 

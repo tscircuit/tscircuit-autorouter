@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -123,6 +123,7 @@ export class CachedIntraNodeRouteSolver
         connectionName: portPoint.connectionName,
         rootConnectionName: portPoint.rootConnectionName,
         portPointId: portPoint.portPointId,
+        pcb_port_id: portPoint.pcb_port_id,
         prevPortPointId: portPoint.prevPortPointId,
         nextPortPointId: portPoint.nextPortPointId,
         x: roundCoord(portPoint.x - center.x),
