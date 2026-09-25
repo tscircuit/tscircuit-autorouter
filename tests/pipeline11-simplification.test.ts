@@ -59,12 +59,17 @@ test("simplification pipeline cleans existing traces without routing SRJ connect
   const inputSnapshot = structuredClone(input)
   const solver = new AutoroutingPipelineSolver11_Simplification(input, {
     iterations: 1,
+    effort: 2,
   })
 
   solver.solve()
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(
+    solver.traceSimplificationStageSolver?.traceSimplificationSolver
+      .simplificationPipelineLoops,
+  ).toBe(1)
   expect(input).toEqual(inputSnapshot)
   const output = solver.getOutputSimpleRouteJson()
   expect(output.connections).toEqual(input.connections)

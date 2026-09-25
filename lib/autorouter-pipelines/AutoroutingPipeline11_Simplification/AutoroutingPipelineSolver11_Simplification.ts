@@ -25,7 +25,9 @@ import {
 } from "./ValidateTraceSimplificationSolver"
 
 export interface AutoroutingPipelineSolver11SimplificationOptions {
-  /** Number of complete cleanup passes. Defaults to two. */
+  /** Multiplies cleanup passes; defaults to 1 (two passes). */
+  effort?: number
+  /** Number of complete cleanup passes. Overrides effort when supplied. */
   iterations?: number
   /** Enables coordinated layer swaps that reduce vias at crossings. */
   enableCrossingViaReduction?: boolean
