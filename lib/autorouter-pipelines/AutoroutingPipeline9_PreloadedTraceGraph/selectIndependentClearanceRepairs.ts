@@ -74,83 +74,91 @@ export const selectIndependentClearanceRepairs = ({
     [],
     resolver,
   )
-  for (const [ri, projected] of proposedRoutes.entries()) {
-    const original = routes[ri]!
-    if (projected.route.length !== original.route.length) {
-      throw new Error("Partial clearance projection changed routing topology")
-    }
-    // repair04 rebuilds its via list from transitions. Keep the input's explicit
-    // via metadata (including repeated sites) because this pass only moves wires.
-    const proposed = { ...original, route: projected.route }
-    const names = [traces[ri]!.pcb_trace_id]
-    if (resolver.canonicalize(names).some((net) => protectedNets.has(net))) {
-      continue
-    }
-    const route = [...original.route]
-    let accepted = false
-    let pointIndex = 0
-    while (pointIndex < proposed.route.length) {
-      const startIndex = pointIndex
-      while (
-        pointIndex < proposed.route.length &&
-        (proposed.route[pointIndex]!.x !== original.route[pointIndex]!.x ||
-          proposed.route[pointIndex]!.y !== original.route[pointIndex]!.y)
-      ) {
-        pointIndex++
+  // A later accepted section can clear a previously blocked proposal. Revisit
+  // the remaining sections until none can be accepted. Every accepted vertex
+  // takes its one fixed proposed position, so this cannot oscillate.
+  let madeProgress: boolean
+  do {
+    madeProgress = false
+    for (const [ri, projected] of proposedRoutes.entries()) {
+      const original = selected[ri]!
+      if (projected.route.length !== original.route.length) {
+        throw new Error("Partial clearance projection changed routing topology")
       }
-      if (pointIndex === startIndex) {
-        pointIndex++
+      // repair04 rebuilds its via list from transitions. Keep the input's explicit
+      // via metadata (including repeated sites) because this pass only moves wires.
+      const proposed = { ...original, route: projected.route }
+      const names = [traces[ri]!.pcb_trace_id]
+      if (resolver.canonicalize(names).some((net) => protectedNets.has(net))) {
         continue
       }
-      const endIndex = pointIndex
-      // Adjacent moved vertices share segments and must be accepted together.
-      // An unchanged vertex separates independent sections. Include the two
-      // boundary segments so retaining one section cannot leave an unchecked gap.
-      let blocked = false
-      for (
-        let pi = Math.max(1, startIndex);
-        pi <= Math.min(endIndex, proposed.route.length - 1);
-        pi++
-      ) {
-        const a = proposed.route[pi - 1]!
-        const b = proposed.route[pi]!
-        if (a.z !== b.z) {
-          throw new Error(
-            "Partial clearance projection moved a layer transition",
-          )
-        }
-        if (
-          index.collides({
-            start: a,
-            end: b,
-            layer: mapZToLayerName(a.z, srj.layerCount),
-            width: Math.max(
-              a.traceThickness ?? proposed.traceThickness,
-              b.traceThickness ?? proposed.traceThickness,
-            ),
-            connectionNames: names,
-          })
+      const route = [...original.route]
+      let accepted = false
+      let pointIndex = 0
+      while (pointIndex < proposed.route.length) {
+        const startIndex = pointIndex
+        while (
+          pointIndex < proposed.route.length &&
+          (proposed.route[pointIndex]!.x !== original.route[pointIndex]!.x ||
+            proposed.route[pointIndex]!.y !== original.route[pointIndex]!.y)
         ) {
-          blocked = true
-          break
+          pointIndex++
         }
+        if (pointIndex === startIndex) {
+          pointIndex++
+          continue
+        }
+        const endIndex = pointIndex
+        // Adjacent moved vertices share segments and must be accepted together.
+        // An unchanged vertex separates independent sections. Include the two
+        // boundary segments so retaining one section cannot leave an unchecked gap.
+        let blocked = false
+        for (
+          let pi = Math.max(1, startIndex);
+          pi <= Math.min(endIndex, proposed.route.length - 1);
+          pi++
+        ) {
+          const a = proposed.route[pi - 1]!
+          const b = proposed.route[pi]!
+          if (a.z !== b.z) {
+            throw new Error(
+              "Partial clearance projection moved a layer transition",
+            )
+          }
+          if (
+            index.collides({
+              start: a,
+              end: b,
+              layer: mapZToLayerName(a.z, srj.layerCount),
+              width: Math.max(
+                a.traceThickness ?? proposed.traceThickness,
+                b.traceThickness ?? proposed.traceThickness,
+              ),
+              connectionNames: names,
+            })
+          ) {
+            blocked = true
+            break
+          }
+        }
+        if (blocked) continue
+        for (let pi = startIndex; pi < endIndex; pi++) {
+          route[pi] = proposed.route[pi]!
+        }
+        accepted = true
       }
-      if (blocked) continue
-      for (let pi = startIndex; pi < endIndex; pi++) {
-        route[pi] = proposed.route[pi]!
-      }
-      accepted = true
+      if (!accepted) continue
+      madeProgress = true
+      selected[ri] = { ...proposed, route }
+      traces[ri] = toTrace(selected[ri]!, ri)
+      index = new SpatialObstacleIndex(
+        indexInput,
+        traces,
+        undefined,
+        [],
+        resolver,
+      )
     }
-    if (!accepted) continue
-    selected[ri] = { ...proposed, route }
-    traces[ri] = toTrace(selected[ri]!, ri)
-    index = new SpatialObstacleIndex(
-      indexInput,
-      traces,
-      undefined,
-      [],
-      resolver,
-    )
-  }
+  } while (madeProgress)
   return selected
 }
