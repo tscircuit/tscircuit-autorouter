@@ -9,7 +9,8 @@ import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "./assets/gameboy-generated-via-layer-short.json"
 
 test("Repair03 misses a generated Game Boy via short outside its signal layers", async (): Promise<void> => {
-  // Unmodified SWCLK and XOUT traces captured from a full Pipeline9 solve.
+  // Core 0.0.1989 exported the SRJ from the unchanged Game Boy TSX board.
+  // Unmodified SWCLK and XOUT traces captured from its full Pipeline9 solve.
   // Only the other nets and component obstacles were removed.
   const captured = structuredClone(capturedInput)
   const routedTraces = captured.traces as SimplifiedPcbTraces

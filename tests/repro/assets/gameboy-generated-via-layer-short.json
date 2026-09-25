@@ -23,16 +23,14 @@
           "y": 18.724923,
           "layer": "top",
           "pointId": "pcb_port_23",
-          "pcb_port_id": "pcb_port_23",
-          "port_selector": "U1.SWCLK"
+          "pcb_port_id": "pcb_port_23"
         },
         {
           "x": -3.8,
           "y": 22.9,
           "layer": "top",
           "pointId": "pcb_port_137",
-          "pcb_port_id": "pcb_port_137",
-          "port_selector": "TP_SWCLK.pin1"
+          "pcb_port_id": "pcb_port_137"
         }
       ],
       "__rootConnectionNames": [
@@ -50,16 +48,14 @@
           "y": 18.724923,
           "layer": "top",
           "pointId": "pcb_port_21",
-          "pcb_port_id": "pcb_port_21",
-          "port_selector": "U1.XOUT"
+          "pcb_port_id": "pcb_port_21"
         },
         {
           "x": -2.3,
           "y": 22.6672,
           "layer": "top",
           "pointId": "pcb_port_132",
-          "pcb_port_id": "pcb_port_132",
-          "port_selector": "R_XOUT.pin1"
+          "pcb_port_id": "pcb_port_132"
         }
       ],
       "__rootConnectionNames": [
