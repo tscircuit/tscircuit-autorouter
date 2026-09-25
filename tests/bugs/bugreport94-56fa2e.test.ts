@@ -6,7 +6,8 @@ import bugReport from "../../fixtures/bug-reports/bugreport94-56fa2e/bugreport94
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -14,6 +15,8 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
+  expect(srj.minTraceToHoleEdgeClearance).toBe(0.2)
+  expect(srj.obstacles.filter((obstacle) => obstacle.isHole)).toHaveLength(144)
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
@@ -35,9 +38,20 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const { errors } = getDrcErrors(circuitJson!)
   expect(errors).toEqual([])
 
+  expect(
+    getTraceToHoleClearanceError(srj, solver.getOutputSimplifiedPcbTraces()),
+  ).toBeNull()
+
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+  expect(
+    getBugReportSnapshotSvg({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      includeBoardClearance: true,
+    }),
+  ).toMatchSvgSnapshot(snapshotPath)
 })

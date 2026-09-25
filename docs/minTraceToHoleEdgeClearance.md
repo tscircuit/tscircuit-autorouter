@@ -51,3 +51,17 @@ Omitting the setting preserves existing routing behavior. Core integration must
 forward the board prop into this SRJ field **and** identify hole obstacles. To
 replace old routes, submit an unrouted SRJ; replaying saved routes does not make
 them satisfy a new clearance constraint.
+
+## Corne regression fixtures
+
+Bug reports 88 (right) and 94 (left) request 0.2 mm clearance. Their original SRJs
+predate explicit hole metadata. Each now identifies 144 circular NPTH obstacles
+using the saved Corne design's physical hole positions and diameters; report 94's
+separate rectangular keepout remains unmarked. Physical centers and dimensions,
+connections, and other routing tolerances are unchanged.
+
+Both regression tests use Pipeline 9 and assert completed routing, coverage of
+all point-pair connections, zero DRC errors, and clearance against the original
+hole geometry. Their snapshots show the routed output and evaluated DRC count.
+Pipeline 7 routes report 88 without hole-clearance violations, but still has
+four unrelated pad/trace and via/trace DRC errors; Pipeline 9 repairs those.
