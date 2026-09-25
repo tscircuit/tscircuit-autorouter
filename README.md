@@ -71,6 +71,12 @@ if (solver.failed) {
 const simplified = solver.getOutputSimpleRouteJson()
 ```
 
+Pass `{ effort: 2 }` as the second constructor argument for four cleanup passes.
+The default effort is 1 (two passes); `iterations` takes precedence if supplied.
+The existing `<autoroutingphase reroute autorouter="simplify" />` receives the
+board's `autorouterEffortLevel`, so `autorouterEffortLevel="2x"` also selects four
+passes. Each pass uses the same cleanup algorithms.
+
 ### Input Format: SimpleRouteJson
 
 The input to the autorouter is a `SimpleRouteJson` object with the following structure:

@@ -15,14 +15,16 @@ test("simplify phase on bugreport64-be7d8f.json", (): void => {
   expect(routingSolver.solved).toBe(true)
   const input = routingSolver.getOutputSimpleRouteJson()
   const inputSnapshot = structuredClone(input)
-  const solver = new AutoroutingPipelineSolver11_Simplification(input)
+  const solver = new AutoroutingPipelineSolver11_Simplification(input, {
+    effort: 2,
+  })
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(
     solver.traceSimplificationStageSolver?.traceSimplificationSolver
       .simplificationPipelineLoops,
-  ).toBe(2)
+  ).toBe(4)
   expect(input).toEqual(inputSnapshot)
   const sourceTrace6 = solver
     .getOutputSimplifiedPcbTraces()

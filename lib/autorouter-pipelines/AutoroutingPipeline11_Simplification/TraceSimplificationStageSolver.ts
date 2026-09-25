@@ -39,7 +39,11 @@ export class TraceSimplificationStageSolver extends BaseSolver {
         preparedInput.options.enableVertexShortcuts ?? true,
     })
     this.traceSimplificationSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
-      preparedInput.options.iterations ?? 2
+      preparedInput.options.iterations ??
+      Math.ceil(
+        this.traceSimplificationSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
+          (preparedInput.options.effort ?? 1),
+      )
     this.activeSubSolver = this
       .traceSimplificationSolver as unknown as BaseSolver
     this.MAX_ITERATIONS = this.traceSimplificationSolver.MAX_ITERATIONS + 1
