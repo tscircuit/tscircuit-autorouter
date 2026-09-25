@@ -75,8 +75,20 @@ test("TinyHypergraph finds a real port-point path between distinct coincident te
       connectionName,
     })),
   ).toEqual([
-    { x: 0, y: 0, z: 0, pcb_port_id: "pcb-a", connectionName: "coincident-pair" },
-    { x: 0, y: 0, z: 0, pcb_port_id: "pcb-b", connectionName: "coincident-pair" },
+    {
+      x: 0,
+      y: 0,
+      z: 0,
+      pcb_port_id: "pcb-a",
+      connectionName: "coincident-pair",
+    },
+    {
+      x: 0,
+      y: 0,
+      z: 0,
+      pcb_port_id: "pcb-b",
+      connectionName: "coincident-pair",
+    },
   ])
   expect(start.portPointId).toBeDefined()
   expect(end.portPointId).toBeDefined()

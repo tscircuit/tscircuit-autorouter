@@ -14,15 +14,17 @@ test("Pipeline9 completes SRJ18 sample 2 without A13 repair regressions", async 
   expect(solver.solved).toBe(true)
   expect(solver.portPointPathingSolver!.solved).toBe(true)
   const pathedConnections = new Set(
-    solver.portPointPathingSolver!
-      .getOutput()
+    solver
+      .portPointPathingSolver!.getOutput()
       .nodesWithPortPoints.flatMap((node) =>
         (node.portPointsInPairs ?? []).map(([start]) => start.connectionName),
       ),
   )
   expect(pathedConnections).toEqual(
     new Set(
-      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+      solver.srjWithPointPairs!.connections.map(
+        (connection) => connection.name,
+      ),
     ),
   )
   expect(

@@ -25,8 +25,8 @@ test("Pipeline9 paths coincident logical terminals without requiring PCB port me
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver!.solved).toBe(true)
-  const pairs = solver.portPointPathingSolver!
-    .getOutput()
+  const pairs = solver
+    .portPointPathingSolver!.getOutput()
     .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
   expect(pairs).toHaveLength(1)
   expect(pairs[0][0].portPointId).not.toBe(pairs[0][1].portPointId)

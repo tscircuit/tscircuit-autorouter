@@ -124,7 +124,7 @@ installation honoring `lean-toolchain` is sufficient.
 - `bun run build` and the full TypeScript check: passed locally after installing
   the repository dependencies.
 - Port-point pathing, coincident terminal, cache identity, MST, stitching, and
-  export regressions: 23 tests passed (268 assertions).
+  export regressions: 24 tests passed (275 assertions).
 - SRJ18 sample 2: the unchanged zero-DRC assertion passes with every point pair
   routed through port-point pathing.
 

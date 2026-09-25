@@ -115,6 +115,6 @@
     "stack-svgs": "^0.0.1"
   },
   "patchedDependencies": {
-    "@tscircuit/trace-simplification-solver@github:tscircuit/trace-simplification-solver#eb37f32": "patches/trace-simplification-solver-preserve-zero-length-vias.patch"
+    "@tscircuit/trace-simplification-solver@github:tscircuit/trace-simplification-solver#7adaba0": "patches/trace-simplification-solver-preserve-zero-length-vias.patch"
   }
 }

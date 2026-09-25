@@ -34,15 +34,17 @@ test("Pipeline9 paths coincident terminals through port-point pathing while pres
   expect(solver.failed).toBe(false)
   expect(solver.srjWithPointPairs!.connections).toHaveLength(2)
   expect(solver.portPointPathingSolver!.solved).toBe(true)
-  const pathedPairs = solver.portPointPathingSolver!
-    .getOutput()
+  const pathedPairs = solver
+    .portPointPathingSolver!.getOutput()
     .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
   const pathedConnectionNames = new Set(
     pathedPairs.map(([start]) => start.connectionName),
   )
   expect(pathedConnectionNames).toEqual(
     new Set(
-      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+      solver.srjWithPointPairs!.connections.map(
+        (connection) => connection.name,
+      ),
     ),
   )
   expect(
@@ -54,11 +56,14 @@ test("Pipeline9 paths coincident terminals through port-point pathing while pres
   ).toBe(true)
   const traces = solver.getOutputSimplifiedPcbTraces()
   const coincidentTrace = traces.find(
-    (trace) => trace.connectsTo?.includes("a") && trace.connectsTo.includes("b"),
+    (trace) =>
+      trace.connectsTo?.includes("a") && trace.connectsTo.includes("b"),
   )
   expect(coincidentTrace).toBeDefined()
   expect(coincidentTrace!.route).toHaveLength(2)
-  expect(coincidentTrace!.route[0]).toMatchObject({ start_pcb_port_id: "pcb_a" })
+  expect(coincidentTrace!.route[0]).toMatchObject({
+    start_pcb_port_id: "pcb_a",
+  })
   expect(coincidentTrace!.route[1]).toMatchObject({ end_pcb_port_id: "pcb_b" })
   expect(
     coincidentTrace!.route.every(

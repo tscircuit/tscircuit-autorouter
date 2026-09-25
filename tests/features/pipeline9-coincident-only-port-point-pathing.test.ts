@@ -30,7 +30,9 @@ test("Pipeline9 paths a coincident-only net through port-point pathing with leng
         ],
       },
     ],
-    buses: [{ busId: "bus", connectionNames: ["coincident"], maxLengthSkew: 0 }],
+    buses: [
+      { busId: "bus", connectionNames: ["coincident"], maxLengthSkew: 0 },
+    ],
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -39,8 +41,8 @@ test("Pipeline9 paths a coincident-only net through port-point pathing with leng
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver!.solved).toBe(true)
-  const pathedPairs = solver.portPointPathingSolver!
-    .getOutput()
+  const pathedPairs = solver
+    .portPointPathingSolver!.getOutput()
     .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
   expect(pathedPairs).toHaveLength(1)
   expect(pathedPairs[0].map((point) => point.pcb_port_id).sort()).toEqual([

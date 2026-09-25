@@ -57,10 +57,7 @@ test("coincident high-density paths preserve paired endpoint identities", (): vo
     }),
   ).toThrow("cannot identify distinct PCB terminals")
   expect(() =>
-    addTerminalPcbPortIds(
-      [{ ...tagged!, startPcbPortId: "unknown" }],
-      node,
-    ),
+    addTerminalPcbPortIds([{ ...tagged!, startPcbPortId: "unknown" }], node),
   ).toThrow('unknown PCB terminal "unknown"')
 
   const logicalPorts = node.portPoints.map(({ pcb_port_id, ...point }) => point)

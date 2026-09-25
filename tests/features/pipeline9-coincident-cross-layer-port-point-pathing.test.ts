@@ -26,8 +26,8 @@ test("Pipeline9 paths coincident cross-layer terminals before creating a via", (
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver!.solved).toBe(true)
-  const pairs = solver.portPointPathingSolver!
-    .getOutput()
+  const pairs = solver
+    .portPointPathingSolver!.getOutput()
     .nodesWithPortPoints.flatMap((node) => node.portPointsInPairs ?? [])
   expect(pairs).toHaveLength(1)
   expect(pairs[0].map((point) => point.pcb_port_id).sort()).toEqual([
