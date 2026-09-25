@@ -4,16 +4,17 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 repairs SRJ18 sample 3 with unchanged routing obstacles", async () => {
+test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 3)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null },
+    { effort: 2, cacheProvider: null },
   )
   solver.solve()
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
   const output = {
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
