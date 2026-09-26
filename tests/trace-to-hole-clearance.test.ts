@@ -19,9 +19,9 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
       cacheProvider: null,
     })
     expect(solver.originalSrj.obstacles).toMatchObject(srj.obstacles)
-    expect(solver.srj.obstacles.find((obstacle) => obstacle.isHole)?.width).toBe(
-      hole.width,
-    )
+    expect(
+      solver.srj.obstacles.find((obstacle) => obstacle.isHole)?.width,
+    ).toBe(hole.width)
     solver.solve()
     expect(solver.error).toBeNull()
     expect(solver.solved).toBe(true)

@@ -49,11 +49,17 @@ test("does not replace nearby multilayer terminals with a reversed layer shortcu
       {
         ...common,
         endPcbPortId: "end",
-        route: [{ x: 0, y: 0, z: 1 }, { x: 0.85, y: 0, z: 1 }],
+        route: [
+          { x: 0, y: 0, z: 1 },
+          { x: 0.85, y: 0, z: 1 },
+        ],
       },
       {
         ...common,
-        route: [{ x: -0.095, y: 0, z: 0 }, { x: -0.095, y: 0, z: 1 }],
+        route: [
+          { x: -0.095, y: 0, z: 0 },
+          { x: -0.095, y: 0, z: 1 },
+        ],
       },
     ],
   })

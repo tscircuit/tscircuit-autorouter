@@ -425,7 +425,7 @@ export class TraceWidthSolver extends BaseSolver {
               height: obstacle.height,
             })
       const margin = obstacle.isHole
-        ? this.minTraceToHoleEdgeClearance ?? this.obstacleMargin
+        ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
         : this.obstacleMargin
       const clearance = physicalClearance - margin
       minClearance = Math.min(minClearance, clearance)
