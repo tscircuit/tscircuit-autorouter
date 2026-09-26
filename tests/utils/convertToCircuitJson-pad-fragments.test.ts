@@ -77,6 +77,20 @@ test("DRC conversion preserves every pad fragment and net-owned plated terminal"
   })
   expect(checkTracesAreContiguous(circuit)).toEqual([])
 
+  const aliasedSrj = structuredClone(srj)
+  for (const obstacle of aliasedSrj.obstacles) {
+    if (obstacle.circuitJsonMetadata) {
+      obstacle.circuitJsonMetadata.pcb_port_id = "imported_start_alias"
+    }
+  }
+  const aliasedCircuit = convertToCircuitJson(aliasedSrj, traces)
+  expect(
+    aliasedCircuit
+      .filter((element) => element.type === "pcb_smtpad")
+      .every((pad) => pad.pcb_port_id === "start"),
+  ).toBe(true)
+  expect(checkTracesAreContiguous(aliasedCircuit)).toEqual([])
+
   const assignablePad = srj.obstacles.at(-1)!
   assignablePad.connectedTo = ["assignable_pool"]
   assignablePad.netIsAssignable = true
