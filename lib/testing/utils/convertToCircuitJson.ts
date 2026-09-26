@@ -747,13 +747,17 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         }
       }
     }
+    // Imported metadata may use an older port alias. Prefer it only when
+    // that port is present in the SRJ's exported connection points.
     const pcbPortId =
-      circuitJsonMetadata.pcb_port_id ??
-      getBestObstaclePcbPortId(
-        obstacle.center,
-        candidatePortIds,
-        portPositionMap,
-      )
+      circuitJsonMetadata.pcb_port_id &&
+      portPositionMap.has(circuitJsonMetadata.pcb_port_id)
+        ? circuitJsonMetadata.pcb_port_id
+        : getBestObstaclePcbPortId(
+            obstacle.center,
+            candidatePortIds,
+            portPositionMap,
+          )
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
