@@ -30,6 +30,7 @@ import {
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
+import { Pipeline9RegularNodeSolver } from "./Pipeline9RegularNodeSolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
@@ -52,6 +53,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  enableNodeSimplification?: boolean
 }
 
 type NodeBounds = {
@@ -331,6 +333,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  enableNodeSimplification?: boolean
 }
 
 /**
@@ -350,8 +353,9 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  enableNodeSimplification = true,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+  new (enableNodeSimplification ? Pipeline9RegularNodeSolver : HighDensitySolver)({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -396,6 +400,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preserveTerminalPcbPortIds: boolean
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
+  readonly enableNodeSimplification: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
@@ -433,6 +438,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
+    this.enableNodeSimplification = params.enableNodeSimplification ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
@@ -502,6 +508,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      enableNodeSimplification: this.enableNodeSimplification,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -966,6 +973,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       if (!this.activeRegularSolver.solved) return
 
+      if (this.enableNodeSimplification) {
+        const simplification = this.activeRegularSolver.stats.nodeSimplification
+        for (const key of ["inputPoints", "outputPoints", "timeMs", "obstacleCount", "routeCount"]) {
+          this.stats[`nodeSimplification_${key}`] =
+            Number(this.stats[`nodeSimplification_${key}`] ?? 0) + Number(simplification[key])
+        }
+      }
       this.finishActiveNode(this.activeRegularSolver.routes)
       return
     }

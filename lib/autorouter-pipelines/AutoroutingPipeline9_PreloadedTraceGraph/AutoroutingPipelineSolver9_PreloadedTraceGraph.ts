@@ -102,6 +102,8 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Remove redundant node-local vertices before repair (enabled by default). */
+  enableNodeSimplification?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -632,6 +634,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: cms.effort,
             includeBoardObstacles: true,
+            enableNodeSimplification: cms.opts.enableNodeSimplification,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },

@@ -10,6 +10,9 @@ export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
   "ordinary_then_regional_without_fixed_copper_v1" as const
 
+export const PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY =
+  "ordinary_node_grid_simplification_then_regional_without_fixed_copper_v4" as const
+
 /**
  * Every solution-affecting input for Pipeline9's terminal single-node policy:
  * ordinary high-density routing followed, when enabled, by the regional
@@ -17,7 +20,9 @@ export const PIPELINE9_NETWORKED_SOLVE_POLICY =
  * helper can run in the cache service.
  */
 export type Pipeline9NetworkedHighDensityNodeInput = {
-  solvePolicy: typeof PIPELINE9_NETWORKED_SOLVE_POLICY
+  solvePolicy:
+    | typeof PIPELINE9_NETWORKED_SOLVE_POLICY
+    | typeof PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY
   enableRegionalFallback: boolean
   nodeWithPortPoints: NodeWithPortPoints
   connectivityNetMap: Record<string, string[]>

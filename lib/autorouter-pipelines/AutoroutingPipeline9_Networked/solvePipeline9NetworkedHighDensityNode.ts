@@ -9,7 +9,7 @@ import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
 } from "./pipeline9NetworkedTypes"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY, PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
 
 type Pipeline9OrdinaryNodeResult =
   | {
@@ -45,6 +45,8 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     obstacles: input.obstacles,
     boardGeometry: input.boardGeometry,
     layerCount: input.layerCount,
+    enableNodeSimplification:
+      input.solvePolicy === PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY,
   })
   solver.solve()
   return solver.solved
@@ -63,7 +65,10 @@ const solvePipeline9OrdinaryHighDensityNode = ({
 export function solvePipeline9NetworkedHighDensityNode(
   input: Pipeline9NetworkedHighDensityNodeInput,
 ): Pipeline9NetworkedHighDensityNodeOutput {
-  if (input.solvePolicy !== PIPELINE9_NETWORKED_SOLVE_POLICY) {
+  if (
+    input.solvePolicy !== PIPELINE9_NETWORKED_SOLVE_POLICY &&
+    input.solvePolicy !== PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY
+  ) {
     throw new Error(
       `Unsupported Pipeline9 networked solve policy ${String(input.solvePolicy)}`,
     )
