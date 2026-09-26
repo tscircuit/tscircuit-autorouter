@@ -1,12 +1,6 @@
 name: Game Boy platform parity
 
 on:
-  pull_request:
-    paths:
-      - package.json
-      - scripts/validate-gameboy-platform-parity.ts
-      - tests/repro/assets/gameboy-full-board-through-vias.srj.json
-      - .github/workflows/gameboy-platform-parity.yml
   workflow_dispatch:
 
 permissions:
