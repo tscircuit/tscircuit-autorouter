@@ -913,6 +913,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (this.activeSubSolver instanceof TraceSimplificationSolver) {
+      this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
+      )
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"

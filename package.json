@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.928",
+  "version": "0.0.937",
   "type": "module",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
-    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#0973fa8a123276ff0f5de1fc7edef31efccb9cc9",
+    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#d2e1fe8732a3ede5dac8e11b8774f3f57fdc55f7",
     "@tscircuit/dataset-srj27-power-traces": "git+https://github.com/tscircuit/dataset-srj27-power-traces.git#eb24d36",
     "@tscircuit/dataset-srj28-partially-prerouted": "git+https://github.com/tscircuit/dataset-srj28-partially-prerouted.git#5b1673544b6ade4480612539ba6574ad414fddc0",
     "@tscircuit/dataset-srj29-ddr3-bga-pairs": "git+https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs.git#585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
@@ -56,10 +56,10 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#e36fe8c225799855ae43ba54e7378ac1b5d16e61",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#0c9792fa1ed695e71d9aa90249607b927ed698d2",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#4a7735c9515590826d40e1e4681c9745196fbbd5",
+    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/edb4e21052c87b7c6861b82f2c38b1b351f64097",
     "@tscircuit/solver-utils": "^0.0.16",
-    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#eb37f32f7fe6a012eeedeae16d707ce48419c0b9",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#7adaba0dfa177844063cd77ca757032481c94af7",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
@@ -112,6 +112,7 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123"
   }
 }

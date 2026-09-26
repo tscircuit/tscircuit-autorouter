@@ -1,4 +1,8 @@
-import { PipelineStagesTable } from "@tscircuit/solver-utils/react"
+import type { PcbTraceLinter } from "@tscircuit/pcb-trace-linter/srj"
+import {
+  GenericSolverDebugger,
+  PipelineStagesTable,
+} from "@tscircuit/solver-utils/react"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { GraphicsObject, Line, Point, Rect } from "graphics-debug"
 import {
@@ -46,6 +50,7 @@ import { CacheDebugger } from "./CacheDebugger"
 import { SolveBreakpointDialog } from "./SolveBreakpointDialog"
 import { evaluateRelaxedDrc } from "./evaluate-relaxed-drc"
 import { getDrcErrors } from "./getDrcErrors"
+import { runTraceLinting } from "./runTraceLinting"
 import { getCurrentCircuitJson } from "./autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { extractCapacityMeshNodeIdFromObjectLabel } from "./utils/extractCapacityMeshNodeIdFromObjectLabel"
 import { filterUnravelMultiSectionInput } from "./utils/filterUnravelMultiSectionInput"
@@ -468,6 +473,17 @@ export const AutoroutingPipelineDebugger = ({
   const [lastTargetIteration, setLastTargetIteration] = useState<number>(
     parseInt(window.localStorage.getItem("lastTargetIteration") || "0", 10),
   )
+  const [traceLintResult, setTraceLintResult] = useState<{
+    routingSolver: PipelineDebuggerSolver
+    iteration: number
+    linter: PcbTraceLinter
+    runId: number
+  } | null>(null)
+  const traceLintRunId = useRef(0)
+  const traceLintIsCurrent =
+    traceLintResult !== null &&
+    traceLintResult.routingSolver === solver &&
+    traceLintResult.iteration === solver.iterations
   const [drcErrors, setDrcErrors] = useState<GraphicsObject | null>(null)
   const [drcErrorCount, setDrcErrorCount] = useState<number>(0)
   const [lastDrcMode, setLastDrcMode] = useState<"strict" | "relaxed" | null>(
@@ -901,6 +917,34 @@ export const AutoroutingPipelineDebugger = ({
     }
   }
 
+  const handleRunTraceLinting = (): void => {
+    if (!solver.solved || solver.failed) {
+      window.alert(
+        "Run Trace Linting is available after routing completes successfully.",
+      )
+      return
+    }
+    try {
+      if (typeof solver.getOutputSimpleRouteJson !== "function") {
+        throw new Error(
+          "The selected solver does not expose routed SimpleRouteJson",
+        )
+      }
+      const linter = runTraceLinting(solver.getOutputSimpleRouteJson())
+      setTraceLintResult({
+        routingSolver: solver,
+        iteration: solver.iterations,
+        linter,
+        runId: ++traceLintRunId.current,
+      })
+    } catch (error) {
+      setTraceLintResult(null)
+      window.alert(
+        `Error running trace linting: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
   const handleRunDrcChecks = () => runDrcChecks("strict")
   const handleRunRelaxedDrcChecks = () => runDrcChecks("relaxed")
 
@@ -1137,6 +1181,8 @@ export const AutoroutingPipelineDebugger = ({
         onSetCanSelectObjects={setCanSelectObjects}
         onRunDrcChecks={handleRunDrcChecks}
         onRunRelaxedDrcChecks={handleRunRelaxedDrcChecks}
+        onRunTraceLinting={handleRunTraceLinting}
+        canRunTraceLinting={solver.solved && !solver.failed}
         canTogglePcbSvg={solver.solved && !solver.failed}
         pcbSvgEnabled={Boolean(pcbSvgMarkup)}
         onTogglePcbSvg={handleTogglePcbSvg}
@@ -1370,6 +1416,45 @@ export const AutoroutingPipelineDebugger = ({
           </>
         )}
       </div>
+
+      {traceLintIsCurrent && traceLintResult && (
+        <section
+          className="fixed inset-4 z-50 overflow-auto rounded-lg border bg-white p-4 shadow-xl"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Trace linting results"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-bold">
+              Trace Linting: {traceLintResult.linter.getOutput().length} style{" "}
+              {traceLintResult.linter.getOutput().length === 1
+                ? "error"
+                : "errors"}
+            </h3>
+            <button
+              className="border rounded p-2"
+              onClick={() => setTraceLintResult(null)}
+            >
+              Close Trace Linting
+            </button>
+          </div>
+          <GenericSolverDebugger
+            key={traceLintResult.runId}
+            solver={traceLintResult.linter}
+          />
+          <details>
+            <summary>Issue locations</summary>
+            <ol className="list-decimal pl-6">
+              {traceLintResult.linter.getOutput().map((issue) => (
+                <li key={issue.issueId}>
+                  {issue.message}: ({issue.start.x}, {issue.start.y}) → (
+                  {issue.end.x}, {issue.end.y})
+                </li>
+              ))}
+            </ol>
+          </details>
+        </section>
+      )}
 
       {dialogObject && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
