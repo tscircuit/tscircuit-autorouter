@@ -692,26 +692,31 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           ? [circuitJsonMetadata.pcb_port_id]
           : []),
         ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
-        // Legacy SRJs may identify pad ownership only by the connection name.
-        // Require both electrical ownership and the terminal's physical center.
-        ...srj.connections.flatMap((connection) =>
-          obstacle.netIsAssignable ||
-          getSrjDeclaredConnectionReferences(connection).some((id) =>
-            connectedTo.includes(id),
-          )
-            ? connection.pointsToConnect.flatMap((point) =>
-                point.pcb_port_id &&
-                Math.hypot(
-                  point.x - obstacle.center.x,
-                  point.y - obstacle.center.y,
-                ) < 1e-6
-                  ? [point.pcb_port_id]
-                  : [],
-              )
-            : [],
-        ),
       ]),
     ]
+    // Legacy SRJs may identify pad ownership only by the connection name.
+    // Require both electrical ownership and the terminal's physical center.
+    if (candidatePortIds.length === 0) {
+      for (const connection of srj.connections) {
+        if (
+          !obstacle.netIsAssignable &&
+          !getSrjDeclaredConnectionReferences(connection).some((id) =>
+            connectedTo.includes(id),
+          )
+        )
+          continue
+        for (const point of connection.pointsToConnect) {
+          if (
+            point.pcb_port_id &&
+            Math.hypot(
+              point.x - obstacle.center.x,
+              point.y - obstacle.center.y,
+            ) < 1e-6
+          )
+            candidatePortIds.push(point.pcb_port_id)
+        }
+      }
+    }
     const pcbPortId =
       circuitJsonMetadata.pcb_port_id ??
       getBestObstaclePcbPortId(
