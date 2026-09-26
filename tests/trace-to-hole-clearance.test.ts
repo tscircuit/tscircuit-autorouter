@@ -10,7 +10,7 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     const srj = structuredClone(fixture) as SimpleRouteJson
     srj.minTraceToHoleEdgeClearance = clearance
     const hole = srj.obstacles.find((o) => o.connectedTo.length === 0)!
-    hole.isHole = true
+    hole.isNonPlatedHole = true
     hole.shape = "circle"
     hole.obstacleId = "switch_mount_hole"
     const before = JSON.stringify(srj)
@@ -20,7 +20,7 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     })
     expect(solver.originalSrj.obstacles).toMatchObject(srj.obstacles)
     expect(
-      solver.srj.obstacles.find((obstacle) => obstacle.isHole)?.width,
+      solver.srj.obstacles.find((obstacle) => obstacle.isNonPlatedHole)?.width,
     ).toBe(hole.width)
     solver.solve()
     expect(solver.error).toBeNull()

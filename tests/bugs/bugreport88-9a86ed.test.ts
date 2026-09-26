@@ -15,7 +15,7 @@ test("bugreport88-9a86ed.json with Pipeline 9", (): void => {
     structuredClone(srj),
   )
   expect(srj.minTraceToHoleEdgeClearance).toBe(0.2)
-  expect(srj.obstacles.filter((obstacle) => obstacle.isHole)).toHaveLength(144)
+  expect(srj.obstacles.filter((obstacle) => obstacle.isNonPlatedHole)).toHaveLength(144)
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)

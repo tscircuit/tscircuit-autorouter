@@ -8,7 +8,7 @@ test("shared DRC reports preloaded trace clearance and overlap with NPTHs", (): 
   for (const y of [1.1, 0]) {
     const srj = structuredClone(fixture) as SimpleRouteJson
     srj.minTraceToHoleEdgeClearance = 0.2
-    srj.obstacles[2]!.isHole = true
+    srj.obstacles[2]!.isNonPlatedHole = true
     srj.obstacles[2]!.shape = "circle"
     srj.traces = [
       {

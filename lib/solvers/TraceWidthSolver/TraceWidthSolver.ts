@@ -414,7 +414,7 @@ export class TraceWidthSolver extends BaseSolver {
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
       const physicalClearance =
-        obstacle.isHole && obstacle.shape === "circle"
+        obstacle.isNonPlatedHole && obstacle.shape === "circle"
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,
@@ -424,7 +424,7 @@ export class TraceWidthSolver extends BaseSolver {
               width: obstacle.width,
               height: obstacle.height,
             })
-      const margin = obstacle.isHole
+      const margin = obstacle.isNonPlatedHole
         ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
         : this.obstacleMargin
       const clearance = physicalClearance - (margin - this.obstacleMargin)
