@@ -7,7 +7,7 @@ const DRC_ERROR_ID_KEYS = [
   "pcb_pad_trace_clearance_error_id",
 ] as const
 
-const isMissingConnectionError = (error: DrcError): boolean =>
+export const isMissingConnectionError = (error: DrcError): boolean =>
   typeof error.pcb_trace_error_id === "string" &&
   error.pcb_trace_error_id.startsWith("missing_connection_")
 

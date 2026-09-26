@@ -11,6 +11,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
+import { isMissingConnectionError } from "./filterPipeline9DrcErrorsAgainstBaseline"
 
 /** Final cleanup only: changing via topology earlier can obstruct regional repair. */
 export const applyPipeline9FinalViaMerges = ({
@@ -109,9 +110,9 @@ export const applyPipeline9FinalViaMerges = ({
         candidateErrors.some(
           (error) =>
             candidateErrors.filter((other) => other.type === error.type)
-              .length > errors.filter((other) => other.type === error.type).length ||
-            (typeof error.pcb_trace_error_id === "string" &&
-              error.pcb_trace_error_id.startsWith("missing_connection_")),
+              .length >
+              errors.filter((other) => other.type === error.type).length ||
+            isMissingConnectionError(error),
         )
       ) {
         continue

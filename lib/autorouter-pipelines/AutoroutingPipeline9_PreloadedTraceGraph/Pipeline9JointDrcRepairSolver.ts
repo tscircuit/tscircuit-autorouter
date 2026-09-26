@@ -1654,12 +1654,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const boundedRegionalRepairTimeMs =
       performance.now() - boundedRegionalRepairStartedAt
-    this.combinedOutput = applyPipeline9FinalViaMerges({
-      originalSrj: this.params.originalSrj,
-      routes: boundedRegionalRepairResult.routes,
-      connMap: this.params.connMap,
-      drcEvaluator: this.cachedReferenceDrcEvaluator!,
-    })
+    this.combinedOutput =
+      boundedRegionalRepairResult.publishedDrcIssueCount === 0
+        ? boundedRegionalRepairResult.routes
+        : applyPipeline9FinalViaMerges({
+            originalSrj: this.params.originalSrj,
+            routes: boundedRegionalRepairResult.routes,
+            connMap: this.params.connMap,
+            drcEvaluator: this.cachedReferenceDrcEvaluator!,
+          })
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,

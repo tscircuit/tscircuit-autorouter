@@ -8,7 +8,10 @@ test("fewer errors cannot justify a new error type or a missing connection", ():
     { type: "pcb_trace_error", pcb_trace_error_id: "missing_connection_power" },
   ]) {
     const fixture = createIndependentViaMergeFixture()
-    const baseline = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
+    const baseline = fixture.drcEvaluator({
+      traces: [],
+      routes: fixture.routes,
+    })
     let evaluations = 0
     const selected = applyPipeline9FinalViaMerges({
       ...fixture,
