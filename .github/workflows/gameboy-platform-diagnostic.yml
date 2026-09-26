@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   capture:
@@ -17,15 +18,19 @@ jobs:
         with:
           bun-version: 1.3.8
       - run: bun install
-      - name: Capture the identical force-improvement input
-        run: bun scripts/diagnose-gameboy-platform.ts platform-diagnostic scripts/gameboy-macos-phase-baseline.json highDensityForceImproveSolver
-      - name: Record Linux force-improvement nodes
-        run: bun scripts/diagnose-gameboy-force-improve.ts platform-diagnostic/selected-stage-input.json.gz platform-diagnostic
+      - uses: actions/download-artifact@v4
+        with:
+          name: gameboy-force-improve-linux-reference
+          run-id: 36230639068
+          github-token: ${{ github.token }}
+          path: force-improve-input
+      - name: Record unchanged math calls for the first differing node
+        run: bun scripts/diagnose-gameboy-force-improve.ts force-improve-input/selected-stage-input.json.gz math-output force-improve-input/node-results.json.gz 414
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gameboy-force-improve-linux-reference
-          path: platform-diagnostic/
+          name: gameboy-force-improve-linux-math
+          path: math-output/
   compare-macos:
     needs: capture
     runs-on: macos-14
@@ -39,11 +44,17 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: gameboy-force-improve-linux-reference
+          run-id: 36230639068
+          github-token: ${{ github.token }}
           path: force-improve-input
-      - name: Stop at the first differing force-improvement node
-        run: bun scripts/diagnose-gameboy-force-improve.ts force-improve-input/selected-stage-input.json.gz force-improve-output force-improve-input/node-results.json.gz
+      - uses: actions/download-artifact@v4
+        with:
+          name: gameboy-force-improve-linux-math
+          path: math-input
+      - name: Stop at the first differing math call
+        run: bun scripts/diagnose-gameboy-force-improve.ts force-improve-input/selected-stage-input.json.gz math-output force-improve-input/node-results.json.gz 414 math-input/math-calls.json.gz
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gameboy-force-improve-macos-first-difference
-          path: force-improve-output/
+          name: gameboy-force-improve-macos-math-difference
+          path: math-output/

@@ -5,6 +5,53 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 
 type EntryResult = { index: number; nodeId: string; hash: string; routes: unknown }
 type Difference = { path: string; expected: unknown; actual: unknown }
+type MathCall = { name: MathName; arguments: string[]; result: string }
+type MathName = "hypot" | "exp" | "sin" | "cos" | "sqrt" | "pow" | "atan2" | "acos"
+const mathNames: MathName[] = ["hypot", "exp", "sin", "cos", "sqrt", "pow", "atan2", "acos"]
+class MathComparisonStop extends Error {}
+
+function traceMathStep(solver: HighDensityForceImproveSolver, outputDirectory: string, baselineFile?: string): void {
+  const expected: MathCall[] | undefined = baselineFile
+    ? JSON.parse(gunzipSync(readFileSync(baselineFile)).toString())
+    : undefined
+  const originals = new Map<MathName, (...values: number[]) => number>()
+  const calls: MathCall[] = []
+  let mismatch: unknown
+  for (const name of mathNames) {
+    const original: (...values: number[]) => number = Math[name]
+    originals.set(name, original)
+    Math[name] = (...values: number[]): number => {
+      const result = original(...values)
+      const call: MathCall = {
+        name,
+        arguments: values.map((value) => Object.is(value, -0) ? "-0" : String(value)),
+        result: Object.is(result, -0) ? "-0" : String(result),
+      }
+      const index = calls.length
+      calls.push(call)
+      if (expected && JSON.stringify(call) !== JSON.stringify(expected[index])) {
+        mismatch = { index, expected: expected[index], actual: call, stack: new Error().stack }
+        throw new MathComparisonStop("Stopped at the first differing math call")
+      }
+      return result
+    }
+  }
+  try {
+    solver.step()
+  } catch (error) {
+    if (!(error instanceof MathComparisonStop)) throw error
+  } finally {
+    for (const [name, original] of originals) Math[name] = original
+  }
+  if (mismatch) {
+    const details = { platform: process.platform, arch: process.arch, bun: Bun.version, mismatch }
+    writeFileSync(`${outputDirectory}/first-math-difference.json`, JSON.stringify(details, null, 2))
+    console.log("FIRST_MATH_DIFFERENCE", JSON.stringify(details))
+    process.exit(2)
+  }
+  writeFileSync(`${outputDirectory}/math-calls.json.gz`, gzipSync(JSON.stringify(calls)))
+  console.log("MATH_CALLS", calls.length)
+}
 
 function decode(value: any, seen = new Map<number, any>()): any {
   if (value === null || typeof value !== "object") return value
@@ -41,7 +88,7 @@ function firstDifference(expected: any, actual: any, field = "routes"): Differen
   return undefined
 }
 
-const [inputFile, outputDirectory, baselineFile] = process.argv.slice(2)
+const [inputFile, outputDirectory, baselineFile, mathNodeIndex, mathBaselineFile] = process.argv.slice(2)
 if (!inputFile || !outputDirectory) throw new Error("Expected input and output paths")
 mkdirSync(outputDirectory, { recursive: true })
 const encoded = gunzipSync(readFileSync(inputFile)).toString()
@@ -58,7 +105,11 @@ const results: EntryResult[] = []
 while (!solver.solved && !solver.failed) {
   const index = solver.activeSampleIndex
   const entry = solver.sampleEntries[index]
-  solver.step()
+  if (mathNodeIndex !== undefined && index === Number(mathNodeIndex)) {
+    traceMathStep(solver, outputDirectory, mathBaselineFile)
+  } else {
+    solver.step()
+  }
   const routes = entry.routeIndexes.map((routeIndex) => solver.improvedRoutesByIndex.get(routeIndex))
   const record = {
     index,
@@ -78,6 +129,10 @@ while (!solver.solved && !solver.failed) {
     writeFileSync(`${outputDirectory}/first-node-difference.json`, JSON.stringify(details, null, 2))
     console.log("FIRST_NODE_DIFFERENCE", JSON.stringify({ index, nodeId: record.nodeId, difference }))
     process.exit(2)
+  }
+  if (mathNodeIndex !== undefined && index === Number(mathNodeIndex)) {
+    console.log("MATH_OBSERVER_PRESERVES_NODE_OUTPUT", record.hash)
+    process.exit(0)
   }
 }
 if (solver.failed) throw new Error(solver.error ?? "Force improvement failed")
