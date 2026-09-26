@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.933",
+  "version": "0.0.937",
   "type": "module",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
-    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#0973fa8a123276ff0f5de1fc7edef31efccb9cc9",
+    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#d2e1fe8732a3ede5dac8e11b8774f3f57fdc55f7",
     "@tscircuit/dataset-srj27-power-traces": "git+https://github.com/tscircuit/dataset-srj27-power-traces.git#eb24d36",
     "@tscircuit/dataset-srj28-partially-prerouted": "git+https://github.com/tscircuit/dataset-srj28-partially-prerouted.git#5b1673544b6ade4480612539ba6574ad414fddc0",
     "@tscircuit/dataset-srj29-ddr3-bga-pairs": "git+https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs.git#585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
@@ -112,6 +112,7 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123"
   }
 }

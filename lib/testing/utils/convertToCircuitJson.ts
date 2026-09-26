@@ -648,10 +648,34 @@ const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
  * Multi-layer obstacles represent plated holes and must not be deduped away
  * against top-side SMT pads that share the same connectivity metadata.
  */
+/** Keep distinct pieces of one physical pad while deduplicating identical obstacles. */
+function getPadFragmentId(
+  baseId: string,
+  obstacle: Obstacle,
+  obstacleIndex: number,
+  geometriesById: Map<string, Set<string>>,
+): string | undefined {
+  const geometryKey = JSON.stringify([
+    obstacle.center.x,
+    obstacle.center.y,
+    obstacle.width,
+    obstacle.height,
+    obstacle.ccwRotationDegrees ?? 0,
+    [...obstacle.layers].sort(),
+  ])
+  const geometries = geometriesById.get(baseId) ?? new Set<string>()
+  if (geometries.has(geometryKey)) return undefined
+  const id =
+    geometries.size === 0 ? baseId : `${baseId}_fragment_${obstacleIndex}`
+  geometries.add(geometryKey)
+  geometriesById.set(baseId, geometries)
+  return id
+}
+
 function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
-  const addedSmtPadIds = new Set<string>()
-  const addedPlatedHoleIds = new Set<string>()
+  const addedSmtPadIds = new Map<string, Set<string>>()
+  const addedPlatedHoleIds = new Map<string, Set<string>>()
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
@@ -700,11 +724,36 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
       ]),
     ]
-    const pcbPortId = getBestObstaclePcbPortId(
-      obstacle.center,
-      candidatePortIds,
-      portPositionMap,
-    )
+    // Legacy SRJs may identify pad ownership only by the connection name.
+    // Require both electrical ownership and the terminal's physical center.
+    if (candidatePortIds.length === 0) {
+      for (const connection of srj.connections) {
+        if (
+          !obstacle.netIsAssignable &&
+          !getSrjDeclaredConnectionReferences(connection).some((id) =>
+            connectedTo.includes(id),
+          )
+        )
+          continue
+        for (const point of connection.pointsToConnect) {
+          if (
+            point.pcb_port_id &&
+            Math.hypot(
+              point.x - obstacle.center.x,
+              point.y - obstacle.center.y,
+            ) < 1e-6
+          )
+            candidatePortIds.push(point.pcb_port_id)
+        }
+      }
+    }
+    const pcbPortId =
+      circuitJsonMetadata.pcb_port_id ??
+      getBestObstaclePcbPortId(
+        obstacle.center,
+        candidatePortIds,
+        portPositionMap,
+      )
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
@@ -720,10 +769,13 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const isMultiLayerObstacle = Boolean(platedHoleId) || layers.length > 1
 
     if (isMultiLayerObstacle) {
-      const id =
-        platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`
-      if (addedPlatedHoleIds.has(id)) continue
-      addedPlatedHoleIds.add(id)
+      const id = getPadFragmentId(
+        platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`,
+        obstacle,
+        obstacleIndex,
+        addedPlatedHoleIds,
+      )
+      if (id === undefined) continue
 
       if (
         typeof rotationDegrees === "number" &&
@@ -787,9 +839,13 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       continue
     }
 
-    const id = smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`
-    if (addedSmtPadIds.has(id)) continue
-    addedSmtPadIds.add(id)
+    const id = getPadFragmentId(
+      smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`,
+      obstacle,
+      obstacleIndex,
+      addedSmtPadIds,
+    )
+    if (id === undefined) continue
 
     if (
       typeof rotationDegrees === "number" &&
