@@ -128,7 +128,7 @@ try {
 } catch (error) {
   if (!(error instanceof ComparisonStop)) throw error
   console.log("STOP", error.message)
-  process.exit(2)
+  process.exit(error.message.startsWith("Captured input") ? 0 : 2)
 }
 if (!solver.solved || solver.failed) throw new Error(solver.error ?? "Solve did not complete")
 const routedTraces = solver.getOutputSimplifiedPcbTraces()

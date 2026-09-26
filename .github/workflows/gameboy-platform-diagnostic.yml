@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  compare:
+  capture:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -17,10 +17,33 @@ jobs:
         with:
           bun-version: 1.3.8
       - run: bun install
-      - name: Compare phase inputs and stop at the first difference
-        run: bun scripts/diagnose-gameboy-platform.ts platform-diagnostic scripts/gameboy-macos-phase-baseline.json
+      - name: Capture the identical force-improvement input
+        run: bun scripts/diagnose-gameboy-platform.ts platform-diagnostic scripts/gameboy-macos-phase-baseline.json highDensityForceImproveSolver
+      - name: Record Linux force-improvement nodes
+        run: bun scripts/diagnose-gameboy-force-improve.ts platform-diagnostic/selected-stage-input.json.gz platform-diagnostic
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: gameboy-linux-first-difference
+          name: gameboy-force-improve-linux-reference
           path: platform-diagnostic/
+  compare-macos:
+    needs: capture
+    runs-on: macos-14
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+      - run: bun install
+      - uses: actions/download-artifact@v4
+        with:
+          name: gameboy-force-improve-linux-reference
+          path: force-improve-input
+      - name: Stop at the first differing force-improvement node
+        run: bun scripts/diagnose-gameboy-force-improve.ts force-improve-input/selected-stage-input.json.gz force-improve-output force-improve-input/node-results.json.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gameboy-force-improve-macos-first-difference
+          path: force-improve-output/
