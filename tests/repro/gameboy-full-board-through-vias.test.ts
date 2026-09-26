@@ -10,7 +10,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import simpleRouteJson from "./assets/gameboy-full-board-through-vias.srj.json"
 
-test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Promise<void> => {
+test("Repair03 misses through-via contacts in the full Game Boy routing", async (): Promise<void> => {
   // Captured from Core 0.0.1989's autorouting:start event before any routing.
   const inputSrj = structuredClone(simpleRouteJson) as SimpleRouteJson
   expect(inputSrj.layerCount).toBe(4)
@@ -23,16 +23,24 @@ test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Prom
     cacheProvider: null,
     effort: 1,
   })
-  solver.solve()
+  // Inspect the complete board immediately before Repair03 consumes its
+  // naturally routed copper. Later Pipeline9 stages can mask the missed DRCs.
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    solver.getCurrentPhase() !== "globalDrcForceImproveSolver"
+  ) {
+    solver.step()
+  }
 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
-  expect(solver.solved).toBeTrue()
+  expect(solver.getCurrentPhase()).toBe("globalDrcForceImproveSolver")
 
   const drcInput = {
     inputSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces: solver.getNewTracesBeforePowerExpansion(),
   }
   const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
   // Recheck identical copper with blind vias allowed to isolate contacts
@@ -77,7 +85,7 @@ test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Prom
   for (const error of errors) {
     errorsByType[error.type] = (errorsByType[error.type] ?? 0) + 1
   }
-  console.log("Full Game Boy DRC result", {
+  console.log("Full Game Boy Repair03 input DRC result", {
     platform: process.platform,
     traces: drcInput.routedTraces.length,
     vias: circuitJson.filter((element) => element.type === "pcb_via").length,
@@ -86,7 +94,7 @@ test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Prom
     errorsByType,
   })
 
-  // This captures the measured DRC count, not an assertion of DRC-free routing.
+  // Repo-native full-board snapshot of Repair03's input, not the final output.
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
   )
