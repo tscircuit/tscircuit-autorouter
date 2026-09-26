@@ -24,6 +24,8 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
+  // Main had 97 errors; the earlier via-repair PR reduced that to 88.
+  expect(errors.length).toBeLessThan(88)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
     stats.postExactReferenceDrcIssueCount,
