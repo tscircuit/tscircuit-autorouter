@@ -46,6 +46,7 @@ import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMargin
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
+import { applyPipeline9FinalViaMerges } from "./applyPipeline9FinalViaMerges"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
   getPipeline9DrcErrors,
@@ -1651,7 +1652,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
       budget: regionalRepairBudget,
     })
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    const boundedRegionalRepairTimeMs =
+      performance.now() - boundedRegionalRepairStartedAt
+    this.combinedOutput = applyPipeline9FinalViaMerges({
+      originalSrj: this.params.originalSrj,
+      routes: boundedRegionalRepairResult.routes,
+      connMap: this.params.connMap,
+      drcEvaluator: this.cachedReferenceDrcEvaluator!,
+    })
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
@@ -1676,8 +1684,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairRepaired: boundedRegionalRepairResult.repaired,
       boundedRegionalRepairPublishedDrcIssueCount:
         boundedRegionalRepairResult.publishedDrcIssueCount,
-      boundedRegionalRepairTimeMs:
-        performance.now() - boundedRegionalRepairStartedAt,
+      boundedRegionalRepairTimeMs,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
