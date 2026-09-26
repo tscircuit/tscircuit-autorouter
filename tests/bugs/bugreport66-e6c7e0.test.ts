@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
+} from "lib"
 import { getCurrentCircuitJson } from "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson } from "lib/types"

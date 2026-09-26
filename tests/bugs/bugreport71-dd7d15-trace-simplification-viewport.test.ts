@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
+} from "lib"
 import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../fixtures/bug-reports/bugreport71-dd7d15/bugreport71-dd7d15.json" with {
   type: "json",

@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
+} from "lib"
 import bugReport from "../../fixtures/bug-reports/bugreport46-ac4337/bugreport46-ac4337-arduino-uno.json" with {
   type: "json",
 }

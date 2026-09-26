@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import {
+  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
+} from "lib"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape01.json" with {
   type: "json",
 }
