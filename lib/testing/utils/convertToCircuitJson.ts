@@ -665,7 +665,8 @@ function getPadFragmentId(
   ])
   const geometries = geometriesById.get(baseId) ?? new Set<string>()
   if (geometries.has(geometryKey)) return undefined
-  const id = geometries.size === 0 ? baseId : `${baseId}_fragment_${obstacleIndex}`
+  const id =
+    geometries.size === 0 ? baseId : `${baseId}_fragment_${obstacleIndex}`
   geometries.add(geometryKey)
   geometriesById.set(baseId, geometries)
   return id
