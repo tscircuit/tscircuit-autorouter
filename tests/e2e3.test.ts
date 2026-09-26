@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "../lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
 import e2e3Fixture from "../fixtures/legacy/assets/e2e3.json"

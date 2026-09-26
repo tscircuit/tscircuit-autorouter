@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "../lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "../lib"
 import { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "../lib"
 import { getSvgFromGraphicsObject } from "graphics-debug"

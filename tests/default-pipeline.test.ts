@@ -10,7 +10,9 @@ test("the default Pipeline 9 solver routes with and without preloaded traces", (
   expect(AutoroutingPipelineSolver).toBe(
     AutoroutingPipelineSolver9_PreloadedTraceGraph,
   )
-  expect(AutoroutingPipelineSolver).not.toBe(AutoroutingPipelineSolver7_MultiGraph)
+  expect(AutoroutingPipelineSolver).not.toBe(
+    AutoroutingPipelineSolver7_MultiGraph,
+  )
 
   const input: SimpleRouteJson = {
     layerCount: 2,
@@ -47,7 +49,9 @@ test("the default Pipeline 9 solver routes with and without preloaded traces", (
     expect(solver.failed).toBe(false)
     expect(solver.solved).toBe(true)
     const output = solver.getOutputSimpleRouteJson()
-    expect(output.traces?.some((trace) => trace.connection_name === "signal")).toBe(true)
+    expect(
+      output.traces?.some((trace) => trace.connection_name === "signal"),
+    ).toBe(true)
     if (traces.length > 0) {
       expect(output.traces).toContainEqual(preloadedTrace)
     }

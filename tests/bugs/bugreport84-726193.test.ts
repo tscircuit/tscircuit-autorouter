@@ -1,9 +1,7 @@
 import { expect, test } from "bun:test"
 import { runAllChecks } from "@tscircuit/checks"
 import type { PcbBoard } from "circuit-json"
-import {
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import bugReport from "../../fixtures/bug-reports/bugreport84-726193/bugreport84-726193.json" with {
   type: "json",

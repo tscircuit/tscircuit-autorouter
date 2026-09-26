@@ -1,8 +1,6 @@
 import { expect, test } from "bun:test"
 import { distance } from "@tscircuit/math-utils"
-import {
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape02.json" with {
   type: "json",
 }
