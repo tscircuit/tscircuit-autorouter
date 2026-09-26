@@ -24,6 +24,10 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
+  // Match or improve the author's nine-error reduction on either platform.
+  expect(errors.length).toBeLessThanOrEqual(
+    process.platform === "linux" ? 87 : 88,
+  )
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
     stats.postExactReferenceDrcIssueCount,
