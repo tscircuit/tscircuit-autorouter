@@ -20,18 +20,15 @@ const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
 })
 let forceImproveHash: string | undefined
 for (const definition of solver.pipelineDef) {
-  if (definition.solverName !== "highDensityRepairSolver") continue
-  const getConstructorParams = definition.getConstructorParams
-  definition.getConstructorParams = (
-    pipeline,
-  ): ReturnType<typeof getConstructorParams> => {
-    const parameters = getConstructorParams(pipeline)
+  if (definition.solverName !== "highDensityForceImproveSolver") continue
+  const onSolved = definition.onSolved
+  definition.onSolved = (pipeline): void => {
+    onSolved?.(pipeline)
     const forceImprove = pipeline.highDensityForceImproveSolver
     if (!forceImprove) throw new Error("Missing force-improvement output")
     const routes = JSON.stringify(forceImprove.getOutput())
     forceImproveHash = createHash("sha256").update(routes).digest("hex")
     console.log("FORCE_IMPROVE_HASH", forceImproveHash)
-    return parameters
   }
 }
 const startedAt = performance.now()
@@ -75,7 +72,13 @@ console.log(
     durationMs,
   }),
 )
-writeFileSync(`${outputDirectory}/summary.json`, JSON.stringify(summary, null, 2))
+writeFileSync(
+  `${outputDirectory}/summary.json`,
+  JSON.stringify(summary, null, 2),
+)
 writeFileSync(`${outputDirectory}/routes.json`, JSON.stringify(routedTraces))
-writeFileSync(`${outputDirectory}/drc-errors.json`, JSON.stringify(errors, null, 2))
+writeFileSync(
+  `${outputDirectory}/drc-errors.json`,
+  JSON.stringify(errors, null, 2),
+)
 writeFileSync(`${outputDirectory}/board.svg`, getBugReportSnapshotSvg(drcInput))
