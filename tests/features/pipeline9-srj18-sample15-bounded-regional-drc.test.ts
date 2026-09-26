@@ -30,6 +30,9 @@ test("regional repair expands a stalled context before exhausting its shared bud
       inputSrj: originalSrj,
       srjWithPointPairs: originalSrj,
       routedTraces: convert(evaluatedRoutes),
+      // This cropped repair region omits the rest of each logical net.
+      // Validate its copper clearance, not whole-board port connectivity.
+      drcOptions: { includeTraceContinuity: false },
     }) as unknown as ReturnType<DrcEvaluator>
   }
   const budget = {

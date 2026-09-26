@@ -210,8 +210,8 @@ export class TraceWidthSolver extends BaseSolver {
       ? this.getClearanceForSegment(this.cursorPosition!, this.cursorPosition!)
       : this.getMinimumRouteClearance()
 
-    // Clearance has the applicable obstacle margin removed; compare the copper radius.
-    const requiredClearance = this.currentTargetWidth / 2
+    // Hole distances are normalized to the existing obstacle margin below.
+    const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     if (clearance < requiredClearance) {
       // Collision found - this width doesn't work, try the next narrower width
       this.hasInsufficientClearance = true
@@ -363,7 +363,7 @@ export class TraceWidthSolver extends BaseSolver {
     if (!this.currentTrace) return Infinity
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
-    const requiredClearance = this.currentTargetWidth / 2
+    const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
     this.lastCollidingObstacles = []
     this.lastCollidingRoutes = []
@@ -414,7 +414,7 @@ export class TraceWidthSolver extends BaseSolver {
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
       const physicalClearance =
-        obstacle.shape === "circle"
+        obstacle.isHole && obstacle.shape === "circle"
           ? segmentToCircleMinDistance(start, end, {
               ...obstacle.center,
               radius: obstacle.width / 2,
@@ -427,7 +427,7 @@ export class TraceWidthSolver extends BaseSolver {
       const margin = obstacle.isHole
         ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
         : this.obstacleMargin
-      const clearance = physicalClearance - margin
+      const clearance = physicalClearance - (margin - this.obstacleMargin)
       minClearance = Math.min(minClearance, clearance)
       if (clearance < requiredClearance)
         this.lastCollidingObstacles.push(obstacle)
@@ -436,7 +436,7 @@ export class TraceWidthSolver extends BaseSolver {
     const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
       start,
       end,
-      requiredClearance + this.obstacleMargin,
+      requiredClearance,
     )
     for (const { conflictingRoute } of nearbyRoutes) {
       const route = conflictingRoute as HighDensityRoute
@@ -467,8 +467,8 @@ export class TraceWidthSolver extends BaseSolver {
           }),
         )
       }
-      minClearance = Math.min(minClearance, clearance - this.obstacleMargin)
-      if (clearance - this.obstacleMargin < requiredClearance) {
+      minClearance = Math.min(minClearance, clearance)
+      if (clearance < requiredClearance) {
         this.lastCollidingRoutes.push(route)
       }
     }
