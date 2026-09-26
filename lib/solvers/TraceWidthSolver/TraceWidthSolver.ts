@@ -49,6 +49,7 @@ export interface TraceWidthSolverInput {
   colorMap?: Record<string, string>
   minTraceWidth: number
   obstacleMargin?: number
+  minTraceToHoleEdgeClearance?: number
   layerCount: number
 }
 
@@ -76,6 +77,7 @@ export class TraceWidthSolver extends BaseSolver {
   nominalTraceWidth: number
   minTraceWidth: number
   obstacleMargin: number
+  minTraceToHoleEdgeClearance?: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
 
@@ -109,6 +111,7 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRoutes = [...input.hdRoutes]
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
+    this.minTraceToHoleEdgeClearance = input.minTraceToHoleEdgeClearance
     this.nominalTraceWidth = 0
     this.TRACE_WIDTH_SCHEDULE = []
 
@@ -207,7 +210,7 @@ export class TraceWidthSolver extends BaseSolver {
       ? this.getClearanceForSegment(this.cursorPosition!, this.cursorPosition!)
       : this.getMinimumRouteClearance()
 
-    // Check if there's enough clearance for the current target width + obstacle margin
+    // Hole distances are normalized to the existing obstacle margin below.
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     if (clearance < requiredClearance) {
       // Collision found - this width doesn't work, try the next narrower width
@@ -367,12 +370,15 @@ export class TraceWidthSolver extends BaseSolver {
 
     // Query the complete clearance envelope, using explicit bounds rather than
     // passing a radius to an API that expects full width and height.
+    const searchClearance =
+      this.currentTargetWidth / 2 +
+      Math.max(this.obstacleMargin, this.minTraceToHoleEdgeClearance ?? 0)
     const nearbyObstacles = new Set(
       this.obstacleSHI?.search({
-        minX: Math.min(start.x, end.x) - requiredClearance,
-        minY: Math.min(start.y, end.y) - requiredClearance,
-        maxX: Math.max(start.x, end.x) + requiredClearance,
-        maxY: Math.max(start.y, end.y) + requiredClearance,
+        minX: Math.min(start.x, end.x) - searchClearance,
+        minY: Math.min(start.y, end.y) - searchClearance,
+        maxX: Math.max(start.x, end.x) + searchClearance,
+        maxY: Math.max(start.y, end.y) + searchClearance,
       }),
     )
     // ObstacleTree indexes unrotated extents. Include rotated pads explicitly
@@ -407,11 +413,21 @@ export class TraceWidthSolver extends BaseSolver {
         y:
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
-      const clearance = segmentToBoxMinDistance(localStart, localEnd, {
-        center: { x: 0, y: 0 },
-        width: obstacle.width,
-        height: obstacle.height,
-      })
+      const physicalClearance =
+        obstacle.isNonPlatedHole && obstacle.shape === "circle"
+          ? segmentToCircleMinDistance(start, end, {
+              ...obstacle.center,
+              radius: obstacle.width / 2,
+            })
+          : segmentToBoxMinDistance(localStart, localEnd, {
+              center: { x: 0, y: 0 },
+              width: obstacle.width,
+              height: obstacle.height,
+            })
+      const margin = obstacle.isNonPlatedHole
+        ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
+        : this.obstacleMargin
+      const clearance = physicalClearance - (margin - this.obstacleMargin)
       minClearance = Math.min(minClearance, clearance)
       if (clearance < requiredClearance)
         this.lastCollidingObstacles.push(obstacle)
@@ -452,7 +468,9 @@ export class TraceWidthSolver extends BaseSolver {
         )
       }
       minClearance = Math.min(minClearance, clearance)
-      if (clearance < requiredClearance) this.lastCollidingRoutes.push(route)
+      if (clearance < requiredClearance) {
+        this.lastCollidingRoutes.push(route)
+      }
     }
     this.lastClearance = minClearance
     return minClearance

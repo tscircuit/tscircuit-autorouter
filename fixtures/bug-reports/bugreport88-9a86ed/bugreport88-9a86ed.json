@@ -45681,7 +45681,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_4",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_144"
       },
       {
         "type": "rect",
@@ -45696,7 +45699,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_4",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_145"
       },
       {
         "type": "rect",
@@ -45711,7 +45717,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_5",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_146"
       },
       {
         "type": "rect",
@@ -45726,7 +45735,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_5",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_147"
       },
       {
         "type": "rect",
@@ -45741,7 +45753,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_5",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_148"
       },
       {
         "type": "rect",
@@ -45755,7 +45770,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_149"
       },
       {
         "type": "rect",
@@ -45770,7 +45788,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_10",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_150"
       },
       {
         "type": "rect",
@@ -45785,7 +45806,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_10",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_151"
       },
       {
         "type": "rect",
@@ -45800,7 +45824,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_11",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_152"
       },
       {
         "type": "rect",
@@ -45815,7 +45842,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_11",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_153"
       },
       {
         "type": "rect",
@@ -45830,7 +45860,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_11",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_154"
       },
       {
         "type": "rect",
@@ -45844,7 +45877,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_155"
       },
       {
         "type": "rect",
@@ -45859,7 +45895,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_14",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_156"
       },
       {
         "type": "rect",
@@ -45874,7 +45913,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_14",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_157"
       },
       {
         "type": "rect",
@@ -45889,7 +45931,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_15",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_158"
       },
       {
         "type": "rect",
@@ -45904,7 +45949,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_15",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_159"
       },
       {
         "type": "rect",
@@ -45919,7 +45967,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_15",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_160"
       },
       {
         "type": "rect",
@@ -45933,7 +45984,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_161"
       },
       {
         "type": "rect",
@@ -45948,7 +46002,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_162"
       },
       {
         "type": "rect",
@@ -45963,7 +46020,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_163"
       },
       {
         "type": "rect",
@@ -45978,7 +46038,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_166"
       },
       {
         "type": "rect",
@@ -45993,7 +46056,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_164"
       },
       {
         "type": "rect",
@@ -46008,7 +46074,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_167"
       },
       {
         "type": "rect",
@@ -46023,7 +46092,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_16",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_165"
       },
       {
         "type": "rect",
@@ -46038,7 +46110,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_19",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_168"
       },
       {
         "type": "rect",
@@ -46053,7 +46128,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_19",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_169"
       },
       {
         "type": "rect",
@@ -46068,7 +46146,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_20",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_170"
       },
       {
         "type": "rect",
@@ -46083,7 +46164,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_20",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_171"
       },
       {
         "type": "rect",
@@ -46098,7 +46182,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_20",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_172"
       },
       {
         "type": "rect",
@@ -46112,7 +46199,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_173"
       },
       {
         "type": "rect",
@@ -46127,7 +46217,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_24",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_174"
       },
       {
         "type": "rect",
@@ -46142,7 +46235,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_24",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_175"
       },
       {
         "type": "rect",
@@ -46157,7 +46253,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_25",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_176"
       },
       {
         "type": "rect",
@@ -46172,7 +46271,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_25",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_177"
       },
       {
         "type": "rect",
@@ -46187,7 +46289,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_25",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_178"
       },
       {
         "type": "rect",
@@ -46201,7 +46306,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_179"
       },
       {
         "type": "rect",
@@ -46216,7 +46324,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_27",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_180"
       },
       {
         "type": "rect",
@@ -46231,7 +46342,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_27",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_181"
       },
       {
         "type": "rect",
@@ -46246,7 +46360,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_28",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_182"
       },
       {
         "type": "rect",
@@ -46261,7 +46378,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_28",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_183"
       },
       {
         "type": "rect",
@@ -46276,7 +46396,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_28",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_184"
       },
       {
         "type": "rect",
@@ -46290,7 +46413,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_185"
       },
       {
         "type": "rect",
@@ -46305,7 +46431,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_29",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_186"
       },
       {
         "type": "rect",
@@ -46320,7 +46449,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_29",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_187"
       },
       {
         "type": "rect",
@@ -46335,7 +46467,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_30",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_188"
       },
       {
         "type": "rect",
@@ -46350,7 +46485,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_30",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_189"
       },
       {
         "type": "rect",
@@ -46365,7 +46503,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_30",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_190"
       },
       {
         "type": "rect",
@@ -46379,7 +46520,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_191"
       },
       {
         "type": "rect",
@@ -46394,7 +46538,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_31",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_192"
       },
       {
         "type": "rect",
@@ -46409,7 +46556,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_31",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_193"
       },
       {
         "type": "rect",
@@ -46424,7 +46574,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_32",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_194"
       },
       {
         "type": "rect",
@@ -46439,7 +46592,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_32",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_195"
       },
       {
         "type": "rect",
@@ -46454,7 +46610,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_32",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_196"
       },
       {
         "type": "rect",
@@ -46468,7 +46627,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_197"
       },
       {
         "type": "rect",
@@ -46483,7 +46645,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_36",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_198"
       },
       {
         "type": "rect",
@@ -46498,7 +46663,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_36",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_199"
       },
       {
         "type": "rect",
@@ -46513,7 +46681,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_37",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_200"
       },
       {
         "type": "rect",
@@ -46528,7 +46699,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_37",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_201"
       },
       {
         "type": "rect",
@@ -46543,7 +46717,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_37",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_202"
       },
       {
         "type": "rect",
@@ -46557,7 +46734,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_203"
       },
       {
         "type": "rect",
@@ -46572,7 +46752,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_39",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_204"
       },
       {
         "type": "rect",
@@ -46587,7 +46770,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_39",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_205"
       },
       {
         "type": "rect",
@@ -46602,7 +46788,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_40",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_206"
       },
       {
         "type": "rect",
@@ -46617,7 +46806,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_40",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_207"
       },
       {
         "type": "rect",
@@ -46632,7 +46824,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_40",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_208"
       },
       {
         "type": "rect",
@@ -46646,7 +46841,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_209"
       },
       {
         "type": "rect",
@@ -46661,7 +46859,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_50",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_210"
       },
       {
         "type": "rect",
@@ -46676,7 +46877,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_50",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_211"
       },
       {
         "type": "rect",
@@ -46691,7 +46895,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_51",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_212"
       },
       {
         "type": "rect",
@@ -46706,7 +46913,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_51",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_213"
       },
       {
         "type": "rect",
@@ -46721,7 +46931,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_51",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_214"
       },
       {
         "type": "rect",
@@ -46735,7 +46948,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_215"
       },
       {
         "type": "rect",
@@ -46750,7 +46966,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_52",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_216"
       },
       {
         "type": "rect",
@@ -46765,7 +46984,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_52",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_217"
       },
       {
         "type": "rect",
@@ -46780,7 +47002,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_53",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_218"
       },
       {
         "type": "rect",
@@ -46795,7 +47020,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_53",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_219"
       },
       {
         "type": "rect",
@@ -46810,7 +47038,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_53",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_220"
       },
       {
         "type": "rect",
@@ -46824,7 +47055,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_221"
       },
       {
         "type": "rect",
@@ -46839,7 +47073,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_58",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_222"
       },
       {
         "type": "rect",
@@ -46854,7 +47091,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_58",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_223"
       },
       {
         "type": "rect",
@@ -46869,7 +47109,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_59",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_224"
       },
       {
         "type": "rect",
@@ -46884,7 +47127,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_59",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_225"
       },
       {
         "type": "rect",
@@ -46899,7 +47145,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_59",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_226"
       },
       {
         "type": "rect",
@@ -46913,7 +47162,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_227"
       },
       {
         "type": "rect",
@@ -46928,7 +47180,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_67",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_228"
       },
       {
         "type": "rect",
@@ -46943,7 +47198,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_67",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_229"
       },
       {
         "type": "rect",
@@ -46958,7 +47216,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_68",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_230"
       },
       {
         "type": "rect",
@@ -46973,7 +47234,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_68",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_231"
       },
       {
         "type": "rect",
@@ -46988,7 +47252,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_68",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_232"
       },
       {
         "type": "rect",
@@ -47002,7 +47269,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_233"
       },
       {
         "type": "rect",
@@ -47017,7 +47287,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_71",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_234"
       },
       {
         "type": "rect",
@@ -47032,7 +47305,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_71",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_235"
       },
       {
         "type": "rect",
@@ -47047,7 +47323,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_72",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_236"
       },
       {
         "type": "rect",
@@ -47062,7 +47341,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_72",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_237"
       },
       {
         "type": "rect",
@@ -47077,7 +47359,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_72",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_238"
       },
       {
         "type": "rect",
@@ -47091,7 +47376,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_239"
       },
       {
         "type": "rect",
@@ -47106,7 +47394,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_77",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_240"
       },
       {
         "type": "rect",
@@ -47121,7 +47412,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_77",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_241"
       },
       {
         "type": "rect",
@@ -47136,7 +47430,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_78",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_242"
       },
       {
         "type": "rect",
@@ -47151,7 +47448,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_78",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_243"
       },
       {
         "type": "rect",
@@ -47166,7 +47466,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_78",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_244"
       },
       {
         "type": "rect",
@@ -47180,7 +47483,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_245"
       },
       {
         "type": "rect",
@@ -47195,7 +47501,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_80",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_246"
       },
       {
         "type": "rect",
@@ -47210,7 +47519,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_80",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_247"
       },
       {
         "type": "rect",
@@ -47225,7 +47537,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_81",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_248"
       },
       {
         "type": "rect",
@@ -47240,7 +47555,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_81",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_249"
       },
       {
         "type": "rect",
@@ -47255,7 +47573,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_81",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_250"
       },
       {
         "type": "rect",
@@ -47269,7 +47590,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_251"
       },
       {
         "type": "rect",
@@ -47284,7 +47608,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_86",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_252"
       },
       {
         "type": "rect",
@@ -47299,7 +47626,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_86",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_253"
       },
       {
         "type": "rect",
@@ -47314,7 +47644,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_87",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_254"
       },
       {
         "type": "rect",
@@ -47329,7 +47662,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_87",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_255"
       },
       {
         "type": "rect",
@@ -47344,7 +47680,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_87",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_256"
       },
       {
         "type": "rect",
@@ -47358,7 +47697,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_257"
       },
       {
         "type": "rect",
@@ -47373,7 +47715,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_89",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_258"
       },
       {
         "type": "rect",
@@ -47388,7 +47733,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_89",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_259"
       },
       {
         "type": "rect",
@@ -47403,7 +47751,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_90",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_260"
       },
       {
         "type": "rect",
@@ -47418,7 +47769,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_90",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_261"
       },
       {
         "type": "rect",
@@ -47433,7 +47787,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_90",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_262"
       },
       {
         "type": "rect",
@@ -47447,7 +47804,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_263"
       },
       {
         "type": "rect",
@@ -47462,7 +47822,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_93",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_264"
       },
       {
         "type": "rect",
@@ -47477,7 +47840,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_93",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_265"
       },
       {
         "type": "rect",
@@ -47492,7 +47858,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_94",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_266"
       },
       {
         "type": "rect",
@@ -47507,7 +47876,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_94",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_267"
       },
       {
         "type": "rect",
@@ -47522,7 +47894,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_94",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_268"
       },
       {
         "type": "rect",
@@ -47536,7 +47911,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_269"
       },
       {
         "type": "rect",
@@ -47551,7 +47929,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_270"
       },
       {
         "type": "rect",
@@ -47566,7 +47947,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_271"
       },
       {
         "type": "rect",
@@ -47581,7 +47965,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_274"
       },
       {
         "type": "rect",
@@ -47596,7 +47983,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_272"
       },
       {
         "type": "rect",
@@ -47611,7 +48001,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_275"
       },
       {
         "type": "rect",
@@ -47626,7 +48019,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_103",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_273"
       },
       {
         "type": "rect",
@@ -47641,7 +48037,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_105",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_276"
       },
       {
         "type": "rect",
@@ -47656,7 +48055,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_105",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_277"
       },
       {
         "type": "rect",
@@ -47671,7 +48073,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_106",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_278"
       },
       {
         "type": "rect",
@@ -47686,7 +48091,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_106",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_279"
       },
       {
         "type": "rect",
@@ -47701,7 +48109,10 @@
           "bottom"
         ],
         "componentId": "pcb_component_106",
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_280"
       },
       {
         "type": "rect",
@@ -47715,7 +48126,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_281"
       },
       {
         "type": "rect",
@@ -47729,7 +48143,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_282"
       },
       {
         "type": "rect",
@@ -47743,7 +48160,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_283"
       },
       {
         "type": "rect",
@@ -47757,7 +48177,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_284"
       },
       {
         "type": "rect",
@@ -47771,7 +48194,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_285"
       },
       {
         "type": "rect",
@@ -47785,7 +48211,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_286"
       },
       {
         "type": "rect",
@@ -47799,7 +48228,10 @@
           "top",
           "bottom"
         ],
-        "connectedTo": []
+        "connectedTo": [],
+        "isNonPlatedHole": true,
+        "shape": "circle",
+        "obstacleId": "pcb_hole_287"
       }
     ],
     "layerCount": 2,
@@ -49925,7 +50357,8 @@
     "minTraceToPadEdgeClearance": 0.1,
     "minPadEdgeToPadEdgeClearance": 0.1,
     "minViaHoleEdgeToViaHoleEdgeClearance": 0.1,
-    "minPlatedHoleDrillEdgeToDrillEdgeClearance": 0.15
+    "minPlatedHoleDrillEdgeToDrillEdgeClearance": 0.15,
+    "minTraceToHoleEdgeClearance": 0.2
   },
   "circuit_json": null,
   "subcircuit_id": null,

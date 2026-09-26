@@ -417,7 +417,9 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   const useConservativeApproximation =
     obstacle.connectedTo.length > 0 &&
     !obstacle.obstacleId?.startsWith("trace_obstacle_")
-  const rects = useConservativeApproximation
+  const needsConservativeApproximation =
+    obstacle.isNonPlatedHole || useConservativeApproximation
+  const rects = needsConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
@@ -477,6 +479,7 @@ export const addApproximatingRectsToSrj = (
         converted.width.toFixed(6),
         converted.height.toFixed(6),
         converted.layers.join(","),
+        converted.isNonPlatedHole ? "hole" : "",
       ].join(":")
       const existingObstacle = obstaclesByRect.get(key)
 

@@ -75,6 +75,8 @@ export interface SimpleRouteJson {
   min_via_pad_diameter?: number
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
+  /** Minimum trace copper edge to non-plated hole edge distance in mm. */
+  minTraceToHoleEdgeClearance?: number
   minBoardEdgeClearance?: number
   minViaEdgeToPadEdgeClearance?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -140,6 +142,8 @@ export interface Obstacle {
   componentId?: string
   /** True when this obstacle replaces one completed fanout source footprint. */
   isFanoutSourceKeepout?: boolean
+  /** Non-plated hole geometry. Must have no electrical connections. */
+  isNonPlatedHole?: boolean
   shape?: "circle"
   /**
    * Optional Circuit JSON provenance carried through SRJ.

@@ -310,7 +310,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   }
 
   _step() {
-    if (this.remainingHdRoutes.length === 0) {
+    const endpoint = this.mergedHdRoute.route.at(-1)!
+    const reachedTerminal =
+      this.mergedHdRoute.endPcbPortId !== undefined &&
+      endpoint.z === this.end.z &&
+      distance(endpoint, this.end) < GEOMETRIC_TOLERANCE
+    // A terminal-to-terminal path is complete here. Following leftover stubs
+    // can traverse another via and disconnect the declared terminal layer.
+    if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }

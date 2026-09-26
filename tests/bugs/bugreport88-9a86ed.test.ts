@@ -1,32 +1,42 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import { getCurrentCircuitJson } from "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 import bugReport from "../../fixtures/bug-reports/bugreport88-9a86ed/bugreport88-9a86ed.json" with {
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport88-9a86ed.json", () => {
-  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+test("bugreport88-9a86ed.json with Pipeline 9", (): void => {
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(srj),
+  )
+  expect(srj.minTraceToHoleEdgeClearance).toBe(0.2)
+  expect(srj.obstacles.filter((obstacle) => obstacle.isNonPlatedHole)).toHaveLength(144)
   solver.solve()
-  const { circuitJson } = evaluateRelaxedDrc({
-    inputSrj: srj,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  })
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
 
-  const { errors } = getDrcErrors(
-    [createPcbBoardElement(srj), ...circuitJson],
-    RELAXED_DRC_OPTIONS,
+  const routedConnectionNames = new Set(
+    solver._getOutputHdRoutes().map((route) => route.connectionName),
+  )
+  expect(routedConnectionNames).toEqual(
+    new Set(
+      solver.srjWithPointPairs!.connections.map(
+        (connection) => connection.name,
+      ),
+    ),
   )
 
-  expect(errors).toHaveLength(0)
+  const circuitJson = getCurrentCircuitJson(solver)
+  expect(circuitJson).not.toBeNull()
+  const { errors } = getDrcErrors(circuitJson!)
+  expect(errors).toEqual([])
+
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
