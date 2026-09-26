@@ -63,4 +63,3 @@ test("preloaded traces retain source connections omitted from point pairs", () =
   ])
   expect(checkTracesAreContiguous(circuit)).toEqual([])
 })
-
