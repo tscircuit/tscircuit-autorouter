@@ -1107,7 +1107,9 @@ export function convertToCircuitJson(
 
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
-      srjWithPointPairs.connections,
+      includeOriginalConnections && originalSrj
+        ? [...srjWithPointPairs.connections, ...originalSrj.connections]
+        : srjWithPointPairs.connections,
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
