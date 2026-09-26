@@ -47,6 +47,8 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { guaranteeNoSameLayerShorts } from "lib/utils/guaranteeNoSameLayerShorts"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -1193,11 +1195,33 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       throw new Error("Cannot get output before solving is complete")
     }
 
-    if (this.powerTraceExpansionSolver) {
-      return this.powerTraceExpansionSolver.getOutput()
-    }
+    const traces = this.powerTraceExpansionSolver
+      ? this.powerTraceExpansionSolver.getOutput()
+      : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+    return guaranteeNoSameLayerShorts(traces, 0, {
+      canPlaceVia: this.getCanPlaceViaInRoutedRegion(),
+      layerNames: this.getRoutingLayerNames(),
+    })
+  }
 
-    return this.getPrePowerTraceOutputSimplifiedPcbTraces()
+  /** Board copper layers, so the safety net may use a layer no trace uses yet. */
+  getRoutingLayerNames(): string[] {
+    return Array.from({ length: this.srj.layerCount }, (_, z) =>
+      mapZToLayerName(z, this.srj.layerCount),
+    )
+  }
+
+  /** Regions with a single available layer have nowhere for a via to go. */
+  getCanPlaceViaInRoutedRegion(): (point: { x: number; y: number }) => boolean {
+    const singleLayerNodes = (
+      this.componentTopologyGeneratorSolver?.getOutput() ?? []
+    ).filter((node) => node.availableZ?.length === 1)
+    return (point) =>
+      !singleLayerNodes.some(
+        (node) =>
+          Math.abs(point.x - node.center.x) <= node.width / 2 &&
+          Math.abs(point.y - node.center.y) <= node.height / 2,
+      )
   }
 
   getPrePowerTraceOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
