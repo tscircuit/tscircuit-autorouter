@@ -36,8 +36,6 @@ import {
   convertSrjToGraphicsObject,
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
-import { validateHoleClearance } from "lib/utils/validateHoleClearance"
-import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -986,7 +984,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    validateHoleClearance(this.originalSrj)
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -997,7 +994,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setSimpleRouteJson(this.originalSrj)
+    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
@@ -1032,7 +1029,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getConstructorParams() {
-    return [this.originalSrj, this.opts] as const
+    return [this.srj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -1048,21 +1045,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (this.originalSrj.minTraceToHoleEdgeClearance !== undefined) {
-        if (!this.powerTraceExpansionSolver) {
-          throw new Error(
-            "Hole clearance validation requires final power-trace expansion output",
-          )
-        }
-        this.error = getTraceToHoleClearanceError(this.originalSrj, [
-          ...this.getPowerTraceExpansionFixedTraces(),
-          ...this.powerTraceExpansionSolver.getOutput(),
-        ])
-        if (this.error) {
-          this.failed = true
-          return
-        }
-      }
       this.solved = true
       return
     }

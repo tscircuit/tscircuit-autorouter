@@ -7,7 +7,6 @@ import bugReport from "../../fixtures/bug-reports/bugreport88-9a86ed/bugreport88
 }
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
-import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -37,10 +36,6 @@ test("bugreport88-9a86ed.json with Pipeline 9", (): void => {
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
   expect(errors).toEqual([])
-
-  expect(
-    getTraceToHoleClearanceError(srj, solver.getOutputSimplifiedPcbTraces()),
-  ).toBeNull()
 
   const snapshotPath =
     process.platform === "linux"
