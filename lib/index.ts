@@ -18,12 +18,12 @@ export {
   AutoroutingPipelineSolver6,
   AutoroutingPipelineSolver6_PolyHypergraph,
 } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
-export {
-  AutoroutingPipelineSolver7_MultiGraph,
-  AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
-} from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+export { AutoroutingPipelineSolver7_MultiGraph } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
-export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+export {
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver,
+} from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 export {
   AutoroutingPipelineSolver9_Networked,
   type AutoroutingPipelineSolver9NetworkedOptions,
