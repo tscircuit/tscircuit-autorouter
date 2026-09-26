@@ -62,4 +62,27 @@ test("preloaded traces retain source connections omitted from point pairs", () =
     ["trace_new", "new"],
   ])
   expect(checkTracesAreContiguous(circuit)).toEqual([])
+
+  const aliasedCircuit = convertToCircuitJson(
+    {
+      ...originalSrj,
+      connections: [
+        {
+          ...connections[0]!,
+          name: "saved_pair",
+          __netConnectionName: "saved_net",
+          __rootConnectionNames: ["saved"],
+        },
+        connections[1]!,
+      ],
+    },
+    traces,
+    { originalSrj, includeOriginalConnections: true },
+  )
+  expect(
+    aliasedCircuit.find(
+      (element) =>
+        element.type === "pcb_trace" && element.pcb_trace_id === "trace_saved",
+    ),
+  ).toMatchObject({ source_trace_id: "saved_net" })
 })

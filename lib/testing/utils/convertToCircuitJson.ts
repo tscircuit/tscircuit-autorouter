@@ -1074,10 +1074,18 @@ export function convertToCircuitJson(
     ),
   )
 
+  const routeConnectionReferences = new Set<string>(
+    srjWithPointPairs.connections.flatMap(getSrjDeclaredConnectionReferences),
+  )
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       includeOriginalConnections && originalSrj
-        ? [...srjWithPointPairs.connections, ...originalSrj.connections]
+        ? [
+            ...srjWithPointPairs.connections,
+            ...originalSrj.connections.filter(
+              (connection) => !routeConnectionReferences.has(connection.name),
+            ),
+          ]
         : srjWithPointPairs.connections,
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
