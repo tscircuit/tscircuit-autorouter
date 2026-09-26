@@ -14,7 +14,14 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     hole.shape = "circle"
     hole.obstacleId = "switch_mount_hole"
     const before = JSON.stringify(srj)
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, { effort: 1, cacheProvider: null })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+      effort: 1,
+      cacheProvider: null,
+    })
+    expect(solver.originalSrj.obstacles).toMatchObject(srj.obstacles)
+    expect(solver.srj.obstacles.find((obstacle) => obstacle.isHole)?.width).toBe(
+      hole.width,
+    )
     solver.solve()
     expect(solver.error).toBeNull()
     expect(solver.solved).toBe(true)
@@ -50,7 +57,9 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     if (previousRoute) expect(geometry).not.toBe(previousRoute)
     previousRoute = geometry
     if (clearance === 0.2) {
-      const reconstructed = new AutoroutingPipelineSolver9_PreloadedTraceGraph(...solver.getConstructorParams())
+      const reconstructed = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+        ...solver.getConstructorParams(),
+      )
       reconstructed.solve()
       expect(reconstructed.solved).toBe(true)
       expect(reconstructed.getOutputSimplifiedPcbTraces()).toEqual(traces)

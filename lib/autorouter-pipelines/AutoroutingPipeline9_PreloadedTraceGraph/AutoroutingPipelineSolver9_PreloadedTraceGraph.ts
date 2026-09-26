@@ -36,7 +36,7 @@ import {
   convertSrjToGraphicsObject,
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
-import { createSrjWithHoleClearance } from "lib/utils/createSrjWithHoleClearance"
+import { validateHoleClearance } from "lib/utils/validateHoleClearance"
 import { getTraceToHoleClearanceError } from "lib/utils/getTraceToHoleClearanceError"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
@@ -299,8 +299,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
-  /** Routing geometry, including NPTH clearance envelopes. */
-  routingSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -313,7 +311,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
       (cms) => [
-        cms.routingSrj,
+        cms.originalSrj,
         { traceColorMode: cms.visualizationTraceColorMode },
       ],
       {
@@ -797,6 +795,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srjWithPointPairs!.connections,
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
       },
     ]),
@@ -839,7 +838,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: cms.routingSrj,
+            originalSrj: cms.originalSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
@@ -963,7 +962,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
           preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.routingSrj,
+            originalSrj: cms.originalSrj,
             newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
             currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
             expandedConnectionNames: onlyConnectionNames,
@@ -987,7 +986,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    this.routingSrj = createSrjWithHoleClearance(this.originalSrj)
+    validateHoleClearance(this.originalSrj)
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -998,7 +997,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setSimpleRouteJson(this.routingSrj)
+    this.setSimpleRouteJson(this.originalSrj)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
@@ -1472,7 +1471,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
       layerCount: this.originalSrj.layerCount,
       defaultViaHoleDiameter: this.viaHoleDiameter,
-      obstacles: this.routingSrj.obstacles,
+      obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
     })
   }
