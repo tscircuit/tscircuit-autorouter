@@ -1,14 +1,30 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
-import board from "../../fixtures/bug-reports/bugreport109-board-1017-via-transition/board-1017.srj.json" with { type: "json" }
+import srjJson from "../../fixtures/bug-reports/bugreport109-board-1017-via-transition/bugreport109-board-1017-via-transition.srj.json" with {
+  type: "json",
+}
+
+const srj = srjJson as SimpleRouteJson
 
 test("bugreport109 reproduces the missing same-net via transition on board 1017", async (): Promise<void> => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(board) as SimpleRouteJson,
+    structuredClone(srj),
     { cacheProvider: null },
   )
+
+  while (
+    solver.getCurrentPhase() !== "traceSimplificationSolver" &&
+    !solver.solved &&
+    !solver.failed
+  ) {
+    solver.step()
+  }
+  expect(solver.failed, solver.error ?? "").toBe(false)
+  expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
+  // Preserve the routed board before the failing simplification mutates it.
+  const routedTraces = solver.getNewTracesBeforePowerExpansion()
 
   // Characterize the reported failure until the underlying solver is fixed.
   const expectedError =
@@ -20,6 +36,10 @@ test("bugreport109 reproduces the missing same-net via transition on board 1017"
   expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
 
   await expect(
-    getSvgFromGraphicsObject(solver.visualize(), { backgroundColor: "white" }),
+    getBugReportSnapshotSvg({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

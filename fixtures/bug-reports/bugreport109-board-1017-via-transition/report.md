@@ -19,7 +19,7 @@ routing fails, the debugger should display the failure rather than `No Errors`.
 
 ## Input and reproduction
 
-`board-1017.srj.json` is an unchanged copy of the supplied
+`bugreport109-board-1017-via-transition.srj.json` is an unchanged copy of the supplied
 `_board#1017 __-autorouting.json`: a 50 × 50 mm, four-layer board with 311 obstacles,
 52 connections, and no pre-routed traces. Blind and buried vias are disabled.
 
@@ -44,11 +44,14 @@ Run the failure-characterization test and its SVG snapshot with:
 bun test tests/bugs/bugreport109-board-1017-via-transition.test.ts --timeout 9999999
 ```
 
-The test asserts this exact exception and snapshots the failed solver's native
-visualization. When the bug is fixed, replace the failure assertions with
+The test asserts this exact exception and uses the standard
+`getBugReportSnapshotSvg` helper to snapshot the routed board immediately before
+trace simplification, including the measured relaxed-DRC count. This is an
+intermediate routing state, not a completed or clean board.
+When the bug is fixed, replace the failure assertions with
 successful-routing assertions and regenerate the snapshot.
 
-![Locally reproduced solver failure](../../../tests/bugs/__snapshots__/bugreport109-board-1017-via-transition.snap.svg)
+![Routing before trace simplification fails](../../../tests/bugs/__snapshots__/bugreport109-board-1017-via-transition.snap.svg)
 
 ## Original failure snapshot
 
