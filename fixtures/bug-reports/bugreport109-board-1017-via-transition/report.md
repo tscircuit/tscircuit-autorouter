@@ -8,14 +8,13 @@ Running the attached board through Pipeline 9 in the autorouter playground throw
 SameNetViaMergerSolver could not find route transition for via at (-5.8, -22.1) on route "source_net_0_mst44"
 ```
 
-The console propagates this error through `TraceSimplificationSolver` and
-`AutoroutingPipelineSolver9_PreloadedTraceGraph`, followed by an uncaught promise
-rejection. At the time of the supplied screenshot, the debugger displays
-1,329,674 iterations, 196 traces, `Status: No Errors`, and `Active Stage: None`.
-The exact deployed revision and debugger settings were not included in the report.
+The latest supplied screenshot reproduces the error in this PR's preview fixture.
+The debugger displays 1,330,336 iterations, 196 traces, `Status: Failed`, and
+`Active Stage: TraceSimplificationSolver`, with the exact via-merger error visible
+in the error banner. The earlier playground capture showed `No Errors` despite
+the console exception; the PR preview correctly surfaces the failure.
 
-Expected behavior: complete routing without a missing-transition exception. If
-routing fails, the debugger should display the failure rather than `No Errors`.
+Expected behavior: complete routing without a missing-transition exception.
 
 ## Input and reproduction
 
@@ -29,8 +28,8 @@ routing fails, the debugger should display the failure rather than `No Errors`.
    explicitly and disables caching so the board is routed from scratch.
 4. Inspect the debugger status and browser console for the error above.
 
-This report preserves the original input and screenshot; it does not change
-solver behavior.
+This report preserves the original routing input and latest supplied preview
+screenshot; it does not change solver behavior.
 
 ## Confirmed reproduction
 
@@ -57,6 +56,6 @@ successful-routing assertions and regenerate the snapshot.
 
 ![Native solver visualization at the crash](../../../tests/bugs/__snapshots__/bugreport109-board-1017-via-transition.snap.svg)
 
-## Original failure snapshot
+## Latest PR preview screenshot
 
-![Pipeline 9 routing and the missing route-transition error](./reported-failure.png)
+![PR preview showing Failed status and the missing route-transition error](./reported-failure.png)
