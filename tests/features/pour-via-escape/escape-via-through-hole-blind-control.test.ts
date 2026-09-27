@@ -14,9 +14,11 @@ test("an explicitly allowed blind escape via may overlap bottom copper in XY", (
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  const vias = solver.getOutputSimpleRouteJson().obstacles.filter((obstacle) =>
-    obstacle.obstacleId?.startsWith("escape-via-obstacle:"),
-  )
+  const vias = solver
+    .getOutputSimpleRouteJson()
+    .obstacles.filter((obstacle) =>
+      obstacle.obstacleId?.startsWith("escape-via-obstacle:"),
+    )
   expect(vias).toHaveLength(1)
   expect({ layers: vias[0]!.layers, zLayers: vias[0]!.__zLayers }).toEqual({
     layers: ["top", "inner1"],
@@ -27,6 +29,7 @@ test("an explicitly allowed blind escape via may overlap bottom copper in XY", (
     (obstacle) => obstacle.obstacleId === "bottom-signal",
   )!
   const clearance =
-    pointToBoxDistance(vias[0]!.center, bottomSignal) - input.minViaPadDiameter / 2
+    pointToBoxDistance(vias[0]!.center, bottomSignal) -
+    input.minViaPadDiameter / 2
   expect(clearance).toBeLessThan(0)
 })

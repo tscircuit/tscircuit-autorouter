@@ -14,9 +14,10 @@ From the repository root, after installing dependencies:
 bun test --timeout 9999999 tests/features/pour-via-escape/escape-via-through-hole-*.test.ts
 ```
 
-Expected on the affected source: **two failures and one passing control**.
-These are ordinary regression tests, intentionally left failing in this
-repro-only change.
+Expected on the affected source: **three passing tests**, including two
+`test.failing` cases whose assertions reproduce the known defects. The blind-via
+control uses an ordinary `test`. Once the solver is fixed, the `test.failing`
+cases report unexpected passes; change them to ordinary `test` cases with the fix.
 
 - `layers`: the generated escape-via obstacle must reserve `top`, `inner1`,
   `inner2`, `bottom`, with z-indices `[0, 1, 2, 3]`.
