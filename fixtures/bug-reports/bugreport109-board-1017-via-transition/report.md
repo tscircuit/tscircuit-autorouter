@@ -44,17 +44,16 @@ Run the failure-characterization test and its SVG snapshot with:
 bun test tests/bugs/bugreport109-board-1017-via-transition.test.ts --timeout 9999999
 ```
 
-The test asserts this exact exception and uses the standard
-`getBugReportSnapshotSvg` helper to snapshot the routed board immediately before
-trace simplification, including the measured relaxed-DRC count. This is an
-intermediate routing state, not a completed or clean board. Following the existing
-crash-report snapshot pattern, a prominent red banner identifies the failed stage,
-missing via transition, and `solved: false, failed: true` status. The DRC count
-describes this intermediate geometry only; it does not indicate routing success.
+The test asserts this exact exception and snapshots `solver.visualize()` after
+the crash, using the solver's default visualization. This preserves the
+active via-merger solver's routes, vias, and obstacles rather than reconstructing
+an output board. A red banner identifies the failed stage, missing via transition,
+and `solved: false, failed: true` status. The snapshot has no DRC summary because
+this is the solver's debug view at the failure, not a completed routing result.
 When the bug is fixed, replace the failure assertions with
 successful-routing assertions and regenerate the snapshot.
 
-![Routing before trace simplification fails](../../../tests/bugs/__snapshots__/bugreport109-board-1017-via-transition.snap.svg)
+![Native solver visualization at the crash](../../../tests/bugs/__snapshots__/bugreport109-board-1017-via-transition.snap.svg)
 
 ## Original failure snapshot
 

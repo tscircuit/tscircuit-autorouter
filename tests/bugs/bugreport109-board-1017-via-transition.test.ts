@@ -14,18 +14,6 @@ test("bugreport109 reproduces the missing same-net via transition on board 1017"
     { cacheProvider: null },
   )
 
-  while (
-    solver.getCurrentPhase() !== "traceSimplificationSolver" &&
-    !solver.solved &&
-    !solver.failed
-  ) {
-    solver.step()
-  }
-  expect(solver.failed, solver.error ?? "").toBe(false)
-  expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
-  // Preserve the routed board before the failing simplification mutates it.
-  const routedTraces = solver.getNewTracesBeforePowerExpansion()
-
   // Characterize the reported failure until the underlying solver is fixed.
   const expectedError =
     'SameNetViaMergerSolver could not find route transition for via at (-5.8, -22.1) on route "source_net_0_mst44"'
@@ -36,10 +24,6 @@ test("bugreport109 reproduces the missing same-net via transition on board 1017"
   expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
 
   await expect(
-    getBoard1017FailureSnapshotSvg({
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
+    getBoard1017FailureSnapshotSvg(solver.visualize()),
   ).toMatchSvgSnapshot(import.meta.path)
 })
