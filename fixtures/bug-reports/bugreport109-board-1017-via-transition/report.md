@@ -47,7 +47,10 @@ bun test tests/bugs/bugreport109-board-1017-via-transition.test.ts --timeout 999
 The test asserts this exact exception and uses the standard
 `getBugReportSnapshotSvg` helper to snapshot the routed board immediately before
 trace simplification, including the measured relaxed-DRC count. This is an
-intermediate routing state, not a completed or clean board.
+intermediate routing state, not a completed or clean board. Following the existing
+crash-report snapshot pattern, a prominent red banner identifies the failed stage,
+missing via transition, and `solved: false, failed: true` status. The DRC count
+describes this intermediate geometry only; it does not indicate routing success.
 When the bug is fixed, replace the failure assertions with
 successful-routing assertions and regenerate the snapshot.
 

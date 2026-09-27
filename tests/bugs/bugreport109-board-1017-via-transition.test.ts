@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
+import { getBoard1017FailureSnapshotSvg } from "../../fixtures/bug-reports/bugreport109-board-1017-via-transition/getBoard1017FailureSnapshotSvg"
 import srjJson from "../../fixtures/bug-reports/bugreport109-board-1017-via-transition/bugreport109-board-1017-via-transition.srj.json" with {
   type: "json",
 }
@@ -36,7 +36,7 @@ test("bugreport109 reproduces the missing same-net via transition on board 1017"
   expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
 
   await expect(
-    getBugReportSnapshotSvg({
+    getBoard1017FailureSnapshotSvg({
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces,
