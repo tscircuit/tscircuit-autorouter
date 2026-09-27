@@ -7,7 +7,10 @@ export default function Board1017ViaTransitionBugReport(): React.JSX.Element {
   return (
     <AutoroutingPipelineDebugger
       srj={srj as SimpleRouteJson}
-      createSolver={(srj, opts): AutoroutingPipelineSolver9_PreloadedTraceGraph =>
+      createSolver={(
+        srj,
+        opts,
+      ): AutoroutingPipelineSolver9_PreloadedTraceGraph =>
         new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
           ...opts,
           cacheProvider: null,

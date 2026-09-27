@@ -23,7 +23,12 @@ test("bugreport109 reproduces the missing same-net via transition on board 1017"
   expect(solver.error).toContain(expectedError)
   expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
 
+  // Native routing coordinates differ slightly between Linux and macOS.
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     getBoard1017FailureSnapshotSvg(solver.visualize()),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(snapshotPath)
 })

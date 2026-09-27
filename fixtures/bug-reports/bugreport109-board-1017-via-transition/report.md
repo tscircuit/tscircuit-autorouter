@@ -50,6 +50,8 @@ active via-merger solver's routes, vias, and obstacles rather than reconstructin
 an output board. A red banner identifies the failed stage, missing via transition,
 and `solved: false, failed: true` status. The snapshot has no DRC summary because
 this is the solver's debug view at the failure, not a completed routing result.
+Linux and macOS use separate snapshots, following existing bug-report tests,
+because native routing produces small coordinate differences across platforms.
 When the bug is fixed, replace the failure assertions with
 successful-routing assertions and regenerate the snapshot.
 
