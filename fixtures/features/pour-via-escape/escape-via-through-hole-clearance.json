@@ -1,0 +1,55 @@
+{
+  "layerCount": 4,
+  "allowBlindAndBuriedVias": false,
+  "minTraceWidth": 0.15,
+  "minViaHoleDiameter": 0.3,
+  "minViaPadDiameter": 0.6,
+  "minViaEdgeToPadEdgeClearance": 0.2,
+  "defaultObstacleMargin": 0.2,
+  "bounds": { "minX": -10, "maxX": 10, "minY": -10, "maxY": 10 },
+  "obstacles": [
+    {
+      "obstacleId": "gnd-pad",
+      "type": "rect",
+      "center": { "x": 0, "y": 0 },
+      "width": 1,
+      "height": 1,
+      "layers": ["top"],
+      "connectedTo": ["GND", "p1"]
+    },
+    {
+      "obstacleId": "gnd-pour",
+      "type": "rect",
+      "center": { "x": 0, "y": 0 },
+      "width": 19,
+      "height": 19,
+      "layers": ["inner1"],
+      "connectedTo": ["GND"],
+      "isCopperPour": true
+    },
+    {
+      "obstacleId": "bottom-signal",
+      "type": "rect",
+      "center": { "x": -1, "y": 0 },
+      "width": 0.2,
+      "height": 4,
+      "layers": ["bottom"],
+      "connectedTo": ["SIGNAL"]
+    }
+  ],
+  "connections": [
+    {
+      "name": "GND",
+      "pointsToConnect": [
+        { "x": 0, "y": 0, "layer": "top", "pointId": "p1", "pcb_port_id": "p1" }
+      ]
+    },
+    {
+      "name": "SIGNAL",
+      "pointsToConnect": [
+        { "x": -1, "y": -2, "layer": "bottom", "pointId": "signal-a" },
+        { "x": -1, "y": 2, "layer": "bottom", "pointId": "signal-b" }
+      ]
+    }
+  ]
+}
