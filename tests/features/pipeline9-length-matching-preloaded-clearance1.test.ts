@@ -3,12 +3,12 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createPipeline9LengthMatchingPreloadedInput"
 
-test("Pipeline9 raw routing tight-preload safety", (): void => {
+test("Pipeline9 length matching tight-preload safety", (): void => {
   const srj = createPipeline9LengthMatchingPreloadedInput(0.3)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
   })
-  solver.solveUntilPhase("powerTraceExpansionSolver")
+  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
   const before = evaluateRelaxedDrc({
     inputSrj: srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -29,5 +29,12 @@ test("Pipeline9 raw routing tight-preload safety", (): void => {
       .getOutputSimpleRouteJson()
       .traces?.find((trace): boolean => trace.pcb_trace_id === "fixed"),
   ).toEqual(srj.traces![0])
-  expect(solver._getOutputHdRoutes()).toHaveLength(2)
+  const lengths: number[] = solver._getOutputHdRoutes().map((route): number =>
+    route.route.slice(1).reduce((length, point, index): number => {
+      const previous = route.route[index]!
+      return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+    }, 0),
+  )
+  expect(lengths).toHaveLength(2)
+  expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.1 + 1e-6)
 })
