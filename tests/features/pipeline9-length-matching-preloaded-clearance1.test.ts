@@ -32,12 +32,13 @@ test("Pipeline9 length matching tight-preload safety", (): void => {
       .getOutputSimpleRouteJson()
       .traces?.find((trace): boolean => trace.pcb_trace_id === "fixed"),
   ).toEqual(srj.traces![0])
-  const lengths: number[] = solver._getOutputHdRoutes().map((route): number =>
-    route.route.slice(1).reduce((length, point, index): number => {
-      const previous = route.route[index]!
+  const lengths = solver.getOutputSimplifiedPcbTraces().map((trace): number => {
+    const points = trace.route.filter((point) => point.route_type === "wire")
+    return points.slice(1).reduce((length, point, index): number => {
+      const previous = points[index]!
       return length + Math.hypot(point.x - previous.x, point.y - previous.y)
-    }, 0),
-  )
+    }, 0)
+  })
   expect(lengths).toHaveLength(2)
   expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.1 + 1e-6)
 })

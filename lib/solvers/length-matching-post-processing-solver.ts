@@ -15,6 +15,7 @@ import { BaseSolver } from "./BaseSolver"
 
 type InitialRoutingSolver = BaseSolver & {
   getCurrentPhase(): string
+  getUpdatedPreloadedTraces(): SimplifiedPcbTraces
   _getOutputHdRoutes(): HighDensityRoute[]
   netToPointPairsSolver?: { newConnections: SimpleRouteConnection[] }
 }
@@ -139,37 +140,9 @@ const assertBusLengthSkew = (
   }
 }
 
-const assertDifferentialPairLengthSkew = (
-  pairs: DifferentialPair[],
-  routes: HighDensityRoute[],
-): void => {
-  for (const pair of pairs) {
-    const lengths = pair.connectionNames.map((connectionName) => {
-      const matches = routes.filter(
-        (route) => route.connectionName === connectionName,
-      )
-      if (matches.length !== 1)
-        throw new Error(
-          `Length matching: differential pair connection "${connectionName}" must have exactly one final route, got ${matches.length}`,
-        )
-      const route = matches[0]!
-      return route.route.slice(1).reduce((length, point, index) => {
-        const previous = route.route[index]!
-        return length + Math.hypot(point.x - previous.x, point.y - previous.y)
-      }, 0)
-    })
-    const skew = Math.abs(lengths[0]! - lengths[1]!)
-    if (skew > pair.lengthTolerance + 1e-6)
-      throw new Error(
-        `Length matching: differential pair "${pair.connectionNames.join("/")}" routed length skew ${skew.toFixed(4)}mm exceeds ${pair.lengthTolerance.toFixed(4)}mm`,
-      )
-  }
-}
-
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
   private differentialPairSolver?: PostProcessingSolver
-  private resolvedDifferentialPairs: DifferentialPair[] = []
   private outputConnections: SimpleRouteConnection[] = []
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
@@ -184,6 +157,8 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
 
   private initializeDifferentialPairSolver(): void {
     const initialRoutingSolver = this.params.initialRoutingSolver
+    if (initialRoutingSolver)
+      this.params.traces = initialRoutingSolver.getUpdatedPreloadedTraces()
     const hdRoutes = initialRoutingSolver
       ? initialRoutingSolver._getOutputHdRoutes()
       : this.params.hdRoutes
@@ -236,7 +211,6 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         maximumCenterlineDistance: centerlineDistance,
       }
     })
-    this.resolvedDifferentialPairs = differentialPairs
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes,
       differentialPairs,
@@ -296,10 +270,6 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         hdRoutes,
       )
       if (differentialPairs.length === 0) {
-        assertDifferentialPairLengthSkew(
-          this.resolvedDifferentialPairs,
-          hdRoutes,
-        )
         this.outputHdRoutes = hdRoutes
         this.solved = true
         return
@@ -330,19 +300,21 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
     assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
-    assertDifferentialPairLengthSkew(
-      this.resolvedDifferentialPairs,
-      this.outputHdRoutes,
-    )
     this.solved = true
   }
 
-  getOutput(): { hdRoutes: HighDensityRoute[] } {
+  getOutput(): {
+    hdRoutes: HighDensityRoute[]
+    preloadedTraces: SimplifiedPcbTraces
+  } {
     if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return { hdRoutes: this.outputHdRoutes }
+    return {
+      hdRoutes: this.outputHdRoutes,
+      preloadedTraces: this.params.traces ?? [],
+    }
   }
 
   getOutputConnections(): SimpleRouteConnection[] {

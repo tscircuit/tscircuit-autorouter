@@ -69,7 +69,6 @@ type Pipeline9JointDrcRepairSolverParams = {
   newHdRoutes: HighDensityRoute[]
   updatedPreloadedTraces: SimplifiedPcbTrace[]
   mutatedPreloadedTraceIds: ReadonlySet<string>
-  immutablePreloadedTraceIds?: ReadonlySet<string>
   connMap: ConnectivityMap
   obstacles: Obstacle[]
   layerCount: number
@@ -831,7 +830,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // the ordinary copper sections anchored on either side of it.
     this.movablePreloadedSections = []
     for (const traceId of candidateMovablePreloadedTraceIds) {
-      if (params.immutablePreloadedTraceIds?.has(traceId)) continue
       const trace = updatedPreloadedTraceById.get(traceId)
       if (!trace) {
         throw new Error(

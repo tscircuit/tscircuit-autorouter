@@ -46,8 +46,6 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -298,10 +296,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
   originalSrj: SimpleRouteJson
-  private lengthMatchedTraces: SimplifiedPcbTraces = []
-  private lengthMatchedHdRoutes: HighDensityRoute[] = []
+  private preloadedTraces: SimplifiedPcbTraces
+  private lengthMatchedTraceIds = new Set<string>()
   private lengthMatchedConnectionNames = new Set<string>()
-  private immutablePreloadedTraces = false
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -319,29 +316,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const processedSrj =
-            cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson()
           cms.setSimpleRouteJson(
-            cms.immutablePreloadedTraces
-              ? createSrjWithBoardValidObstacleLayers(
-                  addApproximatingRectsToSrj({
-                    ...processedSrj,
-                    obstacles: [
-                      ...processedSrj.obstacles,
-                      ...getObstaclesFromSrjTraces({
-                        ...processedSrj,
-                        traces: (processedSrj.traces ?? []).map((trace) => ({
-                          ...trace,
-                          connectsTo: [
-                            trace.connection_name,
-                            ...(trace.connectsTo ?? []),
-                          ],
-                        })),
-                      }),
-                    ],
-                  }),
-                )
-              : processedSrj,
+            cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
           )
         },
       },
@@ -395,8 +371,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                   powerTraceExpansion: { onlyConnectionNames: [] },
                 },
               )
-        if (initialRoutingSolver)
-          initialRoutingSolver.immutablePreloadedTraces = true
         return [
           {
             initialRoutingSolver,
@@ -415,51 +389,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           const solver = cms.lengthMatchingPostProcessingSolver!
-          cms.lengthMatchedHdRoutes = solver.getOutput().hdRoutes
-          if (cms.lengthMatchedHdRoutes.length === 0) return
-          cms.lengthMatchedTraces = assignUniquePcbTraceIdsToNewTraces(
+          const { hdRoutes, preloadedTraces } = solver.getOutput()
+          if (hdRoutes.length === 0) return
+          const traces = assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
               connections: solver.getOutputConnections(),
               originalConnections: cms.originalSrj.connections,
-              hdRoutes: cms.lengthMatchedHdRoutes,
+              hdRoutes,
               layerCount: cms.srj.layerCount,
               obstacles: cms.srj.obstacles,
               defaultViaHoleDiameter: cms.viaHoleDiameter,
               connMap: cms.connMap,
             }),
-            cms.originalSrj.traces ?? [],
+            preloadedTraces,
           )
-          if (
-            cms.lengthMatchedTraces.length !== cms.lengthMatchedHdRoutes.length
+          cms.lengthMatchedTraceIds = new Set(
+            traces.map((trace) => trace.pcb_trace_id),
           )
-            throw new Error(
-              "Pipeline9: every length-matched route must produce a solved trace",
-            )
-          // Tuned geometry is fixed copper: subsequent routing cannot rip or
-          // reshape it without invalidating the length and coupling constraints.
-          const matchedTraceObstacles = getObstaclesFromSrjTraces({
+          cms.preloadedTraces = [...preloadedTraces, ...traces]
+          cms.setSimpleRouteJson({
             ...cms.srj,
-            traces: cms.lengthMatchedTraces.map((trace) => ({
-              ...trace,
-              connectsTo: [trace.connection_name, ...(trace.connectsTo ?? [])],
-            })),
-          })
-          cms.setSimpleRouteJson(
-            createSrjWithBoardValidObstacleLayers(
-              addApproximatingRectsToSrj({
-                ...cms.srj,
-                connections: cms.srj.connections.filter(
-                  (connection) =>
-                    !cms.lengthMatchedConnectionNames.has(connection.name),
-                ),
-                traces: [
-                  ...(cms.originalSrj.traces ?? []),
-                  ...cms.lengthMatchedTraces,
-                ],
-                obstacles: [...cms.srj.obstacles, ...matchedTraceObstacles],
-              }),
+            connections: cms.srj.connections.filter(
+              (connection) =>
+                !cms.lengthMatchedConnectionNames.has(connection.name),
             ),
-          )
+            traces: cms.preloadedTraces,
+          })
         },
       },
     ),
@@ -503,7 +458,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
-            cms.srjWithPointPairs!,
+            cms.getSrjWithMatchedPointPairs(),
           )
         },
       },
@@ -645,11 +600,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       PreloadedTraceGraphSolver,
       (cms) => [
         cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
-        {
-          ...cms.srjWithPointPairs!,
-          // Matched traces are represented by immutable obstacle geometry.
-          traces: cms.immutablePreloadedTraces ? [] : cms.originalSrj.traces,
-        },
+        cms.srjWithPointPairs!,
       ],
     ),
     definePipelineStep(
@@ -744,9 +695,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = cms.getOriginalFixedHdRoutes()
+        const originalFixedHdRoutes = cms.preloadedTraces.flatMap(
+          (trace, traceIndex) =>
+            convertPreloadedTraceToHdRoutes(
+              trace,
+              traceIndex,
+              cms.originalSrj.layerCount,
+              cms.viaDiameter,
+              cms.connMap,
+            ),
+        )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.originalSrj.traces ?? [],
+          traces: cms.preloadedTraces,
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
@@ -964,7 +924,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "pipeline9JointDrcRepairSolver",
       Pipeline9JointDrcRepairSolver,
-      (cms): ConstructorParameters<typeof Pipeline9JointDrcRepairSolver> => {
+      (cms) => {
         const preloadedTraceUpdates =
           cms.getPreloadedTraceUpdatesAfterHighDensity()
         const srjWithMaterializedPreloadedTraces =
@@ -973,25 +933,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: {
-              ...cms.originalSrj,
-              traces: [
-                ...(cms.originalSrj.traces ?? []),
-                ...cms.lengthMatchedTraces,
-              ],
-            },
+            originalSrj: { ...cms.originalSrj, traces: cms.preloadedTraces },
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
-            immutablePreloadedTraceIds: new Set([
-              ...cms.lengthMatchedTraces.map((trace) => trace.pcb_trace_id),
-              ...(cms.immutablePreloadedTraces
-                ? (cms.originalSrj.traces ?? []).map(
-                    (trace) => trace.pcb_trace_id,
-                  )
-                : []),
-            ]),
             mutatedPreloadedTraceIds: new Set(
               preloadedTraceUpdates.mutatedPreloadedTraces.map(
                 (trace) => trace.pcb_trace_id,
@@ -1016,21 +962,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const onlyConnectionNames =
           configuredOptions.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
-        const matchedTraceIds = new Set(
-          cms.lengthMatchedTraces.map((trace) => trace.pcb_trace_id),
-        )
-        const expansionInput = preparePipeline7PowerTraceExpansionInput({
-          originalSrj: cms.originalSrj,
-          newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
-          currentPreloadedTraces: cms
-            .getUpdatedPreloadedTraces()
-            .filter((trace) => !matchedTraceIds.has(trace.pcb_trace_id)),
-          expandedConnectionNames: onlyConnectionNames,
-          resolveConnectedTraceAliases: true,
-        })
-        expansionInput.fixedTraces.push(...cms.lengthMatchedTraces)
         return [
-          expansionInput,
+          preparePipeline7PowerTraceExpansionInput({
+            originalSrj: cms.originalSrj,
+            newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
+            currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
+            expandedConnectionNames: onlyConnectionNames,
+            resolveConnectedTraceAliases: true,
+          }),
           {
             allowNewVias: false,
             ...configuredOptions,
@@ -1049,6 +988,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
+    this.preloadedTraces = srjWithBoardValidObstacleLayers.traces ?? []
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -1110,7 +1050,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (this.lengthMatchedHdRoutes.length > 0)
+      if (this.lengthMatchedTraceIds.size > 0)
         this.srjWithPointPairs = this.getSrjWithMatchedPointPairs()
       this.solved = true
       return
@@ -1404,18 +1344,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    const remainingHdRoutes =
+    return (
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
-    return [...this.lengthMatchedHdRoutes, ...remainingHdRoutes]
+    )
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
-    if (this.immutablePreloadedTraces) return []
-    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+    return this.preloadedTraces.flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
         trace,
         traceIndex,
@@ -1438,7 +1377,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const changedSections = this.getChangedPreloadedTraceSections()
     const fixedRoutesWithoutChangedSections =
       removeChangedSectionsFromFixedHdRoutes({
-        traces: this.originalSrj.traces ?? [],
+        traces: this.preloadedTraces,
         fixedHdRoutes: originalFixedRoutes,
         sections: changedSections,
       })
@@ -1446,7 +1385,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       changedSections.length === 0
         ? []
         : getMaterializedPreloadedSectionHdRoutes({
-            traces: this.originalSrj.traces ?? [],
+            traces: this.preloadedTraces,
             sections: changedSections,
             stitchedHdRoutes:
               this.highDensityStitchSolver?.mergedHdRoutes ?? [],
@@ -1458,8 +1397,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const materializedOriginalRouteNames = originalFixedRoutes
       .filter((route) =>
         materializedTraceIds.has(
-          this.originalSrj.traces?.[route.preloadedTraceIndex]?.pcb_trace_id ??
-            "",
+          this.preloadedTraces[route.preloadedTraceIndex]?.pcb_trace_id ?? "",
         ),
       )
       .map((route) => route.connectionName)
@@ -1510,8 +1448,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           })
         : fixedRouteState.updatedFixedRoutes
 
-    const updates = applyFixedRouteReplacementsToPreloadedTraces({
-      originalTraces: this.originalSrj.traces ?? [],
+    return applyFixedRouteReplacementsToPreloadedTraces({
+      originalTraces: this.preloadedTraces,
       originalFixedRoutes: fixedRouteState.originalFixedRoutes,
       updatedFixedRoutes,
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
@@ -1520,28 +1458,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
     })
-    return {
-      ...updates,
-      updatedPreloadedTraces: [
-        ...updates.updatedPreloadedTraces,
-        ...this.lengthMatchedTraces,
-      ],
-    }
   }
 
   private getSrjWithMatchedPointPairs(): SimpleRouteJson {
-    if (
-      !this.srjWithPointPairs ||
-      !this.lengthMatchingPostProcessingSolver?.solved
-    )
-      throw new Error(
-        "Pipeline9: point-pair output requested before routing setup",
-      )
     return {
-      ...this.srjWithPointPairs,
+      ...this.srjWithPointPairs!,
       connections: [
-        ...this.srjWithPointPairs.connections,
-        ...this.lengthMatchingPostProcessingSolver.getOutputConnections(),
+        ...this.srjWithPointPairs!.connections,
+        ...this.lengthMatchingPostProcessingSolver!.getOutputConnections(),
       ],
     }
   }
@@ -1576,20 +1500,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
-      hdRoutes: canonicalizePipeline9HdRoutes(
-        this._getOutputHdRoutes().filter(
-          (route) => !this.lengthMatchedHdRoutes.includes(route),
-        ),
-      ),
+      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
-    return assignUniquePcbTraceIdsToNewTraces(routedTraces, [
-      ...(this.originalSrj.traces ?? []),
-      ...this.lengthMatchedTraces,
-    ])
+    return assignUniquePcbTraceIdsToNewTraces(
+      routedTraces,
+      this.preloadedTraces,
+    )
   }
 
   private getPowerTraceExpansionFixedTraces(): SimplifiedPcbTraces {
@@ -1617,9 +1537,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) =>
           trace.__replaces_pcb_trace_id !== undefined ||
-          this.lengthMatchedTraces.some(
-            (matchedTrace) => matchedTrace.pcb_trace_id === trace.pcb_trace_id,
-          ),
+          this.lengthMatchedTraceIds.has(trace.pcb_trace_id),
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
