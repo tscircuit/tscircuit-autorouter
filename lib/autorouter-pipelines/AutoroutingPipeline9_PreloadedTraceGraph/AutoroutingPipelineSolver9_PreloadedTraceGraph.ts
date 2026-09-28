@@ -297,7 +297,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  originalSrj: SimpleRouteJson
+  readonly originalSrj: SimpleRouteJson
+  private pairRoutedSrj: SimpleRouteJson
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -335,7 +336,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               JSON.stringify(trace.route),
             ]),
           )
-          cms.originalSrj = { ...cms.originalSrj, traces: srj.traces }
+          cms.pairRoutedSrj = { ...cms.originalSrj, traces: srj.traces }
           cms.setSimpleRouteJson(srj)
         },
       },
@@ -617,7 +618,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
+        const originalFixedHdRoutes = (cms.pairRoutedSrj.traces ?? []).flatMap(
           (trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
               trace,
@@ -628,7 +629,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
         )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.originalSrj.traces ?? [],
+          traces: cms.pairRoutedSrj.traces ?? [],
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
@@ -856,7 +857,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: cms.originalSrj,
+            originalSrj: cms.pairRoutedSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
@@ -887,7 +888,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
         return [
           preparePipeline7PowerTraceExpansionInput({
-            originalSrj: cms.originalSrj,
+            originalSrj: cms.pairRoutedSrj,
             newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
             currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
             expandedConnectionNames: onlyConnectionNames,
@@ -931,6 +932,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
+    this.pairRoutedSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -1082,7 +1084,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
-    const srjToVisualize = this.originalSrj
+    const srjToVisualize = this.pairRoutedSrj
     const problemOutline = srjToVisualize.outline
     const problemLines: Line[] = []
 
@@ -1209,7 +1211,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ? combineVisualizations(
             { lines: problemLines },
             getPresuppliedTraceVisualization({
-              srj: this.originalSrj,
+              srj: this.pairRoutedSrj,
               visualizationOptions,
             }),
             this.visualizeFinalOutput(),
@@ -1291,7 +1293,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
-    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+    return (this.pairRoutedSrj.traces ?? []).flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
         trace,
         traceIndex,
@@ -1314,7 +1316,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const changedSections = this.getChangedPreloadedTraceSections()
     const fixedRoutesWithoutChangedSections =
       removeChangedSectionsFromFixedHdRoutes({
-        traces: this.originalSrj.traces ?? [],
+        traces: this.pairRoutedSrj.traces ?? [],
         fixedHdRoutes: originalFixedRoutes,
         sections: changedSections,
       })
@@ -1322,7 +1324,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       changedSections.length === 0
         ? []
         : getMaterializedPreloadedSectionHdRoutes({
-            traces: this.originalSrj.traces ?? [],
+            traces: this.pairRoutedSrj.traces ?? [],
             sections: changedSections,
             stitchedHdRoutes:
               this.highDensityStitchSolver?.mergedHdRoutes ?? [],
@@ -1334,8 +1336,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const materializedOriginalRouteNames = originalFixedRoutes
       .filter((route) =>
         materializedTraceIds.has(
-          this.originalSrj.traces?.[route.preloadedTraceIndex]?.pcb_trace_id ??
-            "",
+          this.pairRoutedSrj.traces?.[route.preloadedTraceIndex]
+            ?.pcb_trace_id ?? "",
         ),
       )
       .map((route) => route.connectionName)
@@ -1387,7 +1389,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         : fixedRouteState.updatedFixedRoutes
 
     return applyFixedRouteReplacementsToPreloadedTraces({
-      originalTraces: this.originalSrj.traces ?? [],
+      originalTraces: this.pairRoutedSrj.traces ?? [],
       originalFixedRoutes: fixedRouteState.originalFixedRoutes,
       updatedFixedRoutes,
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
@@ -1436,7 +1438,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
-      this.originalSrj.traces ?? [],
+      this.pairRoutedSrj.traces ?? [],
     )
   }
 
