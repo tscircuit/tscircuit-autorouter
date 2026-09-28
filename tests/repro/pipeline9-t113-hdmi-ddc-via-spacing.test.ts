@@ -34,7 +34,7 @@ const readCompressedFixture = <T>(
   return JSON.parse(fixtureText) as T
 }
 
-test("reproduces T113 HDMI 1.8 V same-net drill spacing after joint repair", async (): Promise<void> => {
+test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> => {
   const input = readCompressedFixture<SimpleRouteJson>(
     "t113-linux-hdmi-ddc-via-spacing.srj.json.gz",
     expectedSrjSha256,
@@ -83,27 +83,29 @@ test("reproduces T113 HDMI 1.8 V same-net drill spacing after joint repair", asy
   const viaErrors = drc.errors.filter(
     (error) => error.type === "pcb_via_clearance_error",
   )
-  expect(viaErrors).toHaveLength(1)
-  const viaError = viaErrors[0]!
-  expect(viaError.minimum_clearance).toBe(viaClearance)
-  expect(viaError.actual_clearance).toBeGreaterThan(0.17)
-  expect(viaError.actual_clearance).toBeLessThan(0.18)
+  expect(viaErrors).toHaveLength(0)
 
   const vias = drc.circuitJson.filter(
     (element): element is PcbVia => element.type === "pcb_via",
   )
-  const issueVias = viaError.pcb_via_ids.map((pcbViaId) =>
-    vias.find((via) => via.pcb_via_id === pcbViaId),
+  const mst10Vias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst10_0"),
   )
-  if (!issueVias[0] || !issueVias[1]) {
-    throw new Error("Missing the exact T113 HDMI 1.8 V via pair")
+  const mst15Vias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst15_0"),
+  )
+  const closestPair = mst10Vias
+    .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
+    .sort(
+      ([viaA, viaB], [nextViaA, nextViaB]) =>
+        Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
+        Math.hypot(nextViaA.x - nextViaB.x, nextViaA.y - nextViaB.y),
+    )[0]
+  if (!closestPair) {
+    throw new Error("Missing the repaired T113 HDMI 1.8 V via pair")
   }
-  const [viaA, viaB] = issueVias
-  const minimumCenterDistance =
-    viaA.hole_diameter / 2 + viaClearance + viaB.hole_diameter / 2
-  expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(
-    minimumCenterDistance,
-  )
+  const [viaA, viaB] = closestPair
+  expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
 
   const routedCircuitJson = convertToCircuitJson(
     solver.srjWithPointPairs!,
@@ -123,23 +125,16 @@ test("reproduces T113 HDMI 1.8 V same-net drill spacing after joint repair", asy
       circles: [
         {
           center: viaA,
-          radius: minimumCenterDistance,
-          fill: "#3388ff12",
-          stroke: "#3388ff",
-          label: "required drill center distance",
+          radius: viaA.hole_diameter / 2 + viaClearance,
+          fill: "#16a34a12",
+          stroke: "#16a34a",
+          label: "0.20 mm clearance from shared drill edge",
         },
         {
           center: viaA,
           radius: viaA.hole_diameter / 2,
-          fill: "#3388ff",
-          label: "HDMI 1.8 V drill A",
-        },
-        {
-          center: viaB,
-          radius: viaB.hole_diameter / 2,
-          fill: "#ff334488",
-          stroke: "#ff3344",
-          label: "HDMI 1.8 V drill B",
+          fill: "#16a34a",
+          label: "merged HDMI 1.8 V drill",
         },
       ],
       rects: [

@@ -722,12 +722,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const viaHoleClearance =
+      params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? viaClearance
     const baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-      drcOptions: { traceClearance },
+      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -749,7 +751,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance },
+      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
     })
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
@@ -1231,7 +1233,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: { traceClearance, includeTraceContinuity },
+        drcOptions: {
+          traceClearance,
+          viaClearance: viaHoleClearance,
+          includeTraceContinuity,
+        },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
