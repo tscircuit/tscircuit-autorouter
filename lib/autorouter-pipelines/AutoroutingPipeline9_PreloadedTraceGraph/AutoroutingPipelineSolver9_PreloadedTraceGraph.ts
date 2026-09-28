@@ -304,7 +304,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  private lengthMatchedTraceIds = new Set<string>()
+  earlyLengthMatchingSolver?: AutoroutingPipelineSolver9_PreloadedTraceGraph
+
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -1016,6 +1019,56 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+
+    const constrainedNames = new Set([
+      ...(srj.differentialPairs ?? []).flatMap((pair) => pair.connectionNames),
+      ...(srj.buses ?? []).flatMap((bus) =>
+        bus.maxLengthSkew === undefined ? [] : bus.connectionNames,
+      ),
+    ])
+    const constrainedConnections = srj.connections.filter((connection) =>
+      [
+        connection.name,
+        connection.__netConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
+      ].some((name) => name !== undefined && constrainedNames.has(name)),
+    )
+    const remainingConnections = srj.connections.filter(
+      (connection) => !constrainedConnections.includes(connection),
+    )
+    // Reuse the normal route-and-match flow only when other nets must follow it.
+    // The inner pipeline contains only constrained nets, so it cannot recurse.
+    if (constrainedConnections.length > 0 && remainingConnections.length > 0) {
+      this.pipelineDef.splice(
+        1,
+        0,
+        definePipelineStep(
+          "earlyLengthMatchingSolver",
+          AutoroutingPipelineSolver9_PreloadedTraceGraph,
+          (cms) => [{ ...cms.srj, connections: constrainedConnections }, cms.opts],
+          {
+            onSolved: (cms): void => {
+              const early = cms.earlyLengthMatchingSolver!
+              cms.lengthMatchedTraceIds = new Set(
+                early.getOutputSimplifiedPcbTraces().map(
+                  (trace) => trace.pcb_trace_id,
+                ),
+              )
+              // The ordinary preload path owns these traces from here onward.
+              const traces = early.getOutputSimpleRouteJson().traces!
+              cms.originalSrj = { ...cms.originalSrj, traces }
+              cms.setSimpleRouteJson({
+                ...cms.srj,
+                traces,
+                connections: remainingConnections,
+                differentialPairs: [],
+                buses: cms.srj.buses?.map(({ maxLengthSkew, ...bus }) => bus),
+              })
+            },
+          },
+        ),
+      )
+    }
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {
@@ -1076,6 +1129,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
     if (
+      pipelineStepDef.solverName === "earlyLengthMatchingSolver" ||
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
     )
@@ -1528,7 +1582,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        (trace) =>
+          trace.__replaces_pcb_trace_id !== undefined ||
+          this.lengthMatchedTraceIds.has(trace.pcb_trace_id),
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
