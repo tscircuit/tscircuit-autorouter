@@ -113,3 +113,5 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+
+export { DifferentialPairPostProcessingError } from "./solvers/DifferentialPairPostProcessingError"

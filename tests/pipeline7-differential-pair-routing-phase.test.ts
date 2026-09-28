@@ -167,6 +167,7 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
 
   solver.solve()
 
+  expect(solver.postProcessingErrors).toEqual([])
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.lengthMatchingPostProcessingSolver).toBeDefined()

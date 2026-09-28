@@ -3,13 +3,21 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autoro
 import type { SimpleRouteJson } from "../../lib/types"
 import srj from "../fixtures/core-differential-pair-pad-clearance.json"
 
-test("Pipeline9 preserves declared pad clearance when length matching", () => {
+test("Pipeline9 rejects unsuccessful differential-pair postprocessing and retains diagnostic geometry", () => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     srj as SimpleRouteJson,
   )
-  solver.solve()
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(() => solver.solve()).toThrow("Differential pair post-processing failed")
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.lengthMatchingPostProcessingSolver?.postProcessingErrors).toMatchObject([
+    {
+      stage: "differentialPairReroutingSolver",
+      reason: "no-valid-candidate",
+      connectionNames: ["source_trace_0", "source_trace_1"],
+    },
+  ])
+  expect(solver.powerTraceExpansionSolver).toBeUndefined()
   const routes = solver._getOutputHdRoutes()
   expect(routes).toHaveLength(2)
   const lengths = routes.map((route) =>

@@ -1,4 +1,8 @@
-import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
+import {
+  type PostProcessingError,
+  PostProcessingSolver as DifferentialPairPostProcessingSolver,
+} from "@tscircuit/length-matching-solver"
+import { DifferentialPairPostProcessingError } from "lib/solvers/DifferentialPairPostProcessingError"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -232,6 +236,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  postProcessingErrors: PostProcessingError[] = []
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -793,6 +798,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          cms.postProcessingErrors =
+            cms.lengthMatchingPostProcessingSolver!.getOutput().postProcessingErrors
+          if (cms.postProcessingErrors.length > 0) {
+            throw new DifferentialPairPostProcessingError(cms.postProcessingErrors)
+          }
+        },
       },
     ),
     definePipelineStep(

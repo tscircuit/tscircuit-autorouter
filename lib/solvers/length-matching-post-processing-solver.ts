@@ -1,6 +1,7 @@
 import {
   LengthMatchingSolver,
   PostProcessingSolver,
+  type PostProcessingError,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -11,6 +12,7 @@ import type {
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
+import { DifferentialPairPostProcessingError } from "./DifferentialPairPostProcessingError"
 import { BaseSolver } from "./BaseSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
@@ -134,6 +136,7 @@ const assertBusLengthSkew = (
 
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
+  postProcessingErrors: PostProcessingError[] = []
   private readonly differentialPairSolver: PostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
@@ -170,7 +173,13 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      const { hdRoutes, postProcessingErrors } =
+        this.differentialPairSolver.getOutput()
+      this.postProcessingErrors = postProcessingErrors
+      if (postProcessingErrors.length > 0) {
+        this.outputHdRoutes = hdRoutes
+        throw new DifferentialPairPostProcessingError(postProcessingErrors)
+      }
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
@@ -210,7 +219,11 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   getOutput(): { hdRoutes: HighDensityRoute[] } {
-    if (!this.solved || !this.outputHdRoutes)
+    // Failed pair optimization retains its returned geometry for diagnostics.
+    if (
+      (!this.solved && this.postProcessingErrors.length === 0) ||
+      !this.outputHdRoutes
+    )
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
