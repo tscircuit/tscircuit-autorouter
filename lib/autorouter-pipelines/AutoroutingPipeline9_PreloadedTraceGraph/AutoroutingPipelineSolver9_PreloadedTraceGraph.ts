@@ -65,6 +65,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import type { TraceRoutingConnection } from "@tscircuit/length-matching-solver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -298,7 +299,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   originalSrj: SimpleRouteJson
   private preloadedTraces: SimplifiedPcbTraces
   private lengthMatchedTraceIds = new Set<string>()
-  private lengthMatchedConnectionNames = new Set<string>()
+  private lengthMatchedConnections: SimpleRouteConnection[] = []
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
   /** Available segment points after non-component cramped points are filtered. */
@@ -336,49 +337,50 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             bus.maxLengthSkew === undefined ? [] : bus.connectionNames,
           ),
         ])
-        const constrainedConnections = cms.srj.connections.filter(
-          (connection) =>
-            constrainedConnectionNames.has(connection.name) ||
-            connection.__rootConnectionNames?.some((name) =>
-              constrainedConnectionNames.has(name),
-            ) ||
-            (connection.__netConnectionName !== undefined &&
-              constrainedConnectionNames.has(connection.__netConnectionName)),
+        // Constrained nets use the same point-pair split as general routing.
+        const pointPairsSolver = new NetToPointPairsSolver2_OffBoardConnection(
+          {
+            ...cms.srj,
+            connections: cms.srj.connections.filter((connection) =>
+              constrainedConnectionNames.has(connection.name),
+            ),
+          },
+          cms.colorMap,
+          getInitiallyConnectedMapFromSimpleRouteJson(cms.srj),
         )
-        cms.lengthMatchedConnectionNames = new Set(
-          constrainedConnections.map((connection) => connection.name),
-        )
-        const initialRoutingSolver:
-          | AutoroutingPipelineSolver9_PreloadedTraceGraph
-          | undefined =
-          constrainedConnectionNames.size === 0
-            ? undefined
-            : new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-                {
-                  ...cms.srj,
-                  connections: constrainedConnections,
-                  differentialPairs: [],
-                  buses: (cms.srj.buses ?? [])
-                    .filter((bus) =>
-                      bus.connectionNames.every((name) =>
-                        constrainedConnectionNames.has(name),
-                      ),
-                    )
-                    .map(({ maxLengthSkew, ...bus }) => bus),
-                },
-                {
-                  ...cms.opts,
-                  powerTraceExpansion: { onlyConnectionNames: [] },
-                },
-              )
+        pointPairsSolver.solve()
+        if (pointPairsSolver.failed) throw new Error(pointPairsSolver.error!)
+        cms.lengthMatchedConnections = pointPairsSolver.newConnections
         return [
           {
-            initialRoutingSolver,
-            hdRoutes: [],
+            routingConnections: cms.lengthMatchedConnections.map(
+              (connection): TraceRoutingConnection => {
+                const rootConnectionNames =
+                  connection.__rootConnectionNames ?? [connection.name]
+                const netId = cms.connMap.getNetConnectedToId(
+                  rootConnectionNames[0]!,
+                )
+                if (rootConnectionNames.length !== 1 || !netId)
+                  throw new Error(
+                    `Pipeline9: length-matched connection "${connection.name}" must belong to exactly one root connection`,
+                  )
+                const [start, end] = connection.pointsToConnect
+                return {
+                  connectionName: connection.name,
+                  rootConnectionName: rootConnectionNames[0],
+                  connectedTo: cms.connMap.getIdsConnectedToNet(netId),
+                  start: start!,
+                  end: end!,
+                  traceThickness:
+                    connection.nominalTraceWidth ?? cms.minTraceWidth,
+                  viaDiameter: cms.viaDiameter,
+                }
+              },
+            ),
             differentialPairs: cms.srj.differentialPairs ?? [],
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
-            traces: cms.srj.traces,
+            traces: cms.preloadedTraces,
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
@@ -388,30 +390,34 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          const solver = cms.lengthMatchingPostProcessingSolver!
-          const { hdRoutes, preloadedTraces } = solver.getOutput()
-          if (hdRoutes.length === 0) return
+          if (cms.lengthMatchedConnections.length === 0) return
           const traces = assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: solver.getOutputConnections(),
+              connections: cms.lengthMatchedConnections,
               originalConnections: cms.originalSrj.connections,
-              hdRoutes,
+              hdRoutes:
+                cms.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes,
               layerCount: cms.srj.layerCount,
               obstacles: cms.srj.obstacles,
               defaultViaHoleDiameter: cms.viaHoleDiameter,
               connMap: cms.connMap,
             }),
-            preloadedTraces,
+            cms.preloadedTraces,
           )
           cms.lengthMatchedTraceIds = new Set(
             traces.map((trace) => trace.pcb_trace_id),
           )
-          cms.preloadedTraces = [...preloadedTraces, ...traces]
+          cms.preloadedTraces = [...cms.preloadedTraces, ...traces]
+          const matchedConnectionNames = new Set(
+            cms.lengthMatchedConnections.flatMap(
+              (connection) =>
+                connection.__rootConnectionNames ?? [connection.name],
+            ),
+          )
           cms.setSimpleRouteJson({
             ...cms.srj,
             connections: cms.srj.connections.filter(
-              (connection) =>
-                !cms.lengthMatchedConnectionNames.has(connection.name),
+              (connection) => !matchedConnectionNames.has(connection.name),
             ),
             traces: cms.preloadedTraces,
           })
@@ -1050,7 +1056,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (this.lengthMatchedTraceIds.size > 0)
+      if (this.lengthMatchedConnections.length > 0)
         this.srjWithPointPairs = this.getSrjWithMatchedPointPairs()
       this.solved = true
       return
@@ -1465,7 +1471,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.srjWithPointPairs!,
       connections: [
         ...this.srjWithPointPairs!.connections,
-        ...this.lengthMatchingPostProcessingSolver!.getOutputConnections(),
+        ...this.lengthMatchedConnections,
       ],
     }
   }

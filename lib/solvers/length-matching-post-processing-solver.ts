@@ -1,6 +1,9 @@
 import {
   LengthMatchingSolver,
   PostProcessingSolver,
+  TraceRoutingSolver,
+  type PostProcessingSolverParams,
+  type TraceRoutingConnection,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -13,16 +16,13 @@ import type {
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
 
-type InitialRoutingSolver = BaseSolver & {
-  getCurrentPhase(): string
-  getUpdatedPreloadedTraces(): SimplifiedPcbTraces
-  _getOutputHdRoutes(): HighDensityRoute[]
-  netToPointPairsSolver?: { newConnections: SimpleRouteConnection[] }
-}
+// Upstream bounds pair rerouting, smoothing, and bus matching to a few hundred
+// thousand iterations combined.
+const MATCHING_ITERATION_BUDGET = 1_000_000
 
 type LengthMatchingPostProcessingSolverParams = {
-  initialRoutingSolver?: InitialRoutingSolver
-  hdRoutes: HighDensityRoute[]
+  /** Constrained point pairs, routed before pair and bus matching. */
+  routingConnections: TraceRoutingConnection[]
   differentialPairs: DifferentialPair[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
@@ -140,10 +140,10 @@ const assertBusLengthSkew = (
   }
 }
 
-/** Runs existing differential-pair post-processing, then tunes bus roots. */
+/** Routes constrained connections, then couples pairs and tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
+  private readonly traceRoutingSolver: TraceRoutingSolver
   private differentialPairSolver?: PostProcessingSolver
-  private outputConnections: SimpleRouteConnection[] = []
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
 
@@ -151,120 +151,92 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
+    this.traceRoutingSolver = new TraceRoutingSolver({
+      connections: params.routingConnections,
+      traces: params.traces,
+      obstacles: params.obstacles,
+      bounds: params.bounds,
+      layerCount: params.layerCount,
+      minTraceToPadEdgeClearance: params.obstacleMargin,
+    })
     this.MAX_ITERATIONS =
-      (params.initialRoutingSolver?.MAX_ITERATIONS ?? 0) + 100_000_000
-  }
-
-  private initializeDifferentialPairSolver(): void {
-    const initialRoutingSolver = this.params.initialRoutingSolver
-    if (initialRoutingSolver)
-      this.params.traces = initialRoutingSolver.getUpdatedPreloadedTraces()
-    const hdRoutes = initialRoutingSolver
-      ? initialRoutingSolver._getOutputHdRoutes()
-      : this.params.hdRoutes
-    if (initialRoutingSolver && !initialRoutingSolver.netToPointPairsSolver)
-      throw new Error(
-        "Length matching: initial routing produced no point pairs",
-      )
-    this.outputConnections = initialRoutingSolver
-      ? initialRoutingSolver.netToPointPairsSolver!.newConnections
-      : this.params.connections.filter((connection) =>
-          hdRoutes.some((route) => route.connectionName === connection.name),
-        )
-    const differentialPairs = this.params.differentialPairs.map((pair) => {
-      if (!initialRoutingSolver) return pair
-      const connectionNames = pair.connectionNames.map((connectionName) => {
-        const matches = this.outputConnections.filter(
-          (connection) =>
-            connection.name === connectionName ||
-            connection.__rootConnectionNames?.includes(connectionName) ||
-            connection.__netConnectionName === connectionName,
-        )
-        if (matches.length !== 1)
-          throw new Error(
-            `Length matching: differential pair connection "${connectionName}" must resolve to exactly one point-pair connection, got ${matches.length}`,
-          )
-        return matches[0]!.name
-      }) as [string, string]
-      if (connectionNames[0] === connectionNames[1])
-        throw new Error(
-          `Length matching: differential pair ${pair.connectionNames.join("/")} resolves to the same connection`,
-        )
-      const resolvedPair = { ...pair, connectionNames }
-      if (pair.traceGap === undefined) return resolvedPair
-      const pairRoutes = connectionNames.map((connectionName) => {
-        const matches = hdRoutes.filter(
-          (route) => route.connectionName === connectionName,
-        )
-        if (matches.length !== 1)
-          throw new Error(
-            `Length matching: differential pair connection "${connectionName}" must have exactly one HD route, got ${matches.length}`,
-          )
-        return matches[0]!
-      })
-      const centerlineDistance =
-        pair.traceGap +
-        pairRoutes.reduce((sum, route) => sum + route.traceThickness / 2, 0)
-      return {
-        ...resolvedPair,
-        minimumCenterlineDistance: centerlineDistance,
-        maximumCenterlineDistance: centerlineDistance,
-      }
-    })
-    this.differentialPairSolver = new PostProcessingSolver({
-      hdRoutes,
-      differentialPairs,
-      traces: this.params.traces,
-      obstacles: this.params.obstacles,
-      bounds: this.params.bounds,
-      layerCount: this.params.layerCount,
-      minTraceToPadEdgeClearance: this.params.obstacleMargin,
-    })
-    this.MAX_ITERATIONS = Math.max(
-      this.MAX_ITERATIONS,
-      this.iterations + this.differentialPairSolver.MAX_ITERATIONS + 100_010,
-    )
+      this.traceRoutingSolver.MAX_ITERATIONS + MATCHING_ITERATION_BUDGET
   }
 
   override getSolverName(): string {
     return "LengthMatchingPostProcessingSolver"
   }
 
-  override _step(): void {
-    const initialRoutingSolver = this.params.initialRoutingSolver
-    if (initialRoutingSolver) {
-      if (initialRoutingSolver.solved)
-        throw new Error(
-          "Length matching: initial routing completed past its joint DRC boundary",
-        )
-      // Initial routing supplies geometry through global DRC. Joint repair and
-      // power expansion belong to the outer pipeline after constrained copper
-      // is fixed and the remaining connections have been routed.
-      if (
-        initialRoutingSolver.getCurrentPhase() !==
-        "pipeline9JointDrcRepairSolver"
-      ) {
-        initialRoutingSolver.step()
-        if (initialRoutingSolver.failed) {
-          this.failed = true
-          this.error = initialRoutingSolver.error
-        }
-        return
+  private getDifferentialPairs(): PostProcessingSolverParams["differentialPairs"] {
+    return this.params.differentialPairs.map(({ traceGap, ...pair }) => {
+      if (traceGap === undefined) return pair
+      const centerlineDistance = pair.connectionNames.reduce(
+        (distance, connectionName) => {
+          const connection = this.params.routingConnections.find(
+            (candidate) => candidate.connectionName === connectionName,
+          )
+          if (!connection)
+            throw new Error(
+              `Length matching: differential pair connection "${connectionName}" must route as one point pair`,
+            )
+          return distance + connection.traceThickness / 2
+        },
+        traceGap,
+      )
+      return {
+        ...pair,
+        minimumCenterlineDistance: centerlineDistance,
+        maximumCenterlineDistance: centerlineDistance,
       }
+    })
+  }
+
+  override _step(): void {
+    const hasLengthConstraints =
+      this.params.differentialPairs.length > 0 ||
+      this.params.buses.some((bus) => bus.maxLengthSkew !== undefined)
+    if (!hasLengthConstraints) {
+      this.outputHdRoutes = []
+      this.solved = true
+      return
     }
-    if (!this.differentialPairSolver) this.initializeDifferentialPairSolver()
-    const differentialPairSolver = this.differentialPairSolver!
-    if (!differentialPairSolver.solved) {
-      differentialPairSolver.step()
-      if (differentialPairSolver.failed) {
+    if (!this.traceRoutingSolver.solved) {
+      this.traceRoutingSolver.step()
+      if (this.traceRoutingSolver.failed) {
         this.failed = true
-        this.error = differentialPairSolver.error
+        this.error = this.traceRoutingSolver.error
+      }
+      return
+    }
+    if (!this.differentialPairSolver) {
+      this.differentialPairSolver = new PostProcessingSolver({
+        hdRoutes: this.traceRoutingSolver.getOutput().hdRoutes,
+        differentialPairs: this.getDifferentialPairs(),
+        traces: this.params.traces,
+        obstacles: this.params.obstacles,
+        bounds: this.params.bounds,
+        layerCount: this.params.layerCount,
+        minTraceToPadEdgeClearance: this.params.obstacleMargin,
+      })
+      return
+    }
+    if (!this.differentialPairSolver.solved) {
+      this.differentialPairSolver.step()
+      if (this.differentialPairSolver.failed) {
+        this.failed = true
+        this.error = this.differentialPairSolver.error
       }
       return
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = differentialPairSolver.getOutput().hdRoutes
+      const { hdRoutes, postProcessingErrors } =
+        this.differentialPairSolver.getOutput()
+      // Best-effort output keeps uncoupled or unmatched routes; never fix them.
+      if (postProcessingErrors.length > 0)
+        throw new Error(
+          `Length matching: ${postProcessingErrors.map((error) => error.message).join("; ")}`,
+        )
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
@@ -303,34 +275,19 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.solved = true
   }
 
-  getOutput(): {
-    hdRoutes: HighDensityRoute[]
-    preloadedTraces: SimplifiedPcbTraces
-  } {
+  getOutput(): { hdRoutes: HighDensityRoute[] } {
     if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return {
-      hdRoutes: this.outputHdRoutes,
-      preloadedTraces: this.params.traces ?? [],
-    }
-  }
-
-  getOutputConnections(): SimpleRouteConnection[] {
-    if (!this.solved)
-      throw new Error(
-        "LengthMatchingPostProcessingSolver connections requested before completion",
-      )
-    return this.outputConnections
+    return { hdRoutes: this.outputHdRoutes }
   }
 
   override visualize(): GraphicsObject {
     return (
       this.busLengthMatchingSolver?.visualize() ??
       this.differentialPairSolver?.visualize() ??
-      this.params.initialRoutingSolver?.visualize() ??
-      super.visualize()
+      this.traceRoutingSolver.visualize()
     )
   }
 }
