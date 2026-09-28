@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 import { simpleRouteJson } from "../../../fixtures/features/multilayerconnectionpoints/multilayerconnectionpoints01.fixture"

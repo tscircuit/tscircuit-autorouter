@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { PreparedPipeline11Simplification } from "./PrepareTraceSimplificationSolver"
@@ -35,6 +35,8 @@ export class TraceSimplificationStageSolver extends BaseSolver {
         preparedInput.options.enableCrossingViaReduction ?? true,
       preserveRouteEndpoints: true,
       useTraceWidthAwareClearance: true,
+      enableVertexShortcuts:
+        preparedInput.options.enableVertexShortcuts ?? true,
     })
     this.traceSimplificationSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
       preparedInput.options.iterations ?? 2

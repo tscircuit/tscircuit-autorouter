@@ -45,7 +45,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 
 interface CapacityMeshSolverOptions {

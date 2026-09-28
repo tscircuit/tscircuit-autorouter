@@ -1,6 +1,5 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
-
-const POSITION_EPSILON = 1e-6
+import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
 
 /**
  * Canonicalizes Pipeline9 layer transitions before force improvement.
@@ -28,35 +27,16 @@ export const materializePipeline9HdRouteVias = (
         continue
       }
 
-      const transitionIsColocated =
-        Math.abs(previousRoutePoint.x - routePoint.x) <= POSITION_EPSILON &&
-        Math.abs(previousRoutePoint.y - routePoint.y) <= POSITION_EPSILON
-      const hasViaAtPreviousPoint = hdRoute.vias.some(
-        (via) =>
-          Math.abs(via.x - previousRoutePoint.x) <= POSITION_EPSILON &&
-          Math.abs(via.y - previousRoutePoint.y) <= POSITION_EPSILON,
-      )
-      const hasViaAtRoutePoint = hdRoute.vias.some(
-        (via) =>
-          Math.abs(via.x - routePoint.x) <= POSITION_EPSILON &&
-          Math.abs(via.y - routePoint.y) <= POSITION_EPSILON,
-      )
-
-      if (transitionIsColocated) {
+      const viaEndpoint = getPipeline9LayerTransitionViaEndpoint({
+        hdRoute,
+        start: previousRoutePoint,
+        end: routePoint,
+      })
+      if (viaEndpoint === "colocated") {
         route.push(routePoint)
         continue
       }
-      if (!hasViaAtPreviousPoint && !hasViaAtRoutePoint) {
-        throw new Error(
-          `Pipeline9 route "${hdRoute.connectionName}" changes layers from z=${previousRoutePoint.z} to z=${routePoint.z} without an explicit via`,
-        )
-      }
-      if (hasViaAtPreviousPoint === hasViaAtRoutePoint) {
-        throw new Error(
-          `Pipeline9 route "${hdRoute.connectionName}" has an ambiguous layer transition between (${previousRoutePoint.x}, ${previousRoutePoint.y}) and (${routePoint.x}, ${routePoint.y})`,
-        )
-      }
-      if (hasViaAtPreviousPoint) {
+      if (viaEndpoint === "start") {
         route.push({
           x: previousRoutePoint.x,
           y: previousRoutePoint.y,

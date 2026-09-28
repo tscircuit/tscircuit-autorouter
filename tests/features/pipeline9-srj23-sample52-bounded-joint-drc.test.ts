@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () => {
+test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 52)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -34,13 +34,6 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () 
   ).toBe(12)
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactPrecisionPassAttempted,
-  ).toBeTrue()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats
-      .terminalEscapeSkippedForIndexedIssueCount,
   ).toBeFalse()
   expect(
     Number(

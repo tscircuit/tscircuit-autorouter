@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../fixtures/bug-reports/bugreport90-6dc620/bugreport90-6dc620.json" with {
   type: "json",
 }
@@ -11,7 +11,9 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport90-6dc620.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })

@@ -28,6 +28,8 @@ export const createPipeline7AutoroutingDrcEvaluator = (
 ): DrcEvaluator => {
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
+    // Preserve physical pad geometry rather than routing approximations.
+    obstacles: conversionOptions.originalSrj.obstacles,
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??
@@ -43,6 +45,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
+    includeTraceViaOwnerMetadata: true,
     traceClearance: AUTOROUTING_TRACE_CLEARANCE,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     spatialCellSize,

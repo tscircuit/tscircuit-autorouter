@@ -65,7 +65,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
@@ -590,7 +590,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-          maxSampleEntries: 80,
+          minimumTraceWidth: cms.srj.minTraceWidth,
+          connMap: cms.connMap,
         },
       ],
     ),
@@ -912,6 +913,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (this.activeSubSolver instanceof TraceSimplificationSolver) {
+      this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
+      )
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"

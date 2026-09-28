@@ -254,7 +254,6 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
-const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -1079,44 +1078,36 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           preloadedTraceStats.preloadedAssignmentCount,
         )
       : undefined
-    const shouldRunDuplicateCongestedPortPrepass =
-      connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
-    if (shouldRunDuplicateCongestedPortPrepass) {
-      const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
-        serializedGraph,
-        {
-          duplicatePortProximity: 0.05,
-          useSerializedPortPenalties: false,
-          routeSolveOptions: {
-            ...getTinyViaSizeOptions(params.minViaPadDiameter),
-            USE_SPARSE_CANDIDATE_STORAGE: false,
-            ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
-            GREEDY_FINAL_ROUTE_ITERS: 4,
-            MAX_ITERATIONS: Math.ceil(
-              2_000_000 * getEffortScale(params.effort),
-            ),
-            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
-            STATIC_REACHABILITY_PRECHECK: true,
-          },
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+      serializedGraph,
+      {
+        duplicatePortProximity: 0.05,
+        useSerializedPortPenalties: false,
+        routeSolveOptions: {
+          ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          USE_SPARSE_CANDIDATE_STORAGE: false,
+          ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
+          GREEDY_FINAL_ROUTE_ITERS: 4,
+          MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
+          RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
+          STATIC_REACHABILITY_PRECHECK: true,
         },
-      )
-      duplicateCongestedPortSolver.solve()
-      if (duplicateCongestedPortSolver.failed) {
-        this.duplicateCongestedPortError =
-          duplicateCongestedPortSolver.error ?? "unknown error"
-      } else {
-        this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-        graphForTiny = duplicateCongestedPortSolver.getOutput()
-        for (const port of graphForTiny.ports) {
-          const metadata = asTinyPortMetadata(port.d)
-          if (typeof metadata.duplicatedFromPortId !== "string") continue
-          delete metadata._preloadedFixedNetIds
-          delete metadata._preloadedTracePortAssignments
-        }
-      }
+      },
+    )
+    duplicateCongestedPortSolver.solve()
+    if (duplicateCongestedPortSolver.failed) {
+      this.duplicateCongestedPortError =
+        duplicateCongestedPortSolver.error ?? "unknown error"
     } else {
-      this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
+      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+      graphForTiny = duplicateCongestedPortSolver.getOutput()
+      for (const port of graphForTiny.ports) {
+        const metadata = asTinyPortMetadata(port.d)
+        if (typeof metadata.duplicatedFromPortId !== "string") continue
+        delete metadata._preloadedFixedNetIds
+        delete metadata._preloadedTracePortAssignments
+      }
     }
     this.duplicatedPortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
@@ -1494,11 +1485,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
-      duplicateCongestedPortCount:
-        this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-          (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-          0,
-        ) ?? 0,
+      duplicateCongestedPortCount: this.duplicatedPortCount,
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),
@@ -1722,7 +1709,32 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const solvedNode = this.getOutput().nodesWithPortPoints.find(
       (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
     )
-    const originalRegion = this.originalRegionById.get(node.capacityMeshNodeId)
+    return this.computeSolvedNodePf(node.capacityMeshNodeId, solvedNode)
+  }
+
+  computeNodePfMap(): Map<string, number | null> {
+    const solvedNodeById = new Map(
+      this.getOutput().nodesWithPortPoints.map((node) => [
+        node.capacityMeshNodeId,
+        node,
+      ]),
+    )
+    return new Map(
+      this.inputNodeWithPortPoints.map((node) => [
+        node.capacityMeshNodeId,
+        this.computeSolvedNodePf(
+          node.capacityMeshNodeId,
+          solvedNodeById.get(node.capacityMeshNodeId),
+        ),
+      ]),
+    )
+  }
+
+  private computeSolvedNodePf(
+    capacityMeshNodeId: string,
+    solvedNode: NodeWithPortPoints | undefined,
+  ): number | null {
+    const originalRegion = this.originalRegionById.get(capacityMeshNodeId)
 
     if (!solvedNode || !originalRegion) {
       return null

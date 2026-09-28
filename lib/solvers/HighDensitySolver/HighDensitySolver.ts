@@ -2,6 +2,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
@@ -58,6 +59,11 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  enableNegotiatedSearch: boolean
+  gridSearchSegmentWork: number
+  gridSearchWorkScale: number
+  rejectOverlappingTerminals: boolean
+  boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -93,6 +99,11 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    enableNegotiatedSearch = false,
+    gridSearchSegmentWork = 10_000,
+    gridSearchWorkScale = 1,
+    rejectOverlappingTerminals = false,
+    boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -109,6 +120,11 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    enableNegotiatedSearch?: boolean
+    gridSearchSegmentWork?: number
+    gridSearchWorkScale?: number
+    rejectOverlappingTerminals?: boolean
+    boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -132,6 +148,11 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.gridSearchSegmentWork = gridSearchSegmentWork
+    this.gridSearchWorkScale = gridSearchWorkScale
+    this.rejectOverlappingTerminals = rejectOverlappingTerminals
+    this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -373,6 +394,11 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      enableNegotiatedSearch: this.enableNegotiatedSearch,
+      gridSearchSegmentWork: this.gridSearchSegmentWork,
+      gridSearchWorkScale: this.gridSearchWorkScale,
+      rejectOverlappingTerminals: this.rejectOverlappingTerminals,
+      boardGeometry: this.boardGeometry,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

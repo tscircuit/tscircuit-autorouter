@@ -6,6 +6,7 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getViaLayers } from "high-density-repair03/lib"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -377,6 +378,7 @@ function createSourceTraces(
   srj: SimpleRouteJson,
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
   sourceSrj = srj,
+  sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
   const connections =
@@ -387,9 +389,10 @@ function createSourceTraces(
   const circuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       connections,
-      getConnectivityMapFromSimpleRouteJson(
-        sourceSrj === srj ? srj : { ...sourceSrj, connections },
-      ),
+      sourceConnectivityMap ??
+        getConnectivityMapFromSimpleRouteJson(
+          sourceSrj === srj ? srj : { ...sourceSrj, connections },
+        ),
     )
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
     connections,
@@ -799,11 +802,29 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
+function getViaDrillLayers(
+  via: { from_layer: string; to_layer: string; layers?: string[] },
+  layerCount: number,
+  allowBlindAndBuriedVias: boolean,
+): LayerName[] {
+  if (allowBlindAndBuriedVias && via.layers !== undefined) {
+    return via.layers as LayerName[]
+  }
+  const drillSpan = allowBlindAndBuriedVias
+    ? via
+    : {
+        from_layer: "top",
+        to_layer: mapZToLayerName(layerCount - 1, layerCount),
+      }
+  return getViaLayers(drillSpan, layerCount) as LayerName[]
+}
+
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias = false,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -833,7 +854,11 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
+                layers: getViaDrillLayers(
+                  segment,
+                  layerCount,
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -869,7 +894,11 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [fromLayer, toLayer],
+                layers: getViaDrillLayers(
+                  { from_layer: fromLayer, to_layer: toLayer },
+                  layerCount,
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -887,12 +916,19 @@ function extractViasFromRoutes(
  * @param srjWithPointPairs The SimpleRouteJson created by the NetToPointPairsSolver
  * @param routes The SimplifiedPcbTraces or HighDensityRoutes to convert
  */
+export type CircuitJsonConnectivityMaps = {
+  source: ConnectivityMap
+  route: ConnectivityMap
+}
+
 export type ConvertToCircuitJsonOptions = {
   minTraceWidth?: number
   minViaDiameter?: number
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
+  /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
+  connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
@@ -951,6 +987,7 @@ export function convertToCircuitJson(
       includeOriginalConnections && originalSrj
         ? originalSrj
         : srjWithPointPairs,
+      options.connectivityMaps?.source,
     ),
   )
 
@@ -973,13 +1010,15 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias === true,
     ),
   )
 
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       srjWithPointPairs.connections,
-      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+      options.connectivityMaps?.route ??
+        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
 
   // Process routes based on their type

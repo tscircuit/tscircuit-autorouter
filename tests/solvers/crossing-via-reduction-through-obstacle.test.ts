@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { CrossingViaReductionSolver } from "@tscircuit/trace-simplification-solver"
 import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes"
 
 test("preserves a marked through-obstacle layer transition", () => {

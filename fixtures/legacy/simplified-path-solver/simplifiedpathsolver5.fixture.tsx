@@ -2,7 +2,7 @@ import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import inputData from "fixtures/legacy/assets/simplifiedpathsolver5.json" with {
   type: "json",
 }
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export default () => {

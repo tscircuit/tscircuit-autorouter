@@ -4,7 +4,7 @@ import {
   applyPipeline9MutatedPreloadedSections,
   preparePipeline9MutatedPreloadedSections,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9MutatedPreloadedTraceSimplification"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import {
   createHighlightedMutationFixture,
   highlightedFirstVia,

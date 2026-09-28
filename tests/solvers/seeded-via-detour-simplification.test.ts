@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"

@@ -1,4 +1,4 @@
-import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths"
+import { calculate45DegreePaths } from "@tscircuit/trace-simplification-solver"
 import React, { useState, useEffect, useRef } from "react"
 import { Stage, Layer, Circle, Line, Text } from "react-konva"
 

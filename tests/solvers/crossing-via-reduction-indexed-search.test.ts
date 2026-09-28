@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { CrossingViaReductionSolver } from "@tscircuit/trace-simplification-solver"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 

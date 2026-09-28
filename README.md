@@ -1,6 +1,8 @@
 # @tscircuit/capacity-autorouter
 
-An MIT-licensed full-pipeline PCB autorouter for node.js and TypeScript projects. Part of [tscircuit](https://github.com/tscircuit/tscircuit)
+An MIT-licensed PCB autorouter made for usage with [tscircuit](https://github.com/tscircuit/tscircuit). This is the builtin autorouter.
+
+The autorouter is composed of hundreds of algorithms organized in a Pipeline. The autorouter uses successive approximation and [Hypergraphs](https://blog.autorouting.com/p/hypergraph-autorouting) rather than sequential routing.
 
 [View Online Playground](https://autorouter.tscircuit.com) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com) &middot; [Report/Debug Autorouter Bugs](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
@@ -99,7 +101,21 @@ interface Obstacle {
 
 interface SimpleRouteConnection {
   name: string
-  pointsToConnect: Array<{ x: number; y: number; layer: string }>
+  pointsToConnect: Array<SingleLayerConnectionPoint | MultiLayerConnectionPoint>
+}
+
+type SingleLayerConnectionPoint = {
+  x: number
+  y: number
+  layer: string
+  layers?: never
+}
+
+type MultiLayerConnectionPoint = {
+  x: number
+  y: number
+  layers: string[]
+  layer?: never
 }
 
 interface SimpleRouteBus {
@@ -117,6 +133,19 @@ interface DifferentialPair {
   maxUncoupledLength?: number // Maximum uncoupled length in millimeters
 }
 ```
+
+Pipelines 4–9 validate connection points in the first preprocessing stage.
+On-board points must be inside `bounds`, including its edges. An outside point
+stops routing with `solved = false`, `failed = true`, and an `error` identifying
+the connection, point, coordinates, and bounds. Connections marked `isOffBoard`
+are exempt.
+
+Connection points use exactly one representation: `layer` for a fixed routing
+layer, or `layers` for a terminal accessible on multiple routing layers. Never
+include both fields. The optional `never` properties enforce this distinction
+in TypeScript; they are not JSON fields to emit. For multilayer points, the first
+entry is the primary layer. Obstacle and via `layers` arrays describe their
+physical copper span and are separate from the connection-point representation.
 
 `maxLengthSkew` records the maximum permitted routed-length difference for the
 bus. Bus metadata is preserved in the output so routing implementations can
@@ -203,3 +232,26 @@ bun run build
 ## Maintainer resources
 
 Track routing performance and benchmark results in the [Autorouter Benchmark Dashboard](https://autorouter-benchmark-dashboard.vercel.app/).
+
+### DRC failure dataset (SRJ33)
+
+[dataset-srj33-drc-failures](https://github.com/tscircuit/dataset-srj33-drc-failures)
+contains 37 distinct inputs with at least one measured Pipeline 9 relaxed DRC
+issue. The [original benchmark](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33978041068)
+retained 12 samples and excluded 19 DRC passes. An
+[additional audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33980539076)
+added 25 bug-report inputs that completed routing with DRC issues after the
+recent DRC fix. Original IDs remain 001–006, 010–013, 020, and 025; additions use
+032–056.
+
+```sh
+bun scripts/run-sample.ts --pipeline 9 --dataset srj33 --sample 1
+```
+
+Use `srj33` in the benchmark workflow's dataset input, or open
+`benchmarks/dataset-srj33` in Cosmos. CLI `--sample` selects by position:
+`--sample 12` loads `sample025`, and `--sample 37` loads `sample056`.
+Cosmos uses the sample IDs. The dataset records source links, pinned revisions,
+and Pipeline 9 selection evidence. Saved outputs for the original 12 are their
+historical Pipeline 7 baseline; additions include Pipeline 9 outputs and exact
+DRC errors.

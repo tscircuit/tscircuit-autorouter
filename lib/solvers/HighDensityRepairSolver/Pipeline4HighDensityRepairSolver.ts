@@ -1,9 +1,11 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
   HighDensityRoute,
@@ -12,6 +14,9 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getConnectedPadSides } from "./getConnectedPadSides"
 
 type RepairSampleEntry = {
   node: NodeWithPortPoints
@@ -59,35 +64,30 @@ const isPointInsideObstacle = (
   point: { x: number; y: number },
   obstacle: Obstacle,
 ) => {
+  // Repair01 caches route coordinates rounded to 0.001 mm.
+  const tolerance = 0.001
   const halfWidth = obstacle.width / 2
   const halfHeight = obstacle.height / 2
 
   return (
-    Math.abs(point.x - obstacle.center.x) <= halfWidth &&
-    Math.abs(point.y - obstacle.center.y) <= halfHeight
+    Math.abs(point.x - obstacle.center.x) <= halfWidth + tolerance &&
+    Math.abs(point.y - obstacle.center.y) <= halfHeight + tolerance
   )
 }
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
-const isObstacleConnectedToRoute = (
-  obstacle: Obstacle,
-  route: HighDensityRoute,
-) =>
-  obstacle.connectedTo.includes(route.connectionName) ||
-  (route.rootConnectionName !== undefined &&
-    obstacle.connectedTo.includes(route.rootConnectionName))
-
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
   obstacles: Obstacle[],
+  connMap?: ConnectivityMap,
 ) =>
   route.route.length > 0 &&
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route) &&
+      isObstacleConnectedToRoute(obstacle, route, connMap) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
 
@@ -117,16 +117,27 @@ const findNodeIndexForRoute = (
   return -1
 }
 
-const toRepairRoute = (route: HighDensityRoute): RepairHdRoute => ({
+const toRepairRoute = (
+  route: HighDensityRoute,
+  connMap?: ConnectivityMap,
+  minimumTraceWidth?: number,
+): RepairHdRoute => ({
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
-  rootConnectionName: route.rootConnectionName,
+  rootConnectionName:
+    connMap?.getNetConnectedToId(route.connectionName) ??
+    route.rootConnectionName,
   route: route.route.map((point) => ({
     x: point.x,
     y: point.y,
     z: point.z,
   })),
-  traceThickness: route.traceThickness,
+  // Some HD solvers emit widths below the board rule; do not validate
+  // clearance against copper that will be widened downstream.
+  traceThickness: Math.max(
+    route.traceThickness,
+    minimumTraceWidth ?? route.traceThickness,
+  ),
   vias: route.vias.map((via) => ({
     x: via.x,
     y: via.y,
@@ -140,8 +151,7 @@ const fromRepairRoute = (
   fallbackRoute: HighDensityRoute,
 ): HighDensityRoute => ({
   connectionName: route.connectionName ?? fallbackRoute.connectionName,
-  rootConnectionName:
-    route.rootConnectionName ?? fallbackRoute.rootConnectionName,
+  rootConnectionName: fallbackRoute.rootConnectionName,
   ...(fallbackRoute.startPcbPortId
     ? { startPcbPortId: fallbackRoute.startPcbPortId }
     : {}),
@@ -149,7 +159,7 @@ const fromRepairRoute = (
     ? { endPcbPortId: fallbackRoute.endPcbPortId }
     : {}),
   regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
-  traceThickness: route.traceThickness ?? fallbackRoute.traceThickness,
+  traceThickness: fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
   route:
     route.route?.map((point) => ({
@@ -169,6 +179,8 @@ const getAdjacentObstacles = (
   node: NodeWithPortPoints,
   obstacleSHI: ObstacleSpatialHashIndex,
   margin: number,
+  routes: HighDensityRoute[],
+  connMap?: ConnectivityMap,
 ) => {
   const expandedNodeBounds = getNodeBounds(node, margin)
 
@@ -176,6 +188,13 @@ const getAdjacentObstacles = (
     .search(expandedNodeBounds)
     .filter((obstacle) =>
       doesRectOverlap(expandedNodeBounds, getObstacleBounds(obstacle)),
+    )
+    .filter(
+      (obstacle) =>
+        !connMap ||
+        !routes.some((route) =>
+          isObstacleConnectedToRoute(obstacle, route, connMap),
+        ),
     )
     .map((obstacle) => ({
       type: obstacle.type,
@@ -187,12 +206,14 @@ const getAdjacentObstacles = (
 
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
+  readonly minimumTraceWidth?: number
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
   readonly originalObstacles: Obstacle[]
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
+  readonly connMap?: ConnectivityMap
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -204,11 +225,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     hdRoutes: HighDensityRoute[]
     obstacles: Obstacle[]
     repairMargin?: number
+    minimumTraceWidth?: number
     colorMap?: Record<string, string>
-    maxSampleEntries?: number
+    connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
+    this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -217,11 +240,16 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.originalObstacles,
     )
     this.colorMap = params.colorMap ?? {}
+    this.connMap = params.connMap
 
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
-        isSameNetMultilayerObstacleRoute(params.hdRoutes[i], params.obstacles)
+        isSameNetMultilayerObstacleRoute(
+          params.hdRoutes[i],
+          params.obstacles,
+          params.connMap,
+        )
       ) {
         continue
       }
@@ -236,9 +264,56 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
+    const layeredObstacles = createObjectsWithZLayers(
+      params.obstacles,
+      Math.max(
+        2,
+        ...params.nodeWithPortPoints.flatMap(
+          (node) => node.availableZ?.map((z) => z + 1) ?? [],
+        ),
+      ),
+    )
+    const repairRoutes = params.hdRoutes.map((route) =>
+      toRepairRoute(route, params.connMap, params.minimumTraceWidth),
+    )
+    const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
+      params.hdRoutes.length,
+    )
+    for (const [index, route] of params.hdRoutes.entries()) {
+      const points = [...route.route, ...route.vias]
+      if (points.length === 0) {
+        throw new Error(
+          `High density repair route "${route.connectionName}" has no points`,
+        )
+      }
+      const radius =
+        Math.max(repairRoutes[index].traceThickness!, route.viaDiameter) / 2
+      routeIndex.insert(
+        { routeIndex: index },
+        Math.min(...points.map((point) => point.x)) - radius,
+        Math.min(...points.map((point) => point.y)) - radius,
+        Math.max(...points.map((point) => point.x)) + radius,
+        Math.max(...points.map((point) => point.y)) + radius,
+      )
+    }
+    if (params.hdRoutes.length > 0) routeIndex.finish()
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
+        const copperRadius = Math.max(
+          ...routeIndexes.map(
+            (index) =>
+              Math.max(
+                repairRoutes[index].traceThickness!,
+                params.hdRoutes[index].viaDiameter,
+              ) / 2,
+          ),
+        )
+        const bounds = getNodeBounds(
+          node,
+          Math.max(this.repairMargin, copperRadius + 0.1),
+        )
+        const ownedIndexes = new Set(routeIndexes)
         return {
           node,
           routeIndexes,
@@ -258,31 +333,58 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 nextPortPointId: portPoint.nextPortPointId,
               })),
             },
-            nodeHdRoutes: routeIndexes.map((routeIndex) =>
-              toRepairRoute(params.hdRoutes[routeIndex]),
-            ),
+            nodeHdRoutes: routeIndexes.map((routeIndex) => ({
+              ...repairRoutes[routeIndex],
+              ...(params.connMap
+                ? {
+                    connectedPadSides: getConnectedPadSides(
+                      node,
+                      params.hdRoutes[routeIndex],
+                      layeredObstacles,
+                      params.connMap,
+                    ),
+                  }
+                : {}),
+            })),
+            fixedHdRoutes: routeIndex
+              .search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+              .filter(({ routeIndex }) => !ownedIndexes.has(routeIndex))
+              .map(({ routeIndex }) => repairRoutes[routeIndex]),
+            clearanceObstacles: layeredObstacles
+              .filter((obstacle) =>
+                doesRectOverlap(bounds, getObstacleBounds(obstacle)),
+              )
+              .map((obstacle) => ({
+                type: obstacle.type,
+                center: obstacle.center,
+                width: obstacle.width,
+                height: obstacle.height,
+                zLayers: obstacle.__zLayers,
+                connectedTo: [
+                  ...new Set(
+                    obstacle.connectedTo.flatMap((id) => {
+                      const net = params.connMap?.getNetConnectedToId(id)
+                      return net ? [id, net] : [id]
+                    }),
+                  ),
+                ],
+              })),
             adjacentObstacles: getAdjacentObstacles(
               node,
               this.obstacleSHI,
               this.repairMargin,
+              routeIndexes.map((routeIndex) => params.hdRoutes[routeIndex]),
+              params.connMap,
             ),
           },
         }
       },
     )
-    this.sampleEntries =
-      params.maxSampleEntries !== undefined &&
-      sampleEntries.length > params.maxSampleEntries
-        ? []
-        : sampleEntries
+    this.sampleEntries = sampleEntries
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -299,7 +401,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         hdRoutes: this.originalHdRoutes,
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
+        minimumTraceWidth: this.minimumTraceWidth,
         colorMap: this.colorMap,
+        connMap: this.connMap,
       },
     ] as const
   }
@@ -330,6 +434,21 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       }
 
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+      const clearanceStats = {
+        nodeClearanceInitialConflictCount:
+          Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
+          Number(
+            this.activeSubSolver.stats.nodeClearanceInitialConflictCount ?? 0,
+          ),
+        nodeClearanceFinalConflictCount:
+          Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
+          Number(
+            this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
+          ),
+        nodeClearanceCandidateCount:
+          Number(this.stats.nodeClearanceCandidateCount ?? 0) +
+          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
+      }
       for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
         const routeIndex = sampleEntry.routeIndexes[i]
         const fallbackRoute = this.originalHdRoutes[routeIndex]
@@ -345,6 +464,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSubSolver = null
       this.activeSampleIndex += 1
       this.stats = {
+        ...clearanceStats,
         sampleCount: this.sampleEntries.length,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,
@@ -357,6 +477,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     }
 
     this.activeSubSolver = new HighDensityRepairSolver({
+      // Boundary proximity alone is not a copper-clearance violation.
+      repairBoundaryDiagonals: false,
       sample: sampleEntry.sample,
       margin: this.repairMargin,
     })

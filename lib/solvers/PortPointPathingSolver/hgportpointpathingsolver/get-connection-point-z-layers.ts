@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import type { ConnectionPoint } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -10,7 +11,7 @@ export function getConnectionPointZLayers({
   point,
   layerCount,
 }: GetConnectionPointZLayersParams): number[] {
-  const layerNames = "layers" in point ? point.layers : [point.layer]
+  const layerNames = getConnectionPointLayers(point)
   const zLayers = layerNames.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
   )

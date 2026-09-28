@@ -1,5 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
+import { SameNetViaMergerSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"

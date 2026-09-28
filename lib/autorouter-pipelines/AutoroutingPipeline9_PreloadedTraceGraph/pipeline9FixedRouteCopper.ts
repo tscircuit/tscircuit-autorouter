@@ -5,6 +5,7 @@ import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
 
 export type Pipeline9RouteWireSegment = {
   start: HighDensityRoute["route"][number]
@@ -88,17 +89,23 @@ export const getPipeline9RouteCopperGeometry = (
       }
       continue
     }
+    const viaEndpoint =
+      start.z === end.z
+        ? undefined
+        : getPipeline9LayerTransitionViaEndpoint({ hdRoute: route, start, end })
+    const wireZ = viaEndpoint === "start" ? end.z : start.z
     if (xyDistance > 1e-9) {
       wireSegments.push({
-        start,
-        end: start.z === end.z ? end : { ...end, z: start.z },
-        z: start.z,
+        start: start.z === wireZ ? start : { ...start, z: wireZ },
+        end: end.z === wireZ ? end : { ...end, z: wireZ },
+        z: wireZ,
         width: segmentWidth,
       })
     }
     if (start.z === end.z) continue
+    const viaPoint = viaEndpoint === "start" ? start : end
     viaSpans.push({
-      center: { x: end.x, y: end.y },
+      center: { x: viaPoint.x, y: viaPoint.y },
       minZ: Math.min(start.z, end.z),
       maxZ: Math.max(start.z, end.z),
       diameter: route.viaDiameter,

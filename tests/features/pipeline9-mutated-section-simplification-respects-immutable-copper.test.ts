@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { preparePipeline9MutatedPreloadedSections } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9MutatedPreloadedTraceSimplification"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import {
   createHighlightedMutationFixture,

@@ -1,3 +1,6 @@
+import { getTraceLintTypes, TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
+import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
+
 const formatTime = (timeMs) => {
   if (typeof timeMs !== "number" || !Number.isFinite(timeMs)) {
     return "n/a"
@@ -82,17 +85,22 @@ const getDrcIssueCount = (report, solverName) => {
 
 const getTimePercentile = (report, solverName, percentile) => {
   if (!Array.isArray(report?.tests)) return null
-  const elapsedTimes = report.tests
-    .filter(
-      (test) =>
-        test.solverName === solverName &&
-        (test.didSolve || test.didTimeout) &&
-        typeof test.elapsedTimeMs === "number" &&
-        Number.isFinite(test.elapsedTimeMs),
-    )
-    .map((test) => test.elapsedTimeMs)
-    .sort((a, b) => a - b)
+  const elapsedTimes = []
+  for (const result of report.tests) {
+    if (result.solverName !== solverName) continue
+    // Older reports recorded the timeout as elapsed time for timed-out samples,
+    // but did not record the limit for early failures. Do not guess that limit.
+    const elapsedTime = result.didSolve
+      ? result.elapsedTimeMs
+      : (result.sampleTimeoutMs ??
+        (result.didTimeout ? result.elapsedTimeMs : undefined))
+    if (typeof elapsedTime !== "number" || !Number.isFinite(elapsedTime)) {
+      return null
+    }
+    elapsedTimes.push(elapsedTime)
+  }
   if (elapsedTimes.length === 0) return null
+  elapsedTimes.sort((a, b) => a - b)
 
   const index = (elapsedTimes.length - 1) * percentile
   const lowerIndex = Math.floor(index)
@@ -156,6 +164,13 @@ const renderNetworkedColdHotComparison = (report) => {
   rows.push(
     `| Average vias | ${formatAverage(coldSummary.avgVia)} | ${formatAverage(hotSummary.avgVia)} | ${formatRelativeDelta(coldSummary.avgVia, hotSummary.avgVia)} |`,
   )
+  for (const type of getTraceLintTypes(coldSummary, hotSummary)) {
+    const coldAverage = coldSummary.avgTraceLintIssues?.[type]
+    const hotAverage = hotSummary.avgTraceLintIssues?.[type]
+    rows.push(
+      `| ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(coldAverage)} | ${formatAverage(hotAverage)} | ${formatRelativeDelta(coldAverage, hotAverage)} |`,
+    )
+  }
   if (coldSummary.networkCache && hotSummary.networkCache) {
     rows.push(
       `| HD cache hits | ${coldSummary.networkCache.cacheHits}/${coldSummary.networkCache.remoteRequests} | ${hotSummary.networkCache.cacheHits}/${hotSummary.networkCache.remoteRequests} | ${formatCountDelta(coldSummary.networkCache.cacheHits, hotSummary.networkCache.cacheHits)} |`,
@@ -171,6 +186,7 @@ const renderNetworkedColdHotComparison = (report) => {
     "| --- | ---: | ---: | ---: |",
     ...rows,
     "",
+    "_Style errors are averaged per completed sample with recorded lint counts for that type; angled traces counts violating segments._",
     "_The cold pass starts with a workflow-unique cache namespace; the hot pass reuses it after the full cold pass and an unmeasured Workers KV propagation interval complete. Negative timing changes are faster._",
   ]
 }
@@ -186,10 +202,18 @@ export const renderBenchmarkComparison = ({
       fallbackText.length > maxLength
         ? `${fallbackText.slice(0, maxLength)}\n\n...truncated...`
         : fallbackText
-    return ["```", truncated, "```"]
+    return [
+      "```",
+      truncated,
+      "```",
+      ...renderBenchmarkStageTimings(prReport, "PR"),
+    ]
   }
   if (isNetworkedColdHotReport(prReport)) {
-    return renderNetworkedColdHotComparison(prReport)
+    return [
+      ...renderNetworkedColdHotComparison(prReport),
+      ...renderBenchmarkStageTimings(prReport, "Cold/hot"),
+    ]
   }
 
   const mainSummaries = new Map(
@@ -232,6 +256,13 @@ export const renderBenchmarkComparison = ({
     rows.push(
       `| ${solver} | Average vias | ${formatAverage(mainSummary?.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary?.avgVia, prSummary.avgVia)} |`,
     )
+    for (const type of getTraceLintTypes(mainSummary, prSummary)) {
+      const mainAverage = mainSummary?.avgTraceLintIssues?.[type]
+      const prAverage = prSummary.avgTraceLintIssues?.[type]
+      rows.push(
+        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(mainAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(mainAverage, prAverage)} |`,
+      )
+    }
   }
 
   return [
@@ -241,6 +272,9 @@ export const renderBenchmarkComparison = ({
     "| --- | --- | ---: | ---: | ---: |",
     ...rows,
     "",
-    "_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._",
+    "_DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing changes are faster. Historical failures without timeout metadata make timing percentiles unavailable._",
+    "_Style errors are averaged per completed sample with recorded lint counts for that type; historical/unlinted results are n/a. Angled traces counts violating segments._",
+    ...renderBenchmarkStageTimings(mainReport, "Main"),
+    ...renderBenchmarkStageTimings(prReport, "PR"),
   ]
 }

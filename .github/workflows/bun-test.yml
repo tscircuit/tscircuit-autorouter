@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     # Balanced plans target roughly ten minutes of test work; leave room for
     # checkout, dependency installation, and runner variance.
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +59,24 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          bun test "${test_files[@]}" --timeout 300000
+          # This full-board regression takes just over five minutes even on
+          # successful main runs. Keep its assertions, but allow runner variance.
+          slow_test="tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts"
+          regular_tests=()
+          has_slow_test=false
+          for test_file in "${test_files[@]}"; do
+            if [ "$test_file" = "$slow_test" ]; then
+              has_slow_test=true
+            else
+              regular_tests+=("$test_file")
+            fi
+          done
+          if [ "${#regular_tests[@]}" -gt 0 ]; then
+            bun test "${regular_tests[@]}" --timeout 300000
+          fi
+          if [ "$has_slow_test" = true ]; then
+            bun test "$slow_test" --timeout 600000
+          fi
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()

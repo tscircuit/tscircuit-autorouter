@@ -3,9 +3,11 @@ import keyboard4 from "../../fixtures/legacy/assets/keyboard4.json" with {
   type: "json",
 }
 import { AutoroutingPipelineSolver5 } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import {
+  SameNetViaMergerSolver,
+  MultiSimplifiedPathSolver,
+  UselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import type { SimpleRouteJson } from "lib/types"
 import type {
   HighDensityRoute,

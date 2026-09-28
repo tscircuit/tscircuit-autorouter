@@ -113,13 +113,64 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  minimumGrowthAttempts: number
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
+    // Sub-via-sized nodes spend their first growth attempts just reaching a
+    // usable routing scale. Preserve the normal search budget after that scale
+    // is reached instead of exhausting it before the portfolio can place vias.
+    const minNodeDimension = Math.min(
+      this.nodeWithPortPoints.width,
+      this.nodeWithPortPoints.height,
+    )
+    const growthAttemptsToFitVia =
+      minNodeDimension > 0
+        ? Math.max(
+            0,
+            Math.ceil(
+              Math.log2((params.viaDiameter ?? 0.3) / minNodeDimension),
+            ),
+          )
+        : 0
+    let minimumPortGap = Number.POSITIVE_INFINITY
+    const ports = this.nodeWithPortPoints.portPoints
+    for (let i = 0; i < ports.length; i++) {
+      for (let j = i + 1; j < ports.length; j++) {
+        const a = ports[i]!
+        const b = ports[j]!
+        if (
+          a.z !== b.z ||
+          (a.rootConnectionName ?? a.connectionName) ===
+            (b.rootConnectionName ?? b.connectionName)
+        ) {
+          continue
+        }
+        const gap = Math.hypot(a.x - b.x, a.y - b.y)
+        if (gap > 1e-9) minimumPortGap = Math.min(minimumPortGap, gap)
+      }
+    }
+    // Crowded terminals can consume the initial scales just as sub-via nodes
+    // do. Keep the normal search budget after unrelated copper can first fit.
+    const growthAttemptsToFitPorts = Math.max(
+      0,
+      Math.ceil(Math.log2((params.traceWidth ?? 0.15) / minimumPortGap)),
+    )
+    const growthAttemptsToFitGeometry = Math.max(
+      growthAttemptsToFitVia,
+      growthAttemptsToFitPorts,
+    )
     this.maxGrowthAttempts =
-      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+      params.maxGrowthAttempts ??
+      DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitGeometry
+    // Preserve the existing attempt order; only extend the upper search bound.
+    this.minimumGrowthAttempts = Math.min(
+      params.maxGrowthAttempts ??
+        DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia,
+      Math.max(growthAttemptsToFitVia, 0, growthAttemptsToFitPorts - 1),
+    )
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -154,6 +205,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      enableNegotiatedSearch:
+        this.scaleFactor === 1 &&
+        (portfolioParams.enableNegotiatedSearch ?? true),
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
@@ -186,6 +240,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return false
     }
     this.winningSolver = solver
+    this.error = null
     this.solvedRoutes = solvedRoutes
     this.solved = true
     this.failed = false
@@ -247,8 +302,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
-    this.growthAttempts++
-    this.scaleFactor *= 2
+    this.growthAttempts = Math.max(
+      this.growthAttempts + 1,
+      this.minimumGrowthAttempts,
+    )
+    this.scaleFactor = 2 ** this.growthAttempts
   }
 
   visualize(): GraphicsObject {

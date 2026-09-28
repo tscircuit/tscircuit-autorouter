@@ -153,13 +153,6 @@ const getFixedRouteSlice = (
   }
 
   if (!start || !end) return null
-  if (
-    Math.abs(start.point.x - end.point.x) <= POINT_EPSILON &&
-    Math.abs(start.point.y - end.point.y) <= POINT_EPSILON &&
-    start.point.z === end.point.z
-  ) {
-    return null
-  }
 
   return {
     sourceRoute: route,
@@ -290,6 +283,11 @@ export const createRegionalFallbackProblem = (
   }
 
   for (const section of sections) {
+    // A zero-length slice still owns its position in a contiguous source
+    // section, so a replacement spanning its neighbors must absorb it. An
+    // isolated zero-length section has no copper to reroute and cannot form a
+    // meaningful fallback port pair.
+    if (pointsAreEqual(section.start.point, section.end.point)) continue
     const connectionName = section.sourceRoutes[0]!.connectionName
     if (fixedRouteSectionsByConnectionName.has(connectionName)) {
       throw new Error(

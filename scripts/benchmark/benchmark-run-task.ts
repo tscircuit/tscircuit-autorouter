@@ -1,3 +1,5 @@
+import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
+import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
@@ -296,8 +298,15 @@ const getProgressInfo = (
   }
 }
 
-const getProgressKey = (progress: WorkerProgress) =>
-  [progress.phaseName ?? "", progress.phaseSolverName ?? ""].join("|")
+const getProgressKey = (solver: SolverInstance): string => {
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
+  const phaseName = pipelineStep?.solverName ?? ""
+  const phaseSolverName =
+    pipelineStep?.solverClass?.name ??
+    getSolverInstanceName(solver.activeSubSolver) ??
+    ""
+  return `${phaseName}|${phaseSolverName}`
+}
 
 const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
@@ -357,12 +366,12 @@ const getNetworkedBenchmarkValidationError = (
   return undefined
 }
 
-const solveWithProgress = async (
+export const solveWithProgress = async (
   task: BenchmarkTask,
   solver: SolverInstance,
   start: number,
   options: RunTaskOptions,
-) => {
+): Promise<void> => {
   const progressIntervalMs =
     options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS
   let lastProgressAt = -Infinity
@@ -374,8 +383,7 @@ const solveWithProgress = async (
     }
 
     const elapsedTimeMs = performance.now() - start
-    const progress = getProgressInfo(task, solver, elapsedTimeMs)
-    const progressKey = getProgressKey(progress)
+    const progressKey = getProgressKey(solver)
     if (
       !force &&
       progressKey === lastProgressKey &&
@@ -386,7 +394,9 @@ const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
-    options.onProgress(progress)
+    // Building stage timings walks the completed pipeline and allocates a
+    // report. Do that only for emitted updates, not every routing iteration.
+    options.onProgress(getProgressInfo(task, solver, elapsedTimeMs))
   }
 
   emitProgress(true)
@@ -525,6 +535,19 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    if (typeof solver.getOutputSimpleRouteJson !== "function") {
+      throw new Error(
+        "Cannot lint a solved benchmark without routed SimpleRouteJson",
+      )
+    }
+    const traceLinter = runTraceLinting(solver.getOutputSimpleRouteJson())
+    const traceLintIssueCounts: Record<string, number> = Object.fromEntries(
+      Object.keys(TRACE_LINT_LABELS).map((type) => [type, 0]),
+    )
+    for (const issue of traceLinter.getOutput()) {
+      traceLintIssueCounts[issue.type] =
+        (traceLintIssueCounts[issue.type] ?? 0) + 1
+    }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,
@@ -560,6 +583,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      traceLintIssueCounts,
       stageTiming,
       routingMetrics,
       benchmarkSnapshot,

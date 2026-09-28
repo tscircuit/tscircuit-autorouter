@@ -3,7 +3,7 @@ import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import inputData from "fixtures/legacy/assets/simplifiedpathsolver1.json" with {
   type: "json",
 }
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import { createColorMapFromStrings } from "lib/solvers/colors"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 

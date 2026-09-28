@@ -29,6 +29,8 @@ export interface AutoroutingPipelineSolver11SimplificationOptions {
   iterations?: number
   /** Enables coordinated layer swaps that reduce vias at crossings. */
   enableCrossingViaReduction?: boolean
+  /** Adds collision-checked vertex shortcuts after each path pass. Defaults to true. */
+  enableVertexShortcuts?: boolean
 }
 
 type AutoroutingPipeline11SimplificationInput = {

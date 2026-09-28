@@ -9,6 +9,7 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
@@ -37,6 +38,7 @@ export type Pipeline9HighDensitySolverParams = {
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
+  boardGeometry?: HighDensityBoardGeometry
   layerCount: number
   viaDiameter: number
   traceWidth: number
@@ -327,6 +329,7 @@ export type Pipeline9RegularNodeSolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   obstacles: Obstacle[]
+  boardGeometry?: HighDensityBoardGeometry
   layerCount: number
 }
 
@@ -345,6 +348,7 @@ export const createPipeline9RegularNodeSolver = ({
   effort,
   nodePfById,
   obstacles,
+  boardGeometry,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
@@ -361,6 +365,11 @@ export const createPipeline9RegularNodeSolver = ({
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
+    enableNegotiatedSearch: true,
+    gridSearchSegmentWork: 500,
+    gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
+    rejectOverlappingTerminals: layerCount > 2,
+    boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -376,6 +385,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
+  readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
   readonly viaDiameter: number
   readonly traceWidth: number
@@ -409,6 +419,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
+    this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
@@ -489,6 +500,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
+      boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
@@ -900,6 +912,28 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
+    this.stepNodeRouting()
+    this.activeSubSolver =
+      this.activeFallbackSolver ??
+      this.activeRegularSolver ??
+      this.activeB01Solver
+  }
+
+  computeProgress(): number {
+    if (this.solved) return 1
+    const nodeCount = Number(this.stats.nodeCount)
+    if (nodeCount === 0) return 0
+    const activeProgress = Math.max(
+      0,
+      Math.min(1, this.activeSubSolver?.progress ?? 0),
+    )
+    return Math.max(
+      this.progress,
+      (Number(this.stats.solvedNodeCount) + activeProgress) / nodeCount,
+    )
+  }
+
+  private stepNodeRouting(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {

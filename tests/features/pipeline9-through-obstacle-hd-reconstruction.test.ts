@@ -25,8 +25,10 @@ test("Pipeline9 rebuilds an HD-rerouted section around an immutable through obst
         circuitJsonMetadata: { pcb_plated_hole_id: "plated-hole" },
       },
       { route_type: "wire", x: -1.2, y: 2.2, width: 0.1, layer: "bottom" },
-      { route_type: "wire", x: -0.3, y: 0, width: 0.1, layer: "bottom" },
-      { route_type: "wire", x: 0.3, y: 0, width: 0.1, layer: "bottom" },
+      // Keep this span in the fallback path even when node repair resolves
+      // the symmetric center crossing without replacing the fixed section.
+      { route_type: "wire", x: -0.3, y: -0.25, width: 0.1, layer: "bottom" },
+      { route_type: "wire", x: 0.3, y: -0.25, width: 0.1, layer: "bottom" },
       { route_type: "wire", x: 1.2, y: 2.2, width: 0.1, layer: "bottom" },
     ],
   }

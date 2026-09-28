@@ -1,3 +1,4 @@
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -26,6 +27,7 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   obstacleMargin: number
   effort: 1
   obstacles: Obstacle[]
+  boardGeometry?: HighDensityBoardGeometry
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null

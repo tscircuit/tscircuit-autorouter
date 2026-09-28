@@ -3,6 +3,9 @@ import {
   distance,
   getUnitVectorFromPointAToB,
   pointToBoxDistance,
+  segmentToBoxMinDistance,
+  segmentToCircleMinDistance,
+  segmentToSegmentMinDistance,
 } from "@tscircuit/math-utils"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
@@ -198,15 +201,11 @@ export class TraceWidthSolver extends BaseSolver {
     // Step the cursor forward along the trace
     const stepped = this.stepCursorForward()
 
-    if (!stepped) {
-      // Reached end of trace without collision - this width works!
-      // Use this width and finalize immediately (widest possible that fits)
-      this.finalizeCurrentTrace(this.currentTargetWidth)
-      return
-    }
-
-    // Check clearance at current cursor position
-    const clearance = this.getClearanceAtPosition(this.cursorPosition!)
+    // Before accepting a width, also check entire segments. Cursor samples can
+    // miss short segments, corners, and the final fraction of a route.
+    const clearance = stepped
+      ? this.getClearanceForSegment(this.cursorPosition!, this.cursorPosition!)
+      : this.getMinimumRouteClearance()
 
     // Check if there's enough clearance for the current target width + obstacle margin
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
@@ -224,6 +223,8 @@ export class TraceWidthSolver extends BaseSolver {
         // Exhausted all widths in schedule, use minTraceWidth as fallback
         this.finalizeCurrentTrace(this.minTraceWidth)
       }
+    } else if (!stepped) {
+      this.finalizeCurrentTrace(this.currentTargetWidth)
     }
   }
 
@@ -337,125 +338,122 @@ export class TraceWidthSolver extends BaseSolver {
   }
 
   /**
-   * Gets the minimum clearance at a given position from obstacles and other traces
-   * Also updates lastCollidingObstacles and lastCollidingRoutes for visualization
+   * Checks continuous copper segments before accepting a width, including routes
+   * shorter than the cursor step and the unsampled tail of longer routes.
    */
-  private getClearanceAtPosition(position: Point3D): number {
+  private getMinimumRouteClearance(): number {
     if (!this.currentTrace) return Infinity
+    let clearance = Infinity
+    const route = this.currentTrace.route
+    for (let index = 0; index < route.length - 1; index++) {
+      const start = route[index]!
+      const end = route[index + 1]!
+      if (start.z !== end.z) continue
+      if (start.insideJumperPad && end.insideJumperPad) continue
+      if (start.toNextSegmentType === "through_obstacle") continue
+      clearance = Math.min(clearance, this.getClearanceForSegment(start, end))
+    }
+    return clearance
+  }
 
+  private getClearanceForSegment(start: Point3D, end: Point3D): number {
+    if (!this.currentTrace) return Infinity
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
-    const searchRadius = this.nominalTraceWidth * 2
+    const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
-
-    // Reset colliding objects for visualization
     this.lastCollidingObstacles = []
     this.lastCollidingRoutes = []
 
-    // Check for obstacles within the search radius
-    if (this.obstacleSHI) {
-      const nearbyObstacles = this.obstacleSHI.searchArea(
-        position.x,
-        position.y,
-        searchRadius,
-        searchRadius,
-      )
-
-      for (const obstacle of nearbyObstacles) {
-        if (obstacle.__zLayers && !obstacle.__zLayers.includes(position.z)) {
-          continue
-        }
-
-        if (obstacle.connectedTo.includes(rootConnectionName)) {
-          continue
-        }
-
-        if (
-          obstacle.obstacleId &&
-          this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-        ) {
-          continue
-        }
-
-        let isConnected = false
-        if (this.connMap) {
-          for (const connectedId of obstacle.connectedTo) {
-            if (this.connMap.areIdsConnected(rootConnectionName, connectedId)) {
-              isConnected = true
-              break
-            }
-          }
-        }
-        if (isConnected) continue
-
-        // Skip obstacles that are jumper pads belonging to this trace
-        if (this.isObstacleOwnJumperPad(obstacle)) {
-          continue
-        }
-
-        const obstacleMinX = obstacle.center.x - obstacle.width / 2
-        const obstacleMaxX = obstacle.center.x + obstacle.width / 2
-        const obstacleMinY = obstacle.center.y - obstacle.height / 2
-        const obstacleMaxY = obstacle.center.y + obstacle.height / 2
-
-        const dx = Math.max(
-          obstacleMinX - position.x,
-          0,
-          position.x - obstacleMaxX,
-        )
-        const dy = Math.max(
-          obstacleMinY - position.y,
-          0,
-          position.y - obstacleMaxY,
-        )
-        const distToObstacle = Math.sqrt(dx * dx + dy * dy)
-
-        // Track obstacles that would violate clearance (width/2 + margin)
-        const requiredObstacleClearance =
-          this.currentTargetWidth / 2 + this.obstacleMargin
-        if (distToObstacle < requiredObstacleClearance) {
-          this.lastCollidingObstacles.push(obstacle)
-        }
-
-        if (distToObstacle < minClearance) {
-          minClearance = distToObstacle
-        }
-      }
-    }
-
-    // Check for non-connected traces within the search radius
-    const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesNearPoint(
-      { x: position.x, y: position.y, z: position.z },
-      searchRadius,
+    // Query the complete clearance envelope, using explicit bounds rather than
+    // passing a radius to an API that expects full width and height.
+    const nearbyObstacles = new Set(
+      this.obstacleSHI?.search({
+        minX: Math.min(start.x, end.x) - requiredClearance,
+        minY: Math.min(start.y, end.y) - requiredClearance,
+        maxX: Math.max(start.x, end.x) + requiredClearance,
+        maxY: Math.max(start.y, end.y) + requiredClearance,
+      }),
     )
-
-    for (const { conflictingRoute, distance } of nearbyRoutes) {
-      const routeRootName =
-        conflictingRoute.rootConnectionName ?? conflictingRoute.connectionName
-
-      if (routeRootName === rootConnectionName) {
+    // ObstacleTree indexes unrotated extents. Include rotated pads explicitly
+    // so their copper outside those extents is also considered.
+    for (const obstacle of this.obstacles) {
+      if (obstacle.ccwRotationDegrees) nearbyObstacles.add(obstacle)
+    }
+    for (const obstacle of nearbyObstacles) {
+      if (!this.isObstacleOnPointLayer(obstacle, start)) continue
+      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
         continue
-      }
-
-      if (this.connMap?.areIdsConnected(rootConnectionName, routeRootName)) {
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      )
         continue
+      if (this.isObstacleOwnJumperPad(obstacle)) continue
+      const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+      const cos = Math.cos(angle)
+      const sin = Math.sin(angle)
+      const localStart = {
+        x:
+          (start.x - obstacle.center.x) * cos -
+          (start.y - obstacle.center.y) * sin,
+        y:
+          (start.x - obstacle.center.x) * sin +
+          (start.y - obstacle.center.y) * cos,
       }
-
-      const otherTraceHalfWidth = (conflictingRoute.traceThickness ?? 0.15) / 2
-      const clearance = distance - otherTraceHalfWidth
-
-      // Track routes that would violate clearance (width/2 + margin)
-      const requiredTraceClearance =
-        this.currentTargetWidth / 2 + this.obstacleMargin
-      if (clearance < requiredTraceClearance) {
-        this.lastCollidingRoutes.push(conflictingRoute)
+      const localEnd = {
+        x:
+          (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
+        y:
+          (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
-
-      if (clearance < minClearance) {
-        minClearance = clearance
-      }
+      const clearance = segmentToBoxMinDistance(localStart, localEnd, {
+        center: { x: 0, y: 0 },
+        width: obstacle.width,
+        height: obstacle.height,
+      })
+      minClearance = Math.min(minClearance, clearance)
+      if (clearance < requiredClearance)
+        this.lastCollidingObstacles.push(obstacle)
     }
 
+    const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
+      start,
+      end,
+      requiredClearance,
+    )
+    for (const { conflictingRoute } of nearbyRoutes) {
+      const route = conflictingRoute as HighDensityRoute
+      const otherRoot = route.rootConnectionName ?? route.connectionName
+      if (otherRoot === rootConnectionName) continue
+      if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue
+      let clearance = Infinity
+      for (let index = 0; index < route.route.length - 1; index++) {
+        const a = route.route[index]!
+        const b = route.route[index + 1]!
+        if (a.z !== b.z || a.z !== start.z) continue
+        if (a.insideJumperPad && b.insideJumperPad) continue
+        if (a.toNextSegmentType === "through_obstacle") continue
+        clearance = Math.min(
+          clearance,
+          segmentToSegmentMinDistance(start, end, a, b) -
+            (a.traceThickness ?? route.traceThickness) / 2,
+        )
+      }
+      // The spatial index returns owning routes for both traces and vias.
+      // Measure each via's copper radius, not its owner's trace half-width.
+      for (const via of route.vias) {
+        clearance = Math.min(
+          clearance,
+          segmentToCircleMinDistance(start, end, {
+            ...via,
+            radius: route.viaDiameter / 2,
+          }),
+        )
+      }
+      minClearance = Math.min(minClearance, clearance)
+      if (clearance < requiredClearance) this.lastCollidingRoutes.push(route)
+    }
     this.lastClearance = minClearance
     return minClearance
   }
@@ -798,6 +796,8 @@ export class TraceWidthSolver extends BaseSolver {
     )
 
     this.processedRoutes.push(routeWithWidth)
+    this.hdRouteSHI.removeRoute(routeWithWidth.connectionName)
+    this.hdRouteSHI.addRoute(routeWithWidth)
     this.currentTrace = null
     this.cursorPosition = null
     this.hasInsufficientClearance = false

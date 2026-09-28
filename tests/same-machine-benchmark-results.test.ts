@@ -15,6 +15,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     scenarioName: `sample${sampleNumber}`,
     sampleNumber,
     elapsedTimeMs: 1_000,
+    sampleTimeoutMs: 2_000,
     didSolve: true,
     didTimeout: false,
     relaxedDrcPassed: true,
@@ -45,6 +46,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
         avgVia: 2,
+        avgTraceLintIssues: { odd_angle: 4, future_rule: 2 },
       },
     ],
     tests: [
@@ -70,6 +72,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 900,
         p95TimeMs: 1_800,
         avgVia: 2.2,
+        avgTraceLintIssues: { odd_angle: 2, future_rule: 0 },
       },
     ],
     tests: [
@@ -97,6 +100,12 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain(
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
+  expect(markdown).toContain(
+    "| Pipeline7 | Avg Angled Traces | 4.00 | 2.00 | -50.0% |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline7 | Avg future_rule | 2.00 | 0.00 | -100.0% |",
+  )
   expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
@@ -107,9 +116,37 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(
-    "Timing percentiles include solved and timed-out samples",
+    "Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  mainReport.tests[0] = {
+    ...mainReport.tests[0],
+    didTimeout: false,
+    elapsedTimeMs: 10,
+  }
+  const renderFailedMain = (): string =>
+    renderSameMachineBenchmarkResults({
+      mainReport,
+      prReport,
+      mainSha: "a".repeat(40),
+      prSha: "b".repeat(40),
+      repository: "tscircuit/tscircuit-autorouter",
+      runnerName: "blacksmith-test-runner",
+    })
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |",
+  )
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | 1 | Failed | DRC passed | 10ms |",
+  )
+  delete mainReport.summary[0].avgTraceLintIssues
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | Avg Angled Traces | n/a | 2.00 | n/a |",
+  )
+  delete mainReport.tests[0].sampleTimeoutMs
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | P50 time | n/a | 1.4s | n/a |",
+  )
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,

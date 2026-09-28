@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -92,4 +93,26 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
 
   expect(siblingPadContactErrors).toHaveLength(0)
   expect(errors).toHaveLength(0)
+
+  const connectivityMaps = {
+    source: getConnectivityMapFromSimpleRouteJson({
+      ...inputSrj,
+      connections: [...srjWithPointPairs.connections, ...inputSrj.connections],
+    }),
+    route: getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+  }
+  for (const y of [0, 0.2]) {
+    const candidate = structuredClone(routedTrace)
+    candidate.route.splice(1, 0, {
+      route_type: "wire",
+      x: 2,
+      y,
+      width: 0.1,
+      layer: "top",
+    })
+    const input = { inputSrj, srjWithPointPairs, routedTraces: [candidate] }
+    expect(evaluateRelaxedDrc({ ...input, connectivityMaps })).toEqual(
+      evaluateRelaxedDrc(input),
+    )
+  }
 })

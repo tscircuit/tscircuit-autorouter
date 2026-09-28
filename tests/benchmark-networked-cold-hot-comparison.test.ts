@@ -82,6 +82,7 @@ test("networked benchmark comments compare the cold and hot passes", () => {
     ),
   ).toContain(`| P95 time | 4.0s | 1.0s | -75.0% |
 | Average vias | 2.00 | 2.00 | 0.0% |
+| Avg Angled Traces | n/a | n/a | n/a |
 | HD cache hits | 0/3 | 3/3 | +3 |
 | HD solver results | 3 | 0 | -3 |
 | HD local fallbacks | 0 | 0 | 0 |`)
