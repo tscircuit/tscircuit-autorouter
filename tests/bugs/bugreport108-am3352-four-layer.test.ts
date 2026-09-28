@@ -9,7 +9,7 @@ import board from "../../fixtures/bug-reports/bugreport108-am3352-four-layer/am3
 // Full routing takes about 21 minutes locally. Extracted solver regressions run
 // in normal CI; opt into this uncached board reproduction explicitly.
 test.skipIf(process.env.RUN_AM3352_FULL_SOLVE !== "1")(
-  "bugreport108 routes through repair and reproduces the remaining DDR length-matching failure",
+  "bugreport108 routes through repair and power expansion",
   async (): Promise<void> => {
     const input = structuredClone(board) as SimpleRouteJson
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
@@ -17,7 +17,7 @@ test.skipIf(process.env.RUN_AM3352_FULL_SOLVE !== "1")(
     })
     let lastPhase = ""
     while (
-      solver.getCurrentPhase() !== "lengthMatchingPostProcessingSolver" &&
+      solver.getCurrentPhase() !== "powerTraceExpansionSolver" &&
       !solver.solved &&
       !solver.failed
     ) {
@@ -29,15 +29,13 @@ test.skipIf(process.env.RUN_AM3352_FULL_SOLVE !== "1")(
       solver.step()
     }
     expect(solver.failed, solver.error ?? "").toBe(false)
-    expect(solver.getCurrentPhase()).toBe("lengthMatchingPostProcessingSolver")
+    expect(solver.getCurrentPhase()).toBe("powerTraceExpansionSolver")
     const routedTraces = solver.getNewTracesBeforePowerExpansion()
     expect(routedTraces.length).toBeGreaterThan(0)
-    // Assert the exact remaining failure; unrelated exceptions must fail this test.
-    expect(() => solver.solve()).toThrow(
-      /LengthMatchingSolver: linear regression exhausted all segment\/tooth combinations for "source_net_70"; required 5\.1637mm/,
-    )
-    expect(solver.failed).toBe(true)
-    expect(solver.solved).toBe(false)
+    solver.solve()
+    expect(solver.failed, solver.error ?? "").toBe(false)
+    expect(solver.solved).toBe(true)
+    expect(solver.getOutputSimplifiedPcbTraces().length).toBeGreaterThan(0)
     await expect(
       getAm3352FailureSnapshotSvg({
         inputSrj: input,

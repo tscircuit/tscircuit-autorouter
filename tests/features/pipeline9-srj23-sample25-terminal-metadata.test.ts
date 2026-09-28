@@ -13,9 +13,9 @@ test("Pipeline9 keeps repaired SRJ23 sample 25 PCB port metadata on route endpoi
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  const output = solver.lengthMatchingPostProcessingSolver?.getOutput()
-  expect(output).toBeDefined()
-  for (const hdRoute of output?.hdRoutes ?? []) {
+  const hdRoutes = solver._getOutputHdRoutes()
+  expect(hdRoutes.length).toBeGreaterThan(0)
+  for (const hdRoute of hdRoutes) {
     for (const interiorPoint of hdRoute.route.slice(1, -1)) {
       expect(interiorPoint.pcb_port_id).toBeUndefined()
     }

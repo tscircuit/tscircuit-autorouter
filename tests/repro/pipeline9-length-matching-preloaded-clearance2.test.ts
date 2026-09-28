@@ -4,12 +4,12 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createPipeline9LengthMatchingPreloadedInput"
 
-test("Pipeline9 length matching roomy-preload snapshot", async (): Promise<void> => {
+test("Pipeline9 raw routing roomy-preload snapshot", async (): Promise<void> => {
   const srj = createPipeline9LengthMatchingPreloadedInput(1)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
   })
-  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
+  solver.solveUntilPhase("powerTraceExpansionSolver")
   expect(
     evaluateRelaxedDrc({
       inputSrj: srj,
