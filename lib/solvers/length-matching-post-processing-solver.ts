@@ -169,20 +169,18 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
 
   private getDifferentialPairs(): PostProcessingSolverParams["differentialPairs"] {
     return this.params.differentialPairs.map(({ traceGap, ...pair }) => {
-      if (traceGap === undefined) return pair
-      const centerlineDistance = pair.connectionNames.reduce(
-        (distance, connectionName) => {
-          const connection = this.params.routingConnections.find(
-            (candidate) => candidate.connectionName === connectionName,
+      const halfWidths = pair.connectionNames.map((connectionName) => {
+        const connection = this.params.routingConnections.find(
+          (candidate) => candidate.connectionName === connectionName,
+        )
+        if (!connection)
+          throw new Error(
+            `Length matching: differential pair connection "${connectionName}" must route as one point pair`,
           )
-          if (!connection)
-            throw new Error(
-              `Length matching: differential pair connection "${connectionName}" must route as one point pair`,
-            )
-          return distance + connection.traceThickness / 2
-        },
-        traceGap,
-      )
+        return connection.traceThickness / 2
+      })
+      if (traceGap === undefined) return pair
+      const centerlineDistance = traceGap + halfWidths[0]! + halfWidths[1]!
       return {
         ...pair,
         minimumCenterlineDistance: centerlineDistance,
@@ -192,14 +190,6 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    const hasLengthConstraints =
-      this.params.differentialPairs.length > 0 ||
-      this.params.buses.some((bus) => bus.maxLengthSkew !== undefined)
-    if (!hasLengthConstraints) {
-      this.outputHdRoutes = []
-      this.solved = true
-      return
-    }
     if (!this.traceRoutingSolver.solved) {
       this.traceRoutingSolver.step()
       if (this.traceRoutingSolver.failed) {
@@ -230,13 +220,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      const { hdRoutes, postProcessingErrors } =
-        this.differentialPairSolver.getOutput()
-      // Best-effort output keeps uncoupled or unmatched routes; never fix them.
-      if (postProcessingErrors.length > 0)
-        throw new Error(
-          `Length matching: ${postProcessingErrors.map((error) => error.message).join("; ")}`,
-        )
+      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,

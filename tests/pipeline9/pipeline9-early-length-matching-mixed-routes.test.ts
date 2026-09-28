@@ -38,6 +38,23 @@ test("Pipeline9 hands early length-matched routes to native trace routing", (): 
   expect(new Set(routedTraces.map((trace) => trace.pcb_trace_id)).size).toBe(
     routedTraces.length,
   )
+  // Later native routing must not break the early bus match.
+  const [aLength, bLength] = ["a", "b"].map((connectionName): number =>
+    routedTraces
+      .filter((trace) => trace.connection_name === connectionName)
+      .reduce((length, trace): number => {
+        const wires = trace.route.filter((point) => point.route_type === "wire")
+        return wires.slice(1).reduce((wireLength, point, index): number => {
+          const previous = wires[index]!
+          return (
+            wireLength + Math.hypot(point.x - previous.x, point.y - previous.y)
+          )
+        }, length)
+      }, 0),
+  )
+  expect(Math.abs(aLength! - bLength!)).toBeLessThanOrEqual(
+    input.buses![0]!.maxLengthSkew! + 1e-6,
+  )
   expect(
     evaluateRelaxedDrc({
       inputSrj: input,
