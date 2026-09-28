@@ -55,7 +55,9 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
   expect(new Set(traces.map((trace) => trace.pcb_trace_id)).size).toBe(
     traces.length,
   )
-  expect(solver.getOutputSimpleRouteJson().connections).toEqual(input.connections)
+  expect(solver.getOutputSimpleRouteJson().connections).toEqual(
+    input.connections,
+  )
   expect(
     evaluateRelaxedDrc({
       inputSrj: input,
