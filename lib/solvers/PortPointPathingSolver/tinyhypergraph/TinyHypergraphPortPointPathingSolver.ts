@@ -1086,6 +1086,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         useSerializedPortPenalties: false,
         routeSolveOptions: {
           ...getTinyViaSizeOptions(params.minViaPadDiameter),
+          USE_LAZY_ROUTE_HEURISTIC: true,
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,

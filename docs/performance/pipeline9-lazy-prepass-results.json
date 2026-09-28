@@ -1,0 +1,306 @@
+{
+  "autorouterBase": "34dc48b0bec14d802eda5936f0bd76a426a41136",
+  "tinyHypergraphRevision": "31459ceef75e443d3ea6efca75cde10b90d63180",
+  "dataset": "srj18",
+  "datasetRevision": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "effort": 1,
+  "runsPerVariant": 3,
+  "order": "baseline then lazy, repeated three times, separate processes",
+  "rows": [
+    {
+      "sample": 1,
+      "baselineEvaluations": 2596325,
+      "lazyEvaluations": 44954,
+      "avoidedHeuristicBufferBytes": 20770600,
+      "baselinePrepassMs": [
+        327.573375,
+        293.70004099999994,
+        273.78666699999997
+      ],
+      "lazyPrepassMs": [
+        276.7908329999999,
+        324.80433400000004,
+        279.595084
+      ],
+      "outputSha256": "d86444045c5a1cd4a5153a16bc8fb129c8e8262d342028a7193bf21045345de7"
+    },
+    {
+      "sample": 2,
+      "baselineEvaluations": 4651128,
+      "lazyEvaluations": 86930,
+      "avoidedHeuristicBufferBytes": 37209024,
+      "baselinePrepassMs": [
+        533.444958,
+        417.2146660000001,
+        400.7984999999999
+      ],
+      "lazyPrepassMs": [
+        389.78254200000015,
+        431.26741600000014,
+        441.443542
+      ],
+      "outputSha256": "fc8d95bfd01eff8f2fa9c2b55c5ad56cc64cd65e43a430bf10a1a319e8668983"
+    },
+    {
+      "sample": 3,
+      "baselineEvaluations": 2119030,
+      "lazyEvaluations": 54028,
+      "avoidedHeuristicBufferBytes": 16952240,
+      "baselinePrepassMs": [
+        227.81050000000005,
+        227.36866699999973,
+        225.20341599999983
+      ],
+      "lazyPrepassMs": [
+        229.0726669999999,
+        249.99854199999982,
+        236.40762499999983
+      ],
+      "outputSha256": "7440da88da92ea41f86cc369e93f9af1da6d8550760cf0cf4ff6667619ec3e21"
+    },
+    {
+      "sample": 4,
+      "baselineEvaluations": 869706,
+      "lazyEvaluations": 30018,
+      "avoidedHeuristicBufferBytes": 6957648,
+      "baselinePrepassMs": [
+        133.3475410000001,
+        170.75295800000004,
+        128.872167
+      ],
+      "lazyPrepassMs": [
+        125.88716699999986,
+        143.43975,
+        153.9694169999998
+      ],
+      "outputSha256": "5f19b12133d801963a128ac67b91d7d14f97ed3bcd43e49cffee953b2cce8406"
+    },
+    {
+      "sample": 5,
+      "baselineEvaluations": 2374116,
+      "lazyEvaluations": 40240,
+      "avoidedHeuristicBufferBytes": 18992928,
+      "baselinePrepassMs": [
+        183.07270900000003,
+        173.85091599999987,
+        168.32562499999995
+      ],
+      "lazyPrepassMs": [
+        164.9022500000001,
+        206.62862500000028,
+        185.9975419999996
+      ],
+      "outputSha256": "97ccd2178527f68aeba852632dba07516d5ee9b0c4dc853f81d774622bec4bc3"
+    }
+  ],
+  "fullPipeline": {
+    "timeoutMs": 60000,
+    "concurrency": 1,
+    "baselineSummary": {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "completedRateLabel": "80.0% (\ud83d\udd5220.0%)",
+      "relaxedDrcRateLabel": "80.0% (\ud83d\udd5220.0%)",
+      "timedOutLabel": "1/5",
+      "p50TimeMs": 7694.973833,
+      "p60TimeMs": 17746.801199799997,
+      "p70TimeMs": 27798.628566599993,
+      "p80TimeMs": 38259.6338,
+      "p90TimeMs": 49129.816900000005,
+      "p95TimeMs": 54564.908449999995,
+      "avgVia": 136.5,
+      "avgTraceLintIssues": {
+        "odd_angle": 337.25
+      }
+    },
+    "lazySummary": {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "completedRateLabel": "80.0% (\ud83d\udd5220.0%)",
+      "relaxedDrcRateLabel": "80.0% (\ud83d\udd5220.0%)",
+      "timedOutLabel": "1/5",
+      "p50TimeMs": 7783.819541,
+      "p60TimeMs": 18250.070524599996,
+      "p70TimeMs": 28716.321508199995,
+      "p80TimeMs": 39159.55760000001,
+      "p90TimeMs": 49579.7788,
+      "p95TimeMs": 54789.8894,
+      "avgVia": 136.5,
+      "avgTraceLintIssues": {
+        "odd_angle": 337.25
+      }
+    },
+    "rows": [
+      {
+        "sample": 1,
+        "baselineMs": 7694.973833,
+        "lazyMs": 7783.819541,
+        "baselineSolved": true,
+        "lazySolved": true,
+        "baselineRelaxedDrcPassed": true,
+        "lazyRelaxedDrcPassed": true,
+        "baselineVias": 174,
+        "lazyVias": 174,
+        "routingMetricsEqualExcludingTime": true
+      },
+      {
+        "sample": 2,
+        "baselineMs": 60000,
+        "lazyMs": 60000,
+        "baselineSolved": false,
+        "lazySolved": false,
+        "baselineRelaxedDrcPassed": false,
+        "lazyRelaxedDrcPassed": false,
+        "baselineVias": null,
+        "lazyVias": null,
+        "routingMetricsEqualExcludingTime": true
+      },
+      {
+        "sample": 3,
+        "baselineMs": 6248.112416,
+        "lazyMs": 6745.462333,
+        "baselineSolved": true,
+        "lazySolved": true,
+        "baselineRelaxedDrcPassed": true,
+        "lazyRelaxedDrcPassed": true,
+        "baselineVias": 90,
+        "lazyVias": 90,
+        "routingMetricsEqualExcludingTime": true
+      },
+      {
+        "sample": 4,
+        "baselineMs": 32824.54225,
+        "lazyMs": 33949.447,
+        "baselineSolved": true,
+        "lazySolved": true,
+        "baselineRelaxedDrcPassed": true,
+        "lazyRelaxedDrcPassed": true,
+        "baselineVias": 136,
+        "lazyVias": 136,
+        "routingMetricsEqualExcludingTime": true
+      },
+      {
+        "sample": 5,
+        "baselineMs": 5803.213875000001,
+        "lazyMs": 6013.4863329999935,
+        "baselineSolved": true,
+        "lazySolved": true,
+        "baselineRelaxedDrcPassed": true,
+        "lazyRelaxedDrcPassed": true,
+        "baselineVias": 146,
+        "lazyVias": 146,
+        "routingMetricsEqualExcludingTime": true
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 27.0",
+    "architecture": "arm64",
+    "cpu": "Apple M5",
+    "bun": "1.3.14"
+  },
+  "postBoundaryDriftCheck": {
+    "baseline": [
+      {
+        "sample": 1,
+        "portsEvaluated": 2596325,
+        "queries": 44954,
+        "allocatedBytes": 20770600,
+        "solves": 205,
+        "lazy": false,
+        "elapsedMs": 278.0732079999999,
+        "hash": "d86444045c5a1cd4a5153a16bc8fb129c8e8262d342028a7193bf21045345de7"
+      },
+      {
+        "sample": 2,
+        "portsEvaluated": 4651128,
+        "queries": 86930,
+        "allocatedBytes": 37209024,
+        "solves": 244,
+        "lazy": false,
+        "elapsedMs": 404.78779199999985,
+        "hash": "fc8d95bfd01eff8f2fa9c2b55c5ad56cc64cd65e43a430bf10a1a319e8668983"
+      },
+      {
+        "sample": 3,
+        "portsEvaluated": 2119030,
+        "queries": 54028,
+        "allocatedBytes": 16952240,
+        "solves": 145,
+        "lazy": false,
+        "elapsedMs": 222.25870900000018,
+        "hash": "7440da88da92ea41f86cc369e93f9af1da6d8550760cf0cf4ff6667619ec3e21"
+      },
+      {
+        "sample": 4,
+        "portsEvaluated": 869706,
+        "queries": 30018,
+        "allocatedBytes": 6957648,
+        "solves": 114,
+        "lazy": false,
+        "elapsedMs": 130.6845000000003,
+        "hash": "5f19b12133d801963a128ac67b91d7d14f97ed3bcd43e49cffee953b2cce8406"
+      },
+      {
+        "sample": 5,
+        "portsEvaluated": 2374116,
+        "queries": 40240,
+        "allocatedBytes": 18992928,
+        "solves": 172,
+        "lazy": false,
+        "elapsedMs": 168.15970899999957,
+        "hash": "97ccd2178527f68aeba852632dba07516d5ee9b0c4dc853f81d774622bec4bc3"
+      }
+    ],
+    "lazy": [
+      {
+        "sample": 1,
+        "portsEvaluated": 0,
+        "queries": 44954,
+        "allocatedBytes": 0,
+        "solves": 205,
+        "lazy": true,
+        "elapsedMs": 271.6042499999999,
+        "hash": "d86444045c5a1cd4a5153a16bc8fb129c8e8262d342028a7193bf21045345de7"
+      },
+      {
+        "sample": 2,
+        "portsEvaluated": 0,
+        "queries": 86930,
+        "allocatedBytes": 0,
+        "solves": 244,
+        "lazy": true,
+        "elapsedMs": 405.063625,
+        "hash": "fc8d95bfd01eff8f2fa9c2b55c5ad56cc64cd65e43a430bf10a1a319e8668983"
+      },
+      {
+        "sample": 3,
+        "portsEvaluated": 0,
+        "queries": 54028,
+        "allocatedBytes": 0,
+        "solves": 145,
+        "lazy": true,
+        "elapsedMs": 228.67500000000018,
+        "hash": "7440da88da92ea41f86cc369e93f9af1da6d8550760cf0cf4ff6667619ec3e21"
+      },
+      {
+        "sample": 4,
+        "portsEvaluated": 0,
+        "queries": 30018,
+        "allocatedBytes": 0,
+        "solves": 114,
+        "lazy": true,
+        "elapsedMs": 131.83512500000006,
+        "hash": "5f19b12133d801963a128ac67b91d7d14f97ed3bcd43e49cffee953b2cce8406"
+      },
+      {
+        "sample": 5,
+        "portsEvaluated": 0,
+        "queries": 40240,
+        "allocatedBytes": 0,
+        "solves": 172,
+        "lazy": true,
+        "elapsedMs": 178.24195800000007,
+        "hash": "97ccd2178527f68aeba852632dba07516d5ee9b0c4dc853f81d774622bec4bc3"
+      }
+    ]
+  }
+}
