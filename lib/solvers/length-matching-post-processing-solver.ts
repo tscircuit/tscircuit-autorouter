@@ -188,7 +188,9 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       ? initialRoutingSolver._getOutputHdRoutes()
       : this.params.hdRoutes
     if (initialRoutingSolver && !initialRoutingSolver.netToPointPairsSolver)
-      throw new Error("Length matching: initial routing produced no point pairs")
+      throw new Error(
+        "Length matching: initial routing produced no point pairs",
+      )
     this.outputConnections = initialRoutingSolver
       ? initialRoutingSolver.netToPointPairsSolver!.newConnections
       : this.params.connections.filter((connection) =>
@@ -225,10 +227,9 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
           )
         return matches[0]!
       })
-      const centerlineDistance = pair.traceGap + pairRoutes.reduce(
-        (sum, route) => sum + route.traceThickness / 2,
-        0,
-      )
+      const centerlineDistance =
+        pair.traceGap +
+        pairRoutes.reduce((sum, route) => sum + route.traceThickness / 2, 0)
       return {
         ...resolvedPair,
         minimumCenterlineDistance: centerlineDistance,
@@ -265,7 +266,10 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       // Initial routing supplies geometry through global DRC. Joint repair and
       // power expansion belong to the outer pipeline after constrained copper
       // is fixed and the remaining connections have been routed.
-      if (initialRoutingSolver.getCurrentPhase() !== "pipeline9JointDrcRepairSolver") {
+      if (
+        initialRoutingSolver.getCurrentPhase() !==
+        "pipeline9JointDrcRepairSolver"
+      ) {
         initialRoutingSolver.step()
         if (initialRoutingSolver.failed) {
           this.failed = true
@@ -292,7 +296,10 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         hdRoutes,
       )
       if (differentialPairs.length === 0) {
-        assertDifferentialPairLengthSkew(this.resolvedDifferentialPairs, hdRoutes)
+        assertDifferentialPairLengthSkew(
+          this.resolvedDifferentialPairs,
+          hdRoutes,
+        )
         this.outputHdRoutes = hdRoutes
         this.solved = true
         return

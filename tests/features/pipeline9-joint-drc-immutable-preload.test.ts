@@ -20,37 +20,43 @@ test("joint DRC keeps length-matched preload geometry immutable near a new cross
     bounds: { minX: -4, maxX: 4, minY: -4, maxY: 4 },
     obstacles: [],
     traces: [fixedTrace],
-    connections: [{
-      name: "crossing",
-      pointsToConnect: [
-        { x: 0, y: -2, layer: "top" },
-        { x: 0, y: 2, layer: "top" },
-      ],
-    }],
+    connections: [
+      {
+        name: "crossing",
+        pointsToConnect: [
+          { x: 0, y: -2, layer: "top" },
+          { x: 0, y: 2, layer: "top" },
+        ],
+      },
+    ],
   }
   const route: HighDensityRoute = {
     connectionName: "crossing",
     traceThickness: 0.15,
     viaDiameter: 0.3,
-    route: [{ x: 0, y: -2, z: 0 }, { x: 0, y: 2, z: 0 }],
+    route: [
+      { x: 0, y: -2, z: 0 },
+      { x: 0, y: 2, z: 0 },
+    ],
     vias: [],
   }
-  const params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0] = {
-    srj,
-    srjWithPointPairs: srj,
-    originalSrj: srj,
-    newConnections: srj.connections,
-    newHdRoutes: [route],
-    updatedPreloadedTraces: [fixedTrace],
-    mutatedPreloadedTraceIds: new Set(),
-    connMap: getConnectivityMapFromSimpleRouteJson(srj),
-    obstacles: [],
-    layerCount: 2,
-    defaultViaDiameter: 0.3,
-    defaultViaHoleDiameter: 0.15,
-    effort: 1,
-    colorMap: {},
-  }
+  const params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0] =
+    {
+      srj,
+      srjWithPointPairs: srj,
+      originalSrj: srj,
+      newConnections: srj.connections,
+      newHdRoutes: [route],
+      updatedPreloadedTraces: [fixedTrace],
+      mutatedPreloadedTraceIds: new Set(),
+      connMap: getConnectivityMapFromSimpleRouteJson(srj),
+      obstacles: [],
+      layerCount: 2,
+      defaultViaDiameter: 0.3,
+      defaultViaHoleDiameter: 0.15,
+      effort: 1,
+      colorMap: {},
+    }
   const unrestricted = new Pipeline9JointDrcRepairSolver(params)
   expect(unrestricted.movablePreloadedSections.length).toBeGreaterThan(0)
   const solver = new Pipeline9JointDrcRepairSolver({

@@ -8,14 +8,20 @@ test("preserves matched pair when upstream optimization exceeds grid capacity", 
       connectionName: "P",
       traceThickness: 0.2,
       viaDiameter: 0.3,
-      route: [{ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }],
+      route: [
+        { x: 0, y: 0, z: 0 },
+        { x: 10, y: 0, z: 0 },
+      ],
       vias: [],
     },
     {
       connectionName: "N",
       traceThickness: 0.2,
       viaDiameter: 0.3,
-      route: [{ x: 0, y: 1, z: 0 }, { x: 10, y: 1, z: 0 }],
+      route: [
+        { x: 0, y: 1, z: 0 },
+        { x: 10, y: 1, z: 0 },
+      ],
       vias: [],
     },
   ]

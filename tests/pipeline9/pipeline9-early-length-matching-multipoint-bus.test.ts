@@ -9,7 +9,9 @@ test("Pipeline9 early length matching preserves every multipoint bus terminal an
   for (const connection of input.connections) {
     const end = connection.pointsToConnect[1]!
     end.x += 12
-    const endPad = input.obstacles.find((obstacle): boolean => obstacle.connectedTo.includes(end.pcb_port_id!))!
+    const endPad = input.obstacles.find((obstacle): boolean =>
+      obstacle.connectedTo.includes(end.pcb_port_id!),
+    )!
     endPad.center.x = end.x
   }
   for (const connection of input.connections) {
@@ -43,18 +45,43 @@ test("Pipeline9 early length matching preserves every multipoint bus terminal an
   expect(solver.solved).toBe(true)
   const routes = solver._getOutputHdRoutes()
   const lengths = input.connections.map((connection): number => {
-    const memberRoutes = routes.filter((route): boolean => (route.rootConnectionName ?? route.connectionName) === connection.name)
+    const memberRoutes = routes.filter(
+      (route): boolean =>
+        (route.rootConnectionName ?? route.connectionName) === connection.name,
+    )
     expect(memberRoutes.length).toBeGreaterThan(0)
     for (const terminal of connection.pointsToConnect) {
-      expect(memberRoutes.some((route): boolean => route.route.some((point): boolean => Math.hypot(point.x - terminal.x, point.y - terminal.y) < 1e-6))).toBe(true)
+      expect(
+        memberRoutes.some((route): boolean =>
+          route.route.some(
+            (point): boolean =>
+              Math.hypot(point.x - terminal.x, point.y - terminal.y) < 1e-6,
+          ),
+        ),
+      ).toBe(true)
     }
-    return memberRoutes.reduce((length, route): number => length + route.route.slice(1).reduce((routeLength, point, index): number => {
-      const previous = route.route[index]!
-      return routeLength + Math.hypot(point.x - previous.x, point.y - previous.y)
-    }, 0), 0)
+    return memberRoutes.reduce(
+      (length, route): number =>
+        length +
+        route.route.slice(1).reduce((routeLength, point, index): number => {
+          const previous = route.route[index]!
+          return (
+            routeLength + Math.hypot(point.x - previous.x, point.y - previous.y)
+          )
+        }, 0),
+      0,
+    )
   })
   expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.1 + 1e-6)
-  const wireWidths = new Set(solver.getOutputSimplifiedPcbTraces().flatMap((trace): number[] => trace.route.flatMap((point): number[] => point.route_type === "wire" ? [point.width] : [])))
+  const wireWidths = new Set(
+    solver
+      .getOutputSimplifiedPcbTraces()
+      .flatMap((trace): number[] =>
+        trace.route.flatMap((point): number[] =>
+          point.route_type === "wire" ? [point.width] : [],
+        ),
+      ),
+  )
   // The 0.2mm pads require terminal neckdowns below the requested bus width.
   expect(Math.max(...wireWidths)).toBe(0.3)
   expect(Math.min(...wireWidths)).toBeGreaterThan(0)

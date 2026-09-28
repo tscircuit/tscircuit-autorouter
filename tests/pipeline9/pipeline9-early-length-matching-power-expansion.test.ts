@@ -21,8 +21,8 @@ test("Pipeline9 keeps length-matched copper fixed when explicitly selected for p
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  const expansionInput = solver.powerTraceExpansionSolver!.inputSrj as
-    SimpleRouteJson & { fixedTraces: SimplifiedPcbTraces }
+  const expansionInput = solver.powerTraceExpansionSolver!
+    .inputSrj as SimpleRouteJson & { fixedTraces: SimplifiedPcbTraces }
   for (const earlyTrace of earlyTraces) {
     expect(expansionInput.fixedTraces).toContainEqual(earlyTrace)
     expect(expansionInput.traces).not.toContainEqual(earlyTrace)

@@ -14,26 +14,45 @@ test("Pipeline9 resolves constrained net aliases before selecting and removing e
       {
         name: "positive_connection",
         __netConnectionName: "P",
-        pointsToConnect: [{ x: 0, y: 1, layer: "top" }, { x: 10, y: 1, layer: "top" }],
+        pointsToConnect: [
+          { x: 0, y: 1, layer: "top" },
+          { x: 10, y: 1, layer: "top" },
+        ],
       },
       {
         name: "negative_connection",
         __netConnectionName: "N",
-        pointsToConnect: [{ x: 0, y: -1, layer: "top" }, { x: 10, y: -1, layer: "top" }],
+        pointsToConnect: [
+          { x: 0, y: -1, layer: "top" },
+          { x: 10, y: -1, layer: "top" },
+        ],
       },
       {
         name: "ordinary",
-        pointsToConnect: [{ x: 0, y: -3, layer: "top" }, { x: 10, y: -3, layer: "top" }],
+        pointsToConnect: [
+          { x: 0, y: -3, layer: "top" },
+          { x: 10, y: -3, layer: "top" },
+        ],
       },
     ],
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
   solver.solveUntilPhase("componentDetectionSolver")
   expect(solver.lengthMatchingPostProcessingSolver?.solved).toBe(true)
-  expect(solver.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes).toHaveLength(2)
-  expect(solver.srj.connections.map((connection): string => connection.name)).toEqual(["ordinary"])
+  expect(
+    solver.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes,
+  ).toHaveLength(2)
+  expect(
+    solver.srj.connections.map((connection): string => connection.name),
+  ).toEqual(["ordinary"])
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver._getOutputHdRoutes()).toHaveLength(3)
-  expect(new Set(solver.getOutputSimplifiedPcbTraces().map((trace): string => trace.connection_name))).toEqual(new Set(["P", "N", "ordinary"]))
+  expect(
+    new Set(
+      solver
+        .getOutputSimplifiedPcbTraces()
+        .map((trace): string => trace.connection_name),
+    ),
+  ).toEqual(new Set(["P", "N", "ordinary"]))
 })

@@ -9,12 +9,14 @@ test("initial length-matching routing stops before joint DRC without marking the
   )
   pipeline.solveUntilPhase("lengthMatchingPostProcessingSolver")
   const step = pipeline.pipelineDef.find(
-    (definition) => definition.solverName === "lengthMatchingPostProcessingSolver",
+    (definition) =>
+      definition.solverName === "lengthMatchingPostProcessingSolver",
   )!
-  const params = step.getConstructorParams(pipeline)[0] as ConstructorParameters<
-    typeof LengthMatchingPostProcessingSolver
-  >[0]
-  const initialRouting = params.initialRoutingSolver as AutoroutingPipelineSolver9_PreloadedTraceGraph
+  const params = step.getConstructorParams(
+    pipeline,
+  )[0] as ConstructorParameters<typeof LengthMatchingPostProcessingSolver>[0]
+  const initialRouting =
+    params.initialRoutingSolver as AutoroutingPipelineSolver9_PreloadedTraceGraph
   const solver = new LengthMatchingPostProcessingSolver(params)
   solver.solve()
   expect(solver.solved).toBe(true)

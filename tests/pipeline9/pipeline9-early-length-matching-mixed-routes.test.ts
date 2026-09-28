@@ -14,7 +14,9 @@ test("Pipeline9 routes constrained connections before ordinary routing and prese
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(solver.pipelineDef.slice(0, 2).map((step): string => step.solverName)).toEqual([
+  expect(
+    solver.pipelineDef.slice(0, 2).map((step): string => step.solverName),
+  ).toEqual([
     "preprocessSimpleRouteJsonSolver",
     "lengthMatchingPostProcessingSolver",
   ])
@@ -23,16 +25,39 @@ test("Pipeline9 routes constrained connections before ordinary routing and prese
   const earlyRoutes = structuredClone(
     solver.lengthMatchingPostProcessingSolver!.getOutput().hdRoutes,
   )
-  expect(new Set(earlyRoutes.map((route): string => route.rootConnectionName ?? route.connectionName))).toEqual(new Set(["a", "b"]))
+  expect(
+    new Set(
+      earlyRoutes.map(
+        (route): string => route.rootConnectionName ?? route.connectionName,
+      ),
+    ),
+  ).toEqual(new Set(["a", "b"]))
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   const finalRoutes = solver._getOutputHdRoutes()
   for (const earlyRoute of earlyRoutes) {
-    expect(finalRoutes.find((route): boolean => route.connectionName === earlyRoute.connectionName)).toEqual(earlyRoute)
+    expect(
+      finalRoutes.find(
+        (route): boolean => route.connectionName === earlyRoute.connectionName,
+      ),
+    ).toEqual(earlyRoute)
   }
-  expect(finalRoutes.some((route): boolean => (route.rootConnectionName ?? route.connectionName) === "ordinary")).toBe(true)
+  expect(
+    finalRoutes.some(
+      (route): boolean =>
+        (route.rootConnectionName ?? route.connectionName) === "ordinary",
+    ),
+  ).toBe(true)
   const output = solver.getOutputSimpleRouteJson()
-  expect(output.traces?.find((trace): boolean => trace.pcb_trace_id === "fixed")).toEqual(input.traces![0])
-  expect(new Set(solver.getOutputSimplifiedPcbTraces().map((trace): string | undefined => trace.connection_name))).toEqual(new Set(["a", "b", "ordinary"]))
+  expect(
+    output.traces?.find((trace): boolean => trace.pcb_trace_id === "fixed"),
+  ).toEqual(input.traces![0])
+  expect(
+    new Set(
+      solver
+        .getOutputSimplifiedPcbTraces()
+        .map((trace): string | undefined => trace.connection_name),
+    ),
+  ).toEqual(new Set(["a", "b", "ordinary"]))
 })

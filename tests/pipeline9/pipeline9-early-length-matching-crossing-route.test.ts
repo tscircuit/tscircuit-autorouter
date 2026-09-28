@@ -24,13 +24,21 @@ test("Pipeline9 routes a crossing connection around immutable length-matched cop
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
-  expect(routedTraces.some((trace) => trace.connection_name === "crossing")).toBe(true)
+  expect(
+    routedTraces.some((trace) => trace.connection_name === "crossing"),
+  ).toBe(true)
   for (const matchedTrace of matchedTraces) {
-    expect(routedTraces.find((trace) => trace.pcb_trace_id === matchedTrace.pcb_trace_id)).toEqual(matchedTrace)
+    expect(
+      routedTraces.find(
+        (trace) => trace.pcb_trace_id === matchedTrace.pcb_trace_id,
+      ),
+    ).toEqual(matchedTrace)
   }
-  expect(evaluateRelaxedDrc({
-    inputSrj: input,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces,
-  }).errors).toHaveLength(0)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    }).errors,
+  ).toHaveLength(0)
 })

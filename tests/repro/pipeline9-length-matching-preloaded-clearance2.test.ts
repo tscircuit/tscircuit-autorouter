@@ -15,7 +15,8 @@ test("Pipeline9 length matching roomy-preload snapshot", async (): Promise<void>
       inputSrj: srj,
       srjWithPointPairs: {
         ...solver.srj,
-        connections: solver.lengthMatchingPostProcessingSolver!.getOutputConnections(),
+        connections:
+          solver.lengthMatchingPostProcessingSolver!.getOutputConnections(),
       },
       routedTraces: solver.srj.traces!.filter(
         (trace) => trace.pcb_trace_id !== "fixed",
