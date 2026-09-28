@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Abse2001/trace-simplification-solver
-          ref: f2d8670
+          ref: 9d20fff072cbef145990ae4aeeae15a8f0b363fa
           path: repro
       - uses: oven-sh/setup-bun@v2
         with:
