@@ -157,10 +157,7 @@ test("reproduces T113 HDMI 1.8 V same-net drill spacing after joint repair", asy
   )
   await expect(
     stackSvgsHorizontally(
-      [
-        convertCircuitJsonToPcbSvg([...circuitJson, ...routedCopper]),
-        focusSvg,
-      ],
+      [convertCircuitJsonToPcbSvg([...circuitJson, ...routedCopper]), focusSvg],
       { gap: 12, normalizeSize: false },
     ).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, {
