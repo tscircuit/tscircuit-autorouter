@@ -16,13 +16,11 @@ import type {
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
 
-// Upstream bounds pair rerouting, smoothing, and bus matching to a few hundred
-// thousand iterations combined.
-const MATCHING_ITERATION_BUDGET = 1_000_000
-
 type LengthMatchingPostProcessingSolverParams = {
   /** Constrained point pairs, routed before pair and bus matching. */
   routingConnections: TraceRoutingConnection[]
+  /** Point-pair declarations behind `routingConnections`, with alias metadata. */
+  pointPairConnections: SimpleRouteConnection[]
   differentialPairs: DifferentialPair[]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
@@ -159,8 +157,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       layerCount: params.layerCount,
       minTraceToPadEdgeClearance: params.obstacleMargin,
     })
-    this.MAX_ITERATIONS =
-      this.traceRoutingSolver.MAX_ITERATIONS + MATCHING_ITERATION_BUDGET
+    this.MAX_ITERATIONS = this.traceRoutingSolver.MAX_ITERATIONS + 1
   }
 
   override getSolverName(): string {
@@ -169,20 +166,33 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
 
   private getDifferentialPairs(): PostProcessingSolverParams["differentialPairs"] {
     return this.params.differentialPairs.map(({ traceGap, ...pair }) => {
-      const halfWidths = pair.connectionNames.map((connectionName) => {
-        const connection = this.params.routingConnections.find(
-          (candidate) => candidate.connectionName === connectionName,
+      const connections = pair.connectionNames.map((connectionName) => {
+        const matches = this.params.pointPairConnections.filter(
+          (connection) =>
+            connection.name === connectionName ||
+            connection.__rootConnectionNames?.includes(connectionName) ||
+            connection.__netConnectionName === connectionName,
         )
-        if (!connection)
+        const connection = this.params.routingConnections.find(
+          (candidate) => candidate.connectionName === matches[0]?.name,
+        )
+        if (matches.length !== 1 || !connection)
           throw new Error(
-            `Length matching: differential pair connection "${connectionName}" must route as one point pair`,
+            `Length matching: differential pair connection "${connectionName}" must resolve to exactly one point-pair connection, got ${matches.length}`,
           )
-        return connection.traceThickness / 2
+        return connection
       })
-      if (traceGap === undefined) return pair
-      const centerlineDistance = traceGap + halfWidths[0]! + halfWidths[1]!
+      const connectionNames = connections.map(
+        (connection) => connection.connectionName,
+      ) as [string, string]
+      if (traceGap === undefined) return { ...pair, connectionNames }
+      const centerlineDistance =
+        traceGap +
+        connections[0]!.traceThickness / 2 +
+        connections[1]!.traceThickness / 2
       return {
         ...pair,
+        connectionNames,
         minimumCenterlineDistance: centerlineDistance,
         maximumCenterlineDistance: centerlineDistance,
       }
@@ -192,6 +202,8 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override _step(): void {
     if (!this.traceRoutingSolver.solved) {
       this.traceRoutingSolver.step()
+      // Routing grows its bound as each connection's search grid is built.
+      this.MAX_ITERATIONS = this.traceRoutingSolver.MAX_ITERATIONS + 1
       if (this.traceRoutingSolver.failed) {
         this.failed = true
         this.error = this.traceRoutingSolver.error
@@ -208,6 +220,11 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         layerCount: this.params.layerCount,
         minTraceToPadEdgeClearance: this.params.obstacleMargin,
       })
+      this.MAX_ITERATIONS =
+        this.iterations +
+        this.differentialPairSolver.MAX_ITERATIONS +
+        100_000 +
+        10
       return
     }
     if (!this.differentialPairSolver.solved) {
