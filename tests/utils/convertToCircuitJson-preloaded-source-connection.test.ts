@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { checkTracesAreContiguous } from "@tscircuit/checks"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("preloaded traces retain source connections omitted from point pairs", () => {
+test("preloaded traces retain source connections omitted from point pairs", async () => {
   const connections: SimpleRouteJson["connections"] = ["saved", "new"].map(
     (name, index) => ({
       name,
@@ -62,6 +63,40 @@ test("preloaded traces retain source connections omitted from point pairs", () =
     ["trace_new", "new"],
   ])
   expect(checkTracesAreContiguous(circuit)).toEqual([])
+
+  const convertedTraces = circuit.filter((e) => e.type === "pcb_trace")
+  const graphics: GraphicsObject = {
+    rects: circuit.filter((e) => e.type === "pcb_smtpad").map((pad) => {
+      if (pad.shape !== "rect") throw new Error("Expected rectangular pad")
+      return {
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: "rgba(255,0,0,0.25)",
+        stroke: "red",
+      }
+    }),
+    lines: convertedTraces.map((trace) => {
+      const wires = trace.route.filter((point) => point.route_type === "wire")
+      return { points: wires, strokeWidth: wires[0]!.width, strokeColor: "red" }
+    }),
+    texts: convertedTraces.map((trace) => {
+      const wires = trace.route.filter((point) => point.route_type === "wire")
+      return {
+        x: (wires[0]!.x + wires.at(-1)!.x) / 2,
+        y: wires[0]!.y - 0.6,
+        text: `${trace.pcb_trace_id}\nsource: ${trace.source_trace_id}`,
+        fontSize: 0.15,
+      }
+    }),
+  }
+  await expect(
+    getSvgFromGraphicsObject(graphics, {
+      backgroundColor: "white",
+      svgWidth: 1000,
+      svgHeight: 300,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 
   const aliasedCircuit = convertToCircuitJson(
     {

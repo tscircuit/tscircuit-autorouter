@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import { checkTracesAreContiguous } from "@tscircuit/checks"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("DRC conversion preserves every pad fragment and net-owned plated terminal", () => {
+test("DRC conversion preserves every pad fragment and net-owned plated terminal", async () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -76,6 +77,69 @@ test("DRC conversion preserves every pad fragment and net-owned plated terminal"
     layers: ["top", "bottom"],
   })
   expect(checkTracesAreContiguous(circuit)).toEqual([])
+
+  const terminal = circuit.find((e) => e.type === "pcb_plated_hole")!
+  if (terminal.shape !== "circle") throw new Error("Expected circular terminal")
+  const graphics: GraphicsObject = {
+    rects: pads.map((pad) => {
+      if (pad.shape !== "rect") throw new Error("Expected rectangular fragment")
+      return {
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: "rgba(255,0,0,0.25)",
+        stroke: "red",
+      }
+    }),
+    circles: [
+      {
+        center: { x: terminal.x, y: terminal.y },
+        radius: terminal.outer_diameter / 2,
+        fill: "rgba(255,0,0,0.25)",
+        stroke: "red",
+      },
+      {
+        center: { x: terminal.x, y: terminal.y },
+        radius: terminal.hole_diameter / 2,
+        fill: "white",
+        stroke: "blue",
+      },
+    ],
+    lines: circuit.filter((e) => e.type === "pcb_trace").map((trace) => {
+      const wires = trace.route.filter((point) => point.route_type === "wire")
+      return {
+        points: wires,
+        strokeWidth: wires[0]!.width,
+        strokeColor: wires[0]!.layer === "top" ? "red" : "blue",
+        strokeDash: wires[0]!.layer === "top" ? undefined : "0.05 0.05",
+      }
+    }),
+    texts: [
+      ...pads.map((pad) => {
+        if (pad.shape !== "rect") throw new Error("Expected rectangular fragment")
+        return {
+          x: pad.x - 0.7,
+          y: pad.y,
+          text: `${pad.pcb_smtpad_id} → ${pad.pcb_port_id}`,
+          fontSize: 0.15,
+          anchorSide: "center_right" as const,
+        }
+      }),
+      {
+        x: terminal.x,
+        y: terminal.y - 0.8,
+        text: `Plated terminal → ${terminal.pcb_port_id}`,
+        fontSize: 0.15,
+      },
+    ],
+  }
+  await expect(
+    getSvgFromGraphicsObject(graphics, {
+      backgroundColor: "white",
+      svgWidth: 1000,
+      svgHeight: 550,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 
   const aliasedSrj = structuredClone(srj)
   for (const obstacle of aliasedSrj.obstacles) {
