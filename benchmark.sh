@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [ "${1:-}" = "--differential-pairs" ]; then
+  shift
+  exec bun scripts/differential-pair-benchmark/index.ts "$@"
+fi
+
 SOLVER_NAME=""
 SCENARIO_LIMIT=""
 EFFORT=""
@@ -79,10 +84,12 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
+  ./benchmark.sh --differential-pairs --dataset PATH [--limit N] [--baseline PATH]
   ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
   ./benchmark.sh [--solver NAME] [--pipeline ID] [--limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
 
 Options:
+  --differential-pairs Run the seeded pair corpus quality benchmark (must be first; append --help for options)
   --solver NAME        Run only one solver (same as first positional arg)
   --pipeline ID        Run a pipeline alias (1-7, 9, 9net, 10, or krt). 9net runs cold then hot against hd-cache2.
   --limit N            Run only first N scenarios (same as second positional arg)

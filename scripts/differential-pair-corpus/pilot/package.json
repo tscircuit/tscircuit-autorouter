@@ -1,0 +1,7 @@
+{
+  "name": "differential-pair-corpus",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

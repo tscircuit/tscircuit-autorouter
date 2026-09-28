@@ -1,0 +1,29 @@
+{
+  "valid": true,
+  "sampleCount": 2048,
+  "pairCount": 5738,
+  "errors": [],
+  "warnings": [],
+  "familyCounts": {
+    "usb_c_series_template": 1230,
+    "core_pad_clearance": 409,
+    "pico_usb_bug85": 409
+  },
+  "splitCounts": {
+    "train": 1230,
+    "validation": 409,
+    "test": 409
+  },
+  "kindCounts": {
+    "control": 309,
+    "stress": 1664,
+    "infeasible": 75
+  },
+  "declaredConstraintCounts": {
+    "lengthTolerance": 5738,
+    "traceGap": 4920,
+    "maxUncoupledLength": 4920
+  },
+  "exactDuplicateGroups": [],
+  "shapeGroups": []
+}

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": 2,
+  "seed": 20260928,
+  "sampleCount": 14,
+  "samples": [
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00000",
+      "path": "samples/usb_c_series_template_p1_s1352840_00000.json",
+      "split": "train",
+      "kind": "control",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "fbe5abb4ef700d5e5b71dfa653bc9f5be58b94ef3e796417a936434a3a5d912d"
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00000",
+      "path": "samples/usb_c_series_template_p2_s1352840_00000.json",
+      "split": "train",
+      "kind": "control",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "9b500c3c11c3d53bf3a3a1f0646043a7ffac635496923739c49bfe515c8e66ca"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00000",
+      "path": "samples/usb_c_series_template_p3_s1352840_00000.json",
+      "split": "train",
+      "kind": "control",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "9d3fd87b3a362fd0afc9974f9741fc56bd68716e0f3cd26ca9b18c4344f31742"
+    },
+    {
+      "sampleId": "core_pad_clearance_s1352840_00000",
+      "path": "samples/core_pad_clearance_s1352840_00000.json",
+      "split": "validation",
+      "kind": "stress",
+      "familyId": "core_pad_clearance",
+      "fingerprint": "e4717870df842640bfdc050919910fe596014eb8b05b328026b0a34902ed8faf"
+    },
+    {
+      "sampleId": "pico_usb_bug85_s1352840_00000",
+      "path": "samples/pico_usb_bug85_s1352840_00000.json",
+      "split": "test",
+      "kind": "stress",
+      "familyId": "pico_usb_bug85",
+      "fingerprint": "a67c64fa0dcbdac7096f3287e04f08e4870b15305fc56519260eb3690bda370c"
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00001",
+      "path": "samples/usb_c_series_template_p1_s1352840_00001.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "47c0ec4243f6833794e93637e90f827cf44adca0396795da6a0a09280b4391ad"
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00001",
+      "path": "samples/usb_c_series_template_p2_s1352840_00001.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "7929fdc7a0c36fef6352ac7b3fed310813e085c0be789f12f70ba7dd701267c5"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00001",
+      "path": "samples/usb_c_series_template_p3_s1352840_00001.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "1d62263415528ec83d8c3f1a2cee04579e6e26c45a3cdec181340e9d3b65370b"
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00005",
+      "path": "samples/usb_c_series_template_p1_s1352840_00005.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "dbc994e51933942692b296a66ee508849039f5baaf9f0aee52af1e9cbe6595aa"
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00006",
+      "path": "samples/usb_c_series_template_p2_s1352840_00006.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "9a4aa9f98387968103a324c19267602fdba34867ad828308adee7a4e096bf00b"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00006",
+      "path": "samples/usb_c_series_template_p3_s1352840_00006.json",
+      "split": "train",
+      "kind": "stress",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "ab0bc62950acd26fba13f1ee4808fedb641756a037a31dfdd33265905bb59292"
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00015",
+      "path": "samples/usb_c_series_template_p1_s1352840_00015.json",
+      "split": "train",
+      "kind": "infeasible",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "eae9b2d055b58cb4998c65d91c00abb6f9ed3ed532ae883b0f66809ed06b9c87"
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00015",
+      "path": "samples/usb_c_series_template_p2_s1352840_00015.json",
+      "split": "train",
+      "kind": "infeasible",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "86d949c9f681b5b15918bac43d37612968bb2f2b0577463c8240b4a33381af0e"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00015",
+      "path": "samples/usb_c_series_template_p3_s1352840_00015.json",
+      "split": "train",
+      "kind": "infeasible",
+      "familyId": "usb_c_series_template",
+      "fingerprint": "0da673a67d945a379dec20da167b4c571ecf483182c224bcc5924e0b69df5a83"
+    }
+  ]
+}
