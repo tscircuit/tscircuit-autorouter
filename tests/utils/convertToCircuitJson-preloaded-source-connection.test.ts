@@ -66,16 +66,18 @@ test("preloaded traces retain source connections omitted from point pairs", asyn
 
   const convertedTraces = circuit.filter((e) => e.type === "pcb_trace")
   const graphics: GraphicsObject = {
-    rects: circuit.filter((e) => e.type === "pcb_smtpad").map((pad) => {
-      if (pad.shape !== "rect") throw new Error("Expected rectangular pad")
-      return {
-        center: { x: pad.x, y: pad.y },
-        width: pad.width,
-        height: pad.height,
-        fill: "rgba(255,0,0,0.25)",
-        stroke: "red",
-      }
-    }),
+    rects: circuit
+      .filter((e) => e.type === "pcb_smtpad")
+      .map((pad) => {
+        if (pad.shape !== "rect") throw new Error("Expected rectangular pad")
+        return {
+          center: { x: pad.x, y: pad.y },
+          width: pad.width,
+          height: pad.height,
+          fill: "rgba(255,0,0,0.25)",
+          stroke: "red",
+        }
+      }),
     lines: convertedTraces.map((trace) => {
       const wires = trace.route.filter((point) => point.route_type === "wire")
       return { points: wires, strokeWidth: wires[0]!.width, strokeColor: "red" }

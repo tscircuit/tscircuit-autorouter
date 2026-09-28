@@ -105,18 +105,21 @@ test("DRC conversion preserves every pad fragment and net-owned plated terminal"
         stroke: "blue",
       },
     ],
-    lines: circuit.filter((e) => e.type === "pcb_trace").map((trace) => {
-      const wires = trace.route.filter((point) => point.route_type === "wire")
-      return {
-        points: wires,
-        strokeWidth: wires[0]!.width,
-        strokeColor: wires[0]!.layer === "top" ? "red" : "blue",
-        strokeDash: wires[0]!.layer === "top" ? undefined : "0.05 0.05",
-      }
-    }),
+    lines: circuit
+      .filter((e) => e.type === "pcb_trace")
+      .map((trace) => {
+        const wires = trace.route.filter((point) => point.route_type === "wire")
+        return {
+          points: wires,
+          strokeWidth: wires[0]!.width,
+          strokeColor: wires[0]!.layer === "top" ? "red" : "blue",
+          strokeDash: wires[0]!.layer === "top" ? undefined : "0.05 0.05",
+        }
+      }),
     texts: [
       ...pads.map((pad) => {
-        if (pad.shape !== "rect") throw new Error("Expected rectangular fragment")
+        if (pad.shape !== "rect")
+          throw new Error("Expected rectangular fragment")
         return {
           x: pad.x - 0.7,
           y: pad.y,
