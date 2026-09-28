@@ -13,7 +13,14 @@ import type {
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
 
+type InitialRoutingSolver = BaseSolver & {
+  getCurrentPhase(): string
+  _getOutputHdRoutes(): HighDensityRoute[]
+  netToPointPairsSolver?: { newConnections: SimpleRouteConnection[] }
+}
+
 type LengthMatchingPostProcessingSolverParams = {
+  initialRoutingSolver?: InitialRoutingSolver
   hdRoutes: HighDensityRoute[]
   differentialPairs: DifferentialPair[]
   buses: SimpleRouteBus[]
@@ -132,9 +139,38 @@ const assertBusLengthSkew = (
   }
 }
 
+const assertDifferentialPairLengthSkew = (
+  pairs: DifferentialPair[],
+  routes: HighDensityRoute[],
+): void => {
+  for (const pair of pairs) {
+    const lengths = pair.connectionNames.map((connectionName) => {
+      const matches = routes.filter(
+        (route) => route.connectionName === connectionName,
+      )
+      if (matches.length !== 1)
+        throw new Error(
+          `Length matching: differential pair connection "${connectionName}" must have exactly one final route, got ${matches.length}`,
+        )
+      const route = matches[0]!
+      return route.route.slice(1).reduce((length, point, index) => {
+        const previous = route.route[index]!
+        return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+      }, 0)
+    })
+    const skew = Math.abs(lengths[0]! - lengths[1]!)
+    if (skew > pair.lengthTolerance + 1e-6)
+      throw new Error(
+        `Length matching: differential pair "${pair.connectionNames.join("/")}" routed length skew ${skew.toFixed(4)}mm exceeds ${pair.lengthTolerance.toFixed(4)}mm`,
+      )
+  }
+}
+
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly differentialPairSolver: PostProcessingSolver
+  private differentialPairSolver?: PostProcessingSolver
+  private resolvedDifferentialPairs: DifferentialPair[] = []
+  private outputConnections: SimpleRouteConnection[] = []
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
 
@@ -142,17 +178,77 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new PostProcessingSolver({
-      hdRoutes: params.hdRoutes,
-      differentialPairs: params.differentialPairs,
-      traces: params.traces,
-      obstacles: params.obstacles,
-      bounds: params.bounds,
-      layerCount: params.layerCount,
-      minTraceToPadEdgeClearance: params.obstacleMargin,
-    })
     this.MAX_ITERATIONS =
-      this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
+      (params.initialRoutingSolver?.MAX_ITERATIONS ?? 0) + 100_000_000
+  }
+
+  private initializeDifferentialPairSolver(): void {
+    const initialRoutingSolver = this.params.initialRoutingSolver
+    const hdRoutes = initialRoutingSolver
+      ? initialRoutingSolver._getOutputHdRoutes()
+      : this.params.hdRoutes
+    if (initialRoutingSolver && !initialRoutingSolver.netToPointPairsSolver)
+      throw new Error("Length matching: initial routing produced no point pairs")
+    this.outputConnections = initialRoutingSolver
+      ? initialRoutingSolver.netToPointPairsSolver!.newConnections
+      : this.params.connections.filter((connection) =>
+          hdRoutes.some((route) => route.connectionName === connection.name),
+        )
+    const differentialPairs = this.params.differentialPairs.map((pair) => {
+      if (!initialRoutingSolver) return pair
+      const connectionNames = pair.connectionNames.map((connectionName) => {
+        const matches = this.outputConnections.filter(
+          (connection) =>
+            connection.name === connectionName ||
+            connection.__rootConnectionNames?.includes(connectionName) ||
+            connection.__netConnectionName === connectionName,
+        )
+        if (matches.length !== 1)
+          throw new Error(
+            `Length matching: differential pair connection "${connectionName}" must resolve to exactly one point-pair connection, got ${matches.length}`,
+          )
+        return matches[0]!.name
+      }) as [string, string]
+      if (connectionNames[0] === connectionNames[1])
+        throw new Error(
+          `Length matching: differential pair ${pair.connectionNames.join("/")} resolves to the same connection`,
+        )
+      const resolvedPair = { ...pair, connectionNames }
+      if (pair.traceGap === undefined) return resolvedPair
+      const pairRoutes = connectionNames.map((connectionName) => {
+        const matches = hdRoutes.filter(
+          (route) => route.connectionName === connectionName,
+        )
+        if (matches.length !== 1)
+          throw new Error(
+            `Length matching: differential pair connection "${connectionName}" must have exactly one HD route, got ${matches.length}`,
+          )
+        return matches[0]!
+      })
+      const centerlineDistance = pair.traceGap + pairRoutes.reduce(
+        (sum, route) => sum + route.traceThickness / 2,
+        0,
+      )
+      return {
+        ...resolvedPair,
+        minimumCenterlineDistance: centerlineDistance,
+        maximumCenterlineDistance: centerlineDistance,
+      }
+    })
+    this.resolvedDifferentialPairs = differentialPairs
+    this.differentialPairSolver = new PostProcessingSolver({
+      hdRoutes,
+      differentialPairs,
+      traces: this.params.traces,
+      obstacles: this.params.obstacles,
+      bounds: this.params.bounds,
+      layerCount: this.params.layerCount,
+      minTraceToPadEdgeClearance: this.params.obstacleMargin,
+    })
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + this.differentialPairSolver.MAX_ITERATIONS + 100_010,
+    )
   }
 
   override getSolverName(): string {
@@ -160,22 +256,43 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (!this.differentialPairSolver.solved) {
-      this.differentialPairSolver.step()
-      if (this.differentialPairSolver.failed) {
+    const initialRoutingSolver = this.params.initialRoutingSolver
+    if (initialRoutingSolver) {
+      if (initialRoutingSolver.solved)
+        throw new Error(
+          "Length matching: initial routing completed past its joint DRC boundary",
+        )
+      // Initial routing supplies geometry through global DRC. Joint repair and
+      // power expansion belong to the outer pipeline after constrained copper
+      // is fixed and the remaining connections have been routed.
+      if (initialRoutingSolver.getCurrentPhase() !== "pipeline9JointDrcRepairSolver") {
+        initialRoutingSolver.step()
+        if (initialRoutingSolver.failed) {
+          this.failed = true
+          this.error = initialRoutingSolver.error
+        }
+        return
+      }
+    }
+    if (!this.differentialPairSolver) this.initializeDifferentialPairSolver()
+    const differentialPairSolver = this.differentialPairSolver!
+    if (!differentialPairSolver.solved) {
+      differentialPairSolver.step()
+      if (differentialPairSolver.failed) {
         this.failed = true
-        this.error = this.differentialPairSolver.error
+        this.error = differentialPairSolver.error
       }
       return
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      const hdRoutes = differentialPairSolver.getOutput().hdRoutes
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
       )
       if (differentialPairs.length === 0) {
+        assertDifferentialPairLengthSkew(this.resolvedDifferentialPairs, hdRoutes)
         this.outputHdRoutes = hdRoutes
         this.solved = true
         return
@@ -206,6 +323,10 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
     assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
+    assertDifferentialPairLengthSkew(
+      this.resolvedDifferentialPairs,
+      this.outputHdRoutes,
+    )
     this.solved = true
   }
 
@@ -217,10 +338,20 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     return { hdRoutes: this.outputHdRoutes }
   }
 
+  getOutputConnections(): SimpleRouteConnection[] {
+    if (!this.solved)
+      throw new Error(
+        "LengthMatchingPostProcessingSolver connections requested before completion",
+      )
+    return this.outputConnections
+  }
+
   override visualize(): GraphicsObject {
     return (
       this.busLengthMatchingSolver?.visualize() ??
-      this.differentialPairSolver.visualize()
+      this.differentialPairSolver?.visualize() ??
+      this.params.initialRoutingSolver?.visualize() ??
+      super.visualize()
     )
   }
 }

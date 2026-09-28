@@ -8,11 +8,14 @@ test("Pipeline9 length matching tight-preload safety", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
   })
-  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
+  solver.solveUntilPhase("componentDetectionSolver")
+  expect(solver.lengthMatchingPostProcessingSolver?.solved).toBe(true)
   const before = evaluateRelaxedDrc({
     inputSrj: srj,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getNewTracesBeforePowerExpansion(),
+    srjWithPointPairs: solver.srj,
+    routedTraces: solver.srj.traces!.filter(
+      (trace): boolean => trace.pcb_trace_id !== "fixed",
+    ),
   })
   expect(before.errors).toHaveLength(0)
   solver.solve()

@@ -14,6 +14,10 @@ const TARGET_CONNECTION_NAME = "DDR3_m2_fpga_ddr_dram_ba0"
 
 test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal regions", () => {
   const inputSrj = structuredClone(sample007) as SimpleRouteJson
+  // This stage-level regression isolates terminal-region ownership for one net.
+  // Length matching now runs before topology and would route every bus member.
+  inputSrj.differentialPairs = []
+  inputSrj.buses = inputSrj.buses?.map(({ maxLengthSkew, ...bus }) => bus)
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
     cacheProvider: null,
   })

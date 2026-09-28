@@ -5,6 +5,7 @@ import boardPhase from "../../fixtures/bug-reports/am62l-hdmi-bus-constraints/am
 }
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
@@ -47,6 +48,12 @@ test("AM62L HDMI clock pair stays within its maximum length skew", async () => {
   expect(clockBus.maxLengthSkew).toBe(0.5)
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const drc = evaluateRelaxedDrc({
+    inputSrj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  })
+  expect(drc.errors).toHaveLength(0)
   const routedLengths = CLOCK_PAIR_CONNECTIONS.map((connectionName) =>
     routedTraces
       .filter((trace) => trace.connection_name === connectionName)

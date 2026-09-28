@@ -9,12 +9,17 @@ test("Pipeline9 length matching roomy-preload snapshot", async (): Promise<void>
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
   })
-  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
+  solver.solveUntilPhase("componentDetectionSolver")
   expect(
     evaluateRelaxedDrc({
       inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getNewTracesBeforePowerExpansion(),
+      srjWithPointPairs: {
+        ...solver.srj,
+        connections: solver.lengthMatchingPostProcessingSolver!.getOutputConnections(),
+      },
+      routedTraces: solver.srj.traces!.filter(
+        (trace) => trace.pcb_trace_id !== "fixed",
+      ),
     }).errors,
   ).toHaveLength(0)
   solver.solve()

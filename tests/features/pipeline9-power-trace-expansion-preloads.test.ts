@@ -72,6 +72,9 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   )
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
   expect(solver.pipelineDef.at(-2)?.solverName).toBe(
+    "pipeline9JointDrcRepairSolver",
+  )
+  expect(solver.pipelineDef[1]?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",
   )
   solver.getNewTracesBeforePowerExpansion = () => newlyRoutedTraces
