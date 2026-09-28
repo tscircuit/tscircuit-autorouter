@@ -14,15 +14,15 @@ export function getRegionNetIdByRegionId(input: {
   const regionNetCandidates = new Map<string, Set<number>>()
   const alreadyConnectedEndpointRegionIds = new Set<string>()
   const netIndexByConnectionAlias = new Map<string, number>()
+  const netIndexByNetId = new Map<string, number>()
   for (const connection of input.params.connections) {
     const netId = connection.mutuallyConnectedNetworkId
     const routeNetIndex = input.getNetIndex({
       connectionId: connection.connectionId,
       mutuallyConnectedNetworkId: netId,
     })
-    for (const connectionAlias of [connection.connectionId, netId]) {
-      netIndexByConnectionAlias.set(connectionAlias, routeNetIndex)
-    }
+    netIndexByNetId.set(netId, routeNetIndex)
+    netIndexByConnectionAlias.set(connection.connectionId, routeNetIndex)
     for (const point of connection.simpleRouteConnection.pointsToConnect) {
       for (const region of input.params.graph.regions) {
         if (
@@ -54,7 +54,11 @@ export function getRegionNetIdByRegionId(input: {
 
   for (const region of input.params.graph.regions) {
     for (const connectionName of region.d._connectedTo ?? []) {
-      const routeNetIndex = netIndexByConnectionAlias.get(connectionName)
+      // buildHyperGraph normalizes connected copper to canonical net IDs.
+      // A route alias with the same spelling must not replace that ownership.
+      const routeNetIndex =
+        netIndexByNetId.get(connectionName) ??
+        netIndexByConnectionAlias.get(connectionName)
       if (routeNetIndex === undefined) continue
 
       let netCandidates = regionNetCandidates.get(region.regionId)

@@ -1,0 +1,72 @@
+{
+  "regions": [
+    {
+      "regionId": "source",
+      "pointIds": ["start"],
+      "d": {
+        "center": { "x": -1, "y": 0 },
+        "width": 1,
+        "height": 1,
+        "availableZ": [0]
+      }
+    },
+    {
+      "regionId": "left",
+      "pointIds": ["start", "middle"],
+      "d": {
+        "center": { "x": 0, "y": 0 },
+        "width": 1,
+        "height": 1,
+        "availableZ": [0]
+      }
+    },
+    {
+      "regionId": "right",
+      "pointIds": ["middle", "end"],
+      "d": {
+        "center": { "x": 1, "y": 0 },
+        "width": 1,
+        "height": 1,
+        "availableZ": [0]
+      }
+    },
+    {
+      "regionId": "target",
+      "pointIds": ["end"],
+      "d": {
+        "center": { "x": 2, "y": 0 },
+        "width": 1,
+        "height": 1,
+        "availableZ": [0]
+      }
+    }
+  ],
+  "ports": [
+    {
+      "portId": "start",
+      "region1Id": "source",
+      "region2Id": "left",
+      "d": { "x": -0.5, "y": 0, "z": 0 }
+    },
+    {
+      "portId": "middle",
+      "region1Id": "left",
+      "region2Id": "right",
+      "d": { "x": 0.5, "y": 0, "z": 0 }
+    },
+    {
+      "portId": "end",
+      "region1Id": "right",
+      "region2Id": "target",
+      "d": { "x": 1.5, "y": 0, "z": 0 }
+    }
+  ],
+  "connections": [
+    {
+      "connectionId": "route",
+      "startRegionId": "source",
+      "endRegionId": "target",
+      "mutuallyConnectedNetworkId": "shared-net"
+    }
+  ]
+}

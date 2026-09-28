@@ -1,0 +1,6 @@
+name = "pathing_contract"
+version = "0.1.0"
+defaultTargets = ["PathingContract"]
+
+[[lean_lib]]
+name = "PathingContract"

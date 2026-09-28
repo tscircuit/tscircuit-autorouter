@@ -652,7 +652,12 @@ export class PortPointPathingSolver extends BaseSolver {
   ): number {
     const assigned = this.assignedPortPoints.get(portPointId)
     if (!assigned) return 0
-    if (rootConnectionName === assigned.rootConnectionName) return 0
+    if (
+      rootConnectionName !== undefined &&
+      rootConnectionName === assigned.rootConnectionName
+    ) {
+      return 0
+    }
     return this.PORT_POINT_REUSE_FACTOR
   }
 
@@ -867,7 +872,8 @@ export class PortPointPathingSolver extends BaseSolver {
       const assignment = this.assignedPortPoints.get(pp.portPointId)
       if (
         assignment &&
-        assignment?.rootConnectionName !== currentRootConnectionName
+        (currentRootConnectionName === undefined ||
+          assignment.rootConnectionName !== currentRootConnectionName)
       ) {
         continue
       }
@@ -931,6 +937,7 @@ export class PortPointPathingSolver extends BaseSolver {
       const centerAssignment = this.assignedPortPoints.get(center.portPointId)
       const canBeReassignedBecauseSameNet =
         centerAssignment &&
+        currentRootConnectionName !== undefined &&
         centerAssignment.rootConnectionName === currentRootConnectionName
 
       if (!centerAssignment || canBeReassignedBecauseSameNet) {
@@ -952,7 +959,8 @@ export class PortPointPathingSolver extends BaseSolver {
         const assignment = this.assignedPortPoints.get(pp.portPointId)
         const isAvailable =
           !assignment ||
-          assignment.rootConnectionName === currentRootConnectionName
+          (currentRootConnectionName !== undefined &&
+            assignment.rootConnectionName === currentRootConnectionName)
 
         if (isAvailable) {
           currentRange.push(pp)
@@ -1009,7 +1017,8 @@ export class PortPointPathingSolver extends BaseSolver {
         const assignment = this.assignedPortPoints.get(pp.portPointId)
         if (
           assignment &&
-          assignment.rootConnectionName !== currentRootConnectionName
+          (currentRootConnectionName === undefined ||
+            assignment.rootConnectionName !== currentRootConnectionName)
         )
           continue
         availablePortPoints.push({
@@ -1760,7 +1769,35 @@ export class PortPointPathingSolver extends BaseSolver {
 
     // Remove port points from assignedPortPoints map
     for (const [portPointId, assignment] of this.assignedPortPoints.entries()) {
-      if (assignment.connectionName === connectionName) {
+      if (assignment.connectionName !== connectionName) continue
+
+      // Same-net routes can share a port. Keep it reserved until the last
+      // route using it (including off-board reservations) has been ripped.
+      const survivingRoute = this.connectionsWithResults.find(
+        (result): boolean => {
+          if (result === connectionResult || !result.path) return false
+          return result.path.some((candidate): boolean => {
+            if (candidate.portPoint?.portPointId === portPointId) return true
+            const node = this.nodeMap.get(candidate.currentNodeId)
+            if (!node?._offBoardConnectionId) return false
+            return Boolean(
+              node._offBoardConnectedCapacityMeshNodeIds?.some(
+                (nodeId): boolean => Boolean(
+                  this.nodePortPointsMap.get(nodeId)?.some(
+                    (portPoint): boolean => portPoint.portPointId === portPointId,
+                  ),
+                ),
+              ),
+            )
+          })
+        },
+      )
+      if (survivingRoute) {
+        this.assignedPortPoints.set(portPointId, {
+          connectionName: survivingRoute.connection.name,
+          rootConnectionName: survivingRoute.connection.__rootConnectionNames?.[0],
+        })
+      } else {
         this.assignedPortPoints.delete(portPointId)
       }
     }
