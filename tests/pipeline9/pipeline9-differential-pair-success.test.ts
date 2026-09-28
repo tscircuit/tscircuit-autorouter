@@ -15,18 +15,22 @@ test("Pipeline9 completes a coupled pair without postprocessing errors", (): voi
         { x: 8, y, layer: "top" },
       ],
     })),
-    differentialPairs: [{
-      connectionNames: ["pair_0", "pair_1"],
-      lengthTolerance: 0.05,
-      traceGap: 0.2,
-      maxUncoupledLength: 1,
-    }],
+    differentialPairs: [
+      {
+        connectionNames: ["pair_0", "pair_1"],
+        lengthTolerance: 0.05,
+        traceGap: 0.2,
+        maxUncoupledLength: 1,
+      },
+    ],
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
   solver.solve()
   expect(solver.postProcessingErrors).toEqual([])
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  expect(solver.lengthMatchingPostProcessingSolver?.postProcessingErrors).toEqual([])
+  expect(
+    solver.lengthMatchingPostProcessingSolver?.postProcessingErrors,
+  ).toEqual([])
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(2)
 })

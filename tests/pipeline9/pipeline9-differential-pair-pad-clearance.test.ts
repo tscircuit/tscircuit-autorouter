@@ -17,8 +17,9 @@ test("Pipeline9 preserves declared pad clearance when length matching", () => {
       connectionNames: ["source_trace_0", "source_trace_1"],
     },
   ])
-  expect(solver.lengthMatchingPostProcessingSolver?.getOutput().postProcessingErrors)
-    .toEqual(solver.postProcessingErrors)
+  expect(
+    solver.lengthMatchingPostProcessingSolver?.getOutput().postProcessingErrors,
+  ).toEqual(solver.postProcessingErrors)
   expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(2)
   const routes = solver._getOutputHdRoutes()
