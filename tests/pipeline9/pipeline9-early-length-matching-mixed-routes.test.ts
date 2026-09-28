@@ -8,8 +8,8 @@ test("Pipeline9 hands early length-matched routes to native trace routing", (): 
   input.connections.push({
     name: "ordinary",
     pointsToConnect: [
-      { x: 0, y: -3, layer: "top", pcb_port_id: "ordinary_start" },
-      { x: 10, y: -3, layer: "top", pcb_port_id: "ordinary_end" },
+      { x: 5, y: -3, layer: "top", pcb_port_id: "ordinary_start" },
+      { x: 5, y: 4, layer: "top", pcb_port_id: "ordinary_end" },
     ],
   })
   const original = structuredClone(input)
@@ -29,6 +29,7 @@ test("Pipeline9 hands early length-matched routes to native trace routing", (): 
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(solver.preloadedTraceGraphSolver!.stats.preloadedTraceCount).toBe(3)
   expect(input).toEqual(original)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   expect(new Set(routedTraces.map((trace) => trace.connection_name))).toEqual(
