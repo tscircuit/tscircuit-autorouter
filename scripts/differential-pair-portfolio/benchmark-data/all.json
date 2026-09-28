@@ -1,0 +1,215 @@
+{
+  "cases": [
+    {
+      "id": "rv1106g2-camera-post-processing",
+      "path": "inputs/rv1106g2-camera-post-processing.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "rv1106g2-reversing-spine",
+      "path": "inputs/rv1106g2-reversing-spine.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-01",
+      "path": "inputs/sample-01.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-02",
+      "path": "inputs/sample-02.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-03",
+      "path": "inputs/sample-03.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-04",
+      "path": "inputs/sample-04.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-05",
+      "path": "inputs/sample-05.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-06",
+      "path": "inputs/sample-06.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-07",
+      "path": "inputs/sample-07.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-08",
+      "path": "inputs/sample-08.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-09",
+      "path": "inputs/sample-09.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-10",
+      "path": "inputs/sample-10.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-11",
+      "path": "inputs/sample-11.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-12",
+      "path": "inputs/sample-12.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-13",
+      "path": "inputs/sample-13.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-14",
+      "path": "inputs/sample-14.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "core-declared-pad-clearance",
+      "path": "inputs/core-declared-pad-clearance.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "usb-mcu-existing-terminal-clearance",
+      "path": "inputs/usb-mcu-existing-terminal-clearance.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "core-captured",
+      "path": "inputs/core-captured.json",
+      "sourceKind": "faithful-pre-post-stage"
+    },
+    {
+      "id": "pico-captured",
+      "path": "inputs/pico-captured.json",
+      "sourceKind": "faithful-pre-post-stage"
+    },
+    {
+      "id": "pilot-post-output-usb_c_series_template_p1_s1352840_00000",
+      "path": "inputs/pilot-post-output-usb_c_series_template_p1_s1352840_00000.json",
+      "sourceKind": "pilot-post-output-reoptimization",
+      "constraints": [
+        {
+          "connectionNames": [
+            "usb_0_p_connector_to_resistor",
+            "usb_0_n_connector_to_resistor"
+          ],
+          "lengthTolerance": 0.1206,
+          "traceGap": 0.41003999999999996,
+          "maxUncoupledLength": 4.824
+        },
+        {
+          "connectionNames": [
+            "usb_0_p_resistor_to_controller",
+            "usb_0_n_resistor_to_controller"
+          ],
+          "lengthTolerance": 0.1206,
+          "traceGap": 0.41003999999999996,
+          "maxUncoupledLength": 4.824
+        }
+      ]
+    },
+    {
+      "id": "pilot-post-output-usb_c_series_template_p2_s1352840_00001",
+      "path": "inputs/pilot-post-output-usb_c_series_template_p2_s1352840_00001.json",
+      "sourceKind": "pilot-post-output-reoptimization",
+      "constraints": [
+        {
+          "connectionNames": [
+            "usb_0_p_connector_to_resistor",
+            "usb_0_n_connector_to_resistor"
+          ],
+          "lengthTolerance": 0.0969,
+          "traceGap": 0.150195,
+          "maxUncoupledLength": 3.876
+        },
+        {
+          "connectionNames": [
+            "usb_0_p_resistor_to_controller",
+            "usb_0_n_resistor_to_controller"
+          ],
+          "lengthTolerance": 0.0969,
+          "traceGap": 0.150195,
+          "maxUncoupledLength": 3.876
+        },
+        {
+          "connectionNames": [
+            "usb_1_p_connector_to_resistor",
+            "usb_1_n_connector_to_resistor"
+          ],
+          "lengthTolerance": 0.0969,
+          "traceGap": 0.150195,
+          "maxUncoupledLength": 3.876
+        },
+        {
+          "connectionNames": [
+            "usb_1_p_resistor_to_controller",
+            "usb_1_n_resistor_to_controller"
+          ],
+          "lengthTolerance": 0.0969,
+          "traceGap": 0.150195,
+          "maxUncoupledLength": 3.876
+        }
+      ]
+    },
+    {
+      "id": "pilot-post-output-usb_c_series_template_p2_s1352840_00006",
+      "path": "inputs/pilot-post-output-usb_c_series_template_p2_s1352840_00006.json",
+      "sourceKind": "pilot-post-output-reoptimization",
+      "constraints": [
+        {
+          "connectionNames": [
+            "usb_0_p_connector_to_resistor",
+            "usb_0_n_connector_to_resistor"
+          ],
+          "lengthTolerance": 0.1111,
+          "traceGap": 0.172205,
+          "maxUncoupledLength": 4.444
+        },
+        {
+          "connectionNames": [
+            "usb_0_p_resistor_to_controller",
+            "usb_0_n_resistor_to_controller"
+          ],
+          "lengthTolerance": 0.1111,
+          "traceGap": 0.172205,
+          "maxUncoupledLength": 4.444
+        },
+        {
+          "connectionNames": [
+            "usb_1_p_connector_to_resistor",
+            "usb_1_n_connector_to_resistor"
+          ],
+          "lengthTolerance": 0.1111,
+          "traceGap": 0.172205,
+          "maxUncoupledLength": 4.444
+        },
+        {
+          "connectionNames": [
+            "usb_1_p_resistor_to_controller",
+            "usb_1_n_resistor_to_controller"
+          ],
+          "lengthTolerance": 0.1111,
+          "traceGap": 0.172205,
+          "maxUncoupledLength": 4.444
+        }
+      ]
+    }
+  ]
+}

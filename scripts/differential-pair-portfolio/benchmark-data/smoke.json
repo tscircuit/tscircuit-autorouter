@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "sample-01",
+      "path": "inputs/sample-01.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-11",
+      "path": "inputs/sample-11.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-12",
+      "path": "inputs/sample-12.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "sample-14",
+      "path": "inputs/sample-14.json",
+      "sourceKind": "existing-length-matching-fixture"
+    },
+    {
+      "id": "core-captured",
+      "path": "inputs/core-captured.json",
+      "sourceKind": "faithful-pre-post-stage"
+    },
+    {
+      "id": "pico-captured",
+      "path": "inputs/pico-captured.json",
+      "sourceKind": "faithful-pre-post-stage"
+    }
+  ]
+}

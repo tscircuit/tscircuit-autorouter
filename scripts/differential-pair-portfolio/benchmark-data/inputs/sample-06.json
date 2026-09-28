@@ -1,0 +1,69 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "pair_1_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [{ "x": 2, "y": 1.8, "z": 0 }, { "x": 22, "y": 1.8, "z": 0 }],
+      "vias": []
+    },
+    {
+      "connectionName": "pair_1_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [{ "x": 2, "y": 0.6, "z": 0 }, { "x": 12, "y": 0.6, "z": 0 }],
+      "vias": []
+    },
+    {
+      "connectionName": "pair_2_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [{ "x": 2, "y": -0.6, "z": 0 }, { "x": 12, "y": -0.6, "z": 0 }],
+      "vias": []
+    },
+    {
+      "connectionName": "pair_2_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [{ "x": 2, "y": -1.8, "z": 0 }, { "x": 21.4, "y": -1.8, "z": 0 }],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "pair_1_p",
+      "pointsToConnect": [{ "x": 2, "y": 1.8, "layer": "top" }, { "x": 22, "y": 1.8, "layer": "top" }]
+    },
+    {
+      "name": "pair_1_n",
+      "pointsToConnect": [{ "x": 2, "y": 0.6, "layer": "top" }, { "x": 12, "y": 0.6, "layer": "top" }]
+    },
+    {
+      "name": "pair_2_p",
+      "pointsToConnect": [{ "x": 2, "y": -0.6, "layer": "top" }, { "x": 12, "y": -0.6, "layer": "top" }]
+    },
+    {
+      "name": "pair_2_n",
+      "pointsToConnect": [{ "x": 2, "y": -1.8, "layer": "top" }, { "x": 21.4, "y": -1.8, "layer": "top" }]
+    }
+  ],
+  "differentialPairs": [
+    { "connectionNames": ["pair_1_p", "pair_1_n"], "lengthTolerance": 0.001 },
+    { "connectionNames": ["pair_2_p", "pair_2_n"], "lengthTolerance": 0.001 }
+  ],
+  "maximumMeanderDepth": 2,
+  "minimumToothPitch": 1,
+  "bounds": { "minX": 0, "maxX": 24, "minY": -3, "maxY": 3 },
+  "obstacles": [
+    { "obstacleId": "pair-1-p-left-pad", "type": "rect", "layers": ["top"], "center": { "x": 2, "y": 1.8 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_1_p"] },
+    { "obstacleId": "pair-1-p-right-pad", "type": "rect", "layers": ["top"], "center": { "x": 22, "y": 1.8 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_1_p"] },
+    { "obstacleId": "pair-1-n-left-pad", "type": "rect", "layers": ["top"], "center": { "x": 2, "y": 0.6 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_1_n"] },
+    { "obstacleId": "pair-1-n-right-pad", "type": "rect", "layers": ["top"], "center": { "x": 12, "y": 0.6 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_1_n"] },
+    { "obstacleId": "pair-2-p-left-pad", "type": "rect", "layers": ["top"], "center": { "x": 2, "y": -0.6 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_2_p"] },
+    { "obstacleId": "pair-2-p-right-pad", "type": "rect", "layers": ["top"], "center": { "x": 12, "y": -0.6 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_2_p"] },
+    { "obstacleId": "pair-2-n-left-pad", "type": "rect", "layers": ["top"], "center": { "x": 2, "y": -1.8 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_2_n"] },
+    { "obstacleId": "pair-2-n-right-pad", "type": "rect", "layers": ["top"], "center": { "x": 21.4, "y": -1.8 }, "width": 0.5, "height": 0.5, "connectedTo": ["pair_2_n"] }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

@@ -1,0 +1,42 @@
+{
+  "traces": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "pair-p",
+      "connection_name": "PAIR_P",
+      "route": [
+        { "route_type": "wire", "x": 0, "y": 0.6, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 2, "y": 3.2, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 8, "y": 3.2, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 10, "y": 0.6, "width": 0.2, "layer": "top" }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "pair-n",
+      "connection_name": "PAIR_N",
+      "route": [
+        { "route_type": "wire", "x": 0, "y": -0.6, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 2, "y": -3.2, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 8, "y": -3.2, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 10, "y": -0.6, "width": 0.2, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    { "connectionNames": ["PAIR_P", "PAIR_N"], "lengthTolerance": 0.01 }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "center-component",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 5, "y": 0 },
+      "width": 3,
+      "height": 4,
+      "connectedTo": []
+    }
+  ],
+  "bounds": { "minX": -1, "maxX": 11, "minY": -5, "maxY": 5 },
+  "layerCount": 2
+}

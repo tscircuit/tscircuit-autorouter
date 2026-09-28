@@ -1,0 +1,2368 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.13332,
+  "minViaDiameter": 0.5555,
+  "minViaHoleDiameter": 0.27775,
+  "minTraceToPadEdgeClearance": 0.1111,
+  "minBoardEdgeClearance": 0.2222,
+  "defaultObstacleMargin": 0.1111,
+  "bounds": {
+    "minX": -35.004000000000005,
+    "maxX": -8.34,
+    "minY": -30.962,
+    "maxY": 4.590000000000002
+  },
+  "connections": [
+    {
+      "name": "usb_0_p_connector_to_resistor",
+      "pointsToConnect": [
+        {
+          "x": -14.72825,
+          "y": 1.2570000000000001,
+          "layer": "top",
+          "pcb_port_id": "J0_p"
+        },
+        {
+          "x": -14.339400000000001,
+          "y": -13.885308295062277,
+          "layer": "top",
+          "pcb_port_id": "R0_p_1"
+        }
+      ]
+    },
+    {
+      "name": "usb_0_p_resistor_to_controller",
+      "pointsToConnect": [
+        {
+          "x": -14.339400000000001,
+          "y": -14.996308295062278,
+          "layer": "top",
+          "pcb_port_id": "R0_p_2"
+        },
+        {
+          "x": -27.164920734792627,
+          "y": -25.215688576711806,
+          "layer": "top",
+          "pcb_port_id": "U0_p"
+        }
+      ]
+    },
+    {
+      "name": "usb_0_n_connector_to_resistor",
+      "pointsToConnect": [
+        {
+          "x": -15.28375,
+          "y": 1.2570000000000001,
+          "layer": "top",
+          "pcb_port_id": "J0_n"
+        },
+        {
+          "x": -15.6726,
+          "y": -13.885308295062277,
+          "layer": "top",
+          "pcb_port_id": "R0_n_1"
+        }
+      ]
+    },
+    {
+      "name": "usb_0_n_resistor_to_controller",
+      "pointsToConnect": [
+        {
+          "x": -15.6726,
+          "y": -14.996308295062278,
+          "layer": "top",
+          "pcb_port_id": "R0_n_2"
+        },
+        {
+          "x": -28.053720734792623,
+          "y": -25.215688576711806,
+          "layer": "top",
+          "pcb_port_id": "U0_n"
+        }
+      ]
+    },
+    {
+      "name": "usb_1_p_connector_to_resistor",
+      "pointsToConnect": [
+        {
+          "x": -28.06025,
+          "y": 1.257000000000001,
+          "layer": "top",
+          "pcb_port_id": "J1_p"
+        },
+        {
+          "x": -27.6714,
+          "y": -13.885308295062277,
+          "layer": "top",
+          "pcb_port_id": "R1_p_1"
+        }
+      ]
+    },
+    {
+      "name": "usb_1_p_resistor_to_controller",
+      "pointsToConnect": [
+        {
+          "x": -27.6714,
+          "y": -14.996308295062278,
+          "layer": "top",
+          "pcb_port_id": "R1_p_2"
+        },
+        {
+          "x": -14.589398264336076,
+          "y": -25.215688576711806,
+          "layer": "top",
+          "pcb_port_id": "U1_p"
+        }
+      ]
+    },
+    {
+      "name": "usb_1_n_connector_to_resistor",
+      "pointsToConnect": [
+        {
+          "x": -28.61575,
+          "y": 1.257000000000001,
+          "layer": "top",
+          "pcb_port_id": "J1_n"
+        },
+        {
+          "x": -29.0046,
+          "y": -13.885308295062277,
+          "layer": "top",
+          "pcb_port_id": "R1_n_1"
+        }
+      ]
+    },
+    {
+      "name": "usb_1_n_resistor_to_controller",
+      "pointsToConnect": [
+        {
+          "x": -29.0046,
+          "y": -14.996308295062278,
+          "layer": "top",
+          "pcb_port_id": "R1_n_2"
+        },
+        {
+          "x": -15.478198264336076,
+          "y": -25.215688576711806,
+          "layer": "top",
+          "pcb_port_id": "U1_n"
+        }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": [
+        "usb_0_p_connector_to_resistor",
+        "usb_0_n_connector_to_resistor"
+      ],
+      "lengthTolerance": 0.1111,
+      "traceGap": 0.172205,
+      "maxUncoupledLength": 4.444
+    },
+    {
+      "connectionNames": [
+        "usb_0_p_resistor_to_controller",
+        "usb_0_n_resistor_to_controller"
+      ],
+      "lengthTolerance": 0.1111,
+      "traceGap": 0.172205,
+      "maxUncoupledLength": 4.444
+    },
+    {
+      "connectionNames": [
+        "usb_1_p_connector_to_resistor",
+        "usb_1_n_connector_to_resistor"
+      ],
+      "lengthTolerance": 0.1111,
+      "traceGap": 0.172205,
+      "maxUncoupledLength": 4.444
+    },
+    {
+      "connectionNames": [
+        "usb_1_p_resistor_to_controller",
+        "usb_1_n_resistor_to_controller"
+      ],
+      "lengthTolerance": 0.1111,
+      "traceGap": 0.172205,
+      "maxUncoupledLength": 4.444
+    }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "J0_p",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -14.72825,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_p_connector_to_resistor",
+        "J0_p"
+      ]
+    },
+    {
+      "obstacleId": "R0_p_1",
+      "componentId": "R0_p",
+      "type": "rect",
+      "center": {
+        "x": -14.339400000000001,
+        "y": -13.885308295062277
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_p_connector_to_resistor",
+        "R0_p_1"
+      ]
+    },
+    {
+      "obstacleId": "R0_p_2",
+      "componentId": "R0_p",
+      "type": "rect",
+      "center": {
+        "x": -14.339400000000001,
+        "y": -14.996308295062278
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_p_resistor_to_controller",
+        "R0_p_2"
+      ]
+    },
+    {
+      "obstacleId": "U0_p",
+      "componentId": "U0",
+      "type": "rect",
+      "center": {
+        "x": -27.164920734792627,
+        "y": -25.215688576711806
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_p_resistor_to_controller",
+        "U0_p"
+      ]
+    },
+    {
+      "obstacleId": "J0_n",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -15.28375,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_n_connector_to_resistor",
+        "J0_n"
+      ]
+    },
+    {
+      "obstacleId": "R0_n_1",
+      "componentId": "R0_n",
+      "type": "rect",
+      "center": {
+        "x": -15.6726,
+        "y": -13.885308295062277
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_n_connector_to_resistor",
+        "R0_n_1"
+      ]
+    },
+    {
+      "obstacleId": "R0_n_2",
+      "componentId": "R0_n",
+      "type": "rect",
+      "center": {
+        "x": -15.6726,
+        "y": -14.996308295062278
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_n_resistor_to_controller",
+        "R0_n_2"
+      ]
+    },
+    {
+      "obstacleId": "U0_n",
+      "componentId": "U0",
+      "type": "rect",
+      "center": {
+        "x": -28.053720734792623,
+        "y": -25.215688576711806
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_0_n_resistor_to_controller",
+        "U0_n"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_-2.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -11.95075,
+        "y": 1.2569999999999997
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_-2.75"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_-2.25",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -12.50625,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_-2.25"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_-1.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -13.06175,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_-1.75"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_-1.25",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -13.617249999999999,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_-1.25"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_-0.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -14.17275,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_-0.75"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_0.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -15.83925,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_0.75"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_1.25",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -16.394750000000002,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_1.25"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_1.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -16.95025,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_1.75"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_2.25",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -17.50575,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_2.25"
+      ]
+    },
+    {
+      "obstacleId": "J0_neighbor_2.75",
+      "componentId": "J0",
+      "type": "rect",
+      "center": {
+        "x": -18.06125,
+        "y": 1.2570000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J0_neighbor_2.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_p",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -28.06025,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_p_connector_to_resistor",
+        "J1_p"
+      ]
+    },
+    {
+      "obstacleId": "R1_p_1",
+      "componentId": "R1_p",
+      "type": "rect",
+      "center": {
+        "x": -27.6714,
+        "y": -13.885308295062277
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_p_connector_to_resistor",
+        "R1_p_1"
+      ]
+    },
+    {
+      "obstacleId": "R1_p_2",
+      "componentId": "R1_p",
+      "type": "rect",
+      "center": {
+        "x": -27.6714,
+        "y": -14.996308295062278
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_p_resistor_to_controller",
+        "R1_p_2"
+      ]
+    },
+    {
+      "obstacleId": "U1_p",
+      "componentId": "U1",
+      "type": "rect",
+      "center": {
+        "x": -14.589398264336076,
+        "y": -25.215688576711806
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_p_resistor_to_controller",
+        "U1_p"
+      ]
+    },
+    {
+      "obstacleId": "J1_n",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -28.61575,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_n_connector_to_resistor",
+        "J1_n"
+      ]
+    },
+    {
+      "obstacleId": "R1_n_1",
+      "componentId": "R1_n",
+      "type": "rect",
+      "center": {
+        "x": -29.0046,
+        "y": -13.885308295062277
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_n_connector_to_resistor",
+        "R1_n_1"
+      ]
+    },
+    {
+      "obstacleId": "R1_n_2",
+      "componentId": "R1_n",
+      "type": "rect",
+      "center": {
+        "x": -29.0046,
+        "y": -14.996308295062278
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_n_resistor_to_controller",
+        "R1_n_2"
+      ]
+    },
+    {
+      "obstacleId": "U1_n",
+      "componentId": "U1",
+      "type": "rect",
+      "center": {
+        "x": -15.478198264336076,
+        "y": -25.215688576711806
+      },
+      "width": 0.4444,
+      "height": 0.5555,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "usb_1_n_resistor_to_controller",
+        "U1_n"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_-2.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -25.28275,
+        "y": 1.2570000000000006
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_-2.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_-2.25",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -25.83825,
+        "y": 1.2570000000000006
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_-2.25"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_-1.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -26.39375,
+        "y": 1.2570000000000006
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_-1.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_-1.25",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -26.94925,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_-1.25"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_-0.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -27.50475,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_-0.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_0.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -29.17125,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_0.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_1.25",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -29.72675,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_1.25"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_1.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -30.28225,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_1.75"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_2.25",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -30.83775,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_2.25"
+      ]
+    },
+    {
+      "obstacleId": "J1_neighbor_2.75",
+      "componentId": "J1",
+      "type": "rect",
+      "center": {
+        "x": -31.39325,
+        "y": 1.257000000000001
+      },
+      "width": 0.27775,
+      "height": 0.7777,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "J1_neighbor_2.75"
+      ]
+    },
+    {
+      "obstacleId": "congestion_0",
+      "type": "rect",
+      "center": {
+        "x": -30.323797465847804,
+        "y": -16.874886032479814
+      },
+      "width": 1.3889727432535963,
+      "height": 2.125423308128258,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_1",
+      "type": "rect",
+      "center": {
+        "x": -31.26475430280948,
+        "y": -20.405797261450438
+      },
+      "width": 0.9582295406784862,
+      "height": 0.7517830340445507,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_2",
+      "type": "rect",
+      "center": {
+        "x": -13.648142093861942,
+        "y": -3.9584085160566023
+      },
+      "width": 0.9646697664344683,
+      "height": 1.670629803655902,
+      "layers": [
+        "top",
+        "bottom"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_3",
+      "type": "rect",
+      "center": {
+        "x": -18.396810969005337,
+        "y": -6.841383171988186
+      },
+      "width": 1.3368653850989416,
+      "height": 2.0470152895251523,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_4",
+      "type": "rect",
+      "center": {
+        "x": -25.674542723942547,
+        "y": -8.518452815250258
+      },
+      "width": 0.7724516061764211,
+      "height": 1.648467485021567,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_5",
+      "type": "rect",
+      "center": {
+        "x": -25.19617225363478,
+        "y": -5.892944651958064
+      },
+      "width": 1.4649158188634552,
+      "height": 1.5326415142520564,
+      "layers": [
+        "top",
+        "bottom"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_6",
+      "type": "rect",
+      "center": {
+        "x": -27.483153433775527,
+        "y": -11.774906329605262
+      },
+      "width": 0.7562180715343915,
+      "height": 1.9909572978630894,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_7",
+      "type": "rect",
+      "center": {
+        "x": -28.12581788262632,
+        "y": -17.846171514651736
+      },
+      "width": 0.5712992259922438,
+      "height": 0.9488602985480101,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_8",
+      "type": "rect",
+      "center": {
+        "x": -14.360426191709005,
+        "y": -11.313573431408498
+      },
+      "width": 0.7617765068191104,
+      "height": 1.3411740876568947,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_9",
+      "type": "rect",
+      "center": {
+        "x": -23.36247842609091,
+        "y": -8.835569754071765
+      },
+      "width": 0.566110229914356,
+      "height": 0.7608139415836195,
+      "layers": [
+        "top",
+        "bottom"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_10",
+      "type": "rect",
+      "center": {
+        "x": -32.181026295959015,
+        "y": -6.320079704813425
+      },
+      "width": 0.8908934320337139,
+      "height": 2.1439382381123724,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "congestion_11",
+      "type": "rect",
+      "center": {
+        "x": -20.42541580291884,
+        "y": -5.385990858301287
+      },
+      "width": 1.6014254859398118,
+      "height": 0.828827763785026,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": []
+    }
+  ],
+  "traces": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_1_n_resistor_to_controller_0",
+      "connection_name": "usb_1_n_resistor_to_controller",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -15.478198264336076,
+          "y": -25.215688576711806,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.7,
+          "y": -25.216,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.203,
+          "y": -24.938,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -19.105,
+          "y": -24.323,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -20.689,
+          "y": -24.283,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -22.238,
+          "y": -24.219,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.658,
+          "y": -24.075,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "via",
+          "x": -23.658,
+          "y": -24.075,
+          "from_layer": "top",
+          "to_layer": "bottom",
+          "via_diameter": 0.5555,
+          "via_hole_diameter": 0.27775
+        },
+        {
+          "route_type": "wire",
+          "x": -23.658,
+          "y": -24.075,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.811,
+          "y": -22.66,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.884,
+          "y": -21.112,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.937,
+          "y": -19.537,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -24.008,
+          "y": -17.989,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -24.157,
+          "y": -16.566,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "via",
+          "x": -24.157,
+          "y": -16.566,
+          "from_layer": "bottom",
+          "to_layer": "top",
+          "via_diameter": 0.5555,
+          "via_hole_diameter": 0.27775
+        },
+        {
+          "route_type": "wire",
+          "x": -24.157,
+          "y": -16.566,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.505,
+          "y": -16.323,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -16.323,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.338,
+          "y": -15.274,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.0046,
+          "y": -14.996308295062278,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_1_n_connector_to_resistor_0",
+      "connection_name": "usb_1_n_connector_to_resistor",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -28.61575,
+          "y": 1.257000000000001,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.616,
+          "y": 0.868,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.8,
+          "y": 0.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.309,
+          "y": -0.025,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.471,
+          "y": -0.816,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.539,
+          "y": -1.606,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.571,
+          "y": -2.402,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.586,
+          "y": -3.201,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.594,
+          "y": -4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.597,
+          "y": -4.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.598,
+          "y": -5.6,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.598,
+          "y": -6.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.596,
+          "y": -7.2,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.591,
+          "y": -8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.577,
+          "y": -8.799,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.548,
+          "y": -9.596,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.488,
+          "y": -10.39,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.361,
+          "y": -11.188,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.004,
+          "y": -12.01,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.8,
+          "y": -12.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.005,
+          "y": -13.186,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -29.0046,
+          "y": -13.885308295062277,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_1_p_resistor_to_controller_0",
+      "connection_name": "usb_1_p_resistor_to_controller",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -14.589398264336076,
+          "y": -25.215688576711806,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.034,
+          "y": -24.938,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.895,
+          "y": -23.773,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.6,
+          "y": -22.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.599,
+          "y": -20.801,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "via",
+          "x": -17.599,
+          "y": -20.801,
+          "from_layer": "top",
+          "to_layer": "bottom",
+          "via_diameter": 0.5555,
+          "via_hole_diameter": 0.27775
+        },
+        {
+          "route_type": "wire",
+          "x": -17.599,
+          "y": -20.801,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.599,
+          "y": -19.203,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.6,
+          "y": -17.615,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.602,
+          "y": -16.063,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.646,
+          "y": -14.638,
+          "width": 0.13332,
+          "layer": "bottom"
+        },
+        {
+          "route_type": "via",
+          "x": -17.646,
+          "y": -14.638,
+          "from_layer": "bottom",
+          "to_layer": "top",
+          "via_diameter": 0.5555,
+          "via_hole_diameter": 0.27775
+        },
+        {
+          "route_type": "wire",
+          "x": -17.646,
+          "y": -14.638,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -19.208,
+          "y": -14.498,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -20.8,
+          "y": -14.442,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -22.397,
+          "y": -14.418,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.99,
+          "y": -14.407,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.569,
+          "y": -14.402,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -14.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -14.441,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.6714,
+          "y": -14.996308295062278,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_1_p_connector_to_resistor_0",
+      "connection_name": "usb_1_p_connector_to_resistor",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -28.06025,
+          "y": 1.257000000000001,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.06,
+          "y": 0.868,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28,
+          "y": 0.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.507,
+          "y": -0.025,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.659,
+          "y": -0.814,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.695,
+          "y": -1.601,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.661,
+          "y": -2.387,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.507,
+          "y": -3.175,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28,
+          "y": -4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.861,
+          "y": -3.937,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.483,
+          "y": -8.742,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -10.061,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.505,
+          "y": -11.661,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -13.189,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.6714,
+          "y": -13.885308295062277,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_0_n_resistor_to_controller_0",
+      "connection_name": "usb_0_n_resistor_to_controller",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -15.6726,
+          "y": -14.996308295062278,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.895,
+          "y": -14.996,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16,
+          "y": -15.2,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.879,
+          "y": -15.259,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -19.255,
+          "y": -15.327,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -20.728,
+          "y": -15.526,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -22.324,
+          "y": -16.929,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.875,
+          "y": -18.479,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.274,
+          "y": -20.078,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.6,
+          "y": -21.6,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.105,
+          "y": -22.86,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.609,
+          "y": -24.938,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -28.053720734792623,
+          "y": -25.215688576711806,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_0_n_connector_to_resistor_0",
+      "connection_name": "usb_0_n_connector_to_resistor",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -15.28375,
+          "y": 1.2570000000000001,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.284,
+          "y": 0.868,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.2,
+          "y": 0.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.901,
+          "y": -0.032,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.492,
+          "y": -0.839,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.669,
+          "y": -1.62,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.739,
+          "y": -2.407,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.77,
+          "y": -3.202,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.783,
+          "y": -4.001,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.784,
+          "y": -4.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.774,
+          "y": -5.599,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.745,
+          "y": -6.394,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.677,
+          "y": -7.184,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.51,
+          "y": -7.975,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16,
+          "y": -8.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.606,
+          "y": -9.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -9.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -9.43,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -9.57,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -9.75,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -9.945,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -10.143,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -10.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -10.543,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -10.743,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -10.943,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -11.143,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -11.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -11.543,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -11.743,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.606,
+          "y": -11.984,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -12,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -12.201,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -12.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -12.6,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -12.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -13,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -13.2,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.6,
+          "y": -13.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.673,
+          "y": -13.608,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.673,
+          "y": -13.885,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_0_p_resistor_to_controller_0",
+      "connection_name": "usb_0_p_resistor_to_controller",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -27.164920734792627,
+          "y": -25.215688576711806,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -27.024,
+          "y": -24.938,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -25.6,
+          "y": -24,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -23.976,
+          "y": -22.44,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -22.35,
+          "y": -20.917,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -20.725,
+          "y": -19.528,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -19.177,
+          "y": -19.325,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -17.594,
+          "y": -19.246,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16,
+          "y": -19.2,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.895,
+          "y": -18.941,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.006,
+          "y": -15.274,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.339400000000001,
+          "y": -14.996308295062278,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "usb_0_p_connector_to_resistor_0",
+      "connection_name": "usb_0_p_connector_to_resistor",
+      "connectsTo": [],
+      "route": [
+        {
+          "route_type": "wire",
+          "x": -14.72825,
+          "y": 1.2570000000000001,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.728,
+          "y": 0.868,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.8,
+          "y": 0.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.501,
+          "y": -0.032,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.091,
+          "y": -0.84,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.267,
+          "y": -1.62,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.331,
+          "y": -2.407,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.349,
+          "y": -3.201,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.333,
+          "y": -3.995,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.273,
+          "y": -4.784,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -16.11,
+          "y": -5.572,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.609,
+          "y": -6.393,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.148,
+          "y": -7.207,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.253,
+          "y": -7.99,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.8,
+          "y": -8.8,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.03,
+          "y": -9.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15,
+          "y": -9.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.976,
+          "y": -9.43,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.921,
+          "y": -9.574,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.935,
+          "y": -9.75,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.901,
+          "y": -9.944,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.93,
+          "y": -10.142,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.91,
+          "y": -10.341,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.958,
+          "y": -10.544,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.978,
+          "y": -10.744,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.988,
+          "y": -10.944,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.994,
+          "y": -11.143,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.997,
+          "y": -11.343,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.999,
+          "y": -11.543,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15,
+          "y": -11.743,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15.03,
+          "y": -11.984,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -15,
+          "y": -12,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.815,
+          "y": -12.162,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.659,
+          "y": -12.281,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.525,
+          "y": -12.447,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.465,
+          "y": -12.621,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.433,
+          "y": -12.808,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.416,
+          "y": -13.003,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.407,
+          "y": -13.201,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.4,
+          "y": -13.4,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.339,
+          "y": -13.608,
+          "width": 0.13332,
+          "layer": "top"
+        },
+        {
+          "route_type": "wire",
+          "x": -14.339,
+          "y": -13.885,
+          "width": 0.13332,
+          "layer": "top"
+        }
+      ]
+    }
+  ]
+}

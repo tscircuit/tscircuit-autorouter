@@ -1,0 +1,107 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "data_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": 2, "z": 0 },
+        { "x": 12, "y": 2, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "data_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": -2, "z": 0 },
+        { "x": 10, "y": -2, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "data_p",
+      "pointsToConnect": [
+        { "x": 0, "y": 2, "layer": "top" },
+        { "x": 12, "y": 2, "layer": "top" }
+      ]
+    },
+    {
+      "name": "data_n",
+      "pointsToConnect": [
+        { "x": 0, "y": -2, "layer": "top" },
+        { "x": 10, "y": -2, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["data_p", "data_n"],
+      "lengthTolerance": 0.001
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "minimumToothPitch": 1,
+  "bounds": { "minX": -1, "maxX": 13, "minY": -4, "maxY": 4 },
+  "obstacles": [
+    {
+      "obstacleId": "data-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": 2 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["data_p"]
+    },
+    {
+      "obstacleId": "data-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 12, "y": 2 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["data_p"]
+    },
+    {
+      "obstacleId": "center-keepout",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 6, "y": 0 },
+      "width": 1.5,
+      "height": 1,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "lower-trace-keepout",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 5, "y": -1.35 },
+      "width": 3,
+      "height": 0.8,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "data-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": -2 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["data_n"]
+    },
+    {
+      "obstacleId": "data-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 10, "y": -2 },
+      "width": 1,
+      "height": 1,
+      "connectedTo": ["data_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

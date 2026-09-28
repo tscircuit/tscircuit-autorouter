@@ -1,0 +1,86 @@
+{
+  "traces": [
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "sample-via-p",
+      "connection_name": "SAMPLE_VIA_P",
+      "route": [
+        { "route_type": "wire", "x": -5.2, "y": -3.2, "width": 0.2, "layer": "top", "start_pcb_port_id": "left-p" },
+        { "route_type": "wire", "x": -4.5, "y": 1.6, "width": 0.2, "layer": "top" },
+        { "route_type": "via", "x": -4.5, "y": 1.6, "from_layer": "top", "to_layer": "bottom", "via_diameter": 0.6, "via_hole_diameter": 0.3 },
+        { "route_type": "wire", "x": -1.7, "y": 2.9, "width": 0.2, "layer": "bottom" },
+        { "route_type": "via", "x": -1.7, "y": 2.9, "from_layer": "bottom", "to_layer": "top", "via_diameter": 0.6, "via_hole_diameter": 0.3 },
+        { "route_type": "wire", "x": 6.4, "y": 4.6, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 9.2, "y": 3.6, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 10.3, "y": -3.5, "width": 0.2, "layer": "top", "end_pcb_port_id": "right-p" }
+      ]
+    },
+    {
+      "type": "pcb_trace",
+      "pcb_trace_id": "sample-via-n",
+      "connection_name": "SAMPLE_VIA_N",
+      "route": [
+        { "route_type": "wire", "x": -3.3, "y": -3.2, "width": 0.2, "layer": "top", "start_pcb_port_id": "left-n" },
+        { "route_type": "wire", "x": -3.3, "y": 0.7, "width": 0.2, "layer": "top" },
+        { "route_type": "via", "x": -3.3, "y": 0.7, "from_layer": "top", "to_layer": "bottom", "via_diameter": 0.6, "via_hole_diameter": 0.3 },
+        { "route_type": "wire", "x": -0.7, "y": 2.1, "width": 0.2, "layer": "bottom" },
+        { "route_type": "via", "x": -0.7, "y": 2.1, "from_layer": "bottom", "to_layer": "top", "via_diameter": 0.6, "via_hole_diameter": 0.3 },
+        { "route_type": "wire", "x": 6.1, "y": 3.3, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 8.1, "y": 2.7, "width": 0.2, "layer": "top" },
+        { "route_type": "wire", "x": 9.2, "y": -3.5, "width": 0.2, "layer": "top", "end_pcb_port_id": "right-n" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    { "connectionNames": ["SAMPLE_VIA_P", "SAMPLE_VIA_N"], "lengthTolerance": 0.01 }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "center-component",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1.7, "y": -1.2 },
+      "width": 4.7,
+      "height": 4.5,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "left-p-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -5.2, "y": -3.2 },
+      "width": 1.3,
+      "height": 1,
+      "connectedTo": ["SAMPLE_VIA_P"]
+    },
+    {
+      "obstacleId": "left-n-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": -3.3, "y": -3.2 },
+      "width": 1.3,
+      "height": 1,
+      "connectedTo": ["SAMPLE_VIA_N"]
+    },
+    {
+      "obstacleId": "right-p-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 10.3, "y": -3.5 },
+      "width": 1.3,
+      "height": 1,
+      "connectedTo": ["SAMPLE_VIA_P"]
+    },
+    {
+      "obstacleId": "right-n-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 9.2, "y": -3.5 },
+      "width": 1.3,
+      "height": 1,
+      "connectedTo": ["SAMPLE_VIA_N"]
+    }
+  ],
+  "bounds": { "minX": -6.2, "maxX": 11.5, "minY": -4.5, "maxY": 5.5 },
+  "layerCount": 2
+}

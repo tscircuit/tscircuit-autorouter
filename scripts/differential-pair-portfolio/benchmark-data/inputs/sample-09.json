@@ -1,0 +1,97 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "usb_d_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": 0.25, "z": 0 },
+        { "x": 4, "y": 0.25, "z": 0 },
+        { "x": 4, "y": 1.25, "z": 0 },
+        { "x": 10, "y": 1.25, "z": 0 },
+        { "x": 10, "y": 0.25, "z": 0 },
+        { "x": 12, "y": 0.25, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "usb_d_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": -0.25, "z": 0 },
+        { "x": 12, "y": -0.25, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "usb_d_p",
+      "pointsToConnect": [
+        { "x": 0, "y": 0.25, "layer": "top" },
+        { "x": 12, "y": 0.25, "layer": "top" }
+      ]
+    },
+    {
+      "name": "usb_d_n",
+      "pointsToConnect": [
+        { "x": 0, "y": -0.25, "layer": "top" },
+        { "x": 12, "y": -0.25, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["usb_d_p", "usb_d_n"],
+      "lengthTolerance": 0.01
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "bounds": {
+    "minX": -1,
+    "maxX": 13,
+    "minY": -3,
+    "maxY": 2
+  },
+  "obstacles": [
+    {
+      "obstacleId": "usb-d-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": 0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["usb_d_p"]
+    },
+    {
+      "obstacleId": "usb-d-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 12, "y": 0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["usb_d_p"]
+    },
+    {
+      "obstacleId": "usb-d-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": -0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["usb_d_n"]
+    },
+    {
+      "obstacleId": "usb-d-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 12, "y": -0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["usb_d_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

@@ -1,0 +1,103 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "multi_segment_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 1, "y": 7, "z": 0 },
+        { "x": 3, "y": 10, "z": 0 },
+        { "x": 5, "y": 7, "z": 0 },
+        { "x": 7, "y": 10, "z": 0 },
+        { "x": 9, "y": 7, "z": 0 },
+        { "x": 11, "y": 10, "z": 0 },
+        { "x": 13, "y": 7, "z": 0 },
+        { "x": 15, "y": 10, "z": 0 },
+        { "x": 17, "y": 7, "z": 0 },
+        { "x": 19, "y": 10, "z": 0 },
+        { "x": 22, "y": 7, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "multi_segment_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 1, "y": 1, "z": 0 },
+        { "x": 5, "y": 2, "z": 0 },
+        { "x": 9, "y": 0, "z": 0 },
+        { "x": 13, "y": 2, "z": 0 },
+        { "x": 18, "y": 1, "z": 0 },
+        { "x": 22, "y": 1, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "multi_segment_p",
+      "pointsToConnect": [
+        { "x": 1, "y": 7, "layer": "top" },
+        { "x": 22, "y": 7, "layer": "top" }
+      ]
+    },
+    {
+      "name": "multi_segment_n",
+      "pointsToConnect": [
+        { "x": 1, "y": 1, "layer": "top" },
+        { "x": 22, "y": 1, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["multi_segment_p", "multi_segment_n"],
+      "lengthTolerance": 0.001
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "minimumToothPitch": 1,
+  "minMeanderGap": 0.25,
+  "bounds": { "minX": 0, "maxX": 23, "minY": -2, "maxY": 11 },
+  "obstacles": [
+    {
+      "obstacleId": "multi-segment-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": 7 },
+      "width": 0.5,
+      "height": 0.5,
+      "connectedTo": ["multi_segment_p"]
+    },
+    {
+      "obstacleId": "multi-segment-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 22, "y": 7 },
+      "width": 0.5,
+      "height": 0.5,
+      "connectedTo": ["multi_segment_p"]
+    },
+    {
+      "obstacleId": "multi-segment-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": 1 },
+      "width": 0.5,
+      "height": 0.5,
+      "connectedTo": ["multi_segment_n"]
+    },
+    {
+      "obstacleId": "multi-segment-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 22, "y": 1 },
+      "width": 0.5,
+      "height": 0.5,
+      "connectedTo": ["multi_segment_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

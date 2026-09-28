@@ -1,0 +1,3 @@
+Inputs are exact copies of 18 existing length-matching fixtures and two captured pre-postprocessing inputs. Three pilot inputs are explicitly post-output reoptimization cases: original board constraints and obstacles, with returned routed copper. These are not captured pre-postprocessing inputs. All modes consume identical normalized params, recorded with SHA256 hashes.
+
+Run: bun scripts/differential-pair-portfolio/benchmark.ts --manifest scripts/differential-pair-portfolio/benchmark-data/smoke.json --budget-ms 5000 --modes joint,a,b,all --out investigation-output/portfolio-benchmark/results-smoke

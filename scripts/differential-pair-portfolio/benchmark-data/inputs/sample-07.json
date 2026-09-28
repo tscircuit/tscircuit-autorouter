@@ -1,0 +1,107 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "corridor_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 1, "y": 0.22, "z": 0 },
+        { "x": 32, "y": 0.22, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "corridor_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 1, "y": -0.22, "z": 0 },
+        { "x": 30, "y": -0.22, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "corridor_p",
+      "pointsToConnect": [
+        { "x": 1, "y": 0.22, "layer": "top" },
+        { "x": 32, "y": 0.22, "layer": "top" }
+      ]
+    },
+    {
+      "name": "corridor_n",
+      "pointsToConnect": [
+        { "x": 1, "y": -0.22, "layer": "top" },
+        { "x": 30, "y": -0.22, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["corridor_p", "corridor_n"],
+      "lengthTolerance": 0.001
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "minimumToothPitch": 1,
+  "bounds": { "minX": 0, "maxX": 33, "minY": -0.5, "maxY": 0.5 },
+  "obstacles": [
+    {
+      "obstacleId": "upper-corridor-keepout",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 16.5, "y": 0.875 },
+      "width": 33,
+      "height": 0.5,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "lower-corridor-keepout",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 16.5, "y": -0.875 },
+      "width": 33,
+      "height": 0.5,
+      "connectedTo": []
+    },
+    {
+      "obstacleId": "corridor-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": 0.22 },
+      "width": 0.4,
+      "height": 0.4,
+      "connectedTo": ["corridor_p"]
+    },
+    {
+      "obstacleId": "corridor-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 32, "y": 0.22 },
+      "width": 0.4,
+      "height": 0.4,
+      "connectedTo": ["corridor_p"]
+    },
+    {
+      "obstacleId": "corridor-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 1, "y": -0.22 },
+      "width": 0.4,
+      "height": 0.4,
+      "connectedTo": ["corridor_n"]
+    },
+    {
+      "obstacleId": "corridor-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 30, "y": -0.22 },
+      "width": 0.4,
+      "height": 0.4,
+      "connectedTo": ["corridor_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

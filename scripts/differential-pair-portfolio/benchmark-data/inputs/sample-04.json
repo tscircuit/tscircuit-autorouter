@@ -1,0 +1,91 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "data_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.2,
+      "route": [
+        { "x": 2.67, "y": 10.42, "z": 0 },
+        { "x": 6.22, "y": 6.66, "z": 0 },
+        { "x": 9.54, "y": 4.84, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "data_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.2,
+      "route": [
+        { "x": 2.53, "y": 7.75, "z": 0 },
+        { "x": 6.06, "y": 2.36, "z": 0 },
+        { "x": 11.85, "y": 2.42, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "data_p",
+      "pointsToConnect": [
+        { "x": 2.67, "y": 10.42, "layer": "top" },
+        { "x": 9.54, "y": 4.84, "layer": "top" }
+      ]
+    },
+    {
+      "name": "data_n",
+      "pointsToConnect": [
+        { "x": 2.53, "y": 7.75, "layer": "top" },
+        { "x": 11.85, "y": 2.42, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["data_p", "data_n"],
+      "lengthTolerance": 0.001
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "minimumToothPitch": 1,
+  "bounds": { "minX": 0, "maxX": 14, "minY": 0, "maxY": 12 },
+  "obstacles": [
+    {
+      "obstacleId": "data-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 2.68, "y": 10.36 },
+      "width": 2.04,
+      "height": 1.92,
+      "connectedTo": ["data_p"]
+    },
+    {
+      "obstacleId": "data-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 2.72, "y": 7.82 },
+      "width": 2.04,
+      "height": 1.92,
+      "connectedTo": ["data_n"]
+    },
+    {
+      "obstacleId": "data-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 9.64, "y": 4.76 },
+      "width": 2.04,
+      "height": 1.92,
+      "connectedTo": ["data_p"]
+    },
+    {
+      "obstacleId": "data-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 11.84, "y": 2.5 },
+      "width": 2.04,
+      "height": 1.92,
+      "connectedTo": ["data_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}

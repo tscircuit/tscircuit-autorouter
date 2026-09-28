@@ -1,0 +1,88 @@
+{
+  "hdRoutes": [
+    {
+      "connectionName": "small_gap_p",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": 0.25, "z": 0 },
+        { "x": 12, "y": 0.25, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "small_gap_n",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.6,
+      "route": [
+        { "x": 0, "y": -0.25, "z": 0 },
+        { "x": 11.95, "y": -0.25, "z": 0 }
+      ],
+      "vias": []
+    }
+  ],
+  "originalConnections": [
+    {
+      "name": "small_gap_p",
+      "pointsToConnect": [
+        { "x": 0, "y": 0.25, "layer": "top" },
+        { "x": 12, "y": 0.25, "layer": "top" }
+      ]
+    },
+    {
+      "name": "small_gap_n",
+      "pointsToConnect": [
+        { "x": 0, "y": -0.25, "layer": "top" },
+        { "x": 11.95, "y": -0.25, "layer": "top" }
+      ]
+    }
+  ],
+  "differentialPairs": [
+    {
+      "connectionNames": ["small_gap_p", "small_gap_n"],
+      "lengthTolerance": 0.01
+    }
+  ],
+  "maximumMeanderDepth": 2,
+  "bounds": { "minX": -1, "maxX": 13, "minY": -3, "maxY": 3 },
+  "obstacles": [
+    {
+      "obstacleId": "small-gap-p-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": 0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["small_gap_p"]
+    },
+    {
+      "obstacleId": "small-gap-p-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 12, "y": 0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["small_gap_p"]
+    },
+    {
+      "obstacleId": "small-gap-n-left-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 0, "y": -0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["small_gap_n"]
+    },
+    {
+      "obstacleId": "small-gap-n-right-pad",
+      "type": "rect",
+      "layers": ["top"],
+      "center": { "x": 11.95, "y": -0.25 },
+      "width": 0.4,
+      "height": 0.3,
+      "connectedTo": ["small_gap_n"]
+    }
+  ],
+  "obstacleMargin": 0.15,
+  "layerCount": 2
+}
