@@ -1,5 +1,8 @@
 # Checked model correspondence
 
+See [CURRENT_BASE.md](CURRENT_BASE.md) for the refreshed main and consumer pin.
+The revision below labels the original inspection, not the current branch base.
+
 Source examined: `tscircuit/tscircuit-autorouter` revision
 `8e8adc693d63f89583b71862f7c39c9d82791a79`, specifically
 `lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts`
