@@ -1,7 +1,11 @@
 import type { CorpusSample } from "../differential-pair-corpus/types"
 import type { PairOutputEvaluation } from "./evaluatePairOutput"
 
-export type BenchmarkConfig = { solver: string; effort: number; timeoutMs: number }
+export type BenchmarkConfig = {
+  solver: string
+  effort: number
+  timeoutMs: number
+}
 export type LogicalPathMeasurement = {
   pairId: string
   status: "measured" | "unavailable"

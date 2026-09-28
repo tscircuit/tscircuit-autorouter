@@ -1,0 +1,186 @@
+{
+  "all": {
+    "samples": 14,
+    "declaredPairs": 50,
+    "unmeasurablePairs": 0,
+    "pairsWithoutMetrics": 20,
+    "coupling": {
+      "coupledMm": 407.4036864820057,
+      "uncoupledMm": 421.4131183776091
+    },
+    "measuredPairVias": 22,
+    "drcErrors": 0,
+    "drcUnknown": 5,
+    "outputAvailable": 11,
+    "solved": 9,
+    "timeouts": 5,
+    "metricsUnavailable": 5,
+    "measuredPairs": 30,
+    "compliantPairs": 20,
+    "failedPairs": 10,
+    "unknownPairs": 0,
+    "durationP50Ms": 8764.628631000001,
+    "durationP95Ms": 30027.746844999998,
+    "durationAvgMs": 14814.396731357145
+  },
+  "byKind": {
+    "control": {
+      "samples": 3,
+      "declaredPairs": 12,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 0,
+      "coupling": {
+        "coupledMm": 278.3913443578685,
+        "uncoupledMm": 0
+      },
+      "measuredPairVias": 0,
+      "drcErrors": 0,
+      "drcUnknown": 0,
+      "outputAvailable": 3,
+      "solved": 3,
+      "timeouts": 0,
+      "metricsUnavailable": 0,
+      "measuredPairs": 12,
+      "compliantPairs": 12,
+      "failedPairs": 0,
+      "unknownPairs": 0,
+      "durationP50Ms": 2138.129251,
+      "durationP95Ms": 3883.7658039999997,
+      "durationAvgMs": 2361.9024766666666
+    },
+    "stress": {
+      "samples": 8,
+      "declaredPairs": 26,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 8,
+      "coupling": {
+        "coupledMm": 129.01234212413718,
+        "uncoupledMm": 421.4131183776091
+      },
+      "measuredPairVias": 22,
+      "drcErrors": 0,
+      "drcUnknown": 2,
+      "outputAvailable": 8,
+      "solved": 6,
+      "timeouts": 2,
+      "metricsUnavailable": 2,
+      "measuredPairs": 18,
+      "compliantPairs": 8,
+      "failedPairs": 10,
+      "unknownPairs": 0,
+      "durationP50Ms": 8764.628631000001,
+      "durationP95Ms": 30027.746844999998,
+      "durationAvgMs": 13780.806172499999
+    },
+    "infeasible": {
+      "samples": 3,
+      "declaredPairs": 12,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 12,
+      "coupling": {
+        "coupledMm": 0,
+        "uncoupledMm": 0
+      },
+      "measuredPairVias": 0,
+      "drcErrors": 0,
+      "drcUnknown": 3,
+      "outputAvailable": 0,
+      "solved": 0,
+      "timeouts": 3,
+      "metricsUnavailable": 3,
+      "measuredPairs": 0,
+      "compliantPairs": 0,
+      "failedPairs": 0,
+      "unknownPairs": 0,
+      "durationP50Ms": 30023.361512000003,
+      "durationP95Ms": 30024.065097000013,
+      "durationAvgMs": 30023.132476333343
+    }
+  },
+  "byFamily": {
+    "usb_c_series_template": {
+      "samples": 12,
+      "declaredPairs": 48,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 20,
+      "coupling": {
+        "coupledMm": 407.4036864820057,
+        "uncoupledMm": 421.4131183776091
+      },
+      "measuredPairVias": 18,
+      "drcErrors": 0,
+      "drcUnknown": 5,
+      "outputAvailable": 9,
+      "solved": 7,
+      "timeouts": 5,
+      "metricsUnavailable": 5,
+      "measuredPairs": 28,
+      "compliantPairs": 18,
+      "failedPairs": 10,
+      "unknownPairs": 0,
+      "durationP50Ms": 12736.018868999992,
+      "durationP95Ms": 30027.746844999998,
+      "durationAvgMs": 16010.379767
+    },
+    "core_pad_clearance": {
+      "samples": 1,
+      "declaredPairs": 1,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 0,
+      "coupling": {
+        "coupledMm": 0,
+        "uncoupledMm": 0
+      },
+      "measuredPairVias": 0,
+      "drcErrors": 0,
+      "drcUnknown": 0,
+      "outputAvailable": 1,
+      "solved": 1,
+      "timeouts": 0,
+      "metricsUnavailable": 0,
+      "measuredPairs": 1,
+      "compliantPairs": 1,
+      "failedPairs": 0,
+      "unknownPairs": 0,
+      "durationP50Ms": 6512.368404,
+      "durationP95Ms": 6512.368404,
+      "durationAvgMs": 6512.368404
+    },
+    "pico_usb_bug85": {
+      "samples": 1,
+      "declaredPairs": 1,
+      "unmeasurablePairs": 0,
+      "pairsWithoutMetrics": 0,
+      "coupling": {
+        "coupledMm": 0,
+        "uncoupledMm": 0
+      },
+      "measuredPairVias": 4,
+      "drcErrors": 0,
+      "drcUnknown": 0,
+      "outputAvailable": 1,
+      "solved": 1,
+      "timeouts": 0,
+      "metricsUnavailable": 0,
+      "measuredPairs": 1,
+      "compliantPairs": 1,
+      "failedPairs": 0,
+      "unknownPairs": 0,
+      "durationP50Ms": 8764.628631000001,
+      "durationP95Ms": 8764.628631000001,
+      "durationAvgMs": 8764.628631000001
+    }
+  },
+  "metricContract": {
+    "version": "sampled-copper-v2",
+    "sampleStepMm": 0.05,
+    "gapToleranceMm": 0.05,
+    "maximumParallelAngleDegrees": 15,
+    "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+    "boundaryToleranceMm": 0.05,
+    "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+    "length": "planar copper only; via barrel and resistor body lengths excluded",
+    "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+    "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+  }
+}

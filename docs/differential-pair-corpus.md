@@ -37,7 +37,7 @@ bun scripts/differential-pair-corpus/generate.ts --seed 20260928 --count 2048 --
 bun scripts/differential-pair-corpus/generate.ts --seed 20260928 --count 80 --pilot --out /tmp/differential-pair-pilot
 ```
 
-The second command selects 14 strata covering the source families, one to three USB ports, labels, and layer-transition presence. IDs and inputs match the corresponding entries in the full corpus. The export contains `manifest.json`, validation results, sample records, and JavaScript/type entrypoints; it requires no transpilation. It has no reserved SRJ dataset number and is not published to npm.
+The second command selects 14 strata covering the source families, one to three USB ports, labels, and layer-transition presence. Its single Pico example is an integration smoke case; do not tune on it and then claim untouched held-out evaluation. IDs and inputs match the corresponding entries in the full corpus. The export contains `manifest.json`, validation results, sample records, and JavaScript/type entrypoints; it requires no transpilation. It has no reserved SRJ dataset number and is not published to npm.
 
 Run routing benchmarks on Blacksmith from the repository root. For a testbox whose Bun is not on `PATH`, use `/home/runner/.bun/bin/bun` and the runner entrypoint directly:
 
@@ -48,15 +48,19 @@ blacksmith testbox run --id YOUR_TESTBOX '/home/runner/.bun/bin/bun install --fr
 
 The repository entrypoint is `./benchmark.sh --differential-pairs --help`. The runner supports `--limit N`, `--sample ID`, and `--solver EXPORT`, processes samples sequentially, and creates a separate bounded process per sample. The timeout covers process startup, routing, checkpointing, and evaluation. Default output directories are `results/runNNN`.
 
-After changing the solver, repeat the same command with a fresh output directory and `--baseline results/pair-pilot-baseline/results.json`. If the experiment intentionally changes the matching-solver dependency, add `--allow-dependency-change`; the report records both dependency locks. Otherwise mismatched locks, dataset contents, metric versions, Bun versions, and run settings reject the comparison before routing. Hardware differences suppress runtime deltas. A matching CPU description alone does not control system load, so use the same testbox and repeated runs for performance claims.
+After changing the solver, repeat the same command with a fresh output directory and `--baseline results/pair-pilot-baseline/results.json`. If the experiment intentionally changes the matching-solver dependency, add `--allow-dependency-change`; the report records both dependency locks. Otherwise mismatched locks, dataset contents, metric versions or implementation hashes, Bun versions, and run settings reject the comparison before routing. Hardware differences suppress runtime deltas. A matching CPU description alone does not control system load, so use the same testbox and repeated runs for performance claims.
 
 ```sh
 blacksmith testbox download --id YOUR_TESTBOX results/pair-pilot-baseline/ /tmp/pair-pilot-baseline/
 blacksmith testbox stop --id YOUR_TESTBOX
 ```
 
+Finish downloading artifacts before starting another Testbox sync: a sync may remove remote-only output directories. Keep a downloaded baseline result file in the synced checkout when comparing a later run.
+
 Each sample directory retains the input record, available output SRJ, measurement results, and process logs. `summary.json` separates labels and source families; `comparison.json` records matched per-sample changes when a baseline is supplied.
 
 ## Scale validation
 
 Seed `20260928`, count `2048`, generator version 2 produced 5,738 declared copper-segment pairs across 1,230 procedural USB samples, 409 core-pad samples, and 409 Pico samples. The label counts were 309 controls, 1,664 stress cases, and 75 deliberate infeasible cases. Structural and witness validation found no errors, exact duplicates, or repeated pre-transform geometry fingerprints. These are generator-validation results, not a claim that the autorouter solved 2,048 boards. The generated corpus is approximately 103 MB; the tracked pilot is approximately 420 KB.
+
+A bounded 14-case baseline and terminal-only dependency comparison are recorded in [the pilot experiment report](differential-pair-benchmark-results/experiment.md). They preserved all 11 non-barrier outputs (including two timed-out checkpoints), and all three controls passed. The two revisions emitted identical copper on this pilot; no improvement claim is made. Historical reports pin their original input and scorer revision.

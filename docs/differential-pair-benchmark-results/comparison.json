@@ -1,0 +1,138 @@
+{
+  "dependencyChanged": true,
+  "dependencyChangeExplicitlyAllowed": true,
+  "baselineDependencyLockSha256": "0815d91dfbf6b1e33cca3f2d5c4d59ebaeacd1247dd3600feaf084cfa3d3191e",
+  "currentDependencyLockSha256": "6bd5ea45b77a23a35cae30e957065698df65d0077470d095eb639829c1101e63",
+  "baselineCommit": "43bf51debd074910672ea52b964e2ee45f9161e1",
+  "currentCommit": "43bf51debd074910672ea52b964e2ee45f9161e1",
+  "runtimeComparable": true,
+  "runtimeNote": "Same reported CPU/OS/Bun is necessary, but external host load is uncontrolled; use a fixed testbox and repeated runs.",
+  "changes": [
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00000",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -0.3125750000001517
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00000",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -61.72757899999988
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00000",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -3.9025040000001354
+    },
+    {
+      "sampleId": "core_pad_clearance_s1352840_00000",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -166.39936999999918
+    },
+    {
+      "sampleId": "pico_usb_bug85_s1352840_00000",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -330.5054579999978
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00001",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -32.3118910000012
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00001",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": true,
+      "timedOutAfter": true,
+      "durationDeltaMs": -1.3728900000023714
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00001",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -732.3348500000066
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00005",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": -18.36398100000224
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00006",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": true,
+      "timedOutAfter": true,
+      "durationDeltaMs": -4.279020000001765
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00006",
+      "outputAvailableBefore": true,
+      "outputAvailableAfter": true,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": false,
+      "timedOutAfter": false,
+      "durationDeltaMs": 41.13417799999297
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00015",
+      "outputAvailableBefore": false,
+      "outputAvailableAfter": false,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": true,
+      "timedOutAfter": true,
+      "durationDeltaMs": -2.3091889999923296
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00015",
+      "outputAvailableBefore": false,
+      "outputAvailableAfter": false,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": true,
+      "timedOutAfter": true,
+      "durationDeltaMs": -3.12375400000019
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00015",
+      "outputAvailableBefore": false,
+      "outputAvailableAfter": false,
+      "compliantPairsDelta": 0,
+      "timedOutBefore": true,
+      "timedOutAfter": true,
+      "durationDeltaMs": -5.703498999995645
+    }
+  ]
+}

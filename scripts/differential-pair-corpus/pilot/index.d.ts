@@ -1,4 +1,11 @@
-type Sample = { layerCount: number; minTraceWidth: number; bounds: { minX: number; maxX: number; minY: number; maxY: number }; obstacles: object[]; connections: object[]; differentialPairs?: object[] }
+type Sample = {
+  layerCount: number
+  minTraceWidth: number
+  bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  obstacles: object[]
+  connections: object[]
+  differentialPairs?: object[]
+}
 export declare const sample0001: Sample
 export declare const sample0002: Sample
 export declare const sample0003: Sample

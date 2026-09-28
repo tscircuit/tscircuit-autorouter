@@ -1,0 +1,2291 @@
+{
+  "schemaVersion": 1,
+  "metricVersion": "sampled-copper-v2",
+  "metricImplementationSha256": "bb0680c5280db87aaecff70aa00a9150ef94ea7db7ee2fe9ab3a32d185d07db1",
+  "createdAt": "2026-09-28T12:06:19.100Z",
+  "gitCommit": "43bf51debd074910672ea52b964e2ee45f9161e1",
+  "workingTreeSha256": "8bfd88af486f2b18120f3f9b74f2c2999ed28a142b47e87c51918bb05f2c3fe3",
+  "datasetSha256": "5184749c8a1d0a623e188dc2276b5ceaa185dd54c92aa963a79bb77dca9ac0be",
+  "dependencyLockSha256": "6bd5ea45b77a23a35cae30e957065698df65d0077470d095eb639829c1101e63",
+  "bunVersion": "1.4.2",
+  "host": {
+    "platform": "linux",
+    "architecture": "arm64",
+    "cpu": "unknown"
+  },
+  "config": {
+    "solver": "AutoroutingPipelineSolver7_MultiGraph",
+    "effort": 1,
+    "timeoutMs": 30000
+  },
+  "samples": [
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00000",
+      "fingerprint": "fbe5abb4ef700d5e5b71dfa653bc9f5be58b94ef3e796417a936434a3a5d912d",
+      "kind": "control",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 2,
+      "durationMs": 1063.812375,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 4,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 719.3435669999999,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              15.53095588538842,
+              15.53095588538842
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 15.53095588538847,
+                "coupledMm": 15.53095588538847,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.41003999999999974,
+                  0.41003999999999974,
+                  0.41003999999999974
+                ],
+                "minGapMm": 0.41003999999999974,
+                "maxGapMm": 0.41003999999999974
+              },
+              {
+                "lengthMm": 15.53095588538847,
+                "coupledMm": 15.53095588538847,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.41003999999999974,
+                  0.41003999999999974,
+                  0.41003999999999974
+                ],
+                "minGapMm": 0.41003999999999974,
+                "maxGapMm": 0.41003999999999974
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              11.014960039767903,
+              11.014960039767903
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 11.01496003976795,
+                "coupledMm": 11.01496003976795,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.41003999999999974,
+                  0.41003999999999974,
+                  0.41003999999999974
+                ],
+                "minGapMm": 0.41003999999999974,
+                "maxGapMm": 0.41003999999999974
+              },
+              {
+                "lengthMm": 11.01496003976795,
+                "coupledMm": 11.01496003976795,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.41003999999999974,
+                  0.41003999999999974,
+                  0.41003999999999974
+                ],
+                "minGapMm": 0.41003999999999974,
+                "maxGapMm": 0.41003999999999974
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 26.545915925156322,
+          "negativePlanarLengthMm": 26.545915925156322,
+          "planarSkewMm": 0
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00000",
+      "fingerprint": "9b500c3c11c3d53bf3a3a1f0646043a7ffac635496923739c49bfe515c8e66ca",
+      "kind": "control",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 4,
+      "durationMs": 2138.129251,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 8,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 1784.6207729999999,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.447326985630674,
+              12.447326985630673
+            ],
+            "skewMm": 1.7763568394002505e-15,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.447326985630646,
+                "coupledMm": 12.447326985630646,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999946,
+                "maxGapMm": 0.37468000000000035
+              },
+              {
+                "lengthMm": 12.447326985630644,
+                "coupledMm": 12.447326985630644,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999946,
+                "maxGapMm": 0.37468000000000035
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              10.079545803623269,
+              10.079545803623269
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 10.079545803623255,
+                "coupledMm": 10.079545803623255,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999946,
+                "maxGapMm": 0.37468000000000035
+              },
+              {
+                "lengthMm": 10.079545803623255,
+                "coupledMm": 10.079545803623255,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999946,
+                "maxGapMm": 0.37468000000000035
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_connector_to_resistor",
+              "usb_1_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.447326985630674,
+              12.447326985630674
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.447326985630635,
+                "coupledMm": 12.447326985630635,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999857,
+                "maxGapMm": 0.37468000000000035
+              },
+              {
+                "lengthMm": 12.447326985630635,
+                "coupledMm": 12.447326985630635,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999857,
+                "maxGapMm": 0.37468000000000035
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_resistor_to_controller",
+              "usb_1_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              10.079545803623276,
+              10.079545803623276
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 10.079545803623244,
+                "coupledMm": 10.079545803623244,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.37467999999999857,
+                "maxGapMm": 0.37468000000000035
+              },
+              {
+                "lengthMm": 10.079545803623244,
+                "coupledMm": 10.079545803623244,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.37468000000000035,
+                  0.37468000000000035,
+                  0.37468000000000035
+                ],
+                "minGapMm": 0.3746799999999968,
+                "maxGapMm": 0.37468000000000035
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 22.526872789253943,
+          "negativePlanarLengthMm": 22.526872789253943,
+          "planarSkewMm": 0
+        },
+        {
+          "pairId": "usb_1",
+          "status": "measured",
+          "positivePlanarLengthMm": 22.52687278925395,
+          "negativePlanarLengthMm": 22.52687278925395,
+          "planarSkewMm": 0
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00000",
+      "fingerprint": "9d3fd87b3a362fd0afc9974f9741fc56bd68716e0f3cd26ca9b18c4344f31742",
+      "kind": "control",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 6,
+      "durationMs": 3883.7658039999997,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 12,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 3516.6152230000002,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.708038086831571,
+              12.708038086831571
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.708038086831523,
+                "coupledMm": 12.708038086831523,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.3610799999999988
+              },
+              {
+                "lengthMm": 12.708038086831523,
+                "coupledMm": 12.708038086831523,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.3610799999999988
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              9.8239654715918,
+              9.8239654715918
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.3610799999999988
+              },
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.3610799999999988
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_connector_to_resistor",
+              "usb_1_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.708038086831571,
+              12.708038086831571
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.708038086831525,
+                "coupledMm": 12.708038086831525,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.36108000000000234
+              },
+              {
+                "lengthMm": 12.708038086831525,
+                "coupledMm": 12.708038086831525,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.36108000000000234
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_resistor_to_controller",
+              "usb_1_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              9.8239654715918,
+              9.8239654715918
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.36108000000000234
+              },
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610799999999988,
+                  0.3610799999999988,
+                  0.3610799999999988
+                ],
+                "minGapMm": 0.3610799999999988,
+                "maxGapMm": 0.36108000000000234
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_connector_to_resistor",
+              "usb_2_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.708038086831571,
+              12.708038086831571
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.708038086831525,
+                "coupledMm": 12.708038086831525,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610800000000059,
+                  0.3610800000000059,
+                  0.3610800000000059
+                ],
+                "minGapMm": 0.3610800000000059,
+                "maxGapMm": 0.3610800000000059
+              },
+              {
+                "lengthMm": 12.708038086831525,
+                "coupledMm": 12.708038086831525,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610800000000059,
+                  0.3610800000000059,
+                  0.3610800000000059
+                ],
+                "minGapMm": 0.3610800000000059,
+                "maxGapMm": 0.3610800000000059
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_resistor_to_controller",
+              "usb_2_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              9.8239654715918,
+              9.8239654715918
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610800000000059,
+                  0.3610800000000059,
+                  0.3610800000000059
+                ],
+                "minGapMm": 0.3610800000000059,
+                "maxGapMm": 0.3610800000000059
+              },
+              {
+                "lengthMm": 9.823965471591823,
+                "coupledMm": 9.823965471591823,
+                "uncoupledMm": 0,
+                "coupledFraction": 1,
+                "gapP10MedianP90Mm": [
+                  0.3610800000000059,
+                  0.3610800000000059,
+                  0.3610800000000059
+                ],
+                "minGapMm": 0.3610800000000059,
+                "maxGapMm": 0.3610800000000059
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 22.53200355842337,
+          "negativePlanarLengthMm": 22.53200355842337,
+          "planarSkewMm": 0
+        },
+        {
+          "pairId": "usb_1",
+          "status": "measured",
+          "positivePlanarLengthMm": 22.53200355842337,
+          "negativePlanarLengthMm": 22.53200355842337,
+          "planarSkewMm": 0
+        },
+        {
+          "pairId": "usb_2",
+          "status": "measured",
+          "positivePlanarLengthMm": 22.53200355842337,
+          "negativePlanarLengthMm": 22.53200355842337,
+          "planarSkewMm": 0
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "core_pad_clearance_s1352840_00000",
+      "fingerprint": "e4717870df842640bfdc050919910fe596014eb8b05b328026b0a34902ed8faf",
+      "kind": "stress",
+      "split": "validation",
+      "familyId": "core_pad_clearance",
+      "declaredPairCount": 1,
+      "durationMs": 6512.368404,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 2,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 6167.464613,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "source_trace_0",
+              "source_trace_1"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              18.651210521383543,
+              18.651210521040696
+            ],
+            "skewMm": 3.4284752814528474e-10,
+            "skew": "pass",
+            "gap": "undeclared",
+            "maxUncoupled": "undeclared",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": null,
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [],
+      "error": null
+    },
+    {
+      "sampleId": "pico_usb_bug85_s1352840_00000",
+      "fingerprint": "a67c64fa0dcbdac7096f3287e04f08e4870b15305fc56519260eb3690bda370c",
+      "kind": "stress",
+      "split": "test",
+      "familyId": "pico_usb_bug85",
+      "declaredPairCount": 1,
+      "durationMs": 8764.628631000001,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 96,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 8209.584886,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "source_trace_53",
+              "source_trace_51"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              20.44003203936029,
+              20.760740446018282
+            ],
+            "skewMm": 0.3207084066579924,
+            "skew": "pass",
+            "gap": "undeclared",
+            "maxUncoupled": "undeclared",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": null,
+            "viaCounts": [
+              2,
+              2
+            ],
+            "viaLayerSequences": [
+              [
+                "top->bottom",
+                "bottom->top"
+              ],
+              [
+                "top->bottom",
+                "bottom->top"
+              ]
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00001",
+      "fingerprint": "47c0ec4243f6833794e93637e90f827cf44adca0396795da6a0a09280b4391ad",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 2,
+      "durationMs": 1302.5183289999986,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 4,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 951.1765289999998,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              12.022836022498948,
+              12.022836022498947
+            ],
+            "skewMm": 1.7763568394002505e-15,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 12.022836022498904,
+                "coupledMm": 10.286742880658498,
+                "uncoupledMm": 1.7360931418404064,
+                "coupledFraction": 0.8556003642907902,
+                "gapP10MedianP90Mm": [
+                  0.15483000000000186,
+                  0.15483000000000186,
+                  0.2945661993093437
+                ],
+                "minGapMm": 0.15483000000000186,
+                "maxGapMm": 0.966555977195563
+              },
+              {
+                "lengthMm": 12.022836022498902,
+                "coupledMm": 10.286742880658498,
+                "uncoupledMm": 1.7360931418404046,
+                "coupledFraction": 0.8556003642907903,
+                "gapP10MedianP90Mm": [
+                  0.15483000000000186,
+                  0.15483000000000186,
+                  0.2945661993093438
+                ],
+                "minGapMm": 0.15483000000000186,
+                "maxGapMm": 0.9665559771955619
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              14.472305617770523,
+              14.479150455645687
+            ],
+            "skewMm": 0.006844837875163989,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 14.472305617770443,
+                "coupledMm": 12.644689659605323,
+                "uncoupledMm": 1.8276159581651203,
+                "coupledFraction": 0.87371632368508,
+                "gapP10MedianP90Mm": [
+                  0.1548299999999983,
+                  0.1548299999999983,
+                  0.256135630438632
+                ],
+                "minGapMm": 0.1548299999999983,
+                "maxGapMm": 0.9619823158261247
+              },
+              {
+                "lengthMm": 14.479150455645744,
+                "coupledMm": 12.518385223952627,
+                "uncoupledMm": 1.9607652316931166,
+                "coupledFraction": 0.8645800913734846,
+                "gapP10MedianP90Mm": [
+                  0.1548299999999983,
+                  0.1548299999999983,
+                  0.2565479088316755
+                ],
+                "minGapMm": 0.1548299999999979,
+                "maxGapMm": 0.9440092914209004
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 26.495141640269473,
+          "negativePlanarLengthMm": 26.501986478144634,
+          "planarSkewMm": 0.006844837875160437
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00001",
+      "fingerprint": "7929fdc7a0c36fef6352ac7b3fed310813e085c0be789f12f70ba7dd701267c5",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 4,
+      "durationMs": 30027.746844999998,
+      "timedOut": true,
+      "exitCode": 137,
+      "outputAvailable": true,
+      "outputSource": "pre-power-checkpoint",
+      "metricsStatus": "unavailable",
+      "metrics": null,
+      "logicalPaths": [],
+      "error": "Child exceeded wall-clock budget (routing, checkpointing and evaluation combined)"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00001",
+      "fingerprint": "1d62263415528ec83d8c3f1a2cee04579e6e26c45a3cdec181340e9d3b65370b",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 6,
+      "durationMs": 19813.033031,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 12,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 19423.311177,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              16.59133016794857,
+              16.59133016794857
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 16.59133016794869,
+                "coupledMm": 14.974808243274762,
+                "uncoupledMm": 1.616521924673929,
+                "coupledFraction": 0.9025682746162966,
+                "gapP10MedianP90Mm": [
+                  0.17747499999999986,
+                  0.1774749999999999,
+                  0.2156213911827666
+                ],
+                "minGapMm": 0.17747499999999986,
+                "maxGapMm": 0.9769676453896177
+              },
+              {
+                "lengthMm": 16.59133016794869,
+                "coupledMm": 14.974808243274762,
+                "uncoupledMm": 1.616521924673929,
+                "coupledFraction": 0.9025682746162966,
+                "gapP10MedianP90Mm": [
+                  0.17747499999999986,
+                  0.1774749999999999,
+                  0.2156213911827666
+                ],
+                "minGapMm": 0.17747499999999986,
+                "maxGapMm": 0.9769676453896174
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              31.79922025287782,
+              31.248242935634494
+            ],
+            "skewMm": 0.5509773172433263,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 31.79922025287788,
+                "coupledMm": 0,
+                "uncoupledMm": 31.79922025287788,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  1.2594163965362664,
+                  5.85233297406603,
+                  9.241570635517085
+                ],
+                "minGapMm": 0.4821535911081535,
+                "maxGapMm": 9.241570635517085
+              },
+              {
+                "lengthMm": 31.248242935633975,
+                "coupledMm": 0,
+                "uncoupledMm": 31.248242935633975,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  1.4581926387698296,
+                  5.760232532659714,
+                  9.241570635517085
+                ],
+                "minGapMm": 0.46492238345439474,
+                "maxGapMm": 9.241570635517085
+              }
+            ],
+            "viaCounts": [
+              1,
+              1
+            ],
+            "viaLayerSequences": [
+              [
+                "bottom->top"
+              ],
+              [
+                "top->bottom"
+              ]
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_connector_to_resistor",
+              "usb_1_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              16.612022472071676,
+              16.612022472071676
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 16.612022472071672,
+                "coupledMm": 0,
+                "uncoupledMm": 16.612022472071672,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.38885218061591853,
+                  0.3890593457249276,
+                  0.3892665108339384
+                ],
+                "minGapMm": 0.3888007787467672,
+                "maxGapMm": 0.847418181872202
+              },
+              {
+                "lengthMm": 16.61202247207166,
+                "coupledMm": 0,
+                "uncoupledMm": 16.61202247207166,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.38885218061591853,
+                  0.3890593457249293,
+                  0.3892665108339384
+                ],
+                "minGapMm": 0.3888007787467672,
+                "maxGapMm": 0.8474181818721969
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_resistor_to_controller",
+              "usb_1_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              10.117183996363492,
+              10.30681517052899
+            ],
+            "skewMm": 0.18963117416549835,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 10.117183996363464,
+                "coupledMm": 0,
+                "uncoupledMm": 10.117183996363464,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.5667460420897205,
+                  1.1908000000000023,
+                  1.1908000000000023
+                ],
+                "minGapMm": 0.4644610914274002,
+                "maxGapMm": 1.1908000000000023
+              },
+              {
+                "lengthMm": 10.306815170528997,
+                "coupledMm": 0,
+                "uncoupledMm": 10.306815170528997,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.654301068053998,
+                  1.1908000000000023,
+                  1.1908000000000023
+                ],
+                "minGapMm": 0.46445970645897405,
+                "maxGapMm": 1.1908000000000023
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_connector_to_resistor",
+              "usb_2_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              16.612022472071676,
+              16.612022472071672
+            ],
+            "skewMm": 3.552713678800501e-15,
+            "skew": "pass",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 16.612022472071676,
+                "coupledMm": 0,
+                "uncoupledMm": 16.612022472071676,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.38885218061591853,
+                  0.3890593457249293,
+                  0.38926651083394015
+                ],
+                "minGapMm": 0.38880077874676544,
+                "maxGapMm": 0.847418181872202
+              },
+              {
+                "lengthMm": 16.61202247207166,
+                "coupledMm": 0,
+                "uncoupledMm": 16.61202247207166,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.38885218061591853,
+                  0.3890593457249293,
+                  0.38926651083394015
+                ],
+                "minGapMm": 0.38880077874676544,
+                "maxGapMm": 0.847418181872196
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_resistor_to_controller",
+              "usb_2_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              32.225285334166045,
+              33.60194196227559
+            ],
+            "skewMm": 1.3766566281095436,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 32.22528533416613,
+                "coupledMm": 0,
+                "uncoupledMm": 32.22528533416613,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.46449306366653786,
+                  0.5039745770915787,
+                  0.6815481431290884
+                ],
+                "minGapMm": 0.4644663811867573,
+                "maxGapMm": 1.7579646579788453
+              },
+              {
+                "lengthMm": 33.601941962275376,
+                "coupledMm": 0,
+                "uncoupledMm": 33.601941962275376,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.4644906167596733,
+                  0.5039745770915787,
+                  1.3801064047818679
+                ],
+                "minGapMm": 0.46446635834318917,
+                "maxGapMm": 1.7791313708897774
+              }
+            ],
+            "viaCounts": [
+              2,
+              2
+            ],
+            "viaLayerSequences": [
+              [
+                "top->inner1",
+                "inner1->bottom"
+              ],
+              [
+                "top->inner2",
+                "inner2->bottom"
+              ]
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 48.390550420826386,
+          "negativePlanarLengthMm": 47.839573103583064,
+          "planarSkewMm": 0.5509773172433228
+        },
+        {
+          "pairId": "usb_1",
+          "status": "measured",
+          "positivePlanarLengthMm": 26.729206468435166,
+          "negativePlanarLengthMm": 26.918837642600664,
+          "planarSkewMm": 0.18963117416549835
+        },
+        {
+          "pairId": "usb_2",
+          "status": "measured",
+          "positivePlanarLengthMm": 48.83730780623772,
+          "negativePlanarLengthMm": 50.21396443434726,
+          "planarSkewMm": 1.3766566281095436
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00005",
+      "fingerprint": "dbc994e51933942692b296a66ee508849039f5baaf9f0aee52af1e9cbe6595aa",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 2,
+      "durationMs": 1065.3665270000056,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 4,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 725.521655,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              13.118906998714557,
+              13.118906998714557
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 13.118906998714605,
+                "coupledMm": 11.327337130181103,
+                "uncoupledMm": 1.791569868533502,
+                "coupledFraction": 0.8634360416832713,
+                "gapP10MedianP90Mm": [
+                  0.15509000000000034,
+                  0.15509000000000034,
+                  0.26429259336795285
+                ],
+                "minGapMm": 0.15509000000000034,
+                "maxGapMm": 0.9674941928936003
+              },
+              {
+                "lengthMm": 13.118906998714605,
+                "coupledMm": 11.327337130181103,
+                "uncoupledMm": 1.791569868533502,
+                "coupledFraction": 0.8634360416832713,
+                "gapP10MedianP90Mm": [
+                  0.15509000000000034,
+                  0.15509000000000034,
+                  0.26429259336795285
+                ],
+                "minGapMm": 0.15509000000000034,
+                "maxGapMm": 0.9674941928936003
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              14.674707392750916,
+              14.785432032388318
+            ],
+            "skewMm": 0.11072463963740198,
+            "skew": "pass",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 14.67470739275105,
+                "coupledMm": 0,
+                "uncoupledMm": 14.67470739275105,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.8921661126530527,
+                  1.70915374176787,
+                  2.1004270454147775
+                ],
+                "minGapMm": 0.8048443521088435,
+                "maxGapMm": 3.1620670649456737
+              },
+              {
+                "lengthMm": 14.785432032388222,
+                "coupledMm": 0,
+                "uncoupledMm": 14.785432032388222,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.8921661126530527,
+                  1.70915374176787,
+                  2.118835654291464
+                ],
+                "minGapMm": 0.7877048970451261,
+                "maxGapMm": 3.1620098527508365
+              }
+            ],
+            "viaCounts": [
+              1,
+              1
+            ],
+            "viaLayerSequences": [
+              [
+                "top->bottom"
+              ],
+              [
+                "bottom->top"
+              ]
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 27.793614391465475,
+          "negativePlanarLengthMm": 27.904339031102875,
+          "planarSkewMm": 0.1107246396374002
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00006",
+      "fingerprint": "9a4aa9f98387968103a324c19267602fdba34867ad828308adee7a4e096bf00b",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 4,
+      "durationMs": 30024.768744,
+      "timedOut": true,
+      "exitCode": 137,
+      "outputAvailable": true,
+      "outputSource": "pre-power-checkpoint",
+      "metricsStatus": "unavailable",
+      "metrics": null,
+      "logicalPaths": [],
+      "error": "Child exceeded wall-clock budget (routing, checkpointing and evaluation combined)"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00006",
+      "fingerprint": "ab0bc62950acd26fba13f1ee4808fedb641756a037a31dfdd33265905bb59292",
+      "kind": "stress",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 6,
+      "durationMs": 12736.018868999992,
+      "timedOut": false,
+      "exitCode": 0,
+      "outputAvailable": true,
+      "outputSource": "final",
+      "metricsStatus": "measured",
+      "metrics": {
+        "outputAvailable": true,
+        "outputRouteCount": 12,
+        "solved": true,
+        "failed": false,
+        "error": null,
+        "runtimeMs": 12367.252475,
+        "timedOut": false,
+        "immutableCopperPreserved": "pass",
+        "drcStatus": "pass",
+        "drcErrorCount": 0,
+        "drcError": null,
+        "pairs": [
+          {
+            "connectionNames": [
+              "usb_0_p_connector_to_resistor",
+              "usb_0_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              9.25480129845629,
+              9.25480129845629
+            ],
+            "skewMm": 0,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 9.254801298456302,
+                "coupledMm": 7.754779843792908,
+                "uncoupledMm": 1.5000214546633943,
+                "coupledFraction": 0.8379196477277586,
+                "gapP10MedianP90Mm": [
+                  0.14120499999999991,
+                  0.14120500000000014,
+                  0.2286609092970543
+                ],
+                "minGapMm": 0.14120499999999914,
+                "maxGapMm": 0.763069933398846
+              },
+              {
+                "lengthMm": 9.254801298456282,
+                "coupledMm": 7.755085440041389,
+                "uncoupledMm": 1.499715858414893,
+                "coupledFraction": 0.8379526680205389,
+                "gapP10MedianP90Mm": [
+                  0.14120499999999991,
+                  0.14120500000000014,
+                  0.22866090929705452
+                ],
+                "minGapMm": 0.14120499999999914,
+                "maxGapMm": 0.7630699333988459
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_0_p_resistor_to_controller",
+              "usb_0_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              27.292068884168724,
+              26.935927695637115
+            ],
+            "skewMm": 0.35614118853160903,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 27.29206888416871,
+                "coupledMm": 0,
+                "uncoupledMm": 27.29206888416871,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.3345062711588326,
+                  0.7738831504517304,
+                  1.1412706029733424
+                ],
+                "minGapMm": 0.3345062711588326,
+                "maxGapMm": 2.145377610228648
+              },
+              {
+                "lengthMm": 26.935927695637115,
+                "coupledMm": 0,
+                "uncoupledMm": 26.935927695637115,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.3345062711588326,
+                  0.7738831504517316,
+                  1.141320313483471
+                ],
+                "minGapMm": 0.3345062711588326,
+                "maxGapMm": 2.1449979549259792
+              }
+            ],
+            "viaCounts": [
+              2,
+              2
+            ],
+            "viaLayerSequences": [
+              [
+                "top->bottom",
+                "bottom->top"
+              ],
+              [
+                "top->bottom",
+                "bottom->top"
+              ]
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_connector_to_resistor",
+              "usb_1_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              8.840587736083195,
+              8.840587736083197
+            ],
+            "skewMm": 1.7763568394002505e-15,
+            "skew": "pass",
+            "gap": "pass",
+            "maxUncoupled": "pass",
+            "terminalCoverage": "pass",
+            "fullCompliance": "pass",
+            "coupling": [
+              {
+                "lengthMm": 8.840587736083188,
+                "coupledMm": 7.580812724258096,
+                "uncoupledMm": 1.2597750118250923,
+                "coupledFraction": 0.8575009886861624,
+                "gapP10MedianP90Mm": [
+                  0.14120499999999858,
+                  0.14120499999999858,
+                  0.2406087951478451
+                ],
+                "minGapMm": 0.14120499999999858,
+                "maxGapMm": 0.7630699333988462
+              },
+              {
+                "lengthMm": 8.840587736083188,
+                "coupledMm": 7.580812724258096,
+                "uncoupledMm": 1.2597750118250923,
+                "coupledFraction": 0.8575009886861624,
+                "gapP10MedianP90Mm": [
+                  0.14120499999999858,
+                  0.14120499999999858,
+                  0.2406087951478451
+                ],
+                "minGapMm": 0.14120499999999858,
+                "maxGapMm": 0.7630699333988478
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_1_p_resistor_to_controller",
+              "usb_1_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              16.40868646301319,
+              14.090241577616466
+            ],
+            "skewMm": 2.3184448853967243,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 16.408686463013225,
+                "coupledMm": 0,
+                "uncoupledMm": 16.408686463013225,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.6322399999999987,
+                  2.9355796962515774,
+                  4.0518454933025145
+                ],
+                "minGapMm": 0.3690977074511268,
+                "maxGapMm": 4.319679719742992
+              },
+              {
+                "lengthMm": 14.090241577616524,
+                "coupledMm": 0,
+                "uncoupledMm": 14.090241577616524,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.5788506899726072,
+                  1.9529104560286972,
+                  4.109319541174545
+                ],
+                "minGapMm": 0.3690980466579188,
+                "maxGapMm": 4.303749868523763
+              }
+            ],
+            "viaCounts": [
+              2,
+              2
+            ],
+            "viaLayerSequences": [
+              [
+                "top->bottom",
+                "bottom->top"
+              ],
+              [
+                "top->bottom",
+                "bottom->top"
+              ]
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_connector_to_resistor",
+              "usb_2_n_connector_to_resistor"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              8.852974417624468,
+              8.85297441762447
+            ],
+            "skewMm": 1.7763568394002505e-15,
+            "skew": "pass",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 8.852974417624473,
+                "coupledMm": 0,
+                "uncoupledMm": 8.852974417624473,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.3097400000000007,
+                  0.3097400000000007,
+                  0.3097400000000007
+                ],
+                "minGapMm": 0.3097400000000007,
+                "maxGapMm": 0.6710515564450218
+              },
+              {
+                "lengthMm": 8.852974417624475,
+                "coupledMm": 0,
+                "uncoupledMm": 8.852974417624475,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.3097400000000007,
+                  0.3097400000000007,
+                  0.3097400000000007
+                ],
+                "minGapMm": 0.3097400000000007,
+                "maxGapMm": 0.6710515564450231
+              }
+            ],
+            "viaCounts": [
+              0,
+              0
+            ],
+            "viaLayerSequences": [
+              [],
+              []
+            ]
+          },
+          {
+            "connectionNames": [
+              "usb_2_p_resistor_to_controller",
+              "usb_2_n_resistor_to_controller"
+            ],
+            "measurementStatus": "measured",
+            "routeCounts": [
+              1,
+              1
+            ],
+            "lengthsMm": [
+              26.930206863409488,
+              27.24708069656077
+            ],
+            "skewMm": 0.3168738331512806,
+            "skew": "fail",
+            "gap": "fail",
+            "maxUncoupled": "fail",
+            "terminalCoverage": "pass",
+            "fullCompliance": "fail",
+            "coupling": [
+              {
+                "lengthMm": 26.93020686340946,
+                "coupledMm": 0,
+                "uncoupledMm": 26.93020686340946,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.3891393256010509,
+                  0.6275056280885464,
+                  3.439118027794634
+                ],
+                "minGapMm": 0.3695794221287553,
+                "maxGapMm": 3.439118027794634
+              },
+              {
+                "lengthMm": 27.247080696561,
+                "coupledMm": 0,
+                "uncoupledMm": 27.247080696561,
+                "coupledFraction": 0,
+                "gapP10MedianP90Mm": [
+                  0.627251865251825,
+                  0.6275509736203296,
+                  3.3862193413552566
+                ],
+                "minGapMm": 0.3695794221287554,
+                "maxGapMm": 3.439118027794634
+              }
+            ],
+            "viaCounts": [
+              2,
+              0
+            ],
+            "viaLayerSequences": [
+              [
+                "top->bottom",
+                "bottom->top"
+              ],
+              []
+            ]
+          }
+        ],
+        "metricContract": {
+          "version": "sampled-copper-v2",
+          "sampleStepMm": 0.05,
+          "gapToleranceMm": 0.05,
+          "maximumParallelAngleDegrees": 15,
+          "uncoupledBudgetMeaning": "total planar uncoupled length per member including terminal escapes",
+          "boundaryToleranceMm": 0.05,
+          "pairResolution": "one output trace per two-terminal named connection; other structures unknown",
+          "length": "planar copper only; via barrel and resistor body lengths excluded",
+          "continuity": "single ordered continuous wire/via route; jumpers and through-obstacle routes unmeasurable",
+          "clearance": "repository evaluateRelaxedDrc with declared trace-pad clearance and board clearance; not full manufacturing DRC"
+        }
+      },
+      "logicalPaths": [
+        {
+          "pairId": "usb_0",
+          "status": "measured",
+          "positivePlanarLengthMm": 36.546870182625014,
+          "negativePlanarLengthMm": 36.190728994093405,
+          "planarSkewMm": 0.35614118853160903
+        },
+        {
+          "pairId": "usb_1",
+          "status": "measured",
+          "positivePlanarLengthMm": 25.249274199096384,
+          "negativePlanarLengthMm": 22.93082931369966,
+          "planarSkewMm": 2.3184448853967226
+        },
+        {
+          "pairId": "usb_2",
+          "status": "measured",
+          "positivePlanarLengthMm": 35.783181281033954,
+          "negativePlanarLengthMm": 36.10005511418524,
+          "planarSkewMm": 0.31687383315128415
+        }
+      ],
+      "error": null
+    },
+    {
+      "sampleId": "usb_c_series_template_p1_s1352840_00015",
+      "fingerprint": "eae9b2d055b58cb4998c65d91c00abb6f9ed3ed532ae883b0f66809ed06b9c87",
+      "kind": "infeasible",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 2,
+      "durationMs": 30021.970820000017,
+      "timedOut": true,
+      "exitCode": 137,
+      "outputAvailable": false,
+      "outputSource": "none",
+      "metricsStatus": "unavailable",
+      "metrics": null,
+      "logicalPaths": [],
+      "error": "Child exceeded wall-clock budget (routing, checkpointing and evaluation combined)"
+    },
+    {
+      "sampleId": "usb_c_series_template_p2_s1352840_00015",
+      "fingerprint": "86d949c9f681b5b15918bac43d37612968bb2f2b0577463c8240b4a33381af0e",
+      "kind": "infeasible",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 4,
+      "durationMs": 30024.065097000013,
+      "timedOut": true,
+      "exitCode": 137,
+      "outputAvailable": false,
+      "outputSource": "none",
+      "metricsStatus": "unavailable",
+      "metrics": null,
+      "logicalPaths": [],
+      "error": "Child exceeded wall-clock budget (routing, checkpointing and evaluation combined)"
+    },
+    {
+      "sampleId": "usb_c_series_template_p3_s1352840_00015",
+      "fingerprint": "0da673a67d945a379dec20da167b4c571ecf483182c224bcc5924e0b69df5a83",
+      "kind": "infeasible",
+      "split": "train",
+      "familyId": "usb_c_series_template",
+      "declaredPairCount": 6,
+      "durationMs": 30023.361512000003,
+      "timedOut": true,
+      "exitCode": 137,
+      "outputAvailable": false,
+      "outputSource": "none",
+      "metricsStatus": "unavailable",
+      "metrics": null,
+      "logicalPaths": [],
+      "error": "Child exceeded wall-clock budget (routing, checkpointing and evaluation combined)"
+    }
+  ]
+}
