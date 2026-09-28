@@ -12,15 +12,7 @@ test("bugreport85 Pico USB differential-pair best-effort visualization", (): voi
     { cacheProvider: null },
   )
 
-  expect(() => solver.solve()).toThrow("Differential pair post-processing failed")
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(solver.postProcessingErrors).toMatchObject([
-    {
-      stage: "differentialPairReroutingSolver",
-      reason: "iteration-limit-exhausted",
-    },
-  ])
+  solver.solve()
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,

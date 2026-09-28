@@ -1,17 +1,16 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "../lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { DifferentialPairPostProcessingError } from "../lib/solvers/DifferentialPairPostProcessingError"
 import type { SimpleRouteJson } from "../lib/types"
 import srj from "./fixtures/core-differential-pair-pad-clearance.json"
 
-test("Pipeline7 fails when pair postprocessing returns diagnostics while retaining geometry", (): void => {
+test("Pipeline7 returns best-effort routes and diagnostics when pair optimization misses", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj) as SimpleRouteJson,
   )
 
-  expect(() => solver.solve()).toThrow(DifferentialPairPostProcessingError)
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
+  solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
   expect(solver.postProcessingErrors).toMatchObject([
     {
       stage: "differentialPairReroutingSolver",
@@ -19,7 +18,7 @@ test("Pipeline7 fails when pair postprocessing returns diagnostics while retaini
       connectionNames: ["source_trace_0", "source_trace_1"],
     },
   ])
-  expect(solver.error).toContain("source_trace_0/source_trace_1")
-  expect(solver.powerTraceExpansionSolver).toBeUndefined()
-  expect(solver._getOutputHdRoutes()).toHaveLength(2)
+  expect(solver.error).toBeNull()
+  expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
+  expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(2)
 })

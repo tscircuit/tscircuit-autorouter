@@ -12,7 +12,6 @@ import type {
   SimpleRouteBus,
   SimpleRouteConnection,
 } from "lib/types/srj-types"
-import { DifferentialPairPostProcessingError } from "./DifferentialPairPostProcessingError"
 import { BaseSolver } from "./BaseSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
@@ -176,10 +175,6 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       const { hdRoutes, postProcessingErrors } =
         this.differentialPairSolver.getOutput()
       this.postProcessingErrors = postProcessingErrors
-      if (postProcessingErrors.length > 0) {
-        this.outputHdRoutes = hdRoutes
-        throw new DifferentialPairPostProcessingError(postProcessingErrors)
-      }
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
@@ -218,16 +213,18 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.solved = true
   }
 
-  getOutput(): { hdRoutes: HighDensityRoute[] } {
-    // Failed pair optimization retains its returned geometry for diagnostics.
-    if (
-      (!this.solved && this.postProcessingErrors.length === 0) ||
-      !this.outputHdRoutes
-    )
+  getOutput(): {
+    hdRoutes: HighDensityRoute[]
+    postProcessingErrors: PostProcessingError[]
+  } {
+    if (!this.solved || !this.outputHdRoutes)
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-    return { hdRoutes: this.outputHdRoutes }
+    return {
+      hdRoutes: this.outputHdRoutes,
+      postProcessingErrors: structuredClone(this.postProcessingErrors),
+    }
   }
 
   override visualize(): GraphicsObject {

@@ -24,6 +24,7 @@ test("Pipeline9 completes a coupled pair without postprocessing errors", (): voi
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
   solver.solve()
+  expect(solver.postProcessingErrors).toEqual([])
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.lengthMatchingPostProcessingSolver?.postProcessingErrors).toEqual([])

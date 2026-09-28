@@ -1,3 +1,4 @@
+import type { PostProcessingError } from "@tscircuit/length-matching-solver"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -269,6 +270,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
+  postProcessingErrors: PostProcessingError[] = []
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -947,6 +949,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
           },
         ]
+      },
+      {
+        onSolved: (cms) => {
+          cms.postProcessingErrors =
+            cms.lengthMatchingPostProcessingSolver!.getOutput().postProcessingErrors
+        },
       },
     ),
     definePipelineStep(
