@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   route:
@@ -20,8 +21,14 @@ jobs:
         with:
           bun-version: 1.3.8
       - run: bun install
+      - uses: actions/download-artifact@v4
+        with:
+          name: gameboy-ubuntu-latest
+          run-id: 36445569801
+          github-token: ${{ github.token }}
+          path: captured
       - name: Route the unchanged full Game Boy using Pipeline 9
-        run: bun scripts/diagnose-gameboy-platform.ts platform-result
+        run: bun scripts/diagnose-gameboy-simplification.ts captured/traceSimplificationSolver-input.json.gz platform-result
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -32,12 +39,12 @@ jobs:
     needs: route
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: results
-      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.8
-      - name: Compare stage inputs and stop at the first difference
-        run: bun scripts/compare-gameboy-stages.ts results/gameboy-ubuntu-latest results/gameboy-macos-14
+      - name: Compare simplification phase and route outputs
+        run: diff -u results/gameboy-ubuntu-latest/records.json results/gameboy-macos-14/records.json
