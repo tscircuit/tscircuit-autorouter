@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { LengthMatchingPostProcessingSolver } from "../../lib/solvers/length-matching-post-processing-solver"
 import type { SimpleRouteJson } from "../../lib/types"
 
 test("Pipeline9 forwards differential-pair maximum uncoupled length", async () => {
@@ -16,12 +15,7 @@ test("Pipeline9 forwards differential-pair maximum uncoupled length", async () =
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  const lengthMatchingStep = solver.pipelineDef.find(
-    (step) => step.solverClass === LengthMatchingPostProcessingSolver,
-  )
-  if (!lengthMatchingStep)
-    throw new Error("Expected Pipeline9 length-matching post-processing step")
-  expect(lengthMatchingStep.getConstructorParams(solver)[0]).toMatchObject({
-    differentialPairs: [{ maxUncoupledLength: 3 }],
-  })
+  expect(
+    solver.differentialPairRoutingSolver!.getConstructorParams()[0],
+  ).toMatchObject({ differentialPairs: [{ maxUncoupledLength: 3 }] })
 })
