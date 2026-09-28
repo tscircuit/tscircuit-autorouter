@@ -5,31 +5,34 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createPipeline9LengthMatchingPreloadedInput"
 
 // Pipeline 9 currently omits bus length matching.
-test.failing("Pipeline9 length matching tight-preload snapshot", async (): Promise<void> => {
-  const srj = createPipeline9LengthMatchingPreloadedInput(0.3)
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
-    cacheProvider: null,
-  })
-  solver.solveUntilPhase("powerTraceExpansionSolver")
-  expect(
-    evaluateRelaxedDrc({
+test.failing(
+  "Pipeline9 length matching tight-preload snapshot",
+  async (): Promise<void> => {
+    const srj = createPipeline9LengthMatchingPreloadedInput(0.3)
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+      cacheProvider: null,
+    })
+    solver.solveUntilPhase("powerTraceExpansionSolver")
+    expect(
+      evaluateRelaxedDrc({
+        inputSrj: srj,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces: solver.getNewTracesBeforePowerExpansion(),
+      }).errors,
+    ).toHaveLength(0)
+    solver.solve()
+    expect(solver.solved).toBe(true)
+    const drcInput = {
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getNewTracesBeforePowerExpansion(),
-    }).errors,
-  ).toHaveLength(0)
-  solver.solve()
-  expect(solver.solved).toBe(true)
-  const drcInput = {
-    inputSrj: srj,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  }
-  expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
-    import.meta.path,
-    {
-      svgName: "tight-preload",
-    },
-  )
-})
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }
+    expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)
+    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+      import.meta.path,
+      {
+        svgName: "tight-preload",
+      },
+    )
+  },
+)
