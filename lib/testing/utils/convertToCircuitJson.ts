@@ -680,6 +680,36 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
+    if (obstacle.isNonPlatedHole) {
+      const common = {
+        type: "pcb_hole" as const,
+        pcb_hole_id: obstacle.obstacleId ?? `pcb_hole_${obstacleIndex}`,
+        x: obstacle.center.x,
+        y: obstacle.center.y,
+      }
+      if (obstacle.shape === "circle") {
+        pads.push({
+          ...common,
+          hole_shape: "circle",
+          hole_diameter: obstacle.width,
+        })
+      } else {
+        const rotation = obstacle.ccwRotationDegrees ?? 0
+        if (rotation % 90 !== 0) {
+          throw new Error(
+            `Cannot represent rotated rectangular hole ${common.pcb_hole_id} in Circuit JSON`,
+          )
+        }
+        const swapDimensions = rotation % 180 !== 0
+        pads.push({
+          ...common,
+          hole_shape: "rect",
+          hole_width: swapDimensions ? obstacle.height : obstacle.width,
+          hole_height: swapDimensions ? obstacle.width : obstacle.height,
+        })
+      }
+      continue
+    }
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
     if (circuitJsonMetadata.pcb_via_id) continue
@@ -1006,6 +1036,7 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
       ? { outline: srj.outline, shape: "polygon" as const }
       : { shape: "rect" as const }),
     material: "fr4",
+    min_trace_to_hole_edge_clearance: srj.minTraceToHoleEdgeClearance,
     ...(srj.minBoardEdgeClearance !== undefined
       ? { min_board_edge_clearance: srj.minBoardEdgeClearance }
       : {}),

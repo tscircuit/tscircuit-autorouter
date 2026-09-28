@@ -14,6 +14,8 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
+  expect(srj.minTraceToHoleEdgeClearance).toBe(0.2)
+  expect(srj.obstacles.filter((obstacle) => obstacle.isNonPlatedHole)).toHaveLength(144)
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
