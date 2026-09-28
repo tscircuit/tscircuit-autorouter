@@ -53,7 +53,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
-    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#c6ada25241edc692588912ca733284cf9da55dc3",
+    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#0f910105179d08b1cce6eb016cc85d9ee0420ace",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#acc9264753c362b1c337ca8ed30f66683d9e7a21",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
