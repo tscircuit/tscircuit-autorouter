@@ -29,10 +29,13 @@ test.failing(
   "AM62L HDMI clock pair stays within its maximum length skew",
   async () => {
     const inputSrj = structuredClone(boardPhase) as SimpleRouteJson
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-      cacheProvider: null,
-      visualizationTraceColorMode: "net",
-    })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      inputSrj,
+      {
+        cacheProvider: null,
+        visualizationTraceColorMode: "net",
+      },
+    )
 
     solver.solve()
 
