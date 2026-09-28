@@ -45,7 +45,9 @@ test("ripping a route preserves ports used by a surviving same-net route", () =>
   })
   solver.solve()
   expect(solver.solved).toBe(true)
-  expect(solver.connectionsWithResults.every((result) => result.path)).toBe(true)
+  expect(solver.connectionsWithResults.every((result) => result.path)).toBe(
+    true,
+  )
 
   const owner = solver.assignedPortPoints.get("shared-port")!
   const ripped = solver.connectionsWithResults.find(
@@ -67,7 +69,9 @@ test("ripping a route preserves ports used by a surviving same-net route", () =>
     connection: { ...ripped.connection, __rootConnectionNames: ["other-net"] },
   }
   expect(solver.getAvailableExitPortPoints("left")).toEqual([])
-  expect(solver.getAvailableExitPortPointsWithOmissions("left", "right")).toEqual([])
+  expect(
+    solver.getAvailableExitPortPointsWithOmissions("left", "right"),
+  ).toEqual([])
 
   solver.ripConnection(surviving)
   expect(solver.assignedPortPoints.has("shared-port")).toBe(false)

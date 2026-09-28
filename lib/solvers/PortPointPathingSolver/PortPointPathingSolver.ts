@@ -1782,11 +1782,15 @@ export class PortPointPathingSolver extends BaseSolver {
             if (!node?._offBoardConnectionId) return false
             return Boolean(
               node._offBoardConnectedCapacityMeshNodeIds?.some(
-                (nodeId): boolean => Boolean(
-                  this.nodePortPointsMap.get(nodeId)?.some(
-                    (portPoint): boolean => portPoint.portPointId === portPointId,
+                (nodeId): boolean =>
+                  Boolean(
+                    this.nodePortPointsMap
+                      .get(nodeId)
+                      ?.some(
+                        (portPoint): boolean =>
+                          portPoint.portPointId === portPointId,
+                      ),
                   ),
-                ),
               ),
             )
           })
@@ -1795,7 +1799,8 @@ export class PortPointPathingSolver extends BaseSolver {
       if (survivingRoute) {
         this.assignedPortPoints.set(portPointId, {
           connectionName: survivingRoute.connection.name,
-          rootConnectionName: survivingRoute.connection.__rootConnectionNames?.[0],
+          rootConnectionName:
+            survivingRoute.connection.__rootConnectionNames?.[0],
         })
       } else {
         this.assignedPortPoints.delete(portPointId)

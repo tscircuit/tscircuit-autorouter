@@ -64,7 +64,9 @@ test("connections without root metadata cannot share an occupied port", () => {
     // The off-board exit selector must use the same ownership rule.
     nodes[0]._offBoardConnectedCapacityMeshNodeIds = ["right"]
     solver.currentConnection = solver.failedConnection
-    expect(solver.getAvailableExitPortPointsForOffboardConnection("left")).toEqual([])
+    expect(
+      solver.getAvailableExitPortPointsForOffboardConnection("left"),
+    ).toEqual([])
     delete nodes[0]._offBoardConnectedCapacityMeshNodeIds
   }
 })
