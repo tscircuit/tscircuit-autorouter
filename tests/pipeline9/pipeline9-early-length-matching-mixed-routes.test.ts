@@ -1,65 +1,71 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createPipeline9LengthMatchingPreloadedInput"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
+import type { SimpleRouteJson } from "../../lib/types"
+import fixture from "../fixtures/core-differential-pair-pad-clearance.json"
 
-test("Pipeline9 hands early length-matched routes to native trace routing", (): void => {
-  const input = createPipeline9LengthMatchingPreloadedInput(1)
+test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (): void => {
+  const input: SimpleRouteJson = structuredClone(fixture) as SimpleRouteJson
   input.connections.push({
     name: "ordinary",
     pointsToConnect: [
-      { x: 5, y: -3, layer: "top", pcb_port_id: "ordinary_start" },
-      { x: 5, y: 4, layer: "top", pcb_port_id: "ordinary_end" },
+      { x: 0, y: -4, layer: "top", pcb_port_id: "ordinary_start" },
+      { x: 0, y: 4, layer: "top", pcb_port_id: "ordinary_end" },
     ],
   })
-  const original = structuredClone(input)
+  for (const point of input.connections.at(-1)!.pointsToConnect) {
+    input.obstacles.push({
+      type: "rect",
+      center: { x: point.x, y: point.y },
+      width: 0.2,
+      height: 0.2,
+      layers: ["top"],
+      connectedTo: [point.pcb_port_id!],
+      circuitJsonMetadata: { pcb_port_id: point.pcb_port_id },
+    })
+  }
+  const originalInput = structuredClone(input)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(solver.pipelineDef.slice(0, 2).map((step) => step.solverName)).toEqual(
-    ["preprocessSimpleRouteJsonSolver", "lengthMatchingPostProcessingSolver"],
-  )
+  const originalSrj = structuredClone(solver.originalSrj)
   solver.solveUntilPhase("componentDetectionSolver")
-  expect(solver.lengthMatchingPostProcessingSolver?.solved).toBe(true)
-  expect(solver.srj.traces).toHaveLength(3)
-  expect(solver.srj.obstacles).toHaveLength(input.obstacles.length)
-  expect(solver.srj.connections.map((connection) => connection.name)).toEqual([
+  const early = solver.differentialPairRoutingSolver!.getOutput()
+  expect(early.routedTraces).toHaveLength(2)
+  expect(early.srj.connections.map((connection) => connection.name)).toEqual([
     "ordinary",
   ])
+  expect(solver.srj.traces).toEqual(early.routedTraces)
+  expect(solver.highDensityRouteSolver).toBeUndefined()
+
   solver.solve()
+
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  expect(solver.preloadedTraceGraphSolver!.stats.preloadedTraceCount).toBe(3)
-  expect(input).toEqual(original)
-  const routedTraces = solver.getOutputSimplifiedPcbTraces()
-  expect(new Set(routedTraces.map((trace) => trace.connection_name))).toEqual(
-    new Set(["a", "b", "ordinary"]),
+  const traces = solver.getOutputSimplifiedPcbTraces()
+  expect(traces.map((trace) => trace.connection_name).sort()).toEqual([
+    "ordinary",
+    "source_trace_0",
+    "source_trace_1",
+  ])
+  for (const trace of early.routedTraces) {
+    expect(
+      traces.find((candidate) => candidate.pcb_trace_id === trace.pcb_trace_id),
+    ).toEqual(trace)
+  }
+  expect(new Set(traces.map((trace) => trace.pcb_trace_id)).size).toBe(
+    traces.length,
   )
-  expect(new Set(routedTraces.map((trace) => trace.pcb_trace_id)).size).toBe(
-    routedTraces.length,
-  )
-  // Later native routing must not break the early bus match.
-  const [aLength, bLength] = ["a", "b"].map((connectionName): number =>
-    routedTraces
-      .filter((trace) => trace.connection_name === connectionName)
-      .reduce((length, trace): number => {
-        const wires = trace.route.filter((point) => point.route_type === "wire")
-        return wires.slice(1).reduce((wireLength, point, index): number => {
-          const previous = wires[index]!
-          return (
-            wireLength + Math.hypot(point.x - previous.x, point.y - previous.y)
-          )
-        }, length)
-      }, 0),
-  )
-  expect(Math.abs(aLength! - bLength!)).toBeLessThanOrEqual(
-    input.buses![0]!.maxLengthSkew! + 1e-6,
+  expect(solver.getOutputSimpleRouteJson().connections).toEqual(
+    input.connections,
   )
   expect(
     evaluateRelaxedDrc({
       inputSrj: input,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
+      routedTraces: traces,
     }).errors,
-  ).toHaveLength(0)
+  ).toEqual([])
+  expect(input).toEqual(originalInput)
+  expect(solver.originalSrj).toEqual(originalSrj)
 })
