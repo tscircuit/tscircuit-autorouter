@@ -551,10 +551,22 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   // fixing vias and adding slack can block otherwise feasible regional repairs.
   // When that search cannot publish, select safe nudges from the original input
   // so private regional changes cannot leak into the partial result.
-  const independentRoutes = applyPipeline9ClearanceProjection({
+  let independentRoutes = applyPipeline9ClearanceProjection({
     originalSrj,
     routes,
     allowPartialRepair: true,
+    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+      result.referenceValidationCount++
+      return drcEvaluator(input)
+    },
+  })
+  // Refine the retained geometry separately: subdividing before the first
+  // projection changes its forces and can discard already feasible nudges.
+  independentRoutes = applyPipeline9ClearanceProjection({
+    originalSrj,
+    routes: independentRoutes,
+    allowPartialRepair: true,
+    subdivideSegments: true,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
       return drcEvaluator(input)
