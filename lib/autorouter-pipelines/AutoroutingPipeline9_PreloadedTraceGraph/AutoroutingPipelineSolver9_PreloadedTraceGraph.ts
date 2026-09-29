@@ -308,10 +308,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
-      (cms) => [
-        cms.srj,
-        { traceColorMode: cms.visualizationTraceColorMode },
-      ],
+      (cms) => [cms.srj, { traceColorMode: cms.visualizationTraceColorMode }],
       {
         onSolved: (cms) => {
           cms.setSimpleRouteJson(
@@ -612,8 +609,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = cms.getPreloadedTraces().flatMap(
-          (trace, traceIndex) =>
+        const originalFixedHdRoutes = cms
+          .getPreloadedTraces()
+          .flatMap((trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
               trace,
               traceIndex,
@@ -621,7 +619,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.viaDiameter,
               cms.connMap,
             ),
-        )
+          )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
           traces: cms.getPreloadedTraces(),
           fixedHdRoutes: originalFixedHdRoutes,
