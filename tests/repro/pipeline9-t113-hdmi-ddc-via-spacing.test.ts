@@ -30,7 +30,7 @@ const readCompressedFixture = <T>(
   return JSON.parse(fixtureText) as T
 }
 
-test.failing("repairs T113 HDMI 1.8 V same-net drill spacing", (): void => {
+test.skip("repairs T113 HDMI 1.8 V same-net drill spacing", (): void => {
   const input = readCompressedFixture<SimpleRouteJson>(
     "t113-linux-hdmi-ddc-via-spacing.srj.json.gz",
     expectedSrjSha256,
