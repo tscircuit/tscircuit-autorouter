@@ -34,7 +34,7 @@ const readCompressedFixture = <T>(
   return JSON.parse(fixtureText) as T
 }
 
-test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> => {
+test("routes T113 HDMI 1.8 V with clear drill spacing", async (): Promise<void> => {
   const input = readCompressedFixture<SimpleRouteJson>(
     "t113-linux-hdmi-ddc-via-spacing.srj.json.gz",
     expectedSrjSha256,
@@ -94,18 +94,9 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
   const mst15Vias = vias.filter((via) =>
     via.pcb_trace_id?.includes("source_net_4_mst15_0"),
   )
-  const closestPair = mst10Vias
-    .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
-    .sort(
-      ([viaA, viaB], [nextViaA, nextViaB]) =>
-        Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
-        Math.hypot(nextViaA.x - nextViaB.x, nextViaA.y - nextViaB.y),
-    )[0]
-  if (!closestPair) {
-    throw new Error("Missing the repaired T113 HDMI 1.8 V via pair")
-  }
-  const [viaA, viaB] = closestPair
-  expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
+  expect(mst10Vias).toHaveLength(1)
+  expect(mst15Vias).toHaveLength(0)
+  const viaA = mst10Vias[0]!
 
   const routedCircuitJson = convertToCircuitJson(
     solver.srjWithPointPairs!,
@@ -128,20 +119,20 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
           radius: viaA.hole_diameter / 2 + viaClearance,
           fill: "#16a34a12",
           stroke: "#16a34a",
-          label: "0.20 mm clearance from shared drill edge",
+          label: "0.20 mm clearance from drill edge",
         },
         {
           center: viaA,
           radius: viaA.hole_diameter / 2,
           fill: "#16a34a",
-          label: "merged HDMI 1.8 V drill",
+          label: "HDMI 1.8 V drill",
         },
       ],
       rects: [
         {
           center: {
-            x: (viaA.x + viaB.x) / 2,
-            y: (viaA.y + viaB.y) / 2,
+            x: viaA.x,
+            y: viaA.y,
           },
           width: 1.2,
           height: 1.2,

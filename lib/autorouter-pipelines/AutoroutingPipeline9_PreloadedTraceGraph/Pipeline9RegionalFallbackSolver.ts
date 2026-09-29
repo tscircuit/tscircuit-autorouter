@@ -1,6 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
@@ -33,7 +32,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   layerCount: number
 }
 
-type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
+type RegionalFallbackPhase = "route" | "repair" | "done"
 
 const getPointToObstacleDistance = (
   point: { x: number; y: number },
@@ -130,7 +129,6 @@ const hasPreloadedViaToBoardObstacleConflict = ({
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly params: Pipeline9RegionalFallbackSolverParams
   readonly highDensitySolver: HighDensitySolver
-  forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private phase: RegionalFallbackPhase = "route"
 
@@ -139,7 +137,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.params = params
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
-      forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
     this.highDensitySolver = new HighDensitySolver({
@@ -217,38 +214,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.forceImproveSolver = new HighDensityForceImproveSolver({
-        nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: routedCandidate,
-        colorMap: this.params.colorMap,
-        totalStepsPerNode: Math.max(12, Math.round(20 * this.params.effort)),
-        nodeAssignmentMargin: this.params.obstacleMargin,
-      })
-      this.activeSubSolver = this.forceImproveSolver
-      this.phase = "improve"
-      return
-    }
-
-    if (this.phase === "improve") {
-      this.forceImproveSolver!.step()
-      if (this.forceImproveSolver!.failed) {
-        this.error = this.forceImproveSolver!.error
-        this.failed = true
-        return
-      }
-      if (!this.forceImproveSolver!.solved) return
-      const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
-      if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
-        this.stats.forceImproveCandidateRejectionCount =
-          Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional force-improve output failed its candidate validator"
-        this.failed = true
-        return
-      }
+      // Force improvement has no board-obstacle constraints and can move a
+      // validated preloaded via into a pad. Repair the routed geometry directly.
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: forceImprovedRoutes,
+        hdRoutes: routedCandidate,
         obstacles: this.params.obstacles,
         colorMap: this.params.colorMap,
         repairMargin: this.params.obstacleMargin,
@@ -285,18 +255,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
-    return (
-      this.repairSolver?.getOutput() ??
-      this.forceImproveSolver?.getOutput() ??
-      this.highDensitySolver.routes
-    )
+    return this.repairSolver?.getOutput() ?? this.highDensitySolver.routes
   }
 
   override visualize(): GraphicsObject {
-    return (
-      this.repairSolver?.visualize() ??
-      this.forceImproveSolver?.visualize() ??
-      this.highDensitySolver.visualize()
-    )
+    return this.repairSolver?.visualize() ?? this.highDensitySolver.visualize()
   }
 }
