@@ -30,80 +30,77 @@ const readCompressedFixture = <T>(
   return JSON.parse(fixtureText) as T
 }
 
-test.failing(
-  "repairs T113 HDMI 1.8 V same-net drill spacing",
-  (): void => {
-    const input = readCompressedFixture<SimpleRouteJson>(
-      "t113-linux-hdmi-ddc-via-spacing.srj.json.gz",
-      expectedSrjSha256,
-    )
-    const circuitJson = readCompressedFixture<CircuitJson>(
-      "t113-linux-hdmi-ddc-via-spacing-unrouted.circuit.json.gz",
-      expectedCircuitJsonSha256,
-    )
+test.failing("repairs T113 HDMI 1.8 V same-net drill spacing", (): void => {
+  const input = readCompressedFixture<SimpleRouteJson>(
+    "t113-linux-hdmi-ddc-via-spacing.srj.json.gz",
+    expectedSrjSha256,
+  )
+  const circuitJson = readCompressedFixture<CircuitJson>(
+    "t113-linux-hdmi-ddc-via-spacing-unrouted.circuit.json.gz",
+    expectedCircuitJsonSha256,
+  )
 
-    expect(input.connections).toHaveLength(258)
-    expect(input.obstacles).toHaveLength(605)
-    expect(input.traces).toHaveLength(0)
-    expect(input.layerCount).toBe(4)
-    expect(input.minViaHoleEdgeToViaHoleEdgeClearance).toBe(0.2)
-    expect(
-      circuitJson.filter((element) => element.type === "source_component"),
-    ).toHaveLength(141)
-    expect(
-      circuitJson.filter((element) => element.type === "pcb_component"),
-    ).toHaveLength(141)
-    expect(
-      circuitJson.filter(
-        (element) => element.type === "pcb_trace" || element.type === "pcb_via",
-      ),
-    ).toEqual([])
+  expect(input.connections).toHaveLength(258)
+  expect(input.obstacles).toHaveLength(605)
+  expect(input.traces).toHaveLength(0)
+  expect(input.layerCount).toBe(4)
+  expect(input.minViaHoleEdgeToViaHoleEdgeClearance).toBe(0.2)
+  expect(
+    circuitJson.filter((element) => element.type === "source_component"),
+  ).toHaveLength(141)
+  expect(
+    circuitJson.filter((element) => element.type === "pcb_component"),
+  ).toHaveLength(141)
+  expect(
+    circuitJson.filter(
+      (element) => element.type === "pcb_trace" || element.type === "pcb_via",
+    ),
+  ).toEqual([])
 
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      structuredClone(input),
-      { cacheProvider: null, effort: 2 },
-    )
-    solver.solve()
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(input),
+    { cacheProvider: null, effort: 2 },
+  )
+  solver.solve()
 
-    expect(solver.solved).toBe(true)
-    expect(solver.failed).toBe(false)
-    expect(solver.error).toBeNull()
-    const routedTraces = solver.getOutputSimplifiedPcbTraces()
-    expect(routedTraces).toHaveLength(388)
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  expect(routedTraces).toHaveLength(388)
 
-    const viaClearance = input.minViaHoleEdgeToViaHoleEdgeClearance!
-    const drc = evaluateRelaxedDrc({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-      drcOptions: { viaClearance },
-    })
-    const viaErrors = drc.errors.filter(
-      (error) => error.type === "pcb_via_clearance_error",
-    )
-    expect(viaErrors).toHaveLength(0)
+  const viaClearance = input.minViaHoleEdgeToViaHoleEdgeClearance!
+  const drc = evaluateRelaxedDrc({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+    drcOptions: { viaClearance },
+  })
+  const viaErrors = drc.errors.filter(
+    (error) => error.type === "pcb_via_clearance_error",
+  )
+  expect(viaErrors).toHaveLength(0)
 
-    const vias = drc.circuitJson.filter(
-      (element): element is PcbVia => element.type === "pcb_via",
-    )
-    const mst10Vias = vias.filter((via) =>
-      via.pcb_trace_id?.includes("source_net_4_mst10_0"),
-    )
-    const mst15Vias = vias.filter((via) =>
-      via.pcb_trace_id?.includes("source_net_4_mst15_0"),
-    )
-    const closestPair = mst10Vias
-      .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
-      .sort(
-        ([viaA, viaB], [nextViaA, nextViaB]) =>
-          Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
-          Math.hypot(nextViaA.x - nextViaB.x, nextViaA.y - nextViaB.y),
-      )[0]
-    if (!closestPair) {
-      throw new Error("Missing the repaired T113 HDMI 1.8 V via pair")
-    }
-    const [viaA, viaB] = closestPair
-    expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
+  const vias = drc.circuitJson.filter(
+    (element): element is PcbVia => element.type === "pcb_via",
+  )
+  const mst10Vias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst10_0"),
+  )
+  const mst15Vias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst15_0"),
+  )
+  const closestPair = mst10Vias
+    .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
+    .sort(
+      ([viaA, viaB], [nextViaA, nextViaB]) =>
+        Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -
+        Math.hypot(nextViaA.x - nextViaB.x, nextViaA.y - nextViaB.y),
+    )[0]
+  if (!closestPair) {
+    throw new Error("Missing the repaired T113 HDMI 1.8 V via pair")
+  }
+  const [viaA, viaB] = closestPair
+  expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
 
-  },
-)
+})
