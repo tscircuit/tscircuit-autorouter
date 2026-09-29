@@ -314,7 +314,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.setDifferentialPairRoutedSrj(
+          cms.setSrj(
             cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
           )
         },
@@ -331,7 +331,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.differentialPairTraceIds = new Set(
             routedTraces.map((trace) => trace.pcb_trace_id),
           )
-          cms.setDifferentialPairRoutedSrj(srj)
+          cms.setSrj(srj)
         },
       },
     ),
@@ -934,7 +934,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setDifferentialPairRoutedSrj(srjWithBoardValidObstacleLayers)
+    this.setSrj(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
       const boundsWidth =
@@ -962,10 +962,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.timeSpentOnPhase = {}
   }
 
-  private setDifferentialPairRoutedSrj(
-    differentialPairRoutedSrj: SimpleRouteJson,
-  ): void {
-    this.differentialPairRoutedSrj = differentialPairRoutedSrj
+  private setSrj(srj: SimpleRouteJson): void {
+    this.differentialPairRoutedSrj = srj
     const viaDimensions = getViaDimensions(this.differentialPairRoutedSrj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
