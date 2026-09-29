@@ -40,7 +40,8 @@ export const subdividePipeline9ClearanceSegments = (
       const divisions = Math.min(
         MAX_SUBDIVISIONS,
         Math.ceil(
-          getVectorLength(next.x - point.x, next.y - point.y) / MAX_SEGMENT_LENGTH,
+          getVectorLength(next.x - point.x, next.y - point.y) /
+            MAX_SEGMENT_LENGTH,
         ),
       )
       return [
