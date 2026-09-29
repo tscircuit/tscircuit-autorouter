@@ -3,6 +3,12 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { gunzipSync, gzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GlobalDrcBranchPortfolioSolver, GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import { spyOn } from "bun:test"
+import * as precision from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearancePrecisionRepairs"
+import * as terminal from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9TerminalEscapeRelocations"
+import * as regional from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
+import * as bounded from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import * as projection from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
 import { Pipeline9JointDrcRepairSolver } from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 
 type EncodedObject = {
@@ -86,6 +92,48 @@ function capture(solver: RepairSolver, event: string): void {
   const key = `${identifiers.get(solver)}-${solver.constructor.name}-${solver.iterations}-${event}`
   records.push({ key, hash, phase: Reflect.get(solver, "phase"), solved: solver.solved, failed: solver.failed })
 }
+
+function captureRoutes(key: string, routes: unknown): void {
+  const serialized = JSON.stringify(routes)
+  const hash = createHash("sha256").update(serialized).digest("hex")
+  if (!written.has(hash)) {
+    writeFileSync(`${outputDirectory}/${hash}.json.gz`, gzipSync(serialized))
+    written.add(hash)
+  }
+  records.push({ key, hash, phase: "cleanup", solved: false, failed: false })
+}
+
+function observeRepairFunction<Params extends { routes: unknown }, Result extends { routes: unknown }>(
+  key: string,
+  original: (params: Params) => Result,
+): (params: Params) => Result {
+  return (params: Params): Result => {
+    captureRoutes(`${key}-before`, params.routes)
+    const result = original(params)
+    captureRoutes(`${key}-after`, result.routes)
+    return result
+  }
+}
+
+spyOn(precision, "applyPipeline9ClearancePrecisionRepairs").mockImplementation(
+  observeRepairFunction("precision", precision.applyPipeline9ClearancePrecisionRepairs),
+)
+spyOn(terminal, "applyPipeline9TerminalEscapeRelocations").mockImplementation(
+  observeRepairFunction("terminal", terminal.applyPipeline9TerminalEscapeRelocations),
+)
+spyOn(regional, "applyPipeline9RegionalB01Repairs").mockImplementation(
+  observeRepairFunction("regional", regional.applyPipeline9RegionalB01Repairs),
+)
+spyOn(bounded, "applyPipeline9BoundedRegionalRepairs").mockImplementation(
+  observeRepairFunction("bounded", bounded.applyPipeline9BoundedRegionalRepairs),
+)
+const originalProjection = projection.applyPipeline9ClearanceProjection
+spyOn(projection, "applyPipeline9ClearanceProjection").mockImplementation((params): ReturnType<typeof originalProjection> => {
+  captureRoutes("projection-before", params.routes)
+  const result = originalProjection(params)
+  captureRoutes("projection-after", result)
+  return result
+})
 
 const originalForceStep = GlobalDrcForceImproveSolver.prototype._step
 GlobalDrcForceImproveSolver.prototype._step = function (this: GlobalDrcForceImproveSolver): void {
