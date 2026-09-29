@@ -9,12 +9,6 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
-type MovedSection = {
-  routeIndex: number
-  startIndex: number
-  endIndex: number
-}
-
 /**
  * Select safe sections from repair04's junction-preserving projection.
  * Validate neighboring moves together, then restore blocked sections until
@@ -73,7 +67,11 @@ export const selectIndependentClearanceRepairs = ({
     ]),
   )
   const selected = [...routes]
-  const sections: MovedSection[] = []
+  const sections: {
+    routeIndex: number
+    startIndex: number
+    endIndex: number
+  }[] = []
   for (const [ri, projected] of proposedRoutes.entries()) {
     const original = routes[ri]!
     if (projected.route.length !== original.route.length) {
@@ -117,7 +115,7 @@ export const selectIndependentClearanceRepairs = ({
     routeIndex,
     startIndex,
     endIndex,
-  }: MovedSection): boolean => {
+  }: (typeof sections)[number]): boolean => {
     const proposed = proposedRoutes[routeIndex]!
     // Include both boundary segments of each moved section.
     for (
