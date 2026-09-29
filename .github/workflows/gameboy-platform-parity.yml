@@ -20,15 +20,21 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.8
-      - run: bun install
+      - run: bun install --network-concurrency 8 --verbose
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: 36564545230
-          name: gameboy-${{ matrix.os }}
-          path: stage-inputs
-      - name: Replay only the first divergent stage without changing its output
-        run: bun scripts/diagnose-gameboy-joint-repair.ts stage-inputs repair-result
+          run-id: 36566411709
+          name: repair-ubuntu-latest
+          path: original-input
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 36566062240
+          name: repair-${{ matrix.os }}
+          path: expected-output
+      - name: Replay only the first clearance projection without changing its output
+        run: bun scripts/replay-gameboy-clearance.ts original-input/relax-input.json.gz expected-output repair-result
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -46,5 +52,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: results
-      - name: Stop at the first differing repair observation
-        run: bun scripts/compare-gameboy-joint-repair.ts results/repair-ubuntu-latest results/repair-macos-14
+      - name: Compare the native distance calculations
+        run: |
+          bun -e 'import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib"; const read = (os) => JSON.parse(gunzipSync(readFileSync(`results/repair-${os}/hypot-calls.json.gz`)).toString()); const linux = read("ubuntu-latest"); const mac = read("macos-14"); for (let index=0; index<Math.max(linux.length,mac.length); index++) { if (JSON.stringify(linux[index])!==JSON.stringify(mac[index])) { console.log("FIRST_NATIVE_DIFFERENCE", JSON.stringify({index,linux:linux[index],mac:mac[index]})); throw new Error("Native distance calculations differ") } } console.log("All captured native distances match")'
