@@ -1,5 +1,9 @@
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
+// Subdividing an unchanged segment can round its measured gap differently.
+// This only compares residual errors; the DRC thresholds remain unchanged.
+const CLEARANCE_COMPARISON_EPSILON = 1e-9
+
 /** Call only after changed wire segments are clear and all via sites are fixed. */
 export const canPublishIndependentClearanceRepairs = (
   initialErrors: Pipeline9DrcError[],
@@ -44,7 +48,8 @@ export const canPublishIndependentClearanceRepairs = (
       typeof previous.actual_clearance !== "number" ||
       !Number.isFinite(previous.actual_clearance) ||
       error.minimum_clearance !== previous.minimum_clearance ||
-      error.actual_clearance < previous.actual_clearance
+      error.actual_clearance <
+        previous.actual_clearance - CLEARANCE_COMPARISON_EPSILON
     ) {
       return false
     }

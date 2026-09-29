@@ -19,6 +19,16 @@ test("partial nudges reject new pairs, worsened gaps, and unproven continuity", 
   expect(canPublishIndependentClearanceRepairs(before, [clearance])).toBe(true)
   expect(
     canPublishIndependentClearanceRepairs(before, [
+      { ...clearance, actual_clearance: 0.09 - Number.EPSILON },
+    ]),
+  ).toBe(true)
+  expect(
+    canPublishIndependentClearanceRepairs(before, [
+      { ...clearance, actual_clearance: 0.09 - 1e-7 },
+    ]),
+  ).toBe(false)
+  expect(
+    canPublishIndependentClearanceRepairs(before, [
       { ...clearance, actual_clearance: 0.08 },
     ]),
   ).toBe(false)
