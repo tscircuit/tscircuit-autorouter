@@ -27,7 +27,9 @@ test("Pipeline9 rejects missing and ambiguous non-colocated transition vias", ()
       vias,
     }
     const originalRoute = structuredClone(hdRoute)
-    expect(() => getPipeline9RouteCopperGeometry(hdRoute)).toThrow(message)
+    expect(() =>
+      getPipeline9RouteCopperGeometry(hdRoute, { layerCount: 4 }),
+    ).toThrow(message)
     expect(() => materializePipeline9HdRouteVias([hdRoute])).toThrow(message)
     expect(hdRoute).toEqual(originalRoute)
   }

@@ -1,5 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { Obstacle } from "lib/types"
+import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
@@ -42,13 +42,18 @@ export type Pipeline9AxisAlignedRect = {
 const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
-  Pipeline9RouteCopperGeometry
+  Map<string, Pipeline9RouteCopperGeometry>
 >()
 
 export const getPipeline9RouteCopperGeometry = (
   route: HighDensityRoute,
+  { layerCount, allowBlindAndBuriedVias }: Pick<
+    SimpleRouteJson,
+    "layerCount" | "allowBlindAndBuriedVias"
+  >,
 ): Pipeline9RouteCopperGeometry => {
-  const cachedGeometry = routeCopperGeometryCache.get(route)
+  const cacheKey = `${layerCount}:${allowBlindAndBuriedVias === true}`
+  const cachedGeometry = routeCopperGeometryCache.get(route)?.get(cacheKey)
   if (cachedGeometry) return cachedGeometry
   const wireSegments: Pipeline9RouteWireSegment[] = []
   const viaSpans: Pipeline9RouteViaSpan[] = []
@@ -104,15 +109,23 @@ export const getPipeline9RouteCopperGeometry = (
     }
     if (start.z === end.z) continue
     const viaPoint = viaEndpoint === "start" ? start : end
+    // Signal endpoints do not limit the drilled copper on a through via.
+    // Validate them before expanding the span so invalid layers still fail.
+    mapZToLayerName(start.z, layerCount)
+    mapZToLayerName(end.z, layerCount)
     viaSpans.push({
       center: { x: viaPoint.x, y: viaPoint.y },
-      minZ: Math.min(start.z, end.z),
-      maxZ: Math.max(start.z, end.z),
+      minZ: allowBlindAndBuriedVias ? Math.min(start.z, end.z) : 0,
+      maxZ: allowBlindAndBuriedVias
+        ? Math.max(start.z, end.z)
+        : layerCount - 1,
       diameter: route.viaDiameter,
     })
   }
   const geometry = { wireSegments, viaSpans }
-  routeCopperGeometryCache.set(route, geometry)
+  const geometries = routeCopperGeometryCache.get(route) ?? new Map()
+  geometries.set(cacheKey, geometry)
+  routeCopperGeometryCache.set(route, geometries)
   return geometry
 }
 
@@ -154,15 +167,20 @@ export const getPipeline9AxisAlignedWireApproximations = (
 export const getPipeline9FixedRouteObstacles = ({
   fixedObstacleRoutes,
   layerCount,
+  allowBlindAndBuriedVias,
 }: {
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): Obstacle[] => {
   return fixedObstacleRoutes.flatMap((route, routeIndex) => {
     const connectedTo = [route.connectionName, route.rootConnectionName].filter(
       (connectedId): connectedId is string => typeof connectedId === "string",
     )
-    const geometry = getPipeline9RouteCopperGeometry(route)
+    const geometry = getPipeline9RouteCopperGeometry(route, {
+      layerCount,
+      allowBlindAndBuriedVias,
+    })
     return [
       ...geometry.wireSegments.flatMap((segment, segmentIndex): Obstacle[] => {
         const approximatingRects = getPipeline9AxisAlignedWireApproximations(
@@ -261,14 +279,19 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   right,
   clearance,
   leftBounds,
+  layerCount,
+  allowBlindAndBuriedVias,
 }: {
   left: HighDensityRoute
   right: HighDensityRoute
   clearance: number
   leftBounds?: Pipeline9Bounds
+  layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): boolean => {
-  const leftGeometry = getPipeline9RouteCopperGeometry(left)
-  const rightGeometry = getPipeline9RouteCopperGeometry(right)
+  const board = { layerCount, allowBlindAndBuriedVias }
+  const leftGeometry = getPipeline9RouteCopperGeometry(left, board)
+  const rightGeometry = getPipeline9RouteCopperGeometry(right, board)
   const leftWires = leftBounds
     ? leftGeometry.wireSegments.filter((segment) =>
         wireSegmentOverlapsBounds(segment, leftBounds),

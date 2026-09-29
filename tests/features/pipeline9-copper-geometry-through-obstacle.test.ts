@@ -22,7 +22,7 @@ test("Pipeline9 endpoint resolution leaves through-obstacle copper unchanged", (
     vias: [],
   }
   const originalRoute = structuredClone(hdRoute)
-  const geometry = getPipeline9RouteCopperGeometry(hdRoute)
+  const geometry = getPipeline9RouteCopperGeometry(hdRoute, { layerCount: 4 })
   expect(geometry.viaSpans).toEqual([])
   expect(geometry.wireSegments).toEqual(
     [0, 1, 2].map((z) => ({
@@ -43,7 +43,9 @@ test("Pipeline9 endpoint resolution leaves through-obstacle copper unchanged", (
       route: [hdRoute.route[0]!, { x: 0, y: 0, z: 2, traceThickness: 0.7 }],
       vias: explicitVia ? [{ x: 0, y: 0 }] : [],
     }
-    expect(getPipeline9RouteCopperGeometry(colocatedRoute)).toEqual({
+    expect(
+      getPipeline9RouteCopperGeometry(colocatedRoute, { layerCount: 4 }),
+    ).toEqual({
       wireSegments: [],
       viaSpans: [
         {
