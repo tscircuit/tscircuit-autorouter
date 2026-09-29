@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   route:
@@ -20,8 +21,17 @@ jobs:
         with:
           bun-version: 1.3.8
       - run: bun install
-      - name: Route the unchanged full Game Boy using Pipeline 9
-        run: bun scripts/validate-gameboy-platform-parity.ts platform-result
+      - name: Capture unchanged inputs to each pipeline stage
+        run: bun scripts/diagnose-gameboy-platform.ts platform-result
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 36548882379
+          name: gameboy-${{ matrix.os }}
+          path: unobserved-result
+      - name: Verify observation did not change the prior full-board output
+        run: |
+          bun -e 'import { readFileSync } from "node:fs"; import { gunzipSync } from "node:zlib"; const actual = gunzipSync(readFileSync("platform-result/routes.json.gz")).toString(); const expected = readFileSync("unobserved-result/routes.json", "utf8"); if (actual !== expected) throw new Error("Observed routing differs from the unobserved run"); console.log("Observed route exactly matches the previous unobserved route")'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -32,8 +42,12 @@ jobs:
     needs: route
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
       - uses: actions/download-artifact@v4
         with:
           path: results
-      - name: Compare measured geometry and DRC counts
-        run: diff -u results/gameboy-ubuntu-latest/summary.json results/gameboy-macos-14/summary.json
+      - name: Stop at the first differing stage input
+        run: bun scripts/compare-gameboy-stages.ts results/gameboy-ubuntu-latest results/gameboy-macos-14
