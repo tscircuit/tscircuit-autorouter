@@ -67,7 +67,7 @@ test("clearance margin follows the owner's via transition after shared-site dedu
   routes[2]!.vias.push({ x: 3, y: 4 })
   const srj = {
     bounds: { minX: -10, minY: -10, maxX: 10, maxY: 10 },
-    layerCount: 2,
+    layerCount: 4,
     minTraceWidth: 0.1,
     obstacles: [],
     connections: routes.map((route) => ({
@@ -82,7 +82,7 @@ test("clearance margin follows the owner's via transition after shared-site dedu
       type: "pcb_trace",
       pcb_trace_id: `${route.connectionName}_0`,
       connection_name: route.rootConnectionName ?? route.connectionName,
-      route: convertHdRouteToSimplifiedRoute(route, 2),
+      route: convertHdRouteToSimplifiedRoute(route, 4),
     }))
     return convertToCircuitJson(srj, traces, { minViaDiameter: 0.3 })
   }

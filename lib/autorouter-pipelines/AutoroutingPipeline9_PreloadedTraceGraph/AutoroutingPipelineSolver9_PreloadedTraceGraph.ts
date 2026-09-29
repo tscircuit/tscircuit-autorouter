@@ -807,7 +807,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces as any,
             hdRoutes: lockHdRouteTerminals(
-              cms.traceWidthSolver!.getHdRoutesWithWidths(),
+              canonicalizePipeline9HdRoutes(
+                cms.traceWidthSolver!.getHdRoutesWithWidths(),
+              ),
               cms.netToPointPairsSolver?.newConnections ?? [],
               new Map(
                 (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
