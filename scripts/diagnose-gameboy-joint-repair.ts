@@ -115,17 +115,21 @@ function observeRepairFunction<Params extends { routes: unknown }, Result extend
   }
 }
 
+const originalPrecision = precision.applyPipeline9ClearancePrecisionRepairs
+const originalTerminal = terminal.applyPipeline9TerminalEscapeRelocations
+const originalRegional = regional.applyPipeline9RegionalB01Repairs
+const originalBounded = bounded.applyPipeline9BoundedRegionalRepairs
 spyOn(precision, "applyPipeline9ClearancePrecisionRepairs").mockImplementation(
-  observeRepairFunction("precision", precision.applyPipeline9ClearancePrecisionRepairs),
+  observeRepairFunction("precision", originalPrecision),
 )
 spyOn(terminal, "applyPipeline9TerminalEscapeRelocations").mockImplementation(
-  observeRepairFunction("terminal", terminal.applyPipeline9TerminalEscapeRelocations),
+  observeRepairFunction("terminal", originalTerminal),
 )
 spyOn(regional, "applyPipeline9RegionalB01Repairs").mockImplementation(
-  observeRepairFunction("regional", regional.applyPipeline9RegionalB01Repairs),
+  observeRepairFunction("regional", originalRegional),
 )
 spyOn(bounded, "applyPipeline9BoundedRegionalRepairs").mockImplementation(
-  observeRepairFunction("bounded", bounded.applyPipeline9BoundedRegionalRepairs),
+  observeRepairFunction("bounded", originalBounded),
 )
 const originalProjection = projection.applyPipeline9ClearanceProjection
 spyOn(projection, "applyPipeline9ClearanceProjection").mockImplementation((params): ReturnType<typeof originalProjection> => {
