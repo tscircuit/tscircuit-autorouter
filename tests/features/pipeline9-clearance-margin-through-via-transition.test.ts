@@ -55,7 +55,9 @@ test("clearance margin tracks an inner-layer transition inside a through via", (
   })
   expect(measurement.status).toBe("measured")
   if (measurement.status !== "measured") {
-    throw new Error("Expected the through-via transition to retain its identity")
+    throw new Error(
+      "Expected the through-via transition to retain its identity",
+    )
   }
   expect(measurement.errors).toHaveLength(1)
   expect(measurement.errors[0]!.actual_clearance).toBeCloseTo(0.0995, 10)

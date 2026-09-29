@@ -47,10 +47,10 @@ const routeCopperGeometryCache = new WeakMap<
 
 export const getPipeline9RouteCopperGeometry = (
   route: HighDensityRoute,
-  { layerCount, allowBlindAndBuriedVias }: Pick<
-    SimpleRouteJson,
-    "layerCount" | "allowBlindAndBuriedVias"
-  >,
+  {
+    layerCount,
+    allowBlindAndBuriedVias,
+  }: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
 ): Pipeline9RouteCopperGeometry => {
   const cacheKey = `${layerCount}:${allowBlindAndBuriedVias === true}`
   const cachedGeometry = routeCopperGeometryCache.get(route)?.get(cacheKey)
@@ -116,9 +116,7 @@ export const getPipeline9RouteCopperGeometry = (
     viaSpans.push({
       center: { x: viaPoint.x, y: viaPoint.y },
       minZ: allowBlindAndBuriedVias ? Math.min(start.z, end.z) : 0,
-      maxZ: allowBlindAndBuriedVias
-        ? Math.max(start.z, end.z)
-        : layerCount - 1,
+      maxZ: allowBlindAndBuriedVias ? Math.max(start.z, end.z) : layerCount - 1,
       diameter: route.viaDiameter,
     })
   }

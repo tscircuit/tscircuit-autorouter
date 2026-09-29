@@ -670,8 +670,10 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairAttempted: false,
     }
   }
-  const fixedRouteCopperSpatialIndex =
-    createFixedRouteCopperSpatialIndex(fixedObstacleRoutes, srj)
+  const fixedRouteCopperSpatialIndex = createFixedRouteCopperSpatialIndex(
+    fixedObstacleRoutes,
+    srj,
+  )
 
   for (let pass = 0; pass < 2; pass++) {
     if (candidateSearchBudgetExhausted) break
