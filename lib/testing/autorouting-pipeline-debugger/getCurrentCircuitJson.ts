@@ -9,11 +9,10 @@ type SolverLike = {
     getNewSimpleRouteJson?: () => any
   }
   srjWithPointPairs?: any
+  originalSrj?: SimpleRouteJson
   getOutputSimplifiedPcbTraces: () => SimplifiedPcbTrace[]
-} & (
-  | { originalSrj: SimpleRouteJson; srj?: SimpleRouteJson }
-  | { srj: SimpleRouteJson }
-)
+  srj: SimpleRouteJson
+}
 
 export const getCurrentCircuitJson = (
   solver: SolverLike,
@@ -37,7 +36,7 @@ export const getCurrentCircuitJson = (
     )
     return null
   }
-  const inputSrj = "originalSrj" in solver ? solver.originalSrj : solver.srj
+  const inputSrj = solver.originalSrj ?? solver.srj
   const jointTraces = [...(inputSrj.traces ?? []), ...routedTraces]
 
   const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {

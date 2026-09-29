@@ -295,7 +295,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   connMap!: ConnectivityMap
   srjWithEscapeViaLocations?: SimpleRouteJson
   srjWithPointPairs?: SimpleRouteJson
-  differentialPairRoutedSrj!: SimpleRouteJson
+  readonly originalSrj: SimpleRouteJson
+  private preloadedTraces: SimplifiedPcbTraces
   private differentialPairTraceIds = new Set<string>()
   capacityNodes: CapacityMeshNode[] | null = null
   capacityEdges: CapacityMeshEdge[] | null = null
@@ -309,12 +310,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
       (cms) => [
-        cms.differentialPairRoutedSrj,
+        cms.originalSrj,
         { traceColorMode: cms.visualizationTraceColorMode },
       ],
       {
         onSolved: (cms) => {
-          cms.setSrj(
+          cms.setSimpleRouteJson(
             cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
           )
         },
@@ -323,7 +324,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "differentialPairRoutingSolver",
       DifferentialPairRoutingSolver,
-      (cms) => [cms.differentialPairRoutedSrj],
+      (cms) => [cms.srj],
       {
         onSolved: (cms) => {
           const { srj, routedTraces } =
@@ -331,25 +332,25 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.differentialPairTraceIds = new Set(
             routedTraces.map((trace) => trace.pcb_trace_id),
           )
-          cms.setSrj(srj)
+          cms.preloadedTraces = srj.traces ?? []
+          cms.setSimpleRouteJson(srj)
         },
       },
     ),
     definePipelineStep(
       "componentDetectionSolver",
       ComponentDetectionSolver,
-      (cms) => [{ inputSrj: cms.differentialPairRoutedSrj }],
+      (cms) => [{ inputSrj: cms.srj }],
     ),
     definePipelineStep(
       "escapeViaLocationSolver",
       EscapeViaLocationSolver,
       (cms) => [
-        cms.differentialPairRoutedSrj,
+        cms.srj,
         {
           viaDiameter: cms.viaDiameter,
           minTraceWidth: cms.minTraceWidth,
-          obstacleMargin:
-            cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.15,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
       ],
       {
@@ -363,8 +364,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "netToPointPairsSolver",
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
-        const inputSrj =
-          cms.srjWithEscapeViaLocations ?? cms.differentialPairRoutedSrj
+        const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
         return [
           inputSrj,
           cms.colorMap,
@@ -390,8 +390,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputSrj: cms.srjWithPointPairs!,
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
-          obstacleMargin:
-            cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.15,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
         },
       ],
       {
@@ -413,7 +412,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
+            layerCount: cms.srj.layerCount,
             nodeGroups: [
               {
                 groupId: "global",
@@ -533,7 +532,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.availableSegmentPointSolver!.getOutput()
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
-          layerCount: cms.differentialPairRoutedSrj.layerCount,
+          layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
@@ -545,7 +544,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             graph,
             connections,
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
+            layerCount: cms.srj.layerCount,
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
@@ -590,12 +589,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.differentialPairRoutedSrj.obstacles,
-          layerCount: cms.differentialPairRoutedSrj.layerCount,
-          useLayerAwareGeometry: cms.differentialPairRoutedSrj.layerCount > 2,
-          preserveSolitaryPorts: Boolean(
-            cms.differentialPairRoutedSrj.traces?.length,
-          ),
+          obstacles: cms.srj.obstacles,
+          layerCount: cms.srj.layerCount,
+          useLayerAwareGeometry: cms.srj.layerCount > 2,
+          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
         },
       ],
     ),
@@ -617,9 +614,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = cms
-          .getPreloadedTraces()
-          .flatMap((trace, traceIndex) =>
+        const originalFixedHdRoutes = cms.preloadedTraces.flatMap(
+          (trace, traceIndex) =>
             convertPreloadedTraceToHdRoutes(
               trace,
               traceIndex,
@@ -627,9 +623,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.viaDiameter,
               cms.connMap,
             ),
-          )
+        )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.getPreloadedTraces(),
+          traces: cms.preloadedTraces,
           fixedHdRoutes: originalFixedHdRoutes,
           sections: cms.getChangedPreloadedTraceSections(),
         })
@@ -645,14 +641,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             fixedHdRoutes,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
-            obstacles: cms.differentialPairRoutedSrj.obstacles,
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
-            obstacleMargin:
-              cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.15,
-            viaToPadClearance:
-              cms.differentialPairRoutedSrj.minViaEdgeToPadEdgeClearance,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: cms.effort,
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
@@ -672,8 +666,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
-          nodeAssignmentMargin:
-            cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.2,
+          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
     ),
@@ -686,11 +679,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
-          obstacles: cms.differentialPairRoutedSrj.obstacles,
+          obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
-          repairMargin:
-            cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.2,
-          minimumTraceWidth: cms.differentialPairRoutedSrj.minTraceWidth,
+          repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          minimumTraceWidth: cms.srj.minTraceWidth,
           connMap: cms.connMap,
         },
       ],
@@ -711,7 +703,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          layerCount: cms.differentialPairRoutedSrj.layerCount,
+          layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
@@ -753,23 +745,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: newHdRoutes,
-            obstacles: cms.differentialPairRoutedSrj.obstacles,
+            obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
-            outline: cms.differentialPairRoutedSrj.outline,
+            outline: cms.srj.outline,
             defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
-            minTraceToPadEdgeClearance:
-              cms.differentialPairRoutedSrj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance:
-              cms.differentialPairRoutedSrj.minBoardEdgeClearance,
+            layerCount: cms.srj.layerCount,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
-              cms.differentialPairRoutedSrj.connections,
-              cms.differentialPairRoutedSrj.obstacles,
-              cms.differentialPairRoutedSrj.layerCount,
+              cms.srj.connections,
+              cms.srj.obstacles,
+              cms.srj.layerCount,
             ),
             iterations: 2,
           },
@@ -791,16 +781,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: editableHdRoutes,
-            obstacles: cms.differentialPairRoutedSrj.obstacles,
+            obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
-            outline: cms.differentialPairRoutedSrj.outline,
+            outline: cms.srj.outline,
             defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
-            minTraceToPadEdgeClearance:
-              cms.differentialPairRoutedSrj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance:
-              cms.differentialPairRoutedSrj.minBoardEdgeClearance,
+            layerCount: cms.srj.layerCount,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes,
             netByConnectionName: getPipeline9NetByConnectionName(
               [...editableHdRoutes, ...otherHdRoutes],
@@ -816,16 +804,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.differentialPairRoutedSrj.obstacles,
+        obstacles: cms.srj.obstacles,
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srjWithPointPairs!.connections,
-        obstacleMargin:
-          cms.differentialPairRoutedSrj.minTraceToPadEdgeClearance ?? 0.15,
-        minTraceToHoleEdgeClearance:
-          cms.differentialPairRoutedSrj.minTraceToHoleEdgeClearance,
-        layerCount: cms.differentialPairRoutedSrj.layerCount,
+        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+        layerCount: cms.srj.layerCount,
       },
     ]),
     definePipelineStep(
@@ -867,10 +853,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
-            originalSrj: {
-              ...cms.originalSrj,
-              traces: cms.getPreloadedTraces(),
-            },
+            originalSrj: { ...cms.originalSrj, traces: cms.preloadedTraces },
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
@@ -881,8 +864,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
             ),
             connMap: cms.connMap,
-            obstacles: cms.differentialPairRoutedSrj.obstacles,
-            layerCount: cms.differentialPairRoutedSrj.layerCount,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
             defaultViaDiameter: cms.viaDiameter,
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: cms.effort,
@@ -918,12 +901,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   ]
 
   constructor(
-    public readonly originalSrj: SimpleRouteJson,
+    public srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(structuredClone(originalSrj))
+      createSrjWithBoardValidObstacleLayers(srj)
+    this.originalSrj = srjWithBoardValidObstacleLayers
+    this.preloadedTraces = srjWithBoardValidObstacleLayers.traces ?? []
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -934,15 +919,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
     this.visualizationTraceColorMode =
       mutableOpts.visualizationTraceColorMode ?? "layer"
-    this.setSrj(srjWithBoardValidObstacleLayers)
+    this.setSimpleRouteJson(srjWithBoardValidObstacleLayers)
 
     if (mutableOpts.capacityDepth === undefined) {
-      const boundsWidth =
-        this.differentialPairRoutedSrj.bounds.maxX -
-        this.differentialPairRoutedSrj.bounds.minX
-      const boundsHeight =
-        this.differentialPairRoutedSrj.bounds.maxY -
-        this.differentialPairRoutedSrj.bounds.minY
+      const boundsWidth = this.srj.bounds.maxX - this.srj.bounds.minX
+      const boundsHeight = this.srj.bounds.maxY - this.srj.bounds.minY
       const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
       const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5
       mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
@@ -962,20 +943,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.timeSpentOnPhase = {}
   }
 
-  private setSrj(srj: SimpleRouteJson): void {
-    this.differentialPairRoutedSrj = srj
-    const viaDimensions = getViaDimensions(this.differentialPairRoutedSrj)
+  private setSimpleRouteJson(srj: SimpleRouteJson) {
+    this.srj = srj
+    const viaDimensions = getViaDimensions(this.srj)
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
-    this.minTraceWidth = this.differentialPairRoutedSrj.minTraceWidth
-    this.connMap = getConnectivityMapFromSimpleRouteJson(
-      this.differentialPairRoutedSrj,
-    )
-    this.colorMap = getColorMap(this.differentialPairRoutedSrj, this.connMap)
+    this.minTraceWidth = this.srj.minTraceWidth
+    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.colorMap = getColorMap(this.srj, this.connMap)
   }
 
   getConstructorParams() {
-    return [this.originalSrj, this.opts] as const
+    return [this.srj, this.opts] as const
   }
 
   currentPipelineStepIndex = 0
@@ -1292,16 +1271,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getPreloadedTraces(): SimplifiedPcbTraces {
-    const { differentialPairRoutingSolver } = this
-    if (!differentialPairRoutingSolver?.solved) {
-      return this.differentialPairRoutedSrj.traces ?? []
-    }
-    return differentialPairRoutingSolver.getOutput().srj.traces ?? []
-  }
-
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {
-    return this.getPreloadedTraces().flatMap((trace, traceIndex) =>
+    return this.preloadedTraces.flatMap((trace, traceIndex) =>
       convertPreloadedTraceToHdRoutes(
         trace,
         traceIndex,
@@ -1324,7 +1295,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const changedSections = this.getChangedPreloadedTraceSections()
     const fixedRoutesWithoutChangedSections =
       removeChangedSectionsFromFixedHdRoutes({
-        traces: this.getPreloadedTraces(),
+        traces: this.preloadedTraces,
         fixedHdRoutes: originalFixedRoutes,
         sections: changedSections,
       })
@@ -1332,7 +1303,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       changedSections.length === 0
         ? []
         : getMaterializedPreloadedSectionHdRoutes({
-            traces: this.getPreloadedTraces(),
+            traces: this.preloadedTraces,
             sections: changedSections,
             stitchedHdRoutes:
               this.highDensityStitchSolver?.mergedHdRoutes ?? [],
@@ -1344,8 +1315,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const materializedOriginalRouteNames = originalFixedRoutes
       .filter((route) =>
         materializedTraceIds.has(
-          this.getPreloadedTraces()[route.preloadedTraceIndex]?.pcb_trace_id ??
-            "",
+          this.preloadedTraces[route.preloadedTraceIndex]?.pcb_trace_id ?? "",
         ),
       )
       .map((route) => route.connectionName)
@@ -1397,13 +1367,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         : fixedRouteState.updatedFixedRoutes
 
     return applyFixedRouteReplacementsToPreloadedTraces({
-      originalTraces: this.getPreloadedTraces(),
+      originalTraces: this.preloadedTraces,
       originalFixedRoutes: fixedRouteState.originalFixedRoutes,
       updatedFixedRoutes,
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
       layerCount: this.originalSrj.layerCount,
       defaultViaHoleDiameter: this.viaHoleDiameter,
-      obstacles: this.differentialPairRoutedSrj.obstacles,
+      obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
     })
   }
@@ -1439,14 +1409,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
       hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
-      layerCount: this.differentialPairRoutedSrj.layerCount,
-      obstacles: this.differentialPairRoutedSrj.obstacles,
+      layerCount: this.srj.layerCount,
+      obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
-      this.getPreloadedTraces(),
+      this.preloadedTraces,
     )
   }
 

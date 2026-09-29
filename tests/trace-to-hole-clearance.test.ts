@@ -20,9 +20,7 @@ test("fresh routes respect trace-to-NPTH clearance independently of pad clearanc
     })
     expect(solver.originalSrj.obstacles).toMatchObject(srj.obstacles)
     expect(
-      solver.differentialPairRoutedSrj.obstacles.find(
-        (obstacle) => obstacle.isNonPlatedHole,
-      )?.width,
+      solver.srj.obstacles.find((obstacle) => obstacle.isNonPlatedHole)?.width,
     ).toBe(hole.width)
     solver.solve()
     expect(solver.error).toBeNull()
