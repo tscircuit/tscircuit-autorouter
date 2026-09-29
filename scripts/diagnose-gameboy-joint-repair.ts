@@ -4,6 +4,7 @@ import { gunzipSync, gzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GlobalDrcBranchPortfolioSolver, GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { spyOn } from "bun:test"
+import * as repair04 from "@tscircuit/repair04"
 import * as precision from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearancePrecisionRepairs"
 import * as terminal from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9TerminalEscapeRelocations"
 import * as regional from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
@@ -137,6 +138,35 @@ spyOn(projection, "applyPipeline9ClearanceProjection").mockImplementation((param
   const result = originalProjection(params)
   captureRoutes("projection-after", result)
   return result
+})
+
+const originalRelax = repair04.relaxTraceClearance
+let relaxInvocationCount = 0
+spyOn(repair04, "relaxTraceClearance").mockImplementation((params): ReturnType<typeof originalRelax> => {
+  const invocation = relaxInvocationCount++
+  captureRoutes(`relax-${invocation}-before`, params.routes)
+  if (invocation !== 0) {
+    const result = originalRelax(params)
+    captureRoutes(`relax-${invocation}-after`, result)
+    return result
+  }
+  writeFileSync(`${outputDirectory}/relax-input.json.gz`, gzipSync(JSON.stringify(params)))
+  const calls: number[][] = []
+  const nativeHypot = Math.hypot
+  Math.hypot = (...args: number[]): number => {
+    const result = nativeHypot(...args)
+    calls.push([...args, result])
+    return result
+  }
+  try {
+    const result = originalRelax(params)
+    captureRoutes(`relax-${invocation}-after`, result)
+    writeFileSync(`${outputDirectory}/relax-output.json.gz`, gzipSync(JSON.stringify(result)))
+    return result
+  } finally {
+    Math.hypot = nativeHypot
+    writeFileSync(`${outputDirectory}/hypot-calls.json.gz`, gzipSync(JSON.stringify(calls)))
+  }
 })
 
 const originalForceStep = GlobalDrcForceImproveSolver.prototype._step
