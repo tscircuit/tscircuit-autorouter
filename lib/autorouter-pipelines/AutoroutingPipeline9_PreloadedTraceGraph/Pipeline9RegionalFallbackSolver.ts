@@ -199,6 +199,20 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return !hasViaConflict
   }
 
+  private startRepair(routes: HighDensityRoute[]): void {
+    this.repairSolver = new Pipeline4HighDensityRepairSolver({
+      nodeWithPortPoints: [this.params.nodeWithPortPoints],
+      hdRoutes: routes,
+      obstacles: this.params.obstacles,
+      colorMap: this.params.colorMap,
+      repairMargin: this.params.obstacleMargin,
+      minimumTraceWidth: this.params.traceWidth,
+      connMap: this.params.connMap,
+    })
+    this.activeSubSolver = this.repairSolver
+    this.phase = "repair"
+  }
+
   override _step(): void {
     if (this.phase === "route") {
       this.highDensitySolver.step()
@@ -215,6 +229,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.error =
           "Pipeline9 regional route output failed its candidate validator"
         this.failed = true
+        return
+      }
+      // Force improvement has no board-obstacle constraints. Keep validated
+      // via-to-pad clearance by sending constrained regions directly to repair.
+      if (this.params.viaToPadClearance !== undefined) {
+        this.startRepair(routedCandidate)
         return
       }
       this.forceImproveSolver = new HighDensityForceImproveSolver({
@@ -246,17 +266,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.repairSolver = new Pipeline4HighDensityRepairSolver({
-        nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: forceImprovedRoutes,
-        obstacles: this.params.obstacles,
-        colorMap: this.params.colorMap,
-        repairMargin: this.params.obstacleMargin,
-        minimumTraceWidth: this.params.traceWidth,
-        connMap: this.params.connMap,
-      })
-      this.activeSubSolver = this.repairSolver
-      this.phase = "repair"
+      this.startRepair(forceImprovedRoutes)
       return
     }
 
