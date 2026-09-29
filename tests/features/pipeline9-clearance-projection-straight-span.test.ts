@@ -20,7 +20,9 @@ test("partial projection bends a straight span while preserving terminals and an
   const before = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
   const beforeErrors = Array.isArray(before) ? before : before.errors
   expect(
-    beforeErrors.some((error) => error.type === "pcb_pad_trace_clearance_error"),
+    beforeErrors.some(
+      (error) => error.type === "pcb_pad_trace_clearance_error",
+    ),
   ).toBe(true)
   expect(
     applyPipeline9ClearanceProjection({ ...fixture, allowPartialRepair: true }),

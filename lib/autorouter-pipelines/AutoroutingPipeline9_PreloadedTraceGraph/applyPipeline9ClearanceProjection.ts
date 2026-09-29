@@ -72,8 +72,11 @@ export const applyPipeline9ClearanceProjection = ({
       proposedRoutes: candidate,
     })
     // Do not retain extra vertices on protected or rejected routes.
-    candidate = candidate.map((route, index): HighDensityRoute =>
-      route === canonicalRoutes[index] ? originalCanonicalRoutes[index]! : route,
+    candidate = candidate.map(
+      (route, index): HighDensityRoute =>
+        route === canonicalRoutes[index]
+          ? originalCanonicalRoutes[index]!
+          : route,
     )
   }
   const fixedViolations = new Map(

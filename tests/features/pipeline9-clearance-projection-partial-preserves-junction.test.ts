@@ -61,9 +61,11 @@ test("partial projection keeps an interior same-net branch attached", (): void =
     const trunk = routes[0]!.route
     expect(
       Math.min(
-        ...trunk.slice(1).map((point, index) =>
-          pointToSegmentDistance(branch, trunk[index]!, point),
-        ),
+        ...trunk
+          .slice(1)
+          .map((point, index) =>
+            pointToSegmentDistance(branch, trunk[index]!, point),
+          ),
       ),
     ).toBeLessThan(1e-12)
     expect(routes[2]).toEqual(original[2])
