@@ -572,19 +572,19 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       return drcEvaluator(input)
     },
   })
-  // Once wire-only improvements are stable, let the coupled projection move
-  // wires and vias together. The complete-board DRC and physical guards in
-  // applyPipeline9ClearanceProjection decide whether to retain the result.
-  independentRoutes = applyPipeline9ClearanceProjection({
-    originalSrj,
-    routes: independentRoutes,
-    usePrecisionMargin: true,
-    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
-      result.referenceValidationCount++
-      return drcEvaluator(input)
-    },
-  })
   if (independentRoutes !== routes) {
+    // The earlier whole-board pass already checked the original layout. Once
+    // wire-only improvements have made room, try moving wires and vias together.
+    // The complete-board DRC and physical guards decide whether to retain it.
+    independentRoutes = applyPipeline9ClearanceProjection({
+      originalSrj,
+      routes: independentRoutes,
+      usePrecisionMargin: true,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
+    })
     const independentReference = drcEvaluator({
       traces: [],
       routes: independentRoutes,
