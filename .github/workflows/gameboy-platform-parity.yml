@@ -17,7 +17,7 @@ jobs:
           - label: drill-span-only
             ref: ad5541b202652ced9a9e1614619c5f0af95d64d9
           - label: transition-fixes
-            ref: 108872dc
+            ref: 108872dcca1b806d5ba96474043a54743a323d29
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -37,7 +37,7 @@ jobs:
         run: cp diagnostics/scripts/capture-via-repair-regression.ts solver/scripts/
       - name: Capture unmodified board-1726 routing and reference DRC
         working-directory: solver
-        run: bun scripts/capture-via-repair-regression.ts tests/fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json regression-result
+        run: bun scripts/capture-via-repair-regression.ts fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json regression-result
       - uses: actions/upload-artifact@v4
         if: always()
         with:
