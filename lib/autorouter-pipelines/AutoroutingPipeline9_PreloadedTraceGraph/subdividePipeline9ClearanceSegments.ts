@@ -1,5 +1,6 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
+import { getVectorLength } from "lib/utils/getVectorLength"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 const MAX_SEGMENT_LENGTH = 0.5
@@ -39,7 +40,7 @@ export const subdividePipeline9ClearanceSegments = (
       const divisions = Math.min(
         MAX_SUBDIVISIONS,
         Math.ceil(
-          Math.hypot(next.x - point.x, next.y - point.y) / MAX_SEGMENT_LENGTH,
+          getVectorLength(next.x - point.x, next.y - point.y) / MAX_SEGMENT_LENGTH,
         ),
       )
       return [
