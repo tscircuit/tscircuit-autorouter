@@ -102,5 +102,4 @@ test.failing("repairs T113 HDMI 1.8 V same-net drill spacing", (): void => {
   }
   const [viaA, viaB] = closestPair
   expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
-
 })
