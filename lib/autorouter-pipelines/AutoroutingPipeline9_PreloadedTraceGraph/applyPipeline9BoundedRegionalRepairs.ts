@@ -147,6 +147,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   const clearance = Math.max(
     originalSrj.defaultObstacleMargin ?? 0.2,
     originalSrj.minTraceToPadEdgeClearance ?? 0,
+    originalSrj.minTraceToHoleEdgeClearance ?? 0,
     originalSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
   let maxCopperDiameter = Math.max(

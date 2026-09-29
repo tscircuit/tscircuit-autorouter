@@ -5,7 +5,7 @@ import {
   mergeGraphics,
   type Point,
 } from "graphics-debug"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import reportedRoutingJson from "../../fixtures/bug-reports/bugreport93-overlapping-vias/bugreport93-overlapping-vias.output.json" with {

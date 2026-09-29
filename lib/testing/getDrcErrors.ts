@@ -1,6 +1,7 @@
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
+  checkHoleTraceClearance,
   checkPadTraceClearance,
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
@@ -48,6 +49,7 @@ export interface GetDrcErrorsResult {
 }
 
 export interface GetDrcErrorsOptions {
+  holeClearance?: number
   viaClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
@@ -81,7 +83,7 @@ export const getDrcErrors = (
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
-  })
+  }).filter((error) => error.type !== "pcb_keepout_overlap_warning")
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
   const viaTraceErrors = includeTypedTraceClearance
@@ -96,6 +98,9 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
+  const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
+    minClearance: options.holeClearance,
+  })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
@@ -115,6 +120,7 @@ export const getDrcErrors = (
       : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
+    ...holeTraceErrors,
     ...viaErrors,
   ]
 

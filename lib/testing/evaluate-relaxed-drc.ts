@@ -88,6 +88,7 @@ export const evaluateRelaxedDrc = ({
     circuitJson,
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
+      holeClearance: inputSrj.minTraceToHoleEdgeClearance,
       ...drcOptions,
     }),
   }
