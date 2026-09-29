@@ -650,7 +650,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
             obstacleMargin:
-            cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.15,
+              cms.differentialPairRoutedSrj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance:
               cms.differentialPairRoutedSrj.minViaEdgeToPadEdgeClearance,
             effort: cms.effort,
