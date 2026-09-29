@@ -106,50 +106,52 @@ export const selectIndependentClearanceRepairs = ({
       })
     }
   }
+  let index = new SpatialObstacleIndex(
+    indexInput,
+    selected.map(toTrace),
+    undefined,
+    [],
+    resolver,
+  )
+  const isSectionClear = ({
+    routeIndex,
+    startIndex,
+    endIndex,
+  }: MovedSection): boolean => {
+    const proposed = proposedRoutes[routeIndex]!
+    // Include both boundary segments of each moved section.
+    for (
+      let pi = Math.max(1, startIndex);
+      pi <= Math.min(endIndex, proposed.route.length - 1);
+      pi++
+    ) {
+      const a = proposed.route[pi - 1]!
+      const b = proposed.route[pi]!
+      if (a.z !== b.z) {
+        throw new Error("Partial clearance projection moved a layer transition")
+      }
+      if (
+        index.collides({
+          start: a,
+          end: b,
+          layer: mapZToLayerName(a.z, srj.layerCount),
+          width: Math.max(
+            a.traceThickness ?? proposed.traceThickness,
+            b.traceThickness ?? proposed.traceThickness,
+          ),
+          connectionNames: [traces[routeIndex]!.pcb_trace_id],
+        })
+      ) {
+        return false
+      }
+    }
+    return true
+  }
   // A move may need its neighbor to move too. Validate the proposed geometry
   // together instead of rejecting the first move against old neighbor copper.
   let pending = sections
   while (pending.length > 0) {
-    const candidateTraces = selected.map(toTrace)
-    const index = new SpatialObstacleIndex(
-      indexInput,
-      candidateTraces,
-      undefined,
-      [],
-      resolver,
-    )
-    const blocked = pending.filter(({ routeIndex, startIndex, endIndex }) => {
-      const proposed = selected[routeIndex]!
-      // Include both boundary segments of each moved section.
-      for (
-        let pi = Math.max(1, startIndex);
-        pi <= Math.min(endIndex, proposed.route.length - 1);
-        pi++
-      ) {
-        const a = proposed.route[pi - 1]!
-        const b = proposed.route[pi]!
-        if (a.z !== b.z) {
-          throw new Error(
-            "Partial clearance projection moved a layer transition",
-          )
-        }
-        if (
-          index.collides({
-            start: a,
-            end: b,
-            layer: mapZToLayerName(a.z, srj.layerCount),
-            width: Math.max(
-              a.traceThickness ?? proposed.traceThickness,
-              b.traceThickness ?? proposed.traceThickness,
-            ),
-            connectionNames: [traces[routeIndex]!.pcb_trace_id],
-          })
-        ) {
-          return true
-        }
-      }
-      return false
-    })
+    const blocked = pending.filter((section) => !isSectionClear(section))
     if (blocked.length === 0) break
     // A restored section can obstruct a move accepted in this round. Rebuild
     // the index and recheck survivors before publishing anything. Each round
@@ -161,9 +163,37 @@ export const selectIndependentClearanceRepairs = ({
     }
     const rejected = new Set(blocked)
     pending = pending.filter((section) => !rejected.has(section))
+    index = new SpatialObstacleIndex(
+      indexInput,
+      selected.map(toTrace),
+      undefined,
+      [],
+      resolver,
+    )
   }
-  const accepted = new Set(pending.map(({ routeIndex }) => routeIndex))
+  // Conflicting proposals may have blocked each other even though one clears
+  // the restored neighbor. Reconsider each rejected section once, retaining
+  // only individually clear moves against the already accepted copper.
+  const accepted = new Set(pending)
+  for (const section of sections) {
+    if (accepted.has(section) || !isSectionClear(section)) continue
+    const { routeIndex, startIndex, endIndex } = section
+    for (let pi = startIndex; pi < endIndex; pi++) {
+      selected[routeIndex]!.route[pi] = proposedRoutes[routeIndex]!.route[pi]!
+    }
+    accepted.add(section)
+    index = new SpatialObstacleIndex(
+      indexInput,
+      selected.map(toTrace),
+      undefined,
+      [],
+      resolver,
+    )
+  }
+  const acceptedRouteIndices = new Set(
+    [...accepted].map(({ routeIndex }) => routeIndex),
+  )
   return selected.map((route, routeIndex) =>
-    accepted.has(routeIndex) ? route : routes[routeIndex]!,
+    acceptedRouteIndices.has(routeIndex) ? route : routes[routeIndex]!,
   )
 }
