@@ -24,30 +24,39 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
       circuitJsonMetadata: { pcb_port_id: point.pcb_port_id },
     })
   }
-  const originalInput = structuredClone(input)
-  const inputObjects: object[] = [input]
-  while (inputObjects.length > 0) {
-    const value = inputObjects.pop()!
-    Object.freeze(value)
-    for (const child of Object.values(value)) {
-      if (child !== null && typeof child === "object") inputObjects.push(child)
+  const originalSrjSnapshot = structuredClone(input)
+  const srjObjectsToFreeze: object[] = [input]
+  while (srjObjectsToFreeze.length > 0) {
+    const srjObject = srjObjectsToFreeze.pop()!
+    Object.freeze(srjObject)
+    for (const nestedSrjObject of Object.values(srjObject)) {
+      if (nestedSrjObject !== null && typeof nestedSrjObject === "object") {
+        srjObjectsToFreeze.push(nestedSrjObject)
+      }
     }
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
   expect(solver.originalSrj).toBe(input)
-  expect(solver.originalSrj).toEqual(originalInput)
-  expect(solver.srj).not.toBe(input)
-  expect(solver.srj.connections).not.toBe(input.connections)
-  expect(solver.srj.obstacles[0]!.center).not.toBe(input.obstacles[0]!.center)
+  expect(solver.originalSrj).toEqual(originalSrjSnapshot)
+  expect(solver.routingSrj).not.toBe(input)
+  expect(solver.routingSrj.connections).not.toBe(input.connections)
+  expect(solver.routingSrj.obstacles[0]!.center).not.toBe(
+    input.obstacles[0]!.center,
+  )
   solver.solveUntilPhase("componentDetectionSolver")
-  const early = solver.differentialPairRoutingSolver!.getOutput()
-  expect(early.routedTraces).toHaveLength(2)
-  expect(early.srj.connections.map((connection) => connection.name)).toEqual([
-    "ordinary",
-  ])
-  expect(solver.srj.traces).toEqual(early.routedTraces)
+  const differentialPairRoutingOutput =
+    solver.differentialPairRoutingSolver!.getOutput()
+  expect(differentialPairRoutingOutput.routedTraces).toHaveLength(2)
+  expect(
+    differentialPairRoutingOutput.srj.connections.map(
+      (connection) => connection.name,
+    ),
+  ).toEqual(["ordinary"])
+  expect(solver.routingSrj.traces).toEqual(
+    differentialPairRoutingOutput.routedTraces,
+  )
   expect(solver.highDensityRouteSolver).toBeUndefined()
 
   solver.solve()
@@ -60,7 +69,7 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
     "source_trace_0",
     "source_trace_1",
   ])
-  for (const trace of early.routedTraces) {
+  for (const trace of differentialPairRoutingOutput.routedTraces) {
     expect(
       traces.find((candidate) => candidate.pcb_trace_id === trace.pcb_trace_id),
     ).toEqual(trace)
@@ -78,7 +87,7 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
       routedTraces: traces,
     }).errors,
   ).toEqual([])
-  expect(input).toEqual(originalInput)
-  expect(solver.originalSrj).toEqual(originalInput)
+  expect(input).toEqual(originalSrjSnapshot)
+  expect(solver.originalSrj).toEqual(originalSrjSnapshot)
   expect(solver.getConstructorParams()[0]).toBe(input)
 })

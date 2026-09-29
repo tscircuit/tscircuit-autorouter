@@ -1332,7 +1332,7 @@ export const AutoroutingPipelineDebugger = ({
           Trace Count:{" "}
           <span className="font-bold">
             {solver.srjWithPointPairs?.connections.length ??
-              `${solver.srj.connections.length} (*)`}
+              `${("routingSrj" in solver ? solver.routingSrj : solver.srj).connections.length} (*)`}
           </span>
         </div>
         {viaCount !== null && (
