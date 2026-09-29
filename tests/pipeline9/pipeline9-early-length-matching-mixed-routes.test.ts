@@ -40,9 +40,11 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
   })
   expect(solver.originalSrj).toBe(input)
   expect(solver.originalSrj).toEqual(originalSrjSnapshot)
-  expect(solver.routingSrj).not.toBe(input)
-  expect(solver.routingSrj.connections).not.toBe(input.connections)
-  expect(solver.routingSrj.obstacles[0]!.center).not.toBe(
+  expect(solver.differentialPairRoutedSrj).not.toBe(input)
+  expect(solver.differentialPairRoutedSrj.connections).not.toBe(
+    input.connections,
+  )
+  expect(solver.differentialPairRoutedSrj.obstacles[0]!.center).not.toBe(
     input.obstacles[0]!.center,
   )
   solver.solveUntilPhase("componentDetectionSolver")
@@ -54,7 +56,7 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
       (connection) => connection.name,
     ),
   ).toEqual(["ordinary"])
-  expect(solver.routingSrj.traces).toEqual(
+  expect(solver.differentialPairRoutedSrj.traces).toEqual(
     differentialPairRoutingOutput.routedTraces,
   )
   expect(solver.highDensityRouteSolver).toBeUndefined()
