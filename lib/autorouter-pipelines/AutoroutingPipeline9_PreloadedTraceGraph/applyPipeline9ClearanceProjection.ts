@@ -12,6 +12,7 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { canPublishIndependentClearanceRepairs } from "./canPublishIndependentClearanceRepairs"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
+import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
 
 /** Opens coupled copper gaps while keeping terminals, junctions and widths fixed. */
 export const applyPipeline9ClearanceProjection = ({
@@ -20,6 +21,7 @@ export const applyPipeline9ClearanceProjection = ({
   drcEvaluator,
   previousRoutes,
   allowPartialRepair = false,
+  subdivideSegments = false,
 }: {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
@@ -28,6 +30,8 @@ export const applyPipeline9ClearanceProjection = ({
   previousRoutes?: HighDensityRoute[]
   /** Retain independently safe wire adjustments on boards with mixed errors. */
   allowPartialRepair?: boolean
+  /** Add local bend vertices after the original wire adjustments are retained. */
+  subdivideSegments?: boolean
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
@@ -36,7 +40,11 @@ export const applyPipeline9ClearanceProjection = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
-  const canonicalRoutes = canonicalizePipeline9HdRoutes(routes)
+  const originalCanonicalRoutes = canonicalizePipeline9HdRoutes(routes)
+  const canonicalRoutes =
+    allowPartialRepair && subdivideSegments
+      ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
+      : originalCanonicalRoutes
   // Whole-board projection needs no cropping or splicing. Preserve every
   // transition's point indices so the via guard can prove its identity.
   let candidate = relaxTraceClearance({
@@ -63,6 +71,10 @@ export const applyPipeline9ClearanceProjection = ({
       routes: canonicalRoutes,
       proposedRoutes: candidate,
     })
+    // Do not retain extra vertices on protected or rejected routes.
+    candidate = candidate.map((route, index): HighDensityRoute =>
+      route === canonicalRoutes[index] ? originalCanonicalRoutes[index]! : route,
+    )
   }
   const fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
