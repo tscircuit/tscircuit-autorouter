@@ -91,7 +91,7 @@ test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Prom
     import.meta.path,
   )
 
-  // Known bug: Repair03 misses actual shorts outside a via's signal layers.
-  // A future via-span fix must update this characterization assertion.
-  expect(missedThroughViaShorts.length).toBeGreaterThan(0)
+  // Repair03 must detect every contact outside a through via's signal layers.
+  // This checks detection, not whether the routed board is free of shorts.
+  expect(missedThroughViaShorts.length).toBe(0)
 })
