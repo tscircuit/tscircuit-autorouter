@@ -9,10 +9,16 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
+type MovedSection = {
+  routeIndex: number
+  startIndex: number
+  endIndex: number
+}
+
 /**
- * Select proposals from repair04's junction-preserving projection. This does
- * not generate moves: a section is accepted only when every changed segment is
- * clear of all foreign copper, including previously accepted proposals.
+ * Select safe sections from repair04's junction-preserving projection.
+ * Validate neighboring moves together, then restore blocked sections until
+ * every retained move clears the copper that will actually be published.
  * Unchanged conflicts may remain; changed copper cannot trade one for another.
  */
 export const selectIndependentClearanceRepairs = ({
@@ -67,34 +73,25 @@ export const selectIndependentClearanceRepairs = ({
     ]),
   )
   const selected = [...routes]
-  let index = new SpatialObstacleIndex(
-    indexInput,
-    traces,
-    undefined,
-    [],
-    resolver,
-  )
+  const sections: MovedSection[] = []
   for (const [ri, projected] of proposedRoutes.entries()) {
     const original = routes[ri]!
     if (projected.route.length !== original.route.length) {
       throw new Error("Partial clearance projection changed routing topology")
     }
-    // repair04 rebuilds its via list from transitions. Keep the input's explicit
-    // via metadata (including repeated sites) because this pass only moves wires.
-    const proposed = { ...original, route: projected.route }
     const names = [traces[ri]!.pcb_trace_id]
     if (resolver.canonicalize(names).some((net) => protectedNets.has(net))) {
       continue
     }
-    const route = [...original.route]
-    let accepted = false
+    // Keep the original via metadata: this pass only moves wires.
+    selected[ri] = { ...original, route: [...projected.route] }
     let pointIndex = 0
-    while (pointIndex < proposed.route.length) {
+    while (pointIndex < projected.route.length) {
       const startIndex = pointIndex
       while (
-        pointIndex < proposed.route.length &&
-        (proposed.route[pointIndex]!.x !== original.route[pointIndex]!.x ||
-          proposed.route[pointIndex]!.y !== original.route[pointIndex]!.y)
+        pointIndex < projected.route.length &&
+        (projected.route[pointIndex]!.x !== original.route[pointIndex]!.x ||
+          projected.route[pointIndex]!.y !== original.route[pointIndex]!.y)
       ) {
         pointIndex++
       }
@@ -102,11 +99,28 @@ export const selectIndependentClearanceRepairs = ({
         pointIndex++
         continue
       }
-      const endIndex = pointIndex
-      // Adjacent moved vertices share segments and must be accepted together.
-      // An unchanged vertex separates independent sections. Include the two
-      // boundary segments so retaining one section cannot leave an unchecked gap.
-      let blocked = false
+      sections.push({
+        routeIndex: ri,
+        startIndex,
+        endIndex: pointIndex,
+      })
+    }
+  }
+  // A move may need its neighbor to move too. Validate the proposed geometry
+  // together instead of rejecting the first move against old neighbor copper.
+  let pending = sections
+  while (pending.length > 0) {
+    const candidateTraces = selected.map(toTrace)
+    const index = new SpatialObstacleIndex(
+      indexInput,
+      candidateTraces,
+      undefined,
+      [],
+      resolver,
+    )
+    const blocked = pending.filter(({ routeIndex, startIndex, endIndex }) => {
+      const proposed = selected[routeIndex]!
+      // Include both boundary segments of each moved section.
       for (
         let pi = Math.max(1, startIndex);
         pi <= Math.min(endIndex, proposed.route.length - 1);
@@ -128,29 +142,28 @@ export const selectIndependentClearanceRepairs = ({
               a.traceThickness ?? proposed.traceThickness,
               b.traceThickness ?? proposed.traceThickness,
             ),
-            connectionNames: names,
+            connectionNames: [traces[routeIndex]!.pcb_trace_id],
           })
         ) {
-          blocked = true
-          break
+          return true
         }
       }
-      if (blocked) continue
+      return false
+    })
+    if (blocked.length === 0) break
+    // A restored section can obstruct a move accepted in this round. Rebuild
+    // the index and recheck survivors before publishing anything. Each round
+    // removes at least one section, so this process is bounded by their count.
+    for (const { routeIndex, startIndex, endIndex } of blocked) {
       for (let pi = startIndex; pi < endIndex; pi++) {
-        route[pi] = proposed.route[pi]!
+        selected[routeIndex]!.route[pi] = routes[routeIndex]!.route[pi]!
       }
-      accepted = true
     }
-    if (!accepted) continue
-    selected[ri] = { ...proposed, route }
-    traces[ri] = toTrace(selected[ri]!, ri)
-    index = new SpatialObstacleIndex(
-      indexInput,
-      traces,
-      undefined,
-      [],
-      resolver,
-    )
+    const rejected = new Set(blocked)
+    pending = pending.filter((section) => !rejected.has(section))
   }
-  return selected
+  const accepted = new Set(pending.map(({ routeIndex }) => routeIndex))
+  return selected.map((route, routeIndex) =>
+    accepted.has(routeIndex) ? route : routes[routeIndex]!,
+  )
 }
