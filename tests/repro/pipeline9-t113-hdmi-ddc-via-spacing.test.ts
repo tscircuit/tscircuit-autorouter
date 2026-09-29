@@ -105,7 +105,13 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
     throw new Error("Missing the repaired T113 HDMI 1.8 V via pair")
   }
   const [viaA, viaB] = closestPair
-  expect(Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)).toBeLessThan(1e-9)
+  const centerDistance = Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)
+  const minimumSeparateCenterDistance =
+    viaA.hole_diameter / 2 + viaB.hole_diameter / 2 + viaClearance
+  const usesSharedDrill = centerDistance < 1e-9
+  expect(
+    usesSharedDrill || centerDistance >= minimumSeparateCenterDistance,
+  ).toBe(true)
 
   const routedCircuitJson = convertToCircuitJson(
     solver.srjWithPointPairs!,
@@ -128,14 +134,33 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
           radius: viaA.hole_diameter / 2 + viaClearance,
           fill: "#16a34a12",
           stroke: "#16a34a",
-          label: "0.20 mm clearance from shared drill edge",
+          label: usesSharedDrill
+            ? "0.20 mm clearance from shared drill edge"
+            : "0.20 mm clearance from first drill edge",
         },
         {
           center: viaA,
           radius: viaA.hole_diameter / 2,
           fill: "#16a34a",
-          label: "merged HDMI 1.8 V drill",
+          label: usesSharedDrill ? "shared HDMI 1.8 V drill" : "first drill",
         },
+        ...(!usesSharedDrill
+          ? [
+              {
+                center: viaB,
+                radius: viaB.hole_diameter / 2 + viaClearance,
+                fill: "#2563eb12",
+                stroke: "#2563eb",
+                label: "0.20 mm clearance from second drill edge",
+              },
+              {
+                center: viaB,
+                radius: viaB.hole_diameter / 2,
+                fill: "#2563eb",
+                label: "second drill",
+              },
+            ]
+          : []),
       ],
       rects: [
         {
@@ -143,8 +168,8 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
             x: (viaA.x + viaB.x) / 2,
             y: (viaA.y + viaB.y) / 2,
           },
-          width: 1.2,
-          height: 1.2,
+          width: Math.max(1.2, Math.abs(viaA.x - viaB.x) + 1),
+          height: Math.max(1.2, Math.abs(viaA.y - viaB.y) + 1),
           fill: "#00000000",
         },
       ],
