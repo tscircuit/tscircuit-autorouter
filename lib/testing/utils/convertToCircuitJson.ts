@@ -628,20 +628,8 @@ function getBestObstaclePcbPortId(
   return bestPcbPortId ?? candidatePortIds[0]
 }
 
-const layerNames = new Set<string>([
-  "top",
-  "bottom",
-  "inner1",
-  "inner2",
-  "inner3",
-  "inner4",
-  "inner5",
-  "inner6",
-  "inner7",
-  "inner8",
-])
-
-const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
+const isLayerName = (layer: string): layer is LayerName =>
+  layer === "top" || layer === "bottom" || /^inner[1-9]\d*$/.test(layer)
 
 /**
  * Create pad-like circuit-json elements from SRJ obstacles.

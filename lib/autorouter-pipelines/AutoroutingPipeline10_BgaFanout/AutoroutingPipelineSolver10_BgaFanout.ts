@@ -210,6 +210,7 @@ function getPhysicalFanoutBuses({
   // The fanout solver assigns one layer to an entire bus. Keep the dataset's
   // logical DDR buses in the SRJ, but use per-signal physical buses here so a
   // 25-signal address group is not incorrectly forced through one BGA layer.
+  // Differential-pair members share a physical bus and coordinated exits.
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
   const boundary = getExpandedBounds(source, fanoutBoundaryMargin)
   const inwardDirection: FanoutDirection =
@@ -217,7 +218,7 @@ function getPhysicalFanoutBuses({
   const outwardDirection: FanoutDirection =
     inwardDirection === "right" ? "left" : "right"
 
-  return inputSrj.connections.map((connection, connectionIndex) => {
+  const buses = inputSrj.connections.map((connection, connectionIndex): FanoutBusSpec => {
     const sourcePoints = connection.pointsToConnect.filter(
       (point) =>
         point.x >= source.bounds.minX &&
@@ -280,6 +281,44 @@ function getPhysicalFanoutBuses({
       termination: { type: "boundary" },
     }
   })
+  for (const pair of inputSrj.differentialPairs ?? []) {
+    const pairBuses = pair.connectionNames.map((name) => {
+      const bus = buses.find((bus) => bus.connectionNames.includes(name))
+      if (!bus)
+        throw new Error(`Missing fanout bus for differential pair member ${name}`)
+      return bus
+    })
+    pairBuses[0]!.connectionNames = [...pair.connectionNames]
+    pairBuses[0]!.maxLengthSkew = pair.lengthTolerance
+    pairBuses[0]!.direction = inwardDirection
+    pairBuses[0]!.preferredExit = inwardDirection
+    pairBuses[0]!.exitEdge = inwardDirection
+    const pairConnections = pair.connectionNames.map(
+      (name) => inputSrj.connections.find((connection) => connection.name === name)!,
+    )
+    const sourcePoints = pairConnections.map(
+      (connection) => connection.pointsToConnect.find((point) =>
+        point.x >= source.bounds.minX && point.x <= source.bounds.maxX &&
+        point.y >= source.bounds.minY && point.y <= source.bounds.maxY,
+      )!,
+    )
+    const centerY = (sourcePoints[0]!.y + sourcePoints[1]!.y) / 2
+    const pitch = inputSrj.minTraceWidth + (pair.traceGap ?? inputSrj.minTraceWidth)
+    // The second fanout follows the first fanout's lane order and copper layer.
+    pairBuses[0]!.connectionExitTargets = Object.fromEntries(
+      pairConnections.map((connection, index) => {
+        const pairedExit = connection.pointsToConnect.find(
+          (point) => point.pointId?.startsWith("fanout-exit:"),
+        )
+        return [connection.name, pairedExit ?? {
+          x: getCenterX(target),
+          y: centerY + (index - 0.5) * pitch,
+        }]
+      }),
+    )
+    buses.splice(buses.indexOf(pairBuses[1]!), 1)
+  }
+  return buses
 }
 
 function getFanoutOptions({
@@ -313,6 +352,10 @@ function getFanoutOptions({
     balanceLayerLoadByConnectionCount: true,
     compactBusTracks: true,
     borderDistribution: "even",
+    // Pair routing requires at least one trace width of clearance to fixed copper.
+    clearance: inputSrj.differentialPairs?.length
+      ? Math.max(inputSrj.minTraceWidth, inputSrj.defaultObstacleMargin ?? 0)
+      : undefined,
   }
 }
 
