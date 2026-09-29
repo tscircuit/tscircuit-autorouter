@@ -25,10 +25,22 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
     })
   }
   const originalInput = structuredClone(input)
+  const inputObjects: object[] = [input]
+  while (inputObjects.length > 0) {
+    const value = inputObjects.pop()!
+    Object.freeze(value)
+    for (const child of Object.values(value)) {
+      if (child !== null && typeof child === "object") inputObjects.push(child)
+    }
+  }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  const originalSrj = structuredClone(solver.originalSrj)
+  expect(solver.originalSrj).toBe(input)
+  expect(solver.originalSrj).toEqual(originalInput)
+  expect(solver.srj).not.toBe(input)
+  expect(solver.srj.connections).not.toBe(input.connections)
+  expect(solver.srj.obstacles[0]!.center).not.toBe(input.obstacles[0]!.center)
   solver.solveUntilPhase("componentDetectionSolver")
   const early = solver.differentialPairRoutingSolver!.getOutput()
   expect(early.routedTraces).toHaveLength(2)
@@ -67,5 +79,6 @@ test("Pipeline9 preloads matched pairs before routing crossing ordinary nets", (
     }).errors,
   ).toEqual([])
   expect(input).toEqual(originalInput)
-  expect(solver.originalSrj).toEqual(originalSrj)
+  expect(solver.originalSrj).toEqual(originalInput)
+  expect(solver.getConstructorParams()[0]).toBe(input)
 })
