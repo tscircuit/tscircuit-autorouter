@@ -54,7 +54,9 @@ test("regional repair expands a stalled context before exhausting its shared bud
     drcEvaluator,
     budget,
   })
-  expect(result.initialDrcIssueCount).toBe(117)
+  // Checks 0.0.228 also detects the 0.09477 mm copper gap between via_25 and
+  // via_120; their drill spacing passed the previous checker.
+  expect(result.initialDrcIssueCount).toBe(118)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(budget.maxRegions)

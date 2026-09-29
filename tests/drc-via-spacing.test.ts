@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import type { PcbVia } from "circuit-json"
 import {
   MIN_VIA_TO_VIA_CLEARANCE,
   getDrcErrors,
@@ -7,7 +8,7 @@ import {
 const VIA_OUTER_DIAMETER = 0.3
 const VIA_HOLE_DIAMETER = 0.15
 
-const createViaPair = (centerDistance: number) =>
+const createViaPair = (centerDistance: number): PcbVia[] =>
   [
     {
       type: "pcb_via",
@@ -27,7 +28,7 @@ const createViaPair = (centerDistance: number) =>
       hole_diameter: VIA_HOLE_DIAMETER,
       layers: ["top", "bottom"],
     },
-  ] as any[]
+  ]
 
 test("getDrcErrors reports different-net vias that are too close", () => {
   const circuitJson = createViaPair(VIA_HOLE_DIAMETER + 0.1 - 0.01)
@@ -60,8 +61,8 @@ test("getDrcErrors enforces 0.1 minimum via-to-via clearance", () => {
   })
 })
 
-test("getDrcErrors allows vias at 0.1 clearance", () => {
-  const centerDistance = VIA_HOLE_DIAMETER + MIN_VIA_TO_VIA_CLEARANCE
+test("getDrcErrors allows vias at 0.1 copper clearance", () => {
+  const centerDistance = VIA_OUTER_DIAMETER + MIN_VIA_TO_VIA_CLEARANCE
   const { errors } = getDrcErrors(createViaPair(centerDistance))
 
   expect(errors).toHaveLength(0)

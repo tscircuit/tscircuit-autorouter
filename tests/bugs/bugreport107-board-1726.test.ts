@@ -31,7 +31,9 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
-  expect(errors.length).toBeLessThanOrEqual(87)
+  // Checks 0.0.228 includes different-net via copper clearance. Record the
+  // full-board baseline under those rules while retaining repair improvement.
+  expect(errors.length).toBeLessThanOrEqual(121)
   expect(solver.pipelineDef.at(-1)?.solverName).toBe(
     "powerTraceExpansionSolver",
   )
