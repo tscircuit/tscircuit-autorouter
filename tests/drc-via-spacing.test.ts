@@ -8,27 +8,26 @@ import {
 const VIA_OUTER_DIAMETER = 0.3
 const VIA_HOLE_DIAMETER = 0.15
 
-const createViaPair = (centerDistance: number): PcbVia[] =>
-  [
-    {
-      type: "pcb_via",
-      pcb_via_id: "via_a",
-      x: 0,
-      y: 0,
-      outer_diameter: VIA_OUTER_DIAMETER,
-      hole_diameter: VIA_HOLE_DIAMETER,
-      layers: ["top", "bottom"],
-    },
-    {
-      type: "pcb_via",
-      pcb_via_id: "via_b",
-      x: centerDistance,
-      y: 0,
-      outer_diameter: VIA_OUTER_DIAMETER,
-      hole_diameter: VIA_HOLE_DIAMETER,
-      layers: ["top", "bottom"],
-    },
-  ]
+const createViaPair = (centerDistance: number): PcbVia[] => [
+  {
+    type: "pcb_via",
+    pcb_via_id: "via_a",
+    x: 0,
+    y: 0,
+    outer_diameter: VIA_OUTER_DIAMETER,
+    hole_diameter: VIA_HOLE_DIAMETER,
+    layers: ["top", "bottom"],
+  },
+  {
+    type: "pcb_via",
+    pcb_via_id: "via_b",
+    x: centerDistance,
+    y: 0,
+    outer_diameter: VIA_OUTER_DIAMETER,
+    hole_diameter: VIA_HOLE_DIAMETER,
+    layers: ["top", "bottom"],
+  },
+]
 
 test("getDrcErrors reports different-net vias that are too close", () => {
   const circuitJson = createViaPair(VIA_HOLE_DIAMETER + 0.1 - 0.01)

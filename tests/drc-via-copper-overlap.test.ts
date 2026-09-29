@@ -24,9 +24,7 @@ test("getDrcErrors rejects via copper overlap despite sufficient drill spacing",
     },
   ]
   const drillGap =
-    vias[1].x -
-    vias[0].x -
-    (vias[0].hole_diameter + vias[1].hole_diameter) / 2
+    vias[1].x - vias[0].x - (vias[0].hole_diameter + vias[1].hole_diameter) / 2
   expect(drillGap).toBeCloseTo(0.1)
 
   const { errors } = getDrcErrors(vias)
