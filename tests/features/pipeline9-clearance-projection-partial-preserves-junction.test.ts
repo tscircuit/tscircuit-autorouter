@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
@@ -46,13 +47,29 @@ test("partial projection keeps an interior same-net branch attached", (): void =
     vias: [],
   })
   const original = structuredClone(fixture.routes)
-  const routes = applyPipeline9ClearanceProjection({
-    ...fixture,
-    allowPartialRepair: true,
-  })
-  // The contacted segment is fixed by repair04's existing junction anchors.
-  expect(routes[0]).toEqual(original[0])
-  expect(routes[2]).toEqual(original[2])
-  expect(routes[1]).not.toEqual(original[1])
-  expect(fixture.routes).toEqual(original)
+  for (const subdivideSegments of [false, true]) {
+    const routes = applyPipeline9ClearanceProjection({
+      ...fixture,
+      allowPartialRepair: true,
+      subdivideSegments,
+    })
+    // The contacted segment is fixed by repair04's existing junction anchors.
+    if (!subdivideSegments) {
+      expect(routes[0]).toEqual(original[0])
+    }
+    const branch = routes[2]!.route[0]!
+    const trunk = routes[0]!.route
+    expect(
+      Math.min(
+        ...trunk
+          .slice(1)
+          .map((point, index) =>
+            pointToSegmentDistance(branch, trunk[index]!, point),
+          ),
+      ),
+    ).toBeLessThan(1e-12)
+    expect(routes[2]).toEqual(original[2])
+    expect(routes[1]).not.toEqual(original[1])
+    expect(fixture.routes).toEqual(original)
+  }
 })
