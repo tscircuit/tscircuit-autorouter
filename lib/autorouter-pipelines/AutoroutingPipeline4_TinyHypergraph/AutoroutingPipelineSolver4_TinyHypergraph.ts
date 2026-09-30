@@ -379,7 +379,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * Math.min(1, cms.effort))),
+          totalStepsPerNode: Math.max(
+            20,
+            Math.round(60 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],

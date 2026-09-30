@@ -287,7 +287,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             effort: Math.min(1, cms.effort),
             ACCEPTABLE_REGION_COST: 0.1,
             MAX_ATTEMPTS_PER_REGION: Math.max(3, 3 * Math.min(1, cms.effort)),
-            MAX_ATTEMPTS_PER_SECTION: Math.max(50, 50 * Math.min(1, cms.effort)),
+            MAX_ATTEMPTS_PER_SECTION: Math.max(
+              50,
+              50 * Math.min(1, cms.effort),
+            ),
             FRACTION_TO_REPLACE: 1,
             alwaysRipConflicts: true,
           },

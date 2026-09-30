@@ -649,7 +649,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * Math.min(1, cms.effort))),
+          totalStepsPerNode: Math.max(
+            12,
+            Math.round(20 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],

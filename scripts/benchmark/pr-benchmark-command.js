@@ -107,9 +107,13 @@ export const parsePrBenchmarkCommand = (body) => {
   }
 
   if (/^\/benchmark-effort(?:\s|$)/.test(command)) {
-    const args = splitShellArgs(command.slice("/benchmark-effort".length).trim())
+    const args = splitShellArgs(
+      command.slice("/benchmark-effort".length).trim(),
+    )
     if (args.length !== 0) {
-      throw new Error("/benchmark-effort takes no arguments; it compares 1x, 1.5x, and 2x on dataset18")
+      throw new Error(
+        "/benchmark-effort takes no arguments; it compares 1x, 1.5x, and 2x on dataset18",
+      )
     }
     return {
       kind: "benchmark-effort",
