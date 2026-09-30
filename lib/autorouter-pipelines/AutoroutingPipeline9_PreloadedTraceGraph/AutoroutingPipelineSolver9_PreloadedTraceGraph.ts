@@ -910,11 +910,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               ),
               enableCrossingViaReduction: true,
-              terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
-                cms.srj.connections,
-                cms.srj.obstacles,
-                cms.srj.layerCount,
-              ),
+              terminalLayerIndicesByPcbPortId:
+                getTerminalLayerIndicesByPcbPortId(
+                  cms.srj.connections,
+                  cms.srj.obstacles,
+                  cms.srj.layerCount,
+                ),
             },
             getCost: (
               routes: HighDensityRoute[],
@@ -928,7 +929,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                       .length,
                   0,
                 ),
-                points: traces.reduce((sum, trace) => sum + trace.route.length, 0),
+                points: traces.reduce(
+                  (sum, trace) => sum + trace.route.length,
+                  0,
+                ),
               }
             },
             isValid: (routes: HighDensityRoute[]): boolean =>

@@ -804,7 +804,9 @@ export const parseArgs = (
     options.effort !== undefined &&
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
-    throw new Error("--effort must be a finite number greater than or equal to 1")
+    throw new Error(
+      "--effort must be a finite number greater than or equal to 1",
+    )
   }
 
   return options

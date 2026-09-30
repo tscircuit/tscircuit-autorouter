@@ -618,9 +618,9 @@ jobs:
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
             const formatEffortSuffix = (effortLabel) => {
               const label = String(effortLabel ?? '')
-              const match = label.match(/^(\d+)x effort$/)
+              const match = label.match(/^(\d+(?:\.\d+)?)x effort$/)
               if (!match) return label === 'mixed effort' ? '(mixed)' : ''
-              const effort = Number.parseInt(match[1], 10)
+              const effort = Number.parseFloat(match[1])
               return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
             }
             const formatSolverDisplayName = (solverName, effortLabel) =>
@@ -1126,9 +1126,9 @@ jobs:
               String(solverName ?? '').replace(/^AutoroutingPipelineSolver(\d+).*$/, 'Pipeline$1')
             const formatEffortSuffix = (effortLabel) => {
               const label = String(effortLabel ?? '')
-              const match = label.match(/^(\d+)x effort$/)
+              const match = label.match(/^(\d+(?:\.\d+)?)x effort$/)
               if (!match) return label === 'mixed effort' ? '(mixed)' : ''
-              const effort = Number.parseInt(match[1], 10)
+              const effort = Number.parseFloat(match[1])
               return Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ''
             }
             const formatSolverDisplayName = (solverName, effortLabel) =>
