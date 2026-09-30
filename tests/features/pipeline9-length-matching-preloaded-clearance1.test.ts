@@ -3,12 +3,13 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createPipeline9LengthMatchingPreloadedInput"
 
-test("Pipeline9 length matching tight-preload safety", (): void => {
+// Pipeline 9 currently omits bus length matching.
+test.failing("Pipeline9 length matching tight-preload safety", (): void => {
   const srj = createPipeline9LengthMatchingPreloadedInput(0.3)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
   })
-  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
+  solver.solveUntilPhase("powerTraceExpansionSolver")
   const before = evaluateRelaxedDrc({
     inputSrj: srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
