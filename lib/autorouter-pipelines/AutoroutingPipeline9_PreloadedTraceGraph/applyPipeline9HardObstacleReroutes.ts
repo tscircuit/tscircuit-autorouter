@@ -107,11 +107,9 @@ export const applyPipeline9HardObstacleReroutes = ({
 
     for (const error of errors
       .filter((error) => error.type === "pcb_via_trace_clearance_error")
-      .sort((left, right) => {
-        const leftClearance =
-          typeof left.actual_clearance === "number"
-            ? left.actual_clearance
-            : 0
+        .sort((left, right) => {
+          const leftClearance =
+            typeof left.actual_clearance === "number" ? left.actual_clearance : 0
         const rightClearance =
           typeof right.actual_clearance === "number"
             ? right.actual_clearance
@@ -188,8 +186,7 @@ export const applyPipeline9HardObstacleReroutes = ({
         if (
           candidateTraceErrors.length > existingTraceErrorCount ||
           candidateTraceErrors.some(
-            (candidate) =>
-              !existingTraceErrors.has(traceErrorKey(candidate)),
+            (candidate) => !existingTraceErrors.has(traceErrorKey(candidate)),
           )
         ) {
           continue
@@ -213,7 +210,11 @@ export const applyPipeline9HardObstacleReroutes = ({
         improved = true
         break
       }
-      if (improved || attempts >= maxAttempts || searchNodes >= MAX_SEARCH_NODES)
+      if (
+        improved ||
+        attempts >= maxAttempts ||
+        searchNodes >= MAX_SEARCH_NODES
+      )
         break
     }
     if (!improved) break

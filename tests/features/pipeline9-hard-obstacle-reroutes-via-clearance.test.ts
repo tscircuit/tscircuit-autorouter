@@ -67,7 +67,7 @@ test("single-connection reroute clears via clearance while neighboring copper st
       routedTraces: traces,
     })
     const errors = normalizePipeline9DrcErrorsForRepair({
-      errors: result.errors,
+      errors: result.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: result.circuitJson,
       newTraceIds: new Set(traces.map((trace) => trace.pcb_trace_id)),
     })
