@@ -8,6 +8,11 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      effort_compare:
+        description: Compare 1x, 1.5x, and 2x effort on dataset18
+        required: false
+        default: false
+        type: boolean
       solver_name:
         description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver9_PreloadedTraceGraph; use "all" for all solvers)'
         required: false
@@ -67,12 +72,20 @@ permissions:
   issues: write
 
 jobs:
+  effort-comparison:
+    if: github.event_name == 'workflow_dispatch' && inputs.effort_compare == true
+    uses: ./.github/workflows/benchmark-effort.yml
+    with:
+      ref: ${{ inputs.ref }}
+      pr_number: ${{ inputs.pr_number }}
+
   benchmark:
     name: Run benchmark
     if: |
       (
         github.event_name == 'workflow_dispatch' &&
-        inputs.same_machine_compare != true
+        inputs.same_machine_compare != true &&
+        inputs.effort_compare != true
       ) || (
         github.event_name == 'push' &&
         github.ref_name == 'main'

@@ -57,13 +57,13 @@ jobs:
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                workflow_id: command.kind === 'benchmark-effort' ? 'benchmark-effort.yml' : isProfile ? 'profile.yml' : 'benchmark.yml',
+                workflow_id: isProfile ? 'profile.yml' : 'benchmark.yml',
                 ref: context.payload.repository.default_branch,
                 inputs: {
                   ref: pr.data.head.sha,
                   pr_number: String(context.issue.number),
                   ...(command.kind === 'benchmark-effort' ? {} : { dataset_name: dataset }),
-                  ...(command.kind === 'benchmark-effort' ? {} : isProfile
+                  ...(command.kind === 'benchmark-effort' ? { effort_compare: 'true' } : isProfile
                     ? { profile_args_json: JSON.stringify(command.benchmarkArgs) }
                     : {
                         profile_solvers: String(command.profileSolvers),
