@@ -1,0 +1,76 @@
+name: Pipeline 9 through-via timeout profiling
+
+on:
+  push:
+    branches: [codex/profile-through-via-timeouts]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - name: Checkout diagnostic controller
+        uses: actions/checkout@v4
+        with:
+          path: controller
+          persist-credentials: false
+      - name: Checkout exact benchmark main
+        uses: actions/checkout@v4
+        with:
+          ref: e85fb1930487a46983772cb0bc629afa00aef18c
+          path: main
+          persist-credentials: false
+      - name: Checkout exact PR revision
+        uses: actions/checkout@v4
+        with:
+          ref: 5680cbdcdf513bbee08679c04297427aefb256e7
+          path: candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - name: Install main dependencies
+        working-directory: main
+        run: bun install
+      - name: Install candidate dependencies
+        working-directory: candidate
+        run: bun install
+      - name: Prepare identical observer and provenance
+        shell: bash
+        run: |
+          mkdir -p profile-results
+          for revision in main candidate; do
+            cp controller/scripts/profile-pipeline9-repair.ts "$revision/scripts/profile-pipeline9-repair.ts"
+            git -C "$revision" rev-parse HEAD > "profile-results/$revision.sha"
+            cp "$revision/package.json" "profile-results/$revision.package.json"
+            (cd "$revision" && bun pm ls --all) > "profile-results/$revision.dependencies.txt"
+          done
+          bun --version > profile-results/bun-version.txt
+          lscpu > profile-results/cpu.txt
+      - name: Profile samples serially on the same runner
+        shell: bash
+        run: |
+          result=0
+          for sample in 14 15; do
+            for revision in main candidate; do
+              output="$GITHUB_WORKSPACE/profile-results/$revision-$sample"
+              mkdir -p "$output"
+              (
+                cd "$revision"
+                bun --cpu-prof --cpu-prof-name=cpu.cpuprofile --cpu-prof-dir="$output" \
+                  scripts/profile-pipeline9-repair.ts "$sample" "$output"
+              ) > "$output/run.log" 2>&1 || result=1
+            done
+          done
+          exit "$result"
+      - name: Upload CPU profiles and actual route measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline9-through-via-timeout-profiles
+          path: profile-results
+          if-no-files-found: error
