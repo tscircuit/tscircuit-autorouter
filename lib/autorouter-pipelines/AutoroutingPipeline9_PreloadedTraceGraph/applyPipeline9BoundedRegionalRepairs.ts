@@ -18,6 +18,7 @@ import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionNa
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
+import { applyPipeline9HardObstacleReroutes } from "./applyPipeline9HardObstacleReroutes"
 
 export type Pipeline9BoundedRegionalRepairResult = {
   routes: HighDensityRoute[]
@@ -598,6 +599,34 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.publishedDrcIssueCount = independentErrors.length
     result.finalDrcIssueCount = independentErrors.length
     result.repaired = independentErrors.length === 0
+  }
+  if (budget.revisitChangedRegions && result.publishedDrcIssueCount) {
+    const rerouted = applyPipeline9HardObstacleReroutes({
+      originalSrj,
+      routes: result.routes,
+      connections: originalSrj.connections,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
+      viaHoleDiameter,
+      maxAttempts: 100,
+    })
+    if (rerouted !== result.routes) {
+      result.routes = rerouted
+      const finalReference = drcEvaluator({
+        traces: [],
+        routes: rerouted,
+        hdRoutes: rerouted,
+      })
+      result.referenceValidationCount++
+      const finalErrors = Array.isArray(finalReference)
+        ? finalReference
+        : finalReference.errors
+      result.finalDrcIssueCount = finalErrors.length
+      result.publishedDrcIssueCount = finalErrors.length
+      result.repaired = finalErrors.length === 0
+    }
   }
   return result
 }
