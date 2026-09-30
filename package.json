@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.943",
+  "version": "0.0.945",
   "type": "module",
   "repository": {
     "type": "git",
@@ -59,7 +59,7 @@
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/13dba5a7e65c01d5f5eda081def808dc27b4d197",
     "@tscircuit/solver-utils": "^0.0.16",
-    "@tscircuit/trace-simplification-solver": "github:Abse2001/trace-simplification-solver#7560900cbffc0f415c3ec9940d0788ba9ac8ed2c",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#63589c466643da56c99122998ef2768adc8859dd",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
