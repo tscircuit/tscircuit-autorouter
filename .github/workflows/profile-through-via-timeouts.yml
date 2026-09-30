@@ -18,16 +18,16 @@ jobs:
         with:
           path: controller
           persist-credentials: false
-      - name: Checkout PR before pad lookup optimization
+      - name: Checkout main before upstream Repair03 pin
         uses: actions/checkout@v4
         with:
-          ref: 5680cbdcdf513bbee08679c04297427aefb256e7
+          ref: 38a1ee35516cee0a7b1fa9ce80f6c94bb4ab985f
           path: main
           persist-credentials: false
-      - name: Checkout PR with pad lookup optimization
+      - name: Checkout main with merged upstream Repair03 pin
         uses: actions/checkout@v4
         with:
-          ref: 13dc4a0fb5a61858687123a0382e6e849926b9a4
+          ref: a2bb8baa38b3afff5785e414dd75d5275337cc50
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -78,7 +78,7 @@ jobs:
             done
           done
           exit "$result"
-      - name: Verify optimization preserves completed routes and DRCs
+      - name: Compare completed routes and DRCs across Repair03 pins
         shell: bash
         run: |
           for sample in 14 15; do
