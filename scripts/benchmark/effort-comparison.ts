@@ -23,7 +23,7 @@ export function renderEffortComparison(runs: EffortRun[]): string {
   const lines = [
     "## Dataset18 effort comparison",
     "",
-    "Same commit and runner; pipeline 9; 1x, 1.5x, and 2x cleanup effort. Per-sample timeouts: 360s, 540s, and 720s.",
+    "Same commit and runner; pipeline 9; 1x, 1.5x, and 2x cleanup effort. Per-sample timeouts: 600s, 900s, and 1200s.",
     `Via totals use only the ${matched.length} samples solved with relaxed DRC passing at every effort. Failures and timeouts remain visible below.`,
     "",
     "| Effort | Solved | DRC passing | Timeouts | Matched vias | Via change vs 1x | Matched runtime (s) |",
@@ -70,7 +70,7 @@ if (import.meta.main) {
         "--effort",
         String(effort),
         "--sample-timeout",
-        `${360 * effort}s`,
+        `${600 * effort}s`,
         "--concurrency",
         "8",
       ],
@@ -81,7 +81,11 @@ if (import.meta.main) {
       throw new Error(`Benchmark ${effort}x exited with ${result.status}`)
     const raw = readFileSync("benchmark-result.json", "utf8")
     writeFileSync(`benchmark-effort/${effort}x.json`, raw)
-    runs.push({ effort, report: JSON.parse(raw) as BenchmarkReport })
+    const report = JSON.parse(raw) as BenchmarkReport
+    if (report.effortLabel !== `${effort}x effort`) {
+      throw new Error(`Expected ${effort}x effort, got ${report.effortLabel}`)
+    }
+    runs.push({ effort, report })
   }
   writeFileSync("benchmark-effort/comparison.md", renderEffortComparison(runs))
 }

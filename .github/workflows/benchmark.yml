@@ -75,6 +75,7 @@ jobs:
   effort-comparison:
     if: github.event_name == 'workflow_dispatch' && inputs.effort_compare == true
     uses: ./.github/workflows/benchmark-effort.yml
+    secrets: inherit
     with:
       ref: ${{ inputs.ref }}
       pr_number: ${{ inputs.pr_number }}

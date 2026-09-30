@@ -7,10 +7,16 @@ The command takes no arguments. For a manual workflow dispatch, use Benchmark
 Effort with the commit SHA and PR number.
 
 Routing/search settings are capped at 1x; lower-effort settings are preserved.
-Additional effort runs extra trace-simplification passes (2, 3, and 4), including
-cleanup of mutated preloaded traces, with proportional iteration budgets.
-Outer pipeline budgets still grow to accommodate the extra cleanup work.
-Per-sample benchmark timeouts grow from 360s to 540s and 720s.
+Pipeline 9 first completes the same routing, simplification, and DRC repair at
+all three effort levels. Extra effort then runs one or two additional cleanup
+passes before length matching and power-trace expansion. Each pass is a candidate:
+accept it only if it passes DRC (including board and declared clearances) and has
+fewer vias, or equal vias with fewer route points. Retain the best accepted result
+across passes. Other pipelines retain their 1x cleanup behavior above 1x effort.
+Cleanup iteration budgets and outer pipeline budgets grow with the extra work.
+The benchmark parser preserves fractional efforts and verifies the effective
+effort in every generated report.
+Per-sample benchmark timeouts grow from 600s to 900s and 1200s.
 
 Via totals compare only samples solved with relaxed DRC passing at every effort.
 Completion, DRC pass rates, timeouts, paired runtime, and individual via counts

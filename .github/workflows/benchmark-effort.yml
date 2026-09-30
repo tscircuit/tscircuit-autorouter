@@ -44,6 +44,7 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number }}
           BENCHMARK_REF: ${{ inputs.ref }}
         with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const fs = require('node:fs')
             const body = fs.readFileSync('benchmark-effort/comparison.md', 'utf8')

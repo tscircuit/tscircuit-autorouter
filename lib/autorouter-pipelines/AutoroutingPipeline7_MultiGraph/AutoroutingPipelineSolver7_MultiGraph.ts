@@ -917,12 +917,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
-      // Give additional cleanup passes a proportional iteration budget.
-      this.activeSubSolver.MAX_ITERATIONS = Math.ceil(
-        this.activeSubSolver.MAX_ITERATIONS * Math.max(1, this.effort),
-      )
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
-        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
+          Math.min(1, this.effort),
       )
     }
     if (

@@ -1,3 +1,5 @@
+import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -283,6 +285,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   viaHoleDiameter!: number
   minTraceWidth!: number
   effort: number
+  effortCleanupSolver?: Pipeline9EffortCleanupSolver
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -864,6 +867,88 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "effortCleanupSolver",
+      Pipeline9EffortCleanupSolver,
+      (cms) => {
+        const preloadedTraces = cms.getUpdatedPreloadedTraces()
+        const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
+        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
+          assignUniquePcbTraceIdsToNewTraces(
+            convertPipeline7HdRoutesToSimplifiedPcbTraces({
+              connections: cms.netToPointPairsSolver!.newConnections,
+              originalConnections: cms.originalSrj.connections,
+              hdRoutes: canonicalizePipeline9HdRoutes(routes),
+              layerCount: cms.srj.layerCount,
+              obstacles: cms.srj.obstacles,
+              defaultViaHoleDiameter: cms.viaHoleDiameter,
+              connMap: cms.connMap,
+            }),
+            cms.originalSrj.traces ?? [],
+          )
+        return [
+          {
+            effort: cms.effort,
+            config: {
+              hdRoutes,
+              preserveRouteEndpoints: true,
+              obstacles: cms.srj.obstacles,
+              connMap: cms.connMap,
+              colorMap: cms.colorMap,
+              outline: cms.srj.outline,
+              defaultViaDiameter: cms.viaDiameter,
+              layerCount: cms.srj.layerCount,
+              minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+              minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+              otherHdRoutes: preloadedTraces.flatMap((trace, index) =>
+                convertPreloadedTraceToHdRoutes(
+                  trace,
+                  index,
+                  cms.srj.layerCount,
+                  cms.viaDiameter,
+                  cms.connMap,
+                ),
+              ),
+              enableCrossingViaReduction: true,
+              terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
+                cms.srj.connections,
+                cms.srj.obstacles,
+                cms.srj.layerCount,
+              ),
+            },
+            getCost: (
+              routes: HighDensityRoute[],
+            ): { vias: number; points: number } => {
+              const traces = convert(routes)
+              return {
+                vias: traces.reduce(
+                  (sum, trace) =>
+                    sum +
+                    trace.route.filter((point) => point.route_type === "via")
+                      .length,
+                  0,
+                ),
+                points: traces.reduce((sum, trace) => sum + trace.route.length, 0),
+              }
+            },
+            isValid: (routes: HighDensityRoute[]): boolean =>
+              evaluateRelaxedDrc({
+                inputSrj,
+                srjWithPointPairs: cms.srjWithPointPairs!,
+                routedTraces: convert(routes),
+                includeBoardClearance: true,
+                drcOptions: {
+                  traceClearance:
+                    cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+                  viaClearance:
+                    cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+                },
+              }).errors.length === 0,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
@@ -892,7 +977,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes = cms.effortCleanupSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1077,17 +1162,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
-      // Give additional cleanup passes a proportional iteration budget.
-      this.activeSubSolver.MAX_ITERATIONS = Math.ceil(
-        this.activeSubSolver.MAX_ITERATIONS * Math.max(1, this.effort),
-      )
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
-        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
+        this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
+          Math.min(1, this.effort),
       )
     }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
-      pipelineStepDef.solverName === "powerTraceExpansionSolver"
+      pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
+      (pipelineStepDef.solverName === "effortCleanupSolver" && this.effort > 1)
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -1357,6 +1440,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.effortCleanupSolver?.solved
+        ? this.effortCleanupSolver.getOutput()
+        : undefined) ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
