@@ -247,6 +247,7 @@ export const createRegionalFallbackProblem = (
       (slice) =>
         slice.sourceRoute.isThroughObstacle !== true &&
         (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+          pointsAreEqual(slice.start.point, slice.end.point) ||
           promotedFixedRouteConnectionNames.has(
             slice.sourceRoute.connectionName,
           )),
