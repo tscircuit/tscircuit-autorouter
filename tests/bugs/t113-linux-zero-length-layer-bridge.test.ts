@@ -10,7 +10,7 @@ const fixturePath = new URL(
   import.meta.url,
 )
 
-test("reproduces the T113 zero-length layer bridge reconstruction failure", async (): Promise<void> => {
+test("routes the T113 phase through a zero-length layer bridge", async (): Promise<void> => {
   const input = JSON.parse(
     gunzipSync(Uint8Array.from(readFileSync(fixturePath))).toString("utf8"),
     (_key, value) =>
@@ -21,12 +21,11 @@ test("reproduces the T113 zero-length layer bridge reconstruction failure", asyn
     { cacheProvider: null },
   )
 
-  expect(() => solver.solve()).toThrow(
-    'Pipeline9 could not reconnect mutated preloaded segment "breakout:pcb_breakout_point_50_fixed_30_2"',
-  )
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
+  solver.solve()
+
+  expect(solver.failed, solver.error ?? "").toBe(false)
+  expect(solver.solved).toBe(true)
   await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-}, 1_080_000)
+})
