@@ -249,9 +249,9 @@ const rectBounds = (rect: Pipeline9AxisAlignedRect): Bounds => ({
 const routeCopperOverlapsBounds = (
   route: HighDensityRoute,
   bounds: Bounds,
-  srj: SimpleRouteJson,
+  opts: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
 ): boolean => {
-  const geometry = getPipeline9RouteCopperGeometry(route, srj)
+  const geometry = getPipeline9RouteCopperGeometry(route, opts)
   return (
     geometry.wireSegments.some((segment) =>
       boundsOverlap(wireSegmentBounds(segment), bounds),
