@@ -1,6 +1,6 @@
+import { getVectorLength } from "@tscircuit/high-density-a01"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
-import { getVectorLength } from "lib/utils/getVectorLength"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 // Give clearance projection a bend within short pad/trace gaps.
