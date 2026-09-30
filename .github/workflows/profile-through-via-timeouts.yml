@@ -47,7 +47,18 @@ jobs:
             cp controller/scripts/profile-pipeline9-repair.ts "$revision/scripts/profile-pipeline9-repair.ts"
             git -C "$revision" rev-parse HEAD > "profile-results/$revision.sha"
             cp "$revision/package.json" "profile-results/$revision.package.json"
-            (cd "$revision" && bun pm ls --all) > "profile-results/$revision.dependencies.txt"
+            # This repository disables lockfile saving, so bun pm ls cannot
+            # enumerate it. Record the actual installed package manifests.
+            (cd "$revision" && bun -e '
+              const packages = []
+              for await (const path of new Bun.Glob("**/package.json").scan({ cwd: "node_modules", followSymlinks: true })) {
+                const manifest = await Bun.file(`node_modules/${path}`).json()
+                packages.push({ path, name: manifest.name, version: manifest.version })
+              }
+              if (packages.length === 0) throw new Error("No installed package manifests found")
+              packages.sort((a, b) => a.path.localeCompare(b.path))
+              console.log(JSON.stringify(packages, null, 2))
+            ') > "profile-results/$revision.dependencies.json"
           done
           bun --version > profile-results/bun-version.txt
           lscpu > profile-results/cpu.txt
