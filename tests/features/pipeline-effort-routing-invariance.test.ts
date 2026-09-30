@@ -18,6 +18,7 @@ test("higher effort preserves initial routing and extends cleanup budgets", (): 
       solver.step()
     expect(solver.failed).toBe(false)
     expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
+    expect(solver.highDensityRouteSolver!.effort).toBe(1)
     routes.push(structuredClone(solver.highDensityStitchSolver!.mergedHdRoutes))
     solver.step()
     expect(solver.traceSimplificationSolver!.MAX_ITERATIONS).toBe(

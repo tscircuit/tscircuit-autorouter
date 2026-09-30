@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import { renderEffortComparison } from "../scripts/benchmark/effort-comparison"
-import type { BenchmarkReport, WorkerResult } from "../scripts/benchmark/benchmark-types"
+import type {
+  BenchmarkReport,
+  WorkerResult,
+} from "../scripts/benchmark/benchmark-types"
 
 test("effort comparison excludes failures from paired vias but reports them", (): void => {
   const runs = [1, 1.5, 2].map((effort) => ({
