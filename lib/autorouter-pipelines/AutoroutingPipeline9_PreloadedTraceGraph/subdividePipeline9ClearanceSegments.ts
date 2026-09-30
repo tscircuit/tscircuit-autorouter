@@ -3,7 +3,8 @@ import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { getVectorLength } from "lib/utils/getVectorLength"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
-const MAX_SEGMENT_LENGTH = 0.5
+// Give clearance projection a bend within short pad/trace gaps.
+const MAX_SEGMENT_LENGTH = 0.25
 const MAX_SUBDIVISIONS = 32
 
 /** Gives local clearance projection movable vertices without changing copper. */
