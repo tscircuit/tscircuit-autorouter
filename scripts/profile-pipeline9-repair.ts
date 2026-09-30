@@ -115,8 +115,8 @@ const captureProgress = (): void => {
   observedPipelineStepIndex = solver.currentPipelineStepIndex
   const phaseName = solver.pipelineDef[solver.currentPipelineStepIndex]?.solverName
   const elapsedTimeMs = performance.now() - startedAt
-  if (phaseName === "pipeline9JointDrcRepairSolver") {
-    jointSolver = solver.activeSubSolver as ObservedSolver
+  if (solver.pipeline9JointDrcRepairSolver) {
+    jointSolver = solver.pipeline9JointDrcRepairSolver as ObservedSolver
   }
   if (phaseName !== lastPhase || elapsedTimeMs - lastProgressAt >= 3_000) {
     const progress: ProgressSample = {
@@ -145,6 +145,8 @@ try {
     if (
       iteration % 512 === 0 ||
       jointSolver ||
+      solver.pipelineDef[solver.currentPipelineStepIndex]?.solverName ===
+        "pipeline9JointDrcRepairSolver" ||
       solver.currentPipelineStepIndex !== observedPipelineStepIndex
     ) {
       captureProgress()
@@ -164,6 +166,9 @@ let drcCount: number | null = null
 let traceCount: number | null = null
 let viaCount: number | null = null
 if (didSolve) {
+  if (!jointSolver) {
+    throw new Error("Completed solve is missing observed joint repair")
+  }
   if (!solver.getOutputSimplifiedPcbTraces || !solver.srjWithPointPairs) {
     throw new Error("Solved Pipeline 9 is missing output or point-pair SRJ")
   }

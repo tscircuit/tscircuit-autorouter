@@ -18,16 +18,16 @@ jobs:
         with:
           path: controller
           persist-credentials: false
-      - name: Checkout exact benchmark main
-        uses: actions/checkout@v4
-        with:
-          ref: e85fb1930487a46983772cb0bc629afa00aef18c
-          path: main
-          persist-credentials: false
-      - name: Checkout exact PR revision
+      - name: Checkout PR before pad lookup optimization
         uses: actions/checkout@v4
         with:
           ref: 5680cbdcdf513bbee08679c04297427aefb256e7
+          path: main
+          persist-credentials: false
+      - name: Checkout PR with pad lookup optimization
+        uses: actions/checkout@v4
+        with:
+          ref: 13dc4a0fb5a61858687123a0382e6e849926b9a4
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -78,6 +78,14 @@ jobs:
             done
           done
           exit "$result"
+      - name: Verify optimization preserves completed routes and DRCs
+        shell: bash
+        run: |
+          for sample in 14 15; do
+            cmp "profile-results/main-$sample/input.json" "profile-results/candidate-$sample/input.json"
+            cmp "profile-results/main-$sample/routes.json" "profile-results/candidate-$sample/routes.json"
+            cmp "profile-results/main-$sample/drc-errors.json" "profile-results/candidate-$sample/drc-errors.json"
+          done
       - name: Upload CPU profiles and actual route measurements
         if: always()
         uses: actions/upload-artifact@v4
