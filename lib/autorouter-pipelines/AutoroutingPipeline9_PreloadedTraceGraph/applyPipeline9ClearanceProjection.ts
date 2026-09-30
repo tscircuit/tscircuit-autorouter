@@ -22,6 +22,7 @@ export const applyPipeline9ClearanceProjection = ({
   previousRoutes,
   allowPartialRepair = false,
   subdivideSegments = false,
+  usePrecisionMargin = false,
 }: {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
@@ -32,6 +33,8 @@ export const applyPipeline9ClearanceProjection = ({
   allowPartialRepair?: boolean
   /** Add local bend vertices after the original wire adjustments are retained. */
   subdivideSegments?: boolean
+  /** Keep the same small clearance margin when validating a final coupled pass. */
+  usePrecisionMargin?: boolean
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
@@ -62,7 +65,7 @@ export const applyPipeline9ClearanceProjection = ({
     traceClearance:
       (originalSrj.minTraceToPadEdgeClearance ??
         RELAXED_DRC_OPTIONS.traceClearance!) +
-      (allowPartialRepair ? CLEARANCE_PRECISION_MARGIN : 0),
+      (allowPartialRepair || usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   if (allowPartialRepair) {

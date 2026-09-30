@@ -119,7 +119,7 @@ type RepairRegionLocation = {
 
 const REGION_SIZES = [10, 16] as const
 
-/** Searches coupled repairs before publishing independent wire-only improvements. */
+/** Searches regional repairs, then projects wires and vias against the retained wire layout. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   connMap,
@@ -573,6 +573,18 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     },
   })
   if (independentRoutes !== routes) {
+    // The earlier whole-board pass already checked the original layout. Once
+    // wire-only improvements have made room, try moving wires and vias together.
+    // The complete-board DRC and physical guards decide whether to retain it.
+    independentRoutes = applyPipeline9ClearanceProjection({
+      originalSrj,
+      routes: independentRoutes,
+      usePrecisionMargin: true,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
+    })
     const independentReference = drcEvaluator({
       traces: [],
       routes: independentRoutes,
