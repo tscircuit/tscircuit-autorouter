@@ -347,7 +347,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //           {
     //             ...this.portPointPathingSolver?.hyperParameters,
     //             EXPANSION_DEGREES: 10,
-    //             MAX_RIPS: 10 * Math.min(1, cms.effort),
+    //             MAX_RIPS: 10 * cms.effort,
     //             RANDOM_RIP_FRACTION: 0.1,
     //             RIPPING_PF_THRESHOLD: 0.9,
     //             STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,
