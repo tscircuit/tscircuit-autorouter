@@ -15,7 +15,12 @@ test("Pipeline9 keeps colocated layer transitions without requiring explicit via
       ],
       vias,
     }
-    expect(getPipeline9RouteCopperGeometry(hdRoute)).toEqual({
+    expect(
+      getPipeline9RouteCopperGeometry(hdRoute, {
+        layerCount: 4,
+        allowBlindAndBuriedVias: true,
+      }),
+    ).toEqual({
       wireSegments: [],
       viaSpans: [
         {
@@ -41,7 +46,9 @@ test("Pipeline9 keeps colocated layer transitions without requiring explicit via
     ],
     vias: [],
   }
-  const geometry = getPipeline9RouteCopperGeometry(sameLayerRoute)
+  const geometry = getPipeline9RouteCopperGeometry(sameLayerRoute, {
+    layerCount: 4,
+  })
   expect(geometry.viaSpans).toEqual([])
   expect(geometry.wireSegments).toEqual([
     {
