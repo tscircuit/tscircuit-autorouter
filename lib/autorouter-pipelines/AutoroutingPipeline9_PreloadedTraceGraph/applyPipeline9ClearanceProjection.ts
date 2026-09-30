@@ -65,7 +65,9 @@ export const applyPipeline9ClearanceProjection = ({
     traceClearance:
       (originalSrj.minTraceToPadEdgeClearance ??
         RELAXED_DRC_OPTIONS.traceClearance!) +
-      (allowPartialRepair || usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
+      (allowPartialRepair || usePrecisionMargin
+        ? CLEARANCE_PRECISION_MARGIN
+        : 0),
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   if (allowPartialRepair) {

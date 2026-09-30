@@ -31,7 +31,7 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
-  expect(errors.length).toBeLessThanOrEqual(65)
+  expect(errors.length).toBeLessThanOrEqual(59)
   expect(solver.pipelineDef.at(-1)?.solverName).toBe(
     "powerTraceExpansionSolver",
   )
