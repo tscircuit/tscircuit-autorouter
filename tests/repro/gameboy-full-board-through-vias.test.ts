@@ -10,7 +10,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import simpleRouteJson from "./assets/gameboy-full-board-through-vias.srj.json"
 
-test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Promise<void> => {
+test("Pipeline9 routes the full Game Boy with zero relaxed DRCs", async (): Promise<void> => {
   // Captured from Core 0.0.1989's autorouting:start event before any routing.
   const inputSrj = structuredClone(simpleRouteJson) as SimpleRouteJson
   expect(inputSrj.layerCount).toBe(4)
@@ -86,12 +86,10 @@ test("Pipeline9 routes the full Game Boy and reports final DRCs", async (): Prom
     errorsByType,
   })
 
-  // This captures the measured DRC count, not an assertion of DRC-free routing.
+  expect(errors).toEqual([])
+  expect(missedThroughViaShorts).toEqual([])
+
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
   )
-
-  // Known bug: Repair03 misses actual shorts outside a via's signal layers.
-  // A future via-span fix must update this characterization assertion.
-  expect(missedThroughViaShorts.length).toBeGreaterThan(0)
 })
