@@ -28,4 +28,4 @@ test("routes the T113 phase through a zero-length layer bridge", async (): Promi
   await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-}, 1_080_000)
+})
