@@ -80,6 +80,9 @@ export const applyPipeline9HardObstacleReroutes = ({
   let errors = Array.isArray(initialReference)
     ? initialReference
     : initialReference.errors
+  if (!errors.some((error) => error.type === "pcb_via_trace_clearance_error")) {
+    return routes
+  }
   let attempts = 0
   let searchNodes = 0
 

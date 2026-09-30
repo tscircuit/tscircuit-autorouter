@@ -537,6 +537,35 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       return result
     }
   }
+  const finishPublishedRepair = (): Pipeline9BoundedRegionalRepairResult => {
+    const rerouted = applyPipeline9HardObstacleReroutes({
+      originalSrj,
+      routes: result.routes,
+      connections: originalSrj.connections,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
+      viaHoleDiameter,
+      maxAttempts: Math.min(100, budget.maxCandidateAttempts),
+    })
+    if (rerouted !== result.routes) {
+      result.routes = rerouted
+      const finalReference = drcEvaluator({
+        traces: [],
+        routes: rerouted,
+        hdRoutes: rerouted,
+      })
+      result.referenceValidationCount++
+      const finalErrors = Array.isArray(finalReference)
+        ? finalReference
+        : finalReference.errors
+      result.finalDrcIssueCount = finalErrors.length
+      result.publishedDrcIssueCount = finalErrors.length
+      result.repaired = finalErrors.length === 0
+    }
+    return result
+  }
   if (
     canPublishPartialFixedObstacleRepair({
       originalSrj,
@@ -546,7 +575,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   ) {
     result.routes = currentRoutes
     result.publishedDrcIssueCount = currentErrors.length
-    return result
+    return finishPublishedRepair()
   }
   // Independent wire repairs must not replace the coupled search's geometry:
   // fixing vias and adding slack can block otherwise feasible regional repairs.
@@ -600,33 +629,5 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.finalDrcIssueCount = independentErrors.length
     result.repaired = independentErrors.length === 0
   }
-  if (budget.revisitChangedRegions && result.publishedDrcIssueCount) {
-    const rerouted = applyPipeline9HardObstacleReroutes({
-      originalSrj,
-      routes: result.routes,
-      connections: originalSrj.connections,
-      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
-        result.referenceValidationCount++
-        return drcEvaluator(input)
-      },
-      viaHoleDiameter,
-      maxAttempts: 100,
-    })
-    if (rerouted !== result.routes) {
-      result.routes = rerouted
-      const finalReference = drcEvaluator({
-        traces: [],
-        routes: rerouted,
-        hdRoutes: rerouted,
-      })
-      result.referenceValidationCount++
-      const finalErrors = Array.isArray(finalReference)
-        ? finalReference
-        : finalReference.errors
-      result.finalDrcIssueCount = finalErrors.length
-      result.publishedDrcIssueCount = finalErrors.length
-      result.repaired = finalErrors.length === 0
-    }
-  }
-  return result
+  return finishPublishedRepair()
 }
