@@ -18,16 +18,16 @@ jobs:
         with:
           path: controller
           persist-credentials: false
-      - name: Checkout main before unchanged-sweep optimization
-        uses: actions/checkout@v4
-        with:
-          ref: a2bb8baa38b3afff5785e414dd75d5275337cc50
-          path: main
-          persist-credentials: false
-      - name: Checkout PR with unchanged-sweep optimization
+      - name: Checkout previous unchanged-sweep candidate
         uses: actions/checkout@v4
         with:
           ref: 562eae365e1604419eefdd4a9a848526821c623d
+          path: main
+          persist-credentials: false
+      - name: Checkout candidate with early edge rejection
+        uses: actions/checkout@v4
+        with:
+          ref: 8a0f6de628eaeeb6940992c9a3ef2cc9cb14a0fc
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
