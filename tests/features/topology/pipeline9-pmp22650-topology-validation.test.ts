@@ -18,9 +18,7 @@ test("validates the merged topology for the PMP22650 onboard charger", async ():
   const durationMs = performance.now() - startedAt
   const topologyMergingSolver = solver.topologyMergingSolver!
   const outputNodes = topologyMergingSolver.getOutput()
-  console.log(
-    `PMP22650 topology merging duration=${durationMs.toFixed(3)}ms`,
-  )
+  console.log(`PMP22650 topology merging duration=${durationMs.toFixed(3)}ms`)
 
   expect(scenarioName).toBe("sample024")
   expect(scenario.connections).toHaveLength(409)
