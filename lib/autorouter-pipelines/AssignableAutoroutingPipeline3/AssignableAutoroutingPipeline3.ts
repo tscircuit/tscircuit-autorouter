@@ -282,7 +282,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
             inputNodes,
             capacityMeshNodes: cms.capacityNodes!,
             colorMap: cms.colorMap,
-            numShuffleSeeds: 10 * cms.effort,
+            numShuffleSeeds: 10 * Math.min(1, cms.effort),
             // minAllowedBoardScore: -1,
             hyperParameters: {
               // 1 = 60% maximum pf (see computeSectionScore)
@@ -293,7 +293,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
               // SHUFFLE_SEED: 275,
               JUMPER_PF_FN_ENABLED: true,
               NODE_PF_FACTOR: 100,
-              MAX_RIPS: 100 * cms.effort,
+              MAX_RIPS: 100 * Math.min(1, cms.effort),
               RIPPING_ENABLED: true,
               MAX_RIPPING_PF_THRESHOLD: 0.9,
               MIN_RIPPING_PF_THRESHOLD: 0.1,
@@ -347,7 +347,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //           {
     //             ...this.portPointPathingSolver?.hyperParameters,
     //             EXPANSION_DEGREES: 10,
-    //             MAX_RIPS: 10 * cms.effort,
+    //             MAX_RIPS: 10 * Math.min(1, cms.effort),
     //             RANDOM_RIP_FRACTION: 0.1,
     //             RIPPING_PF_THRESHOLD: 0.9,
     //             STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 0,

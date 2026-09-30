@@ -482,7 +482,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -573,7 +573,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
+          totalStepsPerNode: Math.max(12, Math.round(20 * Math.min(1, cms.effort))),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -659,7 +659,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             ),
           ),
           connMap: cms.connMap,
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
@@ -687,7 +687,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             srj: cms.srjWithPointPairs! as any,
             hdRoutes,
             connMap: cms.connMap,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             viaHoleDiameter: cms.viaHoleDiameter,
             drcEvaluator: autoroutingDrcEvaluator,
             viaInPadDrcEvaluator: autoroutingDrcEvaluator,
@@ -914,6 +914,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
+      // Give additional cleanup passes a proportional iteration budget.
+      this.activeSubSolver.MAX_ITERATIONS = Math.ceil(
+        this.activeSubSolver.MAX_ITERATIONS * Math.max(1, this.effort),
+      )
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS * this.effort,
       )

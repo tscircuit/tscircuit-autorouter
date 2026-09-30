@@ -1,5 +1,5 @@
 export type PrBenchmarkCommand = {
-  kind: "profile" | "benchmark" | "benchmark-long" | "benchmark-all"
+  kind: "benchmark-effort" | "profile" | "benchmark" | "benchmark-long" | "benchmark-all"
   benchmarkArgs: string[]
   datasetName: string
   profileSolvers: boolean
