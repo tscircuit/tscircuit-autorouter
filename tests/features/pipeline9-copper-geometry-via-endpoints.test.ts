@@ -4,6 +4,7 @@ import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/Autoro
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("Pipeline9 copper geometry follows either explicit transition endpoint", (): void => {
+  const board = { layerCount: 4, allowBlindAndBuriedVias: true }
   for (const viaAtStart of [true, false]) {
     for (const startZ of [0, 2]) {
       const start = { x: 0, y: 0, z: startZ }
@@ -18,7 +19,7 @@ test("Pipeline9 copper geometry follows either explicit transition endpoint", ()
         vias: [{ x: viaPoint.x, y: viaPoint.y }],
       }
       const originalRoute = structuredClone(hdRoute)
-      const geometry = getPipeline9RouteCopperGeometry(hdRoute)
+      const geometry = getPipeline9RouteCopperGeometry(hdRoute, board)
 
       expect(geometry.viaSpans).toEqual([
         {
@@ -37,7 +38,7 @@ test("Pipeline9 copper geometry follows either explicit transition endpoint", ()
         },
       ])
       const materializedRoute = materializePipeline9HdRouteVias([hdRoute])[0]!
-      expect(getPipeline9RouteCopperGeometry(materializedRoute)).toEqual(
+      expect(getPipeline9RouteCopperGeometry(materializedRoute, board)).toEqual(
         geometry,
       )
       expect(hdRoute).toEqual(originalRoute)

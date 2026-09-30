@@ -4,6 +4,26 @@ import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
+test("Pipeline9 repairs SRJ18 sample 3 at default effort", async (): Promise<void> => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 3)
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(scenario),
+    { effort: 1, cacheProvider: null },
+  )
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: scenario,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }).errors,
+  ).toHaveLength(0)
+}, 120_000)
+
 test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 3)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -26,4 +46,4 @@ test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> =>
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
   await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(snapshotPath)
-})
+}, 120_000)

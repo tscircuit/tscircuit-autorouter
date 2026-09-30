@@ -626,6 +626,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
@@ -807,7 +808,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             srj: srjWithMaterializedPreloadedTraces as any,
             hdRoutes: lockHdRouteTerminals(
-              cms.traceWidthSolver!.getHdRoutesWithWidths(),
+              canonicalizePipeline9HdRoutes(
+                cms.traceWidthSolver!.getHdRoutesWithWidths(),
+              ),
               cms.netToPointPairsSolver?.newConnections ?? [],
               new Map(
                 (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(

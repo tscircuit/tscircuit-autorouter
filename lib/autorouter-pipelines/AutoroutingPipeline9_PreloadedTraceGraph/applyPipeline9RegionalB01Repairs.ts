@@ -249,8 +249,9 @@ const rectBounds = (rect: Pipeline9AxisAlignedRect): Bounds => ({
 const routeCopperOverlapsBounds = (
   route: HighDensityRoute,
   bounds: Bounds,
+  srj: SimpleRouteJson,
 ): boolean => {
-  const geometry = getPipeline9RouteCopperGeometry(route)
+  const geometry = getPipeline9RouteCopperGeometry(route, srj)
   return (
     geometry.wireSegments.some((segment) =>
       boundsOverlap(wireSegmentBounds(segment), bounds),
@@ -261,6 +262,7 @@ const routeCopperOverlapsBounds = (
 
 const createFixedRouteCopperSpatialIndex = (
   routes: PreloadedHighDensityRoute[],
+  srj: SimpleRouteJson,
 ): FixedRouteCopperSpatialIndex => {
   const routeIndexesByCell = new Map<string, Set<number>>()
   const addBounds = (routeIndex: number, bounds: Bounds): void => {
@@ -279,7 +281,7 @@ const createFixedRouteCopperSpatialIndex = (
   }
 
   for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
-    const geometry = getPipeline9RouteCopperGeometry(routes[routeIndex]!)
+    const geometry = getPipeline9RouteCopperGeometry(routes[routeIndex]!, srj)
     for (const wireSegment of geometry.wireSegments) {
       for (const rect of getPipeline9AxisAlignedWireApproximations(
         wireSegment,
@@ -313,7 +315,7 @@ const createFixedRouteCopperSpatialIndex = (
       return [...routeIndexes]
         .sort((left, right) => left - right)
         .map((routeIndex) => routes[routeIndex]!)
-        .filter((route) => routeCopperOverlapsBounds(route, bounds))
+        .filter((route) => routeCopperOverlapsBounds(route, bounds, srj))
     },
   }
 }
@@ -324,12 +326,14 @@ const candidateConflictsWithFixedRoutes = ({
   obstacleMargin,
   connMap,
   candidateBounds,
+  srj,
 }: {
   candidateRoutes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   obstacleMargin: number
   connMap: ConnectivityMap
   candidateBounds?: Bounds
+  srj: SimpleRouteJson
 }): boolean => {
   for (const candidateRoute of candidateRoutes) {
     for (const fixedRoute of fixedObstacleRoutes) {
@@ -342,6 +346,8 @@ const candidateConflictsWithFixedRoutes = ({
           right: fixedRoute,
           clearance: obstacleMargin,
           leftBounds: candidateBounds,
+          layerCount: srj.layerCount,
+          allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
         })
       ) {
         return true
@@ -419,6 +425,7 @@ const getRegionalCandidate = ({
     colorMap,
     obstacles: srj.obstacles,
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     viaDiameter,
     traceWidth,
     obstacleMargin,
@@ -496,7 +503,7 @@ const getRegularRegionalCandidate = ({
   ].flatMap((section) => section.sourceRoutes)
   const maxRegionalCopperRadius = regionalSourceRoutes.reduce(
     (maxRadius, route) => {
-      const geometry = getPipeline9RouteCopperGeometry(route)
+      const geometry = getPipeline9RouteCopperGeometry(route, srj)
       return Math.max(
         maxRadius,
         route.viaDiameter / 2,
@@ -517,6 +524,7 @@ const getRegularRegionalCandidate = ({
   const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
     fixedObstacleRoutes: localFixedObstacleRoutes,
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
@@ -528,6 +536,7 @@ const getRegularRegionalCandidate = ({
     effort,
     obstacles: [...srj.obstacles, ...fixedRouteObstacles],
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
   solver.solve()
   if (!solver.solved || solver.failed) return undefined
@@ -567,6 +576,7 @@ const getRegularRegionalCandidate = ({
       obstacleMargin,
       connMap,
       candidateBounds,
+      srj,
     })
   ) {
     return undefined
@@ -660,8 +670,10 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairAttempted: false,
     }
   }
-  const fixedRouteCopperSpatialIndex =
-    createFixedRouteCopperSpatialIndex(fixedObstacleRoutes)
+  const fixedRouteCopperSpatialIndex = createFixedRouteCopperSpatialIndex(
+    fixedObstacleRoutes,
+    srj,
+  )
 
   for (let pass = 0; pass < 2; pass++) {
     if (candidateSearchBudgetExhausted) break

@@ -61,16 +61,14 @@ jobs:
           echo "Running ${#test_files[@]} test files from $test_plan"
           # These full-board regressions can exceed five minutes. Keep their
           # assertions, but allow runner variance.
-          slow_tests=()
           regular_tests=()
+          slow_tests=()
           for test_file in "${test_files[@]}"; do
             case "$test_file" in
-              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/repro/gameboy-full-board-through-vias.test.ts)
+              tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts|tests/repro/gameboy-full-board-through-vias.test.ts)
                 slow_tests+=("$test_file")
                 ;;
-              *)
-                regular_tests+=("$test_file")
-                ;;
+              *) regular_tests+=("$test_file") ;;
             esac
           done
           if [ "${#regular_tests[@]}" -gt 0 ]; then
