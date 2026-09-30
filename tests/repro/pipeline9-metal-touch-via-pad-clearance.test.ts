@@ -6,11 +6,12 @@ import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsHorizontally } from "stack-svgs"
 
-test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND pad", async (): Promise<void> => {
+test("Pipeline 9 respects via-to-pad clearance on the metal-touch controller board", async (): Promise<void> => {
   const fixtureDirectory =
     "../../fixtures/bug-reports/metal-touch-via-pad-clearance/"
   const inputBytes = gunzipSync(
@@ -110,7 +111,8 @@ test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND p
     )
   // Board-world millimeter points, +X right and +Y up. Distance from a via
   // disk to this axis-aligned rectangle is center-to-rectangle distance minus radius.
-  const violations = powerVias
+  expect(powerVias.length).toBeGreaterThan(0)
+  const measurements = powerVias
     .map((via) => {
       expect(via.via_diameter).toBe(0.6)
       const dx = Math.max(
@@ -123,16 +125,25 @@ test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND p
       )
       return { via, gap: Math.hypot(dx, dy) - via.via_diameter! / 2 }
     })
-    .filter(({ gap }) => gap < input.minViaEdgeToPadEdgeClearance!)
-  // This repro deliberately asserts the current defect. A fix must change this
-  // to require zero violations; rendering failures must never count as success.
-  expect(violations).toHaveLength(1)
-  const { via, gap } = violations[0]!
+    .sort((left, right) => left.gap - right.gap)
+  // Allow only floating-point roundoff at the declared copper-edge clearance.
+  expect(
+    measurements.filter(
+      ({ gap }) => gap + 1e-9 < input.minViaEdgeToPadEdgeClearance!,
+    ),
+  ).toHaveLength(0)
+  const { via, gap } = measurements[0]!
   expect([via.from_layer, via.to_layer]).toContain("bottom")
-  expect(via.x).toBeCloseTo(-0.6348087672, 8)
-  expect(via.y).toBeCloseTo(-2.54004, 8)
-  expect(gap).toBeCloseTo(0.0000013, 9)
-  expect(gap).toBeLessThan(input.minViaEdgeToPadEdgeClearance!)
+  expect(gap + 1e-9).toBeGreaterThanOrEqual(input.minViaEdgeToPadEdgeClearance!)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
+      includeBoardClearance: true,
+      drcOptions: { traceClearance: input.minTraceToPadEdgeClearance },
+    }).errors,
+  ).toEqual([])
 
   const routedCircuit = convertToCircuitJson(
     solver.srjWithPointPairs!,
@@ -176,7 +187,7 @@ test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND p
           y: -3.3,
           text: `Actual gap: ${gap.toFixed(7)} mm`,
           fontSize: 0.075,
-          color: "#b91c1c",
+          color: "#15803d",
         },
         {
           x: via.x,
@@ -187,9 +198,9 @@ test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND p
         {
           x: via.x,
           y: -3.65,
-          text: "Pink clearance area overlaps the GND pad",
+          text: "Clearance area stays outside the GND pad",
           fontSize: 0.06,
-          color: "#b91c1c",
+          color: "#15803d",
         },
       ],
       rects: [
@@ -205,9 +216,9 @@ test("Pipeline 9 places a V3V3 via too close to the metal-touch controller GND p
         {
           center: via,
           radius: via.via_diameter! / 2 + input.minViaEdgeToPadEdgeClearance!,
-          fill: "#ef444415",
-          stroke: "#ef4444",
-          label: "Required 0.15 mm clearance reaches inside GND pad",
+          fill: "#22c55e15",
+          stroke: "#15803d",
+          label: "Required 0.15 mm clearance stays outside GND pad",
         },
         {
           center: via,

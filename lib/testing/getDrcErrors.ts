@@ -6,10 +6,12 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -31,6 +33,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
 
 type DrcError =
   | PcbTraceError
+  | PcbPadPadClearanceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
@@ -49,6 +52,8 @@ export interface GetDrcErrorsResult {
 }
 
 export interface GetDrcErrorsOptions {
+  /** Check via-to-pad copper clearance when a board declares this rule. */
+  viaToPadClearance?: number
   holeClearance?: number
   viaClearance?: number
   traceClearance?: number
@@ -122,6 +127,12 @@ export const getDrcErrors = (
     ...padTraceErrors,
     ...holeTraceErrors,
     ...viaErrors,
+    ...(options.viaToPadClearance === undefined
+      ? []
+      : checkViaPadClearance(circuitJson, {
+          connMap,
+          minClearance: options.viaToPadClearance,
+        })),
   ]
 
   const vias = circuitJson.filter(
