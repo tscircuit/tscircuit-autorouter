@@ -36,7 +36,10 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
       ?.getUpdatedFixedHdRoutes()
       .some((route) => route.connectionName === "source_trace_0_fixed_70_0"),
   ).toBeTrue()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(import.meta.path, {
-    svgName: "routed",
-  })
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+    {
+      svgName: "routed",
+    },
+  )
 }, 600_000)
