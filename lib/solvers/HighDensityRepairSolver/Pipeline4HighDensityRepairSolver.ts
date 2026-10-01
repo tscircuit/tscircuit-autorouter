@@ -418,9 +418,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-      this.latestVisualization = this.activeSubSolver.visualize()
 
       if (this.activeSubSolver.failed) {
+        this.latestVisualization = this.activeSubSolver.visualize()
         this.failed = true
         this.error =
           this.activeSubSolver.error ??
@@ -433,6 +433,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         return
       }
 
+      this.latestVisualization = this.activeSubSolver.visualize()
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
