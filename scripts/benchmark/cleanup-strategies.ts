@@ -21,15 +21,20 @@ const strategies = [
   { name: "local-acceptance", passes: 2, salvage: true, detours: false, merge: false },
   { name: "both-detour-anchors", passes: 2, salvage: false, detours: true, merge: false },
   { name: "wider-via-merging", passes: 2, salvage: false, detours: false, merge: true },
+  { name: "vertex-shortcuts", passes: 2, salvage: false, detours: false, merge: false },
+  { name: "vertex-local-acceptance", passes: 2, salvage: true, detours: false, merge: false },
   { name: "combined", passes: 4, salvage: true, detours: true, merge: true },
 ]
 const runs: { name: string; report: BenchmarkReport }[] = []
 mkdirSync("benchmark-effort", { recursive: true })
 try {
-  for (const strategy of strategies) {
+  for (const strategy of strategies.filter((s) => !process.env.CLEANUP_STRATEGIES || process.env.CLEANUP_STRATEGIES.split(",").includes(s.name))) {
     let cleanup = originals.get(cleanupPath)!
     cleanup = replaceOnce(cleanup, "Math.ceil(2 * (params.effort - 1))", `Math.ceil(${strategy.passes} * (params.effort - 1))`)
     cleanup = replaceOnce(cleanup, "    simplifier.step()", `    const previousPhase = simplifier.currentPhase\n    ;${flag} = true\n    simplifier.step()\n    ;${flag} = false`)
+    if (strategy.name.startsWith("vertex-")) {
+      cleanup = replaceOnce(cleanup, "      ...params.config,", "      ...params.config,\n      enableVertexShortcuts: true,")
+    }
     if (strategy.salvage) {
       cleanup = replaceOnce(cleanup, "if (completedPasses > this.completedPasses)", "if (completedPasses > this.completedPasses || previousPhase !== simplifier.currentPhase)")
       cleanup = replaceOnce(cleanup, "        this.bestCost = cost\n      }", `        this.bestCost = cost
