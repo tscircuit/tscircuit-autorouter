@@ -84,6 +84,9 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
     (error) => error.type === "pcb_via_clearance_error",
   )
   expect(viaErrors).toHaveLength(0)
+  // Via-to-pad repair must retain the drill-spacing fix and leave the
+  // complete reference DRC clean, including trace continuity.
+  expect(drc.errors).toHaveLength(0)
 
   const vias = drc.circuitJson.filter(
     (element): element is PcbVia => element.type === "pcb_via",
