@@ -92,6 +92,7 @@ export class TraceWidthSolver extends BaseSolver {
   currentScheduleIndex = 0
   currentTargetWidth: number = 0
   hasInsufficientClearance = false
+  private obstacleConnectionToCurrentTrace = new WeakMap<Obstacle, boolean>()
 
   // For visualization - track colliding objects
   lastCollidingObstacles: Obstacle[] = []
@@ -182,6 +183,7 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       this.currentTrace = nextTrace
+      this.obstacleConnectionToCurrentTrace = new WeakMap()
       this.nominalTraceWidth = nominalTraceWidth
       const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
@@ -241,6 +243,27 @@ export class TraceWidthSolver extends BaseSolver {
     this.currentTraceSegmentIndex = 0
     this.currentTraceSegmentT = 0
     this.hasInsufficientClearance = false
+  }
+
+  private isObstacleConnectedToCurrentTrace(obstacle: Obstacle): boolean {
+    if (!this.currentTrace) return false
+
+    const cachedConnection = this.obstacleConnectionToCurrentTrace.get(obstacle)
+    if (cachedConnection !== undefined) return cachedConnection
+
+    const rootConnectionName =
+      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
+    const isConnected =
+      isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap) ||
+      (obstacle.obstacleId !== undefined &&
+        (this.connMap?.areIdsConnected(
+          rootConnectionName,
+          obstacle.obstacleId,
+        ) ??
+          false))
+
+    this.obstacleConnectionToCurrentTrace.set(obstacle, isConnected)
+    return isConnected
   }
 
   /**
@@ -388,13 +411,7 @@ export class TraceWidthSolver extends BaseSolver {
     }
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
-        continue
-      if (
-        obstacle.obstacleId &&
-        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-      )
-        continue
+      if (this.isObstacleConnectedToCurrentTrace(obstacle)) continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
       const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
       const cos = Math.cos(angle)
