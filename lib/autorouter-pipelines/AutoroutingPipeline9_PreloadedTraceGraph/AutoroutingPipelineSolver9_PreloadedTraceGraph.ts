@@ -1,3 +1,4 @@
+import { preparePostRoutingWholeNetInput } from "../../solvers/PostRoutingOptimization/preparePostRoutingWholeNetInput"
 import { PostRoutingNetTreeSolver } from "../../solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
 import { PostRoutingOptimizationSolver } from "../../solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
 import type {
@@ -1683,43 +1684,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   private createPostRoutingInput(
     traces: SimplifiedPcbTraces,
   ): PostRoutingOptimizationInput {
-    const connections = this.originalSrj.connections
-    const map = getConnectivityMapFromSimpleRouteJson(this.originalSrj)
-    const traceOwners = new Map<string, string>()
-    for (const trace of traces) {
-      const candidates = connections.filter(
-        (connection) =>
-          connection.name === trace.connection_name ||
-          connection.__netConnectionName === trace.connection_name ||
-          connection.__rootConnectionNames?.includes(trace.connection_name) ||
-          (map.getNetConnectedToId(trace.connection_name) !== undefined &&
-            map.getNetConnectedToId(trace.connection_name) ===
-              map.getNetConnectedToId(connection.name)),
-      )
-      if (candidates.length !== 1)
-        throw new Error(
-          `Pipeline9: post-routing trace ${trace.pcb_trace_id} needs one explicit whole-net owner, found ${candidates.length}`,
-        )
-      const owner = candidates[0]!.name
-      if (
-        traceOwners.has(trace.connection_name) &&
-        traceOwners.get(trace.connection_name) !== owner
-      )
-        throw new Error(
-          `Pipeline9: conflicting post-routing owner ${trace.connection_name}`,
-        )
-      traceOwners.set(trace.connection_name, owner)
-    }
-    // Freeze the actual finalized fixed copper, including explicit prior replacements.
-    // Rules, pads and whole-net endpoints still come from the physical input.
-    return {
-      srj: {
-        ...structuredClone(this.originalSrj),
-        traces: structuredClone(this.getPowerTraceExpansionFixedTraces()),
-      },
+    return preparePostRoutingWholeNetInput(
+      this.originalSrj,
       traces,
-      traceOwners,
-    }
+      this.getPowerTraceExpansionFixedTraces(),
+      Array.from(new Set((this.opts.postRoutingOptimization?.nets ?? []).map((plan) => plan.net))),
+      this.netToPointPairsSolver?.newConnections ?? [],
+    )
   }
 
   getPostRoutingOptimizationResult():
