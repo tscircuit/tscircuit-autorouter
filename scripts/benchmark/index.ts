@@ -710,8 +710,9 @@ const parseSampleNumbersArg = (rawValue: string) => {
   return sampleNumbers
 }
 
-const parseArgs = (): BenchmarkOptions => {
-  const args = process.argv.slice(2)
+export const parseArgs = (
+  args: string[] = process.argv.slice(2),
+): BenchmarkOptions => {
   const defaultConcurrency =
     typeof os.availableParallelism === "function"
       ? os.availableParallelism()
@@ -749,7 +750,7 @@ const parseArgs = (): BenchmarkOptions => {
       continue
     }
     if (arg === "--effort") {
-      options.effort = Number.parseInt(args[i + 1] ?? "", 10)
+      options.effort = Number(args[i + 1] ?? "")
       i += 1
       continue
     }
@@ -803,7 +804,9 @@ const parseArgs = (): BenchmarkOptions => {
     options.effort !== undefined &&
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
-    throw new Error("--effort must be a positive integer")
+    throw new Error(
+      "--effort must be a finite number greater than or equal to 1",
+    )
   }
 
   return options

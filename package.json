@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.946",
+  "version": "0.0.951",
   "type": "module",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
     "@tscircuit/dataset-srj05": "git+https://github.com/tscircuit/dataset-srj05.git#9a49c126a89c083dc4d2b72cd17184735f637762",
-    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#d2e1fe8732a3ede5dac8e11b8774f3f57fdc55f7",
+    "@tscircuit/dataset-srj24": "git+https://github.com/tscircuit/dataset-srj24.git#6340ee442bc36cc5a0fd3c9b84070548ed5f416a",
     "@tscircuit/dataset-srj27-power-traces": "git+https://github.com/tscircuit/dataset-srj27-power-traces.git#eb24d36",
     "@tscircuit/dataset-srj28-partially-prerouted": "git+https://github.com/tscircuit/dataset-srj28-partially-prerouted.git#5b1673544b6ade4480612539ba6574ad414fddc0",
     "@tscircuit/dataset-srj29-ddr3-bga-pairs": "git+https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs.git#585c3abd4c6ce4be52bbc430b1d5e6dcc9b4ea30",
@@ -104,7 +104,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/67fbcfe637a5f5cd6e5f819de6f015ea1ee78e11",
-    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/cbbc86a3d6a01a565f2381b6fd01353783f4171a",
+    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/ccad3906eb0fe30c9f79f4e28f390d9f41cbf387",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"

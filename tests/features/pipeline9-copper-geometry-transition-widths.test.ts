@@ -21,7 +21,9 @@ test("Pipeline9 endpoint resolution preserves original per-point wire widths", (
         vias: [{ x: viaPoint.x, y: viaPoint.y }],
       }
       const originalRoute = structuredClone(hdRoute)
-      const geometry = getPipeline9RouteCopperGeometry(hdRoute)
+      const geometry = getPipeline9RouteCopperGeometry(hdRoute, {
+        layerCount: 2,
+      })
       expect(geometry.wireSegments[0]!.width).toBe(0.7)
       expect(geometry.wireSegments[0]!.z).toBe(viaAtStart ? 1 : 0)
       expect(geometry.viaSpans[0]!.diameter).toBe(0.55)
