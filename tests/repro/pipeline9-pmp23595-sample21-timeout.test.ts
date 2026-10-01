@@ -2,6 +2,7 @@ import { dataset as datasetSrj24 } from "@tscircuit/dataset-srj24"
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
@@ -57,7 +58,15 @@ test("PMP23595 sample021 routes within the benchmark timeout", () => {
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
-  expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(460)
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  expect(routedTraces).toHaveLength(460)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    }).errors,
+  ).toEqual([])
   expect(
     getSvgFromGraphicsObject(solver.visualizeFinalOutput(), {
       backgroundColor: "white",

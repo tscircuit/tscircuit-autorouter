@@ -225,7 +225,9 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
-  DISTANCE_TO_COST: 0.05,
+  // Keep long-board searches goal-directed instead of exploring similarly
+  // congested regions far away from the destination.
+  DISTANCE_TO_COST: 0.1,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -244,7 +246,7 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
-  DISTANCE_TO_COST: 0.05,
+  DISTANCE_TO_COST: 0.1,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
