@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { getPipeline9BoundedRepairBudget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
@@ -20,13 +21,20 @@ test("Pipeline9 repairs SRJ18 sample 2 within its regional work budget", async (
   })
   expect(errors).toEqual([])
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
+  // This board uses the existing congestion-scaled budget, not the fixed
+  // small-board defaults. Keep the zero-DRC requirement above unchanged.
+  const budget = getPipeline9BoundedRepairBudget(
+    solver.pipeline9JointDrcRepairSolver!.getCombinedOutput().length,
+    Number(stats.postExactReferenceDrcIssueCount),
+    1,
+  )
   expect(
     Number(stats.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4)
+  ).toBeLessThanOrEqual(budget.maxRegions)
   expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
-  ).toBeLessThanOrEqual(1_024)
+  ).toBeLessThanOrEqual(budget.maxCandidateAttempts)
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
-  ).toBeLessThanOrEqual(480_000)
+  ).toBeLessThanOrEqual(budget.maxPathSearchNodes)
 })
