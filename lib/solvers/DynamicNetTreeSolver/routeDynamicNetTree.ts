@@ -63,6 +63,17 @@ export type DynamicNetTreeResult = {
     finalComponents: number
   }
 }
+/** A recorded physical branch insertion, never an accepted board output. */
+export type DynamicNetTreeProgress = {
+  kind: "forest" | "tree"
+  net: string
+  traces: SimplifiedPcbTrace[]
+  branches: number
+  components: number
+  initialComponents: number
+  insertedVias: number
+  expansions: number
+}
 export type CopperConnector = {
   point: TreePoint
   copperId: string
@@ -125,11 +136,15 @@ class TreeSearchHeap {
 
 /** Opt-in physical net search. Existing copper is immutable. Failed transactions
  * expose no candidate traces. This does not call NetToPointPairsSolver. */
-export function routeDynamicNetTree(
+export function* routeDynamicNetTreeSteps(
   problem: DynamicNetTreeProblem,
   options: DynamicNetTreeOptions,
-): DynamicNetTreeResult {
+): Generator<DynamicNetTreeProgress, DynamicNetTreeResult> {
+  problem = structuredClone(problem)
+  options = structuredClone(options)
   const started = performance.now()
+  let pausedMilliseconds = 0
+  const elapsed = (): number => performance.now() - started - pausedMilliseconds
   if (
     options.gridStep <= 0 ||
     options.viaCost < 0 ||
@@ -384,8 +399,7 @@ export function routeDynamicNetTree(
         expansions++
         if (
           expansions > options.maxExpansions ||
-          (expansions % 1024 === 0 &&
-            performance.now() - started > options.maxMilliseconds)
+          (expansions % 1024 === 0 && elapsed() > options.maxMilliseconds)
         )
           throw new RoutingRejection(
             "Dynamic net-tree connector budget exhausted",
@@ -497,8 +511,7 @@ export function routeDynamicNetTree(
       expansions++
       if (
         expansions > options.maxExpansions ||
-        (expansions % 1024 === 0 &&
-          performance.now() - started > options.maxMilliseconds)
+        (expansions % 1024 === 0 && elapsed() > options.maxMilliseconds)
       )
         throw new RoutingRejection("Dynamic net-tree search budget exhausted")
       const cell = Math.floor(entry.state / 9) % cellCount,
@@ -691,6 +704,20 @@ export function routeDynamicNetTree(
     if (joined.length >= before)
       throw new Error("Branch insertion failed to join physical components")
   }
+  function progress(
+    kind: DynamicNetTreeProgress["kind"],
+  ): DynamicNetTreeProgress {
+    return {
+      kind,
+      net: problem.net,
+      traces: structuredClone(traces),
+      branches: traces.length,
+      components: components().length,
+      initialComponents,
+      insertedVias,
+      expansions,
+    }
+  }
   let failure: string | undefined
   try {
     if (!Number.isSafeInteger(cellCount) || cellCount > 1_000_000)
@@ -727,8 +754,7 @@ export function routeDynamicNetTree(
             zeroViaForestExpansions++
             if (
               expansions > options.maxExpansions ||
-              (expansions % 1024 === 0 &&
-                performance.now() - started > options.maxMilliseconds)
+              (expansions % 1024 === 0 && elapsed() > options.maxMilliseconds)
             )
               throw new RoutingRejection(
                 "Dynamic net-tree zero-via forest budget exhausted",
@@ -752,6 +778,9 @@ export function routeDynamicNetTree(
           if (source === target) continue
           commitBranch(join)
           zeroViaForestJoins++
+          const paused = performance.now()
+          yield progress("forest")
+          pausedMilliseconds += performance.now() - paused
         }
       }
       while (true) {
@@ -776,6 +805,9 @@ export function routeDynamicNetTree(
           )
         }
         commitBranch(found)
+        const paused = performance.now()
+        yield progress("tree")
+        pausedMilliseconds += performance.now() - paused
       }
     }
   } catch (error) {
@@ -790,11 +822,22 @@ export function routeDynamicNetTree(
     expansions,
     searches,
     branches: traces.length,
-    elapsedMs: performance.now() - started,
+    elapsedMs: elapsed(),
     initialComponents,
     finalComponents: components().length,
   }
   return failure
     ? { solved: false, error: failure, traces: [], attachments: [], stats }
     : { solved: true, traces, attachments, stats }
+}
+
+/** Synchronous entry point; uses the same search as the incremental solver. */
+export function routeDynamicNetTree(
+  problem: DynamicNetTreeProblem,
+  options: DynamicNetTreeOptions,
+): DynamicNetTreeResult {
+  const steps = routeDynamicNetTreeSteps(problem, options)
+  let step = steps.next()
+  while (!step.done) step = steps.next()
+  return step.value
 }
