@@ -23,16 +23,6 @@ export function isPipeline9PostRoutingBenchmarkTask(task: BenchmarkTask): boolea
   )
 }
 
-/** Limit this comparison profile to the explicitly requested public datasets. */
-export function isPipeline9PostRoutingBenchmarkTask(task: BenchmarkTask): boolean {
-  return (
-    !task.networkedCachePass &&
-    (task.datasetName === "dataset01" || task.datasetName === "srj18") &&
-    (task.solverConstructorName ?? task.solverName) ===
-      "AutoroutingPipelineSolver9_PreloadedTraceGraph"
-  )
-}
-
 export function getPipeline9PostRoutingBenchmarkOptions(srj: SimpleRouteJson) {
   const prepared = preparePostRoutingWholeNetInput(
     srj,
