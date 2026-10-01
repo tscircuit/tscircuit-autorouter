@@ -47,7 +47,9 @@ test("the checked-in P9 benchmark profile actually enables its declared arm with
   })
   expect(
     unprofiled.pipelineDef.some((s) =>
-      ["dynamicNetTreeSolver", "postRoutingForestSolver"].includes(s.solverName),
+      ["dynamicNetTreeSolver", "postRoutingForestSolver"].includes(
+        s.solverName,
+      ),
     ),
   ).toBe(false)
   expect(input).toEqual(original)

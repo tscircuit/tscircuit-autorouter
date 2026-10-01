@@ -104,6 +104,10 @@ length or bend increase and at most one changed net.
 
 An unsupported post-phase has `postRoutingBenchmark.pipelineSolved` recorded but
 `eligible: false`, no scored via count, and an explicit error in the public report.
+The profile is limited to explicit `dataset01` and `srj18` Pipeline9 tasks;
+other benchmark tasks retain their original behavior. The A-only branch reports
+its transaction through `getPostRoutingOptimizationResult()`; the stacked branch
+uses `getDynamicNetTreeRoutingResult()` for A and the last-transaction getter for B.
 Only phase-validated outputs proceed to native relaxed-DRC scoring. The existing
 runner uses via *entries*; the phase reports unique physical via sites and copper
 union length separately. The unchanged workflow does not fix random seeds or
