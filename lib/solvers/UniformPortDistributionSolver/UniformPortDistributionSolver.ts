@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import type { CapacityMeshNodeId, Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import type {
@@ -53,6 +53,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  targetNodeIds = new Set<CapacityMeshNodeId>()
+  portPointIdsConnectedToTarget = new Set<PortPointId>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -77,12 +79,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
       InputPortPoint["connectionNodeIds"]
     >()
     for (const node of input.inputNodesWithPortPoints) {
+      if (node._containsTarget) {
+        this.targetNodeIds.add(node.capacityMeshNodeId)
+      }
+    }
+    for (const node of input.inputNodesWithPortPoints) {
       for (const portPoint of node.portPoints) {
         if (!connectionNodeIdsByPortPointId.has(portPoint.portPointId)) {
           connectionNodeIdsByPortPointId.set(
             portPoint.portPointId,
             portPoint.connectionNodeIds,
           )
+        }
+        if (
+          portPoint.connectionNodeIds.some((nodeId) =>
+            this.targetNodeIds.has(nodeId),
+          )
+        ) {
+          this.portPointIdsConnectedToTarget.add(portPoint.portPointId)
         }
       }
     }
@@ -145,12 +159,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
       obstacles: this.input.obstacles,
     })
     if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    const blockedByLayer = new Map<number, boolean>()
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
         portPoint.z,
         (portCountByLayer.get(portPoint.z) ?? 0) + 1,
       )
+      if (!blockedByLayer.has(portPoint.z)) {
+        blockedByLayer.set(
+          portPoint.z,
+          shouldIgnoreSharedEdge({
+            sharedEdge,
+            obstacles: this.input.obstacles,
+            z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
+            layerCount: this.input.layerCount,
+          }),
+        )
+      }
     }
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
@@ -164,16 +190,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
         continue
       }
       if (
-        !shouldIgnoreSharedEdge({
-          sharedEdge,
-          obstacles: this.input.obstacles,
-          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
-          layerCount: this.input.layerCount,
-        }) &&
+        !blockedByLayer.get(portPoint.z) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
+          targetNodeIds: this.targetNodeIds,
+          portPointIdsConnectedToTarget: this.portPointIdsConnectedToTarget,
         })
       ) {
         family.push(portPoint)
