@@ -394,6 +394,7 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
