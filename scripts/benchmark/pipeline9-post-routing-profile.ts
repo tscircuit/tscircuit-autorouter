@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto"
 import type { SimpleRouteJson } from "../../lib/types"
+import type { BenchmarkTask } from "./benchmark-types"
 import type {
   PostRoutingOptimizationInput,
   PostRoutingOptimizationOptions,
@@ -11,6 +12,16 @@ import { preparePostRoutingWholeNetInput } from "../../lib/solvers/PostRoutingOp
  * remain unchanged. The paired workflow runs the same P9 command on its base:
  * main has no profile; the A+B branch's base explicitly selects A. */
 export const PIPELINE9_POST_ROUTING_BENCHMARK_ARM: "A" | "B" | "A+B" = "A+B"
+
+/** Limit this comparison profile to the explicitly requested public datasets. */
+export function isPipeline9PostRoutingBenchmarkTask(task: BenchmarkTask): boolean {
+  return (
+    !task.networkedCachePass &&
+    (task.datasetName === "dataset01" || task.datasetName === "srj18") &&
+    (task.solverConstructorName ?? task.solverName) ===
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+  )
+}
 
 export function getPipeline9PostRoutingBenchmarkOptions(srj: SimpleRouteJson) {
   const prepared = preparePostRoutingWholeNetInput(
