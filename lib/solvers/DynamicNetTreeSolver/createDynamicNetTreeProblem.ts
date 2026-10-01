@@ -42,10 +42,16 @@ export function createDynamicNetTreeProblem(
     if (c.isOffBoard) throw new Error(`Unsupported off-board net ${c.name}`)
     for (const id of [
       c.name,
+      c.source_trace_id,
+      c.rootConnectionName,
+      c.netConnectionName,
+      c.__netConnectionName,
+      ...(c.mergedConnectionNames ?? []),
+      ...(c.__rootConnectionNames ?? []),
       ...c.pointsToConnect
         .flatMap((p) => [p.pointId, p.pcb_port_id])
         .filter((id): id is string => Boolean(id)),
-    ]) {
+    ].filter((id): id is string => Boolean(id))) {
       if (owners.has(id) && owners.get(id) !== c.name)
         throw new Error(`Conflicting explicit owner of ${id}`)
       owners.set(id, c.name)
