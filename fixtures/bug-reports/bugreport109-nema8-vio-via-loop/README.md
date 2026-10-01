@@ -15,7 +15,8 @@ bun scripts/run-sample.ts --pipeline 9 \
 ```
 
 The runner prints the output directory and writes stage PNGs, SVGs, graphics
-JSON, and routing results. Inspect the top-layer VIO route near
+JSON, and DRC logs. Inspect the top-layer VIO route in
+`stage19-mutatedPreloadedTraceSimplificationSolver.png` near
 `(-3.1, 4.8)` mm. Board coordinates use millimeters, +X right and +Y up.
 
 ## Input provenance
@@ -48,6 +49,8 @@ The captured phase also reproduces the detour with repository main `911963b`
 (version 0.0.951). That run reports `solved: true`, `failed: false`; its VIO trace
 has 32 route points versus 37 in the published output. The geometry differs
 between versions, but the route still bends above the via and back down.
+The standard replay command completes all 25 stages and reports 11
+disconnected-endpoint errors under its relaxed DRC check.
 
 This fixture records the routing defect for investigation. It does not assert
 that a shorter route is feasible, that the board is DRC-clean, or that this area
