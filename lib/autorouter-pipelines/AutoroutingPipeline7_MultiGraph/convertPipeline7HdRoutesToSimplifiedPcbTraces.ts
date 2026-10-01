@@ -21,7 +21,9 @@ export interface ConvertPipeline7HdRoutesOptions {
 type StaticConvertPipeline7HdRoutesOptions = Omit<
   ConvertPipeline7HdRoutesOptions,
   "hdRoutes"
->
+> & {
+  cacheRouteGeometryByIdentity?: boolean
+}
 
 type PreparedConnection = {
   connection: SimpleRouteConnection
@@ -36,7 +38,12 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  cacheRouteGeometryByIdentity = false,
 }: StaticConvertPipeline7HdRoutesOptions) => {
+  const cachedTraceByRoute = new WeakMap<
+    HighDensityRoute,
+    SimplifiedPcbTraces[number]
+  >()
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
     string | undefined
@@ -123,9 +130,17 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 
       for (let index = 0; index < connectionRoutes.length; index += 1) {
         const hdRoute = connectionRoutes[index]!
-        traces.push({
+        const pcbTraceId = `${connection.name}_${index}`
+        const cachedTrace = cacheRouteGeometryByIdentity
+          ? cachedTraceByRoute.get(hdRoute)
+          : undefined
+        if (cachedTrace?.pcb_trace_id === pcbTraceId) {
+          traces.push(cachedTrace)
+          continue
+        }
+        const trace: SimplifiedPcbTraces[number] = {
           type: "pcb_trace",
-          pcb_trace_id: `${connection.name}_${index}`,
+          pcb_trace_id: pcbTraceId,
           connection_name: outputConnectionName,
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
@@ -135,7 +150,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
               getConnectedMultilayerObstacles(hdRoute),
             connMap,
           }),
-        })
+        }
+        traces.push(trace)
+        if (cacheRouteGeometryByIdentity) cachedTraceByRoute.set(hdRoute, trace)
       }
     }
 

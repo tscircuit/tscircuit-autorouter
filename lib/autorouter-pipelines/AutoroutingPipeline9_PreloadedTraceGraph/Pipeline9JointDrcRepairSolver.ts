@@ -707,6 +707,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         obstacles: params.obstacles,
         defaultViaHoleDiameter: params.defaultViaHoleDiameter,
         connMap: params.connMap,
+        cacheRouteGeometryByIdentity: true,
       })
     const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
@@ -1039,9 +1040,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       } as RepairSimpleRouteJson,
       {
         connMap: params.connMap,
+        connectivityMapIsImmutable: true,
         traceClearance,
         viaClearance,
         includeTraceViaOwnerMetadata: true,
+        cacheStaticObstacleNetMembership: true,
+        cacheImmutableTraceGeometry: true,
+        useConservativeRectObstaclePrecheck: true,
+        useTransientDynamicQueryMarkers: true,
         spatialCellSize:
           Math.max(
             params.defaultViaDiameter,
