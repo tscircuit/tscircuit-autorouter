@@ -257,6 +257,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const TINY_PIPELINE_STEP_BATCH_SIZE = 25
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -1438,7 +1439,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    this.tinyPipelineSolver.step()
+    for (
+      let workIndex = 0;
+      workIndex < TINY_PIPELINE_STEP_BATCH_SIZE &&
+      !this.tinyPipelineSolver.solved &&
+      !this.tinyPipelineSolver.failed;
+      workIndex++
+    ) {
+      this.tinyPipelineSolver.step()
+    }
 
     if (
       this.candidatePortfolioPhase === "primary" &&

@@ -66,6 +66,7 @@ type NodeBounds = {
 }
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
+const HIGH_DENSITY_STEP_BATCH_SIZE = 10
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
@@ -930,11 +931,27 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
-    this.stepNodeRouting()
-    this.activeSubSolver =
-      this.activeFallbackSolver ??
-      this.activeRegularSolver ??
-      this.activeB01Solver
+    if (!this.activeSubSolver) {
+      this.stepNodeRouting()
+      this.activeSubSolver =
+        this.activeFallbackSolver ??
+        this.activeRegularSolver ??
+        this.activeB01Solver
+      return
+    }
+    const activeSolverAtStart = this.activeSubSolver
+    for (
+      let workIndex = 0;
+      workIndex < HIGH_DENSITY_STEP_BATCH_SIZE && !this.solved && !this.failed;
+      workIndex++
+    ) {
+      this.stepNodeRouting()
+      this.activeSubSolver =
+        this.activeFallbackSolver ??
+        this.activeRegularSolver ??
+        this.activeB01Solver
+      if (this.activeSubSolver !== activeSolverAtStart) break
+    }
   }
 
   computeProgress(): number {
