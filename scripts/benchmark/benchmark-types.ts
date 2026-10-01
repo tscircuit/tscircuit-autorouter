@@ -120,6 +120,8 @@ export type WorkerResult<
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
+  traceLengthMm?: number
+  wirePoints?: number
   viaCount?: number
   drcErrorCount?: number
   /** Per-type style issue counts; absent in historical/unlinted results. */
