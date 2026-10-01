@@ -1,3 +1,5 @@
+import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
+import type { AnyCircuitElement } from "circuit-json"
 import { preparePostRoutingWholeNetInput } from "../../solvers/PostRoutingOptimization/preparePostRoutingWholeNetInput"
 import { PostRoutingNetTreeSolver } from "../../solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
 import { PostRoutingOptimizationSolver } from "../../solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
@@ -112,6 +114,8 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Authoritative source pad/drill facts used only by isolated post-routing inputs. */
+  postRoutingSourceCircuitJson?: readonly AnyCircuitElement[]
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -1685,7 +1689,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     traces: SimplifiedPcbTraces,
   ): PostRoutingOptimizationInput {
     return preparePostRoutingWholeNetInput(
-      this.originalSrj,
+      this.opts.postRoutingSourceCircuitJson
+        ? restorePostRoutingPadMetadata(
+            this.originalSrj,
+            this.opts.postRoutingSourceCircuitJson,
+          )
+        : this.originalSrj,
       traces,
       this.getPowerTraceExpansionFixedTraces(),
       Array.from(

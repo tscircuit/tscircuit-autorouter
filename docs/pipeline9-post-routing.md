@@ -50,7 +50,10 @@ The conservative validator currently supports two ordinary layers, wires,
 through vias, rectangular/circular lands with explicit ownership, and explicit
 plating/drill metadata. Differential pairs, buses, planes, jumpers, blind vias,
 external constraints and ambiguous ownership require dedicated adapters. Invalid
-original boards and unsupported geometry throw; exhausted search, failed
+original boards and malformed ownership still throw. Unsupported geometry or missing
+physical facts return `status: "unsupported"`, `validationStatus: "unsupported"`,
+unchanged copper and diagnostics; this does not certify the original board.
+Exhausted search, failed
 candidate validation, or no objective improvement return the original output.
 An optional additional native/manufacturing checker validates isolated copies.
 Physical copper-length union, unique via sites and vertex bends are routing
@@ -117,3 +120,43 @@ The manifest records the Git head, immutable generic input, arm, seed, options,
 actual stage iterations, diagnostics, output and native recorded graphics paths.
 Omit `graphics` to let PipelineStageDebugRunner also render SVG/PNG stage views.
 B-only branches reject requests for A rather than silently displaying B as A.
+
+## Authoritative pad metadata
+
+Some Circuit JSON to SRJ producers omit plating and drill facts. Pass the original
+source as `postRoutingSourceCircuitJson`, or call
+`restorePostRoutingPadMetadata(srj, circuitJson)` before the standalone phase.
+The adapter requires an exact `circuitJsonMetadata` pad ID and matching port,
+land geometry, rotation and layers. It adds source-backed plating/drill facts to
+a copy, never infers plating from multilayer geometry, and rejects conflicting
+explicit facts. Missing evidence remains unsupported. Slots, offset drills and
+rounded or unknown lands remain explicitly unsupported. Via dimensions use
+Pipeline9's canonical `getViaDimensions` defaults and alias precedence.
+
+`validationStatus: "validated"` means the supported continuous geometry contract
+(and any supplied additional checker) passed. It does not assert a complete
+KiCad/manufacturing DRC. In A+B, an unsupported or rejected A still lets B report
+independently on preserved copper. Invalid original copper and malformed source
+identity throw and stop the pipeline, since there is no valid baseline to replace.
+
+## Public PR benchmark profile
+
+This comparison branch explicitly opts the benchmark runner into B in
+`scripts/benchmark/pipeline9-post-routing-profile.ts`. Product constructors remain
+disabled by default. `/benchmark --pipeline 9 --dataset 01 --effort 1
+--concurrency 2 --sample-timeout 120s` uses the existing comment dispatcher and
+paired runner without any workflow/permission changes. A and B compare with main;
+A+B compares with its A branch base. The checked-in profile chooses one mutable
+whole net by terminal count, preserves preloads, and declares a 300,000 expansion /
+5,000 ms total extra budget, split equally across A+B. Objectives allow no copper
+length or bend increase and at most one changed net.
+
+An unsupported post-phase has `postRoutingBenchmark.pipelineSolved` recorded but
+`eligible: false`, no scored via count, and an explicit error in the public report.
+Only phase-validated outputs proceed to native relaxed-DRC scoring. The existing
+runner uses via *entries*; the phase reports unique physical via sites and copper
+union length separately. The unchanged workflow does not fix random seeds or
+force identical routed baselines between revisions. Its same-machine comparison
+is an observed integration benchmark; isolated saved-baseline replay is needed
+to identify the incremental phase effect. Search and validation times and phase
+diagnostics are included in JSON. No universal improvement is asserted.

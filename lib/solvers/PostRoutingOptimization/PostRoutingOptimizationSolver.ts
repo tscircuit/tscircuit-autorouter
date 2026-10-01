@@ -23,6 +23,7 @@ export class PostRoutingOptimizationSolver extends BaseSolver {
     this.output = this.transaction.evaluate()
     this.stats = {
       status: this.output.status,
+      validationStatus: this.output.validationStatus,
       changedNets: this.output.changedNets,
       before: this.output.before,
       after: this.output.after,
@@ -58,7 +59,7 @@ export class PostRoutingOptimizationSolver extends BaseSolver {
         fontSize: 0.35,
         anchorSide: "bottom_left",
         text: this.output
-          ? `${this.output.status === "accepted" ? "Accepted" : "Atomic rollback"}: ${this.output.changedNets.join(", ") || this.output.diagnostics.join("; ") || this.output.status}`
+          ? `${this.output.status === "unsupported" ? "Unsupported input; copper preserved, validation incomplete" : this.output.status === "accepted" ? "Accepted" : "Atomic rollback"}: ${this.output.changedNets.join(", ") || this.output.diagnostics.join("; ") || this.output.status}`
           : "Candidate awaiting whole-board validation",
       },
     ]

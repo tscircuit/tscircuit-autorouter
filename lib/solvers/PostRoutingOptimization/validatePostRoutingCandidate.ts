@@ -1,4 +1,6 @@
 import type { SimplifiedPcbTrace } from "../../types"
+import { UnsupportedPostRoutingInputError } from "./UnsupportedPostRoutingInputError"
+import { getViaDimensions } from "../../utils/getViaDimensions"
 import { minimumDistanceBetweenSegments } from "../../utils/minimumDistanceBetweenSegments"
 import {
   createDynamicNetTreeProblem,
@@ -22,6 +24,7 @@ export function validatePostRoutingCandidate(
   traces: SimplifiedPcbTrace[],
   traceOwners: ReadonlyMap<string, string>,
 ): PostRoutingValidation {
+  const viaDimensions = getViaDimensions(srj)
   if (srj.connections.length === 0)
     throw new Error("Post-routing validation requires nets")
   const diagnostics: string[] = []
@@ -54,12 +57,16 @@ export function validatePostRoutingCandidate(
         previous = trace.route[i - 1],
         next = trace.route[i + 1]
       if (p.route_type !== "wire" && p.route_type !== "via")
-        throw new Error(`Unsupported trace primitive ${p.route_type}`)
+        throw new UnsupportedPostRoutingInputError(
+          `Unsupported trace primitive ${p.route_type}`,
+        )
       if (![p.x, p.y].every(Number.isFinite))
         throw new Error(`Non-finite trace ${trace.pcb_trace_id}`)
       if (p.route_type === "wire") {
         if (p.layer !== "top" && p.layer !== "bottom")
-          throw new Error(`Unsupported wire layer ${p.layer}`)
+          throw new UnsupportedPostRoutingInputError(
+            `Unsupported wire layer ${p.layer}`,
+          )
         if (!Number.isFinite(p.width) || p.width < width - 1e-9)
           diagnostics.push(`Trace width ${trace.pcb_trace_id}:${i}`)
         if (next?.route_type === "wire" && next.layer !== p.layer)
@@ -67,24 +74,10 @@ export function validatePostRoutingCandidate(
             `Missing layer-transition via ${trace.pcb_trace_id}:${i}`,
           )
       } else {
-        const diameter =
-          p.via_diameter ??
-          srj.minViaPadDiameter ??
-          srj.min_via_pad_diameter ??
-          srj.minViaDiameter ??
-          0.6
-        const hole =
-          p.via_hole_diameter ??
-          srj.minViaHoleDiameter ??
-          srj.min_via_hole_diameter ??
-          0.3
-        const requiredDiameter =
-          srj.minViaPadDiameter ??
-          srj.min_via_pad_diameter ??
-          srj.minViaDiameter ??
-          0.6
-        const requiredHole =
-          srj.minViaHoleDiameter ?? srj.min_via_hole_diameter ?? 0.3
+        const diameter = p.via_diameter ?? viaDimensions.padDiameter
+        const hole = p.via_hole_diameter ?? viaDimensions.holeDiameter
+        const requiredDiameter = viaDimensions.padDiameter
+        const requiredHole = viaDimensions.holeDiameter
         if (
           ![diameter, hole].every(Number.isFinite) ||
           diameter <= hole ||
