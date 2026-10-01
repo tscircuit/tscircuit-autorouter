@@ -3,7 +3,11 @@ import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type {
+  InputNodeWithPortPoints,
+  InputPortPoint,
+  PortPointId,
+} from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
   OwnerPair,
@@ -68,27 +72,40 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
 
+    const connectionNodeIdsByPortPointId = new Map<
+      PortPointId,
+      InputPortPoint["connectionNodeIds"]
+    >()
+    for (const node of input.inputNodesWithPortPoints) {
+      for (const portPoint of node.portPoints) {
+        if (!connectionNodeIdsByPortPointId.has(portPoint.portPointId)) {
+          connectionNodeIdsByPortPointId.set(
+            portPoint.portPointId,
+            portPoint.connectionNodeIds,
+          )
+        }
+      }
+    }
+
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
+    const assignedPortPointIds = new Set<PortPointId>()
     for (const node of input.nodeWithPortPoints) {
       for (const portPoint of node.portPoints) {
         if (!portPoint.portPointId) continue
         const ownerNodeIds = determineOwnerPair({
           portPointId: portPoint.portPointId,
           currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodesWithPortPoints,
+          connectionNodeIdsByPortPointId,
         })
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-        const alreadyPresent = existing.some(
-          (point) =>
-            point.portPointId && point.portPointId === portPoint.portPointId,
-        )
-        if (!alreadyPresent) {
+        if (!assignedPortPointIds.has(portPoint.portPointId)) {
           existing.push({
             ...portPoint,
             ownerNodeIds,
             ownerPairKey,
           })
+          assignedPortPointIds.add(portPoint.portPointId)
         }
         this.mapOfOwnerPairToPortPoints.set(ownerPairKey, existing)
         uniqueOwnerPairs.set(ownerPairKey, ownerNodeIds)
