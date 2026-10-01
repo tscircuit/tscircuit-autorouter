@@ -18,7 +18,9 @@ test("USB-C Ethernet VBUS does not double back past the connector", async (): Pr
       trace.connectsTo.includes("pcb_port_20"),
   )!
   // Version 0.0.941 doubled back to x=-23.494; the connector pin is at x=-19.826.
-  const wirePoints = vbusTrace.route.filter((point) => point.route_type === "wire")
+  const wirePoints = vbusTrace.route.filter(
+    (point) => point.route_type === "wire",
+  )
   expect(Math.min(...wirePoints.map((point) => point.x))).toBeGreaterThan(-20)
   await expect(
     getBugReportSnapshotSvg({
