@@ -18,16 +18,16 @@ jobs:
         with:
           path: controller
           persist-credentials: false
-      - name: Checkout previous Repair04 performance candidate
-        uses: actions/checkout@v4
-        with:
-          ref: 8a0f6de628eaeeb6940992c9a3ef2cc9cb14a0fc
-          path: main
-          persist-credentials: false
-      - name: Checkout candidate with obstacle connectivity cache
+      - name: Checkout previous candidate with connectivity cache
         uses: actions/checkout@v4
         with:
           ref: e850bc33b801aa45ee3242b8310314ca2ef6b8f1
+          path: main
+          persist-credentials: false
+      - name: Checkout candidate with dense clearance search state
+        uses: actions/checkout@v4
+        with:
+          ref: 6d2a7964e8876a976b85cc0af8d1b747e2ea29fe
           path: candidate
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
