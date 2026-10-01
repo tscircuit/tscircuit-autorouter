@@ -325,6 +325,7 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: false,
+            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
@@ -1125,6 +1126,35 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
+    if (this.duplicateCongestedPortReport) {
+      const { routeCongestionScoreByConnectionId } =
+        this.duplicateCongestedPortReport
+      const connections = graphForTiny.connections
+      if (!connections) {
+        throw new Error("Serialized tiny hypergraph is missing connections")
+      }
+      const initialRouteOrder = connections
+        .map((connection, routeId) => {
+          const congestionScore =
+            routeCongestionScoreByConnectionId[connection.connectionId]
+          if (congestionScore === undefined) {
+            throw new Error(
+              `Missing congestion score for "${connection.connectionId}"`,
+            )
+          }
+          return { routeId, congestionScore }
+        })
+        .sort(
+          (left, right) =>
+            left.congestionScore - right.congestionScore ||
+            left.routeId - right.routeId,
+        )
+        .map(({ routeId }) => routeId)
+      tinyPipelineInput.solveGraphOptions = {
+        ...tinyPipelineInput.solveGraphOptions,
+        INITIAL_ROUTE_ORDER: initialRouteOrder,
+      }
+    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
