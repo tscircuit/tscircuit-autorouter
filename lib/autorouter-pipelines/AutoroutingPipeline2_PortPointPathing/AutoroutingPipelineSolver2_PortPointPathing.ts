@@ -319,7 +319,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             initialAssignedPortPoints: portPointSolver.assignedPortPoints,
             initialNodeAssignedPortPoints:
               portPointSolver.nodeAssignedPortPoints,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
           },
         ]
       },
@@ -359,7 +359,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         connMap: cms.connMap,
         viaDiameter: cms.viaDiameter,
         traceWidth: cms.minTraceWidth,
-        effort: cms.effort,
+        effort: Math.min(1, cms.effort),
       },
     ]),
     definePipelineStep(
