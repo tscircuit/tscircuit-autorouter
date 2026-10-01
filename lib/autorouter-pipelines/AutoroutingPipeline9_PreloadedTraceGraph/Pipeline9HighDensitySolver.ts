@@ -485,6 +485,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
+    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
@@ -494,7 +495,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: this.obstacles,
+      obstacles: this.obstacles.filter((obstacle) =>
+        obstacleOverlapsNode(obstacle, nodeBounds),
+      ),
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
     })

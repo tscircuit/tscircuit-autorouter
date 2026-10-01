@@ -72,6 +72,15 @@ const createSolver = (
         height: 2,
         connectedTo: ["board-pad-net"],
       },
+      {
+        obstacleId: "distant-board-pad",
+        type: "rect",
+        layers: ["top", "bottom"],
+        center: { x: 100, y: 100 },
+        width: 1,
+        height: 1,
+        connectedTo: ["distant-board-pad-net"],
+      },
     ],
     layerCount: options.layerCount ?? 2,
     allowBlindAndBuriedVias: options.allowBlindAndBuriedVias,
@@ -102,6 +111,11 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
 
   expect(distantPreloadSolver.activeRegularSolver).not.toBeNull()
   expect(distantPreloadSolver.activeB01Solver).toBeNull()
+  expect(
+    distantPreloadSolver.activeRegularSolver?.obstacles.map(
+      (obstacle) => obstacle.obstacleId,
+    ),
+  ).toEqual(["board-pad"])
   expect(distantPreloadSolver.stats).toMatchObject({
     fixedObstacleCount: 1,
     fixedObstacleUses: 0,
