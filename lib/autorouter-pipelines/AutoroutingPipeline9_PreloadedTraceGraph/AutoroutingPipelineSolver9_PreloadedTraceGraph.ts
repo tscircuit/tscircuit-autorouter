@@ -1,8 +1,6 @@
 import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
 import type { AnyCircuitElement } from "circuit-json"
 import { preparePostRoutingWholeNetInput } from "../../solvers/PostRoutingOptimization/preparePostRoutingWholeNetInput"
-import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
-import type { AnyCircuitElement } from "circuit-json"
 import { PostRoutingNetTreeSolver } from "../../solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
 import { PostRoutingOptimizationSolver } from "../../solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
 import type {
@@ -130,9 +128,6 @@ interface CapacityMeshSolverOptions {
   dynamicNetTreeRouting?: PostRoutingOptimizationOptions
   /** Independent opt-in forest-first post-routing transaction. */
   postRoutingOptimization?: PostRoutingOptimizationOptions
-  /** Optional authoritative source used only to restore physical pad metadata
-   * in isolated post-routing inputs. Pad/port IDs and geometry must agree. */
-  postRoutingSourceCircuitJson?: readonly AnyCircuitElement[]
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
