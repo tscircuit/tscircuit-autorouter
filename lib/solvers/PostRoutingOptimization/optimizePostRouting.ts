@@ -1,4 +1,5 @@
 import type { SimplifiedPcbTrace } from "../../types"
+import { UnsupportedPostRoutingInputError } from "./UnsupportedPostRoutingInputError"
 import {
   createDynamicNetTreeProblem,
   type PostRoutingPhysicalInput,
@@ -63,7 +64,9 @@ export type PostRoutingChange = {
   after: PostRoutingMetrics
 }
 export type PostRoutingOptimizationResult = {
-  status: "disabled" | "accepted" | "rejected"
+  status: "disabled" | "accepted" | "rejected" | "unsupported"
+  /** Unsupported output is preserved, not certified as physically valid. */
+  validationStatus: "unchecked" | "unsupported" | "validated"
   traces: SimplifiedPcbTrace[]
   changedNets: string[]
   changes: PostRoutingChange[]
@@ -93,6 +96,7 @@ function* optimizationSteps(
   const owners = new Map(input.traceOwners)
   const result: PostRoutingOptimizationResult = {
     status: options.enabled ? "rejected" : "disabled",
+    validationStatus: "unchecked",
     traces: structuredClone(original),
     changedNets: [],
     changes: [],
@@ -178,7 +182,17 @@ function* optimizationSteps(
       )
   }
   const validationStarted = performance.now()
-  const baseline = validatePostRoutingCandidate(srj, original, owners)
+  let baseline: PostRoutingValidation
+  try {
+    baseline = validatePostRoutingCandidate(srj, original, owners)
+  } catch (error) {
+    if (!(error instanceof UnsupportedPostRoutingInputError)) throw error
+    result.status = "unsupported"
+    result.validationStatus = "unsupported"
+    result.diagnostics.push(error.message)
+    result.validationMilliseconds += performance.now() - validationStarted
+    return result
+  }
   if (!baseline.valid)
     throw new Error(
       `Optimization requires a valid original board: ${baseline.diagnostics.join("; ")}`,
@@ -195,6 +209,7 @@ function* optimizationSteps(
       )
   }
   result.validationMilliseconds += performance.now() - validationStarted
+  result.validationStatus = "validated"
   result.before = measurePostRoutingMetrics(original, owners)
   result.after = { ...result.before }
   const selected = new Set(nets.map((p) => p.net))

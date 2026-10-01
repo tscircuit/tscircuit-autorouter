@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { optimizePostRouting } from "lib/solvers/PostRoutingOptimization/optimizePostRouting"
 import { boardFixture, phaseOptions } from "./fixtures"
 
-test("unsupported rules, owner ambiguities, mixed widths and changed preloads fail explicitly with immutable original input", () => {
+test("unsupported physical inputs return uncertified unchanged output; invalid owners, widths and preloads still throw", () => {
   for (const defect of [
     "layers",
     "pairs",
@@ -41,7 +41,16 @@ test("unsupported rules, owner ambiguities, mixed widths and changed preloads fa
         },
       ]
     const original = structuredClone(input)
-    expect(() => optimizePostRouting(input, phaseOptions())).toThrow()
+    if (["layers", "pairs", "npth", "drill", "plating"].includes(defect)) {
+      const result = optimizePostRouting(input, phaseOptions())
+      expect(result.status).toBe("unsupported")
+      expect(result.validationStatus).toBe("unsupported")
+      expect(result.traces).toEqual(input.traces)
+      expect(result.changedNets).toEqual([])
+      expect(result.attempts).toEqual([])
+      expect(result.before).toBeNull()
+      expect(result.diagnostics.length).toBeGreaterThan(0)
+    } else expect(() => optimizePostRouting(input, phaseOptions())).toThrow()
     expect(input).toEqual(original)
   }
 })
