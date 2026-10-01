@@ -113,3 +113,24 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export {
+  optimizePostRouting,
+  type PostRoutingOptimizationInput,
+  type PostRoutingOptimizationOptions,
+  type PostRoutingOptimizationResult,
+  type PostRoutingObjective,
+  type PostRoutingNetPlan,
+  type PostRoutingChange,
+} from "./solvers/PostRoutingOptimization/optimizePostRouting"
+export {
+  measurePostRoutingMetrics,
+  type PostRoutingMetrics,
+} from "./solvers/PostRoutingOptimization/measurePostRoutingMetrics"
+export {
+  validatePostRoutingCandidate,
+  type PostRoutingValidation,
+} from "./solvers/PostRoutingOptimization/validatePostRoutingCandidate"
+export type {
+  PostRoutingObstacle,
+  PostRoutingPhysicalInput,
+} from "./solvers/DynamicNetTreeSolver/createDynamicNetTreeProblem"
