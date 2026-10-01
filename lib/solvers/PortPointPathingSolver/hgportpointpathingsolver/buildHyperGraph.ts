@@ -1,6 +1,7 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
@@ -13,7 +14,11 @@ import {
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
-import { selectConnectionPointRegion } from "./select-connection-point-region"
+import {
+  type IndexedRegionHg,
+  selectConnectionPointRegion,
+} from "./select-connection-point-region"
+import { CONNECTION_POINT_REGION_TOLERANCE } from "./checkIfConnectionPointIsInRegion"
 import type {
   RawPort,
   ConnectionHgWithSimpleRouteConnection,
@@ -252,16 +257,30 @@ export function buildHyperGraph(params: {
     layerCount: params.layerCount,
   })
 
+  const regionIndex = new FlatbushIndex<IndexedRegionHg>(graph.regions.length)
+  for (const [index, region] of graph.regions.entries()) {
+    const halfWidth = region.d.width / 2
+    const halfHeight = region.d.height / 2
+    regionIndex.insert(
+      { index, region },
+      region.d.center.x - halfWidth - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y - halfHeight - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.x + halfWidth + CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y + halfHeight + CONNECTION_POINT_REGION_TOLERANCE,
+    )
+  }
+  regionIndex.finish()
+
   for (const connection of params.simpleRouteJsonConnections) {
     const [startPoint, endPoint] = connection.pointsToConnect
 
     const startRegion = selectConnectionPointRegion({
-      graph,
+      regionIndex,
       point: startPoint,
       layerCount: params.layerCount,
     })
     const endRegion = selectConnectionPointRegion({
-      graph,
+      regionIndex,
       point: endPoint,
       layerCount: params.layerCount,
     })
