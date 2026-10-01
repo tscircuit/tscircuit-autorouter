@@ -20,10 +20,11 @@ test("starts a predicted congested node at a routable search scale", () => {
   expect(solver.growthAttempts).toBe(2)
   expect(solver.scaleFactor).toBe(4)
 
-  const ordinaryNodeSolver = new GrowShrinkHighDensityIntraNodeSolver({
-    ...solver.getConstructorParams(),
-    nodePf: 0.5,
-  })
-  expect(ordinaryNodeSolver.growthAttempts).toBe(0)
-  expect(ordinaryNodeSolver.scaleFactor).toBe(1)
+  const moderatelyCongestedNodeSolver =
+    new GrowShrinkHighDensityIntraNodeSolver({
+      ...solver.getConstructorParams(),
+      nodePf: 0.5,
+    })
+  expect(moderatelyCongestedNodeSolver.growthAttempts).toBe(1)
+  expect(moderatelyCongestedNodeSolver.scaleFactor).toBe(2)
 })

@@ -87,6 +87,7 @@ const routeColors = [
 
 const TARGET_NODE_PF = 0.25
 const NODE_CAPACITY_SCALE_EXPONENT = 1.1
+const SCALED_NODE_PORTFOLIO_SUBSTEPS = 500
 
 const getPredictedGrowthAttempts = (nodePf?: number | null): number => {
   if (nodePf === undefined || nodePf === null || nodePf <= TARGET_NODE_PF) {
@@ -98,7 +99,7 @@ const getPredictedGrowthAttempts = (nodePf?: number | null): number => {
     0,
     Math.ceil(Math.log2(predictedScaleFactor)),
   )
-  return predictedGrowthAttempts >= 2 ? predictedGrowthAttempts : 0
+  return predictedGrowthAttempts
 }
 
 const connectionLabel = (
@@ -235,6 +236,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.scaleFactor,
       ),
     })
+    // Scaling has already made the geometry less congested. Let each portfolio
+    // candidate make sustained progress instead of repeatedly paying the
+    // scheduling cost of short slices across every candidate.
+    if (this.scaleFactor > 1) {
+      this.activeSubSolver.MIN_SUBSTEPS = SCALED_NODE_PORTFOLIO_SUBSTEPS
+    }
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt
