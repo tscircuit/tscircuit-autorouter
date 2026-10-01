@@ -26,7 +26,7 @@ test("the checked-in P9 benchmark profile actually enables its declared arm with
     PIPELINE9_POST_ROUTING_BENCHMARK_ARM.includes("B"),
   )
   const solver = createSolverForTask({
-    datasetName: "generic",
+    datasetName: "dataset01",
     scenarioName: "two-nets",
     sampleNumber: 1,
     solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
@@ -38,6 +38,18 @@ test("the checked-in P9 benchmark profile actually enables its declared arm with
   expect(
     solver.pipelineDef.some((s) => s.solverName === "postRoutingForestSolver"),
   ).toBe(PIPELINE9_POST_ROUTING_BENCHMARK_ARM.includes("B"))
+  const unprofiled = createSolverForTask({
+    datasetName: "unit-test",
+    scenarioName: "two-nets",
+    sampleNumber: 1,
+    solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    scenario: input,
+  })
+  expect(
+    unprofiled.pipelineDef.some((s) =>
+      ["dynamicNetTreeSolver", "postRoutingForestSolver"].includes(s.solverName),
+    ),
+  ).toBe(false)
   expect(input).toEqual(original)
 })
 
@@ -45,7 +57,7 @@ test("a routed unsupported benchmark remains explicitly ineligible and has no vi
   const scenario = boardFixture().srj
   scenario.obstacles[0]!.layers = ["top", "bottom"]
   const result = await runTask({
-    datasetName: "generic",
+    datasetName: "dataset01",
     scenarioName: "missing-plating",
     sampleNumber: 1,
     solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
@@ -56,6 +68,9 @@ test("a routed unsupported benchmark remains explicitly ineligible and has no vi
   expect(result.postRoutingBenchmark?.pipelineSolved).toBe(true)
   expect(result.postRoutingBenchmark?.eligible).toBe(false)
   expect(result.error).toContain("ineligible")
+  expect(result.postRoutingBenchmark!.reports).toHaveLength(
+    PIPELINE9_POST_ROUTING_BENCHMARK_ARM === "A+B" ? 2 : 1,
+  )
   for (const report of result.postRoutingBenchmark!.reports) {
     expect(report.beforeSha256 ?? "").toMatch(/^[a-f0-9]{64}$/)
     expect(report.afterSha256).toBe(report.beforeSha256 ?? "")

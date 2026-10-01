@@ -1,5 +1,6 @@
 import {
   getPipeline9PostRoutingBenchmarkOptions,
+  isPipeline9PostRoutingBenchmarkTask,
   PIPELINE9_POST_ROUTING_BENCHMARK_ARM,
   summarizePostRoutingBenchmark,
 } from "./pipeline9-post-routing-profile"
@@ -166,7 +167,7 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   if (!task.networkedCachePass) {
     return new SolverConstructor(task.scenario, {
       ...scenarioOptions,
-      ...(constructorName === "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+      ...(isPipeline9PostRoutingBenchmarkTask(task)
         ? getPipeline9PostRoutingBenchmarkOptions(task.scenario)
         : {}),
     })
@@ -540,14 +541,16 @@ export const runTask = async (
     }
   }
 
-  const isProfile =
-    (task.solverConstructorName ?? task.solverName) ===
-    "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+  const isProfile = isPipeline9PostRoutingBenchmarkTask(task)
   const arm = PIPELINE9_POST_ROUTING_BENCHMARK_ARM as "A" | "B" | "A+B"
   const reports = isProfile
     ? [
         ...(arm.includes("A")
-          ? [solver.getDynamicNetTreeRoutingResult?.()]
+          ? [
+              arm === "A"
+                ? solver.getPostRoutingOptimizationResult?.()
+                : solver.getDynamicNetTreeRoutingResult?.(),
+            ]
           : []),
         ...(arm.includes("B")
           ? [solver.getPostRoutingOptimizationResult?.()]
