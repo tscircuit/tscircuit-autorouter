@@ -32,6 +32,10 @@ try {
     let cleanup = originals.get(cleanupPath)!
     cleanup = replaceOnce(cleanup, "Math.ceil(2 * (params.effort - 1))", `Math.ceil(${strategy.passes} * (params.effort - 1))`)
     cleanup = replaceOnce(cleanup, "    simplifier.step()", `    const previousPhase = simplifier.currentPhase\n    ;${flag} = true\n    simplifier.step()\n    ;${flag} = false`)
+    if (process.env.CLEANUP_CAPTURE) {
+      cleanup = 'import { writeFileSync } from "node:fs"\n' + cleanup
+      cleanup = replaceOnce(cleanup, "      const cost = this.params.getCost(candidate)", '      writeFileSync("benchmark-effort/cleanup-candidate.json", JSON.stringify({ config: this.params.config, candidate, bestRoutes: this.bestRoutes }))\n      const cost = this.params.getCost(candidate)')
+    }
     if (strategy.name.startsWith("vertex-")) {
       cleanup = replaceOnce(cleanup, "      ...params.config,", "      ...params.config,\n      enableVertexShortcuts: true,")
     }
@@ -101,13 +105,13 @@ try {
       continue
     }
     console.log(`\nSTART STRATEGY ${strategy.name}`)
-    const result = spawnSync("bash", ["benchmark.sh", "--pipeline", "9", "--dataset", "18", "--effort", "2", "--sample-timeout", "1200s", "--concurrency", "8"], { stdio: "inherit" })
+    const result = spawnSync("bash", ["benchmark.sh", "--pipeline", "9", "--dataset", "18", "--effort", "2", "--sample-timeout", "1200s", "--concurrency", "8", ...(process.env.CLEANUP_SAMPLE_NUMBERS ? ["--sample-numbers", process.env.CLEANUP_SAMPLE_NUMBERS] : [])], { stdio: "inherit" })
     if (result.error) throw result.error
     if (result.status !== 0) throw new Error(`${strategy.name} exited ${result.status}`)
     const raw = readFileSync("benchmark-result.json", "utf8")
     writeFileSync(`benchmark-effort/${strategy.name}.json`, raw)
     const report = JSON.parse(raw) as BenchmarkReport
-    if (report.tests.length !== 16 || report.effortLabel !== "2x effort") throw new Error("Wrong experiment dataset/effort")
+    if (report.tests.length !== (process.env.CLEANUP_SAMPLE_NUMBERS ? process.env.CLEANUP_SAMPLE_NUMBERS.split(",").length : 16) || report.effortLabel !== "2x effort") throw new Error("Wrong experiment dataset/effort")
     runs.push({ name: strategy.name, report })
     writeFileSync("benchmark-effort/strategies.json", JSON.stringify(runs, null, 2))
   }
