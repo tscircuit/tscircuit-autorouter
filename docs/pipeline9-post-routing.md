@@ -110,16 +110,11 @@ The test prints complete hashes, diagnostics and measured runtime, rather than
 asserting a universal win. Existing pad/via/ownership/clearance regressions cover
 additional supported geometry separately.
 
-Capture the exact current checkout with:
-
-```sh
-bun scripts/capture-post-routing-stages.ts B /tmp/post-routing-captures graphics
-```
-
-The manifest records the Git head, immutable generic input, arm, seed, options,
-actual stage iterations, diagnostics, output and native recorded graphics paths.
-Omit `graphics` to let PipelineStageDebugRunner also render SVG/PNG stage views.
-B-only branches reject requests for A rather than silently displaying B as A.
+For native stage capture, use `PipelineStageDebugRunner` with the enabled
+proposal and validation stages. `getRecordedGraphics()` supplies actual physical
+branch events; `visualize()` supplies candidate or accepted/rolled-back copper.
+The existing SRJ23 snapshot test renders the final SRJ directly so completed
+copper remains visible when an optional phase returns unsupported or rejected.
 
 ## Authoritative pad metadata
 
@@ -153,6 +148,10 @@ length or bend increase and at most one changed net.
 
 An unsupported post-phase has `postRoutingBenchmark.pipelineSolved` recorded but
 `eligible: false`, no scored via count, and an explicit error in the public report.
+The profile is limited to explicit `dataset01` and `srj18` Pipeline9 tasks;
+other benchmark tasks retain their original behavior. The A-only branch reports
+its transaction through `getPostRoutingOptimizationResult()`; the stacked branch
+uses `getDynamicNetTreeRoutingResult()` for A and the last-transaction getter for B.
 Only phase-validated outputs proceed to native relaxed-DRC scoring. The existing
 runner uses via *entries*; the phase reports unique physical via sites and copper
 union length separately. The unchanged workflow does not fix random seeds or

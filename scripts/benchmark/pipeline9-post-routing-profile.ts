@@ -14,7 +14,9 @@ import { preparePostRoutingWholeNetInput } from "../../lib/solvers/PostRoutingOp
 export const PIPELINE9_POST_ROUTING_BENCHMARK_ARM: "A" | "B" | "A+B" = "B"
 
 /** Limit this comparison profile to the explicitly requested public datasets. */
-export function isPipeline9PostRoutingBenchmarkTask(task: BenchmarkTask): boolean {
+export function isPipeline9PostRoutingBenchmarkTask(
+  task: BenchmarkTask,
+): boolean {
   return (
     !task.networkedCachePass &&
     (task.datasetName === "dataset01" || task.datasetName === "srj18") &&
