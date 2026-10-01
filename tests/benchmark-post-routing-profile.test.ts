@@ -58,7 +58,7 @@ test("a routed unsupported benchmark remains explicitly ineligible and has no vi
   expect(result.error).toContain("ineligible")
   for (const report of result.postRoutingBenchmark!.reports) {
     expect(report.beforeSha256 ?? "").toMatch(/^[a-f0-9]{64}$/)
-    expect(report.afterSha256).toBe(report.beforeSha256)
+    expect(report.afterSha256).toBe(report.beforeSha256 ?? "")
     expect(report.actualOptions.enabled).toBe(true)
     expect(report.actualOptions.search?.maxMilliseconds).toBe(
       PIPELINE9_POST_ROUTING_BENCHMARK_ARM === "A+B" ? 2500 : 5000,
