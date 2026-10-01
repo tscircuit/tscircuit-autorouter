@@ -1,5 +1,6 @@
 import { dataset as datasetSrj24 } from "@tscircuit/dataset-srj24"
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
@@ -57,5 +58,13 @@ test("PMP23595 sample021 routes within the benchmark timeout", () => {
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(460)
+  expect(
+    getSvgFromGraphicsObject(solver.visualizeFinalOutput(), {
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "routed",
+    tolerance: 0,
+  })
   expect(elapsedMs).toBeLessThan(EXPECTED_MAX_RUNTIME_MS)
 })
