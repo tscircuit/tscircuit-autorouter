@@ -1,3 +1,5 @@
+import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
+import type { AnyCircuitElement } from "circuit-json"
 import { preparePostRoutingWholeNetInput } from "../../solvers/PostRoutingOptimization/preparePostRoutingWholeNetInput"
 import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
 import type { AnyCircuitElement } from "circuit-json"
@@ -114,6 +116,8 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Authoritative source pad/drill facts used only by isolated post-routing inputs. */
+  postRoutingSourceCircuitJson?: readonly AnyCircuitElement[]
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
