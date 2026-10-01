@@ -179,12 +179,16 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
     },
     { backgroundColor: "white", svgWidth: 700, svgHeight: 700 },
   )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     stackSvgsHorizontally(
       [convertCircuitJsonToPcbSvg([...circuitJson, ...routedCopper]), focusSvg],
       { gap: 12, normalizeSize: false },
     ).replace(/[ \t]+$/gm, ""),
-  ).toMatchSvgSnapshot(import.meta.path, {
+  ).toMatchSvgSnapshot(snapshotPath, {
     svgName: "board-and-drills",
     tolerance: 0.02,
   })
