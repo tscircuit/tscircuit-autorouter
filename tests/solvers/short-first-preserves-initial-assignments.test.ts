@@ -33,10 +33,11 @@ test("short-first preserves preloaded copper and the native global retry order",
     ],
   }
   const before = structuredClone(problem)
-  const control = new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-    topology,
-    problem,
-  )
+  const control =
+    new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+      topology,
+      problem,
+    )
   const candidate = new ShortFirstSelectiveReripTinyHyperGraphSolver(
     topology,
     problem,
