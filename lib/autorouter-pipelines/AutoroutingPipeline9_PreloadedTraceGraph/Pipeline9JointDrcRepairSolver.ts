@@ -224,6 +224,36 @@ const pointsHaveSamePosition = (
   Math.abs(left.x - right.x) <= POINT_EPSILON &&
   Math.abs(left.y - right.y) <= POINT_EPSILON
 
+// Repair can move a section endpoint within same-net copper; its adjacent
+// preloaded via or through-obstacle primitive still has a fixed position.
+const connectRepairedSectionToOriginalTerminals = (
+  repairedRoute: HighDensityRoute,
+  originalRoute: HighDensityRoute,
+): HighDensityRoute => {
+  const originalStart = originalRoute.route[0]
+  const originalEnd = originalRoute.route.at(-1)
+  const repairedStart = repairedRoute.route[0]
+  const repairedEnd = repairedRoute.route.at(-1)
+  if (!originalStart || !originalEnd || !repairedStart || !repairedEnd) {
+    throw new Error(
+      `Pipeline9 cannot reconnect empty repaired section "${repairedRoute.connectionName}"`,
+    )
+  }
+  if (originalStart.z !== repairedStart.z || originalEnd.z !== repairedEnd.z) {
+    throw new Error(
+      `Pipeline9 repaired section "${repairedRoute.connectionName}" changed a fixed terminal layer`,
+    )
+  }
+  return {
+    ...repairedRoute,
+    route: [
+      ...(pointsAreEqual(originalStart, repairedStart) ? [] : [originalStart]),
+      ...repairedRoute.route,
+      ...(pointsAreEqual(originalEnd, repairedEnd) ? [] : [originalEnd]),
+    ],
+  }
+}
+
 const combinePreloadedTraceSectionGroup = ({
   trace,
   sectionGroup,
@@ -1114,7 +1144,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               ? { __replaces_pcb_trace_id: originalTraceId }
               : { __replaces_pcb_trace_id: undefined }),
             route: convertHdRouteToSimplifiedRoute(
-              evaluatedRoute,
+              connectRepairedSectionToOriginalTerminals(
+                evaluatedRoute,
+                movableSection.hdRoute,
+              ),
               params.layerCount,
               {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
@@ -1763,7 +1796,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routePositionStart: movableSection.originalRoutePositionStart,
         routePositionEnd: movableSection.originalRoutePositionEnd,
         route: convertHdRouteToSimplifiedRoute(
-          outputRoute,
+          connectRepairedSectionToOriginalTerminals(
+            outputRoute,
+            movableSection.hdRoute,
+          ),
           this.params.layerCount,
           {
             defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
