@@ -4,7 +4,8 @@ import {
   type PostRoutingPhysicalInput,
 } from "../DynamicNetTreeSolver/createDynamicNetTreeProblem"
 import {
-  routeDynamicNetTree,
+  routeDynamicNetTreeSteps,
+  type DynamicNetTreeProgress,
   type DynamicNetTreeResult,
 } from "../DynamicNetTreeSolver/routeDynamicNetTree"
 import {
@@ -83,10 +84,10 @@ export type PostRoutingOptimizationResult = {
 /** Explicit final phase, called after a router has produced complete traces.
  * Only selected mutable nets are replaced. A rejection returns an exact clone
  * of all original traces and reports why; partial candidates never escape. */
-export function optimizePostRouting(
+function* optimizationSteps(
   input: PostRoutingOptimizationInput,
   options: PostRoutingOptimizationOptions,
-): PostRoutingOptimizationResult {
+): Generator<PostRoutingProgress, PostRoutingOptimizationResult> {
   const original = structuredClone(input.traces),
     srj = structuredClone(input.srj)
   const owners = new Map(input.traceOwners)
@@ -204,10 +205,8 @@ export function optimizePostRouting(
   )
   let candidate = structuredClone(retained),
     expansions = 0
-  const searchStarted = performance.now()
   for (const plan of nets) {
-    const remainingMs =
-      search.maxMilliseconds - (performance.now() - searchStarted)
+    const remainingMs = search.maxMilliseconds - result.searchMilliseconds
     const remainingExpansions = search.maxExpansions - expansions
     if (remainingMs <= 0 || remainingExpansions <= 0) {
       result.diagnostics.push("Transaction search budget exhausted")
@@ -249,7 +248,7 @@ export function optimizePostRouting(
       )
     if (diameters.size) problem.viaDiameter = [...diameters][0]!
     if (holes.size) problem.viaHoleDiameter = [...holes][0]!
-    const routed = routeDynamicNetTree(problem, {
+    const steps = routeDynamicNetTreeSteps(problem, {
       ...search,
       maxMilliseconds: remainingMs,
       maxExpansions: remainingExpansions,
@@ -257,6 +256,17 @@ export function optimizePostRouting(
       maxViasPerBranch: plan.maxNewViasPerBranch,
       componentPlanning: plan.componentPlanning,
     })
+    let next = steps.next()
+    while (!next.done) {
+      yield {
+        kind: "branch",
+        traces: structuredClone([...candidate, ...next.value.traces]),
+        event: next.value,
+      }
+      next = steps.next()
+    }
+    const routed = next.value
+    result.searchMilliseconds += routed.stats.elapsedMs
     expansions += routed.stats.expansions
     result.attempts.push({
       net: plan.net,
@@ -282,7 +292,6 @@ export function optimizePostRouting(
     }
     candidate.push(...routed.traces)
   }
-  result.searchMilliseconds = performance.now() - searchStarted
   if (
     result.searchMilliseconds > search.maxMilliseconds &&
     !result.diagnostics.length
@@ -297,6 +306,7 @@ export function optimizePostRouting(
     JSON.stringify(retained)
   )
     throw new Error("Retained copper invariant violated")
+  yield { kind: "proposal", traces: structuredClone(candidate) }
   const candidateValidationStarted = performance.now()
   const validation = validatePostRoutingCandidate(srj, candidate, owners)
   result.diagnostics.push(...validation.diagnostics)
@@ -376,4 +386,97 @@ export function optimizePostRouting(
   result.changedNets = changes.map((change) => change.net)
   result.changes = changes
   return result
+}
+
+export type PostRoutingProgress = {
+  kind: "branch" | "proposal"
+  traces: SimplifiedPcbTrace[]
+  event?: DynamicNetTreeProgress
+}
+
+/** Owns the proposal and immutable baseline across the two actual stages.
+ * Only evaluate() can release an accepted output, after candidate validation.
+ * Expected budget/objective rejections are reported; invariants still throw. */
+export class PostRoutingOptimizationTransaction {
+  private readonly input: PostRoutingOptimizationInput
+  private readonly options: PostRoutingOptimizationOptions
+  private readonly iterator: Generator<
+    PostRoutingProgress,
+    PostRoutingOptimizationResult
+  >
+  private snapshot: PostRoutingProgress
+  private ready = false
+  private result?: PostRoutingOptimizationResult
+
+  constructor(
+    input: PostRoutingOptimizationInput,
+    options: PostRoutingOptimizationOptions,
+  ) {
+    this.input = {
+      srj: structuredClone(input.srj),
+      traces: structuredClone(input.traces),
+      traceOwners: new Map(input.traceOwners),
+    }
+    this.options = {
+      ...structuredClone({
+        enabled: options.enabled,
+        nets: options.nets,
+        objective: options.objective,
+        search: options.search,
+      }),
+      validate: options.validate,
+    }
+    this.snapshot = { kind: "proposal", traces: structuredClone(input.traces) }
+    this.iterator = optimizationSteps(this.input, this.options)
+  }
+
+  advanceProposal(): boolean {
+    if (this.ready) throw new Error("Post-routing proposal already completed")
+    const next = this.iterator.next()
+    if (next.done) {
+      this.result = next.value
+      this.ready = true
+    } else {
+      this.snapshot = next.value
+      this.ready = next.value.kind === "proposal"
+    }
+    return this.ready
+  }
+
+  evaluate(): PostRoutingOptimizationResult {
+    if (!this.ready)
+      throw new Error(
+        "Post-routing validation requested before proposal completion",
+      )
+    if (!this.result) {
+      const next = this.iterator.next()
+      if (!next.done)
+        throw new Error("Unexpected proposal event during candidate validation")
+      this.result = next.value
+    }
+    return structuredClone(this.result)
+  }
+
+  getSnapshot(): PostRoutingProgress {
+    return structuredClone(this.snapshot)
+  }
+  getInput(): PostRoutingOptimizationInput {
+    return {
+      srj: structuredClone(this.input.srj),
+      traces: structuredClone(this.input.traces),
+      traceOwners: new Map(this.input.traceOwners),
+    }
+  }
+}
+
+/** Callable standalone phase; exactly the same transaction as Pipeline9. */
+export function optimizePostRouting(
+  input: PostRoutingOptimizationInput,
+  options: PostRoutingOptimizationOptions,
+): PostRoutingOptimizationResult {
+  const transaction = new PostRoutingOptimizationTransaction(input, options)
+  while (!transaction.advanceProposal()) {
+    /* one recorded physical insertion */
+  }
+  return transaction.evaluate()
 }

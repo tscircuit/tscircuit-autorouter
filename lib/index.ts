@@ -145,3 +145,5 @@ export type {
   PostRoutingObstacle,
   PostRoutingPhysicalInput,
 } from "./solvers/DynamicNetTreeSolver/createDynamicNetTreeProblem"
+export { PostRoutingNetTreeSolver } from "./solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
+export { PostRoutingOptimizationSolver } from "./solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
