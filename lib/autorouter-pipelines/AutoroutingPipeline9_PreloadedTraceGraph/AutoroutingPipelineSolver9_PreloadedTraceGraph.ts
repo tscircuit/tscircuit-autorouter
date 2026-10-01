@@ -1688,7 +1688,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.originalSrj,
       traces,
       this.getPowerTraceExpansionFixedTraces(),
-      Array.from(new Set((this.opts.postRoutingOptimization?.nets ?? []).map((plan) => plan.net))),
+      Array.from(
+        new Set(
+          (this.opts.postRoutingOptimization?.nets ?? []).map(
+            (plan) => plan.net,
+          ),
+        ),
+      ),
       this.netToPointPairsSolver?.newConnections ?? [],
     )
   }
