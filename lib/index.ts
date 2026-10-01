@@ -113,3 +113,14 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export { DynamicNetTreeSolver } from "./solvers/DynamicNetTreeSolver/DynamicNetTreeSolver"
+export {
+  routeDynamicNetTree,
+  routeDynamicNetTreeSteps,
+} from "./solvers/DynamicNetTreeSolver/routeDynamicNetTree"
+export type {
+  DynamicNetTreeProblem,
+  DynamicNetTreeOptions,
+  DynamicNetTreeProgress,
+  DynamicNetTreeResult,
+} from "./solvers/DynamicNetTreeSolver/routeDynamicNetTree"
