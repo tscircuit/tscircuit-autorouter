@@ -6,7 +6,6 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const SAMPLE_NUMBERS = [1, 3, 7, 10]
 
@@ -92,7 +91,12 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
             ),
             { backgroundColor: "white" },
           )
-        : getLastStepSvg(solver.visualize())
+        : getSvgFromGraphicsObject(
+            convertSrjToGraphicsObject(solver.getOutputSimpleRouteJson(), {
+              traceColorMode: "net",
+            }),
+            { backgroundColor: "white" },
+          )
       ).replace(
         "</svg>",
         `<text x="12" y="28" font-size="12" fill="#9f1239">${diagnostic}</text></svg>`,
