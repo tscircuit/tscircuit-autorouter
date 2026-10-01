@@ -347,8 +347,13 @@ export const createPipeline9RegularNodeSolver = ({
   boardGeometry,
   layerCount,
   cacheProvider,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const capacityMeshNodeId = nodeWithPortPoints.capacityMeshNodeId
+  const nodePf =
+    nodePfById instanceof Map
+      ? nodePfById.get(capacityMeshNodeId)
+      : nodePfById[capacityMeshNodeId]
+  return new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -358,7 +363,9 @@ export const createPipeline9RegularNodeSolver = ({
     traceWidth,
     obstacleMargin,
     effort,
-    nodePfById,
+    nodePfById: new Map(
+      nodePf === undefined ? [] : [[capacityMeshNodeId, nodePf]],
+    ),
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
@@ -372,6 +379,7 @@ export const createPipeline9RegularNodeSolver = ({
     captureSearchDebug: false,
     cacheProvider,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
