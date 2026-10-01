@@ -1,3 +1,13 @@
+import {
+  getPipeline9PostRoutingBenchmarkOptions,
+  PIPELINE9_POST_ROUTING_BENCHMARK_ARM,
+  summarizePostRoutingBenchmark,
+} from "./pipeline9-post-routing-profile"
+import type {
+  PostRoutingOptimizationResult,
+  PostRoutingOptimizationInput,
+  PostRoutingOptimizationOptions,
+} from "../../lib/solvers/PostRoutingOptimization/optimizePostRouting"
 import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
@@ -57,6 +67,24 @@ type SolverInstance = PipelineStageTimingSource & {
     stats?: Record<string, unknown>
     waitForAllRemoteRequests?: () => Promise<void>
   }
+  dynamicNetTreeSolver?: {
+    getConstructorParams: () => [
+      PostRoutingOptimizationInput,
+      PostRoutingOptimizationOptions,
+    ]
+  }
+  postRoutingForestSolver?: {
+    getConstructorParams: () => [
+      PostRoutingOptimizationInput,
+      PostRoutingOptimizationOptions,
+    ]
+  }
+  getDynamicNetTreeRoutingResult?: () =>
+    | PostRoutingOptimizationResult
+    | undefined
+  getPostRoutingOptimizationResult?: () =>
+    | PostRoutingOptimizationResult
+    | undefined
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -136,7 +164,12 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const SolverConstructor = getSolverConstructor(constructorName)
   const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
   if (!task.networkedCachePass) {
-    return new SolverConstructor(task.scenario, scenarioOptions)
+    return new SolverConstructor(task.scenario, {
+      ...scenarioOptions,
+      ...(constructorName === "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+        ? getPipeline9PostRoutingBenchmarkOptions(task.scenario)
+        : {}),
+    })
   }
 
   const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
@@ -507,7 +540,48 @@ export const runTask = async (
     }
   }
 
-  const didSolve = Boolean(solver.solved)
+  const isProfile =
+    (task.solverConstructorName ?? task.solverName) ===
+    "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+  const arm = PIPELINE9_POST_ROUTING_BENCHMARK_ARM as "A" | "B" | "A+B"
+  const reports = isProfile
+    ? [
+        ...(arm.includes("A")
+          ? [solver.getDynamicNetTreeRoutingResult?.()]
+          : []),
+        ...(arm.includes("B")
+          ? [solver.getPostRoutingOptimizationResult?.()]
+          : []),
+      ]
+    : []
+  const eligible =
+    !isProfile ||
+    (reports.length > 0 &&
+      reports.every((r) => r?.validationStatus === "validated"))
+  const postRoutingBenchmark = isProfile
+    ? {
+        arm,
+        pipelineSolved: Boolean(solver.solved),
+        eligible,
+        totalSearchBudget: { maxMilliseconds: 5000, maxExpansions: 300000 },
+        reports: reports
+          .filter((r): r is PostRoutingOptimizationResult => Boolean(r))
+          .map((r, index) =>
+            summarizePostRoutingBenchmark(
+              r,
+              (arm === "B" || index === 1
+                ? solver.postRoutingForestSolver
+                : solver.dynamicNetTreeSolver
+              )?.getConstructorParams(),
+            ),
+          ),
+      }
+    : undefined
+  // A routed but unsupported board has no eligible optimization score. Keep its
+  // actual pipeline state and diagnostics in JSON; omit scored via counts.
+  if (solver.solved && !eligible)
+    solveError = `Post-routing comparison ineligible: ${reports.flatMap((r) => r?.diagnostics ?? ["missing phase result"]).join("; ")}`
+  const didSolve = Boolean(solver.solved) && eligible
   const routingMetrics = getRoutingBenchmarkMetrics(solver)
   let stageTimingStatus: "complete" | "partial" = "partial"
   if (didSolve) {
@@ -528,6 +602,7 @@ export const runTask = async (
       stageTiming,
       routingMetrics,
       ...failureInfo,
+      postRoutingBenchmark,
     }
   }
 
@@ -587,6 +662,7 @@ export const runTask = async (
       stageTiming,
       routingMetrics,
       benchmarkSnapshot,
+      postRoutingBenchmark,
       ...drcSummary,
     }
   } catch (error) {
