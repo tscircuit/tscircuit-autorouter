@@ -8,6 +8,7 @@ import {
 } from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import type { CacheProvider } from "lib/cache/types"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
@@ -54,6 +55,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  cacheProvider?: CacheProvider | null
 }
 
 type NodeBounds = {
@@ -324,6 +326,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  cacheProvider?: CacheProvider | null
 }
 
 /**
@@ -343,6 +346,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  cacheProvider,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -366,6 +370,7 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    cacheProvider,
   })
 
 /**
@@ -391,6 +396,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
+  readonly cacheProvider?: CacheProvider | null
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
@@ -429,6 +435,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
+    this.cacheProvider = params.cacheProvider
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -500,6 +507,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ),
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      cacheProvider: this.cacheProvider,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

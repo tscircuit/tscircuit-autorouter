@@ -61,7 +61,9 @@ export class CachedIntraNodeRouteSolver
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
-    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+    this.initialUnsolvedConnections = this.cacheProvider
+      ? cloneValue(this.unsolvedConnections)
+      : this.unsolvedConnections
 
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       this.saveToCacheSync()
