@@ -23,6 +23,8 @@ const strategies = [
   { name: "wider-via-merging", passes: 2, salvage: false, detours: false, merge: true },
   { name: "vertex-shortcuts", passes: 2, salvage: false, detours: false, merge: false },
   { name: "vertex-local-acceptance", passes: 2, salvage: true, detours: false, merge: false },
+  { name: "phase-checkpoints", passes: 2, salvage: true, detours: false, merge: false },
+  { name: "via-only-acceptance", passes: 2, salvage: true, detours: false, merge: false },
   { name: "combined", passes: 4, salvage: true, detours: true, merge: true },
 ]
 const runs: { name: string; report: BenchmarkReport }[] = []
@@ -61,6 +63,12 @@ try {
           }
         }
       }`)
+    }
+    if (strategy.name === "phase-checkpoints") {
+      cleanup = replaceOnce(cleanup, ".slice(0, 64)", ".slice(0, 0)")
+    }
+    if (strategy.name === "via-only-acceptance") {
+      cleanup = replaceOnce(cleanup, "viaGain > 0 || (viaGain === 0 && pointGain > 0)", "viaGain > 0")
     }
     writeFileSync(cleanupPath, cleanup)
     let detour = originals.get(detourPath)!

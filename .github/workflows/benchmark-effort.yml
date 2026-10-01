@@ -34,9 +34,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun scripts/benchmark/cleanup-strategies.ts
         env:
-          CLEANUP_STRATEGIES: vertex-shortcuts
-          CLEANUP_SAMPLE_NUMBERS: "15"
-          CLEANUP_CAPTURE: "1"
+          CLEANUP_STRATEGIES: control,phase-checkpoints,via-only-acceptance
       - uses: actions/upload-artifact@v4
         if: always()
         with:
