@@ -9,33 +9,29 @@ const pointHash = (point: { x: number; y: number }) =>
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
   for (const connection of srj.connections) {
-    for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
-      connMap.addConnections([[connection.name, rootConnectionName]])
-    }
-    // Also link the connection name to its overall netConnectionName if available
+    const connectionGroup = new Set<string>([
+      connection.name,
+      ...(connection.__rootConnectionNames ?? []),
+    ])
     if (connection.__netConnectionName) {
-      connMap.addConnections([
-        [connection.name, connection.__netConnectionName],
-      ])
+      connectionGroup.add(connection.__netConnectionName)
     }
 
     for (const point of connection.pointsToConnect) {
-      connMap.addConnections([
-        [
-          connection.name,
-          `${pointHash(point)}:${getConnectionPointLayers(point)
-            .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
-            .sort()
-            .join("-")}`,
-        ],
-      ])
+      connectionGroup.add(
+        `${pointHash(point)}:${getConnectionPointLayers(point)
+          .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+          .sort()
+          .join("-")}`,
+      )
       if ("pcb_port_id" in point && point.pcb_port_id) {
-        connMap.addConnections([[connection.name, point.pcb_port_id as string]])
+        connectionGroup.add(point.pcb_port_id)
       }
       if (point.pointId) {
-        connMap.addConnections([[connection.name, point.pointId]])
+        connectionGroup.add(point.pointId)
       }
     }
+    connMap.addConnections([[...connectionGroup]])
   }
   for (const obstacle of srj.obstacles) {
     const offBoardConnections = obstacle.offBoardConnectsTo ?? []
