@@ -107,15 +107,27 @@ test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> =>
       : import.meta.path
   // Keep the same expected path and actual pre-phase copper on a phase failure.
   const svg = getBugReportSnapshotSvg(output)
-  const phaseDiagnostic = solver.error
-    ? solver.error.replace(/[&<>]/g, " ")
-    : "Post-routing phase completed"
+  const result = solver.getPostRoutingOptimizationResult()
+  const phaseDiagnostic =
+    solver.error?.replace(/[&<>]/g, " ") ??
+    `${result?.status}: ${result?.diagnostics.join("; ")}; validation=${result?.validationStatus}`
   const observed = svg.replace(
     "</svg>",
     `<text x="12" y="78" font-size="12" fill="#9f1239">${phaseDiagnostic}</text></svg>`,
   )
   await expect(observed).toMatchSvgSnapshot(snapshotPath)
   if (solveError) throw solveError
+  expect(result?.status).toBe("unsupported")
+  expect(result?.validationStatus).toBe("unsupported")
+  expect(result?.attempts).toEqual([])
+  expect(routedTraces).toEqual([
+    ...(
+      solver.powerTraceExpansionSolver!.inputSrj as typeof scenario & {
+        fixedTraces: NonNullable<typeof scenario.traces>
+      }
+    ).fixedTraces,
+    ...solver.powerTraceExpansionSolver!.getOutput(),
+  ])
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
