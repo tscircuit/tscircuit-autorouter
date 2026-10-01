@@ -28,23 +28,74 @@ test("Pipeline9 repairs SRJ18 sample 3 at 2x effort", async (): Promise<void> =>
   const { scenario } = await loadScenarioBySampleNumber("srj18", 3)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { effort: 2, cacheProvider: null },
+    {
+      effort: 2,
+      cacheProvider: null,
+      postRoutingOptimization: {
+        enabled: true,
+        nets: [
+          {
+            net: scenario.connections[0]!.name,
+            maxNewVias: 2,
+            maxNewViasPerBranch: 1,
+          },
+        ],
+        objective: {
+          priorities: ["viaSites", "copperLength", "bends"],
+          maxCopperLengthIncrease: 0,
+          maxBendIncrease: 0,
+          maxChangedNets: 1,
+        },
+        search: {
+          gridStep: 0.5,
+          viaCost: 3,
+          bendCost: 0.05,
+          maxExpansions: 300_000,
+          maxMilliseconds: 5_000,
+        },
+      },
+    },
   )
-  solver.solve()
+  let solveError: unknown
+  try {
+    solver.solve()
+  } catch (error) {
+    solveError = error
+  }
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
-  expect(solver.effortCleanupSolver?.completedPasses).toBe(2)
+  const routedTraces = solver.solved
+    ? solver.getOutputSimplifiedPcbTraces()
+    : [
+        ...(
+          solver.powerTraceExpansionSolver!.inputSrj as typeof scenario & {
+            fixedTraces: typeof scenario.traces
+          }
+        ).fixedTraces!,
+        ...solver.powerTraceExpansionSolver!.getOutput(),
+      ]
   const output = {
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces,
   }
-  expect(evaluateRelaxedDrc(output).errors).toHaveLength(0)
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(snapshotPath)
+  // Keep the same expected path and actual pre-phase copper on a phase failure.
+  const svg = getBugReportSnapshotSvg(output)
+  const phaseDiagnostic = solver.error
+    ? solver.error.replace(/[&<>]/g, " ")
+    : "Post-routing phase completed"
+  const observed = svg.replace(
+    "</svg>",
+    `<text x="12" y="78" font-size="12" fill="#9f1239">${phaseDiagnostic}</text></svg>`,
+  )
+  await expect(observed).toMatchSvgSnapshot(snapshotPath)
+  if (solveError) throw solveError
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.traceSimplificationSolver?.simplificationPipelineLoops).toBe(2)
+  expect(solver.effortCleanupSolver?.completedPasses).toBe(2)
+  expect(evaluateRelaxedDrc(output).errors).toHaveLength(0)
 }, 120_000)
