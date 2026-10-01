@@ -20,13 +20,14 @@ test("Pipeline9 repairs SRJ18 sample 2 within its regional work budget", async (
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   expect(errors).toEqual([])
-  const stats = solver.pipeline9JointDrcRepairSolver!.stats
+  const jointSolver = solver.pipeline9JointDrcRepairSolver!
+  const stats = jointSolver.stats
   // This board uses the existing congestion-scaled budget, not the fixed
   // small-board defaults. Keep the zero-DRC requirement above unchanged.
   const budget = getPipeline9BoundedRepairBudget(
-    solver.pipeline9JointDrcRepairSolver!.getCombinedOutput().length,
+    jointSolver.getOutput().length,
     Number(stats.postExactReferenceDrcIssueCount),
-    1,
+    jointSolver.params.effort,
   )
   expect(
     Number(stats.boundedRegionalRepairAttemptedRegionCount),
