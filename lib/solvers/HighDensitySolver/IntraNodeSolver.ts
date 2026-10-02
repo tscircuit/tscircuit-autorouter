@@ -49,6 +49,36 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
   return deduped
 }
 
+export const canSolveNodeWithDirectSameLayerRoute = (
+  nodeWithPortPoints: NodeWithPortPoints,
+) => {
+  if (nodeWithPortPoints.portPoints.length !== 2) return false
+  if ((nodeWithPortPoints.portPointsInPairs?.length ?? 1) !== 1) return false
+
+  const [start, end] = nodeWithPortPoints.portPoints
+  if (
+    !start ||
+    !end ||
+    start.connectionName !== end.connectionName ||
+    start.z !== end.z
+  ) {
+    return false
+  }
+
+  const bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+  const pointsAreOnSameEdge =
+    (Math.abs(start.x - bounds.minX) < 0.001 &&
+      Math.abs(end.x - bounds.minX) < 0.001) ||
+    (Math.abs(start.x - bounds.maxX) < 0.001 &&
+      Math.abs(end.x - bounds.maxX) < 0.001) ||
+    (Math.abs(start.y - bounds.minY) < 0.001 &&
+      Math.abs(end.y - bounds.minY) < 0.001) ||
+    (Math.abs(start.y - bounds.maxY) < 0.001 &&
+      Math.abs(end.y - bounds.maxY) < 0.001)
+
+  return !pointsAreOnSameEdge
+}
+
 export class IntraNodeRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "IntraNodeRouteSolver"
@@ -178,6 +208,29 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
     )
+
+    if (canSolveNodeWithDirectSameLayerRoute(this.nodeWithPortPoints)) {
+      const [start, end] = this.nodeWithPortPoints.portPoints
+      this.solvedRoutes = [
+        {
+          connectionName: start!.connectionName,
+          rootConnectionName:
+            start!.rootConnectionName ?? end!.rootConnectionName,
+          regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+          route: [
+            { x: start!.x, y: start!.y, z: start!.z },
+            { x: end!.x, y: end!.y, z: end!.z },
+          ],
+          traceThickness: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+          vias: [],
+        },
+      ]
+      this.unsolvedConnections = []
+      this.solved = true
+      this.progress = 1
+      return
+    }
 
     // const {
     //   numEntryExitLayerChanges,
