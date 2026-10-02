@@ -160,5 +160,5 @@ test("differential pair with protection pads is rejected before topology plannin
     getSvgFromGraphicsObject(rejectedGraphics, {
       backgroundColor: "white",
     }),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "early-rejection" })
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "before-rejection" })
 })
