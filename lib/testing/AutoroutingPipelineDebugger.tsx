@@ -1703,6 +1703,14 @@ export const AutoroutingPipelineDebugger = ({
                       ? "text-red-600"
                       : "text-blue-600"
 
+                  let progressLabel = ""
+
+                  if (status === "Solved") {
+                    progressLabel = "100%"
+                  } else if (status === "In Progress") {
+                    progressLabel = `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
+                  }
+
                   const startTime = solver.startTimeOfPhase[step.solverName]
 
                   const endTime =
@@ -1746,13 +1754,7 @@ export const AutoroutingPipelineDebugger = ({
                       <td className="border p-2">
                         {stepSolver?.iterations || 0}
                       </td>
-                      <td className="border p-2">
-                        {status === "Solved"
-                          ? "100%"
-                          : status === "In Progress"
-                            ? `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
-                            : ""}
-                      </td>
+                      <td className="border p-2">{progressLabel}</td>
                       <td className="border p-2 tabular-nums">
                         <div className="flex">
                           <div className="flex-grow">

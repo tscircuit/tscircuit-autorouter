@@ -274,8 +274,18 @@ function getPhysicalFanoutBuses({
         ? inwardDirection
         : nearestNonInwardDirection
 
-    let preferredExit: FanoutBorderTarget =
-      direction === "up" ? "top" : direction === "down" ? "bottom" : direction
+    let preferredExit: FanoutBorderTarget
+
+    switch (direction) {
+      case "up":
+        preferredExit = "top"
+        break
+      case "down":
+        preferredExit = "bottom"
+        break
+      default:
+        preferredExit = direction
+    }
 
     if (direction === "up") {
       preferredExit =
@@ -376,7 +386,7 @@ class FanoutStage extends BaseSolver {
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
-    return this.fanoutSolver.getOutputSimpleRouteJson() as SimpleRouteJson
+    return this.fanoutSolver.getOutputSimpleRouteJson()
   }
 
   override visualize(): GraphicsObject {

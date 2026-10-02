@@ -33,21 +33,19 @@ const getViaClearanceErrorIdentity = (
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string | undefined => {
   const traceIds = [
-    ...(typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []),
-    ...(Array.isArray(error.pcb_trace_ids)
-      ? error.pcb_trace_ids.filter(
-          (traceId): traceId is string => typeof traceId === "string",
-        )
-      : []),
-  ]
-    .map((traceId) =>
-      normalizePreparedTraceIds(traceId, originalTraceIdByPreparedTraceId),
-    )
-    .filter(
-      (traceId, traceIndex, allTraceIds) =>
-        allTraceIds.indexOf(traceId) === traceIndex,
-    )
-    .sort()
+    ...new Set(
+      [
+        ...(typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []),
+        ...(Array.isArray(error.pcb_trace_ids)
+          ? error.pcb_trace_ids.filter(
+              (traceId): traceId is string => typeof traceId === "string",
+            )
+          : []),
+      ].map((traceId) =>
+        normalizePreparedTraceIds(traceId, originalTraceIdByPreparedTraceId),
+      ),
+    ),
+  ].sort()
 
   const centerCandidate =
     error.center && typeof error.center === "object"

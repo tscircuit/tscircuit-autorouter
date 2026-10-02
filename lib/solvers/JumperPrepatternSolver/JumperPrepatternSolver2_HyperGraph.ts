@@ -907,15 +907,18 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       // Use a small margin to catch pads that touch the region boundary
       const padMargin = 0.01
 
-      const regionObstacles: CurvyObstacle[] = padObstacleInfos
-        .filter(
-          (padInfo) =>
-            padInfo.minX <= bounds.maxX + padMargin &&
-            padInfo.maxX >= bounds.minX - padMargin &&
-            padInfo.minY <= bounds.maxY + padMargin &&
-            padInfo.maxY >= bounds.minY - padMargin,
-        )
-        .map((padInfo) => {
+      const regionObstacles: CurvyObstacle[] = padObstacleInfos.flatMap(
+        (padInfo) => {
+          if (
+            !(
+              padInfo.minX <= bounds.maxX + padMargin &&
+              padInfo.maxX >= bounds.minX - padMargin &&
+              padInfo.minY <= bounds.maxY + padMargin &&
+              padInfo.maxY >= bounds.minY - padMargin
+            )
+          )
+            return []
+
           // If any of the routes passing through this region connect to this pad,
           // set the networkId so CurvyTraceSolver knows they can connect
           const routeNetworkIds = traversals.map(
@@ -926,15 +929,18 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
             routeNetworkIds.includes(nid),
           )
 
-          return {
-            minX: padInfo.minX,
-            minY: padInfo.minY,
-            maxX: padInfo.maxX,
-            maxY: padInfo.maxY,
-            center: padInfo.center,
-            networkId: matchingNetworkId,
-          }
-        })
+          return [
+            {
+              minX: padInfo.minX,
+              minY: padInfo.minY,
+              maxX: padInfo.maxX,
+              maxY: padInfo.maxY,
+              center: padInfo.center,
+              networkId: matchingNetworkId,
+            },
+          ]
+        },
+      )
 
       // Create CurvyTraceSolver for this region (don't solve yet)
       const problem: CurvyTraceProblem = {

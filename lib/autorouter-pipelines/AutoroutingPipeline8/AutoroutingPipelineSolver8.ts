@@ -874,11 +874,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   }
 
   private getMovableHighDensityRouteIndexes(routes: HighDensityRoute[]) {
-    return routes
-      .map((route, index) =>
-        this.isFixedPreplacedViaRoute(route) ? -1 : index,
-      )
-      .filter((index) => index !== -1)
+    return routes.flatMap((route, index) =>
+      this.isFixedPreplacedViaRoute(route) ? [] : [index],
+    )
   }
 
   private getMovableHighDensityRoutes(routes: HighDensityRoute[]) {

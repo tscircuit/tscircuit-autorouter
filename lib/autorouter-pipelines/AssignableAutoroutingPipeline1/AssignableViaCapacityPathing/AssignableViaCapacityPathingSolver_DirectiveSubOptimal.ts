@@ -984,7 +984,9 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       path.reverse()
 
       if (path.length > 1) {
-        const points = path.map((n) => n.center).filter((p) => isValidPoint(p))
+        const points = path.flatMap((node) =>
+          isValidPoint(node.center) ? [node.center] : [],
+        )
 
         if (points.length > 1) {
           graphics.lines!.push({

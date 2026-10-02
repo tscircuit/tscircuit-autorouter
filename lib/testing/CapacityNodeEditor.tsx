@@ -550,6 +550,14 @@ export default function CapacityNodeEditor({
   const svgCenterX = rect.x + rect.width / 2
   const svgCenterY = rect.y + rect.height / 2
 
+  let pairButtonLabel = "Add Pair"
+
+  if (addMode === "entry") {
+    pairButtonLabel = "Click edge for ENTRY"
+  } else if (addMode === "exit") {
+    pairButtonLabel = "Click edge for EXIT"
+  }
+
   const solverToSvg = (x: number, y: number) => ({
     x: svgCenterX + x * pixelsPerMm,
     y: svgCenterY + y * pixelsPerMm,
@@ -567,11 +575,7 @@ export default function CapacityNodeEditor({
           }}
           className={`px-4 py-2 rounded font-medium ${addMode ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}`}
         >
-          {addMode === "entry"
-            ? "Click edge for ENTRY"
-            : addMode === "exit"
-              ? "Click edge for EXIT"
-              : "Add Pair"}
+          {pairButtonLabel}
         </button>
         <button
           onClick={() => {

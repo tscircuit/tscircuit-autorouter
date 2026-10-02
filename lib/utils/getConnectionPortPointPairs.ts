@@ -87,12 +87,11 @@ export const getConnectionPortPointPairs = (
   const seenPairKeys = new Set<string>()
 
   const portPointsById = new Map(
-    portPoints
-      .filter(
-        (portPoint): portPoint is PortPoint & { portPointId: string } =>
-          typeof portPoint.portPointId === "string",
-      )
-      .map((portPoint) => [portPoint.portPointId, portPoint] as const),
+    portPoints.flatMap((portPoint) =>
+      typeof portPoint.portPointId === "string"
+        ? [[portPoint.portPointId, portPoint] as const]
+        : [],
+    ),
   )
 
   const pairCollection = { pairs, seenPairKeys }

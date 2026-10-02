@@ -200,15 +200,20 @@ export const convertSimplifiedPcbTraceToHighDensityRoute = (
     const transitionFollowsInputDirection = startZ === fromZ
     const start = transitionFollowsInputDirection ? point.start : point.end
     const end = transitionFollowsInputDirection ? point.end : point.start
-    appendRoutePoint(route, {
+
+    const transitionPoint: RoutePoint = {
       ...start,
       z: startZ,
       traceThickness: point.width,
       toNextSegmentType: "through_obstacle",
-      ...(point.circuitJsonMetadata
-        ? { toNextSegmentCircuitJsonMetadata: point.circuitJsonMetadata }
-        : {}),
-    })
+    }
+
+    if (point.circuitJsonMetadata) {
+      transitionPoint.toNextSegmentCircuitJsonMetadata =
+        point.circuitJsonMetadata
+    }
+
+    appendRoutePoint(route, transitionPoint)
     appendRoutePoint(route, {
       ...end,
       z: endZ,
@@ -216,7 +221,7 @@ export const convertSimplifiedPcbTraceToHighDensityRoute = (
     })
   }
 
-  return {
+  const converted: HighDensityRoute = {
     connectionName: trace.pcb_trace_id,
     rootConnectionName: options.rootConnectionName,
     startPcbPortId: getTerminalPcbPortId(trace.route, "start"),
@@ -225,6 +230,11 @@ export const convertSimplifiedPcbTraceToHighDensityRoute = (
     viaDiameter: getViaDiameter(trace.route, options.defaultViaDiameter),
     route,
     vias,
-    ...(jumpers.length > 0 ? { jumpers } : {}),
   }
+
+  if (jumpers.length > 0) {
+    converted.jumpers = jumpers
+  }
+
+  return converted
 }

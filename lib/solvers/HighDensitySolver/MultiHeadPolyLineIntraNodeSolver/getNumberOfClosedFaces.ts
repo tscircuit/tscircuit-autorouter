@@ -134,12 +134,15 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
 
     // collect all intersection indices on this segment
     const onSeg = intersections
-      .map((p, i) => ({
-        p,
-        idx: findIdx(p),
-        d: Math.hypot(p.x - A.x, p.y - A.y),
-      }))
-      .filter((o) => isOnSeg(A, B, o.p))
+      .flatMap((p) => {
+        const intersection = {
+          p,
+          idx: findIdx(p),
+          d: Math.hypot(p.x - A.x, p.y - A.y),
+        }
+
+        return isOnSeg(A, B, p) ? [intersection] : []
+      })
       .sort((a, b) => a.d - b.d)
 
     let prev = u0
