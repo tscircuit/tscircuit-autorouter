@@ -1,4 +1,6 @@
-import type { SimplifiedPcbTrace } from "../../types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../types"
+import { getViaDimensions } from "../../utils/getViaDimensions"
+import { postRoutingViaLayers } from "../DynamicNetTreeSolver/postRoutingLayers"
 
 export type PostRoutingMetrics = {
   viaSites: number
@@ -11,6 +13,7 @@ export type PostRoutingMetrics = {
 export function measurePostRoutingMetrics(
   traces: readonly SimplifiedPcbTrace[],
   traceOwners: ReadonlyMap<string, string>,
+  srj?: SimpleRouteJson,
 ): PostRoutingMetrics {
   const sites = new Set<string>()
   const lines = new Map<string, [number, number][]>()
@@ -22,9 +25,17 @@ export function measurePostRoutingMetrics(
     for (let i = 0; i < trace.route.length; i++) {
       const a = trace.route[i]!
       if (a.route_type === "via") {
-        sites.add(JSON.stringify([owner, a.x.toFixed(9), a.y.toFixed(9)]))
+        const context = srj ?? { layerCount: 2, minTraceWidth: 0 } as SimpleRouteJson
+        const dimensions = getViaDimensions(context)
+        sites.add(JSON.stringify([owner, a.x.toFixed(9), a.y.toFixed(9),
+          postRoutingViaLayers(context, a),
+          a.via_diameter ?? dimensions.padDiameter,
+          a.via_hole_diameter ?? dimensions.holeDiameter]))
         continue
       }
+      // Source-backed plated land traversal is verified by the physical gate.
+      // It contributes no newly routed copper or drilled barrel.
+      if (a.route_type === "through_obstacle") continue
       if (a.route_type !== "wire")
         throw new Error(`Unsupported metric primitive ${a.route_type}`)
       const b = trace.route[i + 1]

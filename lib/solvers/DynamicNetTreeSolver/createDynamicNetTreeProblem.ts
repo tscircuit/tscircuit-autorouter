@@ -1,7 +1,8 @@
 import type { SimpleRouteJson, SimplifiedPcbTrace, Obstacle } from "../../types"
-import { mapLayerNameToZ } from "../../utils/mapLayerNameToZ"
+import { postRoutingLayerIndex, postRoutingViaLayers } from "./postRoutingLayers"
 import type { DynamicNetTreeProblem } from "./routeDynamicNetTree"
 import type { TreeCopper } from "./dynamicNetTreeGeometry"
+import { segmentCopperGap } from "./dynamicNetTreeGeometry"
 import { UnsupportedPostRoutingInputError } from "../PostRoutingOptimization/UnsupportedPostRoutingInputError"
 import { getViaDimensions } from "../../utils/getViaDimensions"
 
@@ -10,11 +11,17 @@ export type PostRoutingObstacle = Obstacle & {
   holeDiameter?: number
   /** Source-backed slots are retained explicitly and are currently unsupported. */
   holeShape?: "circle" | "slot"
+  cornerRadius?: number
+  /** Exact source land inside the SRJ producer's retained obstacle envelope. */
+  landShape?: "rect" | "circle" | "oval"
+  sourceHoleId?: string
+  routingEnvelope?: { width: number; height: number; rotation: number }
   /** Authoritative source geometry that the current validator cannot model. */
   unsupportedPhysicalGeometry?: string
 }
 export type PostRoutingPhysicalInput = Omit<SimpleRouteJson, "obstacles"> & {
   obstacles: PostRoutingObstacle[]
+  unsupportedPhysicalGeometry?: string
 }
 
 /** Explicit name-to-net associations only. No coordinate hashes, prefixes, or
@@ -26,16 +33,16 @@ export function createDynamicNetTreeProblem(
   traceOwners: ReadonlyMap<string, string>,
 ): DynamicNetTreeProblem {
   const viaDimensions = getViaDimensions(srj)
+  if (srj.unsupportedPhysicalGeometry)
+    throw new UnsupportedPostRoutingInputError(srj.unsupportedPhysicalGeometry)
   if (
-    srj.layerCount !== 2 ||
     srj.differentialPairs?.length ||
     srj.buses?.length ||
     srj.allowJumpers ||
-    srj.jumpers?.length ||
-    srj.allowBlindAndBuriedVias
+    srj.jumpers?.length
   )
     throw new UnsupportedPostRoutingInputError(
-      "Post-routing net-tree supports ordinary two-layer nets only",
+      "Post-routing net-tree does not support differential, bus or jumper constraints",
     )
   const connection = srj.connections.find((c) => c.name === net)
   if (!connection) throw new Error(`Unknown net ${net}`)
@@ -78,12 +85,22 @@ export function createDynamicNetTreeProblem(
     if (
       obstacle.isCopperPour ||
       obstacle.offBoardConnectsTo?.length ||
-      obstacle.isNonPlatedHole ||
       obstacle.netIsAssignable
     )
       throw new UnsupportedPostRoutingInputError(
         `Unsupported plane/external copper ${index}`,
       )
+    if (obstacle.isNonPlatedHole) {
+      if (!obstacle.sourceHoleId || obstacle.connectedTo.length ||
+        obstacle.holeShape !== "circle" || !obstacle.holeDiameter)
+        throw new UnsupportedPostRoutingInputError(`Non-plated hole ${index} needs explicit source-backed geometry`)
+      const layers = Array.from({ length: srj.layerCount }, (_, z) => z)
+      copper.push({ id: `hole:${obstacle.sourceHoleId}`, owner: `unassigned-hole:${obstacle.sourceHoleId}`,
+        layers, start: obstacle.center, end: obstacle.center, radius: obstacle.holeDiameter / 2,
+        kind: "hole", holeDiameter: obstacle.holeDiameter,
+        drill: {start: obstacle.center, end: obstacle.center, diameter: obstacle.holeDiameter, layers} })
+      continue
+    }
     const matched = new Set(
       obstacle.connectedTo
         .map((id) => owners.get(id))
@@ -92,18 +109,16 @@ export function createDynamicNetTreeProblem(
     if (matched.size > 1)
       throw new Error(`Obstacle ${index} has conflicting physical ownership`)
     const owner = matched.size ? [...matched][0]! : `unassigned:${index}`
-    if (obstacle.layers.some((layer) => layer !== "top" && layer !== "bottom"))
-      throw new UnsupportedPostRoutingInputError(
-        `Unsupported obstacle layer ${index}`,
-      )
     const activeLayers = obstacle.layers.map((layer) =>
-      mapLayerNameToZ(layer, 2),
+      postRoutingLayerIndex(layer, srj.layerCount),
     )
     if (activeLayers.length === 0) continue
     const model = obstacle as Omit<typeof obstacle, "type"> & {
       type: string
       holeDiameter?: number
     }
+    const shape = obstacle.landShape ??
+      (obstacle.shape === "circle" ? "circle" : model.type)
     const rotation = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
     if (activeLayers.length > 1 && obstacle.isPlated === undefined)
       throw new UnsupportedPostRoutingInputError(
@@ -129,8 +144,10 @@ export function createDynamicNetTreeProblem(
       throw new UnsupportedPostRoutingInputError(
         `Plated pad ${index} requires explicit holeDiameter for drill checks`,
       )
-    if (plated && activeLayers.length !== 2)
-      throw new Error(`Plated pad ${index} must span both supported layers`)
+    if (plated && (activeLayers.length < 2 ||
+      [...activeLayers].sort((a, b) => a - b).some((z, i, layers) =>
+        i > 0 && z !== layers[i - 1]! + 1)))
+      throw new Error(`Plated pad ${index} must have a contiguous physical span`)
     if (!plated && model.holeDiameter)
       throw new UnsupportedPostRoutingInputError(
         `Unplated drilled pad ${index} requires a supported hole adapter`,
@@ -145,11 +162,14 @@ export function createDynamicNetTreeProblem(
         end: obstacle.center,
         radius: 0,
         kind: "pad",
+        sourcePadId: obstacle.circuitJsonMetadata?.pcb_plated_hole_id ??
+          obstacle.circuitJsonMetadata?.pcb_smtpad_id,
+        routingEnvelope: obstacle.routingEnvelope,
       }
-      if (obstacle.shape === "circle" || model.type === "oval") {
+      if (shape === "circle" || shape === "oval") {
         const major = Math.max(obstacle.width, obstacle.height),
           minor = Math.min(obstacle.width, obstacle.height)
-        if (obstacle.shape === "circle" && Math.abs(major - minor) > 1e-8)
+        if (shape === "circle" && Math.abs(major - minor) > 1e-8)
           throw new UnsupportedPostRoutingInputError(
             `Unsupported elliptical pad ${index}`,
           )
@@ -165,18 +185,26 @@ export function createDynamicNetTreeProblem(
           y: obstacle.center.y + Math.sin(angle) * d,
         }
         c.radius = minor / 2
-      } else if (model.type === "rect")
+      } else if (shape === "rect") {
+        c.radius = obstacle.cornerRadius ?? 0
+        if (!Number.isFinite(c.radius) || c.radius < 0 ||
+          c.radius > Math.min(obstacle.width, obstacle.height) / 2)
+          throw new Error(`Invalid rounded pad ${index}`)
         c.rectangle = {
-          width: obstacle.width,
-          height: obstacle.height,
+          width: obstacle.width - 2 * c.radius,
+          height: obstacle.height - 2 * c.radius,
           rotation,
         }
-      else
+      } else
         throw new UnsupportedPostRoutingInputError(
-          `Unsupported pad geometry ${model.type}`,
+          `Unsupported pad geometry ${shape}`,
         )
       // Explicit drill metadata is needed to check new drills against pads.
-      if (plated && model.holeDiameter) c.holeDiameter = model.holeDiameter
+      if (plated && model.holeDiameter) {
+        c.holeDiameter = model.holeDiameter
+        c.drill = { start: obstacle.center, end: obstacle.center,
+          diameter: model.holeDiameter, layers: activeLayers }
+      }
       copper.push(c)
     }
   }
@@ -187,18 +215,21 @@ export function createDynamicNetTreeProblem(
         `Fixed trace ${trace.pcb_trace_id} needs an explicit valid owner`,
       )
     for (const [i, p] of trace.route.entries()) {
-      if (p.route_type === "via")
+      if (p.route_type === "via") {
+        const layers = postRoutingViaLayers(srj, p)
+        const diameter = p.via_hole_diameter ?? viaDimensions.holeDiameter
         copper.push({
           id: `${trace.pcb_trace_id}:via:${i}`,
           owner,
-          layers: [0, 1],
+          layers,
           start: p,
           end: p,
           radius: (p.via_diameter ?? viaDimensions.padDiameter) / 2,
-          holeDiameter: p.via_hole_diameter ?? viaDimensions.holeDiameter,
+          holeDiameter: diameter,
+          drill: { start: p, end: p, diameter, layers },
           kind: "via",
         })
-      else if (p.route_type === "wire") {
+      } else if (p.route_type === "wire") {
         const next = trace.route[i + 1]
         if (
           next?.route_type === "wire" &&
@@ -208,12 +239,25 @@ export function createDynamicNetTreeProblem(
           copper.push({
             id: `${trace.pcb_trace_id}:wire:${i}`,
             owner,
-            layers: [mapLayerNameToZ(p.layer, 2)],
+            layers: [postRoutingLayerIndex(p.layer, srj.layerCount)],
             start: p,
             end: next,
             radius: Math.max(p.width, next.width) / 2,
             kind: "wire",
           })
+      } else if (p.route_type === "through_obstacle") {
+        const id = p.circuitJsonMetadata?.pcb_plated_hole_id
+        const from = postRoutingLayerIndex(p.from_layer, srj.layerCount)
+        const to = postRoutingLayerIndex(p.to_layer, srj.layerCount)
+        const land = id ? copper.find(c => c.kind === "pad" && c.sourcePadId === id && c.drill) : undefined
+        if (!id || !land)
+          throw new UnsupportedPostRoutingInputError(`Unproven plated traversal ${trace.pcb_trace_id}:${i}`)
+        if (land.owner !== owner || !land.layers.includes(from) || !land.layers.includes(to) ||
+          segmentCopperGap(p.start, p.start, land) > 1e-8 ||
+          segmentCopperGap(p.end, p.end, land) > 1e-8)
+          throw new Error(`Invalid physical plated traversal ${trace.pcb_trace_id}:${i}`)
+        // The immutable source pad already supplies this physical connection.
+        // This marker adds neither a wire shortcut nor a new drilled barrel.
       } else
         throw new UnsupportedPostRoutingInputError(
           `Unsupported fixed trace primitive ${p.route_type}`,
@@ -223,11 +267,13 @@ export function createDynamicNetTreeProblem(
   const b = srj.bounds
   return {
     net,
+    layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias ?? false,
     terminals: connection.pointsToConnect.map((p, i) => ({
       id: p.pcb_port_id ?? p.pointId ?? `${net}:${i}`,
       point: { x: p.x, y: p.y },
       layers: (p.layers ?? [p.layer!]).map((layer) =>
-        mapLayerNameToZ(layer, 2),
+        postRoutingLayerIndex(layer, srj.layerCount),
       ),
     })),
     copper,
@@ -245,11 +291,15 @@ export function createDynamicNetTreeProblem(
         srj.nominalTraceWidth ??
         srj.minTraceWidth,
     ),
-    clearance: Math.max(
-      srj.minTraceToPadEdgeClearance ?? srj.defaultObstacleMargin ?? 0.2,
-      srj.minViaEdgeToPadEdgeClearance ?? 0,
-    ),
-    boardEdgeClearance: srj.minBoardEdgeClearance ?? 0.2,
+    // Match Pipeline9's declared-rule validation defaults. A routing margin is
+    // retained when supplied; do not introduce a larger manufacturing rule.
+    clearance: Math.max(srj.minTraceToPadEdgeClearance ?? 0.1,
+      srj.defaultObstacleMargin ?? 0),
+    viaToPadClearance: Math.max(0.1, srj.minViaEdgeToPadEdgeClearance ?? 0,
+      srj.defaultObstacleMargin ?? 0),
+    traceToHoleClearance: srj.minTraceToHoleEdgeClearance ?? 0.2,
+    platedHoleClearance: srj.minPlatedHoleDrillEdgeToDrillEdgeClearance ?? 0,
+    boardEdgeClearance: srj.minBoardEdgeClearance ?? 0,
     viaDiameter: viaDimensions.padDiameter,
     viaHoleDiameter: viaDimensions.holeDiameter,
     holeClearance: Math.max(

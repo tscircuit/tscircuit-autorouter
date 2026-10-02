@@ -12,6 +12,8 @@ export const options: DynamicNetTreeOptions = {
 export function teeProblem(): DynamicNetTreeProblem {
   return {
     net: "N",
+    layerCount: 2,
+    allowBlindAndBuriedVias: false,
     terminals: [
       { id: "A", point: { x: 0, y: 0 }, layers: [0] },
       { id: "B", point: { x: 10, y: 0 }, layers: [0] },

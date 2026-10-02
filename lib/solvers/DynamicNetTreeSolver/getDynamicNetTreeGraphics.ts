@@ -1,6 +1,9 @@
 import type { GraphicsObject } from "graphics-debug"
 import type { SimplifiedPcbTrace } from "../../types"
 import { getGraphicsLayerFromLayerNames } from "../../utils/getGraphicsObjectLayer"
+import { mapZToLayerName } from "../../utils/mapZToLayerName"
+import { copperRectangleCorners } from "./dynamicNetTreeGeometry"
+import { postRoutingViaLayers } from "./postRoutingLayers"
 import type { DynamicNetTreeProblem } from "./routeDynamicNetTree"
 
 /** Physical copper and the current proposed branches; no schematic animation. */
@@ -25,11 +28,11 @@ export function getDynamicNetTreeGraphics(
   })
   for (const c of problem.copper) {
     const layer = getGraphicsLayerFromLayerNames(
-      c.layers.map((z) => (z === 0 ? "top" : "bottom")),
-      2,
+      c.layers.map((z) => mapZToLayerName(z, problem.layerCount)),
+      problem.layerCount,
     )
     const color = c.owner === problem.net ? "#15803d" : "#94a3b8"
-    if (c.rectangle)
+    if (c.rectangle) {
       graphics.rects!.push({
         center: c.start,
         width: c.rectangle.width,
@@ -39,23 +42,33 @@ export function getDynamicNetTreeGraphics(
         layer,
         step,
       })
-    else if (c.kind === "wire")
+      if (c.radius > 0) {
+        const corners = copperRectangleCorners(c)
+        for (const [i, point] of corners.entries())
+          graphics.lines!.push({ points: [point, corners[(i + 1) % corners.length]!],
+            strokeWidth: c.radius * 2, strokeColor: color, layer, step })
+      }
+    } else if (c.kind === "wire" || Math.hypot(c.start.x - c.end.x, c.start.y - c.end.y) > 1e-8)
       graphics.lines!.push({
         points: [c.start, c.end],
         strokeWidth: c.radius * 2,
         strokeColor: color,
         layer,
         step,
-        strokeDash: c.layers[0] === 1 ? "0.15 0.1" : undefined,
+        strokeDash: c.kind === "wire" && c.layers[0] !== 0 ? "0.15 0.1" : undefined,
       })
     else
       graphics.circles!.push({
         center: c.start,
         radius: Math.max(c.radius, 0.08),
-        fill: color,
+        fill: c.kind === "hole" ? "white" : color,
+        stroke: c.kind === "hole" ? color : undefined,
         layer,
         step,
       })
+    if (c.drill && c.kind !== "hole")
+      graphics.circles!.push({center: c.drill.start, radius: c.drill.diameter / 2,
+        fill: "white", stroke: color, layer, step})
   }
   for (const t of problem.terminals)
     graphics.points!.push({
@@ -63,8 +76,8 @@ export function getDynamicNetTreeGraphics(
       color: "#15803d",
       label: t.id,
       layer: getGraphicsLayerFromLayerNames(
-        t.layers.map((z) => (z === 0 ? "top" : "bottom")),
-        2,
+        t.layers.map((z) => mapZToLayerName(z, problem.layerCount)),
+        problem.layerCount,
       ),
       step,
     })
@@ -77,7 +90,9 @@ export function getDynamicNetTreeGraphics(
           center: a,
           radius: (a.via_diameter ?? problem.viaDiameter) / 2,
           fill: "#2563eb",
-          layer: getGraphicsLayerFromLayerNames([a.from_layer, a.to_layer], 2),
+          layer: getGraphicsLayerFromLayerNames(
+            postRoutingViaLayers(problem, a).map(z => mapZToLayerName(z, problem.layerCount)),
+            problem.layerCount),
           step,
         })
       else if (
@@ -89,8 +104,8 @@ export function getDynamicNetTreeGraphics(
           points: [a, b],
           strokeWidth: a.width,
           strokeColor: "#15803d",
-          layer: getGraphicsLayerFromLayerNames([a.layer], 2),
-          strokeDash: a.layer === "bottom" ? "0.15 0.1" : undefined,
+          layer: getGraphicsLayerFromLayerNames([a.layer], problem.layerCount),
+          strokeDash: a.layer !== "top" ? "0.15 0.1" : undefined,
           step,
         })
     }

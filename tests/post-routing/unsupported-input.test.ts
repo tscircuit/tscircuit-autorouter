@@ -4,7 +4,6 @@ import { boardFixture, phaseOptions } from "./fixtures"
 
 test("unsupported physical inputs return uncertified unchanged output; invalid owners, widths and preloads still throw", () => {
   for (const defect of [
-    "layers",
     "pairs",
     "npth",
     "drill",
@@ -14,7 +13,6 @@ test("unsupported physical inputs return uncertified unchanged output; invalid o
     "preload",
   ] as const) {
     const input = boardFixture()
-    if (defect === "layers") input.srj.layerCount = 4
     if (defect === "pairs")
       input.srj.differentialPairs = [
         { connectionNames: ["signal", "fixed"], lengthTolerance: 0.1 },
@@ -41,7 +39,7 @@ test("unsupported physical inputs return uncertified unchanged output; invalid o
         },
       ]
     const original = structuredClone(input)
-    if (["layers", "pairs", "npth", "drill", "plating"].includes(defect)) {
+    if (["pairs", "npth", "drill", "plating"].includes(defect)) {
       const result = optimizePostRouting(input, phaseOptions())
       expect(result.status).toBe("unsupported")
       expect(result.validationStatus).toBe("unsupported")
