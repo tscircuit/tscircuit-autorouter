@@ -210,7 +210,7 @@ function* optimizationSteps(
   }
   result.validationMilliseconds += performance.now() - validationStarted
   result.validationStatus = "validated"
-  result.before = measurePostRoutingMetrics(original, owners)
+  result.before = measurePostRoutingMetrics(original, owners, srj)
   result.after = { ...result.before }
   const selected = new Set(nets.map((p) => p.net))
   const retained = original.filter(
@@ -341,7 +341,7 @@ function* optimizationSteps(
   }
   result.validationMilliseconds +=
     performance.now() - candidateValidationStarted
-  result.candidateMetrics = measurePostRoutingMetrics(candidate, owners)
+  result.candidateMetrics = measurePostRoutingMetrics(candidate, owners, srj)
   if (result.diagnostics.length) return result
   const changes = nets
     .map(
@@ -364,10 +364,12 @@ function* optimizationSteps(
         before: measurePostRoutingMetrics(
           original.filter((t) => owners.get(t.connection_name) === plan.net),
           owners,
+          srj,
         ),
         after: measurePostRoutingMetrics(
           candidate.filter((t) => owners.get(t.connection_name) === plan.net),
           owners,
+          srj,
         ),
       }),
     )

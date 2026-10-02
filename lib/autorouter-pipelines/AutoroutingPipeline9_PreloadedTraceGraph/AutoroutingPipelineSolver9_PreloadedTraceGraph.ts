@@ -116,6 +116,8 @@ import {
 interface CapacityMeshSolverOptions {
   /** Authoritative source pad/drill facts used only by isolated post-routing inputs. */
   postRoutingSourceCircuitJson?: readonly AnyCircuitElement[]
+  /** Explicit source pcb_hole ID to obstacle index provenance for ID-less holes. */
+  postRoutingSourceHoleObstacleIndices?: Readonly<Record<string, number>>
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -1697,6 +1699,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ? restorePostRoutingPadMetadata(
             this.originalSrj,
             this.opts.postRoutingSourceCircuitJson,
+            this.opts.postRoutingSourceHoleObstacleIndices,
           )
         : this.originalSrj,
       traces,

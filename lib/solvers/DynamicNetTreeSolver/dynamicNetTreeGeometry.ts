@@ -8,9 +8,14 @@ export type TreeCopper = {
   start: TreePoint
   end: TreePoint
   radius: number
-  kind: "wire" | "via" | "pad" | "terminal"
+  kind: "wire" | "via" | "pad" | "terminal" | "hole"
+  sourcePadId?: string
+  /** Conservative input pad envelope retained for candidate routing. */
+  routingEnvelope?: { width: number; height: number; rotation: number }
   rectangle?: { width: number; height: number; rotation: number }
   holeDiameter?: number
+  /** Drill geometry is independent of an oval/rounded copper land. */
+  drill?: { start: TreePoint; end: TreePoint; diameter: number; layers: number[] }
 }
 
 export function projectToCopper(
@@ -25,9 +30,15 @@ export function projectToCopper(
       dy = point.y - copper.start.y
     const x = Math.max(-width / 2, Math.min(width / 2, c * dx + s * dy))
     const y = Math.max(-height / 2, Math.min(height / 2, -s * dx + c * dy))
-    return {
+    const core = {
       x: copper.start.x + c * x - s * y,
       y: copper.start.y + s * x + c * y,
+    }
+    const gap = Math.hypot(point.x - core.x, point.y - core.y)
+    if (gap <= copper.radius) return { ...point }
+    return {
+      x: core.x + ((point.x - core.x) * copper.radius) / gap,
+      y: core.y + ((point.y - core.y) * copper.radius) / gap,
     }
   }
   const dx = copper.end.x - copper.start.x,
@@ -77,30 +88,39 @@ export function segmentCopperGap(
       minimumDistanceBetweenSegments(a, b, copper.start, copper.end) -
       copper.radius
     )
-  const pa = projectToCopper(a, copper),
-    pb = projectToCopper(b, copper)
+  const core = { ...copper, radius: 0 }
+  const pa = projectToCopper(a, core),
+    pb = projectToCopper(b, core)
   if (
     Math.hypot(a.x - pa.x, a.y - pa.y) < 1e-10 ||
     Math.hypot(b.x - pb.x, b.y - pb.y) < 1e-10
   )
-    return 0
+    return -copper.radius
   const corners = copperRectangleCorners(copper)
   return Math.min(
     ...corners.map((p, i) =>
       minimumDistanceBetweenSegments(a, b, p, corners[(i + 1) % 4]!),
     ),
+  ) - copper.radius
+}
+
+/** Symmetric continuous shape gap, including either containment order. Rounded
+ * rectangles are a rectangular core plus their exact corner radius. */
+export function copperGap(a: TreeCopper, b: TreeCopper): number {
+  if (!a.rectangle)
+    return segmentCopperGap(a.start, a.end, b) - a.radius
+  const corners = copperRectangleCorners(a)
+  return Math.min(
+    segmentCopperGap(b.start, b.end, a) - b.radius,
+    ...corners.map((p, i) =>
+      segmentCopperGap(p, corners[(i + 1) % 4]!, b) - a.radius),
   )
 }
 
 export function copperTouches(a: TreeCopper, b: TreeCopper): boolean {
+  if (a.kind === "hole" || b.kind === "hole") return false
   if (!a.layers.some((z) => b.layers.includes(z))) return false
-  if (!a.rectangle)
-    return segmentCopperGap(a.start, a.end, b) <= a.radius + 1e-8
-  const corners = copperRectangleCorners(a)
-  if (segmentCopperGap(b.start, b.end, a) <= b.radius + 1e-8) return true
-  return corners.some(
-    (p, i) => segmentCopperGap(p, corners[(i + 1) % 4]!, b) <= 1e-8,
-  )
+  return copperGap(a, b) <= 1e-8
 }
 
 export function pointInOutline(

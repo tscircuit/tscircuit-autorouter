@@ -35,7 +35,7 @@ test("authoritative exact pad identity restores drill and plating without mutati
   expect(physical.obstacles[0]!.isPlated).toBe(true)
   expect(physical.obstacles[0]!.holeDiameter).toBe(0.3)
   expect(physical.obstacles[0]!.holeShape).toBe("circle")
-  const { isPlated, holeDiameter, holeShape, ...land } = physical.obstacles[0]!
+  const { isPlated, holeDiameter, holeShape, landShape, ...land } = physical.obstacles[0]!
   expect(land).toEqual(input.srj.obstacles[0])
   expect({ input, source }).toEqual(original)
   expect(physical).not.toBe(input.srj)
@@ -74,11 +74,10 @@ test("source mismatches and conflicting explicit physical facts fail rather than
   }
 })
 
-test("slots, missing drills, rounded lands and offset drills remain unsupported and uncertified", () => {
+test("slots, missing drills and offset drills remain unsupported and uncertified", () => {
   for (const defect of [
     "slot",
     "missing",
-    "rounded",
     "offset",
     "unknown",
   ] as const) {
@@ -90,7 +89,6 @@ test("slots, missing drills, rounded lands and offset drills remain unsupported 
       pad.hole_height = 0.5
     }
     if (defect === "missing") delete pad.hole_diameter
-    if (defect === "rounded") pad.rect_pad_border_radius = 0.1
     if (defect === "offset") pad.hole_offset_x = 0.1
     if (defect === "unknown") pad.shape = "polygon"
     const physical = restorePostRoutingPadMetadata(input.srj, source)
