@@ -93,6 +93,10 @@ export class TraceWidthSolver extends BaseSolver {
   currentTargetWidth: number = 0
   hasInsufficientClearance = false
   private obstacleConnectionToCurrentTrace = new WeakMap<Obstacle, boolean>()
+  private routeConnectionToCurrentTrace = new WeakMap<
+    HighDensityRoute,
+    boolean
+  >()
 
   // For visualization - track colliding objects
   lastCollidingObstacles: Obstacle[] = []
@@ -184,6 +188,7 @@ export class TraceWidthSolver extends BaseSolver {
 
       this.currentTrace = nextTrace
       this.obstacleConnectionToCurrentTrace = new WeakMap()
+      this.routeConnectionToCurrentTrace = new WeakMap()
       this.nominalTraceWidth = nominalTraceWidth
       const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
@@ -263,6 +268,20 @@ export class TraceWidthSolver extends BaseSolver {
           false))
 
     this.obstacleConnectionToCurrentTrace.set(obstacle, isConnected)
+    return isConnected
+  }
+
+  private isRouteConnectedToCurrentTrace(route: HighDensityRoute): boolean {
+    if (!this.currentTrace) return false
+    const cachedConnection = this.routeConnectionToCurrentTrace.get(route)
+    if (cachedConnection !== undefined) return cachedConnection
+    const rootConnectionName =
+      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
+    const otherRoot = route.rootConnectionName ?? route.connectionName
+    const isConnected =
+      otherRoot === rootConnectionName ||
+      (this.connMap?.areIdsConnected(rootConnectionName, otherRoot) ?? false)
+    this.routeConnectionToCurrentTrace.set(route, isConnected)
     return isConnected
   }
 
@@ -384,8 +403,6 @@ export class TraceWidthSolver extends BaseSolver {
 
   private getClearanceForSegment(start: Point3D, end: Point3D): number {
     if (!this.currentTrace) return Infinity
-    const rootConnectionName =
-      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
     this.lastCollidingObstacles = []
@@ -457,9 +474,7 @@ export class TraceWidthSolver extends BaseSolver {
     )
     for (const { conflictingRoute } of nearbyRoutes) {
       const route = conflictingRoute as HighDensityRoute
-      const otherRoot = route.rootConnectionName ?? route.connectionName
-      if (otherRoot === rootConnectionName) continue
-      if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue
+      if (this.isRouteConnectedToCurrentTrace(route)) continue
       let clearance = Infinity
       for (let index = 0; index < route.route.length - 1; index++) {
         const a = route.route[index]!
