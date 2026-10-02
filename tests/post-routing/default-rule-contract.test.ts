@@ -8,7 +8,12 @@ test("omitted via-in-pad permission remains false and declared obstacle margins 
   input.srj.defaultObstacleMargin = 0.3
   input.srj.minTraceToPadEdgeClearance = 0.05
   input.srj.minViaEdgeToPadEdgeClearance = 0.05
-  const problem = createDynamicNetTreeProblem(input.srj, "signal", [], input.traceOwners)
+  const problem = createDynamicNetTreeProblem(
+    input.srj,
+    "signal",
+    [],
+    input.traceOwners,
+  )
   expect(problem.allowViaInPad).toBe(false)
   expect(problem.clearance).toBe(0.3)
   expect(problem.viaToPadClearance).toBe(0.3)
@@ -21,11 +26,21 @@ test("omitted via-in-pad permission remains false and declared obstacle margins 
     { route_type: "wire", x: 10, y: 0, width: 0.4, layer: "top" },
   ]
   const original = structuredClone(input)
-  expect(validatePostRoutingCandidate(input.srj, input.traces, input.traceOwners)
-    .diagnostics.some(d => d.startsWith("Via in pad"))).toBe(true)
+  expect(
+    validatePostRoutingCandidate(
+      input.srj,
+      input.traces,
+      input.traceOwners,
+    ).diagnostics.some((d) => d.startsWith("Via in pad")),
+  ).toBe(true)
   input.srj.allowViaInPad = true
-  expect(validatePostRoutingCandidate(input.srj, input.traces, input.traceOwners)
-    .diagnostics.some(d => d.startsWith("Via in pad"))).toBe(false)
+  expect(
+    validatePostRoutingCandidate(
+      input.srj,
+      input.traces,
+      input.traceOwners,
+    ).diagnostics.some((d) => d.startsWith("Via in pad")),
+  ).toBe(false)
   delete input.srj.allowViaInPad
   expect(input).toEqual(original)
 })

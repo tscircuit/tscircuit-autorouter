@@ -45,17 +45,26 @@ export function getDynamicNetTreeGraphics(
       if (c.radius > 0) {
         const corners = copperRectangleCorners(c)
         for (const [i, point] of corners.entries())
-          graphics.lines!.push({ points: [point, corners[(i + 1) % corners.length]!],
-            strokeWidth: c.radius * 2, strokeColor: color, layer, step })
+          graphics.lines!.push({
+            points: [point, corners[(i + 1) % corners.length]!],
+            strokeWidth: c.radius * 2,
+            strokeColor: color,
+            layer,
+            step,
+          })
       }
-    } else if (c.kind === "wire" || Math.hypot(c.start.x - c.end.x, c.start.y - c.end.y) > 1e-8)
+    } else if (
+      c.kind === "wire" ||
+      Math.hypot(c.start.x - c.end.x, c.start.y - c.end.y) > 1e-8
+    )
       graphics.lines!.push({
         points: [c.start, c.end],
         strokeWidth: c.radius * 2,
         strokeColor: color,
         layer,
         step,
-        strokeDash: c.kind === "wire" && c.layers[0] !== 0 ? "0.15 0.1" : undefined,
+        strokeDash:
+          c.kind === "wire" && c.layers[0] !== 0 ? "0.15 0.1" : undefined,
       })
     else
       graphics.circles!.push({
@@ -67,8 +76,14 @@ export function getDynamicNetTreeGraphics(
         step,
       })
     if (c.drill && c.kind !== "hole")
-      graphics.circles!.push({center: c.drill.start, radius: c.drill.diameter / 2,
-        fill: "white", stroke: color, layer, step})
+      graphics.circles!.push({
+        center: c.drill.start,
+        radius: c.drill.diameter / 2,
+        fill: "white",
+        stroke: color,
+        layer,
+        step,
+      })
   }
   for (const t of problem.terminals)
     graphics.points!.push({
@@ -91,8 +106,11 @@ export function getDynamicNetTreeGraphics(
           radius: (a.via_diameter ?? problem.viaDiameter) / 2,
           fill: "#2563eb",
           layer: getGraphicsLayerFromLayerNames(
-            postRoutingViaLayers(problem, a).map(z => mapZToLayerName(z, problem.layerCount)),
-            problem.layerCount),
+            postRoutingViaLayers(problem, a).map((z) =>
+              mapZToLayerName(z, problem.layerCount),
+            ),
+            problem.layerCount,
+          ),
           step,
         })
       else if (

@@ -25,12 +25,19 @@ export function measurePostRoutingMetrics(
     for (let i = 0; i < trace.route.length; i++) {
       const a = trace.route[i]!
       if (a.route_type === "via") {
-        const context = srj ?? { layerCount: 2, minTraceWidth: 0 } as SimpleRouteJson
+        const context =
+          srj ?? ({ layerCount: 2, minTraceWidth: 0 } as SimpleRouteJson)
         const dimensions = getViaDimensions(context)
-        sites.add(JSON.stringify([owner, a.x.toFixed(9), a.y.toFixed(9),
-          postRoutingViaLayers(context, a),
-          a.via_diameter ?? dimensions.padDiameter,
-          a.via_hole_diameter ?? dimensions.holeDiameter]))
+        sites.add(
+          JSON.stringify([
+            owner,
+            a.x.toFixed(9),
+            a.y.toFixed(9),
+            postRoutingViaLayers(context, a),
+            a.via_diameter ?? dimensions.padDiameter,
+            a.via_hole_diameter ?? dimensions.holeDiameter,
+          ]),
+        )
         continue
       }
       // Source-backed plated land traversal is verified by the physical gate.
