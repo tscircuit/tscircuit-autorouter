@@ -3,7 +3,7 @@ import { RootCircuit, getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { getSvgFromGraphicsObject } from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 
 test("differential pair with protection pads is rejected before topology planning", async (): Promise<void> => {
   const circuit = new RootCircuit()
@@ -146,7 +146,7 @@ test("differential pair with protection pads is rejected before topology plannin
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "input" })
-  const rejectedGraphics = convertSrjToGraphicsObject(input)
+  const rejectedGraphics: GraphicsObject = convertSrjToGraphicsObject(input)
   rejectedGraphics.texts = [
     {
       x: -8,
