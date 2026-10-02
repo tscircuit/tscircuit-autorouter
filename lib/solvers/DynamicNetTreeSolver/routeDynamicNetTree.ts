@@ -640,7 +640,9 @@ export function* routeDynamicNetTreeSteps(
           const xyCell = cell % plane
           const targetIndex = direction - 8
           const targetZ = targetIndex >= p.z ? targetIndex + 1 : targetIndex
-          const minZ = problem.allowBlindAndBuriedVias ? Math.min(p.z, targetZ) : 0
+          const minZ = problem.allowBlindAndBuriedVias
+            ? Math.min(p.z, targetZ)
+            : 0
           const maxZ = problem.allowBlindAndBuriedVias
             ? Math.max(p.z, targetZ)
             : problem.layerCount - 1
