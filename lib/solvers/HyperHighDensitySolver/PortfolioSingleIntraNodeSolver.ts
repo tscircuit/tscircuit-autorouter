@@ -221,7 +221,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
-    if (this.deferParameterSweeps && this.getNodeSegmentCount() === 1) {
+    const [firstPortPoint, secondPortPoint] = this.nodeWithPortPoints.portPoints
+    const hasSingleTwoTerminalRoute =
+      this.nodeWithPortPoints.portPoints.length === 2 &&
+      firstPortPoint?.connectionName === secondPortPoint?.connectionName &&
+      (this.nodeWithPortPoints.portPointsInPairs?.length ?? 1) === 1
+
+    if (this.deferParameterSweeps && hasSingleTwoTerminalRoute) {
       return [["throughObstacle"], ["defaultSearch"], ["closedFormSingleTrace"]]
     }
 

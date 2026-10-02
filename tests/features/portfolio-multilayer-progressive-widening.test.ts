@@ -58,7 +58,7 @@ test("six-layer nodes defer parameter sweeps until solver families are exhausted
   expect(finalSixLayerPortfolio.supervisedSolvers).toHaveLength(70)
 })
 
-test("six-layer single-route nodes try applicable solvers before the full portfolio", () => {
+test("six-layer two-terminal nodes try applicable solvers before the full portfolio", () => {
   const portfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: {
       capacityMeshNodeId: "single-route-six-layer-node",
@@ -89,4 +89,29 @@ test("six-layer single-route nodes try applicable solvers before the full portfo
   expect(portfolio.failed).toBeFalse()
   expect(portfolio.fullPortfolioInitialized).toBeTrue()
   expect(portfolio.supervisedSolvers).toHaveLength(70)
+
+  const branchedRoutePortfolio = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints: {
+      capacityMeshNodeId: "branched-route-six-layer-node",
+      center: { x: 0, y: 0 },
+      width: 10,
+      height: 10,
+      availableZ: [0, 1, 2, 3, 4, 5],
+      portPoints: [
+        { x: -5, y: -1, z: 0, connectionName: "route" },
+        { x: 5, y: -1, z: 0, connectionName: "route" },
+        { x: -5, y: 1, z: 0, connectionName: "route" },
+        { x: 5, y: 1, z: 0, connectionName: "route" },
+      ],
+    },
+    traceWidth: 0.15,
+    viaDiameter: 0.3,
+    obstacleMargin: 0.15,
+    obstacles: [],
+    layerCount: 6,
+    allowSearchExpansion: true,
+  })
+
+  branchedRoutePortfolio.initializeSolvers()
+  expect(branchedRoutePortfolio.supervisedSolvers).toHaveLength(10)
 })
