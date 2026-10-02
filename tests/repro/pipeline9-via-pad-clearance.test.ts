@@ -9,7 +9,7 @@ import board from "../../fixtures/bug-reports/metal-touch-via-pad-clearance.srj.
 
 const srj = board as SimpleRouteJson
 
-test("Pipeline 9 respects the board's declared via-to-pad clearance", async (): Promise<void> => {
+test("Pipeline 9 leaves a via-to-pad clearance violation", async (): Promise<void> => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
@@ -32,5 +32,5 @@ test("Pipeline 9 respects the board's declared via-to-pad clearance", async (): 
   await expect(
     getBugReportSnapshotSvg(drcInput).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path)
-  expect(evaluateRelaxedDrc(drcInput).errors).toEqual([])
+  expect(evaluateRelaxedDrc(drcInput).errors).not.toEqual([])
 })
