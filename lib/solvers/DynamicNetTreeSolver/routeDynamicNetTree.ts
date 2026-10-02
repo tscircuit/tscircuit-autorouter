@@ -162,10 +162,20 @@ export function* routeDynamicNetTreeSteps(
   )
     throw new Error("Invalid dynamic net-tree rules or search options")
   if (
-    !Number.isInteger(problem.layerCount) || problem.layerCount < 2 || problem.layerCount > 10 ||
-    problem.copper.some((c) => c.layers.some((z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount)) ||
+    !Number.isInteger(problem.layerCount) ||
+    problem.layerCount < 2 ||
+    problem.layerCount > 10 ||
+    problem.copper.some((c) =>
+      c.layers.some(
+        (z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount,
+      ),
+    ) ||
     problem.terminals.some(
-      (t) => t.layers.length === 0 || t.layers.some((z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount),
+      (t) =>
+        t.layers.length === 0 ||
+        t.layers.some(
+          (z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount,
+        ),
     )
   )
     throw new Error("Invalid dynamic net-tree physical layer")
@@ -214,15 +224,36 @@ export function* routeDynamicNetTreeSteps(
     throw new Error("Invalid physical component planning policy")
   const copper = structuredClone(problem.copper)
   for (const c of copper) {
-    if (![c.start.x, c.start.y, c.end.x, c.end.y, c.radius,
-      ...(c.rectangle ? Object.values(c.rectangle) : []),
-      ...(c.routingEnvelope ? Object.values(c.routingEnvelope) : []),
-      ...(c.drill ? [c.drill.start.x, c.drill.start.y, c.drill.end.x,
-        c.drill.end.y, c.drill.diameter] : [])].every(Number.isFinite) ||
-      c.radius < 0 || c.layers.length === 0 ||
-      (c.routingEnvelope && (c.routingEnvelope.width <= 0 || c.routingEnvelope.height <= 0)) ||
-      (c.drill && (c.drill.diameter <= 0 || c.drill.layers.length === 0 ||
-        c.drill.layers.some(z => !Number.isInteger(z) || z < 0 || z >= problem.layerCount))))
+    if (
+      ![
+        c.start.x,
+        c.start.y,
+        c.end.x,
+        c.end.y,
+        c.radius,
+        ...(c.rectangle ? Object.values(c.rectangle) : []),
+        ...(c.routingEnvelope ? Object.values(c.routingEnvelope) : []),
+        ...(c.drill
+          ? [
+              c.drill.start.x,
+              c.drill.start.y,
+              c.drill.end.x,
+              c.drill.end.y,
+              c.drill.diameter,
+            ]
+          : []),
+      ].every(Number.isFinite) ||
+      c.radius < 0 ||
+      c.layers.length === 0 ||
+      (c.routingEnvelope &&
+        (c.routingEnvelope.width <= 0 || c.routingEnvelope.height <= 0)) ||
+      (c.drill &&
+        (c.drill.diameter <= 0 ||
+          c.drill.layers.length === 0 ||
+          c.drill.layers.some(
+            (z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount,
+          )))
+    )
       throw new Error(`Invalid dynamic net-tree copper ${c.id}`)
   }
   const terminalCopperIds = new Map<string, Set<string>>()
@@ -296,15 +327,27 @@ export function* routeDynamicNetTreeSteps(
     const corners = c.rectangle ? copperRectangleCorners(c) : [c.start, c.end]
     if (c.drill) corners.push(c.drill.start, c.drill.end)
     if (c.routingEnvelope)
-      corners.push(...copperRectangleCorners({...c,
-        start: c.drill?.start ?? {x: (c.start.x + c.end.x) / 2, y: (c.start.y + c.end.y) / 2},
-        rectangle: c.routingEnvelope, radius: 0}))
+      corners.push(
+        ...copperRectangleCorners({
+          ...c,
+          start: c.drill?.start ?? {
+            x: (c.start.x + c.end.x) / 2,
+            y: (c.start.y + c.end.y) / 2,
+          },
+          rectangle: c.routingEnvelope,
+          radius: 0,
+        }),
+      )
     const r =
       Math.max(c.radius, (c.drill?.diameter ?? c.holeDiameter ?? 0) / 2) +
       Math.max(problem.viaDiameter / 2, problem.width / 2) +
-      Math.max(problem.clearance, problem.viaToPadClearance ?? 0,
-        problem.traceToHoleClearance ?? 0, problem.platedHoleClearance ?? 0,
-        problem.holeClearance) +
+      Math.max(
+        problem.clearance,
+        problem.viaToPadClearance ?? 0,
+        problem.traceToHoleClearance ?? 0,
+        problem.platedHoleClearance ?? 0,
+        problem.holeClearance,
+      ) +
       0.01
     const x0 = Math.floor((Math.min(...corners.map((p) => p.x)) - r) / binSize),
       x1 = Math.floor((Math.max(...corners.map((p) => p.x)) + r) / binSize)
@@ -358,23 +401,47 @@ export function* routeDynamicNetTreeSteps(
     for (const c of nearby) {
       const drillDiameter = c.drill?.diameter ?? c.holeDiameter
       if (
-        via && drillDiameter && (c.drill?.layers ?? c.layers).includes(z) &&
-        minimumDistanceBetweenSegments(a, b, c.drill?.start ?? c.start, c.drill?.end ?? c.end) <
+        via &&
+        drillDiameter &&
+        (c.drill?.layers ?? c.layers).includes(z) &&
+        minimumDistanceBetweenSegments(
+          a,
+          b,
+          c.drill?.start ?? c.start,
+          c.drill?.end ?? c.end,
+        ) <
           (drillDiameter + problem.viaHoleDiameter) / 2 +
-            (c.kind === "via" ? problem.holeClearance : problem.platedHoleClearance ?? problem.holeClearance) +
+            (c.kind === "via"
+              ? problem.holeClearance
+              : (problem.platedHoleClearance ?? problem.holeClearance)) +
             1e-6
       )
         return false
       if (!c.layers.includes(z)) continue
       const physicalGap = segmentCopperGap(a, b, c)
-      const envelopeGap = c.routingEnvelope ? segmentCopperGap(a, b, {...c,
-        start: {x: (c.start.x + c.end.x) / 2, y: (c.start.y + c.end.y) / 2},
-        rectangle: c.routingEnvelope, radius: 0}) : physicalGap
+      const envelopeGap = c.routingEnvelope
+        ? segmentCopperGap(a, b, {
+            ...c,
+            start: {
+              x: (c.start.x + c.end.x) / 2,
+              y: (c.start.y + c.end.y) / 2,
+            },
+            rectangle: c.routingEnvelope,
+            radius: 0,
+          })
+        : physicalGap
       if (
         c.owner !== problem.net &&
-        Math.min(physicalGap, envelopeGap) < radius +
-          (c.kind === "hole" ? via ? 0 : problem.traceToHoleClearance ?? problem.clearance :
-            via && c.kind === "pad" ? problem.viaToPadClearance ?? problem.clearance : problem.clearance) + 1e-6
+        Math.min(physicalGap, envelopeGap) <
+          radius +
+            (c.kind === "hole"
+              ? via
+                ? 0
+                : (problem.traceToHoleClearance ?? problem.clearance)
+              : via && c.kind === "pad"
+                ? (problem.viaToPadClearance ?? problem.clearance)
+                : problem.clearance) +
+            1e-6
       )
         return false
       if (
@@ -562,7 +629,11 @@ export function* routeDynamicNetTreeSteps(
         bestState = entry.state
         bestTarget = goal
       }
-      for (let direction = 0; direction < 8 + problem.layerCount - 1; direction++) {
+      for (
+        let direction = 0;
+        direction < 8 + problem.layerCount - 1;
+        direction++
+      ) {
         let nextCell: number, cost: number
         if (direction >= 8) {
           if (boundedVias && usedVias >= viaBudget) continue
@@ -570,13 +641,16 @@ export function* routeDynamicNetTreeSteps(
           const targetIndex = direction - 8
           const targetZ = targetIndex >= p.z ? targetIndex + 1 : targetIndex
           const minZ = problem.allowBlindAndBuriedVias ? Math.min(p.z, targetZ) : 0
-          const maxZ = problem.allowBlindAndBuriedVias ? Math.max(p.z, targetZ) : problem.layerCount - 1
+          const maxZ = problem.allowBlindAndBuriedVias
+            ? Math.max(p.z, targetZ)
+            : problem.layerCount - 1
           const key = `${xyCell}:${minZ}:${maxZ}`
           let legal = viaLegal.get(key)
           if (legal === undefined) {
-            legal = Array.from({ length: maxZ - minZ + 1 }, (_, i) => minZ + i).every((z) =>
-              segmentLegal(p, p, z, problem.viaDiameter / 2, true),
-            )
+            legal = Array.from(
+              { length: maxZ - minZ + 1 },
+              (_, i) => minZ + i,
+            ).every((z) => segmentLegal(p, p, z, problem.viaDiameter / 2, true))
             viaLegal.set(key, legal)
           }
           if (!legal) continue
@@ -601,7 +675,8 @@ export function* routeDynamicNetTreeSteps(
         }
         const nextUsedVias =
           boundedVias && direction >= 8 ? usedVias + 1 : usedVias
-        const state = (nextUsedVias * cellCount + nextCell) * 9 + Math.min(direction, 8),
+        const state =
+            (nextUsedVias * cellCount + nextCell) * 9 + Math.min(direction, 8),
           candidate = entry.cost + cost
         if (candidate < distance[state]! - 1e-10) {
           distance[state] = candidate
@@ -643,11 +718,10 @@ export function* routeDynamicNetTreeSteps(
   }
   function physicalViaLayers(from: number, to: number): number[] {
     const min = problem.allowBlindAndBuriedVias ? Math.min(from, to) : 0
-    const max = problem.allowBlindAndBuriedVias ? Math.max(from, to) : problem.layerCount - 1
-    return Array.from(
-      { length: max - min + 1 },
-      (_, i) => min + i,
-    )
+    const max = problem.allowBlindAndBuriedVias
+      ? Math.max(from, to)
+      : problem.layerCount - 1
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i)
   }
   function insert(found: NonNullable<ReturnType<typeof search>>): void {
     const branchId = `dynamic:${problem.net}:${traces.length}`,
@@ -681,7 +755,9 @@ export function* routeDynamicNetTreeSteps(
           y: p.y,
           from_layer: mapZToLayerName(previous.z, problem.layerCount),
           to_layer: mapZToLayerName(p.z, problem.layerCount),
-          layers: physicalViaLayers(previous.z, p.z).map((z) => mapZToLayerName(z, problem.layerCount)),
+          layers: physicalViaLayers(previous.z, p.z).map((z) =>
+            mapZToLayerName(z, problem.layerCount),
+          ),
           via_diameter: problem.viaDiameter,
           via_hole_diameter: problem.viaHoleDiameter,
         })
@@ -704,7 +780,15 @@ export function* routeDynamicNetTreeSteps(
           previous.z === p.z ? problem.width / 2 : problem.viaDiameter / 2,
         ...(previous.z === p.z
           ? {}
-          : { holeDiameter: problem.viaHoleDiameter, drill: { start: p, end: p, diameter: problem.viaHoleDiameter, layers: physicalViaLayers(previous.z, p.z) } }),
+          : {
+              holeDiameter: problem.viaHoleDiameter,
+              drill: {
+                start: p,
+                end: p,
+                diameter: problem.viaHoleDiameter,
+                layers: physicalViaLayers(previous.z, p.z),
+              },
+            }),
       }
       copper.push(c)
       addToBins(c)
@@ -722,7 +806,7 @@ export function* routeDynamicNetTreeSteps(
           a.route_type !== "wire" ||
           b.route_type !== "wire" ||
           a.layer !== b.layer ||
-          a.layer !== (mapZToLayerName(found.source.z, problem.layerCount))
+          a.layer !== mapZToLayerName(found.source.z, problem.layerCount)
         )
           continue
         const p = found.source.point,
