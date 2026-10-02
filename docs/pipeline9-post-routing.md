@@ -46,9 +46,13 @@ ambiguous merged roots require an adapter and fail explicitly. The report lists
 changed nets, trace IDs, before/after/candidate metrics, search budgets and
 validation/rejection diagnostics. Returned results and snapshot views are copies.
 
-The conservative validator currently supports two ordinary layers, wires,
-through vias, rectangular/circular lands with explicit ownership, and explicit
-plating/drill metadata. Differential pairs, buses, planes, jumpers, blind vias,
+The validator supports 2–10 canonical copper layers, wires, contiguous through or
+blind/buried via spans, rotated rectangles, capsules, circles and exact rounded
+rectangles. Pad interlayer bridges require explicit plating and independent drill
+geometry. Non-plated circular holes require explicit source-ID/obstacle mappings;
+unknown ID-less obstacles are never inferred to be holes. Plated-land traversal
+markers require source identity, owner, endpoint containment and a proven span.
+Differential pairs, buses, planes, jumpers, slotted/offset drills, polygons,
 external constraints and ambiguous ownership require dedicated adapters. Invalid
 original boards and malformed ownership still throw. Unsupported geometry or missing
 physical facts return `status: "unsupported"`, `validationStatus: "unsupported"`,
@@ -56,8 +60,11 @@ unchanged copper and diagnostics; this does not certify the original board.
 Exhausted search, failed
 candidate validation, or no objective improvement return the original output.
 An optional additional native/manufacturing checker validates isolated copies.
-Physical copper-length union, unique via sites and vertex bends are routing
-metrics; they do not imply universal improvement or manufacturing signoff.
+Copper length is a same-owner, same-layer collinear union. Via sites include
+physical span and dimensions: duplicate representations of one barrel count once,
+while distinct stacked blind/buried barrels count separately. Pass the SRJ as the
+third metric argument for multilayer copper. Verified plated-land traversal adds
+no new barrel or routed-wire length. These metrics do not imply universal improvement or manufacturing signoff.
 
 `visualize()`/`preview()` show current physical copper. `getRecordedGraphics()`
 contains actual branch events with native GraphicsObject step numbers. The
@@ -121,11 +128,22 @@ copper remains visible when an optional phase returns unsupported or rejected.
 Some Circuit JSON to SRJ producers omit plating and drill facts. Pass the original
 source as `postRoutingSourceCircuitJson`, or call
 `restorePostRoutingPadMetadata(srj, circuitJson)` before the standalone phase.
-The adapter requires an exact `circuitJsonMetadata` pad ID and matching port,
-land geometry, rotation and layers. It adds source-backed plating/drill facts to
-a copy, never infers plating from multilayer geometry, and rejects conflicting
-explicit facts. Missing evidence remains unsupported. Slots, offset drills and
-rounded or unknown lands remain explicitly unsupported. Via dimensions use
+The adapter requires an exact pad ID from `circuitJsonMetadata` or the producer's
+own-pad `connectedTo[0]` record and a verified land envelope/layer span. It checks
+PCB-port identity and corrects the known legacy source-port migration only when
+the exact source PCB port is already in that pad's input alias block. It preserves
+unassigned pads and never invents ports or electrical ownership. Source rounded
+and capsule geometry is restored inside the verified original envelope; that
+conservative envelope is also retained during search, including via-in-pad
+exclusion. Missing source pads or unmapped source holes,
+unsupported geometry and conflicting explicit facts cannot be certified.
+
+For ID-less non-plated holes, pass an explicit `pcb_hole_id → obstacle index` map
+as the third argument, or `postRoutingSourceHoleObstacleIndices` alongside the
+Pipeline9 source. The source component and exact drill geometry must agree;
+coordinates alone cannot assign ownership or plating. The original SRJ, endpoint
+constraints and routed copper stay immutable. Slots and offset drills remain
+unsupported. Via dimensions use
 Pipeline9's canonical `getViaDimensions` defaults and alias precedence.
 
 `validationStatus: "validated"` means the supported continuous geometry contract
@@ -159,3 +177,41 @@ force identical routed baselines between revisions. Its same-machine comparison
 is an observed integration benchmark; isolated saved-baseline replay is needed
 to identify the incremental phase effect. Search and validation times and phase
 diagnostics are included in JSON. No universal improvement is asserted.
+
+## Physical layer and rule contract
+
+A via's signal `from_layer`/`to_layer` does not define its whole physical barrel.
+When `allowBlindAndBuriedVias` is absent or false, every via occupies every board
+copper layer, even a top-to-inner1 transition. Under an explicit blind/buried
+policy, the default is the inclusive endpoint span; `via.layers` may specify a
+wider contiguous span. Unknown/aliased layer names, missing endpoints, duplicate
+layers and noncontiguous spans fail loudly. New vias are checked on every occupied
+layer and emitted with their physical span. Drill spacing uses independent drill
+centers/spans, never an oval land's capsule centerline.
+
+Explicit input rules are retained. Unspecified trace clearance follows Pipeline9's
+0.1 mm validation contract (a supplied obstacle margin remains binding); unspecified
+board-edge clearance is zero. Foreign via/pad clearance is the maximum of 0.1 mm,
+the supplied via/pad rule and the obstacle margin. The via-hole gap defaults to 0.1 mm;
+plated-hole drill spacing uses its separate declared rule, default zero physical
+hole overlap. NPTH-to-wire clearance defaults to the native checker's 0.2 mm.
+Via-in-pad is prohibited by default on the whole board; permission requires
+`allowViaInPad: true`. These are routing/checker defaults,
+not recovered KiCad fabrication rules. Provide the complete additional checker
+through `validate` for requirements beyond this geometry model.
+
+For strict via reduction, use `objective.priorities: ["viaSites"]`. Length/bend
+allowances are explicit tradeoffs, never an inferred user requirement. An unchanged
+via count is rejected even if another metric improves. Multiple requested nets
+form one atomic transaction; any failed proposal restores all original copper.
+A caller may run separate explicit net transactions, checking its total time,
+length and changed-net budgets between calls. Validation time is additional to
+search time. Dense grids are capped at one million cells and via search at forty
+million states; finer grids/larger stacks can exhaust memory or search budgets.
+
+Original physically invalid copper still throws. Source restoration can therefore
+expose a defect that the relaxed Pipeline9 benchmark checker did not test. It does
+not repair that baseline automatically. Any comparison using a separately repaired
+reference must identify that repair and cannot establish fresh default-pipeline
+quality. No universal improvement, complete KiCad DRC or manufacturing signoff is
+asserted.
