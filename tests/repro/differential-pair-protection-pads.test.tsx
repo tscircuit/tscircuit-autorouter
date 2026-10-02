@@ -3,7 +3,8 @@ import { RootCircuit, getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
+import { getSvgFromGraphicsObject } from "graphics-debug"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
 test("repro: differential pair with protection pads fails after routing", async (): Promise<void> => {
   const circuit = new RootCircuit()
@@ -141,18 +142,26 @@ test("repro: differential pair with protection pads fails after routing", async 
   )
   expect(solver.netToPointPairsSolver?.newConnections).toHaveLength(6)
   expect(solver.effortCleanupSolver?.getOutput()).toHaveLength(6)
+  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    connections: solver.netToPointPairsSolver!.newConnections,
+    originalConnections: input.connections,
+    hdRoutes: solver.effortCleanupSolver!.getOutput(),
+    layerCount: input.layerCount,
+    obstacles: input.obstacles,
+    defaultViaHoleDiameter: solver.viaHoleDiameter,
+    connMap: solver.connMap,
+  })
   await expect(
-    getGraphicsSvgFrames({
-      frames: [
-        {
-          name: "Input: four terminals per differential net",
-          graphics: convertSrjToGraphicsObject(input),
-        },
-        {
-          name: "Routes computed, then rejected by length matching",
-          graphics: solver.effortCleanupSolver!.visualize(),
-        },
-      ],
+    getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
+      backgroundColor: "white",
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "input" })
+  await expect(
+    getSvgFromGraphicsObject(
+      convertSrjToGraphicsObject({ ...input, traces: routedTraces }),
+      {
+        backgroundColor: "white",
+      },
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "before-rejection" })
 })
