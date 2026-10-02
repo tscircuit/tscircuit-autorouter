@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { orderConnectionsByNetCardinalityFairly } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/orderConnectionsByNetCardinalityFairly"
+import {
+  hasNetLargerThanNetCount,
+  orderConnectionsByNetCardinalityFairly,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/orderConnectionsByNetCardinalityFairly"
 
 test("interleaves nets proportionally while preserving their route order", () => {
   const connections = [
@@ -7,15 +10,22 @@ test("interleaves nets proportionally while preserving their route order", () =>
     { id: "b0", netId: "b" },
     { id: "a1", netId: "a" },
     { id: "c0", netId: "c" },
-    { id: "b1", netId: "b" },
     { id: "a2", netId: "a" },
-    { id: "d0", netId: "d" },
+    { id: "b1", netId: "b" },
+    { id: "a3", netId: "a" },
   ]
+
+  expect(
+    hasNetLargerThanNetCount(
+      connections,
+      (connection) => connection.netId,
+    ),
+  ).toBeTrue()
 
   expect(
     orderConnectionsByNetCardinalityFairly(
       connections,
       (connection) => connection.netId,
     ).map((connection) => connection.id),
-  ).toEqual(["a0", "b0", "c0", "a1", "d0", "b1", "a2"])
+  ).toEqual(["a0", "b0", "a1", "c0", "a2", "b1", "a3"])
 })

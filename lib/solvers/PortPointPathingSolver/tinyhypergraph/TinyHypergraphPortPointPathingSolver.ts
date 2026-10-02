@@ -37,7 +37,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { orderConnectionsByNetCardinalityFairly } from "./orderConnectionsByNetCardinalityFairly"
+import {
+  hasNetLargerThanNetCount,
+  orderConnectionsByNetCardinalityFairly,
+} from "./orderConnectionsByNetCardinalityFairly"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -300,6 +303,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  acceptFirstCompleteRouteSet = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -312,11 +316,6 @@ const getTinyHyperGraphPipelineInput = (
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
-  // Past the partial-rip limit, another improvement round can only reroute the
-  // entire graph. Keep the first complete route set instead of exhausting the
-  // iteration budget after a valid solution has already been found.
-  const acceptFirstCompleteRouteSet =
-    enablePartialRip && eligibilityCount > maxPartialRipRouteCount
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
@@ -1059,12 +1058,20 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.connections,
     )
     let connections = tinyRouteConnections
+    let acceptFirstCompleteRouteSet = false
     if (params.flags.USE_SELECTIVE_RERIP_ROUTING) {
       const maxPartialRipRouteCount =
         TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
         Number.POSITIVE_INFINITY
+      acceptFirstCompleteRouteSet =
+        params.layerCount > 4 &&
+        tinyRouteConnections.length > maxPartialRipRouteCount &&
+        hasNetLargerThanNetCount(
+          tinyRouteConnections,
+          getTinyRouteConnectionNetId,
+        )
       connections =
-        tinyRouteConnections.length > maxPartialRipRouteCount
+        acceptFirstCompleteRouteSet
           ? orderConnectionsByNetCardinalityFairly(
               tinyRouteConnections,
               getTinyRouteConnectionNetId,
@@ -1144,6 +1151,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      acceptFirstCompleteRouteSet,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(

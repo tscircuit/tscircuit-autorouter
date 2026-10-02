@@ -1,3 +1,21 @@
+export const hasNetLargerThanNetCount = <TConnection>(
+  connections: readonly TConnection[],
+  getNetId: (connection: TConnection) => string | number,
+): boolean => {
+  const connectionCountByNetId = new Map<string | number, number>()
+  for (const connection of connections) {
+    const netId = getNetId(connection)
+    connectionCountByNetId.set(
+      netId,
+      (connectionCountByNetId.get(netId) ?? 0) + 1,
+    )
+  }
+
+  return [...connectionCountByNetId.values()].some(
+    (connectionCount) => connectionCount > connectionCountByNetId.size,
+  )
+}
+
 export const orderConnectionsByNetCardinalityFairly = <TConnection>(
   connections: readonly TConnection[],
   getNetId: (connection: TConnection) => string | number,
