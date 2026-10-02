@@ -21,7 +21,18 @@ type ForceGeometry = {
   vias: ForceVia[]
 }
 
+type ForceWorkspace = {
+  geometry: ForceGeometry[]
+  netForces: Array<Array<{ fx: number; fy: number }>>
+}
+
 export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNodeSolver {
+  // Geometry retains live point references while its topology stays fixed.
+  private readonly forceWorkspaceByPolyLines = new WeakMap<
+    PolyLine2[],
+    ForceWorkspace
+  >()
+
   override getSolverName(): string {
     return "MultiHeadPolyLineIntraNodeSolver2"
   }
@@ -126,15 +137,41 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const BOUNDARY_FORCE_STRENGTH = 0.008 // How strongly points are pushed back into bounds
     const EPSILON = 1e-6 // To avoid division by zero
 
-    // 1. Initialize net forces structure: netForces[lineIdx][mPointIdx] = {fx, fy}
-    const netForces: Array<Array<{ fx: number; fy: number }>> = Array.from(
-      { length: numPolyLines },
-      (_, i) =>
-        Array.from({ length: polyLines[i].mPoints.length }, () => ({
-          fx: 0,
-          fy: 0,
-        })),
-    )
+    // 1. Initialize the candidate's reusable force workspace.
+    let workspace = this.forceWorkspaceByPolyLines.get(polyLines)
+    if (!workspace) {
+      const geometry = polyLines.map((polyLine): ForceGeometry => {
+        const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+        const segments = points.slice(0, -1).map(
+          (point, index): ForceSegment => ({
+            p1: point,
+            p2: points[index + 1]!,
+            layer: point.z2,
+            p1Idx: index,
+            p2Idx: index + 1,
+          }),
+        )
+        const vias = points.flatMap((point, index): ForceVia[] =>
+          point.z1 === point.z2
+            ? []
+            : [{ point, layers: [point.z1, point.z2], index }],
+        )
+        return { segments, vias }
+      })
+      const netForces = polyLines.map((polyLine) =>
+        polyLine.mPoints.map(() => ({ fx: 0, fy: 0 })),
+      )
+      workspace = { geometry, netForces }
+      this.forceWorkspaceByPolyLines.set(polyLines, workspace)
+    } else {
+      for (const lineForces of workspace.netForces) {
+        for (const force of lineForces) {
+          force.fx = 0
+          force.fy = 0
+        }
+      }
+    }
+    const { geometry, netForces } = workspace
 
     // Helper to add force directly to the netForces array for a given mPoint index
     const addNetForce = (
@@ -185,26 +222,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       addNetForce(oppLine, otherSeg.p1Idx, -fx / 2, -fy / 2)
       addNetForce(oppLine, otherSeg.p2Idx, -fx / 2, -fy / 2)
     }
-
-    // Points move only after all forces have been accumulated.
-    const geometry = polyLines.map((polyLine): ForceGeometry => {
-      const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segments = points.slice(0, -1).map(
-        (point, index): ForceSegment => ({
-          p1: point,
-          p2: points[index + 1]!,
-          layer: point.z2,
-          p1Idx: index,
-          p2Idx: index + 1,
-        }),
-      )
-      const vias = points.flatMap((point, index): ForceVia[] =>
-        point.z1 === point.z2
-          ? []
-          : [{ point, layers: [point.z1, point.z2], index }],
-      )
-      return { segments, vias }
-    })
 
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
