@@ -64,6 +64,7 @@ class ForestQueue {
 export function findZeroViaCopperForest(
   grid: {
     nx: number
+    layerCount: number
     ny: number
     step: number
     point: (cell: number) => ForestPoint
@@ -83,7 +84,7 @@ export function findZeroViaCopperForest(
     [1, -1],
   ] as const
   const plane: number = grid.nx * grid.ny,
-    count: number = plane * 2
+    count: number = plane * grid.layerCount
   const distances: Float64Array = new Float64Array(count).fill(Infinity)
   const parents: Int32Array = new Int32Array(count).fill(-2),
     labels: Int32Array = new Int32Array(count).fill(-1),

@@ -5,6 +5,8 @@ import type { DynamicNetTreeProblem } from "lib/solvers/DynamicNetTreeSolver/rou
 export function sharedViaAllocationFixture(): DynamicNetTreeProblem {
   return {
     net: "N",
+    layerCount: 2,
+    allowBlindAndBuriedVias: false,
     terminals: [
       { id: "root", point: { x: 0, y: 0 }, layers: [0] },
       { id: "bottom", point: { x: 2, y: 0 }, layers: [1] },

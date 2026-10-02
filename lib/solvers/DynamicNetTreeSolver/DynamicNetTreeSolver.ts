@@ -21,7 +21,7 @@ export class DynamicNetTreeSolver extends BaseSolver {
     super()
     this.problem = structuredClone(problem)
     this.options = structuredClone(options)
-    this.MAX_ITERATIONS = problem.terminals.length + problem.copper.length + 10
+    this.MAX_ITERATIONS = problem.terminals.reduce((sum, t) => sum + t.layers.length, 0) + problem.copper.length + 10
   }
 
   override _setup(): void {

@@ -9,16 +9,22 @@ import {
   type TreeCopper,
   type TreePoint,
 } from "./dynamicNetTreeGeometry"
+import { mapZToLayerName } from "../../utils/mapZToLayerName"
 import { findZeroViaCopperForest } from "./findZeroViaCopperForest"
 
 export type DynamicNetTreeProblem = {
   net: string
+  layerCount: number
+  allowBlindAndBuriedVias: boolean
   terminals: { id: string; point: TreePoint; layers: number[] }[]
   copper: TreeCopper[]
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline: TreePoint[]
   width: number
   clearance: number
+  viaToPadClearance?: number
+  traceToHoleClearance?: number
+  platedHoleClearance?: number
   boardEdgeClearance: number
   viaDiameter: number
   viaHoleDiameter: number
@@ -156,12 +162,13 @@ export function* routeDynamicNetTreeSteps(
   )
     throw new Error("Invalid dynamic net-tree rules or search options")
   if (
-    problem.copper.some((c) => c.layers.some((z) => z !== 0 && z !== 1)) ||
+    !Number.isInteger(problem.layerCount) || problem.layerCount < 2 || problem.layerCount > 10 ||
+    problem.copper.some((c) => c.layers.some((z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount)) ||
     problem.terminals.some(
-      (t) => t.layers.length === 0 || t.layers.some((z) => z !== 0 && z !== 1),
+      (t) => t.layers.length === 0 || t.layers.some((z) => !Number.isInteger(z) || z < 0 || z >= problem.layerCount),
     )
   )
-    throw new Error("Dynamic net-tree search supports two active layers only")
+    throw new Error("Invalid dynamic net-tree physical layer")
   const numericRules = [
     options.gridStep,
     options.viaCost,
@@ -170,6 +177,9 @@ export function* routeDynamicNetTreeSteps(
     options.maxMilliseconds,
     problem.width,
     problem.clearance,
+    problem.viaToPadClearance ?? problem.clearance,
+    problem.traceToHoleClearance ?? problem.clearance,
+    problem.platedHoleClearance ?? problem.holeClearance,
     problem.boardEdgeClearance,
     problem.viaDiameter,
     problem.viaHoleDiameter,
@@ -182,6 +192,9 @@ export function* routeDynamicNetTreeSteps(
     options.maxMilliseconds <= 0 ||
     problem.boardEdgeClearance < 0 ||
     problem.holeClearance < 0 ||
+    (problem.viaToPadClearance ?? problem.clearance) < 0 ||
+    (problem.traceToHoleClearance ?? problem.clearance) < 0 ||
+    (problem.platedHoleClearance ?? problem.holeClearance) < 0 ||
     problem.viaHoleDiameter <= 0 ||
     problem.outline.length < 3 ||
     problem.bounds.minX >= problem.bounds.maxX ||
@@ -200,6 +213,18 @@ export function* routeDynamicNetTreeSteps(
   )
     throw new Error("Invalid physical component planning policy")
   const copper = structuredClone(problem.copper)
+  for (const c of copper) {
+    if (![c.start.x, c.start.y, c.end.x, c.end.y, c.radius,
+      ...(c.rectangle ? Object.values(c.rectangle) : []),
+      ...(c.routingEnvelope ? Object.values(c.routingEnvelope) : []),
+      ...(c.drill ? [c.drill.start.x, c.drill.start.y, c.drill.end.x,
+        c.drill.end.y, c.drill.diameter] : [])].every(Number.isFinite) ||
+      c.radius < 0 || c.layers.length === 0 ||
+      (c.routingEnvelope && (c.routingEnvelope.width <= 0 || c.routingEnvelope.height <= 0)) ||
+      (c.drill && (c.drill.diameter <= 0 || c.drill.layers.length === 0 ||
+        c.drill.layers.some(z => !Number.isInteger(z) || z < 0 || z >= problem.layerCount))))
+      throw new Error(`Invalid dynamic net-tree copper ${c.id}`)
+  }
   const terminalCopperIds = new Map<string, Set<string>>()
   for (const terminal of problem.terminals) {
     if (terminalCopperIds.has(terminal.id))
@@ -233,7 +258,7 @@ export function* routeDynamicNetTreeSteps(
   const nx = Math.floor((bounds.maxX - bounds.minX) / h) + 1,
     ny = Math.floor((bounds.maxY - bounds.minY) / h) + 1
   const plane = nx * ny,
-    cellCount = plane * 2
+    cellCount = plane * problem.layerCount
   const point = (cell: number): GridPoint => ({
     x: bounds.minX + (cell % nx) * h,
     y: bounds.minY + Math.floor((cell % plane) / nx) * h,
@@ -269,10 +294,17 @@ export function* routeDynamicNetTreeSteps(
     binSize = 2
   function addToBins(c: TreeCopper): void {
     const corners = c.rectangle ? copperRectangleCorners(c) : [c.start, c.end]
+    if (c.drill) corners.push(c.drill.start, c.drill.end)
+    if (c.routingEnvelope)
+      corners.push(...copperRectangleCorners({...c,
+        start: c.drill?.start ?? {x: (c.start.x + c.end.x) / 2, y: (c.start.y + c.end.y) / 2},
+        rectangle: c.routingEnvelope, radius: 0}))
     const r =
-      c.radius +
+      Math.max(c.radius, (c.drill?.diameter ?? c.holeDiameter ?? 0) / 2) +
       Math.max(problem.viaDiameter / 2, problem.width / 2) +
-      Math.max(problem.clearance, problem.holeClearance) +
+      Math.max(problem.clearance, problem.viaToPadClearance ?? 0,
+        problem.traceToHoleClearance ?? 0, problem.platedHoleClearance ?? 0,
+        problem.holeClearance) +
       0.01
     const x0 = Math.floor((Math.min(...corners.map((p) => p.x)) - r) / binSize),
       x1 = Math.floor((Math.max(...corners.map((p) => p.x)) + r) / binSize)
@@ -324,33 +356,39 @@ export function* routeDynamicNetTreeSteps(
       )
         for (const c of bins.get(`${x},${y}`) ?? []) nearby.add(c)
     for (const c of nearby) {
+      const drillDiameter = c.drill?.diameter ?? c.holeDiameter
+      if (
+        via && drillDiameter && (c.drill?.layers ?? c.layers).includes(z) &&
+        minimumDistanceBetweenSegments(a, b, c.drill?.start ?? c.start, c.drill?.end ?? c.end) <
+          (drillDiameter + problem.viaHoleDiameter) / 2 +
+            (c.kind === "via" ? problem.holeClearance : problem.platedHoleClearance ?? problem.holeClearance) +
+            1e-6
+      )
+        return false
       if (!c.layers.includes(z)) continue
+      const physicalGap = segmentCopperGap(a, b, c)
+      const envelopeGap = c.routingEnvelope ? segmentCopperGap(a, b, {...c,
+        start: {x: (c.start.x + c.end.x) / 2, y: (c.start.y + c.end.y) / 2},
+        rectangle: c.routingEnvelope, radius: 0}) : physicalGap
       if (
         c.owner !== problem.net &&
-        segmentCopperGap(a, b, c) < radius + problem.clearance + 1e-6
+        Math.min(physicalGap, envelopeGap) < radius +
+          (c.kind === "hole" ? via ? 0 : problem.traceToHoleClearance ?? problem.clearance :
+            via && c.kind === "pad" ? problem.viaToPadClearance ?? problem.clearance : problem.clearance) + 1e-6
       )
         return false
       if (
         via &&
         !problem.allowViaInPad &&
         c.kind === "pad" &&
-        segmentCopperGap(a, b, c) < radius + 1e-6
-      )
-        return false
-      if (
-        via &&
-        c.holeDiameter &&
-        minimumDistanceBetweenSegments(a, b, c.start, c.end) <
-          (c.holeDiameter + problem.viaHoleDiameter) / 2 +
-            problem.holeClearance +
-            1e-6
+        Math.min(physicalGap, envelopeGap) < radius + 1e-6
       )
         return false
     }
     return true
   }
   const wireLegal = new Map<number, boolean>(),
-    viaLegal = new Map<number, boolean>()
+    viaLegal = new Map<string, boolean>()
   function connectors(items: TreeCopper[]): Map<number, Connector> {
     const result = new Map<number, Connector>()
     for (const c of items) {
@@ -524,20 +562,25 @@ export function* routeDynamicNetTreeSteps(
         bestState = entry.state
         bestTarget = goal
       }
-      for (let direction = 0; direction < 9; direction++) {
+      for (let direction = 0; direction < 8 + problem.layerCount - 1; direction++) {
         let nextCell: number, cost: number
-        if (direction === 8) {
+        if (direction >= 8) {
           if (boundedVias && usedVias >= viaBudget) continue
           const xyCell = cell % plane
-          let legal = viaLegal.get(xyCell)
+          const targetIndex = direction - 8
+          const targetZ = targetIndex >= p.z ? targetIndex + 1 : targetIndex
+          const minZ = problem.allowBlindAndBuriedVias ? Math.min(p.z, targetZ) : 0
+          const maxZ = problem.allowBlindAndBuriedVias ? Math.max(p.z, targetZ) : problem.layerCount - 1
+          const key = `${xyCell}:${minZ}:${maxZ}`
+          let legal = viaLegal.get(key)
           if (legal === undefined) {
-            legal = [0, 1].every((z) =>
+            legal = Array.from({ length: maxZ - minZ + 1 }, (_, i) => minZ + i).every((z) =>
               segmentLegal(p, p, z, problem.viaDiameter / 2, true),
             )
-            viaLegal.set(xyCell, legal)
+            viaLegal.set(key, legal)
           }
           if (!legal) continue
-          nextCell = (1 - p.z) * plane + xyCell
+          nextCell = targetZ * plane + xyCell
           cost = options.viaCost
         } else {
           const [dx, dy] = directions[direction]!,
@@ -557,8 +600,8 @@ export function* routeDynamicNetTreeSteps(
             (heading !== 8 && heading !== direction ? options.bendCost : 0)
         }
         const nextUsedVias =
-          boundedVias && direction === 8 ? usedVias + 1 : usedVias
-        const state = (nextUsedVias * cellCount + nextCell) * 9 + direction,
+          boundedVias && direction >= 8 ? usedVias + 1 : usedVias
+        const state = (nextUsedVias * cellCount + nextCell) * 9 + Math.min(direction, 8),
           candidate = entry.cost + cost
         if (candidate < distance[state]! - 1e-10) {
           distance[state] = candidate
@@ -598,6 +641,14 @@ export function* routeDynamicNetTreeSteps(
       cost: best,
     }
   }
+  function physicalViaLayers(from: number, to: number): number[] {
+    const min = problem.allowBlindAndBuriedVias ? Math.min(from, to) : 0
+    const max = problem.allowBlindAndBuriedVias ? Math.max(from, to) : problem.layerCount - 1
+    return Array.from(
+      { length: max - min + 1 },
+      (_, i) => min + i,
+    )
+  }
   function insert(found: NonNullable<ReturnType<typeof search>>): void {
     const branchId = `dynamic:${problem.net}:${traces.length}`,
       route: SimplifiedPcbTrace["route"] = []
@@ -628,8 +679,9 @@ export function* routeDynamicNetTreeSteps(
           route_type: "via",
           x: p.x,
           y: p.y,
-          from_layer: previous.z === 0 ? "top" : "bottom",
-          to_layer: p.z === 0 ? "top" : "bottom",
+          from_layer: mapZToLayerName(previous.z, problem.layerCount),
+          to_layer: mapZToLayerName(p.z, problem.layerCount),
+          layers: physicalViaLayers(previous.z, p.z).map((z) => mapZToLayerName(z, problem.layerCount)),
           via_diameter: problem.viaDiameter,
           via_hole_diameter: problem.viaHoleDiameter,
         })
@@ -637,7 +689,7 @@ export function* routeDynamicNetTreeSteps(
         route_type: "wire",
         x: p.x,
         y: p.y,
-        layer: p.z === 0 ? "top" : "bottom",
+        layer: mapZToLayerName(p.z, problem.layerCount),
         width: problem.width,
       })
       if (!previous) continue
@@ -645,14 +697,14 @@ export function* routeDynamicNetTreeSteps(
         id: `${branchId}:${i}`,
         owner: problem.net,
         kind: previous.z === p.z ? "wire" : "via",
-        layers: previous.z === p.z ? [p.z] : [0, 1],
+        layers: previous.z === p.z ? [p.z] : physicalViaLayers(previous.z, p.z),
         start: previous,
         end: p,
         radius:
           previous.z === p.z ? problem.width / 2 : problem.viaDiameter / 2,
         ...(previous.z === p.z
           ? {}
-          : { holeDiameter: problem.viaHoleDiameter }),
+          : { holeDiameter: problem.viaHoleDiameter, drill: { start: p, end: p, diameter: problem.viaHoleDiameter, layers: physicalViaLayers(previous.z, p.z) } }),
       }
       copper.push(c)
       addToBins(c)
@@ -670,7 +722,7 @@ export function* routeDynamicNetTreeSteps(
           a.route_type !== "wire" ||
           b.route_type !== "wire" ||
           a.layer !== b.layer ||
-          a.layer !== (found.source.z === 0 ? "top" : "bottom")
+          a.layer !== (mapZToLayerName(found.source.z, problem.layerCount))
         )
           continue
         const p = found.source.point,
@@ -726,7 +778,7 @@ export function* routeDynamicNetTreeSteps(
       if (options.componentPlanning === "zero-via-forest") {
         const initial: TreeCopper[][] = components()
         const joins = findZeroViaCopperForest(
-          { nx, ny, step: h, point },
+          { nx, ny, step: h, point, layerCount: problem.layerCount },
           initial.map(
             (group: TreeCopper[]): Map<number, Connector> => connectors(group),
           ),
