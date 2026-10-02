@@ -32,6 +32,9 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 const STANDARD_PORTFOLIO_MAX_LAYER_COUNT = 4
 
+export const shouldDeferPortfolioParameterSweeps = (layerCount: number) =>
+  layerCount > STANDARD_PORTFOLIO_MAX_LAYER_COUNT
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -61,6 +64,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   negotiatedSearchStarted = false
   readonly deferParameterSweeps: boolean
   readonly enableNegotiatedSearch: boolean
+  readonly allowSearchExpansion: boolean
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
@@ -139,6 +143,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchSegmentWork?: number
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
+      allowSearchExpansion?: boolean
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -151,11 +156,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.allowSearchExpansion = opts.allowSearchExpansion ?? true
     const layerCount =
+      opts.layerCount ??
       opts.nodeWithPortPoints.availableZ?.length ??
       new Set(opts.nodeWithPortPoints.portPoints.map((point) => point.z)).size
-    this.deferParameterSweeps =
-      layerCount > STANDARD_PORTFOLIO_MAX_LAYER_COUNT
+    this.deferParameterSweeps = shouldDeferPortfolioParameterSweeps(layerCount)
     this.fullPortfolioInitialized = !this.deferParameterSweeps
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -540,7 +546,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   override _step() {
     if (!this.supervisedSolvers) this.initializeSolvers()
 
-    if (!this.getSupervisedSolverWithBestFitness()) {
+    if (
+      this.allowSearchExpansion &&
+      !this.getSupervisedSolverWithBestFitness()
+    ) {
       this.initializeFullPortfolio()
       if (
         !this.adaptiveSearchExpanded &&
@@ -560,7 +569,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.stats.negotiatedSearchStartedAtIteration = this.iterations
     }
 
-    if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
+    if (
+      this.allowSearchExpansion &&
+      !this.solved &&
+      !this.failed &&
+      this.shouldExpandPortfolio()
+    ) {
       this.expandAdaptiveSearch()
     }
   }
