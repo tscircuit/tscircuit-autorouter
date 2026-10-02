@@ -42,8 +42,7 @@ test("reuses obstacle connectivity while scanning a trace", (): void => {
     solver.solve()
 
     expect(solver.getHdRoutesWithWidths()[0]?.traceThickness).toBe(0.2)
-    // The two endpoint pad checks are separate from the cursor scan.
-    expect(areIdsConnected).toHaveBeenCalledTimes(3)
+    expect(areIdsConnected).toHaveBeenCalledTimes(1)
   } finally {
     areIdsConnected.mockRestore()
   }
