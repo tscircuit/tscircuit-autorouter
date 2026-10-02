@@ -44,7 +44,11 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
   )
   try {
     const phases: string[] = []
-    for (let step = 0; step < 20_000 && !solver.solved && !solver.failed; step++) {
+    for (
+      let step = 0;
+      step < 20_000 && !solver.solved && !solver.failed;
+      step++
+    ) {
       const child = solver.activeSubSolver
       const iterations = child?.iterations
       const progress = solver.progress
@@ -83,11 +87,13 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
 
   const failing = createSolver()
   const failingExact = failing.exactRepairSolver!
-  const failureStep = spyOn(failingExact, "step").mockImplementation((): void => {
-    failingExact.iterations++
-    failingExact.failed = true
-    failingExact.error = "stage failure"
-  })
+  const failureStep = spyOn(failingExact, "step").mockImplementation(
+    (): void => {
+      failingExact.iterations++
+      failingExact.failed = true
+      failingExact.error = "stage failure"
+    },
+  )
   try {
     failing.step()
     expect(failing.failed).toBeTrue()

@@ -92,22 +92,30 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private initializeRepair(): void {
-    const { initialErrors, drcEvaluator, newConnections, syntheticConnectionNames } = this.params
-    this.currentErrors = initialErrors ?? getPipeline9DrcErrors(drcEvaluator, this.currentRoutes)
+    const {
+      initialErrors,
+      drcEvaluator,
+      newConnections,
+      syntheticConnectionNames,
+    } = this.params
+    this.currentErrors =
+      initialErrors ?? getPipeline9DrcErrors(drcEvaluator, this.currentRoutes)
     // Accepted candidates never increase the error count across the two passes.
     this.MAX_ITERATIONS += 16 * this.currentErrors.length
     this.preloadEligibleDrcIssueCount = this.currentErrors.filter(
-      (error): boolean => isPipeline9DrcErrorOwnedByPreloadRepair({
-        error,
-        preloadRepairTraceIds: this.params.preloadRepairTraceIds,
-      }),
+      (error): boolean =>
+        isPipeline9DrcErrorOwnedByPreloadRepair({
+          error,
+          preloadRepairTraceIds: this.params.preloadRepairTraceIds,
+        }),
     ).length
     const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: this.currentRoutes,
       newConnections,
       syntheticConnectionNames,
     })
-    const hasMovableTracePair = this.params.allowTracePairRepair === true &&
+    const hasMovableTracePair =
+      this.params.allowTracePairRepair === true &&
       this.currentErrors.some((error): boolean =>
         isMovableTracePairError(error, initialRouteIndexByTraceId),
       )
@@ -133,19 +141,23 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.params.syntheticConnectionNames,
     })
-    this.repairableErrors = this.currentErrors.filter((error): boolean =>
-      (error.type === "pcb_trace_error" ||
-        error.type === "pcb_pad_trace_clearance_error" ||
-        error.type === "pcb_via_trace_clearance_error" ||
-        error.type === "pcb_via_clearance_error") &&
-      typeof error.pcb_trace_id === "string",
+    this.repairableErrors = this.currentErrors.filter(
+      (error): boolean =>
+        (error.type === "pcb_trace_error" ||
+          error.type === "pcb_pad_trace_clearance_error" ||
+          error.type === "pcb_via_trace_clearance_error" ||
+          error.type === "pcb_via_clearance_error") &&
+        typeof error.pcb_trace_id === "string",
     )
     this.errorIndex = 0
     this.phase = "begin-error"
   }
 
   private beginError(): void {
-    if (this.candidateSearchBudgetExhausted || this.errorIndex >= this.repairableErrors.length) {
+    if (
+      this.candidateSearchBudgetExhausted ||
+      this.errorIndex >= this.repairableErrors.length
+    ) {
       this.phase = "finish-pass"
       return
     }
@@ -177,11 +189,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private prepareB01Candidate(): void {
-    if (this.stopB01SearchForError || this.candidateSearchBudgetExhausted || this.traceIndex >= this.traceIds.length) {
+    if (
+      this.stopB01SearchForError ||
+      this.candidateSearchBudgetExhausted ||
+      this.traceIndex >= this.traceIds.length
+    ) {
       this.phase = "prepare-regional"
       return
     }
-    const routeIndex = this.routeIndexByTraceId.get(this.traceIds[this.traceIndex]!)
+    const routeIndex = this.routeIndexByTraceId.get(
+      this.traceIds[this.traceIndex]!,
+    )
     if (routeIndex === undefined) {
       this.traceIndex++
       this.regionIndex = 0
@@ -235,7 +253,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     if (candidate) {
       this.attemptedCandidateCount++
       if (candidate.usedFallback) this.fallbackCandidateCount++
-      const candidateErrors = getPipeline9DrcErrors(this.params.drcEvaluator, candidate.routes)
+      const candidateErrors = getPipeline9DrcErrors(
+        this.params.drcEvaluator,
+        candidate.routes,
+      )
       if (isPipeline9DrcCandidateBetter(candidateErrors, this.bestErrors)) {
         this.bestRoutes = candidate.routes
         this.bestErrors = candidateErrors
@@ -246,7 +267,10 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private prepareRegularCandidate(): void {
-    if (this.bestRoutes !== this.currentRoutes || this.candidateSearchBudgetExhausted) {
+    if (
+      this.bestRoutes !== this.currentRoutes ||
+      this.candidateSearchBudgetExhausted
+    ) {
       this.phase = "commit-error"
       return
     }
@@ -259,7 +283,9 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const center = this.repairCenter
     const fixedRouteCopperSpatialIndex = this.fixedRouteCopperSpatialIndex
     if (!center || !fixedRouteCopperSpatialIndex) {
-      throw new Error("Regional fallback candidate is missing its fixed context")
+      throw new Error(
+        "Regional fallback candidate is missing its fixed context",
+      )
     }
     this.regularCandidate = preparePipeline9RegularRegionalCandidate({
       ...this.params,
@@ -287,7 +313,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private validateRegularCandidate(): void {
     const problem = this.regularCandidate
-    if (!problem) throw new Error("Regional fallback has no completed candidate")
+    if (!problem)
+      throw new Error("Regional fallback has no completed candidate")
     const routes = getPipeline9RegularRegionalCandidateOutput(problem)
     this.regularCandidate = undefined
     if (routes) {
@@ -310,14 +337,19 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       this.acceptedOnPass = true
     }
     this.errorIndex++
-    this.phase = this.candidateSearchBudgetExhausted ? "finish-pass" : "begin-error"
+    this.phase = this.candidateSearchBudgetExhausted
+      ? "finish-pass"
+      : "begin-error"
   }
 
   private finishPass(): void {
     this.passIndex++
-    this.phase = !this.acceptedOnPass || this.currentErrors.length === 0 || this.candidateSearchBudgetExhausted
-      ? "refine"
-      : "begin-pass"
+    this.phase =
+      !this.acceptedOnPass ||
+      this.currentErrors.length === 0 ||
+      this.candidateSearchBudgetExhausted
+        ? "refine"
+        : "begin-pass"
   }
 
   private refineAcceptedRoutes(): void {
@@ -330,9 +362,14 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
         this.params.connMap,
       )
       if (refinedRoutes !== this.currentRoutes) {
-        const errors = getPipeline9DrcErrors(this.params.drcEvaluator, refinedRoutes)
-        if (getViaIssueCount(errors) <= getViaIssueCount(this.currentErrors) &&
-          isPipeline9DrcCandidateBetter(errors, this.currentErrors)) {
+        const errors = getPipeline9DrcErrors(
+          this.params.drcEvaluator,
+          refinedRoutes,
+        )
+        if (
+          getViaIssueCount(errors) <= getViaIssueCount(this.currentErrors) &&
+          isPipeline9DrcCandidateBetter(errors, this.currentErrors)
+        ) {
           this.currentRoutes = refinedRoutes
           this.currentErrors = errors
         }
@@ -342,10 +379,13 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   }
 
   private prepareSafeLayerRepair(): void {
-    const hasSafeLayerRepairableError = this.currentErrors.some((error): boolean =>
-      error.type === "pcb_trace_error" || error.type === "pcb_pad_trace_clearance_error",
+    const hasSafeLayerRepairableError = this.currentErrors.some(
+      (error): boolean =>
+        error.type === "pcb_trace_error" ||
+        error.type === "pcb_pad_trace_clearance_error",
     )
-    this.safeTraceLayerRepairSkippedForBudget = hasSafeLayerRepairableError && this.candidateSearchBudgetExhausted
+    this.safeTraceLayerRepairSkippedForBudget =
+      hasSafeLayerRepairableError && this.candidateSearchBudgetExhausted
     if (!hasSafeLayerRepairableError || this.candidateSearchBudgetExhausted) {
       this.finishRepair()
       return
@@ -372,7 +412,9 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     if (!solver) throw new Error("Regional B01 has no safe trace-layer solver")
     solver.step()
     if (solver.failed) {
-      throw new Error(`Pipeline9 post-regional safe trace-layer repair failed: ${solver.error ?? "unknown error"}`)
+      throw new Error(
+        `Pipeline9 post-regional safe trace-layer repair failed: ${solver.error ?? "unknown error"}`,
+      )
     }
     if (!solver.solved) return
     this.activeSubSolver = null
@@ -381,7 +423,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   private validateSafeLayerRepair(): void {
     const solver = this.safeTraceLayerSolver
-    if (!solver) throw new Error("Regional B01 has no completed safe trace-layer solver")
+    if (!solver)
+      throw new Error("Regional B01 has no completed safe trace-layer solver")
     const routes = solver.getOutput()
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     if (isPipeline9DrcCandidateBetter(errors, this.currentErrors)) {
@@ -401,7 +444,8 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       candidateSearchCount: this.candidateSearchCount,
       candidateSearchBudget: this.candidateSearchBudget,
       candidateSearchBudgetExhausted: this.candidateSearchBudgetExhausted,
-      safeTraceLayerRepairSkippedForBudget: this.safeTraceLayerRepairSkippedForBudget,
+      safeTraceLayerRepairSkippedForBudget:
+        this.safeTraceLayerRepairSkippedForBudget,
       remainingDrcIssueCount: this.currentErrors.length,
       preloadEligibleDrcIssueCount: this.preloadEligibleDrcIssueCount,
       preloadRepairAttempted: this.preloadEligibleDrcIssueCount > 0,
@@ -414,22 +458,38 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
 
   override _step(): void {
     switch (this.phase) {
-      case "initialize": return this.initializeRepair()
-      case "begin-pass": return this.beginPass()
-      case "begin-error": return this.beginError()
-      case "prepare-b01": return this.prepareB01Candidate()
-      case "route-b01": return this.stepB01Candidate()
-      case "validate-b01": return this.validateB01Candidate()
-      case "prepare-regional": return this.prepareRegularCandidate()
-      case "route-regional": return this.stepRegularCandidate()
-      case "validate-regional": return this.validateRegularCandidate()
-      case "commit-error": return this.commitErrorRepair()
-      case "finish-pass": return this.finishPass()
-      case "refine": return this.refineAcceptedRoutes()
-      case "prepare-safe-layer": return this.prepareSafeLayerRepair()
-      case "route-safe-layer": return this.stepSafeLayerRepair()
-      case "validate-safe-layer": return this.validateSafeLayerRepair()
-      case "done": throw new Error("Regional B01 repair was stepped after completion")
+      case "initialize":
+        return this.initializeRepair()
+      case "begin-pass":
+        return this.beginPass()
+      case "begin-error":
+        return this.beginError()
+      case "prepare-b01":
+        return this.prepareB01Candidate()
+      case "route-b01":
+        return this.stepB01Candidate()
+      case "validate-b01":
+        return this.validateB01Candidate()
+      case "prepare-regional":
+        return this.prepareRegularCandidate()
+      case "route-regional":
+        return this.stepRegularCandidate()
+      case "validate-regional":
+        return this.validateRegularCandidate()
+      case "commit-error":
+        return this.commitErrorRepair()
+      case "finish-pass":
+        return this.finishPass()
+      case "refine":
+        return this.refineAcceptedRoutes()
+      case "prepare-safe-layer":
+        return this.prepareSafeLayerRepair()
+      case "route-safe-layer":
+        return this.stepSafeLayerRepair()
+      case "validate-safe-layer":
+        return this.validateSafeLayerRepair()
+      case "done":
+        throw new Error("Regional B01 repair was stepped after completion")
     }
   }
 
@@ -438,10 +498,14 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const activeProgress = this.activeSubSolver
       ? Math.max(0, Math.min(1, this.activeSubSolver.progress))
       : 1
-    return Math.max(this.progress, Math.min(1,
-      (Math.max(0, this.candidateSearchCount - 1) + activeProgress) /
-        (this.candidateSearchBudget + 1),
-    ))
+    return Math.max(
+      this.progress,
+      Math.min(
+        1,
+        (Math.max(0, this.candidateSearchCount - 1) + activeProgress) /
+          (this.candidateSearchBudget + 1),
+      ),
+    )
   }
 
   getResult(): Pipeline9RegionalB01RepairResult {

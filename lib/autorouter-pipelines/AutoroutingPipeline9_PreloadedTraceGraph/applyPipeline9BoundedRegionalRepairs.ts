@@ -83,7 +83,6 @@ export type Pipeline9BoundedRegionalRepairParams = {
   budget?: Pipeline9BoundedRepairBudget
 }
 
-
 type RepairAllowance = {
   maxRegions: number
   maxCandidateAttempts: number

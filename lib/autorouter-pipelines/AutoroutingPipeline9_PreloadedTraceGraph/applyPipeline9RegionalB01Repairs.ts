@@ -121,7 +121,10 @@ const getErrorCenter = (error: Pipeline9DrcError) => {
     : undefined
 }
 
-export const getRepairCenter = (error: Pipeline9DrcError, srj: SimpleRouteJson) => {
+export const getRepairCenter = (
+  error: Pipeline9DrcError,
+  srj: SimpleRouteJson,
+) => {
   const obstacleId =
     typeof error.pcb_pad_id === "string"
       ? error.pcb_pad_id
@@ -596,7 +599,9 @@ export const getPipeline9RegularRegionalCandidateOutput = ({
   obstacleMargin,
   connMap,
   srj,
-}: Pipeline9RegularRegionalCandidateProblem): HighDensityRoute[] | undefined => {
+}: Pipeline9RegularRegionalCandidateProblem):
+  | HighDensityRoute[]
+  | undefined => {
   if (!solver.solved || solver.failed) return undefined
   const solverOutput = solver.getOutput()
   const replacementByConnectionName = new Map(

@@ -806,10 +806,10 @@ index 0000000..e45822a
 +}
 diff --git a/lib/NegotiateTraceClearanceSolver.ts b/lib/NegotiateTraceClearanceSolver.ts
 new file mode 100644
-index 0000000..87bdbfc
+index 0000000..200cd0f
 --- /dev/null
 +++ b/lib/NegotiateTraceClearanceSolver.ts
-@@ -0,0 +1,632 @@
+@@ -0,0 +1,638 @@
 +import type { NegotiatedClearanceInput, NegotiatedClearanceResult } from "./negotiateTraceClearance"
 +import { BaseSolver } from "@tscircuit/solver-utils"
 +import { FindClearancePathSolver } from "./FindClearancePathSolver"
@@ -1393,6 +1393,12 @@ index 0000000..87bdbfc
 +
 +          this.pathSolver = solver
 +          this.activeSubSolver = solver
++          // Fixed/preloaded geometry can make setup exceed the original estimate.
++          // Reserve the actual child limit plus apply/queue completion steps.
++          this.MAX_ITERATIONS = Math.max(
++            this.MAX_ITERATIONS,
++            this.iterations + solver.MAX_ITERATIONS + 3,
++          )
 +          this.phase = "path"
 +          this.applyPath = (path): void => {
 +            pathSearchCalls++

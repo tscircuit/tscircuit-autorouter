@@ -704,7 +704,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       solverName: "boundedRegionalRepairSolver",
       createSolver: (): BaseSolver => {
         if (!this.boundedRegionalParams) {
-          throw new Error("Pipeline9 bounded regional stage is missing its input")
+          throw new Error(
+            "Pipeline9 bounded regional stage is missing its input",
+          )
         }
         this.boundedRegionalRepairStartedAt = performance.now()
         this.boundedRegionalRepairSolver =
@@ -1726,14 +1728,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
-      terminalEscapeCandidateCount: terminalEscapeResult.attemptedCandidateCount,
+      terminalEscapeCandidateCount:
+        terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
   }
 
   private finishRegionalB01Repair(): void {
     if (!this.regionalB01RepairSolver?.solved) {
-      throw new Error("Pipeline9 regional B01 stage must solve before completion")
+      throw new Error(
+        "Pipeline9 regional B01 stage must solve before completion",
+      )
     }
     const regionalB01RepairResult = this.regionalB01RepairSolver.getResult()
     const regionalReference = this.cachedReferenceDrcEvaluator!({

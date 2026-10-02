@@ -80,7 +80,10 @@ type BoundedRepairState =
       context: ReferencedContext
     }
   | {
-      phase: "select-region" | "publish-partial" | "prepare-independent-projection"
+      phase:
+        | "select-region"
+        | "publish-partial"
+        | "prepare-independent-projection"
       context: RegionalContext
     }
   | {
@@ -99,17 +102,32 @@ type BoundedRepairState =
       solver: Pipeline9ClearanceProjectionSolver
     }
   | ({ phase: "prepare-via-merge" } & CandidateContext)
-  | ({ phase: "via-merge"; solver: Pipeline9ReportedViaMergeSolver } & CandidateContext)
-  | ({ phase: "candidate-physical"; candidateReference?: DrcResult } & CandidateContext)
+  | ({
+      phase: "via-merge"
+      solver: Pipeline9ReportedViaMergeSolver
+    } & CandidateContext)
+  | ({
+      phase: "candidate-physical"
+      candidateReference?: DrcResult
+    } & CandidateContext)
   | ({ phase: "candidate-reference" } & CandidateValidationContext)
-  | ({ phase: "accept-candidate"; candidateReference: DrcResult } & CandidateValidationContext)
+  | ({
+      phase: "accept-candidate"
+      candidateReference: DrcResult
+    } & CandidateValidationContext)
   | {
-      phase: "independent-projection" | "independent-subdivision" | "independent-coupled"
+      phase:
+        | "independent-projection"
+        | "independent-subdivision"
+        | "independent-coupled"
       context: RegionalContext
       solver: Pipeline9ClearanceProjectionSolver
     }
   | {
-      phase: "prepare-independent-subdivision" | "prepare-independent-coupled" | "independent-reference"
+      phase:
+        | "prepare-independent-subdivision"
+        | "prepare-independent-coupled"
+        | "independent-reference"
       context: RegionalContext
       independentRoutes: HighDensityRoute[]
     }
@@ -173,7 +191,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.result.attemptedRegionCount / Math.max(1, this.budget.maxRegions),
       this.stats.candidateAttemptCount /
         Math.max(1, this.budget.maxCandidateAttempts),
-      this.stats.pathSearchNodeCount / Math.max(1, this.budget.maxPathSearchNodes),
+      this.stats.pathSearchNodeCount /
+        Math.max(1, this.budget.maxPathSearchNodes),
     )
     this.progress = this.solved
       ? 1
@@ -182,7 +201,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
 
   private startChild(solver: BaseSolver): void {
     if (this.activeSubSolver) {
-      throw new Error("Regional repair started a child before the previous stage completed")
+      throw new Error(
+        "Regional repair started a child before the previous stage completed",
+      )
     }
     this.activeSubSolver = solver
     this.reservedChildMaximum = solver.MAX_ITERATIONS
@@ -228,13 +249,17 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         route.viaDiameter,
       )
       for (const point of route.route) {
-        maxCopperDiameter = Math.max(maxCopperDiameter, point.traceThickness ?? 0)
+        maxCopperDiameter = Math.max(
+          maxCopperDiameter,
+          point.traceThickness ?? 0,
+        )
       }
     }
     // Every mutable region retains a fixed collar around its copper.
     const boundaryMargin = Math.max(0.5, maxCopperDiameter + clearance)
     const regionSizes = (this.budget.regionSizes ?? REGION_SIZES).filter(
-      (size): boolean => !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
+      (size): boolean =>
+        !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
     )
     if (regionSizes.length === 0) {
       this.finish()
@@ -253,7 +278,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       hdRoutes: this.params.routes,
     })
     this.result.referenceValidationCount++
-    const currentErrors = Array.isArray(reference) ? reference : reference.errors
+    const currentErrors = Array.isArray(reference)
+      ? reference
+      : reference.errors
     const referenced: ReferencedContext = {
       ...context,
       currentRoutes: this.params.routes,
@@ -288,7 +315,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     })
     this.result.referenceValidationCount++
     context.reference = reference
-    context.currentErrors = Array.isArray(reference) ? reference : reference.errors
+    context.currentErrors = Array.isArray(reference)
+      ? reference
+      : reference.errors
     this.result.finalDrcIssueCount = context.currentErrors.length
     if (context.currentErrors.length === 0) {
       this.publish(context, true)
@@ -374,7 +403,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           Number.isFinite(point.x) &&
           Number.isFinite(point.y),
       )
-    let nextRegion: { center: { x: number; y: number }; size: number } | undefined
+    let nextRegion:
+      | { center: { x: number; y: number }; size: number }
+      | undefined
     for (const size of context.regionSizes) {
       const pendingCenters = centers.filter(
         ({ x, y }) =>
@@ -403,7 +434,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         if (
           nextMaxX - nextMinX >= mutableSize ||
           nextMaxY - nextMinY >= mutableSize
-        ) continue
+        )
+          continue
         minX = nextMinX
         maxX = nextMaxX
         minY = nextMinY
@@ -433,7 +465,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
-    const dirtyTraceIds = new Set(context.currentErrors.flatMap(getDrcErrorTraceIds))
+    const dirtyTraceIds = new Set(
+      context.currentErrors.flatMap(getDrcErrorTraceIds),
+    )
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(
@@ -465,7 +499,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
       pathGridSizeScale:
-        context.currentErrors.length > 10 ? this.budget.pathGridSizeScale : undefined,
+        context.currentErrors.length > 10
+          ? this.budget.pathGridSizeScale
+          : undefined,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
@@ -479,7 +515,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.startChild(solver)
   }
 
-  private completeNegotiation(state: Extract<BoundedRepairState, { phase: "negotiate" }>): void {
+  private completeNegotiation(
+    state: Extract<BoundedRepairState, { phase: "negotiate" }>,
+  ): void {
     const repair = state.solver.getOutput()
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
@@ -487,33 +525,48 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.budget.revisitChangedRegions &&
       repair.unresolvedSpanCount > 0 &&
       candidateAttempts < maxPathSearchCalls &&
-      pathSearchNodes < allowance.maxPathSearchNodes - this.result.pathSearchNodeCount
+      pathSearchNodes <
+        allowance.maxPathSearchNodes - this.result.pathSearchNodeCount
     ) {
       context.regionSizes.sort((a, b) => b - a)
     }
     if (
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
-      candidateAttempts + this.result.candidateAttemptCount > this.budget.maxCandidateAttempts ||
+      candidateAttempts + this.result.candidateAttemptCount >
+        this.budget.maxCandidateAttempts ||
       !Number.isSafeInteger(pathSearchNodes) ||
       pathSearchNodes < 0 ||
-      pathSearchNodes + this.result.pathSearchNodeCount > this.budget.maxPathSearchNodes
+      pathSearchNodes + this.result.pathSearchNodeCount >
+        this.budget.maxPathSearchNodes
     ) {
-      throw new Error("Pipeline9 bounded regional repair exceeded its work budget")
+      throw new Error(
+        "Pipeline9 bounded regional repair exceeded its work budget",
+      )
     }
     this.result.candidateAttemptCount += candidateAttempts
     this.result.pathSearchNodeCount += pathSearchNodes
-    this.state = { phase: "splice-region", negotiation: state.negotiation, repair }
+    this.state = {
+      phase: "splice-region",
+      negotiation: state.negotiation,
+      repair,
+    }
   }
 
-  private spliceRegion(state: Extract<BoundedRepairState, { phase: "splice-region" }>): void {
+  private spliceRegion(
+    state: Extract<BoundedRepairState, { phase: "splice-region" }>,
+  ): void {
     const { context, region } = state.negotiation
     const negotiatedRoutes = mergeRepairRegion({
       routes: context.currentRoutes,
       region,
       repairedRoutes: state.repair.routes,
     })
-    if (negotiatedRoutes.every((route, index): boolean => route === context.currentRoutes[index])) {
+    if (
+      negotiatedRoutes.every(
+        (route, index): boolean => route === context.currentRoutes[index],
+      )
+    ) {
       this.state = { phase: "select-region", context }
       return
     }
@@ -533,7 +586,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.startChild(solver)
   }
 
-  private prepareViaMerge(state: Extract<BoundedRepairState, { phase: "prepare-via-merge" }>): void {
+  private prepareViaMerge(
+    state: Extract<BoundedRepairState, { phase: "prepare-via-merge" }>,
+  ): void {
     if (!this.params.connMap) {
       this.state = { ...state, phase: "candidate-physical" }
       return
@@ -548,7 +603,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.startChild(solver)
   }
 
-  private validateCandidate(state: Extract<BoundedRepairState, { phase: "candidate-physical" }>): void {
+  private validateCandidate(
+    state: Extract<BoundedRepairState, { phase: "candidate-physical" }>,
+  ): void {
     const { context, candidateRoutes } = state
     const candidateFixedViolations = getFixedObstacleViolations({
       srj: context.srj,
@@ -571,7 +628,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     this.state =
       state.candidateReference === undefined
-        ? { phase: "candidate-reference", context, candidateRoutes, candidateFixedViolations }
+        ? {
+            phase: "candidate-reference",
+            context,
+            candidateRoutes,
+            candidateFixedViolations,
+          }
         : {
             phase: "accept-candidate",
             context,
@@ -581,7 +643,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           }
   }
 
-  private referenceCandidate(state: Extract<BoundedRepairState, { phase: "candidate-reference" }>): void {
+  private referenceCandidate(
+    state: Extract<BoundedRepairState, { phase: "candidate-reference" }>,
+  ): void {
     const candidateReference = this.params.drcEvaluator({
       traces: [],
       routes: state.candidateRoutes,
@@ -591,9 +655,13 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.state = { ...state, phase: "accept-candidate", candidateReference }
   }
 
-  private acceptCandidate(state: Extract<BoundedRepairState, { phase: "accept-candidate" }>): void {
+  private acceptCandidate(
+    state: Extract<BoundedRepairState, { phase: "accept-candidate" }>,
+  ): void {
     const { context, candidateReference } = state
-    const candidateErrors = Array.isArray(candidateReference) ? candidateReference : candidateReference.errors
+    const candidateErrors = Array.isArray(candidateReference)
+      ? candidateReference
+      : candidateReference.errors
     if (candidateErrors.length >= context.currentErrors.length) {
       this.state = { phase: "select-region", context }
       return
@@ -602,7 +670,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.currentErrors = candidateErrors
     context.reference = candidateReference
     context.fixedViolations = new Map(
-      state.candidateFixedViolations.map(({ key, severity }) => [key, severity]),
+      state.candidateFixedViolations.map(({ key, severity }) => [
+        key,
+        severity,
+      ]),
     )
     this.result.acceptedRegionCount++
     // Accepted neighboring changes can reopen an already visited region.
@@ -645,9 +716,15 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   }
 
   private prepareIndependentSubdivision(
-    state: Extract<BoundedRepairState, {
-      phase: "prepare-independent-subdivision" | "prepare-independent-coupled" | "independent-reference"
-    }>,
+    state: Extract<
+      BoundedRepairState,
+      {
+        phase:
+          | "prepare-independent-subdivision"
+          | "prepare-independent-coupled"
+          | "independent-reference"
+      }
+    >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
@@ -659,14 +736,24 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         return this.params.drcEvaluator(input)
       },
     })
-    this.state = { phase: "independent-subdivision", context: state.context, solver }
+    this.state = {
+      phase: "independent-subdivision",
+      context: state.context,
+      solver,
+    }
     this.startChild(solver)
   }
 
   private prepareIndependentCoupled(
-    state: Extract<BoundedRepairState, {
-      phase: "prepare-independent-subdivision" | "prepare-independent-coupled" | "independent-reference"
-    }>,
+    state: Extract<
+      BoundedRepairState,
+      {
+        phase:
+          | "prepare-independent-subdivision"
+          | "prepare-independent-coupled"
+          | "independent-reference"
+      }
+    >,
   ): void {
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
@@ -677,14 +764,24 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         return this.params.drcEvaluator(input)
       },
     })
-    this.state = { phase: "independent-coupled", context: state.context, solver }
+    this.state = {
+      phase: "independent-coupled",
+      context: state.context,
+      solver,
+    }
     this.startChild(solver)
   }
 
   private referenceIndependent(
-    state: Extract<BoundedRepairState, {
-      phase: "prepare-independent-subdivision" | "prepare-independent-coupled" | "independent-reference"
-    }>,
+    state: Extract<
+      BoundedRepairState,
+      {
+        phase:
+          | "prepare-independent-subdivision"
+          | "prepare-independent-coupled"
+          | "independent-reference"
+      }
+    >,
   ): void {
     const reference = this.params.drcEvaluator({
       traces: [],
@@ -728,7 +825,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         break
       case "via-merge": {
         const mergeResult = state.solver.getResult()
-        this.result.referenceValidationCount += mergeResult.referenceValidationCount
+        this.result.referenceValidationCount +=
+          mergeResult.referenceValidationCount
         this.state = {
           phase: "candidate-physical",
           context: state.context,
@@ -765,7 +863,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         }
         break
       default:
-        throw new Error(`Regional repair child completed during phase ${state.phase}`)
+        throw new Error(
+          `Regional repair child completed during phase ${state.phase}`,
+        )
     }
   }
 
@@ -836,14 +936,18 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         this.referenceIndependent(state)
         break
       default:
-        throw new Error(`Regional repair has no active child during phase ${state.phase}`)
+        throw new Error(
+          `Regional repair has no active child during phase ${state.phase}`,
+        )
     }
     this.updateProgress()
   }
 
   getResult(): Pipeline9BoundedRegionalRepairResult {
     if (!this.solved || this.failed) {
-      throw new Error("Pipeline9 bounded regional repair result requested before completion")
+      throw new Error(
+        "Pipeline9 bounded regional repair result requested before completion",
+      )
     }
     return this.result
   }
