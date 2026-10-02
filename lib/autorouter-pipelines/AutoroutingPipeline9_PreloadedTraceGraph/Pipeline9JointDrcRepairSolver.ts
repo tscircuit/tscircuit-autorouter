@@ -31,10 +31,10 @@ import {
   type ClearanceMarginDrcEvaluator,
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import {
-  applyPipeline9BoundedRegionalRepairs,
   getPipeline9BoundedRepairBudget,
 } from "./applyPipeline9BoundedRegionalRepairs"
-import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
+import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
+import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -670,6 +670,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  private postExactRepairSteps?: Generator<void, void, void>
+  boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
+  regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -1482,6 +1485,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.postExactRepairSteps) {
+      this.postExactRepairSteps.next()
+      if (this.activeSubSolver) {
+        this.MAX_ITERATIONS = Math.max(
+          this.MAX_ITERATIONS,
+          this.iterations + this.activeSubSolver.MAX_ITERATIONS - this.activeSubSolver.iterations + 2,
+        )
+      }
+      return
+    }
     if (!this.exactRepairSolver) {
       this.solved = true
       return
@@ -1494,6 +1507,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
+    this.postExactRepairSteps = this.finishExactRepairSteps()
+    this.activeSubSolver = null
+    this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS, this.iterations + 2)
+  }
+
+  private *finishExactRepairSteps(): Generator<void, void, void> {
+    if (!this.exactRepairSolver) {
+      throw new Error("Pipeline9 post-exact repair requires the exact solver")
+    }
     let exactOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount
@@ -1611,7 +1633,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
-    const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+    const regionalB01Solver = new Pipeline9RegionalB01RepairSolver({
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
@@ -1631,6 +1653,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
+    this.regionalB01RepairSolver = regionalB01Solver
+    this.activeSubSolver = regionalB01Solver
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + regionalB01Solver.MAX_ITERATIONS + 2,
+    )
+    while (!regionalB01Solver.solved && !regionalB01Solver.failed) {
+      regionalB01Solver.step()
+      yield
+    }
+    if (regionalB01Solver.failed) {
+      throw new Error(`Pipeline9 regional B01 repair failed: ${regionalB01Solver.error}`)
+    }
+    const regionalB01RepairResult = regionalB01Solver.getResult()
     const regionalReference = this.cachedReferenceDrcEvaluator!({
       traces: [],
       routes: regionalB01RepairResult.routes,
@@ -1645,7 +1681,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.params.effort,
     )
     const boundedRegionalRepairStartedAt = performance.now()
-    const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
+    const boundedRegionalSolver = new Pipeline9BoundedRegionalRepairSolver({
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
@@ -1660,6 +1696,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
       budget: regionalRepairBudget,
     })
+    this.boundedRegionalRepairSolver = boundedRegionalSolver
+    this.activeSubSolver = boundedRegionalSolver
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + boundedRegionalSolver.MAX_ITERATIONS + 2,
+    )
+    while (!boundedRegionalSolver.solved && !boundedRegionalSolver.failed) {
+      boundedRegionalSolver.step()
+      this.progress = boundedRegionalSolver.progress
+      yield
+    }
+    if (boundedRegionalSolver.failed) {
+      throw new Error(`Pipeline9 bounded regional repair failed: ${boundedRegionalSolver.error}`)
+    }
+    const boundedRegionalRepairResult = boundedRegionalSolver.getResult()
+    this.activeSubSolver = null
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,

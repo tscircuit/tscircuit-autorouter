@@ -24,6 +24,7 @@ import {
 } from "./pipeline9RegionalFallback"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
@@ -32,7 +33,7 @@ import {
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
-type RegionalB01RepairResult = {
+export type Pipeline9RegionalB01RepairResult = {
   routes: HighDensityRoute[]
   attemptedCandidateCount: number
   acceptedCandidateCount: number
@@ -45,6 +46,29 @@ type RegionalB01RepairResult = {
   preloadEligibleDrcIssueCount: number
   preloadRepairAttempted: boolean
 }
+
+export type Pipeline9RegionalB01RepairParams = {
+  srj: SimpleRouteJson
+  routes: HighDensityRoute[]
+  fixedObstacleRoutes: PreloadedHighDensityRoute[]
+  newConnections: SimpleRouteConnection[]
+  syntheticConnectionNames: ReadonlySet<string>
+  drcEvaluator: DrcEvaluator
+  initialErrors?: Pipeline9DrcError[]
+  allowTracePairRepair?: boolean
+  preloadRepairTraceIds: ReadonlySet<string>
+  connMap: ConnectivityMap
+  colorMap: Record<string, string>
+  viaDiameter: number
+  traceWidth: number
+  obstacleMargin: number
+  effort: number
+}
+
+export type Pipeline9RegionalB01ChildSolver =
+  | Pipeline9HighDensitySolver
+  | Pipeline9RegionalFallbackSolver
+  | GlobalDrcForceImproveSolver
 
 type Bounds = {
   minX: number
@@ -357,7 +381,7 @@ const candidateConflictsWithFixedRoutes = ({
   return false
 }
 
-const getRegionalCandidate = ({
+const getRegionalCandidate = function* ({
   routes,
   fixedObstacleRoutes,
   routeIndex,
@@ -383,12 +407,12 @@ const getRegionalCandidate = ({
   traceWidth: number
   obstacleMargin: number
   effort: number
-}):
-  | {
-      routes: HighDensityRoute[]
-      usedFallback: boolean
-    }
-  | undefined => {
+}): Generator<
+  Pipeline9RegionalB01ChildSolver,
+  | { routes: HighDensityRoute[]; usedFallback: boolean }
+  | undefined,
+  void
+> {
   const regionalRoutes = asRegionalRoutes(routes, connMap)
   const movableRoute = regionalRoutes[routeIndex]
   if (!movableRoute) return undefined
@@ -435,7 +459,10 @@ const getRegionalCandidate = ({
     enableRegionalFallback: false,
     maxB01Rips: 120,
   })
-  solver.solve()
+  while (!solver.solved && !solver.failed) {
+    solver.step()
+    yield solver
+  }
   if (!solver.solved || solver.failed) return undefined
   const replacement = solver.routes.find(
     (route) => route.connectionName === movableRoute.connectionName,
@@ -455,7 +482,7 @@ const getRegionalCandidate = ({
   }
 }
 
-const getRegularRegionalCandidate = ({
+const getRegularRegionalCandidate = function* ({
   routes,
   fixedRouteCopperSpatialIndex,
   center,
@@ -479,7 +506,11 @@ const getRegularRegionalCandidate = ({
   traceWidth: number
   obstacleMargin: number
   effort: number
-}): HighDensityRoute[] | undefined => {
+}): Generator<
+  Pipeline9RegionalB01ChildSolver,
+  HighDensityRoute[] | undefined,
+  void
+> {
   const regionalRoutes = asRegionalRoutes(routes, connMap)
   const node = {
     capacityMeshNodeId: "pipeline9_joint_drc_regular_fallback",
@@ -538,7 +569,10 @@ const getRegularRegionalCandidate = ({
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
-  solver.solve()
+  while (!solver.solved && !solver.failed) {
+    solver.step()
+    yield solver
+  }
   if (!solver.solved || solver.failed) return undefined
   const solverOutput = solver.getOutput()
   const replacementByConnectionName = new Map(
@@ -593,7 +627,7 @@ const getRegularRegionalCandidate = ({
  * If no B01 candidate helps, one regular high-density candidate jointly
  * reroutes all traces in the region.
  */
-export const applyPipeline9RegionalB01Repairs = ({
+export const generatePipeline9RegionalB01RepairSteps = function* ({
   srj,
   routes,
   fixedObstacleRoutes,
@@ -609,23 +643,11 @@ export const applyPipeline9RegionalB01Repairs = ({
   traceWidth,
   obstacleMargin,
   effort,
-}: {
-  srj: SimpleRouteJson
-  routes: HighDensityRoute[]
-  fixedObstacleRoutes: PreloadedHighDensityRoute[]
-  newConnections: SimpleRouteConnection[]
-  syntheticConnectionNames: ReadonlySet<string>
-  drcEvaluator: DrcEvaluator
-  initialErrors?: Pipeline9DrcError[]
-  allowTracePairRepair?: boolean
-  preloadRepairTraceIds: ReadonlySet<string>
-  connMap: ConnectivityMap
-  colorMap: Record<string, string>
-  viaDiameter: number
-  traceWidth: number
-  obstacleMargin: number
-  effort: number
-}): RegionalB01RepairResult => {
+}: Pipeline9RegionalB01RepairParams): Generator<
+  Pipeline9RegionalB01ChildSolver,
+  Pipeline9RegionalB01RepairResult,
+  void
+> {
   let currentRoutes = routes
   let currentErrors =
     initialErrors ?? getPipeline9DrcErrors(drcEvaluator, currentRoutes)
@@ -711,7 +733,7 @@ export const applyPipeline9RegionalB01Repairs = ({
             break
           }
           candidateSearchCount++
-          const candidate = getRegionalCandidate({
+          const candidate = yield* getRegionalCandidate({
             routes: currentRoutes,
             fixedObstacleRoutes,
             routeIndex,
@@ -748,7 +770,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         }
       }
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
-        const fallbackRoutes = getRegularRegionalCandidate({
+        const fallbackRoutes = yield* getRegularRegionalCandidate({
           routes: currentRoutes,
           fixedRouteCopperSpatialIndex,
           center,
@@ -828,7 +850,10 @@ export const applyPipeline9RegionalB01Repairs = ({
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: false,
     })
-    safeTraceLayerSolver.solve()
+    while (!safeTraceLayerSolver.solved && !safeTraceLayerSolver.failed) {
+      safeTraceLayerSolver.step()
+      yield safeTraceLayerSolver
+    }
     if (safeTraceLayerSolver.failed) {
       throw new Error(
         `Pipeline9 post-regional safe trace-layer repair failed: ${safeTraceLayerSolver.error ?? "unknown error"}`,
@@ -855,4 +880,13 @@ export const applyPipeline9RegionalB01Repairs = ({
     preloadEligibleDrcIssueCount,
     preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
   }
+}
+
+/** Synchronous compatibility helper for callers outside the routing pipeline. */
+export const applyPipeline9RegionalB01Repairs = (
+  params: Pipeline9RegionalB01RepairParams,
+): Pipeline9RegionalB01RepairResult => {
+  const solver = new Pipeline9RegionalB01RepairSolver(params)
+  while (!solver.solved && !solver.failed) solver.step()
+  return solver.getResult()
 }

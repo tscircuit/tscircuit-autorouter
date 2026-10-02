@@ -1,0 +1,253 @@
+diff --git a/lib/findClearancePath.ts b/lib/findClearancePath.ts
+index 3c755249e9c3d3230769b8cf795a8fe2924841eb..b81f13fa49d810e4af559b254dfb2295750a260e 100644
+--- a/lib/findClearancePath.ts
++++ b/lib/findClearancePath.ts
+@@ -41,8 +41,7 @@ export type ClearancePathSearchStats = {
+   completionReason: "found" | "no-path" | "node-limit"
+ }
+ 
+-/** Clearance-aware routing between fixed anchors, using only cropped context. */
+-export function findClearancePath(input: {
++export type ClearancePathInput = {
+   srj: SimpleRouteJson & { allowBlindAndBuriedVias?: boolean }
+   routes: HighDensityRoute[]
+   routeIndex: number
+@@ -59,7 +58,7 @@ export function findClearancePath(input: {
+   maxNodes?: number
+   /** Weight the distance estimate when a bounded search prioritizes finding a route. */
+   heuristicWeight?: number
+-  /** Optional output accounting, overwritten for this synchronous call. */
++  /** Optional output accounting, updated as incremental search advances. */
+   stats?: ClearancePathSearchStats
+   /** Nonnegative congestion cost; Infinity prohibits the edge. */
+   getAdditionalEdgeCost?: (start: Point, end: Point) => number
+@@ -67,7 +66,20 @@ export function findClearancePath(input: {
+   existingPath?: Point[]
+   /** Physical drill diameter; unknown drills reserve the copper diameter. */
+   viaHoleDiameter?: number
+-}): Point[] | null {
++}
++
++/** Compatibility entrypoint; incremental consumers should use findClearancePathSteps. */
++export function findClearancePath(input: ClearancePathInput): Point[] | null {
++  const steps = findClearancePathSteps(input)
++  let result = steps.next()
++  while (!result.done) result = steps.next()
++  return result.value
++}
++
++/** Clearance-aware routing, yielding before each bounded batch of 128 heap pops. */
++export function* findClearancePathSteps(
++  input: ClearancePathInput,
++): Generator<void, Point[] | null, void> {
+   const { srj, routes, routeIndex, start, end, bounds, traceThickness } = input
+   const heuristicWeight = input.heuristicWeight ?? 1
+   if (!Number.isFinite(heuristicWeight) || heuristicWeight < 1)
+@@ -236,7 +248,9 @@ export function findClearancePath(input: {
+       ...getRepairCopperLayerSpan(srj, a, b),
+     })
+   }
++  let preparedObstacles = 0
+   for (const obstacle of srj.obstacles) {
++    if (preparedObstacles++ % 128 === 0) yield
+     // A wire may enter its own pad. A via's annulus must remain outside it.
+     const viaOnly = obstacle.connectedTo.some((name) => net(name) === owner)
+     const zs =
+@@ -270,7 +284,9 @@ export function findClearancePath(input: {
+       )
+     }
+   }
++  let preparedRoutes = 0
+   for (const other of routes) {
++    if (preparedRoutes++ % 32 === 0) yield
+     if (net(other.connectionName) === owner) continue
+     for (let i = 1; i < other.route.length; i++) {
+       const a = other.route[i - 1]! as Point,
+@@ -288,7 +304,9 @@ export function findClearancePath(input: {
+       )
+     }
+   }
++  let preparedTraces = 0
+   for (const raw of srj.traces ?? []) {
++    if (preparedTraces++ % 32 === 0) yield
+     if (net(raw.connection_name) === owner) continue
+     const trace = normalizeRepairTrace(raw, srj.minTraceWidth)
+     for (let i = 1; i < trace.route.length; i++) {
+@@ -324,7 +342,9 @@ export function findClearancePath(input: {
+       srj.minViaEdgeToPadEdgeClearance ?? 0,
+     ) +
+     1e-5
++  let indexedBarriers = 0
+   for (const barrier of barriers) {
++    if (indexedBarriers++ % 128 === 0) yield
+     for (
+       let x = Math.floor(Math.max(barrier.minX, bounds.minX - queryReach));
+       x <= Math.floor(Math.min(barrier.maxX, bounds.maxX + queryReach));
+@@ -563,6 +583,7 @@ export function findClearancePath(input: {
+   const fullStackViaClearance = new Map<number, boolean>()
+   let expanded = 0
+   while (heap.length && expanded < (input.maxNodes ?? 30000)) {
++    if (expanded % 128 === 0) yield
+     const current = heap.pop()
+     expanded++
+     if (input.stats) input.stats.nodesPopped = expanded
+diff --git a/lib/index.ts b/lib/index.ts
+index 6397a808d147b9ce8a81aec23afb9b4bb71dfe35..387eeceee90062fef2c71d0896288ac6ec58193f 100644
+--- a/lib/index.ts
++++ b/lib/index.ts
+@@ -22,9 +22,13 @@ export type {
+ export { getRepairViaGeometry } from "./getRepairViaGeometry"
+ export type { RepairViaGeometry } from "./getRepairViaGeometry"
+ 
+-export { relaxTraceClearance } from "./relaxTraceClearance"
++export { relaxTraceClearance, relaxTraceClearanceSteps } from "./relaxTraceClearance"
++export type { RelaxTraceClearanceInput } from "./relaxTraceClearance"
++export { findClearancePath, findClearancePathSteps } from "./findClearancePath"
++export type { ClearancePathInput, ClearancePathSearchStats } from "./findClearancePath"
+ export {
+   negotiateTraceClearance,
++  negotiateTraceClearanceSteps,
+   type NegotiatedClearanceInput,
+   type NegotiatedClearanceResult,
+ } from "./negotiateTraceClearance"
+diff --git a/lib/negotiateTraceClearance.ts b/lib/negotiateTraceClearance.ts
+index af6e8a0517f9fe95de06f64a2b734bd936077328..01b271712f29de27ffa1bbe5553a6b40afa5e7f1 100644
+--- a/lib/negotiateTraceClearance.ts
++++ b/lib/negotiateTraceClearance.ts
+@@ -5,7 +5,7 @@ import type {
+   SimpleRouteJson,
+ } from "high-density-repair03/lib"
+ import {
+-  findClearancePath,
++  findClearancePathSteps,
+   type ClearancePathSearchStats,
+ } from "./findClearancePath"
+ import { getNetRepresentatives } from "./getFixedObstacleViolations"
+@@ -88,6 +88,16 @@ function withPoints(
+ export function negotiateTraceClearance(
+   input: NegotiatedClearanceInput,
+ ): NegotiatedClearanceResult {
++  const steps = negotiateTraceClearanceSteps(input)
++  let result = steps.next()
++  while (!result.done) result = steps.next()
++  return result.value
++}
++
++/** Retains negotiation state while yielding between bounded path-search batches. */
++export function* negotiateTraceClearanceSteps(
++  input: NegotiatedClearanceInput,
++): Generator<void, NegotiatedClearanceResult, void> {
+   for (const value of [input.maxPathSearchNodes, input.maxPathSearchCalls]) {
+     if (!Number.isSafeInteger(value) || value < 0)
+       throw new Error(
+@@ -129,6 +139,7 @@ export function negotiateTraceClearance(
+   const spans: Span[] = []
+   const byRoute: number[][] = input.routes.map((): number[] => [])
+   for (let ri = 0; ri < input.routes.length; ri++) {
++    if (ri % 32 === 0) yield
+     const route = input.routes[ri]!
+     const points: RepairRoutePoint[] = route.route
+     const anchors = points.flatMap((point, pi): number[] => {
+@@ -275,6 +286,7 @@ export function negotiateTraceClearance(
+     const selectedOwner = owner(route)
+     const coppers: Copper[] = []
+     for (let si = 0; si < spans.length; si++) {
++      if (si % 32 === 0) yield
+       if (si === index) continue
+       const other = current[si]!,
+         otherOwner = owner(other)
+@@ -484,7 +496,7 @@ export function negotiateTraceClearance(
+       nodesPopped: 0,
+       completionReason: "no-path",
+     }
+-    const path = findClearancePath({
++    const path = yield* findClearancePathSteps({
+       srj: input.srj,
+       routes: [...fixed, route],
+       routeIndex: fixed.length,
+@@ -515,6 +527,7 @@ export function negotiateTraceClearance(
+     if (!path) {
+       frozen.add(index)
+       fixed.push(route)
++      yield
+       continue
+     }
+     current[index] = withPoints(route, path)
+@@ -530,6 +543,7 @@ export function negotiateTraceClearance(
+       weights[index]!++
+       enqueue(index)
+     }
++    yield
+   }
+   return {
+     routes: input.routes.map((route, ri): HighDensityRoute => {
+diff --git a/lib/relaxTraceClearance.ts b/lib/relaxTraceClearance.ts
+index 3bffa3676fa336bf2c14f55143bda571f7f7c765..54dcc913184ab4d3788862129681a07fa18af3df 100644
+--- a/lib/relaxTraceClearance.ts
++++ b/lib/relaxTraceClearance.ts
+@@ -127,15 +127,26 @@ function getInteriorPadContact(
+  * Target the requested clearances exactly: adding fixed slack can make a
+  * narrow corridor that fits the copper and its clearances infeasible.
+  */
+-export function relaxTraceClearance(
+-  input: RepairRegionInput & {
+-    traceClearance?: number
+-    viaClearance?: number
+-    allowViaMovement?: boolean
+-    /** Minimum board-edge clearance, preserving existing boundary intrusion. */
+-    boardEdgeClearance?: number
+-  },
+-): HighDensityRoute[] {
++export type RelaxTraceClearanceInput = RepairRegionInput & {
++  traceClearance?: number
++  viaClearance?: number
++  allowViaMovement?: boolean
++  /** Minimum board-edge clearance, preserving existing boundary intrusion. */
++  boardEdgeClearance?: number
++}
++
++/** Compatibility entrypoint; incremental consumers should use relaxTraceClearanceSteps. */
++export function relaxTraceClearance(input: RelaxTraceClearanceInput): HighDensityRoute[] {
++  const steps = relaxTraceClearanceSteps(input)
++  let result = steps.next()
++  while (!result.done) result = steps.next()
++  return result.value
++}
++
++/** Preserves projection order while yielding between setup batches and sweeps. */
++export function* relaxTraceClearanceSteps(
++  input: RelaxTraceClearanceInput,
++): Generator<void, HighDensityRoute[], void> {
+   const routes = structuredClone(input.routes)
+   const nets = getNetRepresentatives(input.srj, routes)
+   const traceClearance = input.traceClearance ?? 0.1
+@@ -252,9 +263,11 @@ export function relaxTraceClearance(
+     }
+   }
+   const pairs: SegmentPair[] = []
++  let preparedPairs = 0
+   for (let i = 0; i < segments.length; i++) {
+     const a = segments[i]!
+     for (let j = i + 1; j < segments.length; j++) {
++      if (preparedPairs++ % 4096 === 0) yield
+       const b = segments[j]!
+       if (a.net === b.net || a.maxZ < b.minZ || b.maxZ < a.minZ) continue
+       const reach =
+@@ -272,7 +285,9 @@ export function relaxTraceClearance(
+   }
+   const padContacts: PadContact[] = []
+   const viaPadConstraints = new Map<Vertex, ViaPadConstraint[]>()
++  let preparedObstacles = 0
+   for (const obstacle of input.srj.obstacles) {
++    if (preparedObstacles++ % 16 === 0) yield
+     const radians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+     const cosine = Math.cos(radians),
+       sine = Math.sin(radians)
+@@ -456,6 +471,7 @@ export function relaxTraceClearance(
+     }
+   }
+   for (let sweep = 0; sweep < MAX_SWEEPS; sweep++) {
++    yield
+     // Distances depend only on endpoint coordinates. Reuse them until an
+     // actual displacement changes a revision; force order and sweeps stay fixed.
+     for (const pair of pairs) {

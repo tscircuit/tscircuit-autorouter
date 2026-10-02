@@ -62,57 +62,27 @@ const makeParams = (
   }
 }
 
-test("large conflicted boards bound repair work while near-clean and higher-effort boards retain the full budget", (): void => {
-  expect(getPipeline9BoundedRepairBudget(480, 20, 1)).toEqual({
-    maxRegions: 24,
-    maxCandidateAttempts: 4096,
-    maxCandidateAttemptsPerRegion: 512,
-    maxPathSearchNodes: 40000000,
-    maxPathSearchNodesPerCall: 1000000,
-    pathGridSizeScale: 2,
-    pathHeuristicWeight: 3,
-    revisitChangedRegions: true,
-    regionSizes: [16, 32],
-  })
-  for (const [routeCount, errors, effort] of [
-    [480, 9, 1],
-    [120, 20, 1],
-  ]) {
-    expect(
-      getPipeline9BoundedRepairBudget(routeCount!, errors!, effort!),
-    ).toEqual({
-      maxRegions: 4,
-      maxCandidateAttempts: 1024,
-      maxPathSearchNodes: 480000,
-    })
+test("regional work allowances depend on effort and verified progress rather than board size", (): void => {
+  const budget = getPipeline9BoundedRepairBudget(1, 1, 1)
+  // Adding clean routes or changing error density must not switch policies.
+  for (const routeCount of [0, 1, 119, 120, 121, 237, 479, 480, 481, 1000]) {
+    for (const errors of [0, 1, 9, 10, 20, 199, 500]) {
+      expect(getPipeline9BoundedRepairBudget(routeCount, errors, 1)).toEqual(budget)
+    }
   }
-  expect(getPipeline9BoundedRepairBudget(480, 20, 4)).toEqual({
-    maxRegions: 24,
-    maxCandidateAttempts: 4096,
-    maxCandidateAttemptsPerRegion: 512,
-    maxPathSearchNodes: 40000000,
-    maxPathSearchNodesPerCall: 1000000,
-    pathGridSizeScale: 2,
-    pathHeuristicWeight: 3,
-    revisitChangedRegions: true,
-    regionSizes: [16, 32],
-  })
-  const denseBudget = getPipeline9BoundedRepairBudget(480, 121, 1)
-  expect(denseBudget.pathHeuristicWeight).toBe(3)
-  expect(denseBudget.pathGridSizeScale).toBe(2)
-  expect(denseBudget.maxCandidateAttemptsPerRegion).toBe(512)
-  expect(denseBudget.maxCandidateAttempts).toBe(4096)
-  expect(denseBudget.maxPathSearchNodes).toBe(40000000)
-  expect(getPipeline9BoundedRepairBudget(238, 199, 1)).toEqual({
-    maxRegions: 8,
-    maxCandidateAttempts: 1032,
-    maxCandidateAttemptsPerRegion: 258,
-    maxPathSearchNodes: 5042016,
-    maxPathSearchNodesPerCall: 500000,
-    pathGridSizeScale: 2,
-    pathHeuristicWeight: 3,
-    revisitChangedRegions: true,
-  })
+  expect(budget.initialMaxPathSearchNodes).toBeLessThan(budget.maxPathSearchNodes)
+  expect(budget.initialMaxCandidateAttempts).toBeLessThan(budget.maxCandidateAttempts)
+  expect(budget.pathSearchNodesPerAcceptedRepair).toBeGreaterThan(0)
+  expect(budget.candidateAttemptsPerAcceptedRepair).toBeGreaterThan(0)
+  for (const effort of [1.01, 1.5, 2, 4]) {
+    const scaled = getPipeline9BoundedRepairBudget(500, 20, effort)
+    expect(scaled.maxPathSearchNodes).toBe(Math.ceil(budget.maxPathSearchNodes * effort))
+    expect(scaled.initialMaxCandidateAttempts).toBe(Math.ceil(budget.initialMaxCandidateAttempts! * effort))
+    expect(scaled.maxRegions).toBe(Math.ceil(budget.maxRegions * effort))
+  }
+  for (const invalidEffort of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+    expect(() => getPipeline9BoundedRepairBudget(500, 20, invalidEffort)).toThrow()
+  }
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
