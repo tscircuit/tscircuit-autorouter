@@ -21,10 +21,12 @@ test("regional repair exposes projection children and advances one child step at
   let visibleChildSteps = 0
   let orchestrationSteps = 0
   const childNames = new Set<string>()
+  const phases = new Set<string>()
   while (!solver.solved && !solver.failed) {
     const child = solver.activeSubSolver
     const previousChildIterations = child?.iterations
     solver.step()
+    phases.add(solver.stats.phase)
     if (child) {
       expect(child.iterations).toBe(previousChildIterations! + 1)
       visibleChildSteps++
@@ -43,6 +45,7 @@ test("regional repair exposes projection children and advances one child step at
   expect(solver.solved).toBeTrue()
   expect(childNames.has("Pipeline9ClearanceProjectionSolver")).toBeTrue()
   expect(childNames.has("NegotiateTraceClearanceSolver")).toBeTrue()
+  expect(phases.has("candidate-nominal-projection")).toBeTrue()
   expect(visibleChildSteps).toBeGreaterThan(256)
   expect(orchestrationSteps).toBeGreaterThan(0)
   expect(solver.progress).toBe(1)

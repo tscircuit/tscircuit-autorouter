@@ -97,7 +97,7 @@ type BoundedRepairState =
       repair: NegotiatedClearanceResult
     }
   | {
-      phase: "candidate-projection"
+      phase: "candidate-projection" | "candidate-nominal-projection"
       context: RegionalContext
       solver: Pipeline9ClearanceProjectionSolver
     }
@@ -816,7 +816,27 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       case "negotiate":
         this.completeNegotiation(state)
         break
-      case "candidate-projection":
+      case "candidate-projection": {
+        // Added slack can be infeasible in an exact-fit channel. Reproject the
+        // retained bends at the required clearance before spending more search.
+        const solver = new Pipeline9ClearanceProjectionSolver({
+          originalSrj: this.params.originalSrj,
+          routes: state.solver.getOutput(),
+          previousRoutes: state.context.currentRoutes,
+          drcEvaluator: (input): DrcResult => {
+            this.result.referenceValidationCount++
+            return this.params.drcEvaluator(input)
+          },
+        })
+        this.state = {
+          phase: "candidate-nominal-projection",
+          context: state.context,
+          solver,
+        }
+        this.startChild(solver)
+        break
+      }
+      case "candidate-nominal-projection":
         this.state = {
           phase: "prepare-via-merge",
           context: state.context,
