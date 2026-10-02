@@ -1039,8 +1039,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       } as RepairSimpleRouteJson,
       {
         connMap: params.connMap,
-        connectivityMapIsImmutable: true,
-        cacheStaticObstacleNetMembership: true,
         traceClearance,
         viaClearance,
         includeTraceViaOwnerMetadata: true,

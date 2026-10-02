@@ -3,11 +3,7 @@ import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import {
-  AutoroutingDrcEngine,
-  GlobalDrcForceImproveSolver,
-  type SimpleRouteJson as RepairSimpleRouteJson,
-} from "high-density-repair03/lib"
+import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -22,7 +18,6 @@ import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSol
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -809,23 +804,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         const srjWithMaterializedPreloadedTraces =
           cms.getSrjWithMaterializedPreloadedTraces()
-        const autoroutingDrcEngine = new AutoroutingDrcEngine(
-          srjWithMaterializedPreloadedTraces as RepairSimpleRouteJson,
-          {
-            connMap: cms.connMap,
-            connectivityMapIsImmutable: true,
-            cacheStaticObstacleNetMembership: true,
-            traceClearance:
-              cms.srj.minTraceToPadEdgeClearance ??
-              RELAXED_DRC_OPTIONS.traceClearance,
-            viaClearance:
-              cms.srj.minTraceToPadEdgeClearance ??
-              RELAXED_DRC_OPTIONS.viaClearance,
-          },
-        )
         return [
           {
-            srj: srjWithMaterializedPreloadedTraces as RepairSimpleRouteJson,
+            srj: srjWithMaterializedPreloadedTraces as any,
             hdRoutes: lockHdRouteTerminals(
               canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
@@ -838,7 +819,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
             ),
             connMap: cms.connMap,
-            autoroutingDrcEngine,
             effort: cms.effort,
             maxIterations: 16,
             enableLargeBoardBroadFallback: false,
