@@ -287,8 +287,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)
+      const minViaDistance = this.viaDiameter / 2 + margin
+      const minViaDistanceSquared = minViaDistance * minViaDistance
       for (const via of viasInMyRoute) {
-        if (distance(node, via) < this.viaDiameter / 2 + margin) {
+        const dx = node.x - via.x
+        const dy = node.y - via.y
+        if (dx * dx + dy * dy < minViaDistanceSquared) {
           return true
         }
       }
@@ -326,8 +330,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) {
           continue
         }
+        const projectionRatio =
+          segment.lengthSquared === 0
+            ? 0
+            : Math.max(
+                0,
+                Math.min(
+                  1,
+                  ((node.x - segment.A.x) * segment.deltaX +
+                    (node.y - segment.A.y) * segment.deltaY) /
+                    segment.lengthSquared,
+                ),
+              )
+        const projectionDeltaX =
+          node.x - (segment.A.x + projectionRatio * segment.deltaX)
+        const projectionDeltaY =
+          node.y - (segment.A.y + projectionRatio * segment.deltaY)
         if (
-          pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
+          projectionDeltaX * projectionDeltaX +
+            projectionDeltaY * projectionDeltaY <
+          traceProximity * traceProximity
         ) {
           return true
         }
@@ -336,6 +358,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
+      const viaProximitySquared = viaProximity * viaProximity
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
         node.y - viaProximity,
@@ -344,8 +367,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
-        if (via && distance(node, via) < viaProximity) {
-          return true
+        if (via) {
+          const dx = node.x - via.x
+          const dy = node.y - via.y
+          if (dx * dx + dy * dy < viaProximitySquared) return true
         }
       }
     }
@@ -482,8 +507,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) ?? false
 
       for (const pointPair of getSameLayerPointPairs(route)) {
+        const deltaX = pointPair.B.x - pointPair.A.x
+        const deltaY = pointPair.B.y - pointPair.A.y
         obstacleSegments.push({
           ...pointPair,
+          deltaX,
+          deltaY,
+          lengthSquared: deltaX * deltaX + deltaY * deltaY,
           minX: Math.min(pointPair.A.x, pointPair.B.x),
           minY: Math.min(pointPair.A.y, pointPair.B.y),
           maxX: Math.max(pointPair.A.x, pointPair.B.x),
@@ -638,6 +668,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
+    let viaPositionIsBlocked: boolean | undefined
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
@@ -651,19 +682,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
-      if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
-        !this.isNodeTooCloseToObstacle(
+      if (this.exploredNodes.has(this.getNodeKey(viaNeighbor))) continue
+
+      viaPositionIsBlocked ??=
+        this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
           true,
-        ) &&
-        !this.isNodeTooCloseToEdge(viaNeighbor, true)
-      ) {
-        this.setNodeCosts(viaNeighbor)
+        ) || this.isNodeTooCloseToEdge(viaNeighbor, true)
+      if (viaPositionIsBlocked) continue
 
-        neighbors.push(viaNeighbor)
-      }
+      this.setNodeCosts(viaNeighbor)
+      neighbors.push(viaNeighbor)
     }
 
     return neighbors
@@ -983,6 +1013,9 @@ type IndexedObstacleSegment = {
   minY: number
   maxX: number
   maxY: number
+  deltaX: number
+  deltaY: number
+  lengthSquared: number
   connectedToCurrentConnection: boolean
 }
 

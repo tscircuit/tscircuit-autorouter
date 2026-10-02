@@ -130,6 +130,8 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
 }
 
+const PIPELINE_STEP_BATCH_SIZE = 10
+
 /**
  * Collects the capacity mesh node ids produced by component-local topology
  * generation.
@@ -530,6 +532,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
+            cacheProvider: cms.cacheProvider,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -635,6 +638,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            cacheProvider: cms.cacheProvider,
           },
         ]
       },
@@ -1053,7 +1057,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
 
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      for (
+        let workIndex = 0;
+        workIndex < PIPELINE_STEP_BATCH_SIZE &&
+        !this.activeSubSolver.solved &&
+        !this.activeSubSolver.failed;
+        workIndex++
+      ) {
+        this.activeSubSolver.step()
+      }
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =

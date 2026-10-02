@@ -7,6 +7,7 @@ import type {
 } from "high-density-repair02"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
+import type { CapacityMeshNodeId } from "lib/types"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
@@ -87,20 +88,24 @@ const isSameNetMultilayerObstacleRoute = (
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route, connMap) &&
-      route.route.every((point) => isPointInsideObstacle(point, obstacle)),
+      route.route.every((point) => isPointInsideObstacle(point, obstacle)) &&
+      isObstacleConnectedToRoute(obstacle, route, connMap),
   )
 
-const findNodeIndexForRoute = (
-  route: HighDensityRoute,
-  nodes: NodeWithPortPoints[],
-  margin: number,
-): number => {
+const findNodeIndexForRoute = ({
+  route,
+  nodes,
+  nodeIndexById,
+  margin,
+}: {
+  route: HighDensityRoute
+  nodes: NodeWithPortPoints[]
+  nodeIndexById: Map<CapacityMeshNodeId, number>
+  margin: number
+}): number => {
   if (route.regionId) {
-    const regionNodeIndex = nodes.findIndex(
-      (node) => node.capacityMeshNodeId === route.regionId,
-    )
-    if (regionNodeIndex !== -1) return regionNodeIndex
+    const regionNodeIndex = nodeIndexById.get(route.regionId)
+    if (regionNodeIndex !== undefined) return regionNodeIndex
   }
 
   const routePoints = route.route.map(({ x, y }) => ({ x, y }))
@@ -218,7 +223,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
   override activeSubSolver: HighDensityRepairSolver | null = null
-  latestVisualization: GraphicsObject = {}
+  latestCompletedSubSolver: HighDensityRepairSolver | null = null
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints[]
@@ -243,6 +248,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.connMap = params.connMap
 
     const routeIndexesByNode = new Map<number, number[]>()
+    const nodeIndexById = new Map<CapacityMeshNodeId, number>(
+      params.nodeWithPortPoints.map((node, nodeIndex) => [
+        node.capacityMeshNodeId,
+        nodeIndex,
+      ]),
+    )
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
         isSameNetMultilayerObstacleRoute(
@@ -253,11 +264,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       ) {
         continue
       }
-      const nodeIndex = findNodeIndexForRoute(
-        params.hdRoutes[i],
-        params.nodeWithPortPoints,
-        this.repairMargin,
-      )
+      const nodeIndex = findNodeIndexForRoute({
+        route: params.hdRoutes[i],
+        nodes: params.nodeWithPortPoints,
+        nodeIndexById,
+        margin: this.repairMargin,
+      })
       if (nodeIndex === -1) continue
       const routeIndexes = routeIndexesByNode.get(nodeIndex) ?? []
       routeIndexes.push(i)
@@ -418,9 +430,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-      this.latestVisualization = this.activeSubSolver.visualize()
 
       if (this.activeSubSolver.failed) {
+        this.latestCompletedSubSolver = this.activeSubSolver
         this.failed = true
         this.error =
           this.activeSubSolver.error ??
@@ -433,6 +445,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         return
       }
 
+      this.latestCompletedSubSolver = this.activeSubSolver
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
@@ -482,7 +495,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       sample: sampleEntry.sample,
       margin: this.repairMargin,
     })
-    this.latestVisualization = this.activeSubSolver.visualize()
   }
 
   getOutput(): HighDensityRoute[] {
@@ -497,7 +509,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     }
 
     if (!this.solved) {
-      return this.latestVisualization
+      return this.latestCompletedSubSolver?.visualize() ?? {}
     }
 
     const lines: NonNullable<GraphicsObject["lines"]> = []

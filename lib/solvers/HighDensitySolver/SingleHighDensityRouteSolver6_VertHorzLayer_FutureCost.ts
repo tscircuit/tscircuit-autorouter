@@ -141,22 +141,49 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionPenalty(node: Node, isVia: boolean) {
-    let futureConnectionPenalty = 0
-    const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
-    const goalDist = distance(node, this.B)
-    if (closestFuturePoint) {
-      const distToFuturePoint = distance(node, closestFuturePoint)
-      if (goalDist <= distToFuturePoint) return 0
-      const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
-      const distRatio = distToFuturePoint / maxDist
-      const maxPenalty = isVia
-        ? this.straightLineDistance *
-          this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
-        : this.straightLineDistance *
-          this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
-      futureConnectionPenalty = maxPenalty * Math.exp(-distRatio * 5)
+    let sameLayerDistSq = Infinity
+    let otherLayerDistSq = Infinity
+    let sameLayerPointIndex = Infinity
+    let otherLayerPointIndex = Infinity
+    for (
+      let pointIndex = 0;
+      pointIndex < this.futureConnectionPoints.length;
+      pointIndex++
+    ) {
+      const point = this.futureConnectionPoints[pointIndex]!
+      const dx = node.x - point.x
+      const dy = node.y - point.y
+      const pointDistSq = dx * dx + dy * dy
+      if (point.z === node.z && pointDistSq < sameLayerDistSq) {
+        sameLayerDistSq = pointDistSq
+        sameLayerPointIndex = pointIndex
+      } else if (point.z !== node.z && pointDistSq < otherLayerDistSq) {
+        otherLayerDistSq = pointDistSq
+        otherLayerPointIndex = pointIndex
+      }
     }
-    return futureConnectionPenalty
+
+    const sameLayerDistance = Math.sqrt(sameLayerDistSq)
+    const otherLayerDistance = Math.sqrt(otherLayerDistSq)
+    const useSameLayerPoint =
+      sameLayerDistance < otherLayerDistance + this.viaPenaltyDistance ||
+      (sameLayerDistance === otherLayerDistance + this.viaPenaltyDistance &&
+        sameLayerPointIndex < otherLayerPointIndex)
+    const distToFuturePoint = useSameLayerPoint
+      ? sameLayerDistance
+      : otherLayerDistance
+    if (!Number.isFinite(distToFuturePoint)) return 0
+
+    const goalDist = distance(node, this.B)
+    if (goalDist <= distToFuturePoint) return 0
+    const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
+    const distRatio = distToFuturePoint / maxDist
+    const maxPenalty = isVia
+      ? this.straightLineDistance *
+        this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
+      : this.straightLineDistance *
+        this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+    return maxPenalty * Math.exp(-distRatio * 5)
   }
 
   computeH(node: Node) {

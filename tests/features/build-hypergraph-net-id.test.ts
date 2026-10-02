@@ -1,7 +1,23 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
+import type {
+  CapacityMeshNode,
+  CapacityMeshNodeId,
+  SimpleRouteConnection,
+} from "lib/types"
+
+const createCapacityNode = (
+  capacityMeshNodeId: CapacityMeshNodeId,
+): CapacityMeshNode => ({
+  capacityMeshNodeId,
+  center: { x: 0, y: 0 },
+  width: 2,
+  height: 2,
+  layer: "z0",
+  availableZ: [0],
+  _containsTarget: true,
+})
 
 test("buildHyperGraph resolves connection IDs through the connectivity map", (): void => {
   const connectivityMap = new ConnectivityMap({})
@@ -46,4 +62,28 @@ test("buildHyperGraph resolves connection IDs through the connectivity map", ():
       simpleRouteJsonConnections: [connection],
     }),
   ).toThrow('Could not resolve net ID for connection "alias-a"')
+})
+
+test("indexed endpoint lookup preserves overlapping region order", (): void => {
+  const { connections } = buildHyperGraph({
+    capacityMeshNodes: [
+      createCapacityNode("preferred-node"),
+      createCapacityNode("overlapping-node"),
+    ],
+    segmentPortPoints: [],
+    layerCount: 1,
+    connectivityMap: new ConnectivityMap({ signalNet: ["route-a"] }),
+    simpleRouteJsonConnections: [
+      {
+        name: "route-a",
+        pointsToConnect: [
+          { x: -0.5, y: 0, layer: "top" },
+          { x: 1.0005, y: 0, layer: "top" },
+        ],
+      },
+    ],
+  })
+
+  expect(connections[0]?.startRegion.regionId).toBe("preferred-node")
+  expect(connections[0]?.endRegion.regionId).toBe("preferred-node")
 })

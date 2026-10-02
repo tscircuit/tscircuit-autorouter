@@ -1,9 +1,35 @@
-import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
+import {
+  checkIfConnectionPointIsInRegion,
+  CONNECTION_POINT_REGION_TOLERANCE,
+} from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
+import type { IndexedRegionHg } from "../hgportpointpathingsolver/select-connection-point-region"
 import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import type { TinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+
+const createRegionIndex = (
+  params: HgPortPointPathingSolverParams,
+): FlatbushIndex<IndexedRegionHg> => {
+  const regionIndex = new FlatbushIndex<IndexedRegionHg>(
+    params.graph.regions.length,
+  )
+  for (const [index, region] of params.graph.regions.entries()) {
+    const halfWidth = region.d.width / 2
+    const halfHeight = region.d.height / 2
+    regionIndex.insert(
+      { index, region },
+      region.d.center.x - halfWidth - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y - halfHeight - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.x + halfWidth + CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y + halfHeight + CONNECTION_POINT_REGION_TOLERANCE,
+    )
+  }
+  regionIndex.finish()
+  return regionIndex
+}
 
 export function getRegionNetIdByRegionId(input: {
   params: Omit<HgPortPointPathingSolverParams, "connections"> & {
@@ -11,6 +37,7 @@ export function getRegionNetIdByRegionId(input: {
   }
   getNetIndex: TinyRouteNetIndexer
 }): Map<string, number> {
+  const regionIndex = createRegionIndex(input.params)
   const regionNetCandidates = new Map<string, Set<number>>()
   const alreadyConnectedEndpointRegionIds = new Set<string>()
   const netIndexByConnectionAlias = new Map<string, number>()
@@ -24,7 +51,16 @@ export function getRegionNetIdByRegionId(input: {
       netIndexByConnectionAlias.set(connectionAlias, routeNetIndex)
     }
     for (const point of connection.simpleRouteConnection.pointsToConnect) {
-      for (const region of input.params.graph.regions) {
+      const tolerance = CONNECTION_POINT_REGION_TOLERANCE
+      const candidateRegions = regionIndex
+        .search(
+          point.x - tolerance,
+          point.y - tolerance,
+          point.x + tolerance,
+          point.y + tolerance,
+        )
+        .sort((left, right) => left.index - right.index)
+      for (const { region } of candidateRegions) {
         if (
           !checkIfConnectionPointIsInRegion({
             point,

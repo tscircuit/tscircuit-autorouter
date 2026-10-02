@@ -20,6 +20,7 @@ export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
+    nodePf?: number | null
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
@@ -83,6 +84,23 @@ const routeColors = [
   "#9333ea",
   "#0891b2",
 ]
+
+const TARGET_NODE_PF = 0.25
+const NODE_CAPACITY_SCALE_EXPONENT = 1.1
+const SCALED_NODE_PORTFOLIO_SUBSTEPS = 500
+
+const getPredictedGrowthAttempts = (nodePf?: number | null): number => {
+  if (nodePf === undefined || nodePf === null || nodePf <= TARGET_NODE_PF) {
+    return 0
+  }
+  const predictedScaleFactor =
+    (nodePf / TARGET_NODE_PF) ** (1 / NODE_CAPACITY_SCALE_EXPONENT)
+  const predictedGrowthAttempts = Math.max(
+    0,
+    Math.ceil(Math.log2(predictedScaleFactor)),
+  )
+  return predictedGrowthAttempts
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -171,6 +189,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia,
       Math.max(growthAttemptsToFitVia, 0, growthAttemptsToFitPorts - 1),
     )
+    this.growthAttempts = Math.min(
+      this.maxGrowthAttempts,
+      getPredictedGrowthAttempts(params.nodePf),
+    )
+    this.scaleFactor = 2 ** this.growthAttempts
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -213,6 +236,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.scaleFactor,
       ),
     })
+    // Scaling has already made the geometry less congested. Let each portfolio
+    // candidate make sustained progress instead of repeatedly paying the
+    // scheduling cost of short slices across every candidate.
+    if (this.scaleFactor > 1) {
+      this.activeSubSolver.MIN_SUBSTEPS = SCALED_NODE_PORTFOLIO_SUBSTEPS
+    }
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt

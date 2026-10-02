@@ -92,6 +92,11 @@ export class TraceWidthSolver extends BaseSolver {
   currentScheduleIndex = 0
   currentTargetWidth: number = 0
   hasInsufficientClearance = false
+  private obstacleConnectionToCurrentTrace = new WeakMap<Obstacle, boolean>()
+  private routeConnectionToCurrentTrace = new WeakMap<
+    HighDensityRoute,
+    boolean
+  >()
 
   // For visualization - track colliding objects
   lastCollidingObstacles: Obstacle[] = []
@@ -182,6 +187,8 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       this.currentTrace = nextTrace
+      this.obstacleConnectionToCurrentTrace = new WeakMap()
+      this.routeConnectionToCurrentTrace = new WeakMap()
       this.nominalTraceWidth = nominalTraceWidth
       const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
@@ -241,6 +248,41 @@ export class TraceWidthSolver extends BaseSolver {
     this.currentTraceSegmentIndex = 0
     this.currentTraceSegmentT = 0
     this.hasInsufficientClearance = false
+  }
+
+  private isObstacleConnectedToCurrentTrace(obstacle: Obstacle): boolean {
+    if (!this.currentTrace) return false
+
+    const cachedConnection = this.obstacleConnectionToCurrentTrace.get(obstacle)
+    if (cachedConnection !== undefined) return cachedConnection
+
+    const rootConnectionName =
+      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
+    const isConnected =
+      isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap) ||
+      (obstacle.obstacleId !== undefined &&
+        (this.connMap?.areIdsConnected(
+          rootConnectionName,
+          obstacle.obstacleId,
+        ) ??
+          false))
+
+    this.obstacleConnectionToCurrentTrace.set(obstacle, isConnected)
+    return isConnected
+  }
+
+  private isRouteConnectedToCurrentTrace(route: HighDensityRoute): boolean {
+    if (!this.currentTrace) return false
+    const cachedConnection = this.routeConnectionToCurrentTrace.get(route)
+    if (cachedConnection !== undefined) return cachedConnection
+    const rootConnectionName =
+      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
+    const otherRoot = route.rootConnectionName ?? route.connectionName
+    const isConnected =
+      otherRoot === rootConnectionName ||
+      (this.connMap?.areIdsConnected(rootConnectionName, otherRoot) ?? false)
+    this.routeConnectionToCurrentTrace.set(route, isConnected)
+    return isConnected
   }
 
   /**
@@ -361,8 +403,6 @@ export class TraceWidthSolver extends BaseSolver {
 
   private getClearanceForSegment(start: Point3D, end: Point3D): number {
     if (!this.currentTrace) return Infinity
-    const rootConnectionName =
-      this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
     this.lastCollidingObstacles = []
@@ -388,13 +428,7 @@ export class TraceWidthSolver extends BaseSolver {
     }
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
-        continue
-      if (
-        obstacle.obstacleId &&
-        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
-      )
-        continue
+      if (this.isObstacleConnectedToCurrentTrace(obstacle)) continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
       const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
       const cos = Math.cos(angle)
@@ -440,9 +474,7 @@ export class TraceWidthSolver extends BaseSolver {
     )
     for (const { conflictingRoute } of nearbyRoutes) {
       const route = conflictingRoute as HighDensityRoute
-      const otherRoot = route.rootConnectionName ?? route.connectionName
-      if (otherRoot === rootConnectionName) continue
-      if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue
+      if (this.isRouteConnectedToCurrentTrace(route)) continue
       let clearance = Infinity
       for (let index = 0; index < route.route.length - 1; index++) {
         const a = route.route[index]!
@@ -545,10 +577,17 @@ export class TraceWidthSolver extends BaseSolver {
 
     const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
+    const terminalObstacles =
+      this.obstacleSHI?.search({
+        minX: endpoint.x - COORDINATE_EPSILON,
+        minY: endpoint.y - COORDINATE_EPSILON,
+        maxX: endpoint.x + COORDINATE_EPSILON,
+        maxY: endpoint.y + COORDINATE_EPSILON,
+      }) ?? this.obstacles
 
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of terminalObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+      if (!this.isObstacleConnectedToCurrentTrace(obstacle)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)

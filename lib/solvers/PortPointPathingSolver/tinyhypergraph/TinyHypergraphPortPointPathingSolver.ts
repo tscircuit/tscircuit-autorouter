@@ -225,12 +225,15 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
-  DISTANCE_TO_COST: 0.05,
+  // Keep long-board searches goal-directed instead of exploring similarly
+  // congested regions far away from the destination.
+  DISTANCE_TO_COST: 0.175,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   GREEDY_FINAL_ROUTE_ITERS: 4,
+  USE_LAZY_ROUTE_HEURISTIC: true,
   PARTIAL_RIP_MIN_ROUTE_COUNT: 100,
   PARTIAL_RIP_MAX_ROUTE_COUNT: 350,
   PARTIAL_RIP_MAX_ATTEMPTS: 7,
@@ -243,7 +246,7 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
-  DISTANCE_TO_COST: 0.05,
+  DISTANCE_TO_COST: 0.175,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -254,6 +257,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const TINY_PIPELINE_STEP_BATCH_SIZE = 25
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -324,6 +328,7 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: false,
+            RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
@@ -1124,6 +1129,35 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
+    if (this.duplicateCongestedPortReport) {
+      const { routeCongestionScoreByConnectionId } =
+        this.duplicateCongestedPortReport
+      const connections = graphForTiny.connections
+      if (!connections) {
+        throw new Error("Serialized tiny hypergraph is missing connections")
+      }
+      const initialRouteOrder = connections
+        .map((connection, routeId) => {
+          const congestionScore =
+            routeCongestionScoreByConnectionId[connection.connectionId]
+          if (congestionScore === undefined) {
+            throw new Error(
+              `Missing congestion score for "${connection.connectionId}"`,
+            )
+          }
+          return { routeId, congestionScore }
+        })
+        .sort(
+          (left, right) =>
+            left.congestionScore - right.congestionScore ||
+            left.routeId - right.routeId,
+        )
+        .map(({ routeId }) => routeId)
+      tinyPipelineInput.solveGraphOptions = {
+        ...tinyPipelineInput.solveGraphOptions,
+        INITIAL_ROUTE_ORDER: initialRouteOrder,
+      }
+    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
@@ -1405,7 +1439,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    this.tinyPipelineSolver.step()
+    for (
+      let workIndex = 0;
+      workIndex < TINY_PIPELINE_STEP_BATCH_SIZE &&
+      !this.tinyPipelineSolver.solved &&
+      !this.tinyPipelineSolver.failed;
+      workIndex++
+    ) {
+      this.tinyPipelineSolver.step()
+    }
 
     if (
       this.candidatePortfolioPhase === "primary" &&

@@ -1,8 +1,10 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type {
   CapacityMeshNode,
+  CapacityMeshNodeId,
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
@@ -12,7 +14,11 @@ import {
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
-import { selectConnectionPointRegion } from "./select-connection-point-region"
+import {
+  type IndexedRegionHg,
+  selectConnectionPointRegion,
+} from "./select-connection-point-region"
+import { CONNECTION_POINT_REGION_TOLERANCE } from "./checkIfConnectionPointIsInRegion"
 import type {
   RawPort,
   ConnectionHgWithSimpleRouteConnection,
@@ -169,13 +175,14 @@ export function buildHyperGraph(params: {
     ports: [],
     regions: [],
   }
+  const regionById = new Map<CapacityMeshNodeId, RegionHg>()
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
     const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
       getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
     )
-    graph.regions.push({
+    const region: RegionHg = {
       regionId: cmnNode.capacityMeshNodeId,
       d: connectedNetIds
         ? {
@@ -184,17 +191,17 @@ export function buildHyperGraph(params: {
           }
         : cmnNode,
       ports: [],
-    })
+    }
+    graph.regions.push(region)
+    if (!regionById.has(region.regionId)) {
+      regionById.set(region.regionId, region)
+    }
   }
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-    const region1 = graph.regions.find(
-      (region) => region.regionId === region1Id,
-    )
-    const region2 = graph.regions.find(
-      (region) => region.regionId === region2Id,
-    )
+    const region1 = regionById.get(region1Id)
+    const region2 = regionById.get(region2Id)
 
     assertDefined(
       region1,
@@ -250,16 +257,30 @@ export function buildHyperGraph(params: {
     layerCount: params.layerCount,
   })
 
+  const regionIndex = new FlatbushIndex<IndexedRegionHg>(graph.regions.length)
+  for (const [index, region] of graph.regions.entries()) {
+    const halfWidth = region.d.width / 2
+    const halfHeight = region.d.height / 2
+    regionIndex.insert(
+      { index, region },
+      region.d.center.x - halfWidth - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y - halfHeight - CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.x + halfWidth + CONNECTION_POINT_REGION_TOLERANCE,
+      region.d.center.y + halfHeight + CONNECTION_POINT_REGION_TOLERANCE,
+    )
+  }
+  regionIndex.finish()
+
   for (const connection of params.simpleRouteJsonConnections) {
     const [startPoint, endPoint] = connection.pointsToConnect
 
     const startRegion = selectConnectionPointRegion({
-      graph,
+      regionIndex,
       point: startPoint,
       layerCount: params.layerCount,
     })
     const endRegion = selectConnectionPointRegion({
-      graph,
+      regionIndex,
       point: endPoint,
       layerCount: params.layerCount,
     })

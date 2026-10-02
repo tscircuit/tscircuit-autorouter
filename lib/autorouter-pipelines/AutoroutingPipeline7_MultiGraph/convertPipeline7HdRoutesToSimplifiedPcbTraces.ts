@@ -21,7 +21,9 @@ export interface ConvertPipeline7HdRoutesOptions {
 type StaticConvertPipeline7HdRoutesOptions = Omit<
   ConvertPipeline7HdRoutesOptions,
   "hdRoutes"
->
+> & {
+  cacheRouteGeometryByIdentity?: boolean
+}
 
 type PreparedConnection = {
   connection: SimpleRouteConnection
@@ -36,7 +38,12 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  cacheRouteGeometryByIdentity = false,
 }: StaticConvertPipeline7HdRoutesOptions) => {
+  const cachedTraceByRoute = new WeakMap<
+    HighDensityRoute,
+    SimplifiedPcbTraces[number]
+  >()
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
     string | undefined
@@ -77,28 +84,26 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
-  const connectedObstaclesByConnectionName = new Map<
+  const connectedObstaclesByRouteNet = new Map<
     string,
-    Map<string | undefined, ReadonlyArray<Obstacle>>
+    ReadonlyArray<Obstacle>
   >()
   const getConnectedMultilayerObstacles = (route: HighDensityRoute) => {
-    let byRootConnectionName = connectedObstaclesByConnectionName.get(
-      route.connectionName,
-    )
-    if (!byRootConnectionName) {
-      byRootConnectionName = new Map()
-      connectedObstaclesByConnectionName.set(
-        route.connectionName,
-        byRootConnectionName,
-      )
-    }
-    const cached = byRootConnectionName.get(route.rootConnectionName)
+    const connectionNetId =
+      connMap.getNetConnectedToId?.(route.connectionName) ??
+      route.connectionName
+    const rootNetId = route.rootConnectionName
+      ? (connMap.getNetConnectedToId?.(route.rootConnectionName) ??
+        route.rootConnectionName)
+      : ""
+    const routeNetKey = `${connectionNetId}\0${rootNetId}`
+    const cached = connectedObstaclesByRouteNet.get(routeNetKey)
     if (cached) return cached
 
     const connected = multilayerObstacles.filter((obstacle) =>
       isObstacleConnectedToRoute(obstacle, route, connMap),
     )
-    byRootConnectionName.set(route.rootConnectionName, connected)
+    connectedObstaclesByRouteNet.set(routeNetKey, connected)
     return connected
   }
 
@@ -123,9 +128,17 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
 
       for (let index = 0; index < connectionRoutes.length; index += 1) {
         const hdRoute = connectionRoutes[index]!
-        traces.push({
+        const pcbTraceId = `${connection.name}_${index}`
+        const cachedTrace = cacheRouteGeometryByIdentity
+          ? cachedTraceByRoute.get(hdRoute)
+          : undefined
+        if (cachedTrace?.pcb_trace_id === pcbTraceId) {
+          traces.push(cachedTrace)
+          continue
+        }
+        const trace: SimplifiedPcbTraces[number] = {
           type: "pcb_trace",
-          pcb_trace_id: `${connection.name}_${index}`,
+          pcb_trace_id: pcbTraceId,
           connection_name: outputConnectionName,
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
@@ -135,7 +148,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
               getConnectedMultilayerObstacles(hdRoute),
             connMap,
           }),
-        })
+        }
+        traces.push(trace)
+        if (cacheRouteGeometryByIdentity) cachedTraceByRoute.set(hdRoute, trace)
       }
     }
 

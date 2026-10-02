@@ -8,6 +8,7 @@ import {
 } from "@tscircuit/high-density-b01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import type { CacheProvider } from "lib/cache/types"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type {
@@ -54,6 +55,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  cacheProvider?: CacheProvider | null
 }
 
 type NodeBounds = {
@@ -64,6 +66,7 @@ type NodeBounds = {
 }
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
+const HIGH_DENSITY_STEP_BATCH_SIZE = 10
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
@@ -324,6 +327,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  cacheProvider?: CacheProvider | null
 }
 
 /**
@@ -343,8 +347,14 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+  cacheProvider,
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const capacityMeshNodeId = nodeWithPortPoints.capacityMeshNodeId
+  const nodePf =
+    nodePfById instanceof Map
+      ? nodePfById.get(capacityMeshNodeId)
+      : nodePfById[capacityMeshNodeId]
+  return new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -354,7 +364,9 @@ export const createPipeline9RegularNodeSolver = ({
     traceWidth,
     obstacleMargin,
     effort,
-    nodePfById,
+    nodePfById: new Map(
+      nodePf === undefined ? [] : [[capacityMeshNodeId, nodePf]],
+    ),
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
@@ -366,7 +378,9 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    cacheProvider,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -391,6 +405,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
+  readonly cacheProvider?: CacheProvider | null
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
@@ -429,6 +444,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
+    this.cacheProvider = params.cacheProvider
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -485,6 +501,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
+    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
@@ -494,9 +511,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: this.obstacles,
+      obstacles: this.obstacles.filter((obstacle) =>
+        obstacleOverlapsNode(obstacle, nodeBounds),
+      ),
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      cacheProvider: this.cacheProvider,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -911,11 +931,27 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
-    this.stepNodeRouting()
-    this.activeSubSolver =
-      this.activeFallbackSolver ??
-      this.activeRegularSolver ??
-      this.activeB01Solver
+    if (!this.activeSubSolver) {
+      this.stepNodeRouting()
+      this.activeSubSolver =
+        this.activeFallbackSolver ??
+        this.activeRegularSolver ??
+        this.activeB01Solver
+      return
+    }
+    const activeSolverAtStart = this.activeSubSolver
+    for (
+      let workIndex = 0;
+      workIndex < HIGH_DENSITY_STEP_BATCH_SIZE && !this.solved && !this.failed;
+      workIndex++
+    ) {
+      this.stepNodeRouting()
+      this.activeSubSolver =
+        this.activeFallbackSolver ??
+        this.activeRegularSolver ??
+        this.activeB01Solver
+      if (this.activeSubSolver !== activeSolverAtStart) break
+    }
   }
 
   computeProgress(): number {
