@@ -1,3 +1,4 @@
+import { getDifferentialPairPointPairError } from "lib/utils/getDifferentialPairPointPairError"
 import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -320,6 +321,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.error = getDifferentialPairPointPairError({
+            differentialPairs: cms.srj.differentialPairs ?? [],
+            connections: cms.srjWithPointPairs!.connections,
+          })
+          if (cms.error) {
+            cms.failed = true
+            return
+          }
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,

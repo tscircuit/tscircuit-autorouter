@@ -1,3 +1,4 @@
+import { getDifferentialPairPointPairError } from "lib/utils/getDifferentialPairPointPairError"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -361,6 +362,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.error = getDifferentialPairPointPairError({
+            differentialPairs: cms.srj.differentialPairs ?? [],
+            connections: cms.srjWithPointPairs!.connections,
+          })
+          if (cms.error) {
+            cms.failed = true
+            return
+          }
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,

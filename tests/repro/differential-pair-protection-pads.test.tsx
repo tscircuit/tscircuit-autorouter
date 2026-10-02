@@ -4,9 +4,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
-test("repro: differential pair with protection pads fails after routing", async (): Promise<void> => {
+test("differential pair with protection pads is rejected before topology planning", async (): Promise<void> => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   // U1 models the two flow-through protection pads on each conductor.
@@ -133,35 +132,33 @@ test("repro: differential pair with protection pads fails after routing", async 
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(() => solver.solve()).toThrow(
-    "must resolve to exactly one final point-pair connection, got 3",
-  )
+  solver.solve()
   expect(solver.failed).toBe(true)
-  expect(solver.error).toContain(
-    "must resolve to exactly one final point-pair connection, got 3",
+  expect(solver.solved).toBe(false)
+  expect(solver.error).toBe(
+    `Differential pair connection "${positiveNet.source_net_id}" resolves to 3 point-pair connections; exactly one is supported. Declare each constrained point-to-point segment as a separate differential pair.`,
   )
   expect(solver.netToPointPairsSolver?.newConnections).toHaveLength(6)
-  expect(solver.effortCleanupSolver?.getOutput()).toHaveLength(6)
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-    connections: solver.netToPointPairsSolver!.newConnections,
-    originalConnections: input.connections,
-    hdRoutes: solver.effortCleanupSolver!.getOutput(),
-    layerCount: input.layerCount,
-    obstacles: input.obstacles,
-    defaultViaHoleDiameter: solver.viaHoleDiameter,
-    connMap: solver.connMap,
-  })
+  expect(solver.topologyPlanningSolver).toBeUndefined()
+  expect(solver.effortCleanupSolver).toBeUndefined()
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "input" })
+  const rejectedGraphics = convertSrjToGraphicsObject(input)
+  rejectedGraphics.texts = [
+    {
+      x: -8,
+      y: 4,
+      fontSize: 0.4,
+      anchorSide: "center_left",
+      text: "Rejected before routing: 3 segments per pair member",
+    },
+  ]
   await expect(
-    getSvgFromGraphicsObject(
-      convertSrjToGraphicsObject({ ...input, traces: routedTraces }),
-      {
-        backgroundColor: "white",
-      },
-    ),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "before-rejection" })
+    getSvgFromGraphicsObject(rejectedGraphics, {
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "early-rejection" })
 })
