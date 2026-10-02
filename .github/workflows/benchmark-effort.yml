@@ -1,0 +1,55 @@
+name: Benchmark Effort
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      pr_number:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit to benchmark
+        required: true
+        type: string
+      pr_number:
+        description: PR to receive the comparison
+        required: true
+        type: string
+permissions:
+  contents: read
+  issues: write
+jobs:
+  benchmark:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 480
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/benchmark/effort-comparison.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-effort
+          path: benchmark-effort/
+      - name: Post comparison
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          BENCHMARK_REF: ${{ inputs.ref }}
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs')
+            const body = fs.readFileSync('benchmark-effort/comparison.md', 'utf8')
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: Number(process.env.PR_NUMBER),
+              body: body + `\nCommit: ${process.env.BENCHMARK_REF}\n[Workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            })

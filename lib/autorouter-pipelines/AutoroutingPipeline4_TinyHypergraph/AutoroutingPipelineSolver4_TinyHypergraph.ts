@@ -282,7 +282,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: cms.effort,
+            effort: Math.min(1, cms.effort),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -379,7 +379,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(20, Math.round(60 * cms.effort)),
+          totalStepsPerNode: Math.max(
+            20,
+            Math.round(60 * Math.min(1, cms.effort)),
+          ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
         },
       ],
@@ -453,7 +456,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           srj: cms.srjWithPointPairs! as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
-          effort: cms.effort,
+          effort: Math.min(1, cms.effort),
         },
       ],
     ),
