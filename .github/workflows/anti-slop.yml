@@ -26,9 +26,14 @@ jobs:
       - name: Type check tooling
         id: typecheck
         run: bun run typecheck:anti-slop
+      - name: Check formatting
+        id: format
+        run: bun run format:check
       - name: Report lib diagnostics
         id: lint
         if: ${{ !cancelled() }}
+        # Explicit bash enables pipefail so tee cannot mask lint/setup failures.
+        shell: bash
         run: bun run lint:anti-slop --format json | tee anti-slop-diagnostics.json
       - name: Upload full diagnostic inventory
         if: ${{ always() }}

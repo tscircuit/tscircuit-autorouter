@@ -12,6 +12,8 @@ downgraded, capped or switched off. The CI job remains advisory and records each
 step outcome plus the full JSON diagnostic artifact. A green advisory job can
 contain a failed lint step; inspect its summary and artifact. Setup, plugin,
 integration and typecheck failures are not caught or converted into success.
+The diagnostic step explicitly selects Bash with pipefail: `tee` cannot hide a
+lint or setup failure. The advisory job also checks repository Biome formatting.
 
 ## Provenance and scope
 
@@ -47,6 +49,7 @@ with the full configuration. The after run uses production source revision
 `abd54c9` and the same configuration. Both checked **453 files** under Bun 1.3.14,
 Oxlint 1.86.0, on 2026-10-02. These observations are not an error ceiling or a
 snapshot assertion. See [machine-readable counts](anti-slop-full-counts.json).
+
 | Rule | Before | After |
 | --- | ---: | ---: |
 | `anti-slop/no-array-filter-map` | 14 | 0 |
@@ -162,11 +165,13 @@ serially, without modifying other checkouts or dependencies. Checks completed:
   The actual graphics object and white-background SVG match the base byte for
   byte on this fixture (SVG SHA-256
   `0faf1d4f633114dfd09c0bd4b89975141b1570affdb6119510f7c3b5b4b9a3ce`).
-- Actual Bun CLI integration: **three tests / 111 assertions**. Deliberately bad
+- Actual Bun CLI integration: **four tests / 116 assertions**. Deliberately bad
   examples trigger every one of the 24 rules at error severity and exit 1.
   Legitimate geometry, owned accumulation, const assertions and the two narrow
   exception forms pass. Ignored paths, missing config/plugin failures, exact
-  dependency pins and all 39 vendor file hashes are verified.
+  dependency pins and all 39 vendor file hashes are verified. A regression runs
+  the actual Bash pipeline and verifies that both rule errors and missing-config
+  errors retain exit 1 while `tee` writes the diagnostic artifact.
 - Full lint JSON confirms every remaining diagnostic is an error and the command
   exits 1. No original snapshot or fixture was updated.
 
