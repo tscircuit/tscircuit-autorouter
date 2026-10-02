@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { getNewViaPadViolations } from "@tscircuit/repair04"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("projection preserves a negotiated route when moving its via would fail the outer guard", (): void => {
@@ -66,7 +66,9 @@ test("projection preserves a negotiated route when moving its via would fail the
   // indices even though the existing physical via has not moved.
   previousRoutes[1]!.route.splice(1, 0, { x: -0.6, y: 3.5, z: 0 })
   const previousSnapshot = structuredClone(previousRoutes)
-  const projected = applyPipeline9ClearanceProjection(fixture)
+  const projectedSolver = new Pipeline9ClearanceProjectionSolver(fixture)
+  projectedSolver.solve()
+  const projected = projectedSolver.getOutput()
   expect(projected[1]!.vias).not.toEqual(negotiatedRoutes[1]!.vias)
   expect(
     getNewViaPadViolations({
@@ -76,10 +78,12 @@ test("projection preserves a negotiated route when moving its via would fail the
     }),
   ).toHaveLength(1)
 
-  const result = applyPipeline9ClearanceProjection({
+  const guardedSolver = new Pipeline9ClearanceProjectionSolver({
     ...fixture,
     previousRoutes,
   })
+  guardedSolver.solve()
+  const result = guardedSolver.getOutput()
   expect(result).toBe(fixture.routes)
   expect(result).toEqual(negotiatedRoutes)
   expect(previousRoutes).toEqual(previousSnapshot)

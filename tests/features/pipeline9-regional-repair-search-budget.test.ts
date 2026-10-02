@@ -1,7 +1,7 @@
+import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import {
-  applyPipeline9RegionalB01Repairs,
   getPipeline9RegionalRepairSearchBudget,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { SimpleRouteJson } from "lib/types"
@@ -47,7 +47,7 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     errorsWithCenters: errors,
   })
 
-  const result = applyPipeline9RegionalB01Repairs({
+  const repairSolver = new Pipeline9RegionalB01RepairSolver({
     srj,
     routes,
     fixedObstacleRoutes: [],
@@ -62,6 +62,8 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     obstacleMargin: 0.15,
     effort: 1,
   })
+  repairSolver.solve()
+  const result = repairSolver.getResult()
 
   expect(getPipeline9RegionalRepairSearchBudget(70)).toBe(100)
   expect(getPipeline9RegionalRepairSearchBudget(200)).toBe(35)

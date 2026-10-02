@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import {
-  findClearancePathSteps,
+  FindClearancePathSolver,
   type ClearancePathSearchStats,
 } from "@tscircuit/repair04"
 import { pathInput } from "../fixtures/repair04StepFixtures"
@@ -12,7 +12,7 @@ test("incremental A* returns control after at most 128 heap pops without restart
     nodesPopped: 0,
     completionReason: "no-path",
   }
-  const steps = findClearancePathSteps({
+  const solver = new FindClearancePathSolver({
     ...pathInput,
     srj,
     routes: [pathInput.routes[0]!],
@@ -21,18 +21,18 @@ test("incremental A* returns control after at most 128 heap pops without restart
   })
   expect(stats.nodesPopped).toBe(0)
   let previousNodes = 0
-  let result = steps.next()
-  let searchingYields = 0
-  while (!result.done) {
+  let searchingSteps = 0
+  while (!solver.solved && !solver.failed) {
+    solver.step()
     expect(stats.nodesPopped - previousNodes).toBeLessThanOrEqual(128)
     expect(stats.nodesPopped).toBeGreaterThanOrEqual(previousNodes)
-    if (stats.nodesPopped > previousNodes) searchingYields++
+    if (stats.nodesPopped > previousNodes) searchingSteps++
     previousNodes = stats.nodesPopped
-    result = steps.next()
   }
+  expect(solver.failed).toBeFalse()
   expect(stats.nodesPopped - previousNodes).toBeLessThanOrEqual(128)
-  expect(searchingYields).toBeGreaterThan(1)
+  expect(searchingSteps).toBeGreaterThan(1)
   expect(stats.nodesPopped).toBe(1000)
   expect(stats.completionReason).toBe("node-limit")
-  expect(result.value).toBeNull()
+  expect(solver.getOutput()).toBeNull()
 })

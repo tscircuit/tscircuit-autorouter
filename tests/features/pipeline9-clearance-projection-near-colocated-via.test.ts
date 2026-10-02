@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("clearance projection preserves endpoints while making near-colocated vias exact", (): void => {
@@ -22,7 +22,9 @@ test("clearance projection preserves endpoints while making near-colocated vias 
     vias: [{ x: -3 + 1e-9, y: 2 }],
   })
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9ClearanceProjection(fixture)
+  const solver = new Pipeline9ClearanceProjectionSolver(fixture)
+  solver.solve()
+  const result = solver.getOutput()
   expect(fixture.routes).toEqual(original)
   expect(result[1]!.route[0]).toEqual(original[1]!.route[0])
   expect(result[1]!.route.at(-1)).toEqual(original[1]!.route.at(-1))

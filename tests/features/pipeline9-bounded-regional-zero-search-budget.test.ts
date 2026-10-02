@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("a zero regional search budget preserves routes with scattered errors", () => {
   const routes: HighDensityRoute[] = []
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     originalSrj: {
       bounds: { minX: -30, maxX: 30, minY: -5, maxY: 5 },
       layerCount: 2,
@@ -24,6 +24,11 @@ test("a zero regional search budget preserves routes with scattered errors", () 
       { type: "pcb_trace_error", center: { x: 20, y: 0 } },
     ],
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(result.routes).toBe(routes)
   expect(result.repaired).toBe(false)
   expect(result.publishedDrcIssueCount).toBe(2)

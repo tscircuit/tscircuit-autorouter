@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("the existing projection opens a via gap without moving drills or unrelated crossings", (): void => {
@@ -53,10 +53,12 @@ test("the existing projection opens a via gap without moving drills or unrelated
       (error) => error.type === "pcb_via_trace_clearance_error",
     ),
   ).toBe(true)
-  const routes = applyPipeline9ClearanceProjection({
+  const solver = new Pipeline9ClearanceProjectionSolver({
     ...fixture,
     allowPartialRepair: true,
   })
+  solver.solve()
+  const routes = solver.getOutput()
   const after = fixture.drcEvaluator({ traces: [], routes })
   const errors = Array.isArray(after) ? after : after.errors
   expect(

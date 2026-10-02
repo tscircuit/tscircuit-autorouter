@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("one repair region covers nearby pad errors that otherwise fall in its collar", (): void => {
@@ -12,7 +12,7 @@ test("one repair region covers nearby pad errors that otherwise fall in its coll
   }
   for (const point of fixture.routes[1]!.route) point.y = 5
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     ...fixture,
     budget: {
       maxRegions: 1,
@@ -20,6 +20,11 @@ test("one repair region covers nearby pad errors that otherwise fall in its coll
       maxPathSearchNodes: 480_000,
     },
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(fixture.routes).toEqual(original)
   expect(result.attemptedRegionCount).toBe(1)
   expect(result.repaired).toBe(true)

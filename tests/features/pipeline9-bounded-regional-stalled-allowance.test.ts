@@ -28,7 +28,9 @@ test("a blocked regional search stops at its initial allowance without earning w
     },
   })
   while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
   const result = solver.getResult()
   expect(result.initialDrcIssueCount).toBe(2)
   expect(result.acceptedRegionCount).toBe(0)

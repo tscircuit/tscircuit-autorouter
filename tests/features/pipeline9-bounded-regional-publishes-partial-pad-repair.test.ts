@@ -3,7 +3,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
@@ -83,13 +83,18 @@ test("publishes the SRJ18 repairs while the imported C43 pad still covers TP5", 
       errorsWithCenters: evaluation.errorsWithCenters,
     } as unknown as ReturnType<DrcEvaluator>
   }
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     originalSrj,
     routes,
     syntheticConnectionNames: new Set(),
     drcEvaluator,
     viaHoleDiameter: 0.15,
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   const before = evaluateRoutes(original)
   const after = evaluateRoutes(result.routes)
   const errors = after.errors

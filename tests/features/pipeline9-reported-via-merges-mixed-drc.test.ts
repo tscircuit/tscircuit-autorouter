@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { applyPipeline9ReportedViaMerges } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ReportedViaMerges"
+import { Pipeline9ReportedViaMergeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ReportedViaMergeSolver"
 import { createPipeline9RelaxedDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -109,13 +109,15 @@ test("merges reported same-net vias while an unrelated trace crossing remains", 
     "pcb_via_clearance_error",
   ])
   const original = structuredClone(routes)
-  const result = applyPipeline9ReportedViaMerges({
+  const solver = new Pipeline9ReportedViaMergeSolver({
     srj,
     routes,
     connMap,
     drcEvaluator,
     referenceResult: before,
   })
+  solver.solve()
+  const result = solver.getResult()
   const afterErrors = Array.isArray(result.referenceResult)
     ? result.referenceResult
     : result.referenceResult.errors
@@ -129,13 +131,15 @@ test("merges reported same-net vias while an unrelated trace crossing remains", 
     expect(route.route[0]).toEqual(original[index]!.route[0])
     expect(route.route.at(-1)).toEqual(original[index]!.route.at(-1))
   }
-  const rejected = applyPipeline9ReportedViaMerges({
+  const rejectedSolver = new Pipeline9ReportedViaMergeSolver({
     srj,
     routes,
     connMap,
     referenceResult: before,
     drcEvaluator: (): ReturnType<DrcEvaluator> => before,
   })
+  rejectedSolver.solve()
+  const rejected = rejectedSolver.getResult()
   expect(rejected.accepted).toBe(false)
   expect(rejected.routes).toBe(routes)
   const blockedSrj: SimpleRouteJson = {
@@ -153,13 +157,15 @@ test("merges reported same-net vias while an unrelated trace crossing remains", 
       },
     ],
   }
-  const blocked = applyPipeline9ReportedViaMerges({
+  const blockedSolver = new Pipeline9ReportedViaMergeSolver({
     srj: blockedSrj,
     routes,
     connMap,
     referenceResult: before,
     drcEvaluator: (): ReturnType<DrcEvaluator> => ({ errors: [] }),
   })
+  blockedSolver.solve()
+  const blocked = blockedSolver.getResult()
   expect(blocked.accepted).toBe(false)
   expect(blocked.routes).toBe(routes)
   expect(blocked.referenceValidationCount).toBe(0)

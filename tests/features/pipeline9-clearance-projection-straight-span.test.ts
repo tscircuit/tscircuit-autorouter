@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("partial projection bends a straight span while preserving terminals and an unrelated crossing", (): void => {
@@ -24,15 +24,20 @@ test("partial projection bends a straight span while preserving terminals and an
       (error) => error.type === "pcb_pad_trace_clearance_error",
     ),
   ).toBe(true)
-  expect(
-    applyPipeline9ClearanceProjection({ ...fixture, allowPartialRepair: true }),
-  ).toBe(fixture.routes)
+  const originalProjection = new Pipeline9ClearanceProjectionSolver({
+    ...fixture,
+    allowPartialRepair: true,
+  })
+  originalProjection.solve()
+  expect(originalProjection.getOutput()).toBe(fixture.routes)
 
-  const routes = applyPipeline9ClearanceProjection({
+  const solver = new Pipeline9ClearanceProjectionSolver({
     ...fixture,
     allowPartialRepair: true,
     subdivideSegments: true,
   })
+  solver.solve()
+  const routes = solver.getOutput()
   const after = fixture.drcEvaluator({ traces: [], routes })
   const errors = Array.isArray(after) ? after : after.errors
   expect(errors.length).toBeLessThan(beforeErrors.length)

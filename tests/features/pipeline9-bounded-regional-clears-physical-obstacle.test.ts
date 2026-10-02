@@ -1,11 +1,16 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("bounded regional repair clears physical copper without moving its terminals", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9BoundedRegionalRepairs(fixture)
+  const solver = new Pipeline9BoundedRegionalRepairSolver(fixture)
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(result.repaired).toBeTrue()
   expect(result.initialDrcIssueCount).toBeGreaterThan(0)
   expect(result.finalDrcIssueCount).toBe(0)

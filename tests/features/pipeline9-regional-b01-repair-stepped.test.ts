@@ -3,10 +3,7 @@ import {
   GlobalDrcForceImproveSolver,
   type DrcEvaluator,
 } from "high-density-repair03/lib"
-import {
-  applyPipeline9RegionalB01Repairs,
-  type Pipeline9RegionalB01RepairParams,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
+import type { Pipeline9RegionalB01RepairParams } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
@@ -14,7 +11,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("regional B01 repair advances one child step and preserves synchronous results", (): void => {
+test("regional B01 repair stages each child without draining candidate searches", (): void => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -86,11 +83,13 @@ test("regional B01 repair advances one child step and preserves synchronous resu
     expect(() => solver.getResult()).toThrow("not complete")
     solver.step()
     expect(solver.solved).toBeFalse()
+    expect(solver.activeSubSolver).toBeUndefined()
+    while (!solver.activeSubSolver && !solver.solved && !solver.failed) solver.step()
     expect(solver.activeSubSolver).toBeInstanceOf(Pipeline9HighDensitySolver)
+    expect(solver.activeSubSolver!.iterations).toBe(0)
+    expect(Number.isSafeInteger(solver.MAX_ITERATIONS)).toBeTrue()
+    solver.step()
     expect(solver.activeSubSolver!.iterations).toBe(1)
-    expect(solver.MAX_ITERATIONS).toBe(
-      solver.activeSubSolver!.MAX_ITERATIONS + 2,
-    )
     while (!solver.solved && !solver.failed) {
       const before = stepSpies.reduce(
         (count, spy) => count + spy.mock.calls.length,
@@ -109,12 +108,16 @@ test("regional B01 repair advances one child step and preserves synchronous resu
     expect(solver.activeSubSolver).toBeNull()
     expect(solver.progress).toBe(1)
     expect(stepSpies.every((spy) => spy.mock.calls.length > 0)).toBeTrue()
-    const synchronous = applyPipeline9RegionalB01Repairs({
-      ...params,
-      connMap: getConnectivityMapFromSimpleRouteJson(srj),
+    expect(solver.getResult()).toMatchObject({
+      routes,
+      attemptedCandidateCount: 6,
+      acceptedCandidateCount: 0,
+      fallbackCandidateCount: 1,
+      candidateSearchCount: 6,
+      candidateSearchBudgetExhausted: false,
+      safeTraceLayerRepairSkippedForBudget: false,
+      remainingDrcIssueCount: 1,
     })
-    expect(solver.getResult()).toEqual(synchronous)
-    expect(solver.getResult().remainingDrcIssueCount).toBe(1)
     expect(solveSpies.every((spy) => spy.mock.calls.length === 0)).toBeTrue()
   } finally {
     for (const spy of [...stepSpies, ...solveSpies]) spy.mockRestore()

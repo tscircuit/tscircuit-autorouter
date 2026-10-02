@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -45,7 +45,7 @@ test("regional repair expands a stalled context before exhausting its shared bud
     pathHeuristicWeight: 3,
     revisitChangedRegions: true,
   }
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     originalSrj,
     routes,
     connMap,
@@ -54,6 +54,11 @@ test("regional repair expands a stalled context before exhausting its shared bud
     drcEvaluator,
     budget,
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(result.initialDrcIssueCount).toBe(117)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)

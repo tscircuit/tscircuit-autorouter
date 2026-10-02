@@ -24,7 +24,9 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
     adaptive.step()
     observedAllowances.push(adaptive.stats.allowedRegionCount)
   }
+  expect(adaptive.error).toBeNull()
   expect(adaptive.failed).toBeFalse()
+  expect(adaptive.solved).toBeTrue()
   const repaired = adaptive.getResult()
   expect(observedAllowances).toContain(1)
   expect(observedAllowances).toContain(2)
@@ -63,7 +65,9 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
     },
   })
   while (!fixed.solved && !fixed.failed) fixed.step()
+  expect(fixed.error).toBeNull()
   expect(fixed.failed).toBeFalse()
+  expect(fixed.solved).toBeTrue()
   const partial = fixed.getResult()
   expect(partial.acceptedRegionCount).toBe(1)
   expect(partial.attemptedRegionCount).toBe(1)

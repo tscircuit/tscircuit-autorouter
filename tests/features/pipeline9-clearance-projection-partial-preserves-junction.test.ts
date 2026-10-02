@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("partial projection keeps an interior same-net branch attached", (): void => {
@@ -48,11 +48,13 @@ test("partial projection keeps an interior same-net branch attached", (): void =
   })
   const original = structuredClone(fixture.routes)
   for (const subdivideSegments of [false, true]) {
-    const routes = applyPipeline9ClearanceProjection({
+    const solver = new Pipeline9ClearanceProjectionSolver({
       ...fixture,
       allowPartialRepair: true,
       subdivideSegments,
     })
+    solver.solve()
+    const routes = solver.getOutput()
     // The contacted segment is fixed by repair04's existing junction anchors.
     if (!subdivideSegments) {
       expect(routes[0]).toEqual(original[0])

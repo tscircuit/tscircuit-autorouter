@@ -668,7 +668,52 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
-  private postExactRepairSteps?: Generator<void, void, void>
+  currentPipelineStepIndex = 0
+  private regionalB01Params?: ConstructorParameters<
+    typeof Pipeline9RegionalB01RepairSolver
+  >[0]
+  private boundedRegionalParams?: ConstructorParameters<
+    typeof Pipeline9BoundedRegionalRepairSolver
+  >[0]
+  private boundedRegionalRepairStartedAt?: number
+  readonly pipelineDef = [
+    {
+      solverName: "exactRepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.exactRepairSolver) {
+          throw new Error("Pipeline9 exact repair stage is missing its solver")
+        }
+        return this.exactRepairSolver
+      },
+      onSolved: (): void => this.finishExactRepair(),
+    },
+    {
+      solverName: "regionalB01RepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.regionalB01Params) {
+          throw new Error("Pipeline9 regional B01 stage is missing its input")
+        }
+        this.regionalB01RepairSolver = new Pipeline9RegionalB01RepairSolver(
+          this.regionalB01Params,
+        )
+        return this.regionalB01RepairSolver
+      },
+      onSolved: (): void => this.finishRegionalB01Repair(),
+    },
+    {
+      solverName: "boundedRegionalRepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.boundedRegionalParams) {
+          throw new Error("Pipeline9 bounded regional stage is missing its input")
+        }
+        this.boundedRegionalRepairStartedAt = performance.now()
+        this.boundedRegionalRepairSolver =
+          new Pipeline9BoundedRegionalRepairSolver(this.boundedRegionalParams)
+        return this.boundedRegionalRepairSolver
+      },
+      onSolved: (): void => this.finishBoundedRegionalRepair(),
+    },
+  ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
 
@@ -1483,37 +1528,50 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.postExactRepairSteps) {
-      this.postExactRepairSteps.next()
-      if (this.activeSubSolver) {
-        this.MAX_ITERATIONS = Math.max(
-          this.MAX_ITERATIONS,
-          this.iterations +
-            this.activeSubSolver.MAX_ITERATIONS -
-            this.activeSubSolver.iterations +
-            2,
-        )
-      }
-      return
-    }
-    if (!this.exactRepairSolver) {
+    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
+    if (!pipelineStepDef) {
       this.solved = true
       return
     }
-    this.exactRepairSolver.step()
-    this.progress = this.exactRepairSolver.progress
-    if (this.exactRepairSolver.failed) {
-      this.failed = true
-      this.error = this.exactRepairSolver.error
+    if (this.activeSubSolver) {
+      const child = this.activeSubSolver
+      child.step()
+      this.MAX_ITERATIONS = Math.max(
+        this.MAX_ITERATIONS,
+        this.iterations + child.MAX_ITERATIONS - child.iterations + 2,
+      )
+      if (child.failed) {
+        this.failed = true
+        this.error = child.error
+        this.activeSubSolver = null
+      } else if (child.solved) {
+        pipelineStepDef.onSolved()
+        this.activeSubSolver = null
+        this.currentPipelineStepIndex++
+      }
       return
     }
-    if (!this.exactRepairSolver.solved) return
-    this.postExactRepairSteps = this.finishExactRepairSteps()
-    this.activeSubSolver = null
-    this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS, this.iterations + 2)
+    this.activeSubSolver = pipelineStepDef.createSolver()
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + this.activeSubSolver.MAX_ITERATIONS + 2,
+    )
   }
 
-  private *finishExactRepairSteps(): Generator<void, void, void> {
+  computeProgress(): number {
+    if (this.solved) return 1
+    return Math.max(
+      this.progress,
+      (this.currentPipelineStepIndex + (this.activeSubSolver?.progress ?? 0)) /
+        this.pipelineDef.length,
+    )
+  }
+
+  getCurrentPhase(): string {
+    return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+  }
+
+  private finishExactRepair(): void {
     if (!this.exactRepairSolver) {
       throw new Error("Pipeline9 post-exact repair requires the exact solver")
     }
@@ -1634,7 +1692,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
-    const regionalB01Solver = new Pipeline9RegionalB01RepairSolver({
+    this.regionalB01Params = {
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
@@ -1653,23 +1711,31 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.params.srj.minTraceToPadEdgeClearance ??
         0.15,
       effort: this.params.effort,
-    })
-    this.regionalB01RepairSolver = regionalB01Solver
-    this.activeSubSolver = regionalB01Solver
-    this.MAX_ITERATIONS = Math.max(
-      this.MAX_ITERATIONS,
-      this.iterations + regionalB01Solver.MAX_ITERATIONS + 2,
-    )
-    while (!regionalB01Solver.solved && !regionalB01Solver.failed) {
-      regionalB01Solver.step()
-      yield
     }
-    if (regionalB01Solver.failed) {
-      throw new Error(
-        `Pipeline9 regional B01 repair failed: ${regionalB01Solver.error}`,
-      )
+    this.stats = {
+      ...this.stats,
+      ...this.exactRepairSolver.stats,
+      postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
+      postExactReferenceValidationAttempted: true,
+      postExactReferenceDrcIssueCount,
+      postExactReferenceAccepted: false,
+      clearancePrecisionCandidateCount,
+      clearancePrecisionCandidateValidationCount,
+      clearancePrecisionReferenceValidationCount,
+      clearancePrecisionRepaired,
+      regionalB01RepairTraceIdCount:
+        preloadRepairTraceIds.size +
+        (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
+      terminalEscapeCandidateCount: terminalEscapeResult.attemptedCandidateCount,
+      terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
     }
-    const regionalB01RepairResult = regionalB01Solver.getResult()
+  }
+
+  private finishRegionalB01Repair(): void {
+    if (!this.regionalB01RepairSolver?.solved) {
+      throw new Error("Pipeline9 regional B01 stage must solve before completion")
+    }
+    const regionalB01RepairResult = this.regionalB01RepairSolver.getResult()
     const regionalReference = this.cachedReferenceDrcEvaluator!({
       traces: [],
       routes: regionalB01RepairResult.routes,
@@ -1683,8 +1749,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ).length,
       this.params.effort,
     )
-    const boundedRegionalRepairStartedAt = performance.now()
-    const boundedRegionalSolver = new Pipeline9BoundedRegionalRepairSolver({
+    this.boundedRegionalParams = {
       connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
@@ -1698,37 +1763,27 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
       budget: regionalRepairBudget,
-    })
-    this.boundedRegionalRepairSolver = boundedRegionalSolver
-    this.activeSubSolver = boundedRegionalSolver
-    this.MAX_ITERATIONS = Math.max(
-      this.MAX_ITERATIONS,
-      this.iterations + boundedRegionalSolver.MAX_ITERATIONS + 2,
-    )
-    while (!boundedRegionalSolver.solved && !boundedRegionalSolver.failed) {
-      boundedRegionalSolver.step()
-      this.progress = boundedRegionalSolver.progress
-      yield
     }
-    if (boundedRegionalSolver.failed) {
+  }
+
+  private finishBoundedRegionalRepair(): void {
+    if (
+      !this.boundedRegionalRepairSolver?.solved ||
+      !this.regionalB01RepairSolver?.solved ||
+      !this.boundedRegionalParams?.budget ||
+      this.boundedRegionalRepairStartedAt === undefined
+    ) {
       throw new Error(
-        `Pipeline9 bounded regional repair failed: ${boundedRegionalSolver.error}`,
+        "Pipeline9 bounded regional stage is missing its completed inputs",
       )
     }
-    const boundedRegionalRepairResult = boundedRegionalSolver.getResult()
-    this.activeSubSolver = null
+    const regionalB01RepairResult = this.regionalB01RepairSolver.getResult()
+    const boundedRegionalRepairResult =
+      this.boundedRegionalRepairSolver.getResult()
+    const regionalRepairBudget = this.boundedRegionalParams.budget
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
-      ...this.exactRepairSolver.stats,
-      postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
-      postExactReferenceValidationAttempted: true,
-      postExactReferenceDrcIssueCount,
-      postExactReferenceAccepted: false,
-      clearancePrecisionCandidateCount,
-      clearancePrecisionCandidateValidationCount,
-      clearancePrecisionReferenceValidationCount,
-      clearancePrecisionRepaired,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
@@ -1748,7 +1803,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairPublishedDrcIssueCount:
         boundedRegionalRepairResult.publishedDrcIssueCount,
       boundedRegionalRepairTimeMs:
-        performance.now() - boundedRegionalRepairStartedAt,
+        performance.now() - this.boundedRegionalRepairStartedAt,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
@@ -1769,12 +1824,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
       regionalB01RepairAttempted:
         regionalB01RepairResult.preloadRepairAttempted,
-      regionalB01RepairTraceIdCount:
-        preloadRepairTraceIds.size +
-        (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
-      terminalEscapeCandidateCount:
-        terminalEscapeResult.attemptedCandidateCount,
-      terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
       referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
       indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,

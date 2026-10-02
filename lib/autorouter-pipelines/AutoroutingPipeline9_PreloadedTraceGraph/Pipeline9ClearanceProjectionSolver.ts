@@ -1,7 +1,7 @@
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
-  relaxTraceClearanceSteps,
+  RelaxTraceClearanceSolver,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -42,7 +42,7 @@ type ProjectionState =
   | {
       phase: "relax"
       context: ProjectionContext
-      iterator: ReturnType<typeof relaxTraceClearanceSteps>
+      solver: RelaxTraceClearanceSolver
     }
   | {
       phase: "select" | "physical-validation" | "reference-validation"
@@ -86,48 +86,45 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
-      const segmentCount = canonicalRoutes.reduce(
-        (count, route) => count + Math.max(0, route.route.length - 1),
-        0,
-      )
-      // repair04 yields every 4096 setup pairs, every 16 obstacles and each
-      // of 256 sweeps. Count initialization, generator completion and guards.
-      this.MAX_ITERATIONS =
-        Math.ceil((segmentCount * (segmentCount - 1)) / (2 * 4096)) +
-        Math.ceil(srj.obstacles.length / 16) +
-        256 +
-        5
+      const solver = new RelaxTraceClearanceSolver({
+        srj,
+        routes: canonicalRoutes,
+        bounds: srj.bounds,
+        boundaryMargin: 0,
+        boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
+        lockedPointIndices: canonicalRoutes.map((route) =>
+          route.route.map(() => false),
+        ),
+        allowViaMovement: !params.allowPartialRepair,
+        traceClearance:
+          (params.originalSrj.minTraceToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.traceClearance!) +
+          (params.allowPartialRepair || params.usePrecisionMargin
+            ? CLEARANCE_PRECISION_MARGIN
+            : 0),
+        viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
+      })
+      this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
+      this.activeSubSolver = solver
       this.state = {
         phase: "relax",
         context: { srj, errors, originalCanonicalRoutes, canonicalRoutes },
-        iterator: relaxTraceClearanceSteps({
-          srj,
-          routes: canonicalRoutes,
-          bounds: srj.bounds,
-          boundaryMargin: 0,
-          boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-          lockedPointIndices: canonicalRoutes.map((route) =>
-            route.route.map(() => false),
-          ),
-          allowViaMovement: !params.allowPartialRepair,
-          traceClearance:
-            (params.originalSrj.minTraceToPadEdgeClearance ??
-              RELAXED_DRC_OPTIONS.traceClearance!) +
-            (params.allowPartialRepair || params.usePrecisionMargin
-              ? CLEARANCE_PRECISION_MARGIN
-              : 0),
-          viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
-        }),
+        solver,
       }
       return
     }
     if (state.phase === "relax") {
-      const result = state.iterator.next()
-      if (result.done) {
+      state.solver.step()
+      this.MAX_ITERATIONS = state.solver.MAX_ITERATIONS + 4
+      if (state.solver.failed) {
+        throw new Error(`Clearance relaxation failed: ${state.solver.error}`)
+      }
+      if (state.solver.solved) {
+        this.activeSubSolver = null
         this.state = {
           phase: "select",
           context: state.context,
-          candidate: result.value,
+          candidate: state.solver.getOutput(),
         }
       }
       return
@@ -215,10 +212,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       case "initialize":
         return 0
       case "relax":
-        return Math.min(
-          0.9,
-          (0.9 * Math.max(0, this.iterations - 1)) / (this.MAX_ITERATIONS - 4),
-        )
+        return 0.9 * this.state.solver.progress
       case "select":
         return 0.9
       case "physical-validation":
