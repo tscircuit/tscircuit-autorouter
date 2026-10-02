@@ -1156,10 +1156,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
       nodeWithPortPoints: normalizedNode,
-      obstacles: [
-        ...fixedObstacles,
-        ...boardObstacles,
-      ] as HighDensityObstacle[],
+      obstacles: [...fixedObstacles, ...boardObstacles],
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,

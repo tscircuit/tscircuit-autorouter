@@ -248,16 +248,18 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       HyperPortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
-        this.inputNodeWithPortPoints = cms.capacityNodes!.map((node) => ({
-          capacityMeshNodeId: node.capacityMeshNodeId,
-          center: node.center,
-          width: node.width,
-          height: node.height,
-          portPoints: [] as InputPortPoint[],
-          availableZ: node.availableZ,
-          _containsTarget: node._containsTarget,
-          _containsObstacle: node._containsObstacle,
-        }))
+        this.inputNodeWithPortPoints = cms.capacityNodes!.map(
+          (node): InputNodeWithPortPoints => ({
+            capacityMeshNodeId: node.capacityMeshNodeId,
+            center: node.center,
+            width: node.width,
+            height: node.height,
+            portPoints: [],
+            availableZ: node.availableZ,
+            _containsTarget: node._containsTarget,
+            _containsObstacle: node._containsObstacle,
+          }),
+        )
 
         // Build a map for quick lookup
         const nodeMap = new Map(
@@ -303,7 +305,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
               STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
               // MAX_ITERATIONS_PER_PATH: 10e3,
             },
-          } as HyperPortPointPathingSolverParams,
+          },
         ]
       },
     ),

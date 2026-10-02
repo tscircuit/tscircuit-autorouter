@@ -653,7 +653,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   private getRegionAssignedPortPoints(region: RegionHg): PortPoint[] {
     const existingAssignments = region.assignments ?? []
 
-    return existingAssignments.flatMap((assignment) => {
+    return existingAssignments.flatMap((assignment): PortPoint[] => {
       const region1PortPoint = assignment.regionPort1.d
       const region2PortPoint = assignment.regionPort2.d
       const connectionName = assignment.connection.connectionId
@@ -676,7 +676,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           connectionName,
           rootConnectionName,
         },
-      ] as PortPoint[]
+      ]
     })
   }
 
@@ -757,34 +757,37 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       (assignment) => !routesToRip.has(assignment.solvedRoute),
     )
 
-    const existingPortPoints = existingAssignments.flatMap((assignment) => {
-      const regionPort1 = assignment.regionPort1
-      const regionPort2 = assignment.regionPort2
-      const connectionName = assignment.connection.connectionId
+    const existingPortPoints = existingAssignments.flatMap(
+      (assignment): PortPoint[] => {
+        const regionPort1 = assignment.regionPort1
+        const regionPort2 = assignment.regionPort2
+        const connectionName = assignment.connection.connectionId
 
-      const rootConnectionName =
-        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+        const rootConnectionName =
+          assignment.connection.simpleRouteConnection
+            ?.__rootConnectionNames?.[0]
 
-      return [
-        {
-          x: regionPort1.d.x,
-          y: regionPort1.d.y,
-          z: regionPort1.d.z,
-          connectionName,
-          rootConnectionName,
-        },
-        {
-          x: regionPort2.d.x,
-          y: regionPort2.d.y,
-          z: regionPort2.d.z,
-          connectionName,
-          rootConnectionName,
-        },
-      ] as PortPoint[]
-    })
+        return [
+          {
+            x: regionPort1.d.x,
+            y: regionPort1.d.y,
+            z: regionPort1.d.z,
+            connectionName,
+            rootConnectionName,
+          },
+          {
+            x: regionPort2.d.x,
+            y: regionPort2.d.y,
+            z: regionPort2.d.z,
+            connectionName,
+            rootConnectionName,
+          },
+        ]
+      },
+    )
 
     const newlySolvedRoutePortPoints = newlySolvedRoute.path.flatMap(
-      (candidate) => {
+      (candidate): PortPoint[] => {
         if (!candidate.lastPort || candidate.lastRegion !== region) {
           return []
         }
@@ -811,7 +814,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
               newlySolvedRoute.connection.simpleRouteConnection
                 ?.__rootConnectionNames?.[0],
           },
-        ] as PortPoint[]
+        ]
       },
     )
 
@@ -926,7 +929,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     for (const region of this.params.graph.regions) {
       const assignments = region.assignments ?? []
 
-      const edgePortPoints = assignments.flatMap((assignment) => {
+      const edgePortPoints = assignments.flatMap((assignment): PortPoint[] => {
         const connectionName = assignment.connection.connectionId
 
         const rootConnectionName =
@@ -953,7 +956,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           prevPortPointId: assignment.regionPort1.d.portId,
         }
 
-        return [startPoint, endPoint] as PortPoint[]
+        return [startPoint, endPoint]
       })
 
       const centerPortPoints: PortPoint[] = []
