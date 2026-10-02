@@ -577,8 +577,15 @@ export class TraceWidthSolver extends BaseSolver {
 
     const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
+    const terminalObstacles =
+      this.obstacleSHI?.search({
+        minX: endpoint.x - COORDINATE_EPSILON,
+        minY: endpoint.y - COORDINATE_EPSILON,
+        maxX: endpoint.x + COORDINATE_EPSILON,
+        maxY: endpoint.y + COORDINATE_EPSILON,
+      }) ?? this.obstacles
 
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of terminalObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
