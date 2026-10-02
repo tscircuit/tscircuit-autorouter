@@ -27,13 +27,13 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
-  applyPipeline9ClearancePrecisionRepairs,
-  type ClearanceMarginDrcEvaluator,
-} from "./applyPipeline9ClearancePrecisionRepairs"
-import {
   applyPipeline9BoundedRegionalRepairs,
   getPipeline9BoundedRepairBudget,
 } from "./applyPipeline9BoundedRegionalRepairs"
+import {
+  type ClearanceMarginDrcEvaluator,
+  applyPipeline9ClearancePrecisionRepairs,
+} from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -48,10 +48,10 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  getPipeline9DrcErrors,
-  getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
+  getPipeline9DrcErrors,
+  getPipeline9RouteIndexByTraceId,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
@@ -725,8 +725,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const viaHoleClearance =
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? viaClearance
+    // Repair candidates only change routed copper. Source and route
+    // connectivity stay constant for every DRC evaluation in this solver.
+    const connectivityMaps = {
+      source: getConnectivityMapFromSimpleRouteJson(
+        params.originalSrj === params.srjWithPointPairs
+          ? params.originalSrj
+          : {
+              ...params.originalSrj,
+              connections: [
+                ...params.srjWithPointPairs.connections,
+                ...params.originalSrj.connections,
+              ],
+            },
+      ),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+    }
     const baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
+      connectivityMaps,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
@@ -749,6 +766,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const currentDrcResult = evaluateRelaxedDrc({
       includeBoardClearance: true,
+      connectivityMaps,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
@@ -1209,21 +1227,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    // Candidate repairs change route geometry, not the declared connectivity.
-    const connectivityMaps = {
-      source: getConnectivityMapFromSimpleRouteJson(
-        params.originalSrj === params.srjWithPointPairs
-          ? params.originalSrj
-          : {
-              ...params.originalSrj,
-              connections: [
-                ...params.srjWithPointPairs.connections,
-                ...params.originalSrj.connections,
-              ],
-            },
-      ),
-      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
-    }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
