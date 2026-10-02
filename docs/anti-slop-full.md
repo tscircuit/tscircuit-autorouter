@@ -12,8 +12,12 @@ downgraded, capped or switched off. The CI job remains advisory and records each
 step outcome plus the full JSON diagnostic artifact. A green advisory job can
 contain a failed lint step; inspect its summary and artifact. Setup, plugin,
 integration and typecheck failures are not caught or converted into success.
-The diagnostic step explicitly selects Bash with pipefail: `tee` cannot hide a
-lint or setup failure. The advisory job also checks repository Biome formatting.
+The diagnostic step redirects JSON directly to a regular file and retains the
+lint failure status. Under CI Bun 1.3.8, the earlier pipe through `tee` truncated
+JSON at exactly 65,536 characters. A separate step parses and validates the whole
+report, requires 24 active rules, and publishes per-rule counts. A malformed or
+missing report fails that step visibly. The advisory job also checks repository
+Biome formatting.
 
 ## Provenance and scope
 
@@ -165,13 +169,15 @@ serially, without modifying other checkouts or dependencies. Checks completed:
   The actual graphics object and white-background SVG match the base byte for
   byte on this fixture (SVG SHA-256
   `0faf1d4f633114dfd09c0bd4b89975141b1570affdb6119510f7c3b5b4b9a3ce`).
-- Actual Bun CLI integration: **four tests / 116 assertions**. Deliberately bad
+- Actual Bun CLI integration: **five tests / 124 assertions**. Deliberately bad
   examples trigger every one of the 24 rules at error severity and exit 1.
   Legitimate geometry, owned accumulation, const assertions and the two narrow
   exception forms pass. Ignored paths, missing config/plugin failures, exact
   dependency pins and all 39 vendor file hashes are verified. A regression runs
   the actual Bash pipeline and verifies that both rule errors and missing-config
-  errors retain exit 1 while `tee` writes the diagnostic artifact.
+  errors retain exit 1 through a Bash pipeline. A further regression generates
+  1,000 diagnostics, verifies complete direct-file output beyond 64 KiB, checks
+  the summary counts, and rejects a truncated JSON artifact.
 - Full lint JSON confirms every remaining diagnostic is an error and the command
   exits 1. No original snapshot or fixture was updated.
 

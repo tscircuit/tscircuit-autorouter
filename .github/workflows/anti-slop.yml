@@ -32,15 +32,21 @@ jobs:
       - name: Report lib diagnostics
         id: lint
         if: ${{ !cancelled() }}
-        # Explicit bash enables pipefail so tee cannot mask lint/setup failures.
+        # Bun 1.3.8 truncates large piped stdout; redirect to a regular file.
         shell: bash
-        run: bun run lint:anti-slop --format json | tee anti-slop-diagnostics.json
+        run: bun run lint:anti-slop --format json > anti-slop-diagnostics.json
+      - name: Verify and summarize complete diagnostic JSON
+        id: inventory
+        if: ${{ always() }}
+        run: bun scripts/summarize-anti-slop-diagnostics.ts anti-slop-diagnostics.json anti-slop-summary.json
       - name: Upload full diagnostic inventory
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: anti-slop-diagnostics
-          path: anti-slop-diagnostics.json
+          path: |
+            anti-slop-diagnostics.json
+            anti-slop-summary.json
           if-no-files-found: warn
       - name: Summarize diagnostic status
         if: ${{ always() }}
