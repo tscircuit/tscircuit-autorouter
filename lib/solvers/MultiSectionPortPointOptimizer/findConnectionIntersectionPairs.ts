@@ -17,8 +17,11 @@ function perimeterT(
   const eps = 1e-6
 
   if (Math.abs(p.y - ymax) < eps) return p.x - xmin // Top edge
+
   if (Math.abs(p.x - xmax) < eps) return W + (ymax - p.y) // Right edge
+
   if (Math.abs(p.y - ymin) < eps) return W + H + (xmax - p.x) // Bottom edge
+
   if (Math.abs(p.x - xmin) < eps) return 2 * W + H + (p.y - ymin) // Left edge
 
   // Point not on boundary - find closest edge
@@ -29,9 +32,12 @@ function perimeterT(
   const minDist = Math.min(distTop, distRight, distBottom, distLeft)
 
   if (minDist === distTop) return Math.max(0, Math.min(W, p.x - xmin))
+
   if (minDist === distRight) return W + Math.max(0, Math.min(H, ymax - p.y))
+
   if (minDist === distBottom)
     return W + H + Math.max(0, Math.min(W, xmax - p.x))
+
   return 2 * W + H + Math.max(0, Math.min(H, p.y - ymin))
 }
 
@@ -59,17 +65,21 @@ export function findConnectionIntersectionPairs(
     nodeAssignedPortPoints,
     acceptablePf,
   } = params
+
   const intersectionPairs: Array<[string, string]> = []
 
   // Only analyze nodes with high probability of failure
   for (const nodeId of section.nodeIds) {
     const pf = nodePfMap.get(nodeId) ?? 0
+
     if (pf <= acceptablePf) continue
 
     const capacityNode = capacityMeshNodeMap.get(nodeId)
+
     if (!capacityNode) continue
 
     const portPoints = nodeAssignedPortPoints.get(nodeId) ?? []
+
     if (portPoints.length < 2) continue
 
     // Compute node bounds
@@ -86,9 +96,11 @@ export function findConnectionIntersectionPairs(
 
     for (const pp of portPoints) {
       const points = connectionPointsMap.get(pp.connectionName) ?? []
+
       if (!points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)) {
         points.push({ x: pp.x, y: pp.y, z: pp.z })
       }
+
       connectionPointsMap.set(pp.connectionName, points)
     }
 
@@ -118,6 +130,7 @@ export function findConnectionIntersectionPairs(
 
     // Find crossing pairs using chord interleaving criterion
     const eps = 1e-6
+
     for (const [, chords] of sameLayerChordsByZ) {
       // Normalize chords so t1 < t2
       const normalized = chords.map((c) => ({
@@ -128,6 +141,7 @@ export function findConnectionIntersectionPairs(
 
       for (let i = 0; i < normalized.length; i++) {
         const { connectionName: name1, a, b } = normalized[i]
+
         for (let j = i + 1; j < normalized.length; j++) {
           const { connectionName: name2, a: c, b: d } = normalized[j]
 

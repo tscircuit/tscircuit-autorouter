@@ -41,8 +41,10 @@ function getGraphicsLayerColor(layerName: string): string {
   }
 
   const innerLayerMatch = /^inner([1-9]\d*)$/.exec(layerName)
+
   if (innerLayerMatch) {
     const innerLayerIndex = Number(innerLayerMatch[1])
+
     return `hsl(${(innerLayerIndex * 137) % 360}, 70%, 45%)`
   }
 
@@ -69,9 +71,11 @@ export const convertSrjToGraphicsObject = (
     for (const connection of srj.connections) {
       for (const point of connection.pointsToConnect) {
         const pointLayers = getConnectionPointLayers(point)
+
         const rootConnectionNames = connection.__rootConnectionNames ?? [
           connection.name,
         ]
+
         points.push({
           x: point.x,
           y: point.y,
@@ -104,6 +108,7 @@ export const convertSrjToGraphicsObject = (
         p2: { x: number; y: number },
       ): boolean => {
         const tolerance = 0.01
+
         for (const jumper of jumpers) {
           // Check if this segment connects the jumper's start and end points
           const matchesForward =
@@ -122,6 +127,7 @@ export const convertSrjToGraphicsObject = (
             return true
           }
         }
+
         return false
       }
 
@@ -129,8 +135,10 @@ export const convertSrjToGraphicsObject = (
         if (routePoint.route_type === "via") {
           const fromZ = mapLayerNameToZ(routePoint.from_layer, layerCount)
           const toZ = mapLayerNameToZ(routePoint.to_layer, layerCount)
+
           const viaRadius =
             (routePoint.via_diameter ?? viaDimensions.padDiameter) / 2
+
           const zLayers = Array.from(
             { length: Math.abs(toZ - fromZ) + 1 },
             (_, index) => Math.min(fromZ, toZ) + index,
@@ -163,18 +171,21 @@ export const convertSrjToGraphicsObject = (
       }
 
       let currentWireLine: Line | undefined
+
       for (let j = 0; j < trace.route.length - 1; j++) {
         const routePoint = trace.route[j]
         const nextRoutePoint = trace.route[j + 1]
 
         if (routePoint.route_type === "jumper") {
           currentWireLine = undefined
+
           // Draw jumper pads and body
           const color =
             colorMap[trace.connection_name] ?? "rgba(255, 165, 0, 0.8)"
 
           // Get dimensions based on footprint
           const footprint = routePoint.footprint
+
           const dims =
             JUMPER_DIMENSIONS[
               footprint === "1206x4_pair" ? "1206x4_pair" : "0603"
@@ -241,12 +252,14 @@ export const convertSrjToGraphicsObject = (
 
           traceWidth = routePoint.width
           const isTopLayer = routePoint.layer === "top"
+
           const baseColor =
             traceColorMode === "net"
               ? colorMap[trace.connection_name]!
               : getGraphicsLayerColor(routePoint.layer)
 
           const layer = `z${mapLayerNameToZ(routePoint.layer, layerCount)}`
+
           if (
             currentWireLine &&
             currentWireLine.layer === layer &&
@@ -287,6 +300,7 @@ export const convertSrjToGraphicsObject = (
   for (const o of srj.obstacles) {
     if (o.isCopperPour) continue
     const obstacleZLayers = getGraphicsZLayersForObstacle(o, layerCount)
+
     if (obstacleZLayers.length === 0) {
       throw new Error(
         `Cannot visualize obstacle "${o.obstacleId ?? "unknown"}" without a valid layer: layers=${o.layers.join(",")}, __zLayers=${o.__zLayers?.join(",") ?? "unset"}, layerCount=${layerCount}`,
@@ -297,6 +311,7 @@ export const convertSrjToGraphicsObject = (
       obstacleZLayers.length === 1
         ? mapZToLayerName(obstacleZLayers[0]!, layerCount)
         : null
+
     const obstacleColor =
       onlyLayerName === "bottom"
         ? getGraphicsLayerColor("bottom")

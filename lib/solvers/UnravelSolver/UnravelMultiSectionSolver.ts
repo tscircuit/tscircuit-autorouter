@@ -88,10 +88,13 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
     this.dedupedSegments = getDedupedSegments(assignedSegments)
     this.dedupedSegmentMap = new Map()
+
     for (const segment of this.dedupedSegments) {
       this.dedupedSegmentMap.set(segment.nodePortSegmentId!, segment)
     }
+
     this.nodeMap = new Map()
+
     for (const node of nodes) {
       this.nodeMap.set(node.capacityMeshNodeId, node)
     }
@@ -115,6 +118,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
     // Compute tuned capacity for each node
     this.tunedNodeCapacityMap = new Map()
+
     for (const [nodeId, node] of this.nodeMap) {
       this.tunedNodeCapacityMap.set(nodeId, getTunedTotalCapacity1(node))
     }
@@ -163,17 +167,21 @@ export class UnravelMultiSectionSolver extends BaseSolver {
   _step() {
     if (this.iterations >= this.MAX_ITERATIONS - 1) {
       this.solved = true
+
       return
     }
+
     if (!this.activeSubSolver) {
       // Find the node with the highest probability of failure
       let highestPfNodeId = null
       let highestPf = 0
+
       for (const [nodeId, pf] of this.nodePfMap.entries()) {
         const pfReduced =
           pf *
           (1 -
             (this.attemptsToFixNode.get(nodeId) ?? 0) / this.MAX_NODE_ATTEMPTS)
+
         if (pfReduced > highestPf) {
           highestPf = pf
           highestPfNodeId = nodeId
@@ -182,6 +190,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
       if (!highestPfNodeId || highestPf < this.ACCEPTABLE_PF) {
         this.solved = true
+
         return
       }
 
@@ -217,8 +226,10 @@ export class UnravelMultiSectionSolver extends BaseSolver {
     if (this.activeSubSolver.failed) {
       this.stats.failedOptimizations += 1
       this.activeSubSolver = null
+
       return
     }
+
     if (this.activeSubSolver.solved) {
       if (this.activeSubSolver.cacheHit) {
         this.stats.cacheHits += 1
@@ -232,6 +243,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
       if (foundBetterSolution) {
         this.stats.successfulOptimizations += 1
+
         // Modify the points using the pointModifications of the candidate
         for (const [
           segmentPointId,
@@ -320,10 +332,12 @@ export class UnravelMultiSectionSolver extends BaseSolver {
     // Connect segment points that belong to the same segment
     // Group points by segment ID
     const pointsBySegment = new Map<string, SegmentPoint[]>()
+
     for (const point of this.segmentPointMap.values()) {
       if (!pointsBySegment.has(point.segmentId)) {
         pointsBySegment.set(point.segmentId, [])
       }
+
       pointsBySegment.get(point.segmentId)!.push(point)
     }
 
@@ -354,6 +368,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
     for (let i = 0; i < allPoints.length; i++) {
       const point1 = allPoints[i]
+
       for (let j = i + 1; j < allPoints.length; j++) {
         const point2 = allPoints[j]
 
@@ -372,6 +387,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
         if (hasSharedNode) {
           const connectionKey = `${point1.segmentPointId}-${point2.segmentPointId}`
+
           if (processedConnections.has(connectionKey)) continue
           processedConnections.add(connectionKey)
 
@@ -380,6 +396,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
           const layer = point1.z
 
           let strokeDash: string | undefined
+
           if (sameLayer) {
             strokeDash = layer === 0 ? undefined : "10 5" // Solid for layer 0, long dash for other layers
           } else {
@@ -397,6 +414,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
         }
       }
     }
+
     return graphics
   }
 
@@ -406,11 +424,15 @@ export class UnravelMultiSectionSolver extends BaseSolver {
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
       )
     }
+
     const nodeWithPortPointsMap = new Map<string, NodeWithPortPoints>()
+
     for (const segment of this.dedupedSegments) {
       const segId = segment.nodePortSegmentId!
+
       for (const nodeId of this.segmentIdToNodeIds.get(segId)!) {
         const node = this.nodeMap.get(nodeId)!
+
         if (!nodeWithPortPointsMap.has(nodeId)) {
           nodeWithPortPointsMap.set(nodeId, {
             capacityMeshNodeId: nodeId,
@@ -426,6 +448,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
     for (const segmentPoint of this.segmentPointMap.values()) {
       for (const nodeId of segmentPoint.capacityMeshNodeIds) {
         const nodeWithPortPoints = nodeWithPortPointsMap.get(nodeId)
+
         if (nodeWithPortPoints) {
           nodeWithPortPoints.portPoints.push({
             x: segmentPoint.x,

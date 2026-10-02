@@ -1,0 +1,1510 @@
+[
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableAutoroutingPipeline1Solver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/AssignableViaNodeMergerSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/HyperAssignableViaCapacityPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/OffboardCapacityNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/OffboardPathFragmentSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline1/SingleLayerNodeMergerSolver_OnlyMergeTargets.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/AssignableAutoroutingPipeline2.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/PortPointOffboardPathFragmentSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/updateConnMapWithOffboardObstacleConnections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AssignableAutoroutingPipeline3/AssignableAutoroutingPipeline3.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/ApplyTraceSimplificationSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/PrepareTraceSimplificationSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/TraceSimplificationStageSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/ValidateTraceSimplificationSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/convertSimplifiedPcbTraceToHighDensityRoute.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline1_OriginalUnravel/AutoroutingPipeline1_OriginalUnravel.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline2_PortPointPathing/AutoroutingPipelineSolver2_PortPointPathing.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline3_HgPortPointPathing/AutoroutingPipelineSolver3_HgPortPointPathing.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/AutoroutingPipelineSolver5_HdCache.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AttachProjectedRectsSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHypergraphPortPointPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PreprocessSimpleRouteJsonSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/ProjectHighDensityToPolygonSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/geometry.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/shouldClampProjectionExpansion.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/srjToPolyHyperGraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline8/SplitNodesIntoSingleLayerNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedInputProjection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9EffortCleanupSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyFixedRouteReplacementsToPreloadedTraces.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearancePrecisionRepairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9TerminalEscapeRelocations.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/assignUniquePcbTraceIdsToNewTraces.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canPublishIndependentClearanceRepairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canPublishPartialFixedObstacleRepair.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/filterPipeline9DrcErrorsAgainstBaseline.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ClearanceMarginErrors.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9LayerTransitionViaEndpoint.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9NetByConnectionName.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PreloadedTraceIdsInInitialDrcRegions.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PreloadedViaPairTraceGroups.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getTerminalLayerIndicesByPcbPortId.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializeHypergraphPreloadedTraceSections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializePipeline9HdRouteVias.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/mergePipeline9MovablePreloadedVias.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalizePipeline9DrcErrorsForRepair.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9MutatedPreloadedTraceSimplification.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9DrcRoutedTraces.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/selectIndependentClearanceRepairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/simplifyPipeline9CollinearRoutePoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/subdividePipeline9ClearanceSegments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/autorouter-pipelines/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/cache/InMemoryCache.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/cache/LocalStorageCache.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/cache/attemptToUseCacheSync.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/cache/setupGlobalCaches.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/CapacityNodeTree.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/FlatbushIndex.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/HighDensityRouteSpatialIndex.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/ObstacleTree.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/PriorityQueue.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/RbushIndex.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/SingleRouteCandidatePriorityQueue.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/data-structures/TargetTree.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BaseSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/DetectEdgesNotConnectedToMesh.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/ExpandUnconnectedEdgesToMesh.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/GapFill.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/InitialBgaTopologySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/MergeMeshNodes.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/RemoveMeshNodeOverlappingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/bga-grid.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/gapFillVisualization.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/get-complete-axis-coordinates.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/BgaTopologyGeneratorSolver/isConnectionPointOnObstacle.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger2.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/CachedHyperCapacityPathingSingleSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/CapacityPathingSingleSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/HyperCapacityPathingSingleSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/computeSectionNodesTerminalsAndEdges.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/computeSectionScore.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSectionSolver/visualizeSection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSolver/CapacityPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSolver/CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSolver/CapacityPathingSolver4_FlexibleNegativeCapacity_AvoidLowCapacity_FixedDistanceCost.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacityPathingSolver/CapacityPathingSolver5.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/ComponentDetectionSolver/RectBoundsComponentDetectionStage.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ComponentDetectionSolver/detectors/bga/BgaComponentDetector.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ComponentDetectionSolver/detectors/qfp/qfpShared.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ComponentDetectionSolver/detectors/soic/SoicComponentDetector.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/CurvyIntraNodeSolver/CurvyIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/DeadEndSolver/DeadEndSolver.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/FixedTopologyHighDensityIntraNodeSolver/FixedTopologyHighDensityIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/FixedTopologyHighDensityIntraNodeSolver/buildColorMapFromPortPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensityRepairSolver/getConnectedPadSides.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/HighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/HyperIntraNodeSolverWithJumpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/IntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/computeViaCountVariants.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/constructMiddlePointsWithViaPositions.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/detectMultiConnectedClosedFacesWithoutVias/detectMultiConnectionClosedFacesWithoutVias.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/detectMultiConnectionClosedFacesWithoutVias.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/generateBinaryCombinations.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getCentroidsFromInnerBoxIntersections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getEveryCombinationFromChoiceArray.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getNumberOfClosedFaces.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getPossibleInitialViaPositions.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getViaPossibilities.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/viaCombinationGenerator.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleHighDensityRouteWithJumpersSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/calculateSideTraversal.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/computeDumbbellPaths.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/findCircleLineIntersections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/CachedPortfolioSingleIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/invalidSameLayerCrossingGeometry.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/HighDensitySolverA13WithBoundaryClearance.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/HighDensitySolverA13WithDrcValidation.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/HyperParameterSupervisorSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/JumperPrepatternSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/JumperPrepatternSolver2_HyperGraph.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/RemoveUnnecessaryJumpersSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/areSegmentsCollinear.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/createRegionOffsetPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/estimate0603GridBounds.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/patterns/alternatingGrid.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/patterns/staggeredGrid.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/processPathingSolverResults.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/JumperPrepatternSolver/projectPointOnSegment.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/calculateNodeProbabilityOfFailureWithJumpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/computeSectionScore.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/computeSectionScoreWithJumpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/createPortPointSection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/findConnectionIntersectionPairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/MultiSectionPortPointOptimizer/visualizeSection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NecessaryCrampedPortPointSolver/SingleTargetNecessaryCrampedPortPointSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NecessaryCrampedPortPointSolver/isAllCandidatesBlockedByObstacles.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NetToPointPairsSolver/buildMinimumSpanningTree.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NetToPointPairsSolver/get-initially-connected-zero-weight-edges.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NetToPointPairsSolver/mergeConnections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/HyperPortPointPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/PortPointPathingSolver.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/getConnectionsWithNodes.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/HgPortPointPathingSolverClass.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/buildHyperGraph.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/checkIfConnectionPointIsInRegion.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/computeCost.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/get-connection-point-z-layers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/mergeGraphicsArray.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/select-connection-point-region.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/sharedZLayers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/visualize/visualizeCandidate.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/visualize/visualizeHgConnections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/visualize/visualizeSolvedRoute.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/precomputeSharedParams.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphBfsPortPointPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/createTinyRouteNetIndexer.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/getRegionNetIdByRegionId.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/PortPointPathingSolver/visualizePointPathSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver2.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/NoOffBoardMultipleHighDensityRouteStitchSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/route-stitch-clearance-validator.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/RouteStitchingSolver/routeStitchingShared.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/StrawSolver/StrawSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyMergingSolver/TopologyMergingSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyMergingSolver/topology-merging-input.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyMergingSolver/topology-merging-output.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyMergingSolver/topology-merging-regions.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/TopologyMergingSolver/topology-merging-types.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyPlanningSolver/capacity-node-geometry.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyPlanningSolver/get-global-mesh-nodes-for-topology-merging.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TopologyPlanningSolver/topologyPlanningShared.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceKeepoutSolver/TraceKeepoutSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceKeepoutSolver/computeDrawPositionFromCollisions.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceKeepoutSolver/obstacleToSegments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceKeepoutSolver/removeSelfIntersections.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceKeepoutSolver/smoothLines.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/TraceWidthSolver/TraceWidthSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/determineOwnerNode.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/determineOwnerPair.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/getSideLineCoordinates.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/precomputeSharedEdges.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/redistributePortPointsOnSharedEdge.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/redistributePortPointsOnSide.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/shouldIgnorePortPoint.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/shouldIgnoreSharedEdge.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/shouldIgnoreSide.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/types.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UniformPortDistributionSolver/visualizeUniformPortDistribution.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/CachedUnravelSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/UnravelMultiSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/UnravelSectionSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/createPointModificationsHash.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/createSegmentPointMap.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/getDedupedSegments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/getIssuesInSection.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/getNodesNearNode.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/hasZRangeOverlap.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/UnravelSolver/types.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ViaPossibilitiesSolver/ViaPossibilitiesSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/ViaPossibilitiesSolver/ViaPossibilitiesSolver2.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/colors.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/getPendingEffectsFromSolverTree.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/solvers/length-matching-post-processing-solver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/AutoroutingPipelineDebugger.tsx",
+    "identical": false
+  },
+  {
+    "file": "lib/testing/AutoroutingPipelineMenuBar.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/CapacityNodeEditor.tsx",
+    "identical": false
+  },
+  {
+    "file": "lib/testing/DumbbellDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/GenericSolverDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/HighDensityDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/HighDensityInteractiveNodeDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/HyperHighDensityDebugger.tsx",
+    "identical": false
+  },
+  {
+    "file": "lib/testing/KrtAutoroutingPipelineSolver.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/PipelineStageDebugRunner.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/SegmentOptimizerDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/UnravelSectionDebugger.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/capacity-node-editor/PortPoint.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/capacity-node-editor/getInitialCapacityNodeEditorView.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/capacity-node-editor/helpers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/evaluate-relaxed-drc.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/getBugReportSnapshotSvg.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/getDrcErrors.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/runTraceLinting.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/ui/menubar.tsx",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/convertToCircuitJson.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/extractCapacityMeshNodeIdFromObjectLabel.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/getHighDensityNodeDownloadData.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/prepareParamsForDownload.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/testing/utils/sanitizeParamsForDownload.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/types/index.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/types/srj-types.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/addApproximatingRectsToSrj.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/annotateNominalTraceWidth.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/applyNetColorsToGraphicsObject.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/classifyPointInBounds.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/cloneAndShuffleArray.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/combineVisualizations.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/connection-point-utils.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/convertHdRouteToSimplifiedRoute.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/utils/convertSrjToGraphicsObject.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/convertSrjTracesToObstacles.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/create-srj-with-board-valid-obstacle-layers.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/createNodeMap.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/createRectFromCapacityNode.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/createSrjFromNodeWithPortPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/dsu.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/filterObstaclesOutsideBoard.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/findClosestPointToABCWithinBounds.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/findPointToGetAroundCircle.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/formatObstacleLabel.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/generateColorMapFromNodeWithPortPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/get-initially-connected-map-from-simple-route-json.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getBoundsFromNodeWithPortPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getConnectionPointOutsideBoundsError.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getConnectionPortPointPairs.ts",
+    "identical": false
+  },
+  {
+    "file": "lib/utils/getConnectivityMapFromSimpleRouteJson.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getDrcErrorTraceIds.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getIntraNodeCrossings.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getIntraNodeCrossingsFromSegmentPoints.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getIntraNodeCrossingsFromSegments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getIntraNodeCrossingsUsingCircle.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getLayerFromPoint.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getLinesBetweenNodes.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getPortPairs.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getPresuppliedTraceVisualization.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getRerouteSimpleRouteJson.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getTunedTotalCapacity1.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getVectorLength.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/getViaDimensions.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/mapLayerNameToZ.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/mapZToLayerName.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/minimumDistanceBetweenSegments.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/polygonContainment.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/snapToNearestBound.ts",
+    "identical": true
+  },
+  {
+    "file": "lib/utils/visualizePortPoints.ts",
+    "identical": true
+  }
+]

@@ -14,6 +14,7 @@ import type { CapacityMeshNode, Obstacle } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
+
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
 
 type QfpSide = "top" | "right" | "bottom" | "left"
@@ -74,6 +75,7 @@ function isPerimeterQfpPadObstacle(obstacle: Obstacle) {
 
 function splitQfpThermalPadObstacles(obstacles: Obstacle[]) {
   const padRingObstacles = obstacles.filter(isPerimeterQfpPadObstacle)
+
   const thermalPadObstacles = obstacles.filter(
     (obstacle) => !isPerimeterQfpPadObstacle(obstacle),
   )
@@ -117,6 +119,7 @@ function getObstacleSide(obstacle: Obstacle, bounds: Bounds): QfpSide {
   ]
 
   distances.sort((a, b) => a.distance - b.distance)
+
   return distances[0]!.side
 }
 
@@ -160,6 +163,7 @@ function createMeshNodesForRegion({
   if (!isValidBounds(bounds)) return []
 
   const region = createRectRegion(bounds)
+
   const isLargeEnoughForMultiZ =
     Math.min(region.width, region.height) > multiLayerThreshold
 
@@ -217,6 +221,7 @@ function getThermalPadRegions(obstacles: Obstacle[], layerCount: number) {
 
 function isNarrowPadGap(bounds: Bounds, narrowThreshold: number) {
   if (!isValidBounds(bounds)) return false
+
   return (
     Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) <=
     narrowThreshold
@@ -299,12 +304,15 @@ function createInnerPadClearanceRegionsForSide({
 
   for (let index = 0; index < sideObstacles.length; index++) {
     const currentBounds = getBoundingBox(sideObstacles[index]!)
+
     const previousBounds = sideObstacles[index - 1]
       ? getBoundingBox(sideObstacles[index - 1]!)
       : null
+
     const nextBounds = sideObstacles[index + 1]
       ? getBoundingBox(sideObstacles[index + 1]!)
       : null
+
     let clearanceBounds: Bounds
 
     if (side === "top") {
@@ -377,18 +385,21 @@ function getInnerQfpBounds({
           ...sideGroups.left.map((obstacle) => getBoundingBox(obstacle).maxX),
         )
       : bounds.minX
+
   const rightInner =
     sideGroups.right.length > 0
       ? Math.min(
           ...sideGroups.right.map((obstacle) => getBoundingBox(obstacle).minX),
         )
       : bounds.maxX
+
   const topInner =
     sideGroups.top.length > 0
       ? Math.max(
           ...sideGroups.top.map((obstacle) => getBoundingBox(obstacle).maxY),
         )
       : bounds.minY
+
   const bottomInner =
     sideGroups.bottom.length > 0
       ? Math.min(
@@ -416,24 +427,31 @@ function getOuterCornerRegions({
   const firstTopBounds = sideGroups.top[0]
     ? getBoundingBox(sideGroups.top[0])
     : null
+
   const lastTopBounds = sideGroups.top.at(-1)
     ? getBoundingBox(sideGroups.top.at(-1)!)
     : null
+
   const firstRightBounds = sideGroups.right[0]
     ? getBoundingBox(sideGroups.right[0])
     : null
+
   const lastRightBounds = sideGroups.right.at(-1)
     ? getBoundingBox(sideGroups.right.at(-1)!)
     : null
+
   const firstBottomBounds = sideGroups.bottom[0]
     ? getBoundingBox(sideGroups.bottom[0])
     : null
+
   const lastBottomBounds = sideGroups.bottom.at(-1)
     ? getBoundingBox(sideGroups.bottom.at(-1)!)
     : null
+
   const firstLeftBounds = sideGroups.left[0]
     ? getBoundingBox(sideGroups.left[0])
     : null
+
   const lastLeftBounds = sideGroups.left.at(-1)
     ? getBoundingBox(sideGroups.left.at(-1)!)
     : null
@@ -574,24 +592,31 @@ function getInnerCornerRegions({
   const firstTopBounds = sideGroups.top[0]
     ? getBoundingBox(sideGroups.top[0])
     : null
+
   const lastTopBounds = sideGroups.top.at(-1)
     ? getBoundingBox(sideGroups.top.at(-1)!)
     : null
+
   const firstRightBounds = sideGroups.right[0]
     ? getBoundingBox(sideGroups.right[0])
     : null
+
   const lastRightBounds = sideGroups.right.at(-1)
     ? getBoundingBox(sideGroups.right.at(-1)!)
     : null
+
   const firstBottomBounds = sideGroups.bottom[0]
     ? getBoundingBox(sideGroups.bottom[0])
     : null
+
   const lastBottomBounds = sideGroups.bottom.at(-1)
     ? getBoundingBox(sideGroups.bottom.at(-1)!)
     : null
+
   const firstLeftBounds = sideGroups.left[0]
     ? getBoundingBox(sideGroups.left[0])
     : null
+
   const lastLeftBounds = sideGroups.left.at(-1)
     ? getBoundingBox(sideGroups.left.at(-1)!)
     : null
@@ -743,19 +768,24 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
   override _step() {
     if (this.output) {
       this.solved = true
+
       return
     }
 
     const { layerCount, obstacles } = this.inputProblem.inputSrj
     const { bounds, componentId } = this.inputProblem.detectedComponent
     const availableZ = getLayerRange(layerCount)
+
     const topologyObstacles = obstacles.filter(
       (obstacle) => obstacle.componentId === componentId,
     )
+
     const componentObstacles =
       topologyObstacles.length > 0 ? topologyObstacles : obstacles
+
     const { padRingObstacles, thermalPadObstacles } =
       splitQfpThermalPadObstacles(componentObstacles)
+
     const sideGroups = groupObstaclesBySide(padRingObstacles, bounds)
     const innerBounds = getInnerQfpBounds({ bounds, sideGroups })
     const thermalPadBounds = combineObstacleBounds(thermalPadObstacles)
@@ -763,20 +793,26 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     if (!thermalPadBounds) {
       this.failed = true
       this.error = "QfpThermalPadTopologyGeneratorSolver requires a thermal pad"
+
       return
     }
 
     const nodeScopeId = componentId
+
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
+
     const obstacleMargin =
       this.inputProblem.obstacleMargin ??
       this.inputProblem.inputSrj.defaultObstacleMargin ??
       0.15
+
     const multiLayerThreshold = viaDiameter + obstacleMargin * 2
+
     const narrowPadGapThreshold =
       this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
+
     const regions: QfpThermalPadRoutingRegion[] = [
       ...getPadRegions(padRingObstacles, layerCount),
       ...getThermalPadRegions(thermalPadObstacles, layerCount),
@@ -839,6 +875,7 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
       }),
       ...getOuterCornerRegions({ bounds, innerBounds, sideGroups }),
     ]
+
     const routingRegions = regions.flatMap((region) =>
       createMeshNodesForRegion({
         nodeId: `qfp_thermalpad:${nodeScopeId}:${region.key}`,

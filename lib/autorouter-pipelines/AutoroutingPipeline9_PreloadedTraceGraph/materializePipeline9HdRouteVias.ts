@@ -18,6 +18,7 @@ export const materializePipeline9HdRouteVias = (
 
     for (const routePoint of hdRoute.route) {
       const previousRoutePoint = route.at(-1)
+
       if (
         !previousRoutePoint ||
         previousRoutePoint.z === routePoint.z ||
@@ -32,10 +33,12 @@ export const materializePipeline9HdRouteVias = (
         start: previousRoutePoint,
         end: routePoint,
       })
+
       if (viaEndpoint === "colocated") {
         route.push(routePoint)
         continue
       }
+
       if (viaEndpoint === "start") {
         route.push({
           x: previousRoutePoint.x,
@@ -49,6 +52,7 @@ export const materializePipeline9HdRouteVias = (
           z: previousRoutePoint.z,
         })
       }
+
       route.push(routePoint)
     }
 

@@ -1,10 +1,17 @@
 export type TraceId = string
+
 export type NetId = string
+
 export type BusId = string
+
 export type PointId = string
+
 export type OffBoardConnectionId = string
+
 export type ObstacleId = string
+
 export type RootConnectionName = string
+
 export type CircuitJsonMetadata = {
   pcb_smtpad_id?: string
   pcb_plated_hole_id?: string
@@ -13,10 +20,12 @@ export type CircuitJsonMetadata = {
   source_component_name?: string
   source_port_name?: string
 }
+
 export type TerminalViaHint = {
   toLayer: string
   viaDiameter?: number
 }
+
 /** A terminal on one routing layer. Never carries a `layers` array. */
 export type SingleLayerConnectionPoint = {
   x: number
@@ -30,6 +39,7 @@ export type SingleLayerConnectionPoint = {
   port_selector?: string
   terminalVia?: TerminalViaHint
 }
+
 /** A terminal accessible on multiple routing layers. Never carries `layer`. */
 export type MultiLayerConnectionPoint = {
   x: number
@@ -43,11 +53,13 @@ export type MultiLayerConnectionPoint = {
   /** Stable semantic selector for the source port, e.g. `U1.USB_DM`. */
   port_selector?: string
 }
+
 export type ConnectionPoint =
   | SingleLayerConnectionPoint
   | MultiLayerConnectionPoint
 
 export type PointKey = string
+
 export type ConnectionTempId = string
 
 export type Jumper = {
@@ -144,6 +156,7 @@ export interface Obstacle {
   isFanoutSourceKeepout?: boolean
   /** Non-plated hole geometry. Must have no electrical connections. */
   isNonPlatedHole?: boolean
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
   shape?: "circle"
   /**
    * Optional Circuit JSON provenance carried through SRJ.

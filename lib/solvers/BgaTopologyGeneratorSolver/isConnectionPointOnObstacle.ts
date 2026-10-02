@@ -14,6 +14,7 @@ export function isConnectionPointOnObstacle(input: {
     input.point.pointId,
     input.point.pcb_port_id,
   ].filter((pointId): pointId is string => typeof pointId === "string")
+
   if (
     pointIds.some((pointId) => input.obstacle.connectedTo.includes(pointId))
   ) {
@@ -32,8 +33,10 @@ export function isConnectionPointOnObstacle(input: {
   const pointZLayers: number[] = getConnectionPointLayers(input.point).map(
     (layer) => mapLayerNameToZ(layer, input.layerCount),
   )
+
   const obstacleZLayers: number[] = input.obstacle.layers.map((layer) =>
     mapLayerNameToZ(layer, input.layerCount),
   )
+
   return pointZLayers.some((z) => obstacleZLayers.includes(z))
 }

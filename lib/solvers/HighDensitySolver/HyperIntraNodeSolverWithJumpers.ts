@@ -111,6 +111,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     if ((solver as any).hyperParameters?.USE_JUMPER_PREPATTERN) {
       return solver.iterations / 10_000
     }
+
     // Give IntraNodeSolverWithJumpers a higher base G so prepattern is tried first
     return solver.iterations / 10_000
   }
@@ -137,8 +138,10 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           PATTERN_TYPE: hyperParameters.PATTERN_TYPE,
         },
       })
+
       // Store hyperParameters on the solver for computeG reference
       ;(prepatternSolver as any).hyperParameters = hyperParameters
+
       return prepatternSolver as JumperSolver
     }
 
@@ -155,9 +158,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     if (solver.solver instanceof JumperPrepatternSolver) {
       this.solvedRoutes = solver.solver.getOutput()
     } else {
-      this.solvedRoutes = (
-        solver.solver as IntraNodeSolverWithJumpers
-      ).solvedRoutes
+      this.solvedRoutes = solver.solver.solvedRoutes
     }
   }
 
@@ -166,9 +167,11 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     if (this.winningSolver) {
       return this.winningSolver.visualize()
     }
+
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()
     }
+
     return super.visualize()
   }
 }

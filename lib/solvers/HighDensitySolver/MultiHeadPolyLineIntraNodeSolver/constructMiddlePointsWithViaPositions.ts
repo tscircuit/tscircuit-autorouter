@@ -24,10 +24,12 @@ export const constructMiddlePointsWithViaPositions = (params: {
   let viasAdded = 0
   let lastZ = start.z1
   const availableZOffset = availableZ.indexOf(start.z1)
+
   for (let i = 0; i < viaIndices.length; i++) {
     if (viaIndices[i] === 1) {
       const nextZ =
         availableZ[(availableZOffset + viasAdded + 1) % availableZ.length]
+
       middlePoints[i] = {
         ...viaPositions[viasAdded],
         z1: lastZ,
@@ -39,13 +41,16 @@ export const constructMiddlePointsWithViaPositions = (params: {
   }
 
   let left: MHPoint2 = start
+
   for (let i = 0; i < middlePoints.length; i++) {
     if (middlePoints[i]) {
       left = middlePoints[i]!
       continue
     }
+
     let right: MHPoint2 = end
     let rightIndex: number = middlePoints.length
+
     for (let u = i + 1; u < middlePoints.length; u++) {
       if (middlePoints[u]) {
         right = middlePoints[u]!
@@ -57,6 +62,7 @@ export const constructMiddlePointsWithViaPositions = (params: {
     const N = rightIndex - i
     const dx = right.x - left.x
     const dy = right.y - left.y
+
     for (let t = 1 / (N + 1), ti = 0; ; t += 1 / (N + 1), ti++) {
       if (i + ti === rightIndex) break
       middlePoints[i + ti] = {

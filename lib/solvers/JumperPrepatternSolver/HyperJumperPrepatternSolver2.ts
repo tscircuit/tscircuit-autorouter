@@ -93,11 +93,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       "vertical",
       1,
     )
+
     defs.push({
       name: "0603_max_rows_and_cols_vert_1trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertOneTrace.cols,
           ROWS: max0603VertOneTrace.rows,
           ORIENTATION: "vertical" as const,
@@ -115,11 +116,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         1,
         "staggered",
       )
+
     defs.push({
       name: "0603_max_rows_and_cols_vert_1trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertOneTraceStaggered.cols,
           ROWS: max0603VertOneTraceStaggered.rows,
           ORIENTATION: "vertical" as const,
@@ -135,11 +137,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       "vertical",
       2,
     )
+
     defs.push({
       name: "0603_max_rows_and_cols_vert_2trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertTwoTrace.cols,
           ROWS: max0603VertTwoTrace.rows,
           ORIENTATION: "vertical" as const,
@@ -157,11 +160,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         2,
         "staggered",
       )
+
     defs.push({
       name: "0603_max_rows_and_cols_vert_2trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertTwoTraceStaggered.cols,
           ROWS: max0603VertTwoTraceStaggered.rows,
           ORIENTATION: "vertical" as const,
@@ -177,11 +181,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       "horizontal",
       1,
     )
+
     defs.push({
       name: "0603_max_rows_and_cols_horz_1trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzOneTrace.cols,
           ROWS: max0603HorzOneTrace.rows,
           ORIENTATION: "horizontal" as const,
@@ -199,11 +204,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         1,
         "staggered",
       )
+
     defs.push({
       name: "0603_max_rows_and_cols_horz_1trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzOneTraceStaggered.cols,
           ROWS: max0603HorzOneTraceStaggered.rows,
           ORIENTATION: "horizontal" as const,
@@ -219,11 +225,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       "horizontal",
       2,
     )
+
     defs.push({
       name: "0603_max_rows_and_cols_horz_2trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzTwoTrace.cols,
           ROWS: max0603HorzTwoTrace.rows,
           ORIENTATION: "horizontal" as const,
@@ -241,11 +248,12 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         2,
         "staggered",
       )
+
     defs.push({
       name: "0603_max_rows_and_cols_horz_2trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzTwoTraceStaggered.cols,
           ROWS: max0603HorzTwoTraceStaggered.rows,
           ORIENTATION: "horizontal" as const,
@@ -258,7 +266,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     // 1206x4 jumper type
     defs.push({
       name: "1206x4",
-      possibleValues: [{ JUMPER_TYPE: "1206x4" as JumperType }],
+      possibleValues: [{ JUMPER_TYPE: "1206x4" }],
     })
 
     // 1206x4 cols and rows
@@ -302,6 +310,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     } else if (JUMPER_TYPE === "1206x4") {
       return validCols1206x4.includes(COLS) && validRows1206x4.includes(ROWS)
     }
+
     return false
   }
 
@@ -331,14 +340,18 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     const padHeight = 1.0
     const padGap = 0.35
     const paddingAroundPads = 0.5
+
     const clearance =
       this.traceWidth * traceChannelsBetweenJumpers + this.obstacleMargin * 2
 
     const bodyWidth =
       orientation === "horizontal" ? padWidth * 2 + padGap : padHeight
+
     const bodyHeight =
       orientation === "horizontal" ? padHeight : padWidth * 2 + padGap
+
     const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y"
+
     const staggerOffset =
       pattern === "staggered" && staggerAxis === "x"
         ? bodyWidth / 2
@@ -348,11 +361,13 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
 
     const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2)
     const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2)
+
     const effectiveAvailableWidth = Math.max(
       0,
       availableWidth -
         (pattern === "staggered" && staggerAxis === "x" ? staggerOffset : 0),
     )
+
     const effectiveAvailableHeight = Math.max(
       0,
       availableHeight -
@@ -366,6 +381,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       1,
       Math.floor(1 + (effectiveAvailableWidth - bodyWidth) / pitchX),
     )
+
     const effectiveRows = Math.max(
       1,
       Math.floor(1 + (effectiveAvailableHeight - bodyHeight) / pitchY),
@@ -395,9 +411,11 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       const is0603Combo = combinationDef.some((name) =>
         name.startsWith("0603_max_rows_and_cols_"),
       )
+
       const is1206x4Combo = combinationDef.includes("1206x4")
 
       if (is0603Combo && !this.availableJumperTypes.includes("0603")) continue
+
       if (is1206x4Combo && !this.availableJumperTypes.includes("1206x4"))
         continue
 
@@ -409,6 +427,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         const solver = this.generateSolver(
           hyperParameters as VariantHyperParameters,
         )
+
         const g = this.computeG(solver)
         this.supervisedSolvers.push({
           hyperParameters,
@@ -444,6 +463,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
   computeG(solver: JumperPrepatternSolver2_HyperGraph): number {
     const jumperCount =
       solver.hyperParameters.COLS! * solver.hyperParameters.ROWS!
+
     // Prefer solutions with fewer iterations, or fewer jumpers
     return solver.iterations / 10000 + jumperCount * 0.25
   }
@@ -470,6 +490,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     if (this.winningSolver) {
       return this.winningSolver.visualize()
     }
+
     return super.visualize()
   }
 }

@@ -22,6 +22,7 @@ export type HighDensityIntraNodeRoute = {
   vias: Array<{ x: number; y: number }> // Will be indexed
   jumpers?: Jumper[]
 }
+
 export type HighDensityRoute = HighDensityIntraNodeRoute
 
 // --- Utility Functions (Unchanged) ---
@@ -42,18 +43,22 @@ export type BucketCoordinate = `${number}x${number}`
 function computeDistSq(p1: Point2D, p2: Point2D): number {
   const dx = p1.x - p2.x
   const dy = p1.y - p2.y
+
   return dx * dx + dy * dy
 }
 
 function pointToSegmentDistanceSq(p: Point2D, a: Point2D, b: Point2D): number {
   const l2 = computeDistSq(a, b)
+
   if (l2 === 0) return computeDistSq(p, a) // Segment is a point
   let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2
   t = Math.max(0, Math.min(1, t))
+
   const projection = {
     x: a.x + t * (b.x - a.x),
     y: a.y + t * (b.y - a.y),
   }
+
   return computeDistSq(p, projection)
 }
 
@@ -67,6 +72,7 @@ function segmentToSegmentDistanceSq(
   if (doSegmentsIntersect(a, b, c, d)) {
     return 0
   }
+
   // Convert to Point2D for distance calculations
   const pA = { x: a.x, y: a.y }
   const pB = { x: b.x, y: b.y }
@@ -115,6 +121,7 @@ export class HighDensityRouteSpatialIndex {
         console.warn("Skipping route with missing data:", route)
         continue
       }
+
       this.maximumCopperRadius = Math.max(
         this.maximumCopperRadius,
         route.traceThickness / 2,
@@ -126,8 +133,10 @@ export class HighDensityRouteSpatialIndex {
         for (let i = 0; i < route.route.length - 1; i++) {
           const p1 = route.route[i]
           const p2 = route.route[i + 1]
+
           // Skip zero-length segments
           if (p1.x === p2.x && p1.y === p2.y) continue
+
           // Skip segments inside jumper pads (jumper wires are not collidable)
           if (p1.insideJumperPad && p2.insideJumperPad) continue
 
@@ -147,12 +156,14 @@ export class HighDensityRouteSpatialIndex {
 
           for (let ix = minIndexX; ix <= maxIndexX; ix++) {
             for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-              const bucketKey = `${ix}x${iy}` as BucketCoordinate
+              const bucketKey: BucketCoordinate = `${ix}x${iy}`
               let bucketList = this.segmentBuckets.get(bucketKey)
+
               if (!bucketList) {
                 bucketList = []
                 this.segmentBuckets.set(bucketKey, bucketList)
               }
+
               bucketList.push(segmentInfo)
             }
           }
@@ -163,6 +174,7 @@ export class HighDensityRouteSpatialIndex {
       if (route.vias && route.vias.length > 0) {
         for (let i = 0; i < route.vias.length; i++) {
           const via = route.vias[i]
+
           if (via === undefined || via === null) continue // Basic check
 
           const storedVia: StoredVia = {
@@ -175,13 +187,15 @@ export class HighDensityRouteSpatialIndex {
           // Vias belong to a single bucket
           const ix = Math.floor(via.x / this.CELL_SIZE)
           const iy = Math.floor(via.y / this.CELL_SIZE)
-          const bucketKey = `${ix}x${iy}` as BucketCoordinate
+          const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
           let bucketList = this.viaBuckets.get(bucketKey)
+
           if (!bucketList) {
             bucketList = []
             this.viaBuckets.set(bucketKey, bucketList)
           }
+
           bucketList.push(storedVia)
         }
       }
@@ -226,6 +240,7 @@ export class HighDensityRouteSpatialIndex {
       string,
       { route: HighDensityRoute; minDistSq: number }
     >()
+
     const checkedSegments = new Set<string>() // Store segmentId
     const checkedVias = new Set<string>() // Store viaId
 
@@ -234,10 +249,11 @@ export class HighDensityRouteSpatialIndex {
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         // --- Check Segments in Bucket ---
         const segmentBucketList = this.segmentBuckets.get(bucketKey)
+
         if (segmentBucketList) {
           for (const segmentInfo of segmentBucketList) {
             if (checkedSegments.has(segmentInfo.segmentId)) continue
@@ -272,6 +288,7 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
+
               if (!existing || distSq < existing.minDistSq) {
                 conflictingRouteData.set(routeName, {
                   route,
@@ -284,6 +301,7 @@ export class HighDensityRouteSpatialIndex {
 
         // --- Check Vias in Bucket ---
         const viaBucketList = this.viaBuckets.get(bucketKey)
+
         if (viaBucketList) {
           for (const viaInfo of viaBucketList) {
             if (checkedVias.has(viaInfo.viaId)) continue
@@ -303,6 +321,7 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
+
               if (!existing || distSq < existing.minDistSq) {
                 conflictingRouteData.set(routeName, {
                   route,
@@ -320,6 +339,7 @@ export class HighDensityRouteSpatialIndex {
       conflictingRoute: HighDensityRoute
       distance: number
     }> = []
+
     for (const data of conflictingRouteData.values()) {
       // Distance reported is centerline-to-centerline (or point)
       results.push({
@@ -341,6 +361,7 @@ export class HighDensityRouteSpatialIndex {
       const filtered = segments.filter(
         (seg) => seg.parentRoute.connectionName !== connectionName,
       )
+
       if (filtered.length === 0) {
         this.segmentBuckets.delete(bucketKey)
       } else if (filtered.length !== segments.length) {
@@ -353,6 +374,7 @@ export class HighDensityRouteSpatialIndex {
       const filtered = vias.filter(
         (via) => via.parentRoute.connectionName !== connectionName,
       )
+
       if (filtered.length === 0) {
         this.viaBuckets.delete(bucketKey)
       } else if (filtered.length !== vias.length) {
@@ -368,8 +390,10 @@ export class HighDensityRouteSpatialIndex {
   addRoute(route: HighDensityRoute): void {
     if (!route || !route.connectionName) {
       console.warn("Skipping route with missing data:", route)
+
       return
     }
+
     this.maximumCopperRadius = Math.max(
       this.maximumCopperRadius,
       route.traceThickness / 2,
@@ -383,8 +407,10 @@ export class HighDensityRouteSpatialIndex {
       for (let i = 0; i < route.route.length - 1; i++) {
         const p1 = route.route[i]
         const p2 = route.route[i + 1]
+
         // Skip zero-length segments
         if (p1.x === p2.x && p1.y === p2.y) continue
+
         // Skip segments inside jumper pads (jumper wires are not collidable)
         if (p1.insideJumperPad && p2.insideJumperPad) continue
 
@@ -404,12 +430,14 @@ export class HighDensityRouteSpatialIndex {
 
         for (let ix = minIndexX; ix <= maxIndexX; ix++) {
           for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-            const bucketKey = `${ix}x${iy}` as BucketCoordinate
+            const bucketKey: BucketCoordinate = `${ix}x${iy}`
             let bucketList = this.segmentBuckets.get(bucketKey)
+
             if (!bucketList) {
               bucketList = []
               this.segmentBuckets.set(bucketKey, bucketList)
             }
+
             bucketList.push(segmentInfo)
           }
         }
@@ -420,6 +448,7 @@ export class HighDensityRouteSpatialIndex {
     if (route.vias && route.vias.length > 0) {
       for (let i = 0; i < route.vias.length; i++) {
         const via = route.vias[i]
+
         if (via === undefined || via === null) continue
 
         const storedVia: StoredVia = {
@@ -431,13 +460,15 @@ export class HighDensityRouteSpatialIndex {
 
         const ix = Math.floor(via.x / this.CELL_SIZE)
         const iy = Math.floor(via.y / this.CELL_SIZE)
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         let bucketList = this.viaBuckets.get(bucketKey)
+
         if (!bucketList) {
           bucketList = []
           this.viaBuckets.set(bucketKey, bucketList)
         }
+
         bucketList.push(storedVia)
       }
     }
@@ -471,15 +502,17 @@ export class HighDensityRouteSpatialIndex {
       string,
       { route: HighDensityRoute; minDistSq: number }
     >()
+
     const checkedSegments = new Set<string>()
     const checkedVias = new Set<string>()
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         // --- Check Segments ---
         const segmentBucketList = this.segmentBuckets.get(bucketKey)
+
         if (segmentBucketList) {
           for (const segmentInfo of segmentBucketList) {
             if (checkedSegments.has(segmentInfo.segmentId)) continue
@@ -487,16 +520,19 @@ export class HighDensityRouteSpatialIndex {
 
             const p1_seg = segmentInfo.segment[0]
             const p2_seg = segmentInfo.segment[1]
+
             if (p1_seg.z !== p2_seg.z || p1_seg.z !== point.z) {
               continue
             }
 
             const route = segmentInfo.parentRoute
+
             // Convert segment points to Point2D for distance calculation
             const p1: Point2D = {
               x: segmentInfo.segment[0].x,
               y: segmentInfo.segment[0].y,
             }
+
             const p2: Point2D = {
               x: segmentInfo.segment[1].x,
               y: segmentInfo.segment[1].y,
@@ -511,6 +547,7 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
+
               if (!existing || distSq < existing.minDistSq) {
                 conflictingRouteData.set(routeName, {
                   route,
@@ -523,6 +560,7 @@ export class HighDensityRouteSpatialIndex {
 
         // --- Check Vias ---
         const viaBucketList = this.viaBuckets.get(bucketKey)
+
         if (viaBucketList) {
           for (const viaInfo of viaBucketList) {
             if (checkedVias.has(viaInfo.viaId)) continue
@@ -540,6 +578,7 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
+
               if (!existing || distSq < existing.minDistSq) {
                 conflictingRouteData.set(routeName, {
                   route,
@@ -557,6 +596,7 @@ export class HighDensityRouteSpatialIndex {
       conflictingRoute: HighDensityRoute
       distance: number
     }> = []
+
     for (const data of conflictingRouteData.values()) {
       // Distance reported is point-to-segment-centerline or point-to-via-center
       results.push({

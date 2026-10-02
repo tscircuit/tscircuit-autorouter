@@ -44,6 +44,7 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
       if (assignedObstacle) {
         const existingNodes =
           this.obstacleToNodesMap.get(assignedObstacle) || []
+
         existingNodes.push(node)
         this.obstacleToNodesMap.set(assignedObstacle, existingNodes)
       } else {
@@ -60,6 +61,7 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
 
     if (!obstacle) {
       this.solved = true
+
       return
     }
 
@@ -137,15 +139,16 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphics = {
-      circles: [],
-      lines: [],
-      points: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Assignable Via Node Merger",
-    } as GraphicsObject &
-      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles">
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        circles: [],
+        lines: [],
+        points: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Assignable Via Node Merger",
+      }
 
     // Visualize the new merged nodes
     for (const node of this.newNodes) {
@@ -163,6 +166,7 @@ export class AssignableViaNodeMergerSolver extends BaseSolver {
     // Visualize obstacles that are still being processed
     const nextObstacle =
       this.obstaclesToProcess[this.obstaclesToProcess.length - 1]
+
     if (nextObstacle) {
       const nodesToMerge = this.obstacleToNodesMap.get(nextObstacle) || []
 

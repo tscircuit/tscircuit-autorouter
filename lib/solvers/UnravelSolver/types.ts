@@ -1,6 +1,7 @@
 import type { CapacityMeshNodeId } from "lib/types"
 
 export type SegmentPointId = string
+
 export type SegmentId = string
 
 export interface BaseUnravelIssue {

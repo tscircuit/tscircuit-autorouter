@@ -90,15 +90,18 @@ export function visualizeSection({
 
     // Add capacity info to label if maps are provided
     const rectIndex = graphics.rects!.length - 1
+
     if (usedNodeCapacityMap && totalCapacityMap) {
       const used = usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
       const total = totalCapacityMap.get(node.capacityMeshNodeId) ?? 0
       const percent = total > 0 ? ((used / total) * 100).toFixed(1) : "N/A"
+
       const probabilityOfFailure = calculateNodeProbabilityOfFailure({
         usedCapacity: used,
         totalCapacity: total,
         layerCount: node.availableZ.length,
       })
+
       graphics.rects![rectIndex].label += `\n${used.toFixed(
         1,
       )} / ${total.toFixed(1)}\n${percent}% (Pf: ${(
@@ -121,6 +124,7 @@ export function visualizeSection({
     // Both nodes must be in the provided nodeMap to draw the edge
     const nodeA = nodeMap.get(nodeIdA)
     const nodeB = nodeMap.get(nodeIdB)
+
     if (nodeA && nodeB) {
       const { lineStart, lineEnd } = getLinesBetweenNodes(nodeA, nodeB)
       graphics.lines!.push({
@@ -139,6 +143,7 @@ export function visualizeSection({
     // Ensure terminals are actually within the visualized section nodes
     const isStartInSection =
       startNode && sectionNodeIds.has(startNode.capacityMeshNodeId)
+
     const isEndInSection =
       endNode && sectionNodeIds.has(endNode.capacityMeshNodeId)
 
@@ -218,10 +223,12 @@ export function visualizeSection({
     completedPaths.forEach((solvedPathData, index) => {
       if (solvedPathData.path && solvedPathData.path.length > 0) {
         const pathColor = colorMap[solvedPathData.connectionName] ?? "gray"
+
         const offset = {
           x: ((index + index / 50) % 5) * 0.03,
           y: ((index + index / 50) % 5) * 0.03,
         }
+
         graphics.lines!.push({
           points: solvedPathData.path.map(({ center: { x, y } }) => ({
             x: x + offset.x,

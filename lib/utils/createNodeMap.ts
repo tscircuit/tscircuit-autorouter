@@ -8,8 +8,10 @@ export function createNodeMap(
   nodes: CapacityMeshNode[],
 ): Map<string, CapacityMeshNode> {
   const map = new Map<string, CapacityMeshNode>()
+
   for (const node of nodes) {
     map.set(node.capacityMeshNodeId, node)
   }
+
   return map
 }

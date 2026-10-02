@@ -13,10 +13,12 @@ export function createTinyRouteNetIndexer(): TinyRouteNetIndexer {
   return (routeMetadata: TinyRouteNetIndexSource): number => {
     const netId = routeMetadata.mutuallyConnectedNetworkId
     let netIndex = netIndexById.get(netId)
+
     if (netIndex === undefined) {
       netIndex = netIndexById.size
       netIndexById.set(netId, netIndex)
     }
+
     return netIndex
   }
 }

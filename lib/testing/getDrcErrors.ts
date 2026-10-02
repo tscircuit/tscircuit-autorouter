@@ -22,7 +22,9 @@ import {
 import { Point } from "graphics-debug"
 
 type CircuitJson = AnyCircuitElement[]
+
 type CircuitJsonElement = CircuitJson[number]
+
 type PcbViaWithTraceId = CircuitJsonElement & {
   type: "pcb_via"
   pcb_via_id: string
@@ -44,6 +46,7 @@ type DrcErrorWithCenter = DrcError & { center?: Point }
 type LocationAwareDrcError = DrcError & { center: Point }
 
 export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
+
 export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
 
 export interface GetDrcErrorsResult {
@@ -64,6 +67,7 @@ const createDrcConnectivityMap = (
   circuitJson: CircuitJson,
 ): ConnectivityMap => {
   const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+
   const viaTraceConnections = circuitJson
     .filter(
       (element): element is PcbViaWithTraceId =>
@@ -72,6 +76,7 @@ const createDrcConnectivityMap = (
     .map((via) => [via.pcb_via_id, via.pcb_trace_id])
 
   connMap.addConnections(viaTraceConnections)
+
   return connMap
 }
 
@@ -80,31 +85,38 @@ export const getDrcErrors = (
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
+
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
+
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
   }).filter((error) => error.type !== "pcb_keepout_overlap_warning")
+
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
+
   const viaTraceErrors = includeTypedTraceClearance
     ? checkViaTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
+
   const padTraceErrors = includeTypedTraceClearance
     ? checkPadTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
+
   const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
     minClearance: options.holeClearance,
   })
+
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,

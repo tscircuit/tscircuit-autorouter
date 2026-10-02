@@ -45,7 +45,9 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
   shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
     if (node._depth! >= this.MAX_DEPTH) return false
+
     if (node._containsTarget) return true
+
     if (node._containsObstacle && !node._completelyInsideObstacle) return true
 
     if (
@@ -55,6 +57,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     ) {
       return true
     }
+
     return false
   }
 
@@ -67,6 +70,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
     // Check if this node overlaps with any assignable obstacles
     const assignableObstacles = this.getOverlappingAssignableObstacles(node)
+
     if (assignableObstacles.length > 0) {
       // Don't filter - let the node be created, we'll remove it later
       return false
@@ -100,6 +104,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
         const nodeOverlaps = this.getXYZOverlappingObstacles(node).some(
           (o) => o === obstacle,
         )
+
         if (nodeOverlaps) {
           overlappingNodes.push(node)
         }
@@ -110,6 +115,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
     // Collect all nodes to remove
     const nodesToRemove = new Set<CapacityMeshNode>()
+
     for (const nodes of obstacleToNodesMap.values()) {
       for (const node of nodes) {
         nodesToRemove.add(node)
@@ -124,6 +130,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
     // Add a single multi-layer node for each assignable obstacle
     for (const obstacle of assignableObstacles) {
       const overlappingNodes = obstacleToNodesMap.get(obstacle) || []
+
       const availableZ =
         obstacle.layers && obstacle.layers.length > 0
           ? Array.from(
@@ -163,6 +170,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
       // Check if this extended area contains any target points
       let containsTarget = false
+
       for (const conn of this.srj.connections) {
         for (const point of conn.pointsToConnect) {
           if (
@@ -175,6 +183,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
             break
           }
         }
+
         if (containsTarget) break
       }
 
@@ -204,10 +213,12 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
   _step() {
     const nextNode = this.unfinishedNodes.pop()
+
     if (!nextNode) {
       // Main subdivision complete, now insert assignable obstacles as nodes
       this.insertAssignableObstaclesAsNodes()
       this.solved = true
+
       return
     }
 
@@ -230,10 +241,12 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
 
       if (shouldBeZSubdivided) {
         const zSubNodes = this.getZSubdivisionChildNodes(childNode)
+
         for (const n of zSubNodes) {
           if (!n._containsTarget && this.shouldFilterNodeForObstacle(n)) {
             continue
           }
+
           if (this.shouldNodeBeXYSubdivided(n)) {
             unfinishedNewNodes.push(n)
           } else {
@@ -241,6 +254,7 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
             finishedNewNodes.push(n)
           }
         }
+
         continue
       }
 

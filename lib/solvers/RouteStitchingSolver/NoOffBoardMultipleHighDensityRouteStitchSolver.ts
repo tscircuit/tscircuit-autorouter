@@ -27,6 +27,7 @@ export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHigh
     this.unsolvedRoutes = []
 
     const routesByConnection = new Map<string, any[]>()
+
     for (const hdRoute of params.hdRoutes) {
       const routes = routesByConnection.get(hdRoute.connectionName) || []
       routes.push(hdRoute)
@@ -38,6 +39,7 @@ export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHigh
       const connection = params.connections.find(
         (c) => c.name === connectionName,
       )
+
       if (!connection) continue
 
       const start = {
@@ -47,6 +49,7 @@ export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHigh
           params.layerCount,
         ),
       }
+
       const end = {
         ...connection.pointsToConnect[1],
         z: mapLayerNameToZ(

@@ -2,7 +2,7 @@ name: Anti-slop diagnostics
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, codex/anti-slop-assertion-fixes]
   push:
     branches: [main]
 
@@ -26,17 +26,36 @@ jobs:
       - name: Type check tooling
         id: typecheck
         run: bun run typecheck:anti-slop
-      - name: Report lib warnings
+      - name: Check formatting
+        id: format
+        run: bun run format:check
+      - name: Report lib diagnostics
         id: lint
         if: ${{ !cancelled() }}
-        run: bun run lint:anti-slop
+        # Bun 1.3.8 truncates large piped stdout; redirect to a regular file.
+        shell: bash
+        run: bun run lint:anti-slop --format json > anti-slop-diagnostics.json
+      - name: Verify and summarize complete diagnostic JSON
+        id: inventory
+        if: ${{ always() }}
+        run: bun scripts/summarize-anti-slop-diagnostics.ts anti-slop-diagnostics.json anti-slop-summary.json
+      - name: Upload full diagnostic inventory
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: anti-slop-diagnostics
+          path: |
+            anti-slop-diagnostics.json
+            anti-slop-summary.json
+          if-no-files-found: warn
       - name: Summarize diagnostic status
         if: ${{ always() }}
         env:
           STEPS_JSON: ${{ toJson(steps) }}
         run: |
           echo '### Anti-slop adoption check (advisory)' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Warnings request human review; they do not measure routing quality.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'All 24 pinned rules use upstream error severity; this job remains advisory.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'An advisory green check can contain a failed lint step. Inspect the outcomes and diagnostic artifact.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Setup or integration failures remain visible below and in the logs.' >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           echo "$STEPS_JSON" >> "$GITHUB_STEP_SUMMARY"

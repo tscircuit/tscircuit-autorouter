@@ -18,6 +18,7 @@ export const getPendingEffectsFromSolverTree = (
 
   for (let i = solverChain.length - 1; i >= 0; i--) {
     const pendingEffects = solverChain[i]?.pendingEffects?.filter(Boolean) ?? []
+
     if (pendingEffects.length > 0) {
       return pendingEffects
     }

@@ -122,11 +122,13 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
     for (let i = 0; i < obstacles.length; i++) {
       const obstacle = obstacles[i]
+
       if (
         obstacle.offBoardConnectsTo &&
         obstacle.offBoardConnectsTo.length > 0
       ) {
         this.offboardObstacles.push({ obstacle, index: i })
+
         for (const id of obstacle.offBoardConnectsTo) {
           uniqueOffBoardIds.add(id)
         }
@@ -155,17 +157,20 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
     if (this.currentObstacleIndex >= this.offboardObstacles.length) {
       // Done finding obstacles, compute pending fragments and move to next phase
       this.computePendingFragments()
+
       if (this.pendingFragments.length === 0) {
         this.phase = "done"
         this.solved = true
       } else {
         this.phase = "creating_fragments"
       }
+
       return
     }
 
     const { obstacle, index } =
       this.offboardObstacles[this.currentObstacleIndex]
+
     this.lastProcessedObstacle = { obstacle, index }
 
     // Compute available Z from obstacle layers
@@ -190,6 +195,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
       if (!this.offBoardConnectionToPortPoints.has(offBoardId)) {
         this.offBoardConnectionToPortPoints.set(offBoardId, [])
       }
+
       this.offBoardConnectionToPortPoints.get(offBoardId)!.push(portPoint)
     }
 
@@ -216,6 +222,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
     if (this.currentFragmentIndex >= this.pendingFragments.length) {
       this.phase = "done"
       this.solved = true
+
       return
     }
 
@@ -237,12 +244,15 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
   private layerToZ(layer: string): number {
     if (layer === "top") return 0
+
     if (layer === "bottom") return this.srj.layerCount - 1
     // Try to parse inner layer number
     const match = layer.match(/inner(\d+)/)
+
     if (match) {
       return parseInt(match[1], 10)
     }
+
     return 0
   }
 
@@ -252,11 +262,14 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
     if (this.phase === "finding_obstacles") {
       if (totalObstacles === 0) return 1
+
       return (this.currentObstacleIndex / totalObstacles) * 0.5
     } else if (this.phase === "creating_fragments") {
       if (totalFragments === 0) return 1
+
       return 0.5 + (this.currentFragmentIndex / totalFragments) * 0.5
     }
+
     return 1
   }
 
@@ -270,6 +283,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
     // Draw all obstacles with offBoardConnectsTo (context)
     for (const { obstacle, index } of this.offboardObstacles) {
       const isLastProcessed = this.lastProcessedObstacle?.index === index
+
       const isNextToProcess =
         this.phase === "finding_obstacles" &&
         this.currentObstacleIndex < this.offboardObstacles.length &&
@@ -277,6 +291,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
 
       // Use color from first offBoardConnectsTo id
       const primaryOffBoardId = obstacle.offBoardConnectsTo?.[0]
+
       const baseColor = primaryOffBoardId
         ? this.offBoardColorMap[primaryOffBoardId]
         : "rgba(255, 165, 0, 1)"
@@ -316,6 +331,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
         this.lastCreatedPortPoint?.portPointId === portPoint.portPointId
 
       const primaryOffBoardId = portPoint.offBoardConnectionIds[0]
+
       const baseColor = primaryOffBoardId
         ? this.offBoardColorMap[primaryOffBoardId]
         : "rgba(255, 165, 0, 1)"
@@ -365,6 +381,7 @@ export class PortPointOffboardPathFragmentSolver extends BaseSolver {
     for (const fragment of this.pathFragments) {
       const isLast =
         this.lastCreatedFragment?.pathFragmentId === fragment.pathFragmentId
+
       const baseColor = this.offBoardColorMap[fragment.offBoardConnectionId]
 
       graphics.lines!.push({

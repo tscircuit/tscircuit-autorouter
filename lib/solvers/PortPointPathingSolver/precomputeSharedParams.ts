@@ -43,9 +43,12 @@ export function precomputeSharedParams(
   const nodeMap = new Map(inputNodes.map((n) => [n.capacityMeshNodeId, n]))
 
   // Compute average node pitch for heuristic
-  const pitches = inputNodes
-    .map((n) => (n.width + n.height) / 2)
-    .filter((x) => Number.isFinite(x) && x > 0)
+  const pitches = inputNodes.flatMap((node) => {
+    const pitch = (node.width + node.height) / 2
+
+    return Number.isFinite(pitch) && pitch > 0 ? [pitch] : []
+  })
+
   const avgNodePitch =
     pitches.length > 0 ? pitches.reduce((a, b) => a + b, 0) / pitches.length : 1
 
@@ -69,6 +72,7 @@ export function precomputeSharedParams(
       // Add to both nodes that share this port point
       for (const nodeId of pp.connectionNodeIds) {
         const nodePortPoints = nodePortPointsMap.get(nodeId)
+
         if (
           nodePortPoints &&
           !nodePortPoints.some((p) => p.portPointId === pp.portPointId)
@@ -104,6 +108,7 @@ export function clonePrecomputedMutableParams(
 ): Pick<PrecomputedInitialParams, "nodeAssignedPortPoints"> {
   // Clone nodeAssignedPortPoints - this is mutated during solving
   const nodeAssignedPortPoints = new Map<CapacityMeshNodeId, PortPoint[]>()
+
   for (const [nodeId, portPoints] of params.nodeAssignedPortPoints) {
     nodeAssignedPortPoints.set(nodeId, [...portPoints])
   }

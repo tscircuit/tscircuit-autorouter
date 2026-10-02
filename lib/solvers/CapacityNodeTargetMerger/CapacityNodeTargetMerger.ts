@@ -40,6 +40,7 @@ export class CapacityNodeTargetMerger extends BaseSolver {
       }
 
       this.solved = true
+
       return
     }
 
@@ -60,6 +61,7 @@ export class CapacityNodeTargetMerger extends BaseSolver {
 
       return implicitlyConnected
     })
+
     if (connectedNodes.length === 0) return
 
     const connectionName = connectedNodes[0]._targetConnectionName
@@ -70,6 +72,7 @@ export class CapacityNodeTargetMerger extends BaseSolver {
       maxX: -Infinity,
       maxY: -Infinity,
     }
+
     for (const node of connectedNodes) {
       bounds.minX = Math.min(bounds.minX, node.center.x - node.width / 2)
       bounds.minY = Math.min(bounds.minY, node.center.y - node.height / 2)
@@ -99,6 +102,7 @@ export class CapacityNodeTargetMerger extends BaseSolver {
     }
 
     this.newNodes.push(newNode)
+
     for (const node of connectedNodes) {
       this.removedNodeIds.add(node.capacityMeshNodeId)
     }

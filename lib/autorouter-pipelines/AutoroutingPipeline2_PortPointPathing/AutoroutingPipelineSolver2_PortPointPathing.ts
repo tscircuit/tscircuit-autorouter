@@ -63,6 +63,7 @@ interface CapacityMeshSolverOptions {
   cacheProvider?: CacheProvider | null
   effort?: number
 }
+
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -247,16 +248,18 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       HyperPortPointPathingSolver,
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
-        this.inputNodeWithPortPoints = cms.capacityNodes!.map((node) => ({
-          capacityMeshNodeId: node.capacityMeshNodeId,
-          center: node.center,
-          width: node.width,
-          height: node.height,
-          portPoints: [] as InputPortPoint[],
-          availableZ: node.availableZ,
-          _containsTarget: node._containsTarget,
-          _containsObstacle: node._containsObstacle,
-        }))
+        this.inputNodeWithPortPoints = cms.capacityNodes!.map(
+          (node): InputNodeWithPortPoints => ({
+            capacityMeshNodeId: node.capacityMeshNodeId,
+            center: node.center,
+            width: node.width,
+            height: node.height,
+            portPoints: [],
+            availableZ: node.availableZ,
+            _containsTarget: node._containsTarget,
+            _containsObstacle: node._containsObstacle,
+          }),
+        )
 
         // Build a map for quick lookup
         const nodeMap = new Map(
@@ -265,9 +268,11 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
         // Add port points from the available segment point solver
         const segmentPointSolver = cms.availableSegmentPointSolver!
+
         for (const segment of segmentPointSolver.sharedEdgeSegments) {
           for (const segmentPortPoint of segment.portPoints) {
             const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
+
             const inputPortPoint: InputPortPoint = {
               portPointId: segmentPortPoint.segmentPortPointId,
               x: segmentPortPoint.x,
@@ -279,6 +284,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
             // Add to first node
             const node1 = nodeMap.get(nodeId1)
+
             if (node1) {
               node1.portPoints.push(inputPortPoint)
             }
@@ -299,7 +305,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
               STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
               // MAX_ITERATIONS_PER_PATH: 10e3,
             },
-          } as HyperPortPointPathingSolverParams,
+          },
         ]
       },
     ),
@@ -308,6 +314,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       MultiSectionPortPointOptimizer,
       (cms) => {
         const portPointSolver = cms.portPointPathingSolver!
+
         return [
           {
             simpleRouteJson: cms.srjWithPointPairs!,
@@ -455,13 +462,16 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
+
     if (!pipelineStepDef) {
       this.solved = true
+
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
+
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -475,6 +485,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
+
       return
     }
 
@@ -506,12 +517,16 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
+
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
+
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
+
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
+
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
@@ -579,7 +594,8 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
+
     const visualizations = [
       problemViz,
       netToPPSolver,
@@ -603,6 +619,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
+
     // return visualizations[visualizations.length - 1]
     return combineVisualizations(...visualizations)
   }
@@ -619,6 +636,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
+
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -628,13 +646,16 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
+
         if (lines.length > 200) break
       }
+
       return { lines }
     }
 
     if (this.portPointPathingSolver) {
       const lines: Line[] = []
+
       for (const connection of this.portPointPathingSolver
         .connectionsWithResults) {
         if (!connection.path) continue
@@ -646,6 +667,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           strokeColor: this.colorMap[connection.connection.name],
         })
       }
+
       return { lines }
     }
 
@@ -689,6 +711,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
+
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -716,4 +739,5 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
 
 /** @deprecated Use AutoroutingPipelineSolver instead */
 export const CapacityMeshSolver = AutoroutingPipelineSolver2_PortPointPathing
+
 export type CapacityMeshSolver = AutoroutingPipelineSolver2_PortPointPathing

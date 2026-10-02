@@ -48,6 +48,7 @@ export default function CapacityNodeEditor({
     width: 1 * SCALE,
     height: 1 * SCALE,
   })
+
   const [pairs, setPairs] = useState<PairDef[]>([
     {
       entry: { edge: "left", t: 0.3, layers: [0] },
@@ -58,6 +59,7 @@ export default function CapacityNodeEditor({
       exit: { edge: "bottom", t: 0.5, layers: [1] },
     },
   ])
+
   const [addMode, setAddMode] = useState<"entry" | "exit" | null>(null)
   const [pendingEntry, setPendingEntry] = useState<PointDef | null>(null)
   const [dragging, setDragging] = useState<DraggingState | null>(null)
@@ -84,6 +86,7 @@ export default function CapacityNodeEditor({
 
   useEffect(() => {
     const svg = svgRef.current
+
     if (!svg) return
 
     const updateViewportSize = (width: number, height: number) => {
@@ -98,11 +101,13 @@ export default function CapacityNodeEditor({
 
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0]
+
       if (!entry) return
       updateViewportSize(entry.contentRect.width, entry.contentRect.height)
     })
 
     resizeObserver.observe(svg)
+
     return () => resizeObserver.disconnect()
   }, [])
 
@@ -180,6 +185,7 @@ export default function CapacityNodeEditor({
                 const distBottom = Math.abs(py - halfH)
                 const distLeft = Math.abs(px + halfW)
                 const distRight = Math.abs(px - halfW)
+
                 const minDist = Math.min(
                   distTop,
                   distBottom,
@@ -276,6 +282,7 @@ export default function CapacityNodeEditor({
   useEffect(() => {
     if (selected) {
       const point = pairs[selected.pairIndex]?.[selected.pointType]
+
       if (point) setLayerInput(point.layers.join(","))
     }
   }, [selected, pairs])
@@ -284,6 +291,7 @@ export default function CapacityNodeEditor({
     (e: React.MouseEvent, type: "resize", data: any) => {
       e.stopPropagation()
       const svg = e.currentTarget.closest("svg")
+
       if (!svg) return
       const svgRect = svg.getBoundingClientRect()
       const mx = e.clientX - svgRect.left
@@ -326,28 +334,34 @@ export default function CapacityNodeEditor({
           newRect.x = startRect.x + startRect.width - newWidth
           newRect.width = newWidth
         }
+
         if (handle.includes("right"))
           newRect.width = Math.max(minSize, startRect.width + dx)
+
         if (handle.includes("top")) {
           const newHeight = Math.max(minSize, startRect.height - dy)
           newRect.y = startRect.y + startRect.height - newHeight
           newRect.height = newHeight
         }
+
         if (handle.includes("bottom"))
           newRect.height = Math.max(minSize, startRect.height + dy)
         setRect(newRect)
       } else if (dragging.type === "point") {
         const { pairIndex, pointType } = dragging.data
         const point = pairs[pairIndex][pointType]
+
         const newT = getTFromMouseOnEdge(
           mx - panOffset.x,
           my - panOffset.y,
           point.edge,
           rect,
         )
+
         setPairs((prev) =>
           prev.map((pair, i) => {
             if (i !== pairIndex) return pair
+
             return { ...pair, [pointType]: { ...pair[pointType], t: newT } }
           }),
         )
@@ -362,6 +376,7 @@ export default function CapacityNodeEditor({
         const { pairIndex, pointType } = dragging.data
         setSelected({ pairIndex, pointType })
       }
+
       setDragging(null)
       setDragStart(null)
     },
@@ -379,6 +394,7 @@ export default function CapacityNodeEditor({
           ...prev,
           { x: mx - panOffset.x, y: my - panOffset.y },
         ])
+
         return
       }
 
@@ -387,6 +403,7 @@ export default function CapacityNodeEditor({
         const mx = e.clientX - svgRect.left
         const my = e.clientY - svgRect.top
         const edgeInfo = findEdgeAndT(mx - panOffset.x, my - panOffset.y, rect)
+
         if (!edgeInfo) return
 
         if (addMode === "entry") {
@@ -421,10 +438,12 @@ export default function CapacityNodeEditor({
   const commitLayers = useCallback(() => {
     if (!selected) return
     const layers = parseLayers(layerInput)
+
     if (layers.length === 0) return
     setPairs((prev) =>
       prev.map((pair, i) => {
         if (i !== selected.pairIndex) return pair
+
         return {
           ...pair,
           [selected.pointType]: { ...pair[selected.pointType], layers },
@@ -436,6 +455,7 @@ export default function CapacityNodeEditor({
   const deletePair = useCallback(
     (index: number) => {
       setPairs((prev) => prev.filter((_, i) => i !== index))
+
       if (selected?.pairIndex === index) setSelected(null)
     },
     [selected],
@@ -454,12 +474,14 @@ export default function CapacityNodeEditor({
 
   const widthMm = (rect.width / pixelsPerMm).toFixed(2)
   const heightMm = (rect.height / pixelsPerMm).toFixed(2)
+
   const selectedPoint = selected
     ? pairs[selected.pairIndex]?.[selected.pointType]
     : null
 
   const solverGraphics = useMemo(() => {
     if (!solver) return null
+
     return solver.visualize()
   }, [solver])
 
@@ -475,6 +497,7 @@ export default function CapacityNodeEditor({
 
     const svgCenterX = rect.x + rect.width / 2
     const svgCenterY = rect.y + rect.height / 2
+
     const portPoints = pairs.flatMap((pair, i) => {
       const entryPos = getPointOnEdge(pair.entry.edge, pair.entry.t, rect)
       const exitPos = getPointOnEdge(pair.exit.edge, pair.exit.t, rect)
@@ -482,18 +505,21 @@ export default function CapacityNodeEditor({
       const entryY = (entryPos.y - svgCenterY) / pixelsPerMm
       const exitX = (exitPos.x - svgCenterX) / pixelsPerMm
       const exitY = (exitPos.y - svgCenterY) / pixelsPerMm
+
       const entryPorts = pair.entry.layers.map((layer) => ({
         x: entryX,
         y: entryY,
         z: layer,
         connectionName: `pair_${i}`,
       }))
+
       const exitPorts = pair.exit.layers.map((layer) => ({
         x: exitX,
         y: exitY,
         z: layer,
         connectionName: `pair_${i}`,
       }))
+
       return [...entryPorts, ...exitPorts]
     })
 
@@ -506,6 +532,7 @@ export default function CapacityNodeEditor({
     }
 
     const diagnostics = getIntraNodeCrossings(nodeForCheck)
+
     const probabilityOfFailure = calculateNodeProbabilityOfFailure(
       mockNode,
       diagnostics.numSameLayerCrossings,
@@ -522,6 +549,15 @@ export default function CapacityNodeEditor({
   // Transform solver coordinates to SVG coordinates
   const svgCenterX = rect.x + rect.width / 2
   const svgCenterY = rect.y + rect.height / 2
+
+  let pairButtonLabel = "Add Pair"
+
+  if (addMode === "entry") {
+    pairButtonLabel = "Click edge for ENTRY"
+  } else if (addMode === "exit") {
+    pairButtonLabel = "Click edge for EXIT"
+  }
+
   const solverToSvg = (x: number, y: number) => ({
     x: svgCenterX + x * pixelsPerMm,
     y: svgCenterY + y * pixelsPerMm,
@@ -539,11 +575,7 @@ export default function CapacityNodeEditor({
           }}
           className={`px-4 py-2 rounded font-medium ${addMode ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}`}
         >
-          {addMode === "entry"
-            ? "Click edge for ENTRY"
-            : addMode === "exit"
-              ? "Click edge for EXIT"
-              : "Add Pair"}
+          {pairButtonLabel}
         </button>
         <button
           onClick={() => {
@@ -668,7 +700,9 @@ export default function CapacityNodeEditor({
                 pair.entry.t,
                 rect,
               )
+
               const exitPos = getPointOnEdge(pair.exit.edge, pair.exit.t, rect)
+
               return (
                 <line
                   key={`line-${i}`}
@@ -691,8 +725,10 @@ export default function CapacityNodeEditor({
                     gRect.center.x - gRect.width / 2,
                     gRect.center.y - gRect.height / 2,
                   )
+
                   const w = gRect.width * pixelsPerMm
                   const h = gRect.height * pixelsPerMm
+
                   return (
                     <rect
                       key={`s-rect-${i}`}
@@ -710,11 +746,13 @@ export default function CapacityNodeEditor({
                   const d = gLine.points
                     .map((p, j) => {
                       const svgP = solverToSvg(p.x, p.y)
+
                       return j === 0
                         ? `M ${svgP.x} ${svgP.y}`
                         : `L ${svgP.x} ${svgP.y}`
                     })
                     .join(" ")
+
                   return (
                     <path
                       key={`s-line-${i}`}
@@ -727,6 +765,7 @@ export default function CapacityNodeEditor({
                 })}
                 {solverGraphics.points?.map((gPoint, i) => {
                   const svgP = solverToSvg(gPoint.x, gPoint.y)
+
                   return (
                     <circle
                       key={`s-point-${i}`}

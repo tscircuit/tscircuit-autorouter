@@ -73,6 +73,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     ...pipeline9Params
   }: Pipeline9NetworkedHighDensitySolverParams) {
     super(pipeline9Params)
+
     if (pipeline9Params.effort !== 1) {
       throw new Error(
         `Pipeline9 networked high-density routing requires effort=1, received ${pipeline9Params.effort}`,
@@ -81,6 +82,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
     this.requestTimeoutMs =
       requestTimeoutMs ?? DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS
+
     if (!Number.isFinite(this.requestTimeoutMs) || this.requestTimeoutMs <= 0) {
       throw new Error(
         `Pipeline9 network request timeout must be a positive number, received ${this.requestTimeoutMs}`,
@@ -132,10 +134,13 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
   async waitForAllRemoteRequests(): Promise<void> {
     const remoteRequests = [...this.remoteRequestByNode.values()]
+
     if (remoteRequests.length === 0) {
       this.syncClientStats()
+
       return
     }
+
     await Promise.all(remoteRequests.map(({ promise }) => promise))
     this.syncClientStats()
   }
@@ -153,6 +158,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
           viaDiameter: this.viaDiameter,
         })
       : { connectivityNetMap: {}, obstacles: [] }
+
     const projectedInput = projectPipeline9OrdinaryHighDensityInput({
       nodeWithPortPoints: node,
       connMap: this.connMap,
@@ -166,6 +172,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       traceWidth: this.traceWidth,
       viaDiameter: this.viaDiameter,
     })
+
     return {
       solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
       enableRegionalFallback: this.enableRegionalFallback,
@@ -207,6 +214,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       Pipeline9NetworkedFallbackReason,
       number
     >
+
     counts[reason] = (counts[reason] ?? 0) + 1
   }
 
@@ -216,15 +224,19 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   ): void {
     const deadlineAt = performance.now() + this.requestTimeoutMs
     this.stats.remoteRequestsStarted += 1
+
     const promise = remotePromise.then((result) => {
       const logicallyTimedOut = this.logicallyTimedOutNodes.has(node)
+
       if (!logicallyTimedOut) this.remoteResultByNode.set(node, result)
 
       if (result.kind === "remote") {
         if (result.response.source === "cache") this.stats.remoteCacheHits += 1
+
         if (result.response.source === "solver") {
           this.stats.remoteSolverResults += 1
         }
+
         if (result.response.status === "solved") {
           this.stats.remoteSolvedResults += 1
         } else {
@@ -238,6 +250,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       this.stats.remoteRequestsCompleted += 1
       this.syncClientStats()
     })
+
     this.remoteRequestByNode.set(node, { promise, deadlineAt })
   }
 
@@ -246,6 +259,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       node: NodeWithPortPoints
       input: Pipeline9NetworkedHighDensityNodeInput
     }> = []
+
     const nodesInConsumptionOrder = [...this.unsolvedNodePortPoints].reverse()
 
     for (const node of nodesInConsumptionOrder) {
@@ -266,9 +280,11 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     const promises = this.hdCache2Client.solveMany(
       prepared.map(({ input }) => input),
     )
+
     for (const [index, promise] of promises.entries()) {
       this.trackRemoteSolve(prepared[index]!.node, promise)
     }
+
     this.syncClientStats()
   }
 
@@ -277,12 +293,15 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     request: RemoteNodeRequest,
   ): Promise<void> {
     const remainingTimeoutMs = request.deadlineAt - performance.now()
+
     if (remainingTimeoutMs <= 0) {
       this.recordLogicalTimeout(node)
+
       return
     }
 
     let logicalTimeoutId: ReturnType<typeof setTimeout> | undefined
+
     const result = await Promise.race([
       request.promise.then(() => "request-settled" as const),
       new Promise<"logical-timeout">((resolve) => {
@@ -292,7 +311,9 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
         )
       }),
     ])
+
     if (logicalTimeoutId !== undefined) clearTimeout(logicalTimeoutId)
+
     if (result !== "logical-timeout") return
 
     this.recordLogicalTimeout(node)
@@ -307,8 +328,10 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
   protected override startRegularSolver(node: NodeWithPortPoints): void {
     const result = this.remoteResultByNode.get(node)
+
     if (!result) {
       const request = this.remoteRequestByNode.get(node)
+
       if (request) {
         this.waitingForRemoteNode = node
         const waitPromise = this.waitForCurrentRemoteNode(node, request)
@@ -316,15 +339,19 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
           if (this.waitingForRemoteNode !== node) return
           this.pendingEffects = []
         })
+
         const pendingEffect: PendingEffect = {
           name: `hd-cache2:${node.capacityMeshNodeId}`,
           promise: waitPromise,
         }
+
         this.pendingEffects = [pendingEffect]
+
         return
       }
 
       super.startRegularSolver(node)
+
       return
     }
 
@@ -337,28 +364,35 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   ): void {
     if (result.kind === "local-fallback") {
       super.startRegularSolver(node)
+
       return
     }
 
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
     this.activeNode = node
+
     if (result.response.solutionStage === "regional-fallback") {
       this.stats.remoteRegionalFallbackResults += 1
+
       if (!this.canUseNoFixedCopperRegionalResult(node)) {
         this.stats.remoteRegionalFallbackResultsDeferredToLocal += 1
         this.finishRegularSolverFailure(result.response.ordinaryFailure)
+
         return
       }
+
       this.stats.remoteRegionalFallbackResultsApplied += 1
       this.stats.fallbackNodeCount =
         Number(this.stats.fallbackNodeCount ?? 0) + 1
     } else {
       this.stats.remoteOrdinaryResults += 1
     }
+
     if (result.response.status === "failed") {
       this.error = result.response.error
       this.failed = true
       this.activeNode = null
+
       return
     }
 
@@ -376,10 +410,12 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       ...normalizePipeline9NodeRootConnectionNames(node, this.connMap),
       availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
     }
+
     const problem = createRegionalFallbackProblem(
       regionalNode,
       this.getUpdatedFixedHdRoutes(),
     )
+
     return (
       problem.fixedRouteSectionsByConnectionName.size === 0 &&
       problem.fixedObstacleRoutes.length === 0
@@ -388,6 +424,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
   override _step(): void {
     this.syncClientStats()
+
     if (!this.launchedRemoteSolves) {
       this.launchedRemoteSolves = true
       this.launchRemoteSolves()
@@ -395,17 +432,22 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
     if (this.waitingForRemoteNode) {
       const node = this.waitingForRemoteNode
+
       if (this.logicallyTimedOutNodes.has(node)) {
         this.waitingForRemoteNode = null
         this.pendingEffects = []
         super.startRegularSolver(node)
+
         return
       }
+
       const result = this.remoteResultByNode.get(node)
+
       if (!result) return
       this.waitingForRemoteNode = null
       this.pendingEffects = []
       this.applyRemoteResultToRegularNode(node, result)
+
       return
     }
 

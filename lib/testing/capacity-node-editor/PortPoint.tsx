@@ -32,8 +32,10 @@ export function PortPoint(props: PortPointProps) {
   } = props
 
   const pointPosition = getPointOnEdge(pointDef.edge, pointDef.t, rect)
+
   const isSelected =
     selected?.pairIndex === pairIndex && selected?.pointType === pointType
+
   const maxLayer = Math.max(...pointDef.layers)
 
   return (

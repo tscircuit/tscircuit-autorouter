@@ -24,7 +24,9 @@ import {
 const EDGE_EPSILON: number = 1e-3
 
 type GraphicsRectList = Rect[]
+
 type GraphicsLineList = Line[]
+
 type GraphicsPointList = Point[]
 
 const getAdjacentTargetNodeIds = ({
@@ -37,12 +39,14 @@ const getAdjacentTargetNodeIds = ({
   meshNodes: CapacityMeshNode[]
 }): string[] => {
   const expandedBounds: Bounds = getBoundFromCenteredRect(expandedNode)
+
   const edgeIsVertical: boolean =
     Math.abs(edge.start.x - edge.end.x) <= EDGE_EPSILON
 
   return meshNodes
     .filter((meshNode) => {
       if (meshNode._containsObstacle) return false
+
       if (
         !expandedNode.availableZ.some((z: number) =>
           meshNode.availableZ.includes(z),
@@ -57,6 +61,7 @@ const getAdjacentTargetNodeIds = ({
         const yOverlap =
           Math.min(expandedBounds.maxY, meshBounds.maxY) -
           Math.max(expandedBounds.minY, meshBounds.minY)
+
         if (yOverlap <= EDGE_EPSILON) return false
 
         return edge.expansionDirection.x < 0
@@ -67,6 +72,7 @@ const getAdjacentTargetNodeIds = ({
       const xOverlap =
         Math.min(expandedBounds.maxX, meshBounds.maxX) -
         Math.max(expandedBounds.minX, meshBounds.minX)
+
       if (xOverlap <= EDGE_EPSILON) return false
 
       return edge.expansionDirection.y < 0
@@ -166,8 +172,10 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
     const obstacleEdges: EdgeSegmentWithObstacle[] = getGapFillObstacleEdges(
       this.inputProblem.unmarkedComponentObstacles,
     )
+
     const visualEdges: EdgeSegmentWithObstacle[] =
       sortGapFillEdgesByLocation(obstacleEdges)
+
     const initialLines: GraphicsLineList = [
       ...obstacleEdges.map(
         (edgeWithObstacle): Line => ({
@@ -184,6 +192,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
       ),
       ...obstacleEdges.map((edgeWithObstacle): Line => {
         const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
+
         return {
           points: [
             midpoint,
@@ -212,17 +221,21 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
       this.getStageOutput<EdgeSegmentWithObstacle[]>(
         "detectEdgesNotConnectedToMesh",
       ) ?? []
+
     const expandedNodes: CapacityMeshNode[] =
       this.getStageOutput<CapacityMeshNode[]>("expandUnconnectedEdgesToMesh") ??
       []
+
     const allObstacleEdges: EdgeSegmentWithObstacle[] =
       sortGapFillEdgesByLocation(
         getGapFillObstacleEdges(this.inputProblem.unmarkedComponentObstacles),
       )
 
     const expandedNodeByEdgeIndex = new Map<number, CapacityMeshNode>()
+
     for (const expandedNode of expandedNodes) {
       const edgeIndex = getGapFillExpandedNodeEdgeIndex(expandedNode)
+
       if (edgeIndex === null) continue
 
       expandedNodeByEdgeIndex.set(edgeIndex, expandedNode)
@@ -230,8 +243,10 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
 
     const expandedRects: GraphicsRectList = expandedNodes.map((node): Rect => {
       const edgeIndex = getGapFillExpandedNodeEdgeIndex(node)
+
       const edge =
         edgeIndex === null ? null : (edgesWithObstacle[edgeIndex] ?? null)
+
       const targetNodeIds = edge
         ? getAdjacentTargetNodeIds({
             expandedNode: node,
@@ -239,9 +254,11 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
             meshNodes: this.inputProblem.meshNodes,
           })
         : []
+
       const edgeLabel = edge
         ? getGapFillEdgeVisualId(edge, allObstacleEdges)
         : "E?"
+
       const color =
         edge === null ? "rgba(0,160,100,0.72)" : getGapFillEdgeColor(edge, 0.72)
 
@@ -264,6 +281,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
         ].join("\n"),
       }
     })
+
     const edgeStateLines: GraphicsLineList = edgesWithObstacle.map(
       (edgeWithObstacle, edgeIndex): Line => {
         const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex)
@@ -286,10 +304,12 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
         }
       },
     )
+
     const fillConnectionLines: GraphicsLineList = edgesWithObstacle.flatMap(
       (edgeWithObstacle, edgeIndex): Line[] => {
         const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
         const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex)
+
         if (!expandedNode) return []
 
         return [
@@ -303,6 +323,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
         ]
       },
     )
+
     const expandedEdgePoints: GraphicsPointList = edgesWithObstacle.flatMap(
       (edgeWithObstacle, edgeIndex): Point[] => {
         if (!expandedNodeByEdgeIndex.has(edgeIndex)) return []

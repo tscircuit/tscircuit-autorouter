@@ -42,11 +42,13 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
   override _step() {
     if (!this.initialized) {
       this.initializeDetectionState()
+
       return
     }
 
     if (this.output) {
       this.solved = true
+
       return
     }
 
@@ -55,6 +57,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       this.unprocessedComponentIds.length > 0
     ) {
       this.processNextComponent()
+
       return
     }
 
@@ -94,6 +97,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
 
     for (const obstacle of this.inputSrj.obstacles) {
       if (!obstacle.componentId) continue
+
       if (finalizedComponentIds.has(obstacle.componentId)) continue
 
       const isActive = obstacle.componentId === this.currentComponentId
@@ -164,21 +168,25 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
   private processNextComponent() {
     if (!this.currentComponentId) {
       const nextComponentId = this.unprocessedComponentIds.shift()
+
       if (!nextComponentId) {
         this.currentComponentId = null
         this.currentMemberObstacles = []
+
         return
       }
 
       this.currentComponentId = nextComponentId
       this.currentMemberObstacles =
         this.groupedComponentObstacles[nextComponentId] ?? []
+
       return
     }
 
     if (this.currentMemberObstacles.length === 0) {
       this.currentComponentId = null
       this.currentMemberObstacles = []
+
       return
     }
 
@@ -247,6 +255,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     const detectedEntries = Object.entries(grouped).flatMap(
       ([componentId, memberObstacles]) => {
         const boardBounds = this.inputSrj.bounds
+
         const hasOutOfBoundsObstacle = memberObstacles.some((obstacle) => {
           const obstacleBounds = getBoundingBox(obstacle)
 
@@ -265,9 +274,11 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           memberObstacles,
           inputSrj: this.inputSrj,
         })
+
         if (!componentKind) return []
 
         componentKinds[componentId] = componentKind
+
         const detectedObstacles =
           componentKind === "bga"
             ? getBgaLikeObstacleSubset(memberObstacles)!
@@ -311,6 +322,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           .map((obstacle) => obstacle.componentId)
           .filter((componentId): componentId is string => Boolean(componentId)),
       ).size
+
     const completedCount = this.detectedComponents.length
 
     if (!this.initialized) {

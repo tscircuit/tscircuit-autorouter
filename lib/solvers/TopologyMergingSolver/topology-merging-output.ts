@@ -38,6 +38,7 @@ export function createTopologyMergingOutputNodes({
     provenance.groupIndexesByNodeId.clear()
     provenance.sourceKeysByNodeId.clear()
   }
+
   const sortedRegions = [...regions].sort(
     (a, b) =>
       a.bounds.minX - b.bounds.minX ||
@@ -46,30 +47,38 @@ export function createTopologyMergingOutputNodes({
       a.bounds.maxY - b.bounds.maxY ||
       a.availableZ[0]! - b.availableZ[0]!,
   )
+
   const usedNodeIds = new Set<string>()
 
   return sortedRegions.map((region, regionIndex) => {
     const sourcePreparedNodes = region.sourceKeys.map((sourceKey) => {
       const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+
       if (!preparedNode) {
         throw new Error(
           `TopologyMergingSolver: missing source node for "${sourceKey}"`,
         )
       }
+
       return preparedNode
     })
+
     const sourceNodes = sourcePreparedNodes.map(({ node }) => node)
+
     const isComponentTopologyNode = sourcePreparedNodes.some(
       ({ groupIndex }) => nodeGroups[groupIndex]!.isComponent,
     )
+
     const metadata = getOutputNodeMetadata({
       sourceNodes,
       isComponentTopologyNode,
     })
+
     const preservedSourceNode =
       preserveSourceIds && sourcePreparedNodes.length === 1
         ? sourcePreparedNodes[0]!.node
         : null
+
     const canPreserveSourceId = Boolean(
       preservedSourceNode &&
         canPreserveSourceNodeId({
@@ -78,12 +87,15 @@ export function createTopologyMergingOutputNodes({
           usedNodeIds,
         }),
     )
+
     let capacityMeshNodeId = canPreserveSourceId
       ? preservedSourceNode!.capacityMeshNodeId
       : `topology_merge_${regionIndex}`
+
     while (usedNodeIds.has(capacityMeshNodeId)) {
       capacityMeshNodeId = `${capacityMeshNodeId}_next`
     }
+
     usedNodeIds.add(capacityMeshNodeId)
 
     if (preserveSourceIds) {
@@ -125,12 +137,14 @@ export function validateTopologyMergingOutput({
   provenance: TopologyMergingOutputProvenance
 }): void {
   const nodeIds = new Set<string>()
+
   for (const node of nodes) {
     if (nodeIds.has(node.capacityMeshNodeId)) {
       throw new Error(
         `TopologyMergingSolver: duplicate output node id "${node.capacityMeshNodeId}"`,
       )
     }
+
     nodeIds.add(node.capacityMeshNodeId)
 
     if (!isValidCapacityBounds(getCapacityMeshNodeBounds(node))) {
@@ -138,6 +152,7 @@ export function validateTopologyMergingOutput({
         `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has invalid bounds`,
       )
     }
+
     if (node.availableZ.length === 0) {
       throw new Error(
         `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has no available layers`,
@@ -147,11 +162,13 @@ export function validateTopologyMergingOutput({
     const sourceKeys = provenance.sourceKeysByNodeId.get(
       node.capacityMeshNodeId,
     )
+
     if (!sourceKeys) {
       throw new Error(
         `TopologyMergingSolver: missing output provenance for node "${node.capacityMeshNodeId}"`,
       )
     }
+
     if (sourceKeys.length === 1) {
       validateSingleSourceOutput({
         node,
@@ -163,20 +180,25 @@ export function validateTopologyMergingOutput({
 
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
+
     for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
       const nodeB = nodes[bIndex]!
+
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
       )
+
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
         getCapacityMeshNodeBounds(nodeA),
         getCapacityMeshNodeBounds(nodeB),
       )
+
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX
       const intersectionHeight = intersection.maxY - intersection.minY
+
       if (
         intersectionWidth <= TOPOLOGY_PROVENANCE_EPSILON ||
         intersectionHeight <= TOPOLOGY_PROVENANCE_EPSILON
@@ -187,25 +209,31 @@ export function validateTopologyMergingOutput({
       const nodeAGroupIndexes = provenance.groupIndexesByNodeId.get(
         nodeA.capacityMeshNodeId,
       )
+
       const nodeBGroupIndexes = provenance.groupIndexesByNodeId.get(
         nodeB.capacityMeshNodeId,
       )
+
       if (!nodeAGroupIndexes || !nodeBGroupIndexes) {
         throw new Error(
           `TopologyMergingSolver: missing output provenance for overlapping nodes "${nodeA.capacityMeshNodeId}" and "${nodeB.capacityMeshNodeId}"`,
         )
       }
+
       const nodeASourceKeys = provenance.sourceKeysByNodeId.get(
         nodeA.capacityMeshNodeId,
       )
+
       const nodeBSourceKeys = provenance.sourceKeysByNodeId.get(
         nodeB.capacityMeshNodeId,
       )
+
       if (!nodeASourceKeys || !nodeBSourceKeys) {
         throw new Error(
           `TopologyMergingSolver: missing source provenance for overlapping nodes "${nodeA.capacityMeshNodeId}" and "${nodeB.capacityMeshNodeId}"`,
         )
       }
+
       if (
         isPreservedSameGroupOverlap({
           groupIndexesA: nodeAGroupIndexes,
@@ -242,21 +270,25 @@ function getOutputNodeMetadata({
   }
 
   const sourceNodeIds = sourceNodes.map((node) => node.capacityMeshNodeId)
+
   const targetConnectionName = getUniqueOptionalValue(
     sourceNodes.map((node) => node._targetConnectionName),
     "target connection",
     sourceNodeIds,
   )
+
   const offBoardConnectionId = getUniqueOptionalValue(
     sourceNodes.map((node) => node._offBoardConnectionId),
     "off-board connection",
     sourceNodeIds,
   )
+
   const offboardNetName = getUniqueOptionalValue(
     sourceNodes.map((node) => node._offboardNetName),
     "off-board net",
     sourceNodeIds,
   )
+
   const offBoardConnectedCapacityMeshNodeIds = Array.from(
     new Set(
       sourceNodes.flatMap(
@@ -264,6 +296,7 @@ function getOutputNodeMetadata({
       ),
     ),
   )
+
   const connectedTo = Array.from(
     new Set(sourceNodes.flatMap((node) => node._connectedTo ?? [])),
   )
@@ -307,6 +340,7 @@ function canPreserveSourceNodeId({
   usedNodeIds: ReadonlySet<string>
 }): boolean {
   const sourceBounds = getCapacityMeshNodeBounds(sourceNode)
+
   const hasSameBounds =
     Math.abs(region.bounds.minX - sourceBounds.minX) <=
       TOPOLOGY_MERGING_EPSILON &&
@@ -315,6 +349,7 @@ function canPreserveSourceNodeId({
     Math.abs(region.bounds.minY - sourceBounds.minY) <=
       TOPOLOGY_MERGING_EPSILON &&
     Math.abs(region.bounds.maxY - sourceBounds.maxY) <= TOPOLOGY_MERGING_EPSILON
+
   const hasSameAvailableZ =
     region.availableZ.length === sourceNode.availableZ.length &&
     region.availableZ.every((z, index) => z === sourceNode.availableZ[index])
@@ -364,6 +399,7 @@ function validateSingleSourceOutput({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): void {
   const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+
   if (!preparedNode) {
     throw new Error(
       `TopologyMergingSolver: missing source node for output "${node.capacityMeshNodeId}"`,
@@ -371,14 +407,17 @@ function validateSingleSourceOutput({
   }
 
   const bounds = getCapacityMeshNodeBounds(node)
+
   const isInsideSource =
     bounds.minX >= preparedNode.bounds.minX - TOPOLOGY_PROVENANCE_EPSILON &&
     bounds.maxX <= preparedNode.bounds.maxX + TOPOLOGY_PROVENANCE_EPSILON &&
     bounds.minY >= preparedNode.bounds.minY - TOPOLOGY_PROVENANCE_EPSILON &&
     bounds.maxY <= preparedNode.bounds.maxY + TOPOLOGY_PROVENANCE_EPSILON
+
   const usesOnlySourceLayers = node.availableZ.every((z) =>
     preparedNode.node.availableZ.includes(z),
   )
+
   if (!isInsideSource || !usesOnlySourceLayers) {
     throw new Error(
       `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" escapes its source geometry or layers`,
@@ -414,6 +453,7 @@ function isPreservedSameGroupOverlap({
 
   const sourceA = preparedNodeBySourceKey.get(sourceKeysA[0]!)
   const sourceB = preparedNodeBySourceKey.get(sourceKeysB[0]!)
+
   if (!sourceA || !sourceB || sharedLayers.length === 0) return false
 
   const sourcesShareLayer = sharedLayers.some(
@@ -421,6 +461,7 @@ function isPreservedSameGroupOverlap({
       sourceA.node.availableZ.includes(z) &&
       sourceB.node.availableZ.includes(z),
   )
+
   return (
     sourcesShareLayer &&
     getBoundsIntersection(sourceA.bounds, sourceB.bounds) !== null

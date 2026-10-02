@@ -47,6 +47,7 @@ export const DumbbellDebugger = ({
     name: string
     setter: React.Dispatch<React.SetStateAction<Point>>
   } | null>(null)
+
   const [showInnerPoints, setShowInnerPoints] = useState(true)
   const [showOuterPoints, setShowOuterPoints] = useState(false)
   const [showJPair, setShowJPair] = useState(true)
@@ -73,6 +74,7 @@ export const DumbbellDebugger = ({
       margin,
       subdivisions: showSubdivided ? subdivisions : 0,
     })
+
     setPathResult(result)
   }, [
     pointA,
@@ -97,6 +99,7 @@ export const DumbbellDebugger = ({
     // Unit vectors
     const ux = dx / len,
       uy = dy / len
+
     const px = -uy,
       py = ux // Perpendicular unit vector
 
@@ -114,9 +117,11 @@ export const DumbbellDebugger = ({
   // Draw on canvas
   useEffect(() => {
     const canvas = canvasRef.current
+
     if (!canvas || !pathResult) return
 
     const ctx = canvas.getContext("2d")
+
     if (!ctx) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -242,9 +247,11 @@ export const DumbbellDebugger = ({
       if (points && points.length > 1) {
         ctx.beginPath()
         ctx.moveTo(points[0].x, points[0].y)
+
         for (let i = 1; i < points.length; i++) {
           ctx.lineTo(points[i].x, points[i].y)
         }
+
         ctx.strokeStyle = "#0000FF"
         ctx.lineWidth = 3
         ctx.stroke()
@@ -255,6 +262,7 @@ export const DumbbellDebugger = ({
             isSpecial?: boolean
             specialType?: "A" | "B"
           }
+
           let color = "#0000AA"
           let size = 3
 
@@ -311,9 +319,11 @@ export const DumbbellDebugger = ({
       if (line1 && line1.points) {
         ctx.beginPath()
         ctx.moveTo(line1.points[0].x, line1.points[0].y)
+
         for (let i = 1; i < line1.points.length; i++) {
           ctx.lineTo(line1.points[i].x, line1.points[i].y)
         }
+
         ctx.strokeStyle = "#FF00FF" // Magenta
         ctx.lineWidth = 3
         ctx.stroke()
@@ -339,9 +349,11 @@ export const DumbbellDebugger = ({
       if (line2 && line2.points) {
         ctx.beginPath()
         ctx.moveTo(line2.points[0].x, line2.points[0].y)
+
         for (let i = 1; i < line2.points.length; i++) {
           ctx.lineTo(line2.points[i].x, line2.points[i].y)
         }
+
         ctx.strokeStyle = "#00FF00" // Lime
         ctx.lineWidth = 3
         ctx.stroke()
@@ -384,6 +396,7 @@ export const DumbbellDebugger = ({
   // Event handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
+
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
@@ -402,8 +415,10 @@ export const DumbbellDebugger = ({
 
     for (const { point, name, setter } of points) {
       const dist = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2)
+
       if (dist < 10) {
         setDragging({ name, setter })
+
         return
       }
     }
@@ -413,6 +428,7 @@ export const DumbbellDebugger = ({
     if (!dragging) return
 
     const canvas = canvasRef.current
+
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()

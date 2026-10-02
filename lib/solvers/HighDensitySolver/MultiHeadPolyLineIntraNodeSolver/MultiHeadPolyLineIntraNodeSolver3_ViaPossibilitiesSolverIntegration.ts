@@ -19,10 +19,13 @@ function factorial(n: number) {
   if (!Number.isInteger(n) || n < 0) {
     throw new RangeError("n must be a non-negative integer")
   }
+
   let result = 1
+
   for (let i = 2; i <= n; i++) {
     result *= i
   }
+
   return result
 }
 
@@ -55,6 +58,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     if (viaSolver.failed || !viaSolver.solved) {
       this.failed = true
       this.error = `ViaPossibilitiesSolver2 failed with: ${viaSolver.error}`
+
       return null
     }
 
@@ -84,8 +88,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       // The ViaPossibilitiesSolver2 path structure is [start, p1_z1, p1_z2, p2_z2, ..., end]
       // We need to map this to MHPoint structure { x, y, z1, z2 }
       let lastZ = startPoint.z
+
       for (let i = 0; i < middlePointsRaw.length; i++) {
         const currentRawPoint = middlePointsRaw[i]
+
         const nextRawPoint =
           i + 1 < middlePointsRaw.length ? middlePointsRaw[i + 1] : endPoint // Look ahead to determine z2
 
@@ -114,6 +120,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
           lastZ = currentRawPoint.z // Update lastZ for the next segment
         }
       }
+
       totalViaCount += currentViaCount
 
       // Ensure the polyline has SEGMENTS_PER_POLYLINE segments by splitting the longest ones
@@ -125,6 +132,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         let longestSegmentIndex = -1 // Index of the point *before* the longest segment
         let p1: MHPoint | null = null
         let p2: MHPoint | null = null
+
         const fullPathPoints = [
           {
             ...startPoint,
@@ -146,6 +154,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
           }
 
           const len = distance(segP1, segP2)
+
           if (len > longestSegmentLength) {
             longestSegmentLength = len
             longestSegmentIndex = k
@@ -206,6 +215,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       this.failed = true
       this.error = "No valid polylines generated from ViaPossibilitiesSolver2."
       console.error(this.error)
+
       return null
     }
 
@@ -220,6 +230,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       viaCount: totalViaCount,
       minGaps,
     }
+
     initialCandidate.g = this.computeG(polyLines, initialCandidate)
     initialCandidate.f = initialCandidate.g + initialCandidate.h
 
@@ -228,19 +239,25 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
 
   setupInitialPolyLines(): void {
     this.candidates = []
+
     const maxCandidatesToGenerate = Math.min(
       2000,
       factorial(this.uniqueConnections),
     )
+
     const candidatePolylineHashes = new Set<string>()
+
     for (let i = 0; i < maxCandidatesToGenerate; i++) {
       const newCandidate = this.createInitialCandidateFromSeed(i)
+
       if (!newCandidate) continue
       const newCandidatePolylineHash = hashPolyLines(newCandidate.polyLines)
+
       if (candidatePolylineHashes.has(newCandidatePolylineHash)) continue
       candidatePolylineHashes.add(newCandidatePolylineHash)
       this.candidates.push(newCandidate)
     }
+
     this.candidates.sort((a, b) => a.f - b.f) // Sort in case we add more initial candidates later
   }
 }

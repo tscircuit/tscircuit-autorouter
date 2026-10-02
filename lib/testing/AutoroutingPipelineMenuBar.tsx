@@ -24,8 +24,11 @@ const cacheProviders: CacheProviderName[] = [
 ]
 
 export const EFFORT_LEVELS = [1, 2, 5, 10, 20, 50, 100] as const
+
 export type EffortLevel = (typeof EFFORT_LEVELS)[number]
+
 export const LAYER_OVERRIDE_OPTIONS = ["auto", 1, 2, 4] as const
+
 export type LayerOverride = (typeof LAYER_OVERRIDE_OPTIONS)[number]
 
 export const PIPELINE_OPTIONS = [
@@ -194,6 +197,7 @@ export const AutoroutingPipelineMenuBar = ({
                   option === "auto"
                     ? `auto (${defaultLayerCount})`
                     : String(option)
+
                 return (
                   <MenubarItem
                     key={option}
@@ -328,8 +332,10 @@ export const AutoroutingPipelineMenuBar = ({
               ([prefix, hits]) => {
                 const misses = cacheProvider.cacheMissesByPrefix?.[prefix] || 0
                 const total = hits + misses
+
                 const percentage =
                   total > 0 ? ((hits / total) * 100).toFixed(1) : "N/A"
+
                 return (
                   <MenubarItem key={`hits-${prefix}`} disabled>
                     {prefix} {percentage}%

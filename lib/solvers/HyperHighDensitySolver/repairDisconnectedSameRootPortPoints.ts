@@ -19,8 +19,10 @@ const getConnectedPointKeysForConnection = (
   startKey: string,
 ) => {
   const adjacency = new Map<string, Set<string>>()
+
   const addEdge = (a: string, b: string) => {
     if (!adjacency.has(a)) adjacency.set(a, new Set())
+
     if (!adjacency.has(b)) adjacency.set(b, new Set())
     adjacency.get(a)!.add(b)
     adjacency.get(b)!.add(a)
@@ -30,11 +32,14 @@ const getConnectedPointKeysForConnection = (
     if (route.connectionName !== connectionName || route.route.length === 0) {
       continue
     }
+
     if (route.route.length === 1) {
       const key = pointKey(route.route[0]!)
+
       if (!adjacency.has(key)) adjacency.set(key, new Set())
       continue
     }
+
     for (let i = 0; i < route.route.length - 1; i++) {
       addEdge(pointKey(route.route[i]!), pointKey(route.route[i + 1]!))
     }
@@ -42,8 +47,10 @@ const getConnectedPointKeysForConnection = (
 
   const connected = new Set<string>([startKey])
   const stack = [startKey]
+
   while (stack.length > 0) {
     const key = stack.pop()!
+
     for (const nextKey of adjacency.get(key) ?? []) {
       if (connected.has(nextKey)) continue
       connected.add(nextKey)
@@ -59,6 +66,7 @@ export const areNodePortPointPairsConnectedByRoutes = (
   nodeWithPortPoints: NodeWithPortPoints,
 ): boolean => {
   const explicitPairs = nodeWithPortPoints.portPointsInPairs ?? []
+
   if (explicitPairs.length > 0) {
     for (const [start, end] of explicitPairs) {
       const connectedPointKeys = getConnectedPointKeysForConnection(
@@ -66,15 +74,19 @@ export const areNodePortPointPairsConnectedByRoutes = (
         start.connectionName,
         pointKey(start),
       )
+
       if (!connectedPointKeys.has(pointKey(end))) return false
     }
+
     return true
   }
 
   const portPointsByConnection = new Map<string, PortPoint[]>()
+
   for (const portPoint of nodeWithPortPoints.portPoints) {
     const connectionPortPoints =
       portPointsByConnection.get(portPoint.connectionName) ?? []
+
     connectionPortPoints.push(portPoint)
     portPointsByConnection.set(portPoint.connectionName, connectionPortPoints)
   }
@@ -88,6 +100,7 @@ export const areNodePortPointPairsConnectedByRoutes = (
         connectionName,
         pointKey(start),
       )
+
       if (!connectedPointKeys.has(pointKey(end))) return false
     }
   }
@@ -105,6 +118,7 @@ export const repairDisconnectedSameRootPortPoints = (
   for (const portPoint of nodeWithPortPoints.portPoints) {
     const portPoints =
       portPointsByConnection.get(portPoint.connectionName) ?? []
+
     portPoints.push(portPoint)
     portPointsByConnection.set(portPoint.connectionName, portPoints)
   }
@@ -114,7 +128,9 @@ export const repairDisconnectedSameRootPortPoints = (
 
     const rootConnectionName =
       portPoints[0]?.rootConnectionName ?? connectionName
+
     const targetPortKeys = new Set(portPoints.map(pointKey))
+
     let connectedKeys = getConnectedPointKeysForConnection(
       repairedRoutes,
       connectionName,
@@ -123,6 +139,7 @@ export const repairDisconnectedSameRootPortPoints = (
 
     for (const portPoint of portPoints.slice(1)) {
       const portPointKey = pointKey(portPoint)
+
       if (connectedKeys.has(portPointKey)) continue
 
       const bridgeRoute = repairedRoutes.find((route) => {
@@ -132,11 +149,14 @@ export const repairDisconnectedSameRootPortPoints = (
         ) {
           return false
         }
+
         if (route.connectionName === connectionName) return false
         const [start, end] = routeEndpoints(route)
+
         if (!start || !end) return false
         const startKey = pointKey(start)
         const endKey = pointKey(end)
+
         return (
           (connectedKeys.has(startKey) && endKey === portPointKey) ||
           (connectedKeys.has(endKey) && startKey === portPointKey) ||

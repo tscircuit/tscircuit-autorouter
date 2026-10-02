@@ -10,6 +10,7 @@ export const canonicalizePipeline9HdRoutes = (
       ...route,
       route: route.route.flatMap((point, index) => {
         const previous = route.route[index - 1]
+
         if (
           !previous ||
           previous.z === point.z ||
@@ -18,6 +19,7 @@ export const canonicalizePipeline9HdRoutes = (
         ) {
           return [point]
         }
+
         // Materialization accepts sub-micrometre coincidence; repair04 needs
         // exact XY equality. Preserve both endpoints with an explicit lead.
         return [{ x: point.x, y: point.y, z: previous.z }, point]

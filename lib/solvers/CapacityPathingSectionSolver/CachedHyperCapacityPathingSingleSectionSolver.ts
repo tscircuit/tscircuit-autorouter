@@ -8,6 +8,7 @@ import { GraphicsObject } from "graphics-debug"
 import { visualizeSection } from "./visualizeSection"
 
 type CacheSpaceNodeId = string
+
 type ConnectionIndex = number
 
 // A normalized connection id - note that the first id is always lower than the second
@@ -89,7 +90,9 @@ export class CachedHyperCapacityPathingSingleSectionSolver
     if (!this.hasAttemptedToUseCache && this.cacheProvider) {
       if (this.attemptToUseCacheSync()) return
     }
+
     super._step()
+
     if ((this.solved || this.failed) && this.cacheProvider) {
       this.saveToCacheSync()
     }
@@ -112,10 +115,12 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         capacityMeshNodeId: this.constructorParams.centerNodeId,
       },
     ]
+
     // Run a breadth first search using the rounded capacity as a penalty for the ordering
     while (candidates.length > 0) {
       candidates.sort((a, b) => b.g - a.g)
       const candidate = candidates.pop()
+
       if (!candidate) break
       ordering.push(candidate.capacityMeshNodeId)
 
@@ -138,6 +143,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         })
       }
     }
+
     return ordering
   }
 
@@ -146,46 +152,54 @@ export class CachedHyperCapacityPathingSingleSectionSolver
     cacheToSolveSpaceTransform: CacheToHyperCapacityPathingTransform
   } {
     const nodeOrdering = this._computeBfsOrderingOfNodesInSection()
+
     const realToCacheSpaceNodeIdMap = new Map<
       CapacityMeshNodeId,
       CacheSpaceNodeId
     >()
+
     const cacheSpaceToRealNodeIdMap = new Map<
       CacheSpaceNodeId,
       CapacityMeshNodeId
     >()
 
     nodeOrdering.forEach((realNodeId, i) => {
-      const cacheNodeId = `node${i}` as CacheSpaceNodeId
+      const cacheNodeId: CacheSpaceNodeId = `node${i}`
       realToCacheSpaceNodeIdMap.set(realNodeId, cacheNodeId)
       cacheSpaceToRealNodeIdMap.set(cacheNodeId, realNodeId)
     })
 
     const node_capacity_map: Record<CacheSpaceNodeId, CacheCapacity> = {}
+
     for (const realNodeId of nodeOrdering) {
       const cacheNodeId = realToCacheSpaceNodeIdMap.get(realNodeId)!
       const node = this.constructorParams.nodeMap!.get(realNodeId)!
       const capacity = getTunedTotalCapacity1(node)
-      node_capacity_map[cacheNodeId] = roundCapacity(capacity).toFixed(
-        1,
-      ) as CacheCapacity
+      node_capacity_map[cacheNodeId] = roundCapacity(capacity).toFixed(1)
     }
 
     const node_edge_map_set = new Set<string>()
     const node_edge_map: Array<[CacheSpaceNodeId, CacheSpaceNodeId]> = []
+
     for (const realNodeId1 of nodeOrdering) {
       const cacheNodeId1 = realToCacheSpaceNodeIdMap.get(realNodeId1)!
+
       const neighbors =
         this.constructorParams.nodeEdgeMap!.get(realNodeId1) ?? []
+
       for (const edge of neighbors) {
         const realNodeId2 = edge.nodeIds.find((id) => id !== realNodeId1)!
+
         if (this.sectionNodeIdSet.has(realNodeId2)) {
           const cacheNodeId2 = realToCacheSpaceNodeIdMap.get(realNodeId2)!
+
           const pair = [cacheNodeId1, cacheNodeId2].sort() as [
             CacheSpaceNodeId,
             CacheSpaceNodeId,
           ]
+
           const pairKey = `${pair[0]}-${pair[1]}`
+
           if (!node_edge_map_set.has(pairKey)) {
             node_edge_map.push(pair)
             node_edge_map_set.add(pairKey)
@@ -193,13 +207,16 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         }
       }
     }
+
     // Sort the edge map for consistent hashing
     node_edge_map.sort((a, b) => {
       if (a[0] !== b[0]) return a[0].localeCompare(b[0])
+
       return a[1].localeCompare(b[1])
     })
 
     const terminals: CacheKeyContent["terminals"] = {}
+
     const cacheSpaceToRealConnectionId = new Map<
       CacheSpaceConnectionId,
       string
@@ -252,6 +269,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
 
     this.cacheKey = cacheKey
     this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
+
     return { cacheKey, cacheToSolveSpaceTransform }
   }
 
@@ -264,15 +282,19 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       )
       // Potentially re-compute or treat as cache miss
       this.failed = true // Or handle differently
+
       return
     }
+
     if (!cachedSolution.success) {
       this.failed = true
       this.cacheHit = true // It was a hit, but the solution was a failure
+
       return
     }
 
     this.cachedSectionConnectionTerminals = []
+
     const { cacheSpaceToRealNodeId, cacheSpaceToRealConnectionId } =
       this.cacheToSolveSpaceTransform! // Assert non-null as checked above
 
@@ -282,6 +304,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       const realConnectionName = cacheSpaceToRealConnectionId.get(
         cacheConnId as CacheSpaceConnectionId,
       )
+
       if (!realConnectionName) {
         console.warn(`Could not find real connection name for ${cacheConnId}`)
         continue
@@ -302,17 +325,21 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       const realPathNodes: CapacityMeshNode[] = cachePathNodeIds.map(
         (cacheNodeId) => {
           const realNodeId = cacheSpaceToRealNodeId.get(cacheNodeId)
+
           if (!realNodeId) {
             throw new Error(
               `Could not map cache node ID ${cacheNodeId} to real node ID for connection ${realConnectionName}`,
             )
           }
+
           const node = this.constructorParams.nodeMap!.get(realNodeId)
+
           if (!node) {
             throw new Error(
               `Could not find node with ID ${realNodeId} in nodeMap for connection ${realConnectionName}`,
             )
           }
+
           return node
         },
       )
@@ -336,10 +363,12 @@ export class CachedHyperCapacityPathingSingleSectionSolver
 
   attemptToUseCacheSync(): boolean {
     this.hasAttemptedToUseCache = true
+
     if (!this.cacheProvider?.isSyncCache) {
       console.log(
         "Cache provider is not synchronous, skipping sync cache check.",
       )
+
       return false
     }
 
@@ -349,6 +378,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
 
     if (!this.cacheKey) {
       console.error("Failed to compute cache key.")
+
       return false
     }
 
@@ -361,6 +391,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         this.applyCachedSolution(
           cachedSolution as CachedSolvedHyperCapacityPathingSection,
         )
+
         return true
       }
     } catch (error) {
@@ -373,6 +404,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
   saveToCacheSync(): void {
     if (!this.cacheKey) {
       console.error("Cannot save to cache without cache key.")
+
       return
     }
 
@@ -380,6 +412,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       console.error(
         "Cache transform not available, cannot save solution to cache.",
       )
+
       return
     }
 
@@ -392,11 +425,13 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         CacheSpaceConnectionId,
         CacheSpaceNodeId[]
       > = {}
+
       const { cacheSpaceToRealNodeId, cacheSpaceToRealConnectionId } =
         this.cacheToSolveSpaceTransform
 
       // Create reverse maps for easier lookup
       const realToCacheSpaceNodeId = new Map<string, CacheSpaceNodeId>()
+
       for (const [cacheId, realId] of cacheSpaceToRealNodeId) {
         realToCacheSpaceNodeId.set(realId, cacheId)
       }
@@ -405,6 +440,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
         string,
         CacheSpaceConnectionId
       >()
+
       for (const [cacheConnId, realConnName] of cacheSpaceToRealConnectionId) {
         realToCacheSpaceConnectionId.set(realConnName, cacheConnId)
       }
@@ -417,6 +453,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
             const realPathNodeIds = terminal.path.map(
               (node) => node.capacityMeshNodeId,
             )
+
             realSolutionPaths.push([terminal.connectionName, realPathNodeIds])
           }
         }
@@ -425,6 +462,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       for (const [realConnectionName, realPathNodeIds] of realSolutionPaths) {
         const cacheConnectionId =
           realToCacheSpaceConnectionId.get(realConnectionName)
+
         if (!cacheConnectionId) {
           console.warn(
             `Could not find cache space connection ID for ${realConnectionName} when saving to cache.`,
@@ -434,13 +472,16 @@ export class CachedHyperCapacityPathingSingleSectionSolver
 
         const cachePathNodeIds = realPathNodeIds.map((realNodeId) => {
           const cacheNodeId = realToCacheSpaceNodeId.get(realNodeId)
+
           if (!cacheNodeId) {
             throw new Error(
               `Could not map real node ID ${realNodeId} to cache node ID for connection ${realConnectionName} when saving to cache.`,
             )
           }
+
           return cacheNodeId
         })
+
         solutionPathsInCacheSpace[cacheConnectionId] = cachePathNodeIds
       }
 
@@ -471,8 +512,10 @@ export class CachedHyperCapacityPathingSingleSectionSolver
     | undefined {
     if (this.cacheHit && this.solved && this.cachedSectionConnectionTerminals) {
       console.log("returning the cached section connection terminals")
+
       return this.cachedSectionConnectionTerminals
     }
+
     return super.sectionConnectionTerminals
   }
 

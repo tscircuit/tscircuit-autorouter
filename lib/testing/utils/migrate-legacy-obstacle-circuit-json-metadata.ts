@@ -13,12 +13,15 @@ export const migrateLegacyObstacleCircuitJsonMetadata = (
     if (obstacle.circuitJsonMetadata) return obstacle
 
     const elementId = obstacle.connectedTo[0]
+
     if (!elementId) return obstacle
 
     const repeatedElementIndex = obstacle.connectedTo.indexOf(elementId, 1)
+
     if (repeatedElementIndex === -1) return obstacle
 
     const pcbPortId = obstacle.connectedTo[repeatedElementIndex + 1]
+
     if (!pcbPortId) return obstacle
 
     return {

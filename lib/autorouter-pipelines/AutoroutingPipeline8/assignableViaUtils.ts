@@ -29,5 +29,9 @@ export const getAssignableViaPointKey = (obstacle: Obstacle) =>
 
 export const getAssignableViaPointKeys = (obstacles: Obstacle[]) =>
   new Set(
-    obstacles.filter(isAssignableViaObstacle).map(getAssignableViaPointKey),
+    obstacles.flatMap((obstacle) =>
+      isAssignableViaObstacle(obstacle)
+        ? [getAssignableViaPointKey(obstacle)]
+        : [],
+    ),
   )

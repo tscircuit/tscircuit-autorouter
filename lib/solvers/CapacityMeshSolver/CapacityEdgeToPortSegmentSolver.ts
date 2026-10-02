@@ -60,8 +60,10 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
 
   step() {
     const nodeId = this.unprocessedNodeIds.pop()
+
     if (!nodeId) {
       this.solved = true
+
       return
     }
 
@@ -69,8 +71,10 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
       path: CapacityPath
       indexOfNodeInPath: number
     }> = []
+
     for (const path of this.capacityPaths) {
       const indexOfNodeInPath = path.nodeIds.indexOf(nodeId)
+
       if (indexOfNodeInPath !== -1) {
         pathsGoingThroughNode.push({ path, indexOfNodeInPath })
       }
@@ -85,6 +89,7 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
 
       for (const adjNodeId of [entryNodeId, exitNodeId]) {
         const adjNode = this.nodeMap.get(adjNodeId)!
+
         if (!adjNode) continue
         const segment = findOverlappingSegment(node, adjNode)
 
@@ -121,24 +126,29 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
       rects: [],
       circles: [],
     }
+
     this.nodePortSegments.forEach((segments, nodeId) => {
       const node = this.nodeMap.get(nodeId)!
       segments.forEach((segment) => {
         const isVertical = segment.start.x === segment.end.x
         const THICKNESS = 0.05
+
         for (let i = 0; i < segment.connectionNames.length; i++) {
           const offset = {
             x: 0.05 * Math.max(...segment.availableZ),
             y: 0.05 * Math.max(...segment.availableZ),
           }
+
           const trueSegmentCenter = {
             x: (segment.start.x + segment.end.x) / 2,
             y: (segment.start.y + segment.end.y) / 2,
           }
+
           const segmentCenter = {
             x: trueSegmentCenter.x + offset.x,
             y: trueSegmentCenter.y + offset.y,
           }
+
           if (offset.x > 0) {
             // small dashed line to show the true center
             graphics.lines!.push({
@@ -147,6 +157,7 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
               strokeDash: "5 5",
             })
           }
+
           graphics.points!.push({
             x: segmentCenter.x,
             y: segmentCenter.y,
@@ -162,6 +173,7 @@ export class CapacityEdgeToPortSegmentSolver extends BaseSolver {
         }
       })
     })
+
     return graphics
   }
 }
@@ -200,6 +212,7 @@ function findOverlappingSegment(
   if (xRange < yRange) {
     // They are horizontally adjacent: shared vertical edge.
     const x = (xOverlap.start + xOverlap.end) / 2
+
     return {
       start: { x, y: yOverlap.start },
       end: { x, y: yOverlap.end },
@@ -207,6 +220,7 @@ function findOverlappingSegment(
   } else {
     // Otherwise, they are vertically adjacent: shared horizontal edge.
     const y = (yOverlap.start + yOverlap.end) / 2
+
     return {
       start: { x: xOverlap.start, y },
       end: { x: xOverlap.end, y },
@@ -228,12 +242,14 @@ function availableZAreEqual(zA1: number[], zA2: number[]): boolean {
   if (zA1.length !== zA2.length) {
     return false
   }
+
   // Assuming they are sorted or order matters for distinction
   for (let i = 0; i < zA1.length; i++) {
     if (zA1[i] !== zA2[i]) {
       return false
     }
   }
+
   return true
 }
 
@@ -244,6 +260,7 @@ function availableZAreEqual(zA1: number[], zA2: number[]): boolean {
  */
 function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
   const mergedSegments: NodePortSegment[] = []
+
   // Create copies to avoid modifying the original array during iteration
   // Sort availableZ consistently within each segment copy first
   const remainingSegments = segments.map((s) => ({
@@ -288,6 +305,7 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
         const currentRootConnectionNames = new Set(
           mergedSegment.rootConnectionNames || [],
         )
+
         segmentUnderTest.rootConnectionNames?.forEach((id) =>
           currentRootConnectionNames.add(id),
         )
@@ -308,5 +326,6 @@ function combineSegments(segments: NodePortSegment[]): NodePortSegment[] {
       mergedSegments.push(segmentUnderTest)
     }
   }
+
   return mergedSegments
 }

@@ -59,7 +59,9 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
       solver.unprocessedConnectionPairs.length +
       solver.solvedRoutes.length +
       (solver.activeConnectionPair ? 1 : 0)
+
     const solvedConnections = solver.solvedRoutes.length
+
     const solvedRatio =
       totalConnections > 0 ? solvedConnections / totalConnections : 0
 
@@ -71,7 +73,9 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
       solver.unprocessedConnectionPairs.length +
       solver.solvedRoutes.length +
       (solver.activeConnectionPair ? 1 : 0)
+
     const solvedConnections = solver.solvedRoutes.length
+
     const remainingRatio =
       totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0
 

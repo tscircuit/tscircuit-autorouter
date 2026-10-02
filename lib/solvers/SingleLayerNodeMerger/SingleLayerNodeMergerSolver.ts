@@ -31,14 +31,17 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     super()
     this.nodeMap = new Map()
     this.MAX_ITERATIONS = 100_000
+
     // TODO we probably don't need this map because we only care about
     // nodes that need to be absorbed or processed
     for (const node of nodes) {
       this.nodeMap.set(node.capacityMeshNodeId, node)
     }
+
     this.newNodes = []
     this.absorbedNodeIds = new Set()
     const unprocessedNodesWithArea: Array<[CapacityMeshNode, number]> = []
+
     for (const node of nodes) {
       if (node.availableZ.length > 1) {
         this.newNodes.push(node)
@@ -47,14 +50,18 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
         unprocessedNodesWithArea.push([node, node.width * node.height])
       }
     }
+
     unprocessedNodesWithArea.sort((a, b) => a[1] - b[1])
+
     for (const [node, area] of unprocessedNodesWithArea) {
       const unprocessedNode = {
         ...node,
         center: { ...node.center },
       }
+
       this.nodeMap.set(node.capacityMeshNodeId, unprocessedNode)
     }
+
     this.currentBatchNodeIds = unprocessedNodesWithArea.map(
       ([node]) => node.capacityMeshNodeId,
     )
@@ -66,11 +73,13 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     // Determine max layer from all nodes
     const maxLayer = Math.max(...nodes.map((n) => Math.max(...n.availableZ)))
     const nodeTrees: CapacityNodeTree[] = []
+
     for (let i = 0; i <= maxLayer; i++) {
       nodeTrees.push(
         new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === i)),
       )
     }
+
     for (const node of nodes) {
       const adjacentNodes: CapacityMeshNode[] = []
       const z = node.availableZ[0]
@@ -95,10 +104,12 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
         ) {
           continue
         }
+
         // if (this.absorbedNodeIds.has(unprocessedNode.capacityMeshNodeId))
         //   continue
         if (unprocessedNode.capacityMeshNodeId === node.capacityMeshNodeId)
           continue
+
         if (!areNodesBordering(node, unprocessedNode)) continue
 
         adjacentNodes.push(unprocessedNode)
@@ -131,6 +142,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
 
   getAdjacentSameLayerUnprocessedNodes2(rootNode: CapacityMeshNode) {
     const adjacentNodes: CapacityMeshNode[] = []
+
     const unprocessedAdjNodes: CapacityMeshNode[] = Array.from(
       new Set(
         (rootNode._adjacentNodeIds ?? []).map((a) => this.nodeMap.get(a)!),
@@ -154,7 +166,9 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
       )
       this.hasComputedAdjacentNodeIds = true
     }
+
     let rootNodeId = this.currentBatchNodeIds.pop()
+
     while (rootNodeId && this.absorbedNodeIds.has(rootNodeId)) {
       rootNodeId = this.currentBatchNodeIds.pop()
     }
@@ -164,10 +178,12 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
         this.currentBatchNodeIds = this.nextBatchNodeIds.sort((a, b) => {
           const A = this.nodeMap.get(a)!
           const B = this.nodeMap.get(b)!
+
           return A.width * A.height - B.width * B.height
         })
         this.nextBatchNodeIds = []
         this.batchHadModifications = false
+
         return
       }
 
@@ -175,6 +191,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
       this.newNodes.push(
         ...this.nextBatchNodeIds.map((id) => this.nodeMap.get(id)!),
       )
+
       return
     }
 
@@ -185,6 +202,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
 
     if (adjacentNodes.length === 0) {
       this.nextBatchNodeIds.push(rootNodeId)
+
       return
     }
 
@@ -217,6 +235,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     if (adjacentNodesToLeft.length > 0) {
       const { width: leftAdjNodeWidth, height: leftAdjNodeHeight } =
         adjacentNodesToLeft[0]
+
       const leftAdjNodesAreAllSameSize = adjacentNodesToLeft.every(
         (adjNode) =>
           adjNode.width === leftAdjNodeWidth &&
@@ -250,6 +269,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     if (adjacentNodesToRight.length > 0 && !rootNodeHasGrown) {
       const { width: rightAdjNodeWidth, height: rightAdjNodeHeight } =
         adjacentNodesToRight[0]
+
       const rightAdjNodesAreAllSameSize = adjacentNodesToRight.every(
         (adjNode) =>
           adjNode.width === rightAdjNodeWidth &&
@@ -283,6 +303,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     if (adjacentNodesToTop.length > 0 && !rootNodeHasGrown) {
       const { width: topAdjNodeWidth, height: topAdjNodeHeight } =
         adjacentNodesToTop[0]
+
       const topAdjNodesAreAllSameSize = adjacentNodesToTop.every(
         (adjNode) =>
           adjNode.width === topAdjNodeWidth &&
@@ -316,6 +337,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     if (adjacentNodesToBottom.length > 0 && !rootNodeHasGrown) {
       const { width: bottomAdjNodeWidth, height: bottomAdjNodeHeight } =
         adjacentNodesToBottom[0]
+
       const bottomAdjNodesAreAllSameSize = adjacentNodesToBottom.every(
         (adjNode) =>
           adjNode.width === bottomAdjNodeWidth &&
@@ -350,15 +372,16 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphics = {
-      circles: [],
-      lines: [],
-      points: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Same Layer Node Merger",
-    } as GraphicsObject &
-      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles">
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        circles: [],
+        lines: [],
+        points: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Same Layer Node Merger",
+      }
 
     for (const node of this.newNodes) {
       graphics.rects.push(createRectFromCapacityNode(node))
@@ -366,7 +389,9 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
 
     const nextNodeIdInBatch =
       this.currentBatchNodeIds[this.currentBatchNodeIds.length - 1]
+
     let adjacentNodes: CapacityMeshNode[] | undefined
+
     if (nextNodeIdInBatch) {
       adjacentNodes = this.getAdjacentSameLayerUnprocessedNodes(
         this.nodeMap.get(nextNodeIdInBatch)!,
@@ -376,11 +401,14 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     // Visualize unprocessed nodes with a different style
     for (const nodeId of this.currentBatchNodeIds) {
       const node = this.nodeMap.get(nodeId)
+
       if (this.absorbedNodeIds.has(nodeId)) continue
+
       if (node) {
         const rect = createRectFromCapacityNode(node, {
           rectMargin: 0.01,
         })
+
         if (nodeId === nextNodeIdInBatch) {
           rect.stroke = "rgba(0, 255, 0, 0.8)" // Green for next node in batch
         } else if (
@@ -392,6 +420,7 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
         } else {
           rect.stroke = "rgba(255, 165, 0, 0.8)" // Orange border for other nodes
         }
+
         rect.layer = `z${node.availableZ.join(",")}`
         rect.label = `${rect.label}\n(unprocessed)`
         graphics.rects.push(rect)
@@ -401,11 +430,14 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     // Visualize next batch nodes with a different style
     for (const nodeId of this.nextBatchNodeIds) {
       const node = this.nodeMap.get(nodeId)
+
       if (this.absorbedNodeIds.has(nodeId)) continue
+
       if (node) {
         const rect = createRectFromCapacityNode(node, {
           rectMargin: 0.01,
         })
+
         rect.layer = `z${node.availableZ.join(",")}`
         rect.stroke = "rgba(0, 217, 255, 0.8)" // Green border
         rect.label = `${rect.label}\nx: ${node.center.x}, y: ${node.center.y}\n${node.width}x${node.height}\n(next batch)`

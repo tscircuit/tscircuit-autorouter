@@ -28,10 +28,12 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     if (this.heap.length === 0) {
       return null
     }
+
     const item = this.heap[0]
     this.heap[0] = this.heap[this.heap.length - 1]
     this.heap.pop()
     this.heapifyDown()
+
     return item
   }
 
@@ -39,6 +41,7 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     if (this.heap.length === 0) {
       return null
     }
+
     return this.heap[0]
   }
 
@@ -50,13 +53,16 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
   heapifyUp() {
     let index = this.heap.length - 1
     const item = this.heap[index]
+
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)
       const parent = this.heap[parentIndex]
+
       if (parent.f <= item.f) break
       this.heap[index] = parent
       index = parentIndex
     }
+
     this.heap[index] = item
   }
 
@@ -64,24 +70,31 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     let index = 0
     const heapLength = this.heap.length
     const item = this.heap[index]
+
     if (!item) return
+
     while (true) {
       const leftChildIndex = 2 * index + 1
+
       if (leftChildIndex >= heapLength) break
       const rightChildIndex = leftChildIndex + 1
       let smallerChildIndex = leftChildIndex
+
       if (
         rightChildIndex < heapLength &&
         this.heap[rightChildIndex].f < this.heap[leftChildIndex].f
       ) {
         smallerChildIndex = rightChildIndex
       }
+
       if (item.f < this.heap[smallerChildIndex].f) {
         break
       }
+
       this.heap[index] = this.heap[smallerChildIndex]
       index = smallerChildIndex
     }
+
     this.heap[index] = item
   }
 

@@ -16,12 +16,14 @@ export function visualizeCandidate(
   }
 
   let currentCandidate = candidates.shift()
+
   if (!currentCandidate) {
     return graphics
   }
 
   const currentCandidatePathPoints: Array<{ x: number; y: number; z: number }> =
     []
+
   graphics.points!.push({
     ...currentCandidate.port.d,
     color: "rgb(255, 50, 50)",
@@ -36,6 +38,7 @@ export function visualizeCandidate(
     })
     currentCandidate = currentCandidate.parent
   } while (currentCandidate)
+
   currentCandidatePathPoints.reverse()
 
   const startZ = currentCandidatePathPoints[0]?.z ?? 0
@@ -50,6 +53,7 @@ export function visualizeCandidate(
     const pointB = currentCandidatePathPoints[i + 1]
     const sameLayer = pointA.z === pointB.z
     let strokeDash: string | undefined
+
     if (sameLayer) {
       strokeDash = pointA.z === 0 ? undefined : "10 5"
     } else {

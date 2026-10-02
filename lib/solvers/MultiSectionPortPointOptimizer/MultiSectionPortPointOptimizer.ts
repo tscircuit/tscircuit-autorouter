@@ -89,11 +89,13 @@ export interface MultiSectionPortPointOptimizerParams {
  */
 function seededRandom(seed: number): () => number {
   let state = seed
+
   return () => {
     state = state + 0x6d2b79f5
     let t = state
     t = Math.imul(t ^ (t >>> 15), t | 1)
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
@@ -104,10 +106,13 @@ function seededRandom(seed: number): () => number {
 function seededShuffle<T>(array: T[], seed: number): T[] {
   const random = seededRandom(seed)
   const result = [...array]
+
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1))
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;[result[i], result[j]] = [result[j], result[i]]
   }
+
   return result
 }
 
@@ -255,21 +260,27 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     this.capacityMeshEdges = params.capacityMeshEdges
     this.colorMap = params.colorMap ?? {}
     this.effort = params.effort ?? 1
+
     if (params.FRACTION_TO_REPLACE !== undefined) {
       this.FRACTION_TO_REPLACE = params.FRACTION_TO_REPLACE
     }
+
     if (params.ALWAYS_RIP_INTERSECTIONS !== undefined) {
       this.ALWAYS_RIP_INTERSECTIONS = params.ALWAYS_RIP_INTERSECTIONS
     }
+
     if (params.MAX_ATTEMPTS_PER_NODE !== undefined) {
       this.MAX_ATTEMPTS_PER_NODE = params.MAX_ATTEMPTS_PER_NODE
     }
+
     if (params.MAX_SECTION_ATTEMPTS !== undefined) {
       this.MAX_SECTION_ATTEMPTS = params.MAX_SECTION_ATTEMPTS
     }
+
     if (params.HYPERPARAMETER_SCHEDULE !== undefined) {
       this.HYPERPARAMETER_SCHEDULE = params.HYPERPARAMETER_SCHEDULE
     }
+
     this.JUMPER_PF_FN_ENABLED =
       params.JUMPER_PF_FN_ENABLED ?? this.JUMPER_PF_FN_ENABLED
     this.SHUFFLE_SEEDS_PER_SECTION = params.SHUFFLE_SEEDS_PER_SECTION
@@ -312,6 +323,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     for (const node of this.capacityMeshNodes) {
       const portPoints =
         this.nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
+
       if (portPoints.length === 0) continue
 
       const nodeWithPortPoints: NodeWithPortPoints = {
@@ -332,6 +344,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
                 .numSameLayerCrossings,
             )
           : computeNodePf(nodeWithPortPoints, node)
+
       pfMap.set(node.capacityMeshNodeId, pf)
     }
 
@@ -343,6 +356,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   computeBoardScore(): number {
     const allNodesWithPortPoints = this.getNodesWithPortPoints()
+
     return this.computeScoreForNodes(allNodesWithPortPoints)
   }
 
@@ -357,6 +371,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         this.capacityMeshNodeMap,
       )
     }
+
     return computeSectionScore(nodesWithPortPoints, this.capacityMeshNodeMap)
   }
 
@@ -366,9 +381,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   recomputePfForNodes(nodeIds: Set<CapacityMeshNodeId>) {
     for (const nodeId of nodeIds) {
       const node = this.capacityMeshNodeMap.get(nodeId)
+
       if (!node) continue
 
       const portPoints = this.nodeAssignedPortPoints.get(nodeId) ?? []
+
       if (portPoints.length === 0) {
         this.nodePfMap.set(nodeId, 0)
         continue
@@ -392,6 +409,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
                 .numSameLayerCrossings,
             )
           : computeNodePf(nodeWithPortPoints, node)
+
       this.nodePfMap.set(nodeId, pf)
     }
   }
@@ -414,6 +432,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   createSection(params: PortPointSectionParams): PortPointSection {
     const input = this.getCreatePortPointSectionInput()
+
     return createPortPointSection(input, params)
   }
 
@@ -428,9 +447,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     for (const nodeId of section.nodeIds) {
       const inputNode = this.nodeMap.get(nodeId)
       const capacityNode = this.capacityMeshNodeMap.get(nodeId)
+
       if (!inputNode || !capacityNode) continue
 
       const portPoints = this.nodeAssignedPortPoints.get(nodeId) ?? []
+
       if (portPoints.length > 0) {
         result.push({
           capacityMeshNodeId: nodeId,
@@ -536,6 +557,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       1,
       Math.ceil(shuffled.length * this.FRACTION_TO_REPLACE),
     )
+
     const connectionsToRip = new Set(shuffled.slice(0, ripCount))
 
     // If ALWAYS_RIP_INTERSECTIONS is true, use greedy vertex cover approach:
@@ -572,6 +594,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         }
       }
     }
+
     this.stats.lastRipCount = connectionsToRip.size
 
     return connectionsToRip
@@ -596,6 +619,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
 
     // Fully contained connections
     const fullyContainedResults: ConnectionPathResult[] = []
+
     for (const result of this.connectionResults) {
       if (!result.path || result.path.length === 0) continue
 
@@ -616,6 +640,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       sectionPath: SectionPath
       originalResult: ConnectionPathResult
     }> = []
+
     for (const sectionPath of section.sectionPaths) {
       // Skip paths that are fully contained
       if (!sectionPath.hasEntryFromOutside && !sectionPath.hasExitToOutside) {
@@ -631,9 +656,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       const originalResult = this.connectionResults.find(
         (r) => r.connection.name === sectionPath.connectionName,
       )
+
       if (!originalResult) continue
 
       cutPathCandidates.push({ sectionPath, originalResult })
+
       // Add the original connection name (not the cut name)
       if (!allConnectionNames.includes(sectionPath.connectionName)) {
         allConnectionNames.push(sectionPath.connectionName)
@@ -703,9 +730,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     if (keptConnectionNames.size > 0) {
       for (const nodeId of section.nodeIds) {
         const nodePortPoints = this.nodeAssignedPortPoints.get(nodeId) ?? []
+
         const keptPortPoints = nodePortPoints.filter((pp) =>
           keptConnectionNames.has(pp.connectionName),
         )
+
         if (keptPortPoints.length > 0) {
           this.currentSectionKeptPortPoints.set(nodeId, keptPortPoints)
         }
@@ -754,6 +783,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
             nodeIds: originalResult.nodeIds,
             straightLineDistance: originalResult.straightLineDistance,
           }
+
           this.currentSectionFixedRoutes.push(syntheticResult)
         }
       }
@@ -777,6 +807,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
 
     for (const [, cutInfo] of this.currentSectionCutPathInfo.entries()) {
       const { sectionPath } = cutInfo
+
       if (sectionPath.points.length === 0) continue
 
       // Entry point node
@@ -786,6 +817,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       // Exit point node
       const exitNodeId =
         sectionPath.points[sectionPath.points.length - 1].nodeId
+
       cutPathEndpointNodeIds.add(exitNodeId)
     }
 
@@ -797,6 +829,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           _containsTarget: true,
         }
       }
+
       return node
     })
   }
@@ -806,6 +839,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     sectionAttempt: number,
   ): PortPointPathingHyperParameters {
     const scheduleParams = this.HYPERPARAMETER_SCHEDULE[scheduleIndex]
+
     return {
       ...scheduleParams,
       // Use the schedule's seed plus an offset based on section attempt
@@ -833,6 +867,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     for (const [nodeId, keptPortPoints] of this.currentSectionKeptPortPoints) {
       const existing =
         precomputedParams.nodeAssignedPortPoints.get(nodeId) ?? []
+
       precomputedParams.nodeAssignedPortPoints.set(nodeId, [
         ...existing,
         ...keptPortPoints,
@@ -909,6 +944,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       const remainingPortPoints = portPoints.filter(
         (pp) => !reRoutedConnectionNames.has(pp.connectionName),
       )
+
       this.nodeAssignedPortPoints.set(nodeId, remainingPortPoints)
     }
 
@@ -924,10 +960,12 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       const cutInfo = this.currentSectionCutPathInfo.get(
         cutResult.connection.name,
       )
+
       if (!cutInfo || !cutResult.path) continue
 
       const { sectionPath, originalConnectionResult } = cutInfo
       const originalPath = originalConnectionResult.path
+
       if (!originalPath) continue
 
       // Get the original connection name (without the __cut__ prefix)
@@ -941,9 +979,11 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       ] of this.nodeAssignedPortPoints.entries()) {
         const filtered = portPoints.filter((pp) => {
           if (pp.connectionName !== originalConnectionName) return true
+
           // Keep port points outside the section (we only remove the cut portion)
           return !_section.nodeIds.has(nodeId)
         })
+
         this.nodeAssignedPortPoints.set(nodeId, filtered)
       }
 
@@ -956,6 +996,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       // Convert the new result path to match PortPointCandidate format
       // We need to update connectionName in the path and link prevCandidate correctly
       const newMiddlePath: PortPointCandidate[] = []
+
       let prevCandidate: PortPointCandidate | null =
         beforeCut.length > 0 ? beforeCut[beforeCut.length - 1] : null
 
@@ -964,6 +1005,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           ...candidate,
           prevCandidate,
         }
+
         newMiddlePath.push(newCandidate)
         prevCandidate = newCandidate
       }
@@ -1007,6 +1049,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
                   existing.push(correctedPortPoint)
                   this.nodeAssignedPortPoints.set(nodeId, existing)
                 }
+
                 break
               }
             }
@@ -1028,6 +1071,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       const filteredPortPoints = portPoints.filter(
         (pp) => !pp.connectionName.startsWith("__cut__"),
       )
+
       if (filteredPortPoints.length > 0) {
         const existing = this.nodeAssignedPortPoints.get(nodeId) ?? []
         this.nodeAssignedPortPoints.set(nodeId, [
@@ -1047,6 +1091,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         if (this.activeSubSolver.failed) {
           // Sub-solver failed, try next schedule params or move on
           this.currentScheduleIndex++
+
           if (this.activeSubSolver.error) {
             this.stats.errors++
           }
@@ -1073,6 +1118,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
             this.currentSectionCenterNodeId = null
             this.currentScheduleIndex = 0
           }
+
           return
         }
 
@@ -1088,18 +1134,22 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
                 // Extract original connection name from __cut__<name>__<index>
                 const withoutPrefix = pp.connectionName.slice("__cut__".length)
                 const lastUnderscoreIdx = withoutPrefix.lastIndexOf("__")
+
                 const originalName =
                   lastUnderscoreIdx >= 0
                     ? withoutPrefix.slice(0, lastUnderscoreIdx)
                     : withoutPrefix
+
                 return { ...pp, connectionName: originalName }
               }
+
               return pp
             }),
           }))
 
         // Get connection names that were re-routed by the sub-solver
         const reroutedConnNames = new Set<string>()
+
         for (const node of newNodesWithPortPoints) {
           for (const pp of node.portPoints) {
             reroutedConnNames.add(pp.connectionName)
@@ -1111,6 +1161,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
         const beforeNodes = this.getSectionNodesWithPortPoints(
           this.currentSection!,
         )
+
         const filteredBeforeNodes = beforeNodes
           .map((node) => ({
             ...node,
@@ -1122,6 +1173,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
 
         const filteredBeforeScore =
           this.computeScoreForNodes(filteredBeforeNodes)
+
         const newSectionScore = this.computeScoreForNodes(
           newNodesWithPortPoints,
         )
@@ -1139,9 +1191,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           // Save state before applying changes (for potential revert)
           const savedConnectionResults = [...this.connectionResults]
           const savedAssignedPortPoints = new Map(this.assignedPortPoints)
+
           const savedNodeAssignedPortPoints = new Map(
             Array.from(this.nodeAssignedPortPoints.entries()).map(
-              ([k, v]) => [k, [...v]] as [string, PortPoint[]],
+              ([k, v]): [string, PortPoint[]] => [k, [...v]],
             ),
           )
 
@@ -1192,6 +1245,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
             // Try next schedule params
             const params =
               this.HYPERPARAMETER_SCHEDULE[this.currentScheduleIndex]
+
             this.currentSection = this.createSection({
               centerOfSectionCapacityNodeId: this.currentSectionCenterNodeId,
               expansionDegrees: params.EXPANSION_DEGREES,
@@ -1208,6 +1262,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           }
         }
       }
+
       return
     }
 
@@ -1216,6 +1271,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     // Check if we've exceeded the maximum number of section attempts
     if (this.sectionAttempts >= this.MAX_SECTION_ATTEMPTS) {
       this.solved = true
+
       return
     }
 
@@ -1224,6 +1280,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     if (!highestPfNodeId) {
       // No nodes need optimization
       this.solved = true
+
       return
     }
 
@@ -1251,15 +1308,18 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     const sectionNodesWithPortPoints = this.getSectionNodesWithPortPoints(
       this.currentSection,
     )
+
     this.sectionScoreBeforeOptimization = this.computeScoreForNodes(
       sectionNodesWithPortPoints,
     )
 
     // Check if section has connections to optimize (create temp SimpleRouteJson to check)
     const sectionSrj = this.createSectionSimpleRouteJson(this.currentSection)
+
     if (sectionSrj.connections.length === 0) {
       this.currentSection = null
       this.currentSectionCenterNodeId = null
+
       return
     }
 
@@ -1275,6 +1335,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
     if (this.solved) {
       return visualizePointPathSolver(this)
     }
+
     // If we have an active sub-solver, delegate to it
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()

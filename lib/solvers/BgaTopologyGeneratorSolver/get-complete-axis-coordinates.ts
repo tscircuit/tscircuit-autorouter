@@ -9,11 +9,13 @@ export function getCompleteAxisCoordinates(
     completeAxisCoordinates.push(currentCoordinate)
 
     const nextCoordinate = axisCoordinates[index + 1]
+
     if (nextCoordinate === undefined) continue
 
     const slotDistance = Math.round(
       (nextCoordinate - currentCoordinate) / pitch,
     )
+
     if (slotDistance <= 1) continue
 
     for (let slotOffset = 1; slotOffset < slotDistance; slotOffset++) {

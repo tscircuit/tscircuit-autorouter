@@ -13,12 +13,14 @@ function getObstacleZLayersOnBoard(
     obstacle.__zLayers ?? obstacle.zLayers ?? [],
     layerCount,
   )
+
   if (explicitZLayers.length > 0) return explicitZLayers
 
   const namedZLayers = getUniqueValidZLayersFromLayerNames(
     obstacle.layers,
     layerCount,
   )
+
   if (namedZLayers.length > 0) return namedZLayers
 
   throw new Error(

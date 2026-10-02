@@ -38,8 +38,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   ) {
     super()
     const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
+
     for (const bus of ogSrj.buses ?? []) {
       if (bus.traceWidth === undefined) continue
+
       for (const connectionName of bus.connectionNames) {
         busTraceWidthsByConnectionName.set(
           connectionName,
@@ -50,12 +52,15 @@ export class NetToPointPairsSolver extends BaseSolver {
         )
       }
     }
+
     const connectionsWithBusTraceWidths = ogSrj.connections.map(
       (connection) => {
         const busTraceWidth = busTraceWidthsByConnectionName.get(
           connection.name,
         )
+
         if (busTraceWidth === undefined) return connection
+
         return {
           ...connection,
           nominalTraceWidth: Math.max(
@@ -65,6 +70,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         }
       },
     )
+
     this.unprocessedConnections = mergeConnections(
       connectionsWithBusTraceWidths,
     )
@@ -75,8 +81,10 @@ export class NetToPointPairsSolver extends BaseSolver {
   _step() {
     if (this.unprocessedConnections.length === 0) {
       this.solved = true
+
       return
     }
+
     const connection = this.unprocessedConnections.pop()!
 
     const { zeroWeightEdges, arePointsConnected } =
@@ -87,15 +95,18 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     if (connection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = connection.pointsToConnect
+
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
+
       this.newConnections.push({
         ...connection,
         __rootConnectionNames: connection.__rootConnectionNames ?? [
           connection.name,
         ],
       })
+
       return
     }
 
@@ -104,10 +115,12 @@ export class NetToPointPairsSolver extends BaseSolver {
     })
 
     let mstIdx = 0
+
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+
       this.newConnections.push({
         ...connection,
         pointsToConnect: [edge.from, edge.to],
@@ -122,6 +135,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
   getNewSimpleRouteJson(): SimpleRouteJson {
     const detachedSrj = structuredClone(this.ogSrj)
+
     return {
       ...detachedSrj,
       connections: structuredClone(this.newConnections),
@@ -154,6 +168,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       const fullyConnectedEdgeCount = connection.pointsToConnect.length ** 2
       const random = seededRandom(0)
       const alreadyPlacedEdges = new Set<string>()
+
       for (
         let i = 0;
         i <
@@ -165,6 +180,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       ) {
         const a = Math.floor(random() * connection.pointsToConnect.length)
         const b = Math.floor(random() * connection.pointsToConnect.length)
+
         if (alreadyPlacedEdges.has(`${a}-${b}`)) continue
         alreadyPlacedEdges.add(`${a}-${b}`)
         graphics.lines!.push({

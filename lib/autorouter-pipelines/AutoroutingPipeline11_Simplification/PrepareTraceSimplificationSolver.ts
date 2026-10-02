@@ -46,15 +46,19 @@ const splitTerminalVias = (
   trailingTerminalVias: SimplifiedPcbTrace["route"]
 } => {
   let leadingViaCount = 0
+
   while (trace.route[leadingViaCount]?.route_type === "via") {
     leadingViaCount++
   }
 
   let trailingViaEnd = trace.route.length
+
   while (trace.route[trailingViaEnd - 1]?.route_type === "jumper") {
     trailingViaEnd--
   }
+
   let trailingViaStart = trailingViaEnd
+
   while (
     trailingViaStart > leadingViaCount &&
     trace.route[trailingViaStart - 1]?.route_type === "via"
@@ -83,13 +87,16 @@ const getUniformTraceWidth = (
       ? [point.width]
       : [],
   )
+
   const firstWidth = widths[0]
+
   if (
     firstWidth === undefined ||
     widths.some((width) => Math.abs(width - firstWidth) > WIDTH_TOLERANCE)
   ) {
     return undefined
   }
+
   return firstWidth
 }
 
@@ -102,6 +109,7 @@ const getViaHoleDiameter = (
       return point.via_hole_diameter
     }
   }
+
   return defaultViaHoleDiameter
 }
 
@@ -136,6 +144,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
   override _step(): void {
     const traces = this.preparedInput.srj.traces ?? []
     const trace = traces[this.nextTraceIndex]
+
     if (!trace) {
       this.stats = {
         inputTraceCount: traces.length,
@@ -145,6 +154,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
       }
       this.progress = 1
       this.solved = true
+
       return
     }
 
@@ -157,14 +167,18 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
     if (this.seenTraceIds.has(trace.pcb_trace_id)) {
       throw new Error(`Duplicate pcb_trace_id "${trace.pcb_trace_id}"`)
     }
+
     this.seenTraceIds.add(trace.pcb_trace_id)
     const viaDimensions = getViaDimensions(this.preparedInput.srj)
     const uniformTraceWidth = getUniformTraceWidth(trace)
+
     const { traceToSimplify, leadingTerminalVias, trailingTerminalVias } =
       splitTerminalVias(trace)
+
     const rootConnectionName =
       this.preparedInput.connMap.getNetConnectedToId(trace.connection_name) ??
       trace.connection_name
+
     const mutableHdRoute =
       uniformTraceWidth === undefined
         ? undefined
@@ -174,6 +188,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
             defaultViaDiameter: viaDimensions.padDiameter,
             rootConnectionName,
           })
+
     const usableMutableHdRoute =
       mutableHdRoute && mutableHdRoute.route.length >= 2
         ? mutableHdRoute
@@ -198,6 +213,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
           this.preparedInput.connMap,
         ),
       )
+
       return
     }
 
@@ -215,6 +231,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
       ...trace,
       route: [...leadingTerminalVias, ...trailingTerminalVias],
     }
+
     this.preparedInput.immutableHdRoutes.push(
       ...convertPreloadedTraceToHdRoutes(
         terminalViaRoute,
@@ -230,6 +247,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get prepared traces before preparation completes")
     }
+
     return this.preparedInput
   }
 }

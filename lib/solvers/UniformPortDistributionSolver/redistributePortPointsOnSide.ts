@@ -14,6 +14,7 @@ export const redistributePortPointsOnSide = ({
   if (portPoints.length === 0) return []
 
   const portsByZ = new Map<number, PortPointWithSide[]>()
+
   for (const port of portPoints) {
     const z = port.z ?? 0
     const existing = portsByZ.get(z) ?? []
@@ -33,13 +34,16 @@ export const redistributePortPointsOnSide = ({
       if (side === "top" || side === "bottom") {
         return a.x - b.x
       }
+
       return a.y - b.y
     })
 
     for (let i = 0; i < count; i++) {
       const fraction = (2 * i + 1) / (2 * count)
+
       let x = 0,
         y = 0
+
       switch (side) {
         case "top":
           x = bounds.minX + sideLength * fraction
@@ -58,8 +62,10 @@ export const redistributePortPointsOnSide = ({
           y = bounds.minY + sideLength * fraction
           break
       }
+
       redistributed.push({ ...portsOnZ[i], x, y })
     }
   }
+
   return redistributed
 }

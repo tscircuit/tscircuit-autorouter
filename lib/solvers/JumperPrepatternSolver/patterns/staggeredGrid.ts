@@ -45,9 +45,11 @@ export function staggeredGrid(jps: JumperPrepatternSolver): PatternResult {
       shortMargin,
       borderPadding,
     )
+
     if (result.prepatternJumpers.length <= MAX_JUMPERS) {
       return result
     }
+
     // Increase padding and margin by 10%
     longMargin *= 1.1
     shortMargin *= 1.1
@@ -65,6 +67,7 @@ function generateStaggeredGrid(
   const jumperPadObstacles: Obstacle[] = []
 
   const node = jps.nodeWithPortPoints
+
   const bounds = {
     minX: node.center.x - node.width / 2 + borderPadding,
     maxX: node.center.x + node.width / 2 - borderPadding,
@@ -73,6 +76,7 @@ function generateStaggeredGrid(
     width: 0,
     height: 0,
   }
+
   bounds.width = bounds.maxX - bounds.minX
   bounds.height = bounds.maxY - bounds.minY
 
@@ -153,9 +157,11 @@ function generateStaggeredGrid(
       const distToStart = Math.sqrt(
         (pp.x - start.x) ** 2 + (pp.y - start.y) ** 2,
       )
+
       if (distToStart < margin) return true
 
       const distToEnd = Math.sqrt((pp.x - end.x) ** 2 + (pp.y - end.y) ** 2)
+
       if (distToEnd < margin) return true
     }
 
@@ -205,6 +211,7 @@ function generateStaggeredGrid(
     )
 
     jumperIndex++
+
     return true
   }
 

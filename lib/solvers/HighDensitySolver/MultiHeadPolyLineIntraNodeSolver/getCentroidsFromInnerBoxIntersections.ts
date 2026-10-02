@@ -38,20 +38,25 @@ export function segmentIntersection(
   const r = { x: p2.x - p.x, y: p2.y - p.y }
   const s = { x: q2.x - q.x, y: q2.y - q.y }
   const denom = cross(r.x, r.y, s.x, s.y)
+
   if (almostEqual(denom, 0)) return null // Parallel or collinear
   const qp = { x: q.x - p.x, y: q.y - p.y }
   const t = cross(qp.x, qp.y, s.x, s.y) / denom
   const u = cross(qp.x, qp.y, r.x, r.y) / denom
+
   if (t < -EPS || t > 1 + EPS || u < -EPS || u > 1 + EPS) return null // Outside
+
   return { x: p.x + t * r.x, y: p.y + t * r.y }
 }
 
 export function polygonArea(points: Point[]): number {
   let a = 0
+
   for (let i = 0, n = points.length; i < n; ++i) {
     const j = (i + 1) % n
     a += points[i].x * points[j].y - points[j].x * points[i].y
   }
+
   return 0.5 * a
 }
 
@@ -59,6 +64,7 @@ export function polygonCentroid(points: Point[]): Point | null {
   let a = 0
   let cx = 0
   let cy = 0
+
   for (let i = 0, n = points.length; i < n; ++i) {
     const j = (i + 1) % n
     const crossVal = points[i].x * points[j].y - points[j].x * points[i].y
@@ -66,10 +72,13 @@ export function polygonCentroid(points: Point[]): Point | null {
     cx += (points[i].x + points[j].x) * crossVal
     cy += (points[i].y + points[j].y) * crossVal
   }
+
   a *= 0.5
+
   if (almostEqual(a, 0)) return null
   cx /= 6 * a
   cy /= 6 * a
+
   return { x: cx, y: cy }
 }
 
@@ -142,6 +151,7 @@ export function getCentroidsFromInnerBoxIntersections(
       end: { x: rectangle.minX, y: rectangle.minY },
     },
   ]
+
   const segments: Segment[] = [...userSegments, ...rectEdges]
 
   // 2. Collect breakpoints on each segment (endpoints + intersections)
@@ -162,6 +172,7 @@ export function getCentroidsFromInnerBoxIntersections(
         segments[j].start,
         segments[j].end,
       )
+
       if (p) {
         breakMap[i].push(p)
         breakMap[j].push(p)
@@ -175,17 +186,21 @@ export function getCentroidsFromInnerBoxIntersections(
 
   function getVertexId(p: Point): number {
     const key = pointKey(p)
+
     if (!vertexId.has(key)) {
       const id = vertices.length
       vertexId.set(key, id)
       vertices.push(new Vertex(p.x, p.y))
+
       return id
     }
+
     return vertexId.get(key)!
   }
 
   // Sort breakpoint lists along each segment and create sub-edges
   const undirectedEdges: [number, number][] = []
+
   for (let i = 0; i < segments.length; ++i) {
     const s = segments[i]
     const list: Point[] = breakMap[i].slice()
@@ -193,14 +208,18 @@ export function getCentroidsFromInnerBoxIntersections(
     list.sort((p1: Point, p2: Point) => {
       const dx = s.end.x - s.start.x
       const dy = s.end.y - s.start.y
+
       const t1 = almostEqual(Math.abs(dx), 0)
         ? (p1.y - s.start.y) / dy
         : (p1.x - s.start.x) / dx
+
       const t2 = almostEqual(Math.abs(dx), 0)
         ? (p2.y - s.start.y) / dy
         : (p2.x - s.start.x) / dx
+
       return t1 - t2
     })
+
     for (let k = 0; k < list.length - 1; ++k) {
       const p1 = list[k]
       const p2 = list[k + 1]
@@ -209,6 +228,7 @@ export function getCentroidsFromInnerBoxIntersections(
 
       if (v1 !== v2) {
         undirectedEdges.push([v1, v2])
+
         // Associate connectionName with the vertices of this sub-segment
         if (s.connectionName) {
           vertices[v1].connectionNames.add(s.connectionName)
@@ -220,6 +240,7 @@ export function getCentroidsFromInnerBoxIntersections(
 
   // 4. Build half-edges
   const halfEdges: HalfEdge[] = []
+
   for (const [v1, v2] of undirectedEdges) {
     const he1 = new HalfEdge(v1, v2)
     const he2 = new HalfEdge(v2, v1)
@@ -242,13 +263,16 @@ export function getCentroidsFromInnerBoxIntersections(
       const d2 = vertices[e2.dest]
       const a1 = Math.atan2(d1.y - v.y, d1.x - v.x)
       const a2 = Math.atan2(d2.y - v.y, d2.x - v.x)
+
       return a1 - a2
     })
     const m = v.out.length
+
     for (let i = 0; i < m; ++i) {
       const heOutIdx = v.out[i]
       const hePrevIdx = v.out[(i - 1 + m) % m] // CW predecessor
       const heOut = halfEdges[heOutIdx]
+
       if (heOut.twin !== null) {
         halfEdges[heOut.twin].next = hePrevIdx // twin.next = CW-prev to keep left face on our left
       }
@@ -277,8 +301,10 @@ export function getCentroidsFromInnerBoxIntersections(
     if (poly.length < 3) continue
 
     const area = polygonArea(poly)
+
     if (area > EPS) {
       const c = polygonCentroid(poly)
+
       if (c) {
         centroids.push(c)
         faces.push({

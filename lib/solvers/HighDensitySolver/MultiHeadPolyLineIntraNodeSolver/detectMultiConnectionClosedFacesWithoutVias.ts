@@ -66,6 +66,7 @@ function isOnSegment(p: Point, a: Point, b: Point): boolean {
   const d_ap = Math.hypot(p.x - a.x, p.y - a.y)
   const d_pb = Math.hypot(p.x - b.x, p.y - b.y)
   const d_ab = Math.hypot(a.x - b.x, a.y - b.y)
+
   return almostEqual(d_ap + d_pb, d_ab)
 }
 
@@ -103,6 +104,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
   bounds: Bounds,
 ): boolean {
   const allSegments: Segment[] = []
+
   const viaPoints = new Map<
     string,
     { point: MHPoint; connectionName: string }
@@ -111,6 +113,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
   // 1. Extract segments from polylines and identify vias
   for (const polyLine of polyLines) {
     const path = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+
     for (let i = 0; i < path.length - 1; i++) {
       const p1 = path[i]
       const p2 = path[i + 1]
@@ -127,6 +130,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       // Check and store vias (using p1 as the reference point for the via)
       if (p1.z1 !== p1.z2) {
         const key = pointKey(p1)
+
         if (!viaPoints.has(key)) {
           viaPoints.set(key, {
             point: p1,
@@ -135,10 +139,13 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         }
       }
     }
+
     // Check the last point in the path as well
     const lastPoint = path[path.length - 1]
+
     if (lastPoint.z1 !== lastPoint.z2) {
       const key = pointKey(lastPoint)
+
       if (!viaPoints.has(key)) {
         viaPoints.set(key, {
           point: lastPoint,
@@ -151,6 +158,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
   // 2. Add boundary segments (assuming layer 0, adjust if needed)
   // Assign a special connectionName (e.g., null or "__boundary__")
   const boundaryLayer = 0 // Or determine based on context if necessary
+
   const boundarySegments: Segment[] = [
     {
       start: { x: bounds.minX, y: bounds.minY },
@@ -177,6 +185,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       layer: boundaryLayer,
     },
   ]
+
   allSegments.push(...boundarySegments)
 
   // 3. Find all vertices (endpoints and intersections)
@@ -189,6 +198,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
   ): DcelVertex {
     const key = pointKey(p)
     let vertex = verticesMap.get(key)
+
     if (!vertex) {
       const isVia = viaPoints.has(key)
       vertex = {
@@ -200,14 +210,17 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         outgoingEdges: [],
       }
       verticesMap.set(key, vertex)
+
       if (isVia && viaPoints.get(key)) {
         vertex.connectionNames.add(viaPoints.get(key)!.connectionName)
       }
     }
+
     // Add connection name if provided (e.g., for original endpoints)
     if (connectionName) {
       vertex.connectionNames.add(connectionName)
     }
+
     return vertex
   }
 
@@ -219,6 +232,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
 
   // Find and add intersection points
   const segmentBreakpoints = new Map<Segment, Point[]>()
+
   // Initialize the map for all segments first
   for (const segment of allSegments) {
     segmentBreakpoints.set(segment, [])
@@ -239,12 +253,14 @@ export function detectMultiConnectionClosedFacesWithoutVias(
 
       if (intersection) {
         getOrCreateVertex(intersection) // Create vertex for intersection
+
         // Store intersection point relative to both segments for splitting later
         if (
           isOnSegment(intersection, allSegments[i].start, allSegments[i].end)
         ) {
           segmentBreakpoints.get(allSegments[i])!.push(intersection)
         }
+
         if (
           isOnSegment(intersection, allSegments[j].start, allSegments[j].end)
         ) {
@@ -269,6 +285,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
     pointsOnSegment.sort((a, b) => {
       const dx = segment.end.x - segment.start.x
       const dy = segment.end.y - segment.start.y
+
       if (Math.abs(dx) > Math.abs(dy)) {
         // Sort primarily by x
         return (a.x - segment.start.x) / dx - (b.x - segment.start.x) / dx
@@ -283,8 +300,10 @@ export function detectMultiConnectionClosedFacesWithoutVias(
 
     // Deduplicate points (intersections might be very close to endpoints)
     const uniquePoints: Point[] = []
+
     if (pointsOnSegment.length > 0) {
       uniquePoints.push(pointsOnSegment[0])
+
       for (let i = 1; i < pointsOnSegment.length; i++) {
         if (
           !almostEqual(pointsOnSegment[i].x, pointsOnSegment[i - 1].x) ||
@@ -315,6 +334,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         layer: segment.layer,
         visited: false,
       }
+
       const edge2: DcelHalfEdge = {
         id: edgeIdCounter++,
         origin: v2,
@@ -325,6 +345,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         layer: segment.layer,
         visited: false,
       }
+
       edge1.twin = edge2
 
       halfEdges.push(edge1, edge2)
@@ -340,14 +361,17 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       const p2 = e2.twin!.origin // Destination of e2
       const angle1 = Math.atan2(p1.y - vertex.y, p1.x - vertex.x)
       const angle2 = Math.atan2(p2.y - vertex.y, p2.x - vertex.x)
+
       return angle1 - angle2
     })
 
     // Set next pointers: e.twin.next = prev_edge
     const numEdges = vertex.outgoingEdges.length
+
     for (let i = 0; i < numEdges; i++) {
       const currentEdge = vertex.outgoingEdges[i]
       const prevEdge = vertex.outgoingEdges[(i - 1 + numEdges) % numEdges] // Edge arriving CW before currentEdge
+
       // The 'next' edge in the face cycle starting from currentEdge.twin's origin is prevEdge
       if (currentEdge.twin) {
         currentEdge.twin.next = prevEdge
@@ -370,6 +394,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       innerComponents: [],
       isOuterFace: false, // Assume internal first
     }
+
     faces.push(face)
 
     let currentEdge: DcelHalfEdge | null = edge
@@ -389,10 +414,12 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         faceEdges.length = 0
         break
       }
+
       currentEdge.visited = true
       currentEdge.face = face
       faceEdges.push(currentEdge)
       faceVertices.push(currentEdge.origin)
+
       if (currentEdge.connectionName !== null) {
         // Exclude boundary connection name
         faceConnectionNames.add(currentEdge.connectionName)
@@ -423,6 +450,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
     // Identify outer face (largest area)
     if (faceArea > maxArea) {
       maxArea = faceArea
+
       if (outerFace) outerFace.isOuterFace = false // Demote previous outer face
       outerFace = face
       face.isOuterFace = true
@@ -440,6 +468,7 @@ export function detectMultiConnectionClosedFacesWithoutVias(
       if (actualConnectionNames.length > 1) {
         // Check 2: Is ANY vertex on this face's boundary a via?
         let viaFoundOnFace = false
+
         for (const vertex of faceVertices) {
           if (vertex.isVia) {
             viaFoundOnFace = true

@@ -75,16 +75,22 @@ const PIPELINE_SOLVERS = {
 } as const
 
 const PIPELINE_STORAGE_KEY = "selectedPipeline"
+
 const EFFORT_STORAGE_KEY = "selectedEffort"
+
 const LAYER_OVERRIDE_STORAGE_KEY = "selectedLayerOverride"
+
 const AUTO_SOLVE_STORAGE_KEY = "autoSolve"
+
 const AUTO_RUN_DRC_STORAGE_KEY = "autoRunDrc"
+
 const DEFAULT_PIPELINE_ID: PipelineId =
   "AutoroutingPipelineSolver9_PreloadedTraceGraph"
 
 const parseLayerOverride = (value: string | null): LayerOverride => {
   if (value === "auto") return "auto"
   const parsed = value ? parseInt(value, 10) : Number.NaN
+
   return LAYER_OVERRIDE_OPTIONS.includes(parsed as LayerOverride)
     ? (parsed as LayerOverride)
     : "auto"
@@ -95,6 +101,7 @@ const applyLayerOverrideToSrj = (
   layerOverride: LayerOverride,
 ): SimpleRouteJson => {
   if (layerOverride === "auto") return srj
+
   return {
     ...srj,
     layerCount: layerOverride,
@@ -129,14 +136,18 @@ export const cacheProviderNames = [
   "In Memory",
   "Local Storage",
 ] as const
+
 export type CacheProviderName = (typeof cacheProviderNames)[number]
 
 const getGlobalCacheProviderFromName = (
   name: CacheProviderName,
 ): CacheProvider | null => {
   if (name === "None") return null
+
   if (name === "In Memory") return getGlobalInMemoryCache()
+
   if (name === "Local Storage") return getGlobalLocalStorageCache()
+
   return null
 }
 
@@ -160,10 +171,12 @@ type AsyncPipelineDebuggerSolver = PipelineDebuggerSolver & {
 
 const getOutputViaCount = (solver: PipelineDebuggerSolver): number | null => {
   if (!solver.solved || solver.failed) return null
+
   if (typeof solver.getOutputSimplifiedPcbTraces !== "function") return null
 
   try {
     const traces = solver.getOutputSimplifiedPcbTraces()
+
     if (!Array.isArray(traces)) return null
 
     return traces.reduce((count, trace) => {
@@ -189,6 +202,7 @@ const waitForNextPaint = () =>
       typeof window.requestAnimationFrame === "function"
     ) {
       window.requestAnimationFrame(() => resolve())
+
       return
     }
 
@@ -199,6 +213,7 @@ const downloadJsonFile = (filename: string, data: unknown) => {
   const blob = new Blob([JSON.stringify(data)], {
     type: "application/json",
   })
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.download = filename
@@ -225,6 +240,7 @@ const waitForNextPendingEffect = async (
   solver: AsyncPipelineDebuggerSolver,
 ) => {
   const pendingEffects = getPendingEffectsFromSolverTree(solver)
+
   if (pendingEffects.length === 0) {
     return false
   }
@@ -237,6 +253,7 @@ const waitForNextPendingEffect = async (
       ),
     ),
   )
+
   return true
 }
 
@@ -247,6 +264,7 @@ const createGenericPipelineTableAdapter = (solver: PipelineDebuggerSolver) => {
 
   for (const step of pipelineDef) {
     const stepSolver = solver[step.solverName] as BaseSolver | undefined
+
     if (stepSolver) {
       firstIterationOfStage[step.solverName] = cumulativeIterations
       cumulativeIterations += stepSolver.iterations
@@ -262,8 +280,10 @@ const createGenericPipelineTableAdapter = (solver: PipelineDebuggerSolver) => {
   }
 
   const timeSpentOnStage = { ...(solver.timeSpentOnPhase ?? {}) }
+
   const activeStageName =
     pipelineDef[solver.currentPipelineStepIndex ?? 0]?.solverName
+
   const activeStageStartTime = activeStageName
     ? solver.startTimeOfPhase?.[activeStageName]
     : undefined
@@ -300,6 +320,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setCacheProviderName = (newName: CacheProviderName) => {
     setCacheProviderNameState(newName)
+
     try {
       localStorage.setItem("cacheProviderName", newName)
     } catch (e) {
@@ -320,6 +341,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setSelectedPipelineId = (newPipelineId: PipelineId) => {
     setSelectedPipelineIdState(newPipelineId)
+
     try {
       localStorage.setItem(PIPELINE_STORAGE_KEY, newPipelineId)
     } catch (e) {
@@ -331,6 +353,7 @@ export const AutoroutingPipelineDebugger = ({
   const [effort, setEffortState] = useState<EffortLevel>(() => {
     const stored = localStorage.getItem(EFFORT_STORAGE_KEY)
     const parsed = stored ? parseInt(stored, 10) : 1
+
     return EFFORT_LEVELS.includes(parsed as EffortLevel)
       ? (parsed as EffortLevel)
       : 1
@@ -338,6 +361,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setEffort = (newEffort: EffortLevel) => {
     setEffortState(newEffort)
+
     try {
       localStorage.setItem(EFFORT_STORAGE_KEY, String(newEffort))
     } catch (e) {
@@ -351,6 +375,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setLayerOverride = (newLayerOverride: LayerOverride) => {
     setLayerOverrideState(newLayerOverride)
+
     try {
       localStorage.setItem(LAYER_OVERRIDE_STORAGE_KEY, String(newLayerOverride))
     } catch (e) {
@@ -364,6 +389,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setAutoSolve = (enabled: boolean) => {
     setAutoSolveState(enabled)
+
     try {
       localStorage.setItem(AUTO_SOLVE_STORAGE_KEY, String(enabled))
     } catch (e) {
@@ -377,6 +403,7 @@ export const AutoroutingPipelineDebugger = ({
 
   const setAutoRunDrc = (enabled: boolean) => {
     setAutoRunDrcState(enabled)
+
     try {
       localStorage.setItem(AUTO_RUN_DRC_STORAGE_KEY, String(enabled))
     } catch (e) {
@@ -393,6 +420,7 @@ export const AutoroutingPipelineDebugger = ({
     } = {},
   ) => {
     const cacheProviderToUse = opts.cacheProvider ?? cacheProvider
+
     if (createSolverProp) {
       return createSolverProp(
         applyLayerOverrideToSrj(srj, opts.layerOverride ?? layerOverride),
@@ -402,13 +430,17 @@ export const AutoroutingPipelineDebugger = ({
         },
       )
     }
+
     const pipelineToUse = opts.pipelineId ?? selectedPipelineId
     const effortToUse = opts.effort ?? effort
+
     const srjToUse = applyLayerOverrideToSrj(
       srj,
       opts.layerOverride ?? layerOverride,
     )
+
     const SolverClass = PIPELINE_SOLVERS[pipelineToUse]
+
     return new SolverClass(srjToUse, {
       cacheProvider: cacheProviderToUse,
       effort: effortToUse,
@@ -420,23 +452,30 @@ export const AutoroutingPipelineDebugger = ({
     const initialPipelineId =
       (localStorage.getItem(PIPELINE_STORAGE_KEY) as PipelineId) ||
       DEFAULT_PIPELINE_ID
+
     const initialCacheName =
       (localStorage.getItem("cacheProviderName") as CacheProviderName) ?? "None"
+
     const initialCacheProvider =
       getGlobalCacheProviderFromName(initialCacheName)
+
     const storedEffort = localStorage.getItem(EFFORT_STORAGE_KEY)
+
     const initialEffort = storedEffort
       ? (parseInt(storedEffort, 10) as EffortLevel)
       : 1
+
     const initialLayerOverride = parseLayerOverride(
       localStorage.getItem(LAYER_OVERRIDE_STORAGE_KEY),
     )
+
     const initialSrj = applyLayerOverrideToSrj(srj, initialLayerOverride)
     const SolverClass = PIPELINE_SOLVERS[initialPipelineId]
 
     if (!SolverClass) {
       // Fallback to default pipeline if stored ID is invalid
       const fallbackClass = PIPELINE_SOLVERS[DEFAULT_PIPELINE_ID]
+
       return createSolverProp
         ? createSolverProp(initialSrj, {
             cacheProvider: initialCacheProvider,
@@ -458,46 +497,60 @@ export const AutoroutingPipelineDebugger = ({
           effort: initialEffort,
         })
   })
+
   const [previewMode, setPreviewMode] = useState(false)
+
   const [renderer, setRenderer] = useState<"canvas" | "vector">(
     (window.localStorage.getItem("lastSelectedRenderer") as
       | "canvas"
       | "vector") ?? "vector",
   )
+
   const [canSelectObjects, setCanSelectObjects] = useState(false)
   const [, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [speedLevel, setSpeedLevel] = useState(4)
   const [solveTime, setSolveTime] = useState<number | null>(null)
   const [dialogObject, setDialogObject] = useState<Rect | null>(null)
+
   const [lastTargetIteration, setLastTargetIteration] = useState<number>(
     parseInt(window.localStorage.getItem("lastTargetIteration") || "0", 10),
   )
+
   const [traceLintResult, setTraceLintResult] = useState<{
     routingSolver: PipelineDebuggerSolver
     iteration: number
     linter: PcbTraceLinter
     runId: number
   } | null>(null)
+
   const traceLintRunId = useRef(0)
+
   const traceLintIsCurrent =
     traceLintResult !== null &&
     traceLintResult.routingSolver === solver &&
     traceLintResult.iteration === solver.iterations
+
   const [drcErrors, setDrcErrors] = useState<GraphicsObject | null>(null)
   const [drcErrorCount, setDrcErrorCount] = useState<number>(0)
+
   const [lastDrcMode, setLastDrcMode] = useState<"strict" | "relaxed" | null>(
     null,
   )
+
   const [showDeepestVisualization, setShowDeepestVisualization] =
     useState(false)
+
   const [showGenericPipelineSteps, setShowGenericPipelineSteps] =
     useState(false)
+
   const [pcbSvgMarkup, setPcbSvgMarkup] = useState<string | null>(null)
   const [isBreakpointDialogOpen, setIsBreakpointDialogOpen] = useState(false)
+
   const [breakpointNodeId, setBreakpointNodeId] = useState<string>(
     () => window.localStorage.getItem("lastBreakpointNodeId") || "",
   )
+
   const isSolvingToBreakpointRef = useRef(false) // Ref to track breakpoint solving state
   const autoSolvedSolverRef = useRef<any>(null)
   const autoRanDrcForSolveRef = useRef(false)
@@ -505,6 +558,7 @@ export const AutoroutingPipelineDebugger = ({
   const stepSolver = async (solverToStep: AsyncPipelineDebuggerSolver) => {
     if (solverSupportsAsyncStep(solverToStep)) {
       await solverToStep.stepAsync()
+
       return
     }
 
@@ -539,17 +593,20 @@ export const AutoroutingPipelineDebugger = ({
         }
 
         const waitedForAsync = await waitForNextPendingEffect(solverToSolve)
+
         if (!waitedForAsync) {
           continue
         }
 
         await opts.onProgress()
       }
+
       return
     }
 
     if (solverSupportsAsyncSolve(solverToSolve)) {
       await solverToSolve.solveAsync()
+
       return
     }
 
@@ -575,6 +632,7 @@ export const AutoroutingPipelineDebugger = ({
 
     if (isSolvingToBreakpointRef.current) {
       setIsAnimating(false)
+
       return
     }
 
@@ -598,6 +656,7 @@ export const AutoroutingPipelineDebugger = ({
               if (solver.solved || solver.failed) {
                 break
               }
+
               await stepSolver(solver as AsyncPipelineDebuggerSolver)
             }
 
@@ -613,6 +672,7 @@ export const AutoroutingPipelineDebugger = ({
 
     return () => {
       cancelled = true
+
       if (intervalId !== undefined) {
         clearInterval(intervalId)
       }
@@ -641,6 +701,7 @@ export const AutoroutingPipelineDebugger = ({
           if (cancelled) {
             return
           }
+
           setForceUpdate((prev) => prev + 1)
           await waitForNextPaint()
         },
@@ -661,6 +722,7 @@ export const AutoroutingPipelineDebugger = ({
   useEffect(() => {
     if (!solver.solved) {
       autoRanDrcForSolveRef.current = false
+
       return
     }
 
@@ -678,6 +740,7 @@ export const AutoroutingPipelineDebugger = ({
       await stepSolver(solver as AsyncPipelineDebuggerSolver)
       setForceUpdate((prev) => prev + 1)
     }
+
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on manual step
   }
 
@@ -710,6 +773,7 @@ export const AutoroutingPipelineDebugger = ({
 
       setForceUpdate((prev) => prev + 1)
     }
+
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on next stage
   }
 
@@ -717,10 +781,12 @@ export const AutoroutingPipelineDebugger = ({
   const handleSolveSub = async () => {
     if (!solver.solved && !solver.failed) {
       const currentPhase = solver.activeSubSolver
+
       if (!currentPhase) {
         // No active phase, just step once
         await stepSolver(solver as AsyncPipelineDebuggerSolver)
         setForceUpdate((prev) => prev + 1)
+
         return
       }
 
@@ -750,6 +816,7 @@ export const AutoroutingPipelineDebugger = ({
 
       setForceUpdate((prev) => prev + 1)
     }
+
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on solve sub
   }
 
@@ -766,6 +833,7 @@ export const AutoroutingPipelineDebugger = ({
       const endTime = performance.now() / 1000
       setSolveTime(endTime - startTime)
     }
+
     isSolvingToBreakpointRef.current = false // Stop breakpoint solving on solve completely
   }
 
@@ -784,6 +852,7 @@ export const AutoroutingPipelineDebugger = ({
 
     if (Number.isNaN(target) || target < 0) {
       alert("Please enter a valid positive number")
+
       return
     }
 
@@ -818,10 +887,12 @@ export const AutoroutingPipelineDebugger = ({
   const runDrcChecks = (mode: "strict" | "relaxed") => {
     try {
       let drcResult: ReturnType<typeof getDrcErrors>
+
       if (mode === "relaxed") {
         const traces = solver.failed
           ? []
           : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+
         drcResult = evaluateRelaxedDrc({
           inputSrj: srj,
           srjWithPointPairs: solver.srjWithPointPairs ?? srj,
@@ -835,6 +906,7 @@ export const AutoroutingPipelineDebugger = ({
         if (circuitJson.length === 0) {
           return
         }
+
         drcResult = getDrcErrors(circuitJson)
       }
 
@@ -922,14 +994,17 @@ export const AutoroutingPipelineDebugger = ({
       window.alert(
         "Run Trace Linting is available after routing completes successfully.",
       )
+
       return
     }
+
     try {
       if (typeof solver.getOutputSimpleRouteJson !== "function") {
         throw new Error(
           "The selected solver does not expose routed SimpleRouteJson",
         )
       }
+
       const linter = runTraceLinting(solver.getOutputSimpleRouteJson())
       setTraceLintResult({
         routingSolver: solver,
@@ -951,6 +1026,7 @@ export const AutoroutingPipelineDebugger = ({
   const handleTogglePcbSvg = () => {
     if (pcbSvgMarkup) {
       setPcbSvgMarkup(null)
+
       return
     }
 
@@ -958,6 +1034,7 @@ export const AutoroutingPipelineDebugger = ({
       window.alert(
         "Show PCB SVG is available after the routing problem is solved successfully.",
       )
+
       return
     }
 
@@ -965,6 +1042,7 @@ export const AutoroutingPipelineDebugger = ({
       const circuitJson = getCurrentCircuitJson(solver, (message) =>
         window.alert(message),
       )
+
       if (!circuitJson) return
 
       const svg = convertCircuitJsonToPcbSvg(circuitJson)
@@ -997,6 +1075,7 @@ export const AutoroutingPipelineDebugger = ({
       if (!isSolvingToBreakpointRef.current) return // Stop if cancelled
 
       let deepestSolver = solver.activeSubSolver
+
       while (deepestSolver?.activeSubSolver) {
         deepestSolver = deepestSolver.activeSubSolver
       }
@@ -1004,9 +1083,11 @@ export const AutoroutingPipelineDebugger = ({
       if (deepestSolver) {
         const solverName = deepestSolver.constructor.name
         let rootNodeId: string | undefined = undefined
+
         try {
           // Attempt to get rootNodeId, specific to certain solvers like UnravelSectionSolver
           const params = (deepestSolver as any).getConstructorParams()
+
           if (params?.rootNodeId) {
             rootNodeId = params.rootNodeId
           } else if (params?.[0]?.rootNodeId) {
@@ -1018,12 +1099,14 @@ export const AutoroutingPipelineDebugger = ({
         }
 
         console.log(solverName, rootNodeId)
+
         if (solverName === targetSolverName && rootNodeId === targetNodeId) {
           console.log(
             `Breakpoint hit: ${targetSolverName} with rootNodeId ${targetNodeId}`,
           )
           isSolvingToBreakpointRef.current = false // Breakpoint hit, stop solving
           setForceUpdate((prev) => prev + 1) // Update UI
+
           return
         }
       }
@@ -1060,6 +1143,7 @@ export const AutoroutingPipelineDebugger = ({
       solver.activeSubSolver?.constructor.name !== targetSolverStageKey
     ) {
       await stepSolver(solver as AsyncPipelineDebuggerSolver)
+
       // Check if the target solver became active *after* the step
       if (
         solver?.[
@@ -1104,6 +1188,7 @@ export const AutoroutingPipelineDebugger = ({
   // Increase animation speed
   const increaseSpeed = () => {
     setSpeedLevel((prev) => Math.min(prev + 1, SPEED_DEFINITIONS.length - 1))
+
     if (!isAnimating) {
       setIsAnimating(true)
     }
@@ -1115,6 +1200,7 @@ export const AutoroutingPipelineDebugger = ({
   }
 
   let deepestActiveSubSolver = solver.activeSubSolver
+
   while (deepestActiveSubSolver?.activeSubSolver) {
     deepestActiveSubSolver = deepestActiveSubSolver.activeSubSolver
   }
@@ -1142,6 +1228,7 @@ export const AutoroutingPipelineDebugger = ({
       return baseVisualization
     } catch (error) {
       console.error("Visualization error:", error)
+
       return { points: [], lines: [] }
     }
   }, [
@@ -1164,6 +1251,7 @@ export const AutoroutingPipelineDebugger = ({
       solver.failed,
     ],
   )
+
   const viaCount = useMemo(
     () => getOutputViaCount(solver as PipelineDebuggerSolver),
     [solver, solver.iterations, solver.solved, solver.failed],
@@ -1397,6 +1485,7 @@ export const AutoroutingPipelineDebugger = ({
                 onObjectClicked={({ object }) => {
                   if (!canSelectObjects) return
                   const objectLabel = object.label ?? ""
+
                   if (
                     !objectLabel.includes("cn") &&
                     !objectLabel.includes("cmn") &&
@@ -1484,6 +1573,7 @@ export const AutoroutingPipelineDebugger = ({
                         const nodeId = extractCapacityMeshNodeIdFromObjectLabel(
                           dialogObject.label,
                         )
+
                         if (nodeId) {
                           const dataToDownload = getHighDensityNodeDownloadData(
                             solver,
@@ -1495,9 +1585,11 @@ export const AutoroutingPipelineDebugger = ({
                             null,
                             2,
                           )
+
                           const dataBlob = new Blob([dataStr], {
                             type: "application/json",
                           })
+
                           const url = URL.createObjectURL(dataBlob)
                           const a = document.createElement("a")
                           a.href = url
@@ -1576,10 +1668,13 @@ export const AutoroutingPipelineDebugger = ({
                 const totalTimeMs =
                   solver.pipelineDef?.reduce((total: number, step: any) => {
                     const startTime = solver.startTimeOfPhase[step.solverName]
+
                     if (startTime === undefined) return total // Stage hasn't started
+
                     const endTime =
                       solver.endTimeOfPhase[step.solverName] ??
                       performance.now()
+
                     return total + (endTime - startTime)
                   }, 0) ?? 0
 
@@ -1587,10 +1682,13 @@ export const AutoroutingPipelineDebugger = ({
                   const stepSolver = solver[
                     step.solverName as keyof CapacityMeshSolver
                   ] as BaseSolver | undefined
+
                   const i0 = cumulativeIterations
+
                   if (stepSolver) {
                     cumulativeIterations += stepSolver.iterations
                   }
+
                   const status = stepSolver?.solved
                     ? "Solved"
                     : stepSolver?.failed
@@ -1598,18 +1696,31 @@ export const AutoroutingPipelineDebugger = ({
                       : stepSolver
                         ? "In Progress"
                         : "Not Started"
+
                   const statusClass = stepSolver?.solved
                     ? "text-green-600"
                     : stepSolver?.failed
                       ? "text-red-600"
                       : "text-blue-600"
 
+                  let progressLabel = ""
+
+                  if (status === "Solved") {
+                    progressLabel = "100%"
+                  } else if (status === "In Progress") {
+                    progressLabel = `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
+                  }
+
                   const startTime = solver.startTimeOfPhase[step.solverName]
+
                   const endTime =
                     solver.endTimeOfPhase[step.solverName] ?? performance.now()
+
                   const stepTimeMs =
                     startTime !== undefined ? endTime - startTime : 0
+
                   const stepTimeSec = stepTimeMs / 1000
+
                   const timePercentage =
                     totalTimeMs > 0 ? (stepTimeMs / totalTimeMs) * 100 : 0
 
@@ -1643,13 +1754,7 @@ export const AutoroutingPipelineDebugger = ({
                       <td className="border p-2">
                         {stepSolver?.iterations || 0}
                       </td>
-                      <td className="border p-2">
-                        {status === "Solved"
-                          ? "100%"
-                          : status === "In Progress"
-                            ? `${((stepSolver?.progress ?? 0) * 100).toFixed(1)}%`
-                            : ""}
-                      </td>
+                      <td className="border p-2">{progressLabel}</td>
                       <td className="border p-2 tabular-nums">
                         <div className="flex">
                           <div className="flex-grow">
@@ -1718,13 +1823,17 @@ export const AutoroutingPipelineDebugger = ({
           onClick={() => {
             if (!deepestActiveSubSolver) {
               window.alert("No active sub solver found")
+
               return
             }
+
             let params: any
+
             try {
               params = deepestActiveSubSolver.getConstructorParams()
             } catch (e: any) {
               window.alert(`Unable to get constructor params: ${e.toString()}`)
+
               return
             }
 
@@ -1750,10 +1859,13 @@ export const AutoroutingPipelineDebugger = ({
             const circuitJson = getCurrentCircuitJson(solver, (message) =>
               window.alert(message),
             )
+
             if (!circuitJson) return
+
             const blob = new Blob([JSON.stringify(circuitJson, null, 2)], {
               type: "application/json",
             })
+
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url

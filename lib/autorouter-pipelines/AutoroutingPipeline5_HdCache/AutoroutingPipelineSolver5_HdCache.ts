@@ -49,8 +49,10 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
       getConstructorParams: (cms: AutoroutingPipelineSolver5_HdCache) => {
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
+
         const fallbackNodes =
           cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -59,15 +61,15 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
         return [
           {
             nodePortPoints: nodePortPointsSource,
-            nodePfById: new Map(
+            nodePfById: new Map<CapacityMeshNodeId, number | null>(
               (
                 cms.portPointPathingSolver?.getOutput()
                   .inputNodeWithPortPoints ?? []
               ).map((node) => [
-                node.capacityMeshNodeId as CapacityMeshNodeId,
+                node.capacityMeshNodeId,
                 cms.portPointPathingSolver?.computeNodePf(node) ?? null,
               ]),
-            ) as Map<CapacityMeshNodeId, number | null>,
+            ),
             colorMap: cms.colorMap,
             connMap: cms.connMap as ConnectivityMap | undefined,
             viaDiameter: cms.viaDiameter,
@@ -89,6 +91,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
     this.step()
 
     const pendingEffects = getPendingEffectsFromSolverTree(this)
+
     if (pendingEffects.length === 0) {
       return
     }

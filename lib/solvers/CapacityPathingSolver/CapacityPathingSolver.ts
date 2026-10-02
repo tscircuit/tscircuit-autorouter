@@ -84,8 +84,10 @@ export class CapacityPathingSolver extends BaseSolver {
     this.nodes = nodes
     this.edges = edges
     this.colorMap = colorMap ?? {}
+
     const { connectionsWithNodes, connectionNameToGoalNodeIds } =
       this.getConnectionsWithNodes()
+
     this.connectionsWithNodes = connectionsWithNodes
     this.connectionNameToGoalNodeIds = connectionNameToGoalNodeIds
     this.hyperParameters = hyperParameters
@@ -104,6 +106,7 @@ export class CapacityPathingSolver extends BaseSolver {
 
   getTotalCapacity(node: CapacityMeshNode): number {
     const depth = node._depth ?? 0
+
     return (this.maxDepthOfNodes - depth + 1) ** 2
   }
 
@@ -114,11 +117,13 @@ export class CapacityPathingSolver extends BaseSolver {
       pathFound: boolean
       straightLineDistance: number
     }> = []
+
     const nodesWithTargets = this.nodes.filter((node) => node._containsTarget)
     const connectionNameToGoalNodeIds = new Map<string, CapacityMeshNodeId[]>()
 
     for (const connection of this.simpleRouteJson.connections) {
       const nodesForConnection: CapacityMeshNode[] = []
+
       for (const point of connection.pointsToConnect) {
         let closestNode = this.nodes[0]
         let minDistance = Number.MAX_VALUE
@@ -127,18 +132,22 @@ export class CapacityPathingSolver extends BaseSolver {
           const distance = Math.sqrt(
             (node.center.x - point.x) ** 2 + (node.center.y - point.y) ** 2,
           )
+
           if (distance < minDistance) {
             minDistance = distance
             closestNode = node
           }
         }
+
         nodesForConnection.push(closestNode)
       }
+
       if (nodesForConnection.length < 2) {
         throw new Error(
           `Not enough nodes for connection "${connection.name}", only ${nodesForConnection.length} found`,
         )
       }
+
       connectionNameToGoalNodeIds.set(
         connection.name,
         nodesForConnection.map((n) => n.capacityMeshNodeId),
@@ -157,6 +166,7 @@ export class CapacityPathingSolver extends BaseSolver {
     connectionsWithNodes.sort(
       (a, b) => a.straightLineDistance - b.straightLineDistance,
     )
+
     return { connectionsWithNodes, connectionNameToGoalNodeIds }
   }
 
@@ -186,10 +196,12 @@ export class CapacityPathingSolver extends BaseSolver {
   getBacktrackedPath(candidate: Candidate) {
     const path: CapacityMeshNode[] = []
     let currentCandidate = candidate
+
     while (currentCandidate) {
       path.push(currentCandidate.node)
       currentCandidate = currentCandidate.prevCandidate!
     }
+
     return path
   }
 
@@ -204,8 +216,10 @@ export class CapacityPathingSolver extends BaseSolver {
 
   getCapacityPaths() {
     const capacityPaths: CapacityPath[] = []
+
     for (const connection of this.connectionsWithNodes) {
       const path = connection.path
+
       if (path) {
         capacityPaths.push({
           capacityPathId: connection.connection.name,
@@ -215,6 +229,7 @@ export class CapacityPathingSolver extends BaseSolver {
         })
       }
     }
+
     return capacityPaths
   }
 
@@ -224,6 +239,7 @@ export class CapacityPathingSolver extends BaseSolver {
   ) {
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
+
     const totalCapacity = this.getTotalCapacity(node)
 
     // Single layer nodes can't safely have multiple traces because there's no
@@ -236,6 +252,7 @@ export class CapacityPathingSolver extends BaseSolver {
       return false
 
     let additionalCapacityRequirement = 0
+
     if (node.availableZ.length > 1 && prevNode.availableZ.length === 1) {
       additionalCapacityRequirement += 0.5
     }
@@ -273,11 +290,15 @@ export class CapacityPathingSolver extends BaseSolver {
   _step() {
     const nextConnection =
       this.connectionsWithNodes[this.currentConnectionIndex]
+
     if (!nextConnection) {
       this.solved = true
+
       return
     }
+
     const [start, end] = nextConnection.nodes
+
     if (!this.candidates) {
       this.candidates = [{ prevCandidate: null, node: start, f: 0, g: 0, h: 0 }]
       this.debug_lastNodeCostMap = new Map()
@@ -290,12 +311,14 @@ export class CapacityPathingSolver extends BaseSolver {
 
     this.candidates.sort((a, b) => a.f - b.f)
     const currentCandidate = this.candidates.shift()
+
     if (this.candidates.length > this.MAX_CANDIDATES_IN_MEMORY) {
       this.candidates.splice(
         this.MAX_CANDIDATES_IN_MEMORY,
         this.candidates.length - this.MAX_CANDIDATES_IN_MEMORY,
       )
     }
+
     if (!currentCandidate) {
       // TODO Track failed paths, make sure solver doesn't think it solved
       console.error(
@@ -305,8 +328,10 @@ export class CapacityPathingSolver extends BaseSolver {
       this.candidates = null
       this.visitedNodes = null
       this.failed = true
+
       return
     }
+
     if (this.isConnectedToEndGoal(currentCandidate.node, end)) {
       nextConnection.path = this.getBacktrackedPath({
         prevCandidate: currentCandidate,
@@ -321,27 +346,33 @@ export class CapacityPathingSolver extends BaseSolver {
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedNodes = null
+
       return
     }
 
     const neighborNodes = this.getNeighboringNodes(currentCandidate.node)
+
     for (const neighborNode of neighborNodes) {
       if (this.visitedNodes?.has(neighborNode.capacityMeshNodeId)) {
         continue
       }
+
       if (
         !this.doesNodeHaveCapacityForTrace(neighborNode, currentCandidate.node)
       ) {
         continue
       }
+
       const connectionName =
         this.connectionsWithNodes[this.currentConnectionIndex].connection.name
+
       if (
         neighborNode._containsObstacle &&
         !this.canTravelThroughObstacle(neighborNode, connectionName)
       ) {
         continue
       }
+
       const g = this.computeG(currentCandidate, neighborNode, end)
       const h = this.computeH(currentCandidate, neighborNode, end)
       const f = g + h * this.GREEDY_MULTIPLIER
@@ -359,8 +390,10 @@ export class CapacityPathingSolver extends BaseSolver {
         g,
         h,
       }
+
       this.candidates.push(newCandidate)
     }
+
     this.visitedNodes!.add(currentCandidate.node.capacityMeshNodeId)
   }
 
@@ -376,6 +409,7 @@ export class CapacityPathingSolver extends BaseSolver {
     if (this.connectionsWithNodes) {
       for (let i = 0; i < this.connectionsWithNodes.length; i++) {
         const conn = this.connectionsWithNodes[i]
+
         if (conn.path && conn.path.length > 0) {
           const pathPoints = conn.path.map(
             ({ center: { x, y }, width, availableZ }) => ({
@@ -385,10 +419,12 @@ export class CapacityPathingSolver extends BaseSolver {
               availableZ,
             }),
           )
+
           graphics.lines!.push({
             points: pathPoints,
             strokeColor: this.colorMap[conn.connection.name],
           })
+
           for (let u = 0; u < pathPoints.length; u++) {
             const point = pathPoints[u]
             graphics.points!.push({
@@ -408,6 +444,7 @@ export class CapacityPathingSolver extends BaseSolver {
     for (const node of this.nodes) {
       const usedCapacity =
         this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
+
       const totalCapacity = this.getTotalCapacity(node)
       const nodeCosts = this.debug_lastNodeCostMap.get(node.capacityMeshNodeId)
       graphics.rects!.push({
@@ -450,6 +487,7 @@ export class CapacityPathingSolver extends BaseSolver {
     // If we failed on the previous connection and haven't started the next one yet,
     // show the failed connection instead
     let connectionToVisualize = nextConnection
+
     if (
       !this.candidates &&
       this.currentConnectionIndex > 0 &&
@@ -475,6 +513,7 @@ export class CapacityPathingSolver extends BaseSolver {
     if (this.candidates) {
       // Get top 10 candidates
       const topCandidates = this.candidates.slice(0, 5)
+
       const connectionName =
         this.connectionsWithNodes[this.currentConnectionIndex].connection.name
 

@@ -2,7 +2,9 @@ import { CapacityMeshNode } from "lib/types"
 
 // 1206x4
 const JUMPER_SIZE_WIDTH_WITH_PADDING = 1.6
+
 const JUMPER_SIZE_HEIGHT_WITH_PADDING = 3.2
+
 const JUMPER_SIZE_AREA =
   JUMPER_SIZE_WIDTH_WITH_PADDING * JUMPER_SIZE_HEIGHT_WITH_PADDING
 
@@ -21,6 +23,7 @@ export const calculateNodeProbabilityOfFailureWithJumpers = (
 
   const jumpersWeCanFitInNodeWide =
     Math.floor(nodeDimMin / JUMPER_SIZE_WIDTH_WITH_PADDING) + 0.1
+
   const jumpersWeCanFitInNodeTall =
     Math.floor(nodeDimMax / JUMPER_SIZE_HEIGHT_WITH_PADDING) + 0.1
 

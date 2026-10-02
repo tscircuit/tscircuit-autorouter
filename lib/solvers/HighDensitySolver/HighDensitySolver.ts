@@ -187,12 +187,14 @@ export class HighDensitySolver extends BaseSolver {
     ) {
       return this.getSolvedNodeSolverType(solver.winningSolver)
     }
+
     if (
       solver instanceof PortfolioSingleIntraNodeSolver &&
       solver.winningSolver
     ) {
       return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
     }
+
     return this.getConcreteSolverTypeName(solver)
   }
 
@@ -241,6 +243,7 @@ export class HighDensitySolver extends BaseSolver {
   private getConcreteSolverTypeName(solver: BaseSolver): string {
     if (solver instanceof CachedIntraNodeRouteSolver) {
       const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
+
       return solver.cacheHit ? `${concreteName} [cached]` : concreteName
     }
 
@@ -257,24 +260,31 @@ export class HighDensitySolver extends BaseSolver {
     if (hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
       return "MultiHeadPolyLineIntraNodeSolver3"
     }
+
     if (hyperParameters?.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       return "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
     }
+
     if (hyperParameters?.CLOSED_FORM_SINGLE_TRANSITION) {
       return "SingleTransitionIntraNodeSolver"
     }
+
     if (hyperParameters?.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return "TwoCrossingRoutesHighDensitySolver"
     }
+
     if (hyperParameters?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return "SingleTransitionCrossingRouteSolver"
     }
+
     if (hyperParameters?.HIGH_DENSITY_A01) {
       return "HighDensitySolverA01"
     }
+
     if (hyperParameters?.HIGH_DENSITY_A03) {
       return "HighDensitySolverA03"
     }
+
     return "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
   }
 
@@ -284,6 +294,7 @@ export class HighDensitySolver extends BaseSolver {
   ) {
     const solverType = this.getSolvedNodeSolverType(solver)
     const solverNodeCount = this.stats.solverNodeCount as Record<string, number>
+
     const difficultNodePfs = this.stats.difficultNodePfs as Record<
       string,
       number[]
@@ -292,10 +303,12 @@ export class HighDensitySolver extends BaseSolver {
     solverNodeCount[solverType] = (solverNodeCount[solverType] ?? 0) + 1
 
     const pf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
+
     if (pf !== null && pf > 0.05) {
       if (!difficultNodePfs[solverType]) {
         difficultNodePfs[solverType] = []
       }
+
       difficultNodePfs[solverType].push(pf)
     }
   }
@@ -312,6 +325,7 @@ export class HighDensitySolver extends BaseSolver {
     const terminalPortPoints = solver.nodeWithPortPoints.portPoints.filter(
       (portPoint) => portPoint.pcb_port_id !== undefined,
     )
+
     if (terminalPortPoints.length === 0) return solver.solvedRoutes
 
     const getTerminalPcbPortId = (
@@ -325,15 +339,20 @@ export class HighDensitySolver extends BaseSolver {
           terminal.y === point.y &&
           terminal.z === point.z,
       )
+
       if (matchingTerminals.length > 1) {
         throw new Error(
           `HighDensitySolver found multiple PCB terminals at an endpoint of "${route.connectionName}"`,
         )
       }
+
       const terminal = matchingTerminals[0]
+
       if (!terminal?.pcb_port_id) return undefined
+
       return terminal.pcb_port_id
     }
+
     return solver.solvedRoutes.map((route) => ({
       ...route,
       startPcbPortId: route.route[0]
@@ -352,8 +371,10 @@ export class HighDensitySolver extends BaseSolver {
    */
   _step() {
     this.updateCacheStats()
+
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
+
       if (this.activeSubSolver.solved) {
         this.routes.push(
           ...(this.preserveTerminalPcbPortIds
@@ -373,9 +394,12 @@ export class HighDensitySolver extends BaseSolver {
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }
+
       this.updateCacheStats()
+
       return
     }
+
     if (this.unsolvedNodePortPoints.length === 0) {
       if (this.failedSolvers.length > 0) {
         this.solved = false
@@ -383,13 +407,16 @@ export class HighDensitySolver extends BaseSolver {
         // debugger
         this.error = `Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0, 5).map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`
         this.updateCacheStats()
+
         return
       }
 
       this.solved = true
       this.updateCacheStats()
+
       return
     }
+
     const node = this.unsolvedNodePortPoints.pop()!
 
     const intraNodeSolverParams = {
@@ -414,6 +441,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
+
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
       : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
@@ -433,6 +461,7 @@ export class HighDensitySolver extends BaseSolver {
       rects: [],
       circles: [],
     }
+
     for (const route of this.routes) {
       // Merge segments based on z-coordinate
       const mergedSegments = mergeRouteSegments(
@@ -458,6 +487,7 @@ export class HighDensitySolver extends BaseSolver {
           strokeDash: segment.z !== 0 ? [0.1, 0.3] : undefined,
         })
       }
+
       for (const via of route.vias) {
         graphics.circles!.push({
           center: via,
@@ -472,6 +502,7 @@ export class HighDensitySolver extends BaseSolver {
         })
       }
     }
+
     if (this.solved || this.failed) {
       for (const [capacityMeshNodeId, metadata] of this.nodeSolveMetadataById) {
         const left = metadata.node.center.x - metadata.node.width / 2
@@ -565,12 +596,14 @@ export class HighDensitySolver extends BaseSolver {
         }
       }
     }
+
     if (this.activeSubSolver) {
       graphics = combineVisualizations(
         graphics,
         this.activeSubSolver.visualize(),
       )
     }
+
     return graphics
   }
 }

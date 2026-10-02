@@ -50,6 +50,7 @@ export const getPossibleInitialViaPositions = (params: {
       viaPositionSource = []
       const rows = Math.ceil(Math.sqrt(viaCount))
       const cols = rows
+
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           viaPositionSource.push({
@@ -71,11 +72,13 @@ export const getPossibleInitialViaPositions = (params: {
 
     for (const viaPositionVariant of viaPositionVariants) {
       const viaPositions: Point[] = []
+
       for (let i = 0; i < viaPositionVariant.length; i++) {
         if (viaPositionVariant[i] === 1) {
           viaPositions.push(viaPositionSource[i])
         }
       }
+
       result.push({
         viaPositions,
         viaCountVariant,

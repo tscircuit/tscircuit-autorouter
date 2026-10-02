@@ -4,6 +4,7 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
+
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
 const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 
@@ -30,12 +31,14 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
   } {
     const hasDimensionLimit =
       Number.isFinite(this.maxNodeDimension) && this.maxNodeDimension > 0
+
     const hasRatioLimit =
       Number.isFinite(this.maxNodeRatio) && this.maxNodeRatio > 0
 
     let cols = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.width / this.maxNodeDimension))
       : 1
+
     let rows = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.height / this.maxNodeDimension))
       : 1
@@ -44,6 +47,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       while (true) {
         const childWidth = node.width / cols
         const childHeight = node.height / rows
+
         const childRatio =
           childWidth >= childHeight
             ? childWidth / childHeight
@@ -85,15 +89,19 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     // Rect decomposition can produce low-area slices that still connect larger
     // regions. Removing such a slice changes reachability, so retain bridges.
     let borderingNodeCount = 0
+
     for (const candidate of this.nodes) {
       if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue
+
       if (!node.availableZ.some((z) => candidate.availableZ.includes(z))) {
         continue
       }
+
       if (!areNodesBordering(node, candidate)) continue
 
       if (candidate._containsTarget) return false
       borderingNodeCount++
+
       if (borderingNodeCount >= 2) return false
     }
 
@@ -146,19 +154,23 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     for (const node of this.nodes) {
       const hasInvalidDimensions =
         !Number.isFinite(node.width) || !Number.isFinite(node.height)
+
       const subdividedNodes = this.subdivideNode(node)
+
       if (subdividedNodes.length === 0) {
         if (hasInvalidDimensions) {
           removedInvalidNodeCount++
         } else {
           removedSmallNodeCount++
         }
+
         continue
       }
 
       if (subdividedNodes.length > 1) {
         subdividedNodeCount++
       }
+
       this.outputNodes.push(...subdividedNodes)
     }
 

@@ -11,6 +11,7 @@ export function getNodesNearNode(params: {
   if (hops === 0) return [nodeId]
 
   const visitedNodes = new Set<CapacityMeshNodeId>([nodeId])
+
   const exploreQueue: Array<{
     nodeId: CapacityMeshNodeId
     remainingHops: number
@@ -22,8 +23,10 @@ export function getNodesNearNode(params: {
     if (remainingHops === 0) continue
 
     const segments = nodeIdToSegmentIds.get(node) || []
+
     for (const segmentId of segments) {
       const adjacentNodeIds = segmentIdToNodeIds.get(segmentId) || []
+
       for (const adjacentNodeId of adjacentNodeIds) {
         if (!visitedNodes.has(adjacentNodeId)) {
           visitedNodes.add(adjacentNodeId)

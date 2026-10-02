@@ -18,14 +18,17 @@ export const buildColorMapFromPortPoints = (
 
   const colorMap: Record<string, string> = {}
   const connectionNames = new Set<string>()
+
   for (const pp of nodeWithPortPoints.portPoints) {
     connectionNames.add(pp.connectionName)
   }
 
   let i = 0
+
   for (const name of Array.from(connectionNames)) {
     colorMap[name] = colors[i % colors.length]
     i++
   }
+
   return colorMap
 }

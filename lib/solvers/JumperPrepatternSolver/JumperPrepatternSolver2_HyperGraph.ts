@@ -176,16 +176,21 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       "#bcf60c",
       "#fabebe",
     ]
+
     const colorMap: Record<string, string> = {}
     const connectionNames = new Set<string>()
+
     for (const pp of this.nodeWithPortPoints.portPoints) {
       connectionNames.add(pp.connectionName)
     }
+
     let i = 0
+
     for (const name of Array.from(connectionNames)) {
       colorMap[name] = colors[i % colors.length]
       i++
     }
+
     return colorMap
   }
 
@@ -194,10 +199,12 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       const d = region.d
       const polygon = d?.polygon
       const bounds = d?.bounds
+
       if (!polygon || polygon.length === 0 || !bounds) continue
 
       let polyMinX = Infinity
       let polyMinY = Infinity
+
       for (const point of polygon) {
         polyMinX = Math.min(polyMinX, point.x)
         polyMinY = Math.min(polyMinY, point.y)
@@ -243,6 +250,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     // For horizontal orientation, swap cols and rows
     const effectiveCols =
       orientation === "horizontal" ? patternConfig.rows : patternConfig.cols
+
     const effectiveRows =
       orientation === "horizontal" ? patternConfig.cols : patternConfig.rows
 
@@ -252,16 +260,21 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     const padWidth = 0.9
     const padHeight = 1.0
     const padGap = 0.35
+
     const traceChannels =
       this.hyperParameters.TRACE_CHANNELS_BETWEEN_JUMPERS ?? 1
+
     const clearance = this.traceWidth * traceChannels + this.obstacleMargin * 2
 
     const bodyWidth =
       orientation === "horizontal" ? padWidth * 2 + padGap : padHeight
+
     const bodyHeight =
       orientation === "horizontal" ? padHeight : padWidth * 2 + padGap
+
     const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y"
     const isStaggered = pattern === "staggered"
+
     const staggerOffset =
       isStaggered && staggerAxis === "x"
         ? bodyWidth / 2
@@ -272,10 +285,12 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     const paddingAroundPads = 0.5
     const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2)
     const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2)
+
     const effectiveAvailableWidth = Math.max(
       0,
       availableWidth - (isStaggered && staggerAxis === "x" ? staggerOffset : 0),
     )
+
     const effectiveAvailableHeight = Math.max(
       0,
       availableHeight -
@@ -289,6 +304,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
             (effectiveAvailableWidth - bodyWidth) / (effectiveCols - 1),
           )
         : bodyWidth
+
     const rowSpacing =
       effectiveRows > 1
         ? Math.max(
@@ -349,6 +365,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       minY: node.center.y - node.height / 2,
       maxY: node.center.y + node.height / 2,
     }
+
     this.graphBounds = nodeBounds
 
     let baseGraph: JumperGraph
@@ -361,11 +378,14 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         pattern,
         nodeBounds,
       )
+
       if (!graph) {
         this.error = `0603 grid (${patternConfig.cols}x${patternConfig.rows}) is too large to fit in node bounds`
         this.failed = true
+
         return false
       }
+
       baseGraph = graph
     } else {
       // Generate the base 1206x4 jumper grid to fit the node bounds exactly
@@ -393,9 +413,11 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       let padMaxX = -Infinity
       let padMinY = Infinity
       let padMaxY = -Infinity
+
       for (const region of baseGraph.regions) {
         if (!region.d?.isPad) continue
         const bounds = region.d?.bounds
+
         if (bounds) {
           padMinX = Math.min(padMinX, bounds.minX)
           padMaxX = Math.max(padMaxX, bounds.maxX)
@@ -414,6 +436,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       ) {
         this.error = `baseGraph bounds (${padMinX.toFixed(2)}, ${padMinY.toFixed(2)}, ${padMaxX.toFixed(2)}, ${padMaxY.toFixed(2)}) exceed node bounds (${nodeBounds.minX.toFixed(2)}, ${nodeBounds.minY.toFixed(2)}, ${nodeBounds.maxX.toFixed(2)}, ${nodeBounds.maxY.toFixed(2)})`
         this.failed = true
+
         return false
       }
     }
@@ -432,8 +455,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       string,
       { points: PortPoint[]; rootConnectionName?: string }
     >()
+
     for (const pp of node.portPoints) {
       const existing = connectionMap.get(pp.connectionName)
+
       if (existing) {
         existing.points.push(pp)
       } else {
@@ -446,6 +471,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
     // Create XY connections - use port point positions directly since graph matches node bounds
     this.xyConnections = []
+
     for (const [connectionName, data] of Array.from(connectionMap.entries())) {
       if (data.points.length < 2) continue
 
@@ -458,6 +484,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
     if (this.xyConnections.length === 0) {
       this.solved = true
+
       return true
     }
 
@@ -499,9 +526,12 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     // Initialize on first step
     if (!this.jumperGraphSolver) {
       this._initializeGraph()
+
       if (this.solved) return
+
       if (!this.jumperGraphSolver) {
         this.failed = true
+
         return
       }
     }
@@ -515,6 +545,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     if (this.jumperGraphSolver.solved) {
       // Initialize curvy trace solvers for the next phase
       this._initializeCurvyTraceSolvers()
+
       if (this.curvySolvers.length > 0) {
         this.phase = "curvyTrace"
       } else {
@@ -535,6 +566,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       this._finalizeCurvyTraceResults()
       this.phase = "done"
       this.solved = true
+
       return
     }
 
@@ -550,6 +582,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     if (solver.solved) {
       // Store the curved paths from this solver
       const regionId = currentSolverInfo.regionId
+
       if (!this.regionCurvedPaths.has(regionId)) {
         this.regionCurvedPaths.set(regionId, new Map())
       }
@@ -569,6 +602,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         if (!this.regionCurvedPaths.get(regionId)!.has(networkId)) {
           this.regionCurvedPaths.get(regionId)!.set(networkId, [])
         }
+
         this.regionCurvedPaths.get(regionId)!.get(networkId)!.push(pathEntry)
       }
 
@@ -601,7 +635,9 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       center: { x: number; y: number }
       networkIds: string[] // Routes that connect to this pad
     }
+
     const padObstacleInfos: PadObstacleInfo[] = []
+
     for (const jumperLoc of this.jumperLocations) {
       for (const padRegion of jumperLoc.padRegions) {
         const padBounds = padRegion.d.bounds
@@ -628,6 +664,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       entryPort: JPort
       exitPort: JPort
     }
+
     const regionTraversals: Map<string, RegionTraversal[]> = new Map()
 
     // First pass: collect region traversals and jumper info for each route
@@ -638,10 +675,13 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     ) {
       const solvedRoute = this.jumperGraphSolver.solvedRoutes[routeIdx]
       const connectionId = solvedRoute.connection.connectionId
+
       const rootConnectionName = this.nodeWithPortPoints.portPoints.find(
         (pp) => pp.connectionName === connectionId,
       )?.rootConnectionName
+
       const jumpers: Jumper[] = []
+
       const traversals: Array<{
         regionId: string
         region: JRegion
@@ -676,6 +716,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           // First port - look ahead to find which region we're entering
           // The next port's lastRegion tells us which region we're actually traversing
           const nextCandidate = solvedRoute.path[i + 1]
+
           const nextLastRegion = nextCandidate?.lastRegion as
             | JRegion
             | undefined
@@ -693,6 +734,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           if (!nextRegion) {
             const isConnRegion = (r: JRegion | undefined) =>
               r?.regionId?.startsWith("conn:")
+
             if (
               r1 &&
               !isConnRegion(r1) &&
@@ -733,9 +775,11 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
             // Add to global traversals map
             const key = currentRegion.regionId
+
             if (!regionTraversals.has(key)) {
               regionTraversals.set(key, [])
             }
+
             regionTraversals.get(key)!.push({
               regionId: currentRegion.regionId,
               region: currentRegion,
@@ -766,6 +810,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
           // Determine footprint based on jumper type
           const jumperType = this.hyperParameters.JUMPER_TYPE ?? "1206x4"
+
           const footprint: JumperFootprint =
             jumperType === "0603" ? "0603" : "1206x4_pair"
 
@@ -809,6 +854,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     // Populate networkIds on pad obstacles based on which routes use which jumper pads
     // A route uses a pad if one of its jumpers has start/end at that pad's center
     const POSITION_TOLERANCE = 0.1
+
     for (let routeIdx = 0; routeIdx < this.routeInfos.length; routeIdx++) {
       const routeInfo = this.routeInfos[routeIdx]
       const networkId = routeInfo.rootConnectionName ?? routeInfo.connectionId
@@ -822,6 +868,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           for (const padInfo of padObstacleInfos) {
             const dx = Math.abs(padInfo.center.x - pos.x)
             const dy = Math.abs(padInfo.center.y - pos.y)
+
             if (dx < POSITION_TOLERANCE && dy < POSITION_TOLERANCE) {
               // This pad is used by this route
               if (!padInfo.networkIds.includes(networkId)) {
@@ -838,6 +885,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       if (traversals.length === 0) continue
 
       const region = traversals[0].region
+
       // Skip pad regions and through-jumper regions - these should stay as straight lines
       if (region.d.isPad || region.d.isThroughJumper) continue
 
@@ -845,6 +893,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
       // Create waypoint pairs for all routes passing through this region
       const waypointPairs: CurvyTraceProblem["waypointPairs"] = []
+
       for (const traversal of traversals) {
         waypointPairs.push({
           start: { x: traversal.entryPort.d.x, y: traversal.entryPort.d.y },
@@ -857,33 +906,41 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
       // Filter to pads that overlap or are adjacent to this region's bounds
       // Use a small margin to catch pads that touch the region boundary
       const padMargin = 0.01
-      const regionObstacles: CurvyObstacle[] = padObstacleInfos
-        .filter(
-          (padInfo) =>
-            padInfo.minX <= bounds.maxX + padMargin &&
-            padInfo.maxX >= bounds.minX - padMargin &&
-            padInfo.minY <= bounds.maxY + padMargin &&
-            padInfo.maxY >= bounds.minY - padMargin,
-        )
-        .map((padInfo) => {
+
+      const regionObstacles: CurvyObstacle[] = padObstacleInfos.flatMap(
+        (padInfo) => {
+          if (
+            !(
+              padInfo.minX <= bounds.maxX + padMargin &&
+              padInfo.maxX >= bounds.minX - padMargin &&
+              padInfo.minY <= bounds.maxY + padMargin &&
+              padInfo.maxY >= bounds.minY - padMargin
+            )
+          )
+            return []
+
           // If any of the routes passing through this region connect to this pad,
           // set the networkId so CurvyTraceSolver knows they can connect
           const routeNetworkIds = traversals.map(
             (t) => t.rootConnectionName ?? t.connectionName,
           )
+
           const matchingNetworkId = padInfo.networkIds.find((nid) =>
             routeNetworkIds.includes(nid),
           )
 
-          return {
-            minX: padInfo.minX,
-            minY: padInfo.minY,
-            maxX: padInfo.maxX,
-            maxY: padInfo.maxY,
-            center: padInfo.center,
-            networkId: matchingNetworkId,
-          }
-        })
+          return [
+            {
+              minX: padInfo.minX,
+              minY: padInfo.minY,
+              maxX: padInfo.maxX,
+              maxY: padInfo.maxY,
+              center: padInfo.center,
+              networkId: matchingNetworkId,
+            },
+          ]
+        },
+      )
 
       // Create CurvyTraceSolver for this region (don't solve yet)
       const problem: CurvyTraceProblem = {
@@ -931,11 +988,13 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
         // Find the curved path that matches this traversal's entry/exit points
         let matchedPath: Array<{ x: number; y: number }> | null = null
+
         if (curvedPaths && curvedPaths.length > 0) {
           const entryPoint = {
             x: traversal.entryPort.d.x,
             y: traversal.entryPort.d.y,
           }
+
           const exitPoint = traversal.exitPort
             ? { x: traversal.exitPort.d.x, y: traversal.exitPort.d.y }
             : null
@@ -966,6 +1025,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
           // Use the curved path
           // Skip the first point if we already have points (to avoid duplicates)
           const startIdx = routePoints.length > 0 ? 1 : 0
+
           for (let i = startIdx; i < matchedPath.length; i++) {
             routePoints.push({ x: matchedPath[i].x, y: matchedPath[i].y, z: 0 })
           }
@@ -979,6 +1039,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
               z: 0,
             })
           }
+
           if (traversal.exitPort) {
             routePoints.push({
               x: traversal.exitPort.d.x,
@@ -1027,15 +1088,18 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
         for (const pos of positions) {
           const key = `${pos.x.toFixed(3)},${pos.y.toFixed(3)}`
           const connectedTo = padUsageMap.get(key) ?? []
+
           if (
             route.rootConnectionName &&
             !connectedTo.includes(route.rootConnectionName)
           ) {
             connectedTo.push(route.rootConnectionName)
           }
+
           if (!connectedTo.includes(route.connectionName)) {
             connectedTo.push(route.connectionName)
           }
+
           padUsageMap.set(key, connectedTo)
         }
       }
@@ -1043,8 +1107,10 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
 
     // Convert all jumperLocations to SRJ Jumpers
     const jumperType = this.hyperParameters.JUMPER_TYPE ?? "1206x4"
+
     const dimsKey: JumperFootprint =
       jumperType === "0603" ? "0603" : "1206x4_pair"
+
     const dims = JUMPER_DIMENSIONS[dimsKey]
 
     for (const jumperLoc of this.jumperLocations) {
@@ -1104,6 +1170,7 @@ export class JumperPrepatternSolver2_HyperGraph extends BaseSolver {
     }
 
     const node = this.nodeWithPortPoints
+
     const bounds = {
       minX: node.center.x - node.width / 2,
       maxX: node.center.x + node.width / 2,

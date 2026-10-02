@@ -52,6 +52,7 @@ const isPointInsideNode = (
   margin = 0,
 ) => {
   const bounds = getNodeBounds(node, margin)
+
   return (
     point.x >= bounds.minX &&
     point.x <= bounds.maxX &&
@@ -100,6 +101,7 @@ const findNodeIndexForRoute = (
     const regionNodeIndex = nodes.findIndex(
       (node) => node.capacityMeshNodeId === route.regionId,
     )
+
     if (regionNodeIndex !== -1) return regionNodeIndex
   }
 
@@ -109,6 +111,7 @@ const findNodeIndexForRoute = (
 
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]
+
     if (points.every((point) => isPointInsideNode(point, node, margin))) {
       return i
     }
@@ -243,6 +246,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.connMap = params.connMap
 
     const routeIndexesByNode = new Map<number, number[]>()
+
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
         isSameNetMultilayerObstacleRoute(
@@ -253,11 +257,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       ) {
         continue
       }
+
       const nodeIndex = findNodeIndexForRoute(
         params.hdRoutes[i],
         params.nodeWithPortPoints,
         this.repairMargin,
       )
+
       if (nodeIndex === -1) continue
       const routeIndexes = routeIndexesByNode.get(nodeIndex) ?? []
       routeIndexes.push(i)
@@ -273,21 +279,27 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         ),
       ),
     )
+
     const repairRoutes = params.hdRoutes.map((route) =>
       toRepairRoute(route, params.connMap, params.minimumTraceWidth),
     )
+
     const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
       params.hdRoutes.length,
     )
+
     for (const [index, route] of params.hdRoutes.entries()) {
       const points = [...route.route, ...route.vias]
+
       if (points.length === 0) {
         throw new Error(
           `High density repair route "${route.connectionName}" has no points`,
         )
       }
+
       const radius =
         Math.max(repairRoutes[index].traceThickness!, route.viaDiameter) / 2
+
       routeIndex.insert(
         { routeIndex: index },
         Math.min(...points.map((point) => point.x)) - radius,
@@ -296,10 +308,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         Math.max(...points.map((point) => point.y)) + radius,
       )
     }
+
     if (params.hdRoutes.length > 0) routeIndex.finish()
+
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
+
         const copperRadius = Math.max(
           ...routeIndexes.map(
             (index) =>
@@ -309,11 +324,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               ) / 2,
           ),
         )
+
         const bounds = getNodeBounds(
           node,
           Math.max(this.repairMargin, copperRadius + 0.1),
         )
+
         const ownedIndexes = new Set(routeIndexes)
+
         return {
           node,
           routeIndexes,
@@ -364,6 +382,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                   ...new Set(
                     obstacle.connectedTo.flatMap((id) => {
                       const net = params.connMap?.getNetConnectedToId(id)
+
                       return net ? [id, net] : [id]
                     }),
                   ),
@@ -380,6 +399,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
+
     this.sampleEntries = sampleEntries
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
@@ -413,6 +433,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     if (!sampleEntry) {
       this.solved = true
+
       return
     }
 
@@ -426,6 +447,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           this.activeSubSolver.error ??
           `High density repair failed for node ${sampleEntry.node.capacityMeshNodeId}`
         this.activeSubSolver = null
+
         return
       }
 
@@ -434,6 +456,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       }
 
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
           Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
@@ -449,6 +472,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           Number(this.stats.nodeClearanceCandidateCount ?? 0) +
           Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
       }
+
       for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
         const routeIndex = sampleEntry.routeIndexes[i]
         const fallbackRoute = this.originalHdRoutes[routeIndex]
@@ -473,6 +497,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       if (this.activeSampleIndex >= this.sampleEntries.length) {
         this.solved = true
       }
+
       return
     }
 
@@ -502,11 +527,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     const lines: NonNullable<GraphicsObject["lines"]> = []
     const circles: NonNullable<GraphicsObject["circles"]> = []
+
     for (const route of this.getOutput()) {
       const strokeColor = this.colorMap[route.connectionName] ?? "#0ea5e9"
+
       for (let i = 0; i < route.route.length - 1; i++) {
         const start = route.route[i]
         const end = route.route[i + 1]
+
         if (start.z !== end.z) continue
         lines.push({
           points: [
@@ -520,6 +548,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           strokeDash: start.z !== 0 ? [0.1, 0.3] : undefined,
         })
       }
+
       for (const via of route.vias) {
         circles.push({
           center: { x: via.x, y: via.y },

@@ -17,10 +17,13 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
 
   override _step(): void {
     this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
+
     if (this.error) {
       this.failed = true
+
       return
     }
+
     this.outputSrj = convertSrjTracesToObstacles(this.inputSrj) ?? this.inputSrj
     this.solved = true
   }

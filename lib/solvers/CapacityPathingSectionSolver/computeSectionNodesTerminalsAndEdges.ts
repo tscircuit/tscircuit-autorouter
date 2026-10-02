@@ -11,6 +11,7 @@ export interface SectionConnectionTerminal {
   endNodeId: CapacityMeshNodeId
   path?: CapacityMeshNode[] // To store the result for this connection
 }
+
 export interface CapacityPathingSection {
   centerNodeId: string
   sectionConnectionTerminals: SectionConnectionTerminal[]
@@ -36,12 +37,15 @@ export const computeSectionNodesTerminalsAndEdges = (opts: {
   } = opts
 
   const sectionNodeIds = new Set<CapacityMeshNodeId>()
+
   const queue: Array<{ nodeId: CapacityMeshNodeId; depth: number }> = [
     { nodeId: centerNodeId, depth: 0 },
   ]
+
   sectionNodeIds.add(centerNodeId)
 
   let head = 0
+
   while (head < queue.length) {
     const { nodeId, depth } = queue[head++]
 
@@ -65,11 +69,13 @@ export const computeSectionNodesTerminalsAndEdges = (opts: {
   // Compute section edges (edges where both nodes are in the section)
   const sectionEdges = edges.filter((edge) => {
     const [nodeIdA, nodeIdB] = edge.nodeIds
+
     return sectionNodeIds.has(nodeIdA) && sectionNodeIds.has(nodeIdB)
   })
 
   // Compute terminals
   const sectionConnectionTerminals = []
+
   for (const conn of connectionsWithNodes) {
     if (!conn.path) continue
 
@@ -87,6 +93,7 @@ export const computeSectionNodesTerminalsAndEdges = (opts: {
     // Find the last node in the path that is within the section
     for (let i = conn.path.length - 1; i >= 0; i--) {
       const node = conn.path[i]
+
       if (sectionNodeIds.has(node.capacityMeshNodeId)) {
         endNodeId = node.capacityMeshNodeId
         break
@@ -101,6 +108,7 @@ export const computeSectionNodesTerminalsAndEdges = (opts: {
       })
     }
   }
+
   return {
     sectionConnectionTerminals,
     sectionNodes,

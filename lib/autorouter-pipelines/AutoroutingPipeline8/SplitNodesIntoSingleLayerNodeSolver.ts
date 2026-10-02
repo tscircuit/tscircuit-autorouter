@@ -37,15 +37,18 @@ export class SplitNodesIntoSingleLayerNodeSolver extends BaseSolver {
   override _step() {
     this.outputNodes = this.params.capacityMeshNodes.flatMap((node) => {
       const availableZ = uniqueSorted(node.availableZ)
+
       return availableZ.map((z) => {
         const capacityMeshNodeId = getSingleLayerNodeId(
           node.capacityMeshNodeId,
           z,
         )
+
         this.nodeIdByOriginalAndZ.set(
           `${node.capacityMeshNodeId}:${z}`,
           capacityMeshNodeId,
         )
+
         return {
           ...node,
           capacityMeshNodeId,
@@ -83,7 +86,7 @@ export class SplitNodesIntoSingleLayerNodeSolver extends BaseSolver {
     return uniqueSorted(portPoint.availableZ).flatMap((z) => {
       const nodeIds = portPoint.nodeIds.map((nodeId) =>
         this.getSplitNodeId(nodeId, z),
-      ) as Array<CapacityMeshNodeId | undefined>
+      )
 
       if (!nodeIds[0] || !nodeIds[1]) {
         return []
@@ -104,10 +107,12 @@ export class SplitNodesIntoSingleLayerNodeSolver extends BaseSolver {
     segment: SharedEdgeSegment,
   ): SharedEdgeSegment[] {
     const portPointsByZ = new Map<number, SegmentPortPoint[]>()
+
     for (const portPoint of segment.portPoints.flatMap((portPoint) =>
       this.splitPortPoint(portPoint),
     )) {
       const z = portPoint.availableZ[0]
+
       if (z === undefined) continue
       const existing = portPointsByZ.get(z) ?? []
       existing.push(portPoint)

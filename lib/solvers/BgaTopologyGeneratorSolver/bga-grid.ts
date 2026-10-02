@@ -34,6 +34,7 @@ function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
 
   for (let index = 1; index < axisCoordinates.length; index++) {
     const diff = axisCoordinates[index]! - axisCoordinates[index - 1]!
+
     if (diff > AXIS_EPSILON) {
       positiveDiffs.push(diff)
     }
@@ -42,9 +43,11 @@ function estimateAdjacentAxisPitch(axisCoordinates: number[]): number | null {
   if (positiveDiffs.length === 0) return null
 
   const minimumDiff = Math.min(...positiveDiffs)
+
   const adjacentDiffs = positiveDiffs
     .filter((diff) => diff <= minimumDiff * 1.5)
     .sort((a, b) => a - b)
+
   const medianIndex = Math.floor(adjacentDiffs.length / 2)
 
   return adjacentDiffs.length % 2 === 0
@@ -67,9 +70,11 @@ export class BgaGrid {
     const observedXCoordinates = getUniqueSortedAxisCoordinates(
       obstacles.map((obstacle) => obstacle.center.x),
     )
+
     const observedYCoordinates = getUniqueSortedAxisCoordinates(
       obstacles.map((obstacle) => obstacle.center.y),
     )
+
     const pitchX = estimateAdjacentAxisPitch(observedXCoordinates)
     const pitchY = estimateAdjacentAxisPitch(observedYCoordinates)
 
@@ -116,6 +121,7 @@ export class BgaGrid {
 
     for (const obstacle of params.obstacles) {
       const bgaSlot = this.getSlotForObstacle(obstacle)
+
       if (!bgaSlot) continue
       this.slots.set(this.getSlotKey(bgaSlot.row, bgaSlot.col), {
         ...bgaSlot,
@@ -137,6 +143,7 @@ export class BgaGrid {
 
     for (let axisIndex = 0; axisIndex < axisCoordinates.length; axisIndex++) {
       const distance = Math.abs(axisCoordinates[axisIndex]! - coordinate)
+
       if (distance < closestDistance) {
         closestDistance = distance
         closestAxisIndex = axisIndex
@@ -162,7 +169,9 @@ export class BgaGrid {
     const col = this.getAxisIndex(this.xCoordinates, obstacle.center.x)
 
     if (row === null || col === null) return null
+
     if (row < 0 || row >= this.rowCount) return null
+
     if (col < 0 || col >= this.colCount) return null
 
     return { row, col }

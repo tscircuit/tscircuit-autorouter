@@ -21,5 +21,6 @@ export const getPortPairMap = (
       portPairMap.get(portPoint.connectionName)!.end = portPoint
     }
   })
+
   return portPairMap
 }

@@ -31,8 +31,10 @@ export const shouldIgnoreSide = ({
         ) {
           const overlapMinX = Math.max(bounds.minX, obsMinX)
           const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
+
           if (overlapMaxX - overlapMinX > margin) return true
         }
+
         break
       case "bottom":
         if (
@@ -41,8 +43,10 @@ export const shouldIgnoreSide = ({
         ) {
           const overlapMinX = Math.max(bounds.minX, obsMinX)
           const overlapMaxX = Math.min(bounds.maxX, obsMaxX)
+
           if (overlapMaxX - overlapMinX > margin) return true
         }
+
         break
       case "left":
         if (
@@ -51,8 +55,10 @@ export const shouldIgnoreSide = ({
         ) {
           const overlapMinY = Math.max(bounds.minY, obsMinY)
           const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
+
           if (overlapMaxY - overlapMinY > margin) return true
         }
+
         break
       case "right":
         if (
@@ -61,10 +67,13 @@ export const shouldIgnoreSide = ({
         ) {
           const overlapMinY = Math.max(bounds.minY, obsMinY)
           const overlapMaxY = Math.min(bounds.maxY, obsMaxY)
+
           if (overlapMaxY - overlapMinY > margin) return true
         }
+
         break
     }
   }
+
   return false
 }

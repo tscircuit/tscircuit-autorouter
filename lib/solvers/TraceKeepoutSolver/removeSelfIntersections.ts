@@ -39,6 +39,7 @@ function getSegmentIntersection(
 
   // Check if intersection is within both segments (excluding endpoints for self-intersection)
   const epsilon = 1e-6
+
   if (t > epsilon && t < 1 - epsilon && u > epsilon && u < 1 - epsilon) {
     return {
       x: p1.x + t * d1x,
@@ -68,6 +69,7 @@ function isJumperEndpoint(
       return true
     }
   }
+
   return false
 }
 
@@ -87,6 +89,7 @@ function rangeContainsJumperEndpoint(
       return true
     }
   }
+
   return false
 }
 

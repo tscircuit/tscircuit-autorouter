@@ -36,33 +36,42 @@ export const GenericSolverDebugger = ({
 }: GenericSolverDebuggerProps) => {
   const [mainSolver, setMainSolver] = useState<BaseSolver>(() => {
     const solver = createSolver()
+
     if (autoStepOnce) {
       solver.step()
     }
+
     return solver
   })
+
   const [previewMode, setPreviewMode] = useState(false)
   const [objectSelectionEnabled, setObjectSelectionEnabled] = useState(false)
   const [forcedUpdates, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [speedLevel, setSpeedLevel] = useState(0)
+
   const [showDeepestVisualization, setShowDeepestVisualization] = useState(
     showDeepestVisualizationInitial,
   )
+
   const [selectedSolverKey, setSelectedSolverKey] = useState<"main" | number>(
     "main",
   )
+
   const [renderer, setRenderer] = useState<"canvas" | "vector">(
     window.localStorage.getItem("lastRenderer") === "vector"
       ? "vector"
       : "canvas",
   )
+
   const [lastTargetIteration, setLastTargetIteration] = useState<number>(
     parseInt(window.localStorage.getItem("lastTargetIteration") || "0", 10),
   )
+
   const [selectedStatKey, setSelectedStatKey] = useState<string | null>(
     window.localStorage.getItem("lastSelectedStatKey") || null,
   )
+
   const [showStatSelectionDialog, setShowStatSelectionDialog] = useState(false)
 
   const selectedSolver = useMemo(() => {
@@ -77,6 +86,7 @@ export const GenericSolverDebugger = ({
   }, [mainSolver, selectedSolverKey])
 
   const speedLevels = [1, 2, 5, 10, 100, 500, 1000, 2000]
+
   const speedLabels = [
     "1x",
     "2x",
@@ -91,9 +101,11 @@ export const GenericSolverDebugger = ({
   // Reset solver
   const resetSolver = () => {
     setMainSolver(createSolver())
+
     if (autoStepOnce) {
       mainSolver.step()
     }
+
     setSelectedSolverKey("main")
     setSelectedStatKey(null)
   }
@@ -109,15 +121,18 @@ export const GenericSolverDebugger = ({
   const stepWithStats = () => {
     const nextCandidate =
       (mainSolver as any).lastCandidate || (mainSolver as any).candidates?.[0]
+
     if (nextCandidate) {
       if (nextCandidate.f < stats.current.bestF) {
         stats.current.bestF = nextCandidate.f
         stats.current.bestCandidateIteration = mainSolver.iterations
       }
+
       stats.current.lastF = nextCandidate.f
       stats.current.lastG = nextCandidate.g
       stats.current.lastH = nextCandidate.h
     }
+
     mainSolver.step()
   }
 
@@ -133,8 +148,10 @@ export const GenericSolverDebugger = ({
           if (mainSolver.solved || mainSolver.failed) {
             break
           }
+
           stepWithStats()
         }
+
         setForceUpdate((prev) => prev + 1)
       }, animationSpeed)
     }
@@ -158,6 +175,7 @@ export const GenericSolverDebugger = ({
   const handleStepStat = () => {
     if (!selectedStatKey) {
       setShowStatSelectionDialog(true)
+
       return
     }
 
@@ -176,6 +194,7 @@ export const GenericSolverDebugger = ({
     ) {
       stepWithStats()
       safetyBreak++
+
       // Check if the stat exists and has changed
       if (
         mainSolver.stats.hasOwnProperty(selectedStatKey) &&
@@ -197,6 +216,7 @@ export const GenericSolverDebugger = ({
   // Substep function for deepest active subsolver
   const handleSubStep = () => {
     let deepestSolver = mainSolver.activeSubSolver
+
     while (deepestSolver?.activeSubSolver) {
       deepestSolver = deepestSolver.activeSubSolver
     }
@@ -247,6 +267,7 @@ export const GenericSolverDebugger = ({
       if (onSolverStarted) {
         onSolverStarted(mainSolver)
       }
+
       mainSolver.solve()
       setForceUpdate((prev) => prev + 1)
     }
@@ -271,6 +292,7 @@ export const GenericSolverDebugger = ({
 
     if (Number.isNaN(targetIterations) || targetIterations < 0) {
       alert("Please enter a valid positive number")
+
       return
     }
 
@@ -320,6 +342,7 @@ export const GenericSolverDebugger = ({
   // Increase animation speed
   const increaseSpeed = () => {
     setSpeedLevel((prev) => Math.min(prev + 1, speedLevels.length - 1))
+
     if (!isAnimating) {
       setIsAnimating(true)
     }
@@ -331,6 +354,7 @@ export const GenericSolverDebugger = ({
   }
 
   let deepestActiveSubSolver = mainSolver.activeSubSolver
+
   while (deepestActiveSubSolver?.activeSubSolver) {
     deepestActiveSubSolver = deepestActiveSubSolver.activeSubSolver
   }
@@ -339,28 +363,34 @@ export const GenericSolverDebugger = ({
   const solverChain = useMemo(() => {
     const chain: BaseSolver[] = [mainSolver]
     let current = mainSolver.activeSubSolver
+
     while (current) {
       chain.push(current)
       current = current.activeSubSolver
     }
+
     return chain
   }, [mainSolver, forcedUpdates])
 
   // Download solver input for a specific solver
   const downloadSolverInput = (solver: BaseSolver) => {
     let params: any
+
     try {
       params = solver.getConstructorParams()
     } catch (e: any) {
       window.alert(`Unable to get constructor params: ${e.toString()}`)
+
       return
     }
 
     try {
       const paramsJson = JSON.stringify(prepareParamsForDownload(params))
+
       const blob = new Blob([paramsJson], {
         type: "application/json",
       })
+
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.download = `${solver.constructor.name}_input.json`
@@ -386,9 +416,11 @@ export const GenericSolverDebugger = ({
       if (previewMode) {
         return selectedSolver?.preview() || { points: [], lines: [] }
       }
+
       return selectedSolver?.visualize() || { points: [], lines: [] }
     } catch (error) {
       console.error("Visualization error:", error)
+
       return { points: [], lines: [] }
     }
   }, [
@@ -642,6 +674,7 @@ export const GenericSolverDebugger = ({
               onChange={(e) => {
                 const newKey = e.target.value || null
                 setSelectedStatKey(newKey)
+
                 if (newKey) {
                   window.localStorage.setItem("lastSelectedStatKey", newKey)
                 } else {
@@ -667,6 +700,7 @@ export const GenericSolverDebugger = ({
                 className="border rounded-md px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
                 onClick={() => {
                   setShowStatSelectionDialog(false)
+
                   // Optionally trigger the first step immediately after selection
                   if (selectedStatKey) {
                     handleStepStat() // Call handleStepStat again now that a key is selected
@@ -721,7 +755,7 @@ export const GenericSolverDebugger = ({
               )}
             {selectedSolver?.cacheKey && (
               <div className="border p-2 rounded mb-2 whitespace-pre">
-                Cache Key: {selectedSolver.cacheKey as string}
+                Cache Key: {selectedSolver.cacheKey}
               </div>
             )}
             {(selectedSolver as any)?.candidates !== undefined && (
@@ -793,16 +827,19 @@ export const GenericSolverDebugger = ({
               onClick={() => {
                 if (!deepestActiveSubSolver) {
                   window.alert("No active sub solver found")
+
                   return
                 }
 
                 let params: any
+
                 try {
                   params = deepestActiveSubSolver.getConstructorParams()
                 } catch (e: any) {
                   window.alert(
                     `Unable to get constructor params: ${e.toString()}`,
                   )
+
                   return
                 }
 
@@ -810,9 +847,11 @@ export const GenericSolverDebugger = ({
                   const paramsJson = JSON.stringify(
                     prepareParamsForDownload(params),
                   )
+
                   const blob = new Blob([paramsJson], {
                     type: "application/json",
                   })
+
                   const url = URL.createObjectURL(blob)
                   const a = document.createElement("a")
                   a.download = `${deepestActiveSubSolver.constructor.name}_input.json`

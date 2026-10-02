@@ -25,8 +25,11 @@ type Point = { x: number; y: number }
 
 // Bound whole-board DRC evaluations across all errors and both passes.
 const MAX_CANDIDATE_EVALUATIONS = 256
+
 const MAX_CANDIDATE_ROUTE_EVALUATIONS = 16_384
+
 const CANDIDATE_RADIAL_FACTORS = [0.9, 0.72]
+
 const CANDIDATE_ANGLES = Array.from(
   { length: 16 },
   (_, angleIndex) => (angleIndex * Math.PI) / 8,
@@ -34,7 +37,9 @@ const CANDIDATE_ANGLES = Array.from(
 
 const isObstacleTraceError = (error: Pipeline9DrcError) => {
   if (error.type === "pcb_pad_trace_clearance_error") return true
+
   if (error.type !== "pcb_trace_error") return false
+
   return !(
     Array.isArray(error.pcb_trace_ids) && error.pcb_trace_ids.length >= 2
   )
@@ -42,13 +47,17 @@ const isObstacleTraceError = (error: Pipeline9DrcError) => {
 
 const getErrorObstacleId = (error: Pipeline9DrcError) => {
   if (typeof error.pcb_pad_id === "string") return error.pcb_pad_id
+
   if (typeof error.pcb_trace_error_id === "string") {
     const id = error.pcb_trace_error_id.match(
       /(pcb_(?:smtpad|plated_hole|hole|keepout)_\d+)$/,
     )?.[1]
+
     if (id) return id
   }
+
   const message = typeof error.message === "string" ? error.message : ""
+
   return message.match(
     /(?:pcb_smtpad|pcb_plated_hole|pcb_hole|pcb_keepout)\[#?([^\]"]+)\]/,
   )?.[1]
@@ -59,9 +68,11 @@ const getObstacleById = (
   obstacleId: string | undefined,
 ) => {
   if (!obstacleId) return undefined
+
   const normalizedId = obstacleId.startsWith("pcb_")
     ? obstacleId
     : `pcb_${obstacleId}`
+
   return srj.obstacles.find(
     (obstacle) =>
       obstacle.obstacleId === normalizedId ||
@@ -71,6 +82,7 @@ const getObstacleById = (
 
 const getPcbPortPositionMap = (srj: SimpleRouteJson) => {
   const portPositionMap = new Map<string, Point>()
+
   for (const connection of srj.connections) {
     for (const point of connection.pointsToConnect) {
       if (point.pcb_port_id) {
@@ -78,6 +90,7 @@ const getPcbPortPositionMap = (srj: SimpleRouteJson) => {
       }
     }
   }
+
   return portPositionMap
 }
 
@@ -99,14 +112,18 @@ const getTerminalObstacle = ({
 }): Obstacle | undefined => {
   const layer = mapZToLayerName(z, srj.layerCount)
   const portPosition = portPositionMap.get(pcbPortId)
+
   const candidates = srj.obstacles.filter(
     (obstacle) =>
       obstacle.layers.includes(layer) &&
       obstacle.connectedTo.includes(pcbPortId),
   )
+
   if (!portPosition) return candidates[0]
+
   return candidates.reduce<Obstacle | undefined>((nearest, candidate) => {
     if (!nearest) return candidate
+
     return Math.hypot(
       candidate.center.x - portPosition.x,
       candidate.center.y - portPosition.y,
@@ -136,21 +153,26 @@ const getTerminalCandidates = ({
 }) => {
   const halfWidth = Math.max(0, terminalObstacle.width / 2 - traceRadius)
   const halfHeight = Math.max(0, terminalObstacle.height / 2 - traceRadius)
+
   const rotationRadians =
     ((terminalObstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+
   const candidates = CANDIDATE_RADIAL_FACTORS.flatMap((radialFactor) =>
     CANDIDATE_ANGLES.map((angle) => {
       const localPoint = {
         x: Math.cos(angle) * halfWidth * radialFactor,
         y: Math.sin(angle) * halfHeight * radialFactor,
       }
+
       const rotatedPoint = rotatePoint(localPoint, rotationRadians)
+
       return {
         x: terminalObstacle.center.x + rotatedPoint.x,
         y: terminalObstacle.center.y + rotatedPoint.y,
       }
     }),
   )
+
   return candidates
     .sort(
       (left, right) =>
@@ -183,15 +205,19 @@ const createTerminalCandidate = ({
 }): HighDensityRoute[] | undefined => {
   const candidateRoutes = clonePipeline9HdRoutes(routes)
   const route = candidateRoutes[routeIndex]
+
   if (!route || route.route.length < 2) return undefined
   const pointIndex = endpointIndex === 0 ? 0 : route.route.length - 1
   const adjacentPointIndex = endpointIndex === 0 ? 1 : pointIndex - 1
   const endpoint = route.route[pointIndex]
   const adjacentPoint = route.route[adjacentPointIndex]
+
   if (!endpoint || !adjacentPoint || endpoint.z !== adjacentPoint.z) {
     return undefined
   }
+
   const radius = route.traceThickness / 2
+
   if (
     point.x - radius < bounds.minX ||
     point.x + radius > bounds.maxX ||
@@ -200,14 +226,19 @@ const createTerminalCandidate = ({
   ) {
     return undefined
   }
+
   route.route[pointIndex] = { ...endpoint, ...point }
+
   if (collapseAdjacent) {
     const nextInteriorPointIndex =
       endpointIndex === 0 ? adjacentPointIndex + 1 : adjacentPointIndex - 1
+
     const nextInteriorPoint = route.route[nextInteriorPointIndex]
+
     const adjacentIsVia = route.vias.some(
       (via) => via.x === adjacentPoint.x && via.y === adjacentPoint.y,
     )
+
     if (
       !nextInteriorPoint ||
       nextInteriorPoint.z !== endpoint.z ||
@@ -216,8 +247,10 @@ const createTerminalCandidate = ({
     ) {
       return undefined
     }
+
     route.route[adjacentPointIndex] = { ...adjacentPoint, ...point }
   }
+
   return candidateRoutes
 }
 
@@ -246,6 +279,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
+
   // Each candidate invokes full-board DRC. Bound the total route evaluation
   // work on large conflicted boards, but retain the full near-clean search.
   const candidateBudget =
@@ -261,32 +295,41 @@ export const applyPipeline9TerminalEscapeRelocations = ({
             ),
           ),
         )
+
   const portPositionMap = getPcbPortPositionMap(originalSrj)
 
   for (let pass = 0; pass < 2; pass++) {
     let acceptedOnPass = false
+
     const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
       newConnections,
       syntheticConnectionNames,
     })
+
     for (const error of currentErrors.filter(isObstacleTraceError)) {
       if (attemptedCandidateCount >= candidateBudget) break
+
       if (typeof error.pcb_trace_id !== "string") continue
       const routeIndex = routeIndexByTraceId.get(error.pcb_trace_id)
+
       const conflictingObstacle = getObstacleById(
         srj,
         getErrorObstacleId(error),
       )
+
       if (routeIndex === undefined || !conflictingObstacle) continue
       const route = currentRoutes[routeIndex]!
 
       let bestRoutes = currentRoutes
       let bestErrors = currentErrors
+
       candidateSearch: for (const endpointIndex of [0, -1] as const) {
         const endpoint =
           endpointIndex === 0 ? route.route[0] : route.route.at(-1)
+
         if (!endpoint || typeof endpoint.pcb_port_id !== "string") continue
+
         const terminalObstacle = getTerminalObstacle({
           // Routing envelopes can extend outside a rotated pad. Terminal
           // relocation must stay inside the original physical copper.
@@ -295,14 +338,17 @@ export const applyPipeline9TerminalEscapeRelocations = ({
           z: endpoint.z,
           portPositionMap,
         })
+
         if (!terminalObstacle || terminalObstacle === conflictingObstacle) {
           continue
         }
+
         const maximumRelevantDistance =
           Math.hypot(conflictingObstacle.width, conflictingObstacle.height) /
             2 +
           Math.hypot(terminalObstacle.width, terminalObstacle.height) / 2 +
           0.5
+
         if (
           Math.hypot(
             endpoint.x - conflictingObstacle.center.x,
@@ -311,6 +357,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
         ) {
           continue
         }
+
         for (const point of getTerminalCandidates({
           terminalObstacle,
           conflictingObstacle,
@@ -320,6 +367,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
             if (attemptedCandidateCount >= candidateBudget) {
               break candidateSearch
             }
+
             const candidateRoutes = createTerminalCandidate({
               routes: currentRoutes,
               routeIndex,
@@ -328,12 +376,15 @@ export const applyPipeline9TerminalEscapeRelocations = ({
               bounds: srj.bounds,
               collapseAdjacent,
             })
+
             if (!candidateRoutes) continue
             attemptedCandidateCount++
+
             const candidateErrors = getPipeline9DrcErrors(
               drcEvaluator,
               candidateRoutes,
             )
+
             if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
               bestRoutes = candidateRoutes
               bestErrors = candidateErrors
@@ -341,6 +392,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
           }
         }
       }
+
       if (bestRoutes !== currentRoutes) {
         currentRoutes = bestRoutes
         currentErrors = bestErrors
@@ -348,6 +400,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
         acceptedOnPass = true
       }
     }
+
     if (!acceptedOnPass || currentErrors.length === 0) break
   }
 
