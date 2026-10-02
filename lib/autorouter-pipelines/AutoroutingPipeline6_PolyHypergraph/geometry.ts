@@ -398,6 +398,7 @@ const solveLinearSystem = (matrix: number[][], values: number[]) => {
     if (Math.abs(augmented[pivot]![col]!) < EPSILON) {
       throw new Error("Could not solve homography")
     }
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;[augmented[col], augmented[pivot]] = [augmented[pivot]!, augmented[col]!]
 
     const pivotValue = augmented[col]![col]!

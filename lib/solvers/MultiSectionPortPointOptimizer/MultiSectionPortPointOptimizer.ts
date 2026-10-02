@@ -109,6 +109,7 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1))
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;[result[i], result[j]] = [result[j], result[i]]
   }
 

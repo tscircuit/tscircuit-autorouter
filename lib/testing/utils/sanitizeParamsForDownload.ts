@@ -243,6 +243,7 @@ export const sanitizeParamsForDownload = (
           typeof propertyValue === "object" && propertyValue !== null
             ? (seen.get(propertyValue) ?? childPath)
             : childPath
+        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;(frame.target as Record<string, unknown>)[key] = createReferenceMarker(
           propertyValue,
           parentPath,

@@ -801,6 +801,7 @@ export class HdCache2Client {
         ),
       )
     }, HD_CACHE2_TRANSPORT_TIMEOUT_MS)
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;(
       timeoutId as ReturnType<typeof setTimeout> & { unref?: () => void }
     ).unref?.()
@@ -1056,6 +1057,7 @@ export class HdCache2Client {
         ),
       )
     }, HD_CACHE2_TRANSPORT_TIMEOUT_MS)
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;(
       timeoutId as ReturnType<typeof setTimeout> & { unref?: () => void }
     ).unref?.()

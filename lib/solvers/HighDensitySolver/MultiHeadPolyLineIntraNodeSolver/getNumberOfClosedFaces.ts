@@ -193,6 +193,7 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
         const idx = nbrs.indexOf(currU)
 
         const next = nbrs[(idx - 1 + nbrs.length) % nbrs.length]
+        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;[currU, currV] = [currV, next]
       } while (!(currU === u && currV === v))
 

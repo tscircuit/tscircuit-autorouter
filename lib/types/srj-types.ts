@@ -156,6 +156,7 @@ export interface Obstacle {
   isFanoutSourceKeepout?: boolean
   /** Non-plated hole geometry. Must have no electrical connections. */
   isNonPlatedHole?: boolean
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
   shape?: "circle"
   /**
    * Optional Circuit JSON provenance carried through SRJ.

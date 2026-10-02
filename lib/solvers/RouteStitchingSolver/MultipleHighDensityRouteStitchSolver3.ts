@@ -268,6 +268,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             params.layerCount,
           ),
         }
+        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,

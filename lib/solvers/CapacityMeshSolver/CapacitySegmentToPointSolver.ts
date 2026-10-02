@@ -91,6 +91,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           y: (seg.start.y + seg.end.y) / 2,
           z: seg.availableZ[0],
         }
+        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;(seg as any).assignedPoints = [
           {
             connectionName: seg.connectionNames[0],
@@ -133,6 +134,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           z: candidate.availableZ[0],
         })
       }
+      // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
       ;(candidate as any).assignedPoints = sortedConnections.map(
         (conn, idx) => ({
           connectionName: conn,

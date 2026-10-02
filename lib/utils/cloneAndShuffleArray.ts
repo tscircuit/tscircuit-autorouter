@@ -108,6 +108,7 @@ export function cloneAndShuffleArray<T>(arr: T[], seed: number): T[] {
     const i1 = Math.floor(random() * shuffled.length)
 
     const i2 = Math.floor(random() * (i + 1))
+    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;[shuffled[i1], shuffled[i2]] = [shuffled[i2], shuffled[i1]]
   }
 

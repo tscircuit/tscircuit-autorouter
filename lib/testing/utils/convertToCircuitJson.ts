@@ -747,6 +747,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       if (obstacle.shape === "circle") {
         pads.push({
           ...common,
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           hole_shape: "circle",
           hole_diameter: obstacle.width,
         })
@@ -762,6 +763,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         const swapDimensions = rotation % 180 !== 0
         pads.push({
           ...common,
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           hole_shape: "rect",
           hole_width: swapDimensions ? obstacle.height : obstacle.width,
           hole_height: swapDimensions ? obstacle.width : obstacle.height,
@@ -857,8 +859,11 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         pads.push({
           type: "pcb_plated_hole",
           pcb_plated_hole_id: id,
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           shape: "rotated_pill_hole_with_rect_pad",
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           hole_shape: "rotated_pill",
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           pad_shape: "rect",
           hole_width: holeDiameter,
           hole_height: holeDiameter,
@@ -882,6 +887,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         pads.push({
           type: "pcb_plated_hole",
           pcb_plated_hole_id: id,
+          // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
           shape: "circle",
           outer_diameter: Math.max(width, height),
           hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
@@ -896,7 +902,9 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       pads.push({
         type: "pcb_plated_hole",
         pcb_plated_hole_id: id,
+        // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
         shape: "circular_hole_with_rect_pad",
+        // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
         hole_shape: "circle",
         hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
         rect_pad_width: width,
@@ -928,6 +936,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         type: "pcb_smtpad",
         pcb_smtpad_id: id,
         layer: layers[0],
+        // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
         shape: "rotated_rect",
         x,
         y,
@@ -943,6 +952,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       type: "pcb_smtpad",
       pcb_smtpad_id: id,
       layer: layers[0],
+      // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
       shape: "rect",
       width,
       height,
@@ -1109,8 +1119,10 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
     width: maxX - minX,
     height: maxY - minY,
     ...(srj.outline
-      ? { outline: srj.outline, shape: "polygon" as const }
-      : { shape: "rect" as const }),
+      ? // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
+        { outline: srj.outline, shape: "polygon" as const }
+      : // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
+        { shape: "rect" as const }),
     material: "fr4",
     min_trace_to_hole_edge_clearance: srj.minTraceToHoleEdgeClearance,
     ...(srj.minBoardEdgeClearance !== undefined

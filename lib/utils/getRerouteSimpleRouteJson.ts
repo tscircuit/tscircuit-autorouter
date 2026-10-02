@@ -8,6 +8,7 @@ import type {
 } from "lib/types"
 
 export type RerouteRectRegion = {
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Public SRJ/Circuit JSON geometry key; renaming would change the wire schema.
   shape: "rect"
   minX: number
   maxX: number
