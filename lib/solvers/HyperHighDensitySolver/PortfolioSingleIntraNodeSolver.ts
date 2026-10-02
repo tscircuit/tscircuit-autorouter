@@ -221,10 +221,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
-    if (this.deferParameterSweeps && this.getNodeSegmentCount() === 1) {
-      return [["throughObstacle"], ["defaultSearch"], ["closedFormSingleTrace"]]
-    }
-
     if (this.deferParameterSweeps) {
       return [
         ["throughObstacle"],
@@ -495,21 +491,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ),
     )
     for (const combinationDef of [
-      ["throughObstacle"],
-      ["singleLayerNoDifferentRootIntersections"],
-      ["multiHeadPolyLine"],
-      ["defaultSearch"],
-      ["noVias"],
-      ["closedFormSingleTrace"],
-      ["highDensityA01"],
-      ["highDensityA03"],
-      ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
       ["majorCombinations", "orderings6", "cellSizeFactor"],
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
     ]) {
       const combinations = this.getHyperParameterCombinations(
-        hyperParameterDefs.filter(({ name }) => combinationDef.includes(name)),
+        hyperParameterDefs.filter(({ name }) =>
+          combinationDef.includes(name),
+        ),
       )
       for (const hyperParameters of combinations) {
         const candidateKey = JSON.stringify(
