@@ -1,11 +1,6 @@
 import type { ConnectionPoint, SimpleRouteConnection } from "lib/types"
 import { getConnectionPointLayers } from "./connection-point-utils"
 
-type ChainVertex = {
-  point: ConnectionPoint
-  connections: SimpleRouteConnection[]
-}
-
 function pointsShareTerminal(a: ConnectionPoint, b: ConnectionPoint): boolean {
   if (a.pcb_port_id && b.pcb_port_id) return a.pcb_port_id === b.pcb_port_id
   if (a.pointId && b.pointId) return a.pointId === b.pointId
@@ -24,48 +19,41 @@ export function orderPointPairChain(connections: SimpleRouteConnection[]): {
   start: ConnectionPoint
   end: ConnectionPoint
 } {
-  const vertices: ChainVertex[] = []
-  const endpoints = new Map<SimpleRouteConnection, ChainVertex[]>()
-  for (const connection of connections) {
+  const terminals = connections.flatMap((connection) => {
     if (connection.pointsToConnect.length !== 2)
       throw new Error("Differential pair chain requires point-pair connections")
-    const terminals: ChainVertex[] = []
-    for (const point of connection.pointsToConnect) {
-      let vertex = vertices.find((candidate) =>
-        pointsShareTerminal(candidate.point, point),
-      )
-      if (!vertex) {
-        vertex = { point, connections: [] }
-        vertices.push(vertex)
-      }
-      vertex.connections.push(connection)
-      terminals.push(vertex)
-    }
-    endpoints.set(connection, terminals)
-  }
-  const leaves = vertices.filter((vertex) => vertex.connections.length === 1)
-  if (
-    leaves.length !== 2 ||
-    vertices.some((vertex) => vertex.connections.length > 2)
+    return connection.pointsToConnect
+  })
+  const leaves = terminals.filter(
+    (point) =>
+      terminals.filter((other) => pointsShareTerminal(point, other)).length ===
+      1,
   )
+  if (leaves.length !== 2)
     throw new Error("Differential pair member must form one unbranched path")
 
+  const remaining = new Set(connections)
   const ordered: SimpleRouteConnection[] = []
-  const visited = new Set<SimpleRouteConnection>()
   let current = leaves[0]!
-  while (true) {
-    const connection = current.connections.find(
-      (candidate) => !visited.has(candidate),
+  while (remaining.size > 0) {
+    const matches = [...remaining].filter((connection) =>
+      connection.pointsToConnect.some((point) =>
+        pointsShareTerminal(point, current),
+      ),
     )
-    if (!connection) break
-    visited.add(connection)
-    ordered.push(connection)
-    const next = endpoints.get(connection)!.find((vertex) => vertex !== current)
+    if (matches.length !== 1)
+      throw new Error(
+        "Differential pair member must form one connected, unbranched path",
+      )
+    const connection = matches[0]!
+    const next = connection.pointsToConnect.find(
+      (point) => !pointsShareTerminal(point, current),
+    )
     if (!next)
       throw new Error("Differential pair chain contains a self connection")
+    ordered.push(connection)
+    remaining.delete(connection)
     current = next
   }
-  if (ordered.length !== connections.length || current !== leaves[1])
-    throw new Error("Differential pair member must form one connected path")
-  return { connections: ordered, start: leaves[0]!.point, end: current.point }
+  return { connections: ordered, start: leaves[0]!, end: current }
 }

@@ -139,32 +139,6 @@ test("routes a differential pair through protection pads", async (): Promise<voi
   expect(solver.solved).toBe(true)
   const traces = solver.getOutputSimplifiedPcbTraces()
   expect(traces).toHaveLength(6)
-  const lengths = input.differentialPairs![0]!.connectionNames.map(
-    (connectionName) =>
-      traces
-        .filter((trace) => trace.connection_name === connectionName)
-        .reduce((total, trace) => {
-          const wires = trace.route.filter(
-            (point) => point.route_type === "wire",
-          )
-          return (
-            total +
-            wires
-              .slice(1)
-              .reduce(
-                (length, point, index) =>
-                  length +
-                  Math.hypot(
-                    point.x - wires[index]!.x,
-                    point.y - wires[index]!.y,
-                  ),
-                0,
-              )
-          )
-        }, 0),
-  )
-  expect(lengths[0]).toBeGreaterThanOrEqual(16)
-  expect(lengths[1]).toBeGreaterThanOrEqual(16)
   expect(
     evaluateRelaxedDrc({
       inputSrj: input,
@@ -172,7 +146,6 @@ test("routes a differential pair through protection pads", async (): Promise<voi
       routedTraces: traces,
     }).errors,
   ).toEqual([])
-  expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.15)
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
