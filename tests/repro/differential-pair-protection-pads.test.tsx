@@ -3,9 +3,11 @@ import { RootCircuit, getSimpleRouteJsonFromCircuitJson } from "@tscircuit/core"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
+import { getSvgFromGraphicsObject } from "graphics-debug"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 
-test("differential pair with protection pads is rejected before topology planning", async (): Promise<void> => {
+test("routes a differential pair through protection pads", async (): Promise<void> => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   // U1 models the two flow-through protection pads on each conductor.
@@ -133,32 +135,54 @@ test("differential pair with protection pads is rejected before topology plannin
     cacheProvider: null,
   })
   solver.solve()
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(solver.error).toBe(
-    `Differential pair connection "${positiveNet.source_net_id}" resolves to 3 point-pair connections; exactly one is supported. Declare each constrained point-to-point segment as a separate differential pair.`,
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  const traces = solver.getOutputSimplifiedPcbTraces()
+  expect(traces).toHaveLength(6)
+  const lengths = input.differentialPairs![0]!.connectionNames.map(
+    (connectionName) =>
+      traces
+        .filter((trace) => trace.connection_name === connectionName)
+        .reduce((total, trace) => {
+          const wires = trace.route.filter(
+            (point) => point.route_type === "wire",
+          )
+          return (
+            total +
+            wires
+              .slice(1)
+              .reduce(
+                (length, point, index) =>
+                  length +
+                  Math.hypot(
+                    point.x - wires[index]!.x,
+                    point.y - wires[index]!.y,
+                  ),
+                0,
+              )
+          )
+        }, 0),
   )
-  expect(solver.netToPointPairsSolver?.newConnections).toHaveLength(6)
-  expect(solver.topologyPlanningSolver).toBeUndefined()
-  expect(solver.effortCleanupSolver).toBeUndefined()
+  expect(lengths[0]).toBeGreaterThanOrEqual(16)
+  expect(lengths[1]).toBeGreaterThanOrEqual(16)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
+    }).errors,
+  ).toEqual([])
+  expect(Math.abs(lengths[0]! - lengths[1]!)).toBeLessThanOrEqual(0.15)
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "input" })
-  const rejectedGraphics: GraphicsObject = convertSrjToGraphicsObject(input)
-  rejectedGraphics.texts = [
-    {
-      x: -8,
-      y: 4,
-      fontSize: 0.4,
-      anchorSide: "center_left",
-      text: "Rejected before routing: 3 segments per pair member",
-    },
-  ]
   await expect(
-    getSvgFromGraphicsObject(rejectedGraphics, {
-      backgroundColor: "white",
+    getBugReportSnapshotSvg({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "before-rejection" })
 })
