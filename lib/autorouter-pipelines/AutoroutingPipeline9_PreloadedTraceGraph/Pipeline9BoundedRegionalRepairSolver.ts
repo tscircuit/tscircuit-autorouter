@@ -97,7 +97,7 @@ type BoundedRepairState =
       repair: NegotiatedClearanceResult
     }
   | {
-      phase: "candidate-projection" | "candidate-nominal-projection"
+      phase: "candidate-projection" | "candidate-margin-projection"
       context: RegionalContext
       solver: Pipeline9ClearanceProjectionSolver
     }
@@ -576,7 +576,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       // The outer via guard compares the complete spliced proposal to this input.
       previousRoutes: context.currentRoutes,
       subdivideSegments: true,
-      usePrecisionMargin: true,
       drcEvaluator: (input): DrcResult => {
         this.result.referenceValidationCount++
         return this.params.drcEvaluator(input)
@@ -817,26 +816,27 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         this.completeNegotiation(state)
         break
       case "candidate-projection": {
-        // Added slack can be infeasible in an exact-fit channel. Reproject the
-        // retained bends at the required clearance before spending more search.
+        // A clear nominal projection needs no extra slack. Otherwise refine
+        // its retained bends with the margin before spending more search.
         const solver = new Pipeline9ClearanceProjectionSolver({
           originalSrj: this.params.originalSrj,
           routes: state.solver.getOutput(),
           previousRoutes: state.context.currentRoutes,
+          usePrecisionMargin: true,
           drcEvaluator: (input): DrcResult => {
             this.result.referenceValidationCount++
             return this.params.drcEvaluator(input)
           },
         })
         this.state = {
-          phase: "candidate-nominal-projection",
+          phase: "candidate-margin-projection",
           context: state.context,
           solver,
         }
         this.startChild(solver)
         break
       }
-      case "candidate-nominal-projection":
+      case "candidate-margin-projection":
         this.state = {
           phase: "prepare-via-merge",
           context: state.context,

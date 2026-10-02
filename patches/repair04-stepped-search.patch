@@ -1450,10 +1450,10 @@ index 0000000..200cd0f
 +}
 diff --git a/lib/RelaxTraceClearanceSolver.ts b/lib/RelaxTraceClearanceSolver.ts
 new file mode 100644
-index 0000000..20a7c0d
+index 0000000..97768bd
 --- /dev/null
 +++ b/lib/RelaxTraceClearanceSolver.ts
-@@ -0,0 +1,677 @@
+@@ -0,0 +1,821 @@
 +import { BaseSolver } from "@tscircuit/solver-utils"
 +import type { RelaxTraceClearanceInput } from "./relaxTraceClearance"
 +import { getRepairCopperLayerSpan } from "./getRepairCopperLayerSpan"
@@ -1916,7 +1916,13 @@ index 0000000..20a7c0d
 +    }
 +  }
 +
-+  private project(weights: [Vertex, number][], nx: number, ny: number, deficit: number): void {
++  private project(
++    weights: [Vertex, number][],
++    nx: number,
++    ny: number,
++    deficit: number,
++    allowViaTangents: boolean,
++  ): void {
 +    const viaPadConstraints = this.viaPadConstraints
 +    const combined = new Map<Vertex, number>()
 +    for (const [vertex, weight] of weights) {
@@ -1930,7 +1936,7 @@ index 0000000..20a7c0d
 +    if (mass < 1e-15) return
 +    const scale = Math.min(0.05, deficit * 0.7) / mass
 +    for (const [vertex, weight] of combined) {
-+      const x = Math.max(
++      let x = Math.max(
 +        vertex.bounds.minX,
 +        vertex.original.x - MAX_DISPLACEMENT,
 +        Math.min(
@@ -1939,7 +1945,7 @@ index 0000000..20a7c0d
 +          vertex.x + nx * scale * weight,
 +        ),
 +      )
-+      const y = Math.max(
++      let y = Math.max(
 +        vertex.bounds.minY,
 +        vertex.original.y - MAX_DISPLACEMENT,
 +        Math.min(
@@ -1948,19 +1954,19 @@ index 0000000..20a7c0d
 +          vertex.y + ny * scale * weight,
 +        ),
 +      )
-+      // Wire constraints must never move a via through a fixed solder pad.
-+      // Test its proposed position against every nearby pad before moving it.
++      // Two via sites can slide around pads to satisfy drill spacing. Pad and
++      // wire constraints keep their original motion: their movable endpoints
++      // may include a shared via without representing a drill-spacing error.
++      const pads = viaPadConstraints.get(vertex)
++      if (pads?.some((pad): boolean => this.getViaPadDistance({ x, y }, pad) < pad.clearance)) {
++        if (!allowViaTangents) continue
++        const constrained = this.constrainViaDisplacement(vertex, { x, y }, pads)
++        x = constrained.x
++        y = constrained.y
++      }
++      // Keep the exact physical guard after constraining the displacement.
 +      if (
-+        viaPadConstraints.get(vertex)?.some((pad): boolean => {
-+          const dx = x - pad.center.x,
-+            dy = y - pad.center.y
-+          const localX = dx * pad.cosine + dy * pad.sine
-+          const localY = -dx * pad.sine + dy * pad.cosine
-+          const local = { x: localX, y: localY }
-+          return (
-+            getLocalObstacleDistance(local, local, pad.shape) < pad.clearance
-+          )
-+        })
++        pads?.some((pad): boolean => this.getViaPadDistance({ x, y }, pad) < pad.clearance)
 +      )
 +        continue
 +      if (vertex.x !== x || vertex.y !== y) vertex.revision++
@@ -1968,6 +1974,141 @@ index 0000000..20a7c0d
 +      vertex.y = y
 +    }
 +
++  }
++
++  private getViaPadDistance(point: Point, pad: ViaPadConstraint): number {
++    const dx = point.x - pad.center.x, dy = point.y - pad.center.y
++    const local = {
++      x: dx * pad.cosine + dy * pad.sine,
++      y: -dx * pad.sine + dy * pad.cosine,
++    }
++    return getLocalObstacleDistance(local, local, pad.shape)
++  }
++
++  private constrainViaDisplacement(
++    vertex: Vertex,
++    proposed: Point,
++    pads: ViaPadConstraint[],
++  ): Point {
++    const desired = { x: proposed.x - vertex.x, y: proposed.y - vertex.y }
++    const normals: Point[] = []
++    for (const pad of pads) {
++      if (this.getViaPadDistance(proposed, pad) >= pad.clearance) continue
++      const dx = vertex.x - pad.center.x, dy = vertex.y - pad.center.y
++      const local = {
++        x: dx * pad.cosine + dy * pad.sine,
++        y: -dx * pad.sine + dy * pad.cosine,
++      }
++      let nearest: Point
++      if (pad.shape.type === "rect") {
++        const bounds = pad.shape.bounds
++        nearest = {
++          x: Math.max(bounds.minX, Math.min(bounds.maxX, local.x)),
++          y: Math.max(bounds.minY, Math.min(bounds.maxY, local.y)),
++        }
++      } else {
++        const { a, b } = pad.shape
++        const vx = b.x - a.x, vy = b.y - a.y
++        const lengthSquared = vx * vx + vy * vy
++        const t = lengthSquared > 0
++          ? Math.max(0, Math.min(1,
++              ((local.x - a.x) * vx + (local.y - a.y) * vy) / lengthSquared))
++          : 0
++        nearest = { x: a.x + t * vx, y: a.y + t * vy }
++      }
++      const ux = local.x - nearest.x, uy = local.y - nearest.y
++      const normal = {
++        x: ux * pad.cosine - uy * pad.sine,
++        y: ux * pad.sine + uy * pad.cosine,
++      }
++      if (normal.x * normal.x + normal.y * normal.y > 1e-20)
++        normals.push(normal)
++    }
++
++    // In two dimensions the closest feasible displacement is either the
++    // origin or its projection onto one of the bounding tangent lines.
++    let displacement: Point = { x: 0, y: 0 }
++    let error = desired.x * desired.x + desired.y * desired.y
++    for (const normal of normals) {
++      const dot = desired.x * normal.x + desired.y * normal.y
++      const lengthSquared = normal.x * normal.x + normal.y * normal.y
++      const tangent = this.shortenDisplacement(vertex, {
++        x: desired.x - normal.x * dot / lengthSquared,
++        y: desired.y - normal.y * dot / lengthSquared,
++      })
++      // This tolerance only handles tangent dot-product rounding. The exact
++      // obstacle-distance guard still decides whether the position can move.
++      if (normals.some((other): boolean =>
++        tangent.x * other.x + tangent.y * other.y < -1e-15)) continue
++      const candidateError =
++        (tangent.x - desired.x) ** 2 + (tangent.y - desired.y) ** 2
++      if (candidateError < error) {
++        displacement = tangent
++        error = candidateError
++      }
++    }
++    return this.compensateTangentRounding(vertex, displacement, pads, normals)
++  }
++
++  private shortenDisplacement(vertex: Vertex, displacement: Point): Point {
++    const minX = Math.max(vertex.bounds.minX, vertex.original.x - MAX_DISPLACEMENT)
++    const maxX = Math.min(vertex.bounds.maxX, vertex.original.x + MAX_DISPLACEMENT)
++    const minY = Math.max(vertex.bounds.minY, vertex.original.y - MAX_DISPLACEMENT)
++    const maxY = Math.min(vertex.bounds.maxY, vertex.original.y + MAX_DISPLACEMENT)
++    let scale = 1
++    if (displacement.x > 0) scale = Math.min(scale, (maxX - vertex.x) / displacement.x)
++    if (displacement.x < 0) scale = Math.min(scale, (minX - vertex.x) / displacement.x)
++    if (displacement.y > 0) scale = Math.min(scale, (maxY - vertex.y) / displacement.y)
++    if (displacement.y < 0) scale = Math.min(scale, (minY - vertex.y) / displacement.y)
++    // Shorten the entire ray. Clipping its coordinates independently changes
++    // its direction and can send a pad-tangent displacement back into the pad.
++    return {
++      x: Math.max(minX, Math.min(maxX, vertex.x + displacement.x * scale)) - vertex.x,
++      y: Math.max(minY, Math.min(maxY, vertex.y + displacement.y * scale)) - vertex.y,
++    }
++  }
++
++  private compensateTangentRounding(
++    vertex: Vertex,
++    displacement: Point,
++    pads: ViaPadConstraint[],
++    normals: Point[],
++  ): Point {
++    const position = { x: vertex.x + displacement.x, y: vertex.y + displacement.y }
++    const coordinateScale = pads.reduce((scale, pad): number => Math.max(
++      scale, Math.abs(pad.center.x), Math.abs(pad.center.y), pad.clearance,
++    ), Math.max(1, Math.abs(vertex.x), Math.abs(vertex.y), Math.abs(position.x), Math.abs(position.y)))
++    const roundingMargin = 32 * Number.EPSILON * coordinateScale
++    const distances = pads.map((pad): number => this.getViaPadDistance(position, pad))
++    if (distances.every((distance, index): boolean => distance >= pads[index]!.clearance) ||
++        distances.some((distance, index): boolean => distance < pads[index]!.clearance - roundingMargin))
++      return position
++
++    // A rotated tangent may round a few ulps inside a pad. Move the candidate
++    // outward within the feasible normal cone; never relax the distance guard.
++    const unitNormals = normals.map((normal): Point => {
++      const length = Math.hypot(normal.x, normal.y)
++      return { x: normal.x / length, y: normal.y / length }
++    })
++    const outward = { x: 0, y: 0 }
++    for (const normal of unitNormals) {
++      for (const direction of [normal,
++        { x: -normal.y, y: normal.x }, { x: normal.y, y: -normal.x }]) {
++        if (unitNormals.some((other): boolean => direction.x * other.x + direction.y * other.y < -1e-15))
++          continue
++        outward.x += direction.x
++        outward.y += direction.y
++      }
++    }
++    const length = Math.hypot(outward.x, outward.y)
++    if (length < 1e-15) return position
++    const corrected = this.shortenDisplacement(vertex, {
++      x: displacement.x + outward.x * roundingMargin / length,
++      y: displacement.y + outward.y * roundingMargin / length,
++    })
++    const candidate = { x: vertex.x + corrected.x, y: vertex.y + corrected.y }
++    return pads.every((pad): boolean => this.getViaPadDistance(candidate, pad) >= pad.clearance)
++      ? candidate : position
 +  }
 +
 +  private projectPair(pair: SegmentPair): void {
@@ -2000,6 +2141,7 @@ index 0000000..20a7c0d
 +      contact.x / contact.distance,
 +      contact.y / contact.distance,
 +      required - contact.distance,
++      a.via && b.via,
 +    )
 +
 +  }
@@ -2016,6 +2158,7 @@ index 0000000..20a7c0d
 +          interior.x,
 +          interior.y,
 +          required + interior.depth,
++          false,
 +        )
 +      }
 +    }
@@ -2054,6 +2197,7 @@ index 0000000..20a7c0d
 +      contact.x / contact.distance,
 +      contact.y / contact.distance,
 +      required - contact.distance,
++      false,
 +    )
 +
 +  }

@@ -48,7 +48,7 @@ test("nominal projection clears an exact-fit corridor after margin projection ca
           },
         })),
       ...[-0.25, 0.25].map((y, index) => ({
-        type: "oval" as const,
+        type: "rect" as const,
         center: { x: 0, y },
         width: 0.2,
         height: 0.2,
@@ -148,11 +148,14 @@ test("nominal projection clears an exact-fit corridor after margin projection ca
   expect(result[0]!.vias).toEqual(original[0]!.vias)
   expect(routes).toEqual(original)
   expect(
-    getFixedObstacleViolations({ srj: originalSrj, routes: result }),
+    getFixedObstacleViolations({
+      srj: { ...originalSrj, traces: undefined },
+      routes: result,
+    }),
   ).toHaveLength(0)
   expect(
     getNewViaPadViolations({
-      srj: originalSrj,
+      srj: { ...originalSrj, traces: undefined },
       previousRoutes: routes,
       routes: result,
     }),

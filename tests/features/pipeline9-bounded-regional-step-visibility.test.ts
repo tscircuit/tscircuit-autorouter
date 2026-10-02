@@ -45,7 +45,7 @@ test("regional repair exposes projection children and advances one child step at
   expect(solver.solved).toBeTrue()
   expect(childNames.has("Pipeline9ClearanceProjectionSolver")).toBeTrue()
   expect(childNames.has("NegotiateTraceClearanceSolver")).toBeTrue()
-  expect(phases.has("candidate-nominal-projection")).toBeTrue()
+  expect(phases.has("candidate-margin-projection")).toBeTrue()
   expect(visibleChildSteps).toBeGreaterThan(256)
   expect(orchestrationSteps).toBeGreaterThan(0)
   expect(solver.progress).toBe(1)
