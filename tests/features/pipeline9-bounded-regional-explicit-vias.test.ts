@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("regional repair accepts explicit vias when clearance projection makes no improvement", (): void => {
@@ -18,7 +18,7 @@ test("regional repair accepts explicit vias when clearance projection makes no i
       vias: [{ x: -3, y: 2 }],
     })
     const original = structuredClone(fixture.routes)
-    const result = applyPipeline9BoundedRegionalRepairs({
+    const solver = new Pipeline9BoundedRegionalRepairSolver({
       ...fixture,
       drcEvaluator: (): ReturnType<DrcEvaluator> => ({
         errors: [
@@ -30,6 +30,11 @@ test("regional repair accepts explicit vias when clearance projection makes no i
       }),
       budget: { maxRegions: 0, maxCandidateAttempts: 0, maxPathSearchNodes: 0 },
     })
+    while (!solver.solved && !solver.failed) solver.step()
+    expect(solver.error).toBeNull()
+    expect(solver.failed).toBeFalse()
+    expect(solver.solved).toBeTrue()
+    const result = solver.getResult()
     expect(result.repaired).toBe(false)
     expect(result.routes).toBe(fixture.routes)
     expect(fixture.routes).toEqual(original)

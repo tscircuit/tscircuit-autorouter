@@ -3,7 +3,7 @@ import {
   getNewViaPadViolations,
 } from "@tscircuit/repair04"
 import { expect, test } from "bun:test"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("clearance projection opens a pad gap without changing terminal copper or route vertices", (): void => {
@@ -17,7 +17,9 @@ test("clearance projection opens a pad gap without changing terminal copper or r
   const original = structuredClone(fixture.routes)
   const before = fixture.drcEvaluator({ traces: [], routes: fixture.routes })
   expect(Array.isArray(before) ? before : before.errors).toHaveLength(1)
-  const routes = applyPipeline9ClearanceProjection(fixture)
+  const solver = new Pipeline9ClearanceProjectionSolver(fixture)
+  solver.solve()
+  const routes = solver.getOutput()
   expect(routes).not.toBe(fixture.routes)
   expect(fixture.routes).toEqual(original)
   expect(routes[0]!.route).toHaveLength(original[0]!.route.length)

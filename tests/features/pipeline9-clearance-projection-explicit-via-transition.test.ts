@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
+import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("clearance projection materializes an explicit via before checking fixed copper", (): void => {
@@ -22,7 +22,9 @@ test("clearance projection materializes an explicit via before checking fixed co
     vias: [{ x: -3, y: 2 }],
   })
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9ClearanceProjection(fixture)
+  const solver = new Pipeline9ClearanceProjectionSolver(fixture)
+  solver.solve()
+  const result = solver.getOutput()
   expect(fixture.routes).toEqual(original)
   expect(result[1]!.route).toEqual([
     { x: -3, y: 2, z: 0 },

@@ -1,12 +1,17 @@
 import { getNewViaPadViolations } from "@tscircuit/repair04"
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("bounded regional repair handles many physical contacts within its work budget", (): void => {
   const fixture = createBoundedRegionalRepairFixture(9)
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9BoundedRegionalRepairs(fixture)
+  const solver = new Pipeline9BoundedRegionalRepairSolver(fixture)
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(result.initialDrcIssueCount).toBeGreaterThan(8)
   expect(result.attemptedRegionCount).toBeGreaterThan(0)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)

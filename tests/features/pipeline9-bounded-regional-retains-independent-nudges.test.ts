@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("bounded repair retains a pad nudge while an unrelated crossing remains", (): void => {
@@ -23,10 +23,15 @@ test("bounded repair retains a pad nudge while an unrelated crossing remains", (
   expect(beforeErrors.some((error) => error.type === "pcb_trace_error")).toBe(
     true,
   )
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     ...fixture,
     budget: { maxRegions: 1, maxCandidateAttempts: 1, maxPathSearchNodes: 1 },
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   const after = fixture.drcEvaluator({ traces: [], routes: result.routes })
   const afterErrors = Array.isArray(after) ? after : after.errors
   expect(afterErrors.length).toBeLessThan(beforeErrors.length)

@@ -1,10 +1,8 @@
+import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import {
-  applyPipeline9RegionalB01Repairs,
-  getPipeline9FixedRouteObstacles,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
+import { getPipeline9FixedRouteObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -164,7 +162,7 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     ),
   ).toBeTrue()
 
-  const result = applyPipeline9RegionalB01Repairs({
+  const repairSolver = new Pipeline9RegionalB01RepairSolver({
     srj,
     routes: [route],
     fixedObstacleRoutes: [fixedRoute],
@@ -183,6 +181,8 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     obstacleMargin: 0.15,
     effort: 1,
   })
+  repairSolver.solve()
+  const result = repairSolver.getResult()
 
   expect(result).toMatchObject({
     attemptedCandidateCount: 0,
@@ -266,7 +266,7 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
   expect(fixedCopperMinX).toBeGreaterThan(1.5 + 0.15 + 0.3 / 2)
   expect(fixedCopperMinX).toBeLessThan(1.5 + 0.15 + 1 / 2)
 
-  const wideResult = applyPipeline9RegionalB01Repairs({
+  const wideRepairSolver = new Pipeline9RegionalB01RepairSolver({
     srj: wideSrj,
     routes: [wideRoute],
     fixedObstacleRoutes: [wideFixedRoute],
@@ -285,6 +285,8 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     obstacleMargin: 0.15,
     effort: 1,
   })
+  wideRepairSolver.solve()
+  const wideResult = wideRepairSolver.getResult()
 
   expect(crossesFixedPreload(wideResult.routes[0]!, wideFixedRoute)).toBeFalse()
   expect(wideResult.routes[0]).toEqual(wideRouteBeforeRepair)

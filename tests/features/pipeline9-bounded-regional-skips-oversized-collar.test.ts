@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 type Fixture = ReturnType<typeof createBoundedRegionalRepairFixture>
@@ -35,10 +35,15 @@ test("bounded regional repair skips copper whose safety collar cannot fit its fi
     const fixture = createBoundedRegionalRepairFixture()
     configure(fixture)
     const before = structuredClone(fixture.routes)
-    const result = applyPipeline9BoundedRegionalRepairs({
+    const solver = new Pipeline9BoundedRegionalRepairSolver({
       ...fixture,
       drcEvaluator: () => [{ type: "pcb_trace_error", center: { x: 0, y: 0 } }],
     })
+    while (!solver.solved && !solver.failed) solver.step()
+    expect(solver.error).toBeNull()
+    expect(solver.failed).toBeFalse()
+    expect(solver.solved).toBeTrue()
+    const result = solver.getResult()
     expect(result.routes).toBe(fixture.routes)
     expect(result.routes).toEqual(before)
     expect(result.repaired).toBeFalse()
@@ -49,10 +54,11 @@ test("bounded regional repair skips copper whose safety collar cannot fit its fi
 
   const invalid = createBoundedRegionalRepairFixture()
   invalid.routes[0]!.viaDiameter = Number.POSITIVE_INFINITY
-  expect(() =>
-    applyPipeline9BoundedRegionalRepairs({
+  expect(() => {
+    const solver = new Pipeline9BoundedRegionalRepairSolver({
       ...invalid,
       drcEvaluator: () => [{ type: "pcb_trace_error", center: { x: 0, y: 0 } }],
-    }),
-  ).toThrow("repair04 requires finite positive copper widths")
+    })
+    while (!solver.solved && !solver.failed) solver.step()
+  }).toThrow("repair04 requires finite positive copper widths")
 })

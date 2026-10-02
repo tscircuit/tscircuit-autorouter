@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("bounded regional repair leaves preloaded copper outside its supported scope", (): void => {
@@ -16,12 +16,17 @@ test("bounded regional repair leaves preloaded copper outside its supported scop
     },
   ]
   const original = structuredClone(fixture.originalSrj)
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     ...fixture,
     drcEvaluator: () => {
       throw new Error("Unsupported copper must not reach the search")
     },
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   expect(result.routes).toBe(fixture.routes)
   expect(fixture.originalSrj).toEqual(original)
   expect(result.repaired).toBeFalse()

@@ -47,7 +47,7 @@
     "tests/bugs/bugreport103-pedometer.test.ts": 13.2,
     "tests/bugs/bugreport104-pedometer-pipeline7-solved.test.ts": 0,
     "tests/bugs/bugreport104-pedometer-pipeline9-solved.test.ts": 0,
-    "tests/bugs/bugreport107-board-1726.test.ts": 800.8,
+    "tests/bugs/bugreport107-board-1726.test.ts": 964,
     "tests/bugs/bugreport108-am3352-four-layer.test.ts": 0,
     "tests/bugs/bugreport11-b2de3c.test.ts": 0,
     "tests/bugs/bugreport12-35ce1c.test.ts": 0.3,

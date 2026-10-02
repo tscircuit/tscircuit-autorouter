@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
+import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("independent wire repair does not suppress a complete coupled via repair", (): void => {
@@ -49,10 +49,15 @@ test("independent wire repair does not suppress a complete coupled via repair", 
   const original = structuredClone(fixture.routes)
   const before = fixture.drcEvaluator({ routes: fixture.routes, traces: [] })
   expect(Array.isArray(before) ? before : before.errors).toHaveLength(1)
-  const result = applyPipeline9BoundedRegionalRepairs({
+  const solver = new Pipeline9BoundedRegionalRepairSolver({
     ...fixture,
     budget: { maxRegions: 1, maxCandidateAttempts: 1, maxPathSearchNodes: 1 },
   })
+  while (!solver.solved && !solver.failed) solver.step()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  const result = solver.getResult()
   const after = fixture.drcEvaluator({ routes: result.routes, traces: [] })
   expect(Array.isArray(after) ? after : after.errors).toEqual([])
   expect(result.repaired).toBe(true)
