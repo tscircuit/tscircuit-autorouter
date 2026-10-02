@@ -1,6 +1,30 @@
-import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
+
+type PointToSegmentVector = { dx: number; dy: number }
+
+function setPointToSegmentVector(
+  point: MHPoint2,
+  segmentStart: MHPoint2,
+  segmentEnd: MHPoint2,
+  vector: PointToSegmentVector,
+): void {
+  const segmentDx = segmentEnd.x - segmentStart.x
+  const segmentDy = segmentEnd.y - segmentStart.y
+  const segmentLengthSq = segmentDx * segmentDx + segmentDy * segmentDy
+  if (segmentLengthSq === 0) {
+    vector.dx = point.x - segmentStart.x
+    vector.dy = point.y - segmentStart.y
+    return
+  }
+  let projection =
+    ((point.x - segmentStart.x) * segmentDx +
+      (point.y - segmentStart.y) * segmentDy) /
+    segmentLengthSq
+  projection = Math.max(0, Math.min(1, projection))
+  vector.dx = point.x - (segmentStart.x + projection * segmentDx)
+  vector.dy = point.y - (segmentStart.y + projection * segmentDy)
+}
 
 type ForceSegment = {
   p1: MHPoint2
@@ -19,11 +43,114 @@ type ForceVia = {
 type ForceGeometry = {
   segments: ForceSegment[]
   vias: ForceVia[]
+  internalViaPairs: Array<[ForceVia, ForceVia]>
+}
+
+type ForceInteractions = {
+  firstLineIndex: number
+  secondLineIndex: number
+  segmentPairs: Array<[ForceSegment, ForceSegment]>
+  firstViaSegmentPairs: Array<[ForceVia, ForceSegment]>
+  secondViaSegmentPairs: Array<[ForceVia, ForceSegment]>
+  viaPairs: Array<[ForceVia, ForceVia]>
 }
 
 type ForceWorkspace = {
   geometry: ForceGeometry[]
+  interactions: ForceInteractions[]
   netForces: Array<Array<{ fx: number; fy: number }>>
+}
+
+function createForceWorkspace(polyLines: PolyLine2[]): ForceWorkspace {
+  const geometry = polyLines.map((polyLine): ForceGeometry => {
+    const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+    const segments = points.slice(0, -1).map(
+      (point, index): ForceSegment => ({
+        p1: point,
+        p2: points[index + 1]!,
+        layer: point.z2,
+        p1Idx: index,
+        p2Idx: index + 1,
+      }),
+    )
+    const vias = points.flatMap((point, index): ForceVia[] =>
+      point.z1 === point.z2
+        ? []
+        : [{ point, layers: [point.z1, point.z2], index }],
+    )
+    const internalViaPairs: Array<[ForceVia, ForceVia]> = []
+    for (let firstIndex = 0; firstIndex < vias.length; firstIndex++) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < vias.length;
+        secondIndex++
+      ) {
+        internalViaPairs.push([vias[firstIndex]!, vias[secondIndex]!])
+      }
+    }
+    return { segments, vias, internalViaPairs }
+  })
+  const interactions: ForceInteractions[] = []
+  for (
+    let firstLineIndex = 0;
+    firstLineIndex < geometry.length;
+    firstLineIndex++
+  ) {
+    for (
+      let secondLineIndex = firstLineIndex + 1;
+      secondLineIndex < geometry.length;
+      secondLineIndex++
+    ) {
+      const firstGeometry = geometry[firstLineIndex]!
+      const secondGeometry = geometry[secondLineIndex]!
+      const segmentPairs: Array<[ForceSegment, ForceSegment]> = []
+      const firstViaSegmentPairs: Array<[ForceVia, ForceSegment]> = []
+      const secondViaSegmentPairs: Array<[ForceVia, ForceSegment]> = []
+      const viaPairs: Array<[ForceVia, ForceVia]> = []
+      for (const firstSegment of firstGeometry.segments) {
+        for (const secondSegment of secondGeometry.segments) {
+          if (firstSegment.layer === secondSegment.layer) {
+            segmentPairs.push([firstSegment, secondSegment])
+          }
+        }
+      }
+      for (const firstVia of firstGeometry.vias) {
+        for (const secondSegment of secondGeometry.segments) {
+          if (firstVia.layers.includes(secondSegment.layer)) {
+            firstViaSegmentPairs.push([firstVia, secondSegment])
+          }
+        }
+      }
+      for (const secondVia of secondGeometry.vias) {
+        for (const firstSegment of firstGeometry.segments) {
+          if (secondVia.layers.includes(firstSegment.layer)) {
+            secondViaSegmentPairs.push([secondVia, firstSegment])
+          }
+        }
+      }
+      for (const firstVia of firstGeometry.vias) {
+        for (const secondVia of secondGeometry.vias) {
+          if (
+            firstVia.layers.some((layer) => secondVia.layers.includes(layer))
+          ) {
+            viaPairs.push([firstVia, secondVia])
+          }
+        }
+      }
+      interactions.push({
+        firstLineIndex,
+        secondLineIndex,
+        segmentPairs,
+        firstViaSegmentPairs,
+        secondViaSegmentPairs,
+        viaPairs,
+      })
+    }
+  }
+  const netForces = polyLines.map((polyLine) =>
+    polyLine.mPoints.map(() => ({ fx: 0, fy: 0 })),
+  )
+  return { geometry, interactions, netForces }
 }
 
 export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNodeSolver {
@@ -136,32 +263,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const FORCE_DECAY_RATE = 6
     const BOUNDARY_FORCE_STRENGTH = 0.008 // How strongly points are pushed back into bounds
     const EPSILON = 1e-6 // To avoid division by zero
+    const pointToSegmentVector = { dx: 0, dy: 0 }
 
     // 1. Initialize the candidate's reusable force workspace.
     let workspace = this.forceWorkspaceByPolyLines.get(polyLines)
     if (!workspace) {
-      const geometry = polyLines.map((polyLine): ForceGeometry => {
-        const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-        const segments = points.slice(0, -1).map(
-          (point, index): ForceSegment => ({
-            p1: point,
-            p2: points[index + 1]!,
-            layer: point.z2,
-            p1Idx: index,
-            p2Idx: index + 1,
-          }),
-        )
-        const vias = points.flatMap((point, index): ForceVia[] =>
-          point.z1 === point.z2
-            ? []
-            : [{ point, layers: [point.z1, point.z2], index }],
-        )
-        return { segments, vias }
-      })
-      const netForces = polyLines.map((polyLine) =>
-        polyLine.mPoints.map(() => ({ fx: 0, fy: 0 })),
-      )
-      workspace = { geometry, netForces }
+      workspace = createForceWorkspace(polyLines)
       this.forceWorkspaceByPolyLines.set(polyLines, workspace)
     } else {
       for (const lineForces of workspace.netForces) {
@@ -203,9 +310,13 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       // srcIdOpp: string, // Not needed with addNetForce
       // srcIdThis: string, // Not needed with addNetForce
     ) => {
-      const cp = pointToSegmentClosestPoint(ep, otherSeg.p1, otherSeg.p2)
-      const dx = ep.x - cp.x
-      const dy = ep.y - cp.y
+      setPointToSegmentVector(
+        ep,
+        otherSeg.p1,
+        otherSeg.p2,
+        pointToSegmentVector,
+      )
+      const { dx, dy } = pointToSegmentVector
       const dSq = dx * dx + dy * dy
       if (dSq <= EPSILON) return
       const dist = Math.sqrt(dSq)
@@ -223,216 +334,186 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       addNetForce(oppLine, otherSeg.p2Idx, -fx / 2, -fy / 2)
     }
 
-    for (let i = 0; i < numPolyLines; i++) {
-      for (let j = i + 1; j < numPolyLines; j++) {
-        const { segments: segments1, vias: vias1 } = geometry[i]!
-        const { segments: segments2, vias: vias2 } = geometry[j]!
+    for (const interaction of workspace.interactions) {
+      const i = interaction.firstLineIndex
+      const j = interaction.secondLineIndex
 
-        // --- Interaction Calculations ---
+      // --- Interaction Calculations ---
 
-        // a) Segment <-> Segment
-        for (const seg1 of segments1) {
-          for (const seg2 of segments2) {
-            if (seg1.layer === seg2.layer) {
-              // endpoints of s1 against s2
-              endpointForce(seg1.p1, seg1.p1Idx, seg2, i, j)
-              endpointForce(seg1.p2, seg1.p2Idx, seg2, i, j)
-              // endpoints of s2 against s1
-              endpointForce(seg2.p1, seg2.p1Idx, seg1, j, i)
-              endpointForce(seg2.p2, seg2.p2Idx, seg1, j, i)
-            }
-          }
-        }
+      // a) Segment <-> Segment
+      for (const [seg1, seg2] of interaction.segmentPairs) {
+        // endpoints of s1 against s2
+        endpointForce(seg1.p1, seg1.p1Idx, seg2, i, j)
+        endpointForce(seg1.p2, seg1.p2Idx, seg2, i, j)
+        // endpoints of s2 against s1
+        endpointForce(seg2.p1, seg2.p1Idx, seg1, j, i)
+        endpointForce(seg2.p2, seg2.p2Idx, seg1, j, i)
+      }
 
-        // b) Via <-> Segment
-        for (const via1 of vias1) {
-          for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
-              const closestPointOnSeg = pointToSegmentClosestPoint(
-                via1.point,
-                seg2.p1,
-                seg2.p2,
-              )
-              const dx = via1.point.x - closestPointOnSeg.x
-              const dy = via1.point.y - closestPointOnSeg.y
-              const dSq = dx * dx + dy * dy
+      // b) Via <-> Segment
+      for (const [via1, seg2] of interaction.firstViaSegmentPairs) {
+        setPointToSegmentVector(
+          via1.point,
+          seg2.p1,
+          seg2.p2,
+          pointToSegmentVector,
+        )
+        const { dx, dy } = pointToSegmentVector
+        const dSq = dx * dx + dy * dy
 
-              if (dSq > EPSILON) {
-                const dist = Math.sqrt(dSq)
-                let forceMultiplier = VIA_FORCE_MULTIPLIER
-                let effectiveDistance = dist
+        if (dSq > EPSILON) {
+          const dist = Math.sqrt(dSq)
+          let forceMultiplier = VIA_FORCE_MULTIPLIER
+          let effectiveDistance = dist
 
-                if (dist < this.viaDiameter / 2) {
-                  // Point is inside the via radius
-                  forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
-                  // Use distance from center directly for decay calculation
-                  effectiveDistance = Math.max(EPSILON, dist)
-                } else {
-                  // Point is outside the via radius
-                  // Calculate distance from the edge
-                  effectiveDistance = Math.max(
-                    EPSILON,
-                    dist - this.viaDiameter / 2,
-                  )
-                }
-
-                // Force applied ONLY to the via (i) by the segment (j) - Exponential falloff
-                const forceMag =
-                  forceMultiplier *
-                  FORCE_MAGNITUDE *
-                  Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-                const fx_j_on_i = (dx / dist) * forceMag // Direction is still based on center-to-point vector
-                const fy_j_on_i = (dy / dist) * forceMag
-
-                // Force applied ONLY to the via (i) by the segment (j)
-                addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
-
-                // Force from via1 (i) onto seg2 (j) - Apply opposite force to segment endpoints
-                addNetForce(j, seg2.p1Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
-                addNetForce(j, seg2.p2Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
-              }
-            }
-          }
-        }
-        for (const via2 of vias2) {
-          for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
-              const closestPointOnSeg = pointToSegmentClosestPoint(
-                via2.point,
-                seg1.p1,
-                seg1.p2,
-              )
-              const dx = via2.point.x - closestPointOnSeg.x
-              const dy = via2.point.y - closestPointOnSeg.y
-              const dSq = dx * dx + dy * dy
-
-              if (dSq > EPSILON) {
-                const dist = Math.sqrt(dSq)
-                let forceMultiplier = VIA_FORCE_MULTIPLIER
-                let effectiveDistance = dist
-
-                if (dist < this.viaDiameter / 2) {
-                  // Point is inside the via radius
-                  forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
-                  // Use distance from center directly for decay calculation
-                  effectiveDistance = Math.max(EPSILON, dist)
-                } else {
-                  // Point is outside the via radius
-                  // Calculate distance from the edge
-                  effectiveDistance = Math.max(
-                    EPSILON,
-                    dist - this.viaDiameter / 2,
-                  )
-                }
-
-                // Force applied ONLY to the via (j) by the segment (i) - Exponential falloff
-                const forceMag =
-                  forceMultiplier *
-                  FORCE_MAGNITUDE *
-                  Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-                const fx_i_on_j = (dx / dist) * forceMag // Direction is still based on center-to-point vector
-                const fy_i_on_j = (dy / dist) * forceMag
-
-                // Force applied ONLY to the via (j) by the segment (i)
-                addNetForce(j, via2.index, fx_i_on_j, fy_i_on_j)
-
-                // Force from via2 (j) onto seg1 (i) - Apply opposite force to segment endpoints
-                addNetForce(i, seg1.p1Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
-                addNetForce(i, seg1.p2Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
-              }
-            }
-          }
-        }
-
-        // c) Via <-> Via
-        for (const via1 of vias1) {
-          for (const via2 of vias2) {
-            const commonLayers = via1.layers.filter((z) =>
-              via2.layers.includes(z),
+          if (dist < this.viaDiameter / 2) {
+            // Point is inside the via radius
+            forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
+            // Use distance from center directly for decay calculation
+            effectiveDistance = Math.max(EPSILON, dist)
+          } else {
+            // Point is outside the via radius
+            // Calculate distance from the edge
+            effectiveDistance = Math.max(
+              EPSILON,
+              dist - this.viaDiameter / 2,
             )
-            if (commonLayers.length > 0) {
-              const dx = via1.point.x - via2.point.x
-              const dy = via1.point.y - via2.point.y
-              const dSq = dx * dx + dy * dy
-
-              if (dSq > EPSILON) {
-                const dist = Math.sqrt(dSq)
-                let forceMultiplier = VIA_FORCE_MULTIPLIER
-                let effectiveDistance = dist
-
-                if (dist < this.viaDiameter) {
-                  // Vias overlap
-                  forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
-                  // Use center-to-center distance directly for decay calculation
-                  effectiveDistance = Math.max(EPSILON, dist)
-                } else {
-                  // Vias do not overlap
-                  // Calculate distance between edges
-                  effectiveDistance = Math.max(EPSILON, dist - this.viaDiameter)
-                }
-
-                // Exponential falloff
-                const forceMag =
-                  forceMultiplier *
-                  FORCE_MAGNITUDE *
-                  Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-                const fx_j_on_i = (dx / dist) * forceMag // Force applied by via2 (j) onto via1 (i)
-                const fy_j_on_i = (dy / dist) * forceMag
-
-                // Apply force from via2 (j) onto via1 (i)
-                addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
-                // Apply force from via1 (i) onto via2 (j)
-                addNetForce(j, via2.index, -fx_j_on_i, -fy_j_on_i)
-              }
-            }
           }
+
+          // Force applied ONLY to the via (i) by the segment (j) - Exponential falloff
+          const forceMag =
+            forceMultiplier *
+            FORCE_MAGNITUDE *
+            Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
+          const fx_j_on_i = (dx / dist) * forceMag // Direction is still based on center-to-point vector
+          const fy_j_on_i = (dy / dist) * forceMag
+
+          // Force applied ONLY to the via (i) by the segment (j)
+          addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
+
+          // Force from via1 (i) onto seg2 (j) - Apply opposite force to segment endpoints
+          addNetForce(j, seg2.p1Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
+          addNetForce(j, seg2.p2Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
+        }
+      }
+      for (const [via2, seg1] of interaction.secondViaSegmentPairs) {
+        setPointToSegmentVector(
+          via2.point,
+          seg1.p1,
+          seg1.p2,
+          pointToSegmentVector,
+        )
+        const { dx, dy } = pointToSegmentVector
+        const dSq = dx * dx + dy * dy
+
+        if (dSq > EPSILON) {
+          const dist = Math.sqrt(dSq)
+          let forceMultiplier = VIA_FORCE_MULTIPLIER
+          let effectiveDistance = dist
+
+          if (dist < this.viaDiameter / 2) {
+            // Point is inside the via radius
+            forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
+            // Use distance from center directly for decay calculation
+            effectiveDistance = Math.max(EPSILON, dist)
+          } else {
+            // Point is outside the via radius
+            // Calculate distance from the edge
+            effectiveDistance = Math.max(
+              EPSILON,
+              dist - this.viaDiameter / 2,
+            )
+          }
+
+          // Force applied ONLY to the via (j) by the segment (i) - Exponential falloff
+          const forceMag =
+            forceMultiplier *
+            FORCE_MAGNITUDE *
+            Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
+          const fx_i_on_j = (dx / dist) * forceMag // Direction is still based on center-to-point vector
+          const fy_i_on_j = (dy / dist) * forceMag
+
+          // Force applied ONLY to the via (j) by the segment (i)
+          addNetForce(j, via2.index, fx_i_on_j, fy_i_on_j)
+
+          // Force from via2 (j) onto seg1 (i) - Apply opposite force to segment endpoints
+          addNetForce(i, seg1.p1Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
+          addNetForce(i, seg1.p2Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
+        }
+      }
+
+      // c) Via <-> Via
+      for (const [via1, via2] of interaction.viaPairs) {
+        const dx = via1.point.x - via2.point.x
+        const dy = via1.point.y - via2.point.y
+        const dSq = dx * dx + dy * dy
+
+        if (dSq > EPSILON) {
+          const dist = Math.sqrt(dSq)
+          let forceMultiplier = VIA_FORCE_MULTIPLIER
+          let effectiveDistance = dist
+
+          if (dist < this.viaDiameter) {
+            // Vias overlap
+            forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
+            // Use center-to-center distance directly for decay calculation
+            effectiveDistance = Math.max(EPSILON, dist)
+          } else {
+            // Vias do not overlap
+            // Calculate distance between edges
+            effectiveDistance = Math.max(EPSILON, dist - this.viaDiameter)
+          }
+
+          // Exponential falloff
+          const forceMag =
+            forceMultiplier *
+            FORCE_MAGNITUDE *
+            Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
+          const fx_j_on_i = (dx / dist) * forceMag // Force applied by via2 (j) onto via1 (i)
+          const fy_j_on_i = (dy / dist) * forceMag
+
+          // Apply force from via2 (j) onto via1 (i)
+          addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
+          // Apply force from via1 (i) onto via2 (j)
+          addNetForce(j, via2.index, -fx_j_on_i, -fy_j_on_i)
         }
       }
     }
 
     // 2.5 Calculate forces between vias WITHIN the SAME polyline
     for (let i = 0; i < numPolyLines; i++) {
-      const { vias } = geometry[i]!
+      for (const [via1, via2] of geometry[i]!.internalViaPairs) {
+        // Vias on the same polyline always interact (repel) regardless of layer
+        const dx = via1.point.x - via2.point.x
+        const dy = via1.point.y - via2.point.y
+        const dSq = dx * dx + dy * dy
 
-      if (vias.length < 2) continue // Need at least two vias to interact
+        if (dSq > EPSILON) {
+          const dist = Math.sqrt(dSq)
+          let forceMultiplier = VIA_FORCE_MULTIPLIER
+          let effectiveDistance = dist
 
-      for (let v1Idx = 0; v1Idx < vias.length; v1Idx++) {
-        for (let v2Idx = v1Idx + 1; v2Idx < vias.length; v2Idx++) {
-          const via1 = vias[v1Idx]
-          const via2 = vias[v2Idx]
-
-          // Vias on the same polyline always interact (repel) regardless of layer
-          const dx = via1.point.x - via2.point.x
-          const dy = via1.point.y - via2.point.y
-          const dSq = dx * dx + dy * dy
-
-          if (dSq > EPSILON) {
-            const dist = Math.sqrt(dSq)
-            let forceMultiplier = VIA_FORCE_MULTIPLIER
-            let effectiveDistance = dist
-
-            if (dist < this.viaDiameter) {
-              // Vias overlap
-              forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
-              effectiveDistance = Math.max(EPSILON, dist)
-            } else {
-              // Vias do not overlap
-              effectiveDistance = Math.max(EPSILON, dist - this.viaDiameter)
-            }
-
-            // Exponential falloff
-            const forceMag =
-              forceMultiplier *
-              FORCE_MAGNITUDE *
-              Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-            const fx_2_on_1 = (dx / dist) * forceMag // Force applied by via2 onto via1
-            const fy_2_on_1 = (dy / dist) * forceMag
-
-            // Apply force from via2 onto via1 (both on line i)
-            addNetForce(i, via1.index, fx_2_on_1, fy_2_on_1)
-            // Apply force from via1 onto via2 (both on line i) - opposite direction
-            addNetForce(i, via2.index, -fx_2_on_1, -fy_2_on_1)
+          if (dist < this.viaDiameter) {
+            // Vias overlap
+            forceMultiplier *= INSIDE_VIA_FORCE_MULTIPLIER // Apply stronger force
+            effectiveDistance = Math.max(EPSILON, dist)
+          } else {
+            // Vias do not overlap
+            effectiveDistance = Math.max(EPSILON, dist - this.viaDiameter)
           }
+
+          // Exponential falloff
+          const forceMag =
+            forceMultiplier *
+            FORCE_MAGNITUDE *
+            Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
+          const fx_2_on_1 = (dx / dist) * forceMag // Force applied by via2 onto via1
+          const fy_2_on_1 = (dy / dist) * forceMag
+
+          // Apply force from via2 onto via1 (both on line i)
+          addNetForce(i, via1.index, fx_2_on_1, fy_2_on_1)
+          // Apply force from via1 onto via2 (both on line i) - opposite direction
+          addNetForce(i, via2.index, -fx_2_on_1, -fy_2_on_1)
         }
       }
     }
