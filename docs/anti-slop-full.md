@@ -7,7 +7,7 @@ It explicitly uses Bun for TypeScript config/plugin loading. Biome, Bun tests,
 existing snapshots, typecheck and build retain their existing commands and role.
 
 This is a full diagnostic rollout with reviewed initial code fixes, not a completed
-migration. Lint currently exits **1** with **929 errors**. No enabled rule has been
+migration. Lint currently exits **1** with **851 errors**. No enabled rule has been
 downgraded, capped or switched off. The CI job remains advisory and records each
 step outcome plus the full JSON diagnostic artifact. A green advisory job can
 contain a failed lint step; inspect its summary and artifact. Setup, plugin,
@@ -50,42 +50,42 @@ in their existing harness; no upstream test accidentally enters Bun discovery.
 
 The before run uses PR #2817 head `b8824d359f1c0afba8d3c989d0724bd5d550d3d5`
 with the full configuration. The after run uses production source revision
-`abd54c9` and the same configuration. Both checked **453 files** under Bun 1.3.14,
+`2d57cee` and the same configuration. Both checked **453 files** under Bun 1.3.14,
 Oxlint 1.86.0, on 2026-10-02. These observations are not an error ceiling or a
 snapshot assertion. See [machine-readable counts](anti-slop-full-counts.json).
 
-| Rule | Before | After |
-| --- | ---: | ---: |
-| `anti-slop/no-array-filter-map` | 14 | 0 |
-| `anti-slop/no-reduce-accumulator-copy` | 0 | 0 |
-| `anti-slop/no-chained-type-assertions` | 7 | 7 |
-| `anti-slop/no-conditional-empty-object-spread` | 59 | 57 |
-| `anti-slop/no-known-value-widening` | 95 | 95 |
-| `anti-slop/no-module-mocking` | 0 | 0 |
-| `anti-slop/no-object-parameters` | 1 | 1 |
-| `anti-slop/no-reflect-apply` | 0 | 0 |
-| `anti-slop/no-reflect-get` | 0 | 0 |
-| `anti-slop/no-runtime-typeof` | 254 | 254 |
-| `anti-slop/no-unsafe-dictionary-type` | 62 | 62 |
-| `anti-slop/no-shape-in-symbol-names` | 15 | 0 |
-| `anti-slop/no-unknown-parameters` | 24 | 24 |
-| `anti-slop/no-unknown-returns` | 4 | 4 |
-| `anti-slop/no-unknown-type-aliases` | 0 | 0 |
-| `anti-slop/no-widen-then-assert` | 0 | 0 |
-| `anti-slop/require-readable-spacing` | 6976 | 0 |
-| `anti-slop/require-safety-comment-for-type-assertion` | 442 | 425 |
-| `anti-slop-effect/no-manual-effect-error-tag` | 0 | 0 |
-| `anti-slop-effect/no-manual-tag-comparison` | 0 | 0 |
-| `anti-slop-effect/no-manual-tagged-construction` | 0 | 0 |
-| `anti-slop-effect/no-service-constructor-imports` | 0 | 0 |
-| `anti-slop-effect/prefer-effect-match` | 5 | 0 |
-| `oxc/no-accumulating-spread` | 0 | 0 |
+| Rule | Before | First pass | Current |
+| --- | ---: | ---: | ---: |
+| `anti-slop/no-array-filter-map` | 14 | 0 | 0 |
+| `anti-slop/no-reduce-accumulator-copy` | 0 | 0 | 0 |
+| `anti-slop/no-chained-type-assertions` | 7 | 7 | 7 |
+| `anti-slop/no-conditional-empty-object-spread` | 59 | 57 | 43 |
+| `anti-slop/no-known-value-widening` | 95 | 95 | 95 |
+| `anti-slop/no-module-mocking` | 0 | 0 | 0 |
+| `anti-slop/no-object-parameters` | 1 | 1 | 1 |
+| `anti-slop/no-reflect-apply` | 0 | 0 | 0 |
+| `anti-slop/no-reflect-get` | 0 | 0 | 0 |
+| `anti-slop/no-runtime-typeof` | 254 | 254 | 254 |
+| `anti-slop/no-unsafe-dictionary-type` | 62 | 62 | 62 |
+| `anti-slop/no-shape-in-symbol-names` | 15 | 0 | 0 |
+| `anti-slop/no-unknown-parameters` | 24 | 24 | 24 |
+| `anti-slop/no-unknown-returns` | 4 | 4 | 4 |
+| `anti-slop/no-unknown-type-aliases` | 0 | 0 | 0 |
+| `anti-slop/no-widen-then-assert` | 0 | 0 | 0 |
+| `anti-slop/require-readable-spacing` | 6976 | 0 | 0 |
+| `anti-slop/require-safety-comment-for-type-assertion` | 442 | 425 | 361 |
+| `anti-slop-effect/no-manual-effect-error-tag` | 0 | 0 | 0 |
+| `anti-slop-effect/no-manual-tag-comparison` | 0 | 0 | 0 |
+| `anti-slop-effect/no-manual-tagged-construction` | 0 | 0 | 0 |
+| `anti-slop-effect/no-service-constructor-imports` | 0 | 0 | 0 |
+| `anti-slop-effect/prefer-effect-match` | 5 | 0 | 0 |
+| `oxc/no-accumulating-spread` | 0 | 0 | 0 |
 
-**Total: 7,958 → 929 errors.** The commits separate mechanical spacing,
+**Total: 7,958 → 851 errors.** The commits separate mechanical spacing,
 compiler-checked assertion removal, narrow exceptions, and behavioral rewrites.
 The 376-file spacing commit changes whitespace only. Of 377 changed production
-files, **359 emit identical minified JavaScript** against the base; the remaining
-18 contain the reviewed behavioral transformations below. This is an emission
+files, **354 emit identical minified JavaScript** against the base; the remaining
+23 contain the reviewed behavioral transformations below. This is an emission
 comparison, not a proof of semantic equivalence. See
 [per-file emission results](anti-slop-full-emission.json).
 
@@ -110,6 +110,12 @@ changes do not claim equivalent callback timing for arbitrary side-effectful
 getters, proxies, or externally monkey-patched array methods. No routing speed,
 solve rate or DRC quality improvement is inferred from the lint results.
 
+The continuation from `fc68d2b` resolves another **78 diagnostics** in three
+reviewable commits: 64 assertions and 14 conditional spreads. All 24 policies
+stay enabled; no suppression was added. See [follow-up review and decisions](anti-slop-full-follow-up.md)
+and [the verification record](anti-slop-full-follow-up.json). The first-pass
+929-error checkpoint remains in the counts alongside the original baseline.
+
 ## Narrow exceptions and visible remaining work
 
 [The exception inventory](anti-slop-full-exceptions.json) lists every one of the
@@ -125,12 +131,12 @@ solve rate or DRC quality improvement is inferred from the lint results.
   tools active; it suppresses only spacing, not any assertion on the same line.
 
 [The remaining diagnostic inventory](anti-slop-full-remaining.json) records all
-**929** errors with rule, exact file/line/column, UTF-8 byte span, expression excerpt
+**851** errors with rule, exact file/line/column, UTF-8 byte span, expression excerpt
 and message. Its triage categories are follow-up queues, not claims that every
 finding is safe, inevitable, or a false positive. Nothing in that inventory is
 suppressed. The main categories require separate contract and behavior review:
 
-- **425 safety-comment findings** and **seven retained chained assertions**.
+- **361 safety-comment findings** and **seven retained chained assertions**.
   Several chained casts involve external solver interfaces, a power-expander
   schema mismatch, validated cache data, geometry types or a keyboard/mouse
   adapter. Their exact contracts are discussed in [the earlier fixes](anti-slop-fixes.md).
@@ -148,7 +154,7 @@ suppressed. The main categories require separate contract and behavior review:
   legitimately inspect heterogeneous values, while some adapters need stronger
   owner contracts. They require individual review; changing public inputs to
   arbitrary narrow types would falsely promise validation.
-- **57 conditional empty-object spreads** remain as rewrite backlog. Optional
+- **43 conditional empty-object spreads** remain as rewrite backlog. Optional
   field absence, key order and construction timing need tests before replacement.
   These are not classified as unavoidable conflicts.
 
