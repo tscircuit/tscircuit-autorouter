@@ -83,7 +83,10 @@ export const applyPipeline9ReportedViaMerges = ({
     throw new Error("Reported via merge changed the number of route pieces")
   }
   const mergedByRoute = new Map(
-    movableRoutes.map((route, index) => [route, merger.mergedViaHdRoutes[index]!]),
+    movableRoutes.map((route, index) => [
+      route,
+      merger.mergedViaHdRoutes[index]!,
+    ]),
   )
   const candidateRoutes = routes.map(
     (route): HighDensityRoute => mergedByRoute.get(route) ?? route,

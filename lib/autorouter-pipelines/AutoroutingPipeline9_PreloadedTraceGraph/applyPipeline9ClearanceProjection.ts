@@ -44,10 +44,9 @@ export const applyPipeline9ClearanceProjection = ({
     traces: undefined,
   }
   const originalCanonicalRoutes = canonicalizePipeline9HdRoutes(routes)
-  const canonicalRoutes =
-    subdivideSegments
-      ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
-      : originalCanonicalRoutes
+  const canonicalRoutes = subdivideSegments
+    ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
+    : originalCanonicalRoutes
   // Whole-board projection needs no cropping or splicing. Preserve every
   // transition's point indices so the via guard can prove its identity.
   let candidate = relaxTraceClearance({

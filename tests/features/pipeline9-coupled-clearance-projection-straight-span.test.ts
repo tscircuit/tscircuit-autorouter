@@ -22,7 +22,9 @@ test("coupled projection adds a clearance bend without moving terminal copper", 
     usePrecisionMargin: true,
   })
   const reference = fixture.drcEvaluator({ traces: [], routes })
-  expect(Array.isArray(reference) ? reference : reference.errors).toHaveLength(0)
+  expect(Array.isArray(reference) ? reference : reference.errors).toHaveLength(
+    0,
+  )
   expect(routes[0]!.route.length).toBeGreaterThan(2)
   expect(routes[0]!.route[0]).toEqual(original[0]!.route[0])
   expect(routes[0]!.route.at(-1)).toEqual(original[0]!.route.at(-1))
