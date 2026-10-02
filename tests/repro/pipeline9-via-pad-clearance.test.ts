@@ -22,6 +22,7 @@ test("Pipeline 9 respects the board's declared via-to-pad clearance", async (): 
     inputSrj: srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    showDrcErrorMarkers: true,
     // Validate this board's declared rules, not only benchmark defaults.
     drcOptions: {
       traceClearance: srj.minTraceToPadEdgeClearance,
