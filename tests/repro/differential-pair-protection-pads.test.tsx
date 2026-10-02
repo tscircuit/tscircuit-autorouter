@@ -4,9 +4,10 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 
-test("repro: differential pair with protection pads fails after routing", async (): Promise<void> => {
+test("routes a differential pair through protection pads", async (): Promise<void> => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   // U1 models the two flow-through protection pads on each conductor.
@@ -133,35 +134,28 @@ test("repro: differential pair with protection pads fails after routing", async 
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  expect(() => solver.solve()).toThrow(
-    "must resolve to exactly one final point-pair connection, got 3",
-  )
-  expect(solver.failed).toBe(true)
-  expect(solver.error).toContain(
-    "must resolve to exactly one final point-pair connection, got 3",
-  )
-  expect(solver.netToPointPairsSolver?.newConnections).toHaveLength(6)
-  expect(solver.effortCleanupSolver?.getOutput()).toHaveLength(6)
-  const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-    connections: solver.netToPointPairsSolver!.newConnections,
-    originalConnections: input.connections,
-    hdRoutes: solver.effortCleanupSolver!.getOutput(),
-    layerCount: input.layerCount,
-    obstacles: input.obstacles,
-    defaultViaHoleDiameter: solver.viaHoleDiameter,
-    connMap: solver.connMap,
-  })
+  solver.solve()
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  const traces = solver.getOutputSimplifiedPcbTraces()
+  expect(traces).toHaveLength(6)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
+    }).errors,
+  ).toEqual([])
   await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(input), {
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "input" })
   await expect(
-    getSvgFromGraphicsObject(
-      convertSrjToGraphicsObject({ ...input, traces: routedTraces }),
-      {
-        backgroundColor: "white",
-      },
-    ),
+    getBugReportSnapshotSvg({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
+    }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "before-rejection" })
 })

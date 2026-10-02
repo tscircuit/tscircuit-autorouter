@@ -1,6 +1,8 @@
+import { assertDifferentialPairLengthSkew } from "lib/utils/assertDifferentialPairLengthSkew"
 import {
   LengthMatchingSolver,
   PostProcessingSolver,
+  type PostProcessingSolverParams,
 } from "@tscircuit/length-matching-solver"
 import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -15,7 +17,7 @@ import { BaseSolver } from "./BaseSolver"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
-  differentialPairs: DifferentialPair[]
+  differentialPairs: PostProcessingSolverParams["differentialPairs"]
   buses: SimpleRouteBus[]
   connections: SimpleRouteConnection[]
   traces?: SimplifiedPcbTraces
@@ -171,6 +173,10 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
 
     if (!this.busLengthMatchingSolver) {
       const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      assertDifferentialPairLengthSkew({
+        differentialPairs: this.params.differentialPairs,
+        hdRoutes,
+      })
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
@@ -206,6 +212,10 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
     assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
+    assertDifferentialPairLengthSkew({
+      differentialPairs: this.params.differentialPairs,
+      hdRoutes: this.outputHdRoutes,
+    })
     this.solved = true
   }
 
