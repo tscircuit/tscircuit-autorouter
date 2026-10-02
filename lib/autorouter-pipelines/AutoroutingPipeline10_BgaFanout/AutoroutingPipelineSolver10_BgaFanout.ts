@@ -325,7 +325,7 @@ class FanoutStage extends BaseSolver {
       inputProblem.inputSrj,
       inputProblem.options,
     )
-    this.activeSubSolver = this.fanoutSolver as unknown as BaseSolver
+    this.activeSubSolver = this.fanoutSolver
     this.MAX_ITERATIONS = this.fanoutSolver.MAX_ITERATIONS + 1
   }
 

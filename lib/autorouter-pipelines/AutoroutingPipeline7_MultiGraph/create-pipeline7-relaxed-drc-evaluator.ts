@@ -30,11 +30,8 @@ export const createPipeline7RelaxedDrcEvaluator = (
     })
 
     return {
-      errors: errors as unknown as Record<string, unknown>[],
-      errorsWithCenters: errorsWithCenters as unknown as Record<
-        string,
-        unknown
-      >[],
+      errors: errors,
+      errorsWithCenters: errorsWithCenters,
     }
   }
 }

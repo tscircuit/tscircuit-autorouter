@@ -42,12 +42,12 @@ export const createPipeline9RelaxedDrcEvaluator = (
 
     return {
       errors: normalizePipeline9DrcErrorsForRepair({
-        errors: errors as unknown as Record<string, unknown>[],
+        errors: errors,
         circuitJson,
         newTraceIds,
       }),
       errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
-        errors: errorsWithCenters as unknown as Record<string, unknown>[],
+        errors: errorsWithCenters,
         circuitJson,
         newTraceIds,
       }),

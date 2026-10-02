@@ -14,7 +14,6 @@ import type {
   PortPointPathingHyperParameters,
   PortPointCandidate,
 } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { PortPointPathingSolver } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { precomputeSharedParams } from "../PortPointPathingSolver/precomputeSharedParams"
 import {
   createPortPointSection,
@@ -189,7 +188,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   sections: PortPointSection[] = []
 
   /** Section solver currently running */
-  activeSubSolver: PortPointPathingSolver | null = null
+  activeSubSolver: HyperPortPointPathingSolver | null = null
 
   /** Current section being optimized */
   currentSection: PortPointSection | null = null
@@ -816,10 +815,10 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
   }
 
   /**
-   * Create a PortPointPathingSolver for the current section.
+   * Create the HyperPortPointPathingSolver supervisor for the current section.
    * This centralizes the solver creation logic that was previously duplicated in 3 places.
    */
-  createSectionSolver(section: PortPointSection): PortPointPathingSolver {
+  createSectionSolver(section: PortPointSection): HyperPortPointPathingSolver {
     const sectionSrj = this.createSectionSimpleRouteJson(section)
     const preparedInputNodes = this.prepareSectionInputNodesForCutPaths(section)
 
@@ -857,7 +856,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
       },
       precomputedInitialParams: precomputedParams,
       fixedRoutes: this.currentSectionFixedRoutes,
-    }) as unknown as PortPointPathingSolver
+    })
   }
 
   /**
