@@ -9,9 +9,12 @@ current-head whole-pipeline performance.
 
 ## Full16 eligibility
 
-Twelve saved baselines completed with zero native relaxed errors. The source-backed
-physical model classifies seven as unsupported, four as invalid original boards,
-and one as an original plated-traversal failure. Four captures were censored.
+Twelve saved baselines completed with zero native relaxed errors. An earlier
+physical audit, before the final strict source-port provenance guard, classified
+seven as unsupported, four as invalid original boards, and one as an original
+plated-traversal failure. Four captures were censored. The table retains those
+earlier diagnostics; the final provenance-gate recheck below supersedes their
+current eligibility classification.
 There are **zero directly eligible original baselines**. Unsupported, invalid,
 failed and censored cases are excluded from the optimization denominator.
 The relaxed native checker omits some physical checks, so its zero count does
@@ -39,6 +42,75 @@ not certify these originals. No source geometry, layer, owner or rule is waived.
 The original capture wall times sum to 507.274s. The nominal 60s
 cooperative capture cap overran on synchronous steps (60.6–81.7s); those four
 cases remain censored and were not rerouted for this comparison.
+
+### Final source-provenance recheck
+
+The final adapter rejects contradictory supplied pad-port metadata instead of
+using electrical-net alias membership to guess which port owns a pad. A recheck
+of all 16 migrated benchmark inputs took 1.036s under a 30s/3GiB outer cap, with
+441 MB peak sampled RSS. Fourteen inputs fail this source gate. Sample006 restores
+source facts but its original capture remains censored; sample007 restores source
+facts and its original copper still fails physical validation. There are still
+**zero directly eligible original baselines**. These failures occur before
+geometry validation and must not be reported as supported physical routing.
+
+| Sample | Final first source-gate rejection |
+| --- | --- |
+| 001 | Authoritative pad port mismatch pcb_smtpad_72 |
+| 002 | Authoritative pad port mismatch pcb_smtpad_42; capture also censored |
+| 003 | Authoritative pad port mismatch pcb_smtpad_21 |
+| 004 | Authoritative pad port mismatch pcb_smtpad_63 |
+| 005 | Authoritative pad port mismatch pcb_smtpad_103 |
+| 008 | Authoritative pad port mismatch pcb_smtpad_287 |
+| 009 | Authoritative pad port mismatch pcb_smtpad_160 |
+| 010 | Authoritative pad port mismatch pcb_smtpad_137 |
+| 011 | Authoritative pad port mismatch pcb_smtpad_142 |
+| 012 | Authoritative pad port mismatch pcb_smtpad_13 |
+| 013 | Authoritative pad port mismatch pcb_smtpad_274 |
+| 014 | Authoritative pad port mismatch pcb_smtpad_51; capture also censored |
+| 015 | Authoritative pad port mismatch pcb_smtpad_36; capture also censored |
+| 016 | Authoritative pad port mismatch pcb_smtpad_46 |
+
+Sample004's source pad63 explicitly references pcb_port_67. The legacy benchmark
+loader instead inserts pcb_smtpad_62 into its pcb_port_id field because that
+producer block groups several pads before their ports. The source facts are
+consistent; the supplied migrated metadata is contradictory. A source-enriched
+control on that migrated input stopped before routing in 0.263s. The final guard
+was retained. No migration correction is bundled into the optimizer.
+
+### Fresh Pipeline9 controls
+
+Optimizer-disabled sample007 controls use seed 1, no cache and effort 1/2. They
+complete in 10.891/12.108s with zero native relaxed errors, but both retain the
+full-stack-via/foreign-bottom-pad conflict. Their trace hashes are
+`f84679d54a485aafcd6a8d729df4e02eef5fdc58ea3c6527ca7e1986223533e1`
+and `c55ee1c4c11775d5b5a268461d534ba9082f48b3d79d57843f402a00fec98b5f`.
+Those pre-publication controls identify base 396b674f with uncommitted physical
+model support; the raw sample004 control below uses committed 28bb6850.
+
+A separate fresh sample004 control loads untouched package JSON without that
+legacy metadata migration, then restores exact authoritative pad facts and
+explicit producer-derived NPTH mappings before constructing Pipeline9. It retains
+all rules, layers, owners and terminals; original and enriched inputs remain
+immutable and have distinct recorded hashes. With seed 1, no cache, effort 1 and
+the optimizer disabled, routing completes in 31.186s. The outer shared-lock slot
+takes 32.168s with 1.744 GB sampled RSS under 60s/3GiB caps. It has **7 native errors**
+and fails the physical gate on board edges, NPTH/copper clearance and via-in-pad
+among other diagnostics. No candidate is optimized or accepted.
+
+Raw sample004 input SHA:
+`74b95f6290cae4e60c63b7c9e5cbb6d525f2480f04f3b7c6fa5894a8b1c5af3b`.
+Source-enriched input SHA:
+`59b0b3dfb35364e45fdc335ae13006fb8abfe58eecd3615a329ef9138b8c679a`.
+Output SHA:
+`e6b04290b28df2bcd2315a3397faa9716ee6bc9d36fbbb9b9c294eae16afa618`.
+
+No fresh valid large-board Pipeline9 baseline is demonstrated. Ordinary native
+node routing still lacks complete physical full-stack-via legality; source facts
+provided only to the optional tail phase cannot correct earlier routing. Valid
+baseline generation and source-aware producer migration remain separate blockers
+for broader large-board performance claims. No blind-via permission, layer
+flattening, ownership guess or rule waiver is used to manufacture eligibility.
 
 ## Same-reference A/B/AB
 
@@ -86,7 +158,21 @@ released no valid reference and contributes no A/B/AB improvement.
 
 Original input SHA: `6b18b4508d91ef3606e1a376f95fa7cd279b6b1e84f764aa462c5002b26f8737`.
 Reference SHA: `3d8333c0da34ebe7bc62be5fa13dd281aa80c105474ae7c6fb5c78da6e0b7798`.
-Output SHAs and exact replacements are in
+
+| Qualified artifact | Trace SHA-256 |
+| --- | --- |
+| A156 | `02047bcfc2c70b3f2572a2b3044df470c0b147fa87e6351b1d48a0713bb94394` |
+| B155 | `b909848f96cae64e7eac76bdb4f33a2f5ecd08797ca18d8855e1a595400d9b4d` |
+| A+B168 | `b9dd3e473e9d26343bbe9d6fd0c3293a4ade1f642f38869f2b0d99397af9cefd` |
+
+Unchanged copper, compared with the identical reference net subset, has hash
+`e919123f5133e22b85a6bae17ad259ce380269a1f394dd11c69c9be98237c7ee`
+for A/B and `80169e10c05c4b09dabd699c0435af564abfcb25b240e1c18376c59d0cb5521d`
+for A+B. The rejected earlier 155-via proposal is the different trace artifact
+`7abd4fec8acc964995d4acfd07a205dd9331fd7f562d6bcbb5e47e4986b9a057`,
+with six native errors; it must not be confused with qualified B155.
+
+Exact replacements and output order are in
 [`sample007-saved-replay.json`](../tests/fixtures/srj18-post-routing/sample007-saved-replay.json).
 Run `bun test tests/features/pipeline9-srj18-saved-post-routing.test.ts` to
 reconstruct and validate the saved comparisons. This does not rerun the search
