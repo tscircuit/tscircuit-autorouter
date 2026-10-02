@@ -11,7 +11,10 @@ import {
   PortPointWithOwnerPair,
   SharedEdge,
 } from "./types"
-import { determineOwnerPair, indexPortPointOwnerNodes } from "./determineOwnerPair"
+import {
+  determineOwnerPair,
+  indexPortPointOwnerNodes,
+} from "./determineOwnerPair"
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
