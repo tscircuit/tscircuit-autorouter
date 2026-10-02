@@ -1,0 +1,180 @@
+{
+  "count": 25,
+  "exceptions": [
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/geometry.ts",
+      "commentLine": 401,
+      "targetLine": 402,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client.ts",
+      "commentLine": 804,
+      "targetLine": 805,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client.ts",
+      "commentLine": 1060,
+      "targetLine": 1061,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver.ts",
+      "commentLine": 302,
+      "targetLine": 303,
+      "reason": "Existing exported solver statistic; preserve its consumer-facing name."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver.ts",
+      "commentLine": 94,
+      "targetLine": 95,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver.ts",
+      "commentLine": 137,
+      "targetLine": 138,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getNumberOfClosedFaces.ts",
+      "commentLine": 199,
+      "targetLine": 200,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
+      "commentLine": 112,
+      "targetLine": 113,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3.ts",
+      "commentLine": 271,
+      "targetLine": 272,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 750,
+      "targetLine": 751,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 766,
+      "targetLine": 767,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 862,
+      "targetLine": 863,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 864,
+      "targetLine": 865,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 866,
+      "targetLine": 867,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 890,
+      "targetLine": 891,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 905,
+      "targetLine": 906,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 907,
+      "targetLine": 908,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 939,
+      "targetLine": 940,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 955,
+      "targetLine": 956,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 1122,
+      "targetLine": 1123,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 1124,
+      "targetLine": 1125,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/testing/utils/sanitizeParamsForDownload.ts",
+      "commentLine": 246,
+      "targetLine": 247,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/types/srj-types.ts",
+      "commentLine": 159,
+      "targetLine": 160,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "file": "lib/utils/cloneAndShuffleArray.ts",
+      "commentLine": 111,
+      "targetLine": 112,
+      "reason": "Biome keeps this leading ASI guard attached to the preceding statement."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/utils/getRerouteSimpleRouteJson.ts",
+      "commentLine": 11,
+      "targetLine": 12,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    }
+  ]
+}

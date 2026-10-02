@@ -26,9 +26,12 @@ export function runLint(
   )
 }
 
-export function readLintResult(args: string[]): LintResult {
+export function readLintResult(
+  args: string[],
+  expectedExitCode = 0,
+): LintResult {
   const result = runLint(["--format", "json", ...args])
-  if (result.status !== 0 || result.error) {
+  if (result.status !== expectedExitCode || result.error) {
     throw new Error(
       `Oxlint failed (${result.status}): ${result.error ?? ""}\n${result.stdout}\n${result.stderr}`,
     )
