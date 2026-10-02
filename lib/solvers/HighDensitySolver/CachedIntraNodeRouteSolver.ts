@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -172,10 +172,14 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
+    // Buffer the typed serialization before hashing so the crypto implementation
+    // receives one payload instead of thousands of small updates per candidate.
+    const serializedKeyData = objectHash(keyData, {
+      algorithm: "passthrough",
       respectType: false,
       unorderedObjects: false,
-    })}`
+    })
+    const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey
