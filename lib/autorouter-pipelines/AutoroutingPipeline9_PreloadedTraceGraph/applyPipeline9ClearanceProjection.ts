@@ -31,7 +31,7 @@ export const applyPipeline9ClearanceProjection = ({
   previousRoutes?: HighDensityRoute[]
   /** Retain independently safe wire adjustments on boards with mixed errors. */
   allowPartialRepair?: boolean
-  /** Add local bend vertices after the original wire adjustments are retained. */
+  /** Add local bend vertices before projecting wire and via clearances. */
   subdivideSegments?: boolean
   /** Keep the same small clearance margin when validating a final coupled pass. */
   usePrecisionMargin?: boolean
@@ -45,7 +45,7 @@ export const applyPipeline9ClearanceProjection = ({
   }
   const originalCanonicalRoutes = canonicalizePipeline9HdRoutes(routes)
   const canonicalRoutes =
-    allowPartialRepair && subdivideSegments
+    subdivideSegments
       ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
       : originalCanonicalRoutes
   // Whole-board projection needs no cropping or splicing. Preserve every

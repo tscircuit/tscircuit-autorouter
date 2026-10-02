@@ -31,7 +31,17 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
-  expect(errors.length).toBeLessThanOrEqual(59)
+  expect(errors).toHaveLength(0)
+  expect(
+    evaluateRelaxedDrc({
+      ...drcInput,
+      includeBoardClearance: true,
+      drcOptions: {
+        traceClearance: srj.minTraceToPadEdgeClearance,
+        viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
+      },
+    }).errors,
+  ).toHaveLength(0)
   expect(solver.pipelineDef.at(-1)?.solverName).toBe(
     "powerTraceExpansionSolver",
   )
@@ -44,4 +54,4 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     snapshotPath,
   )
-}, 1_080_000)
+})

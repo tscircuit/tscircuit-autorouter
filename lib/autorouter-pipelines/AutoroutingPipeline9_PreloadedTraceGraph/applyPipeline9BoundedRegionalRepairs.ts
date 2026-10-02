@@ -8,14 +8,13 @@ import {
 } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { SameNetViaMergerSolver } from "@tscircuit/trace-simplification-solver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
-import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
+import { applyPipeline9ReportedViaMerges } from "./applyPipeline9ReportedViaMerges"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 
@@ -51,22 +50,23 @@ export const getPipeline9BoundedRepairBudget = (
   pathGridSizeScale?: number
   pathHeuristicWeight?: number
   revisitChangedRegions?: boolean
+  regionSizes?: readonly number[]
 } => {
   // Congested boards need coupled path search after the local force repairs.
-  // Scale total search work with route count, and cap each path separately so
-  // an infeasible span cannot consume the other regions' work allowance.
+  // A regional queue grows with the number of routes. Shrinking its call
+  // allowance on large boards can stop before even two regions are repaired.
+  // Cap total growth and each path separately to retain bounded search work.
   const congested = drcIssueCount >= 10 && routeCount > 120
   const scale = congested
-    ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
+    ? Math.min(4, (routeCount * Math.max(1, effort)) / 120)
     : 1
-  const coarseGrid = congested && drcIssueCount > routeCount / 4
   const maxCandidateAttempts = Math.max(
     1,
     Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
   )
   return {
-    maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
-    maxCandidateAttempts: maxCandidateAttempts * (coarseGrid ? 2 : 1),
+    maxRegions: congested ? 24 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
+    maxCandidateAttempts,
     maxPathSearchNodes: Math.max(
       1,
       Math.floor(
@@ -75,19 +75,14 @@ export const getPipeline9BoundedRepairBudget = (
           : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes,
       ),
     ),
-    // Coarse paths cost fewer grid expansions. Keep the same total node
-    // allowance and per-region call batch, but leave calls for refinement.
-    ...(coarseGrid
-      ? {
-          maxCandidateAttemptsPerRegion: Math.ceil(maxCandidateAttempts / 2),
-          pathGridSizeScale: 2,
-        }
-      : {}),
     ...(congested
       ? {
-          maxPathSearchNodesPerCall: 500_000,
-          pathHeuristicWeight: drcIssueCount > routeCount / 4 ? 3 : 2,
+          maxCandidateAttemptsPerRegion: 512,
+          maxPathSearchNodesPerCall: 1_000_000,
+          pathGridSizeScale: 2,
+          pathHeuristicWeight: 3,
           revisitChangedRegions: true,
+          regionSizes: [16, 32],
         }
       : {}),
   }
@@ -109,6 +104,7 @@ type Pipeline9BoundedRegionalRepairParams = {
     pathGridSizeScale?: number
     pathHeuristicWeight?: number
     revisitChangedRegions?: boolean
+    regionSizes?: readonly number[]
   }
 }
 
@@ -167,7 +163,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   // Repair04 requires a fixed collar of one copper diameter plus clearance.
   // Keep only bounded contexts that leave room for mutable copper.
   const boundaryMargin = Math.max(0.5, maxCopperDiameter + clearance)
-  const regionSizes = REGION_SIZES.filter(
+  const regionSizes = (budget.regionSizes ?? REGION_SIZES).filter(
     (size) => !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
   )
   if (regionSizes.length === 0) return result
@@ -417,6 +413,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       originalSrj,
       routes: negotiatedRoutes,
       previousRoutes: currentRoutes,
+      subdivideSegments: true,
+      usePrecisionMargin: true,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
         return drcEvaluator(input)
@@ -424,65 +422,15 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     })
     let candidateReference: ReturnType<DrcEvaluator> | undefined
     if (connMap) {
-      const beforeMerge = drcEvaluator({
-        traces: [],
+      const mergeResult = applyPipeline9ReportedViaMerges({
+        srj,
         routes: candidateRoutes,
-        hdRoutes: candidateRoutes,
+        connMap,
+        drcEvaluator,
       })
-      result.referenceValidationCount++
-      candidateReference = beforeMerge
-      const beforeMergeErrors = Array.isArray(beforeMerge)
-        ? beforeMerge
-        : beforeMerge.errors
-      const mergeErrors = beforeMergeErrors.filter(
-        (error): boolean => error.type === "pcb_via_clearance_error",
-      )
-      const mergeTraceIds = mergeErrors.flatMap(getDrcErrorTraceIds)
-      const movableRoutes = candidateRoutes.filter((route): boolean =>
-        mergeTraceIds.some(
-          (traceId): boolean =>
-            traceId === route.connectionName ||
-            traceId.startsWith(`${route.connectionName}_`),
-        ),
-      )
-      if (
-        movableRoutes.length > 0 &&
-        mergeErrors.length === beforeMergeErrors.length
-      ) {
-        // Merge only reported same-net conflicts. Other copper stays fixed,
-        // and the complete proposal still passes the physical guards below.
-        const movable = new Set(movableRoutes)
-        const merger = new SameNetViaMergerSolver({
-          inputHdRoutes: movableRoutes,
-          otherHdRoutes: candidateRoutes.filter(
-            (route): boolean => !movable.has(route),
-          ),
-          netByConnectionName: getPipeline9NetByConnectionName(
-            candidateRoutes,
-            connMap,
-          ),
-          obstacles: srj.obstacles,
-          layerCount: srj.layerCount,
-          connMap,
-          colorMap: {},
-          preserveRouteEndpoints: true,
-        })
-        merger.solve()
-        if (!merger.solved || merger.failed) {
-          throw new Error(`Regional via merge failed: ${merger.error}`)
-        }
-        const mergedByName = new Map(
-          merger.mergedViaHdRoutes.map((route) => [
-            route.connectionName,
-            route,
-          ]),
-        )
-        candidateReference = undefined
-        candidateRoutes = candidateRoutes.map(
-          (route): HighDensityRoute =>
-            mergedByName.get(route.connectionName) ?? route,
-        )
-      }
+      result.referenceValidationCount += mergeResult.referenceValidationCount
+      candidateReference = mergeResult.referenceResult
+      candidateRoutes = mergeResult.routes
     }
     const candidateFixedViolations = getFixedObstacleViolations({
       srj,

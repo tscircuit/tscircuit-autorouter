@@ -64,12 +64,15 @@ const makeParams = (
 
 test("large conflicted boards bound repair work while near-clean and higher-effort boards retain the full budget", (): void => {
   expect(getPipeline9BoundedRepairBudget(480, 20, 1)).toEqual({
-    maxRegions: 8,
-    maxCandidateAttempts: 256,
-    maxPathSearchNodes: 2500000,
-    maxPathSearchNodesPerCall: 500000,
-    pathHeuristicWeight: 2,
+    maxRegions: 24,
+    maxCandidateAttempts: 4096,
+    maxCandidateAttemptsPerRegion: 512,
+    maxPathSearchNodes: 40000000,
+    maxPathSearchNodesPerCall: 1000000,
+    pathGridSizeScale: 2,
+    pathHeuristicWeight: 3,
     revisitChangedRegions: true,
+    regionSizes: [16, 32],
   })
   for (const [routeCount, errors, effort] of [
     [480, 9, 1],
@@ -84,19 +87,22 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
     })
   }
   expect(getPipeline9BoundedRepairBudget(480, 20, 4)).toEqual({
-    maxRegions: 8,
-    maxCandidateAttempts: 1024,
-    maxPathSearchNodes: 10000000,
-    maxPathSearchNodesPerCall: 500000,
-    pathHeuristicWeight: 2,
+    maxRegions: 24,
+    maxCandidateAttempts: 4096,
+    maxCandidateAttemptsPerRegion: 512,
+    maxPathSearchNodes: 40000000,
+    maxPathSearchNodesPerCall: 1000000,
+    pathGridSizeScale: 2,
+    pathHeuristicWeight: 3,
     revisitChangedRegions: true,
+    regionSizes: [16, 32],
   })
   const denseBudget = getPipeline9BoundedRepairBudget(480, 121, 1)
   expect(denseBudget.pathHeuristicWeight).toBe(3)
   expect(denseBudget.pathGridSizeScale).toBe(2)
-  expect(denseBudget.maxCandidateAttemptsPerRegion).toBe(128)
-  expect(denseBudget.maxCandidateAttempts).toBe(512)
-  expect(denseBudget.maxPathSearchNodes).toBe(2500000)
+  expect(denseBudget.maxCandidateAttemptsPerRegion).toBe(512)
+  expect(denseBudget.maxCandidateAttempts).toBe(4096)
+  expect(denseBudget.maxPathSearchNodes).toBe(40000000)
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)

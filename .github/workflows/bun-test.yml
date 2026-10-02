@@ -16,9 +16,9 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    # Balanced plans target roughly ten minutes of test work; leave room for
-    # checkout, dependency installation, and runner variance.
-    timeout-minutes: 20
+    # The full-board bugreport107 repro takes about sixteen minutes locally.
+    # Allow its thirty-minute test budget plus checkout and installation.
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -63,8 +63,12 @@ jobs:
           # Keep their assertions and allow the same runner-variance budget.
           regular_tests=()
           slow_tests=()
+          full_board_tests=()
           for test_file in "${test_files[@]}"; do
             case "$test_file" in
+              tests/bugs/bugreport107-board-1726.test.ts)
+                full_board_tests+=("$test_file")
+                ;;
               tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts|tests/features/pipeline9-a13-srj18-sample2-drc.test.ts)
                 slow_tests+=("$test_file")
                 ;;
@@ -76,6 +80,9 @@ jobs:
           fi
           if [ "${#slow_tests[@]}" -gt 0 ]; then
             bun test "${slow_tests[@]}" --timeout 600000
+          fi
+          if [ "${#full_board_tests[@]}" -gt 0 ]; then
+            bun test "${full_board_tests[@]}" --timeout 1800000
           fi
 
       - name: Upload diff PNG and SVG snapshot artifacts
