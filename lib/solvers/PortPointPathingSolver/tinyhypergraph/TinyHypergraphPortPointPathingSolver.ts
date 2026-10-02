@@ -230,6 +230,7 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
+  USE_LAZY_ROUTE_HEURISTIC: true,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -1109,6 +1110,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
+          USE_LAZY_ROUTE_HEURISTIC: true,
           MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
