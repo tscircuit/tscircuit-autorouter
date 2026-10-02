@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import { RbushIndex } from "lib/data-structures/RbushIndex"
 import type { CapacityMeshNode } from "lib/types"
 import {
   getBoundsIntersection,
@@ -19,6 +20,11 @@ import {
 export type TopologyMergingOutputProvenance = {
   groupIndexesByNodeId: Map<string, number[]>
   sourceKeysByNodeId: Map<string, string[]>
+}
+
+type IndexedCapacityMeshNode = {
+  index: number
+  node: CapacityMeshNode
 }
 
 export function createTopologyMergingOutputNodes({
@@ -161,17 +167,32 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  const nodeSpatialIndex = new RbushIndex<IndexedCapacityMeshNode>()
+  nodeSpatialIndex.bulkLoad(
+    nodes.map((node, index) => ({
+      item: { index, node },
+      ...getCapacityMeshNodeBounds(node),
+    })),
+  )
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
-      const nodeB = nodes[bIndex]!
+    const nodeABounds = getCapacityMeshNodeBounds(nodeA)
+    const potentiallyOverlappingNodes = nodeSpatialIndex.search(
+      nodeABounds.minX,
+      nodeABounds.minY,
+      nodeABounds.maxX,
+      nodeABounds.maxY,
+    )
+    for (const { index: bIndex, node: nodeB } of potentiallyOverlappingNodes) {
+      if (bIndex <= aIndex) continue
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
       )
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
+        nodeABounds,
         getCapacityMeshNodeBounds(nodeB),
       )
       if (!intersection) continue
