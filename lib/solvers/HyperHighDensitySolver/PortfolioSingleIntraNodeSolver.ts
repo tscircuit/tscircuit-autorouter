@@ -496,9 +496,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["flipTraceAlignmentDirection", "orderings6"],
     ]) {
       const combinations = this.getHyperParameterCombinations(
-        hyperParameterDefs.filter(({ name }) =>
-          combinationDef.includes(name),
-        ),
+        hyperParameterDefs.filter(({ name }) => combinationDef.includes(name)),
       )
       for (const hyperParameters of combinations) {
         const candidateKey = JSON.stringify(

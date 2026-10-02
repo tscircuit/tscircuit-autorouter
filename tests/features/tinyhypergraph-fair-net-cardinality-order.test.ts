@@ -16,10 +16,7 @@ test("interleaves nets proportionally while preserving their route order", () =>
   ]
 
   expect(
-    hasNetLargerThanNetCount(
-      connections,
-      (connection) => connection.netId,
-    ),
+    hasNetLargerThanNetCount(connections, (connection) => connection.netId),
   ).toBeTrue()
 
   expect(

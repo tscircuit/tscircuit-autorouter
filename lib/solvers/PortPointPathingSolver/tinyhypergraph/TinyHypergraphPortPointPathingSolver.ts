@@ -1070,16 +1070,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
-      connections =
-        acceptFirstCompleteRouteSet
-          ? orderConnectionsByNetCardinalityFairly(
-              tinyRouteConnections,
-              getTinyRouteConnectionNetId,
-            )
-          : orderConnectionsByNetCardinality(
-              tinyRouteConnections,
-              getTinyRouteConnectionNetId,
-            )
+      connections = acceptFirstCompleteRouteSet
+        ? orderConnectionsByNetCardinalityFairly(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
+        : orderConnectionsByNetCardinality(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
     }
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [

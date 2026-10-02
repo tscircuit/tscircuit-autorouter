@@ -3,14 +3,17 @@ import { validateTopologyMergingOutput } from "lib/solvers/TopologyMergingSolver
 import type { CapacityMeshNode } from "lib/types"
 
 test("validates only spatially overlapping topology output nodes", () => {
-  const nodes: CapacityMeshNode[] = Array.from({ length: 2_000 }, (_, index) => ({
-    capacityMeshNodeId: `node_${index}`,
-    center: { x: index * 2, y: 0 },
-    width: 1,
-    height: 1,
-    layer: "z0",
-    availableZ: [0],
-  }))
+  const nodes: CapacityMeshNode[] = Array.from(
+    { length: 2_000 },
+    (_, index) => ({
+      capacityMeshNodeId: `node_${index}`,
+      center: { x: index * 2, y: 0 },
+      width: 1,
+      height: 1,
+      layer: "z0",
+      availableZ: [0],
+    }),
+  )
   nodes.push({
     capacityMeshNodeId: "overlapping_node",
     center: { x: 2_000, y: 0 },
