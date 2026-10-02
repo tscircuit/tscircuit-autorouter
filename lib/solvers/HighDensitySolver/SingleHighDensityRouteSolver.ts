@@ -638,6 +638,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
+    let viaPositionIsBlocked: boolean | undefined
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
@@ -651,19 +652,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
-      if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
-        !this.isNodeTooCloseToObstacle(
+      if (this.exploredNodes.has(this.getNodeKey(viaNeighbor))) continue
+
+      viaPositionIsBlocked ??=
+        this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
           true,
-        ) &&
-        !this.isNodeTooCloseToEdge(viaNeighbor, true)
-      ) {
-        this.setNodeCosts(viaNeighbor)
+        ) || this.isNodeTooCloseToEdge(viaNeighbor, true)
+      if (viaPositionIsBlocked) continue
 
-        neighbors.push(viaNeighbor)
-      }
+      this.setNodeCosts(viaNeighbor)
+      neighbors.push(viaNeighbor)
     }
 
     return neighbors
