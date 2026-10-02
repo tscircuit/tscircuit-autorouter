@@ -8,10 +8,27 @@ test("four-layer via-only optimization removes two physical through barrels whil
   input.traces[0]!.route = [
     { route_type: "wire", x: 0, y: 0, layer: "top", width: 0.4 },
     { route_type: "wire", x: 0, y: 2, layer: "top", width: 0.4 },
-    { route_type: "via", x: 0, y: 2, from_layer: "top", to_layer: "inner1", layers: ["top", "inner1", "inner2", "bottom"], via_diameter: 0.6, via_hole_diameter: 0.3 },
+    {
+      route_type: "via",
+      x: 0,
+      y: 2,
+      from_layer: "top",
+      to_layer: "inner1",
+      layers: ["top", "inner1", "inner2", "bottom"],
+      via_diameter: 0.6,
+      via_hole_diameter: 0.3,
+    },
     { route_type: "wire", x: 0, y: 2, layer: "inner1", width: 0.4 },
     { route_type: "wire", x: 10, y: 2, layer: "inner1", width: 0.4 },
-    { route_type: "via", x: 10, y: 2, from_layer: "inner1", to_layer: "top", via_diameter: 0.6, via_hole_diameter: 0.3 },
+    {
+      route_type: "via",
+      x: 10,
+      y: 2,
+      from_layer: "inner1",
+      to_layer: "top",
+      via_diameter: 0.6,
+      via_hole_diameter: 0.3,
+    },
     { route_type: "wire", x: 10, y: 2, layer: "top", width: 0.4 },
     { route_type: "wire", x: 10, y: 0, layer: "top", width: 0.4 },
   ]
@@ -25,6 +42,8 @@ test("four-layer via-only optimization removes two physical through barrels whil
   expect(result.before!.viaSites).toBe(2)
   expect(result.after!.viaSites).toBe(0)
   expect(result.changedNets).toEqual(["signal"])
-  expect(result.traces.find(t => t.pcb_trace_id === input.traces[1]!.pcb_trace_id)).toEqual(input.traces[1])
+  expect(
+    result.traces.find((t) => t.pcb_trace_id === input.traces[1]!.pcb_trace_id),
+  ).toEqual(input.traces[1])
   expect(input).toEqual(original)
 })

@@ -33,7 +33,9 @@ export function restorePostRoutingPadMetadata(
   for (const obstacle of output.obstacles) {
     const recorded = obstacle.circuitJsonMetadata
     const ownId = obstacle.connectedTo[0]
-    const id = recorded?.pcb_plated_hole_id ?? recorded?.pcb_smtpad_id ??
+    const id =
+      recorded?.pcb_plated_hole_id ??
+      recorded?.pcb_smtpad_id ??
       (ownId && pads.has(ownId) ? ownId : undefined)
     if (!id) continue
     const source = pads.get(id)
@@ -44,16 +46,22 @@ export function restorePostRoutingPadMetadata(
     representedPads.add(id)
     if (source.type !== "pcb_plated_hole" && source.type !== "pcb_smtpad")
       throw new Error(`Invalid pad source ${id}`)
-    const metadata = obstacle.circuitJsonMetadata ??= source.type === "pcb_plated_hole"
-      ? { pcb_plated_hole_id: id } : { pcb_smtpad_id: id }
+    const metadata = (obstacle.circuitJsonMetadata ??=
+      source.type === "pcb_plated_hole"
+        ? { pcb_plated_hole_id: id }
+        : { pcb_smtpad_id: id })
     if (metadata?.pcb_port_id && source.pcb_port_id !== metadata.pcb_port_id) {
       // The legacy producer's repeated-pad block contains a source-port alias
       // before its PCB port. Correct that known migration only with the exact
       // source pad ID and its authoritative PCB port already in the input.
       const ownBlock = obstacle.connectedTo.lastIndexOf(id)
-      if (obstacle.connectedTo[0] !== id || ownBlock < 0 ||
+      if (
+        obstacle.connectedTo[0] !== id ||
+        ownBlock < 0 ||
         obstacle.connectedTo[ownBlock + 1] !== metadata.pcb_port_id ||
-        !source.pcb_port_id || obstacle.connectedTo[ownBlock + 2] !== source.pcb_port_id)
+        !source.pcb_port_id ||
+        obstacle.connectedTo[ownBlock + 2] !== source.pcb_port_id
+      )
         throw new Error(`Authoritative pad port mismatch ${id}`)
       metadata.pcb_port_id = source.pcb_port_id
     }
@@ -92,17 +100,15 @@ export function restorePostRoutingPadMetadata(
       obstacle.unsupportedPhysicalGeometry = `source land shape ${land.shape}`
       continue
     }
-    if (
-      (land.hole_offset_x ?? 0) !== 0 ||
-      (land.hole_offset_y ?? 0) !== 0
-    ) {
+    if ((land.hole_offset_x ?? 0) !== 0 || (land.hole_offset_y ?? 0) !== 0) {
       obstacle.unsupportedPhysicalGeometry = "offset drill"
       continue
     }
     const expectedType =
       land.shape === "circle"
         ? "circle"
-        : land.shape === "circular_hole_with_rect_pad" || land.shape === "rect" ||
+        : land.shape === "circular_hole_with_rect_pad" ||
+            land.shape === "rect" ||
             land.shape === "rotated_rect"
           ? "rect"
           : "oval"
@@ -140,11 +146,17 @@ export function restorePostRoutingPadMetadata(
         height !== undefined &&
         close(width, height) &&
         rotationGap % 90 < 1e-6)
-    const swappedQuarterTurn = width !== undefined && height !== undefined &&
-      close(obstacle.width, height) && close(obstacle.height, width) &&
-      Math.abs(rotationGap % 180 - 90) < 1e-6
-    const sameAxes = width !== undefined && height !== undefined &&
-      close(obstacle.width, width) && close(obstacle.height, height) &&
+    const swappedQuarterTurn =
+      width !== undefined &&
+      height !== undefined &&
+      close(obstacle.width, height) &&
+      close(obstacle.height, width) &&
+      Math.abs((rotationGap % 180) - 90) < 1e-6
+    const sameAxes =
+      width !== undefined &&
+      height !== undefined &&
+      close(obstacle.width, width) &&
+      close(obstacle.height, height) &&
       (rotationEquivalent || rotationGap % 180 < 1e-6)
     if (
       !close(obstacle.center.x, land.x) ||
@@ -158,20 +170,30 @@ export function restorePostRoutingPadMetadata(
     if (obstacle.isPlated !== undefined && obstacle.isPlated !== plated)
       throw new Error(`Conflicting explicit plating ${id}`)
     obstacle.isPlated = plated
-    const cornerRadius = land.corner_radius ?? land.rect_pad_border_radius ?? land.border_radius
-    if ((expectedType === "circle" || expectedType === "oval" || cornerRadius) &&
-      obstacle.shape !== "circle")
-      obstacle.routingEnvelope = {width: obstacle.width, height: obstacle.height,
-        rotation: ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180}
+    const cornerRadius =
+      land.corner_radius ?? land.rect_pad_border_radius ?? land.border_radius
+    if (
+      (expectedType === "circle" || expectedType === "oval" || cornerRadius) &&
+      obstacle.shape !== "circle"
+    )
+      obstacle.routingEnvelope = {
+        width: obstacle.width,
+        height: obstacle.height,
+        rotation: ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180,
+      }
     // Restore the exact land inside the producer's verified envelope. This is
     // an isolated physical input; original SRJ and routed copper stay intact.
     obstacle.landShape = expectedType
     obstacle.width = width
     obstacle.height = height
-    obstacle.ccwRotationDegrees = land.ccw_rotation ?? land.rect_ccw_rotation ?? 0
+    obstacle.ccwRotationDegrees =
+      land.ccw_rotation ?? land.rect_ccw_rotation ?? 0
     if (cornerRadius !== undefined) {
-      if (!Number.isFinite(cornerRadius) || cornerRadius < 0 ||
-        cornerRadius > Math.min(width, height) / 2)
+      if (
+        !Number.isFinite(cornerRadius) ||
+        cornerRadius < 0 ||
+        cornerRadius > Math.min(width, height) / 2
+      )
         throw new Error(`Invalid authoritative corner radius ${id}`)
       obstacle.cornerRadius = cornerRadius
     }
@@ -212,9 +234,15 @@ export function restorePostRoutingPadMetadata(
   for (const [id, index] of Object.entries(holeObstacleIndices)) {
     const hole = sourceHoles.get(id)
     const obstacle = output.obstacles[index]
-    if (!hole || hole.type !== "pcb_hole" || !obstacle ||
-      usedHoleObstacles.has(index) || obstacle.connectedTo.length ||
-      obstacle.circuitJsonMetadata || obstacle.componentId !== hole.pcb_component_id)
+    if (
+      !hole ||
+      hole.type !== "pcb_hole" ||
+      !obstacle ||
+      usedHoleObstacles.has(index) ||
+      obstacle.connectedTo.length ||
+      obstacle.circuitJsonMetadata ||
+      obstacle.componentId !== hole.pcb_component_id
+    )
       throw new Error(`Invalid authoritative hole obstacle mapping ${id}`)
     usedHoleObstacles.add(index)
     representedHoles.add(id)
@@ -223,9 +251,14 @@ export function restorePostRoutingPadMetadata(
       continue
     }
     const diameter = hole.hole_diameter
-    if (!Number.isFinite(diameter) || diameter <= 0 ||
-      !close(obstacle.center.x, hole.x) || !close(obstacle.center.y, hole.y) ||
-      !close(obstacle.width, diameter) || !close(obstacle.height, diameter))
+    if (
+      !Number.isFinite(diameter) ||
+      diameter <= 0 ||
+      !close(obstacle.center.x, hole.x) ||
+      !close(obstacle.center.y, hole.y) ||
+      !close(obstacle.width, diameter) ||
+      !close(obstacle.height, diameter)
+    )
       throw new Error(`Authoritative hole geometry mismatch ${id}`)
     obstacle.sourceHoleId = id
     obstacle.isNonPlatedHole = true
@@ -233,10 +266,18 @@ export function restorePostRoutingPadMetadata(
     obstacle.holeDiameter = diameter
     obstacle.holeShape = "circle"
   }
-  const missingHoles = [...sourceHoles.keys()].filter((id) => !representedHoles.has(id))
+  const missingHoles = [...sourceHoles.keys()].filter(
+    (id) => !representedHoles.has(id),
+  )
   const missingGeometry = [
-    ...(missing.length ? [`Authoritative source pads absent from SRJ: ${missing.join(", ")}`] : []),
-    ...(missingHoles.length ? [`Authoritative source holes lack obstacle provenance: ${missingHoles.join(", ")}`] : []),
+    ...(missing.length
+      ? [`Authoritative source pads absent from SRJ: ${missing.join(", ")}`]
+      : []),
+    ...(missingHoles.length
+      ? [
+          `Authoritative source holes lack obstacle provenance: ${missingHoles.join(", ")}`,
+        ]
+      : []),
   ]
   if (missingGeometry.length)
     output.unsupportedPhysicalGeometry = missingGeometry.join("; ")

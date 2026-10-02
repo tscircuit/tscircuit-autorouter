@@ -35,7 +35,8 @@ test("authoritative exact pad identity restores drill and plating without mutati
   expect(physical.obstacles[0]!.isPlated).toBe(true)
   expect(physical.obstacles[0]!.holeDiameter).toBe(0.3)
   expect(physical.obstacles[0]!.holeShape).toBe("circle")
-  const { isPlated, holeDiameter, holeShape, landShape, ...land } = physical.obstacles[0]!
+  const { isPlated, holeDiameter, holeShape, landShape, ...land } =
+    physical.obstacles[0]!
   expect(land).toEqual(input.srj.obstacles[0])
   expect({ input, source }).toEqual(original)
   expect(physical).not.toBe(input.srj)
@@ -75,12 +76,7 @@ test("source mismatches and conflicting explicit physical facts fail rather than
 })
 
 test("slots, missing drills and offset drills remain unsupported and uncertified", () => {
-  for (const defect of [
-    "slot",
-    "missing",
-    "offset",
-    "unknown",
-  ] as const) {
+  for (const defect of ["slot", "missing", "offset", "unknown"] as const) {
     const { input, source } = fixture()
     const pad = source[0] as unknown as Record<string, unknown>
     if (defect === "slot") {

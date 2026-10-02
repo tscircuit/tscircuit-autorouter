@@ -15,7 +15,12 @@ export type TreeCopper = {
   rectangle?: { width: number; height: number; rotation: number }
   holeDiameter?: number
   /** Drill geometry is independent of an oval/rounded copper land. */
-  drill?: { start: TreePoint; end: TreePoint; diameter: number; layers: number[] }
+  drill?: {
+    start: TreePoint
+    end: TreePoint
+    diameter: number
+    layers: number[]
+  }
 }
 
 export function projectToCopper(
@@ -97,23 +102,25 @@ export function segmentCopperGap(
   )
     return -copper.radius
   const corners = copperRectangleCorners(copper)
-  return Math.min(
-    ...corners.map((p, i) =>
-      minimumDistanceBetweenSegments(a, b, p, corners[(i + 1) % 4]!),
-    ),
-  ) - copper.radius
+  return (
+    Math.min(
+      ...corners.map((p, i) =>
+        minimumDistanceBetweenSegments(a, b, p, corners[(i + 1) % 4]!),
+      ),
+    ) - copper.radius
+  )
 }
 
 /** Symmetric continuous shape gap, including either containment order. Rounded
  * rectangles are a rectangular core plus their exact corner radius. */
 export function copperGap(a: TreeCopper, b: TreeCopper): number {
-  if (!a.rectangle)
-    return segmentCopperGap(a.start, a.end, b) - a.radius
+  if (!a.rectangle) return segmentCopperGap(a.start, a.end, b) - a.radius
   const corners = copperRectangleCorners(a)
   return Math.min(
     segmentCopperGap(b.start, b.end, a) - b.radius,
-    ...corners.map((p, i) =>
-      segmentCopperGap(p, corners[(i + 1) % 4]!, b) - a.radius),
+    ...corners.map(
+      (p, i) => segmentCopperGap(p, corners[(i + 1) % 4]!, b) - a.radius,
+    ),
   )
 }
 

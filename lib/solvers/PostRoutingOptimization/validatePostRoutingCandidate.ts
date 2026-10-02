@@ -1,7 +1,10 @@
 import type { SimplifiedPcbTrace } from "../../types"
 import { UnsupportedPostRoutingInputError } from "./UnsupportedPostRoutingInputError"
 import { getViaDimensions } from "../../utils/getViaDimensions"
-import { postRoutingLayerIndex, postRoutingViaLayers } from "../DynamicNetTreeSolver/postRoutingLayers"
+import {
+  postRoutingLayerIndex,
+  postRoutingViaLayers,
+} from "../DynamicNetTreeSolver/postRoutingLayers"
 import { minimumDistanceBetweenSegments } from "../../utils/minimumDistanceBetweenSegments"
 import {
   createDynamicNetTreeProblem,
@@ -60,13 +63,30 @@ export function validatePostRoutingCandidate(
       if (p.route_type === "through_obstacle") {
         postRoutingLayerIndex(p.from_layer, srj.layerCount)
         postRoutingLayerIndex(p.to_layer, srj.layerCount)
-        if (![p.start.x, p.start.y, p.end.x, p.end.y, p.width].every(Number.isFinite))
-          throw new Error(`Non-finite plated traversal ${trace.pcb_trace_id}:${i}`)
-        if (p.width < width - 1e-9 || previous?.route_type !== "wire" ||
-          next?.route_type !== "wire" || previous.layer !== p.from_layer ||
-          next.layer !== p.to_layer || Math.hypot(previous.x - p.start.x,
-            previous.y - p.start.y, next.x - p.end.x, next.y - p.end.y) > 1e-8)
-          diagnostics.push(`Malformed plated traversal ${trace.pcb_trace_id}:${i}`)
+        if (
+          ![p.start.x, p.start.y, p.end.x, p.end.y, p.width].every(
+            Number.isFinite,
+          )
+        )
+          throw new Error(
+            `Non-finite plated traversal ${trace.pcb_trace_id}:${i}`,
+          )
+        if (
+          p.width < width - 1e-9 ||
+          previous?.route_type !== "wire" ||
+          next?.route_type !== "wire" ||
+          previous.layer !== p.from_layer ||
+          next.layer !== p.to_layer ||
+          Math.hypot(
+            previous.x - p.start.x,
+            previous.y - p.start.y,
+            next.x - p.end.x,
+            next.y - p.end.y,
+          ) > 1e-8
+        )
+          diagnostics.push(
+            `Malformed plated traversal ${trace.pcb_trace_id}:${i}`,
+          )
         continue
       }
       if (p.route_type !== "wire" && p.route_type !== "via")
@@ -141,7 +161,8 @@ export function validatePostRoutingCandidate(
     problem.boardEdgeClearance < 0 ||
     problem.holeClearance < 0 ||
     problem.viaToPadClearance! < 0 ||
-    problem.traceToHoleClearance! < 0 || problem.platedHoleClearance! < 0 ||
+    problem.traceToHoleClearance! < 0 ||
+    problem.platedHoleClearance! < 0 ||
     (srj.minPadEdgeToPadEdgeClearance ?? 0) < 0 ||
     problem.viaHoleDiameter <= 0 ||
     problem.viaDiameter <= problem.viaHoleDiameter ||
@@ -159,15 +180,30 @@ export function validatePostRoutingCandidate(
         c.radius,
         ...(c.rectangle ? Object.values(c.rectangle) : []),
         ...(c.routingEnvelope ? Object.values(c.routingEnvelope) : []),
-        ...(c.drill ? [c.drill.start.x, c.drill.start.y, c.drill.end.x,
-          c.drill.end.y, c.drill.diameter] : []),
+        ...(c.drill
+          ? [
+              c.drill.start.x,
+              c.drill.start.y,
+              c.drill.end.x,
+              c.drill.end.y,
+              c.drill.diameter,
+            ]
+          : []),
       ].every(Number.isFinite) ||
       c.radius < 0 ||
-      (c.routingEnvelope && (c.routingEnvelope.width <= 0 || c.routingEnvelope.height <= 0)) ||
-      (c.drill && (c.drill.diameter <= 0 || c.drill.layers.length === 0 ||
-        c.drill.layers.some(z => !Number.isInteger(z) || z < 0 || z >= srj.layerCount))) ||
-      (c.rectangle && (c.rectangle.width < 0 || c.rectangle.height < 0 ||
-        (c.radius === 0 && (c.rectangle.width === 0 || c.rectangle.height === 0))))
+      (c.routingEnvelope &&
+        (c.routingEnvelope.width <= 0 || c.routingEnvelope.height <= 0)) ||
+      (c.drill &&
+        (c.drill.diameter <= 0 ||
+          c.drill.layers.length === 0 ||
+          c.drill.layers.some(
+            (z) => !Number.isInteger(z) || z < 0 || z >= srj.layerCount,
+          ))) ||
+      (c.rectangle &&
+        (c.rectangle.width < 0 ||
+          c.rectangle.height < 0 ||
+          (c.radius === 0 &&
+            (c.rectangle.width === 0 || c.rectangle.height === 0))))
     )
       throw new Error(`Invalid copper ${c.id}`)
     if (c.kind === "pad" || c.kind === "hole") continue
@@ -197,33 +233,46 @@ export function validatePostRoutingCandidate(
         const gap = copperGap(a, b)
         const clearance =
           a.kind === "hole" || b.kind === "hole"
-            ? (a.kind === "wire" || b.kind === "wire" ? problem.traceToHoleClearance! : 0)
+            ? a.kind === "wire" || b.kind === "wire"
+              ? problem.traceToHoleClearance!
+              : 0
             : a.kind === "pad" && b.kind === "pad"
-            ? (srj.minPadEdgeToPadEdgeClearance ?? 0)
-            : (a.kind === "via" && b.kind === "pad") ||
-              (b.kind === "via" && a.kind === "pad")
-              ? problem.viaToPadClearance! : problem.clearance
+              ? (srj.minPadEdgeToPadEdgeClearance ?? 0)
+              : (a.kind === "via" && b.kind === "pad") ||
+                  (b.kind === "via" && a.kind === "pad")
+                ? problem.viaToPadClearance!
+                : problem.clearance
         if (gap < clearance - 1e-8 || (clearance === 0 && copperTouches(a, b)))
           diagnostics.push(`Foreign copper clearance ${a.id}/${b.id}`)
       }
-      const ad = a.drill, bd = b.drill
+      const ad = a.drill,
+        bd = b.drill
       if (ad && bd && ad.layers.some((z) => bd.layers.includes(z))) {
         const sameSite =
           a.owner === b.owner &&
-          Math.hypot(ad.start.x - bd.start.x, ad.start.y - bd.start.y,
-            ad.end.x - bd.end.x, ad.end.y - bd.end.y) < 1e-9 &&
-          ad.diameter === bd.diameter && a.radius === b.radius &&
+          Math.hypot(
+            ad.start.x - bd.start.x,
+            ad.start.y - bd.start.y,
+            ad.end.x - bd.end.x,
+            ad.end.y - bd.end.y,
+          ) < 1e-9 &&
+          ad.diameter === bd.diameter &&
+          a.radius === b.radius &&
           JSON.stringify(ad.layers) === JSON.stringify(bd.layers)
         if (
           !sameSite &&
           minimumDistanceBetweenSegments(ad.start, ad.end, bd.start, bd.end) <
             (ad.diameter + bd.diameter) / 2 +
-              (a.kind === "via" && b.kind === "via" ? problem.holeClearance : problem.platedHoleClearance!) - 1e-8
+              (a.kind === "via" && b.kind === "via"
+                ? problem.holeClearance
+                : problem.platedHoleClearance!) -
+              1e-8
         )
           diagnostics.push(`Drill spacing ${a.id}/${b.id}`)
       }
       if (
-        copperOverlap && !problem.allowViaInPad &&
+        copperOverlap &&
+        !problem.allowViaInPad &&
         ((a.kind === "via" &&
           b.kind === "pad" &&
           segmentCopperGap(a.start, a.end, b) < a.radius - 1e-8) ||
@@ -237,9 +286,7 @@ export function validatePostRoutingCandidate(
     const own = copper.filter((c) => c.owner === connection.name)
     const terminals: TreeCopper[] = connection.pointsToConnect.flatMap((p, i) =>
       (p.layers ?? [p.layer!]).map((layer) => {
-        if (
-          ![p.x, p.y].every(Number.isFinite)
-        )
+        if (![p.x, p.y].every(Number.isFinite))
           throw new Error(`Invalid terminal ${connection.name}:${i}`)
         return {
           id: `validation:${i}:${layer}`,
