@@ -128,6 +128,8 @@ interface CapacityMeshSolverOptions {
   visualizationTraceColorMode?: TraceColorMode
   /** Opt-in end-of-pipeline dynamic-tree transaction, without forest preplanning. */
   dynamicNetTreeRouting?: PostRoutingOptimizationOptions
+  /** Independent opt-in forest-first post-routing transaction. */
+  postRoutingOptimization?: PostRoutingOptimizationOptions
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
@@ -290,6 +292,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   dynamicNetTreeSolver?: PostRoutingNetTreeSolver
   dynamicNetTreeValidationSolver?: PostRoutingOptimizationSolver
+  postRoutingForestSolver?: PostRoutingNetTreeSolver
+  postRoutingOptimizationSolver?: PostRoutingOptimizationSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -1136,6 +1140,40 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ),
       )
     }
+    if (opts.postRoutingOptimization?.enabled) {
+      const configuration = {
+        ...structuredClone({
+          enabled: true,
+          nets: opts.postRoutingOptimization.nets,
+          search: opts.postRoutingOptimization.search,
+          objective: opts.postRoutingOptimization.objective,
+        }),
+        validate: opts.postRoutingOptimization.validate,
+      }
+      configuration.nets = configuration.nets.map((plan) => ({
+        ...plan,
+        componentPlanning: "zero-via-forest",
+      }))
+      this.pipelineDef.push(
+        definePipelineStep(
+          "postRoutingForestSolver",
+          PostRoutingNetTreeSolver,
+          (cms) => [
+            cms.createPostRoutingInput(cms.getTracesAfterDynamicTree()),
+            configuration,
+          ],
+        ),
+        definePipelineStep(
+          "postRoutingOptimizationSolver",
+          PostRoutingOptimizationSolver,
+          (cms) => {
+            if (!cms.postRoutingForestSolver)
+              throw new Error("Pipeline9: post-routing forest proposal missing")
+            return [cms.postRoutingForestSolver.getOutput()]
+          },
+        ),
+      )
+    }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
@@ -1455,7 +1493,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.activeSubSolver instanceof PostRoutingOptimizationSolver
     )
       return this.activeSubSolver.preview()
-    if (this.solved && this.dynamicNetTreeValidationSolver)
+    if (
+      this.solved &&
+      (this.dynamicNetTreeValidationSolver ||
+        this.postRoutingOptimizationSolver)
+    )
       return this.visualizeFinalOutput()
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
@@ -1704,17 +1746,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         : this.originalSrj,
       traces,
       this.getPowerTraceExpansionFixedTraces(),
-      this.opts.dynamicNetTreeRouting?.nets.map((plan) => plan.net) ?? [],
+      Array.from(
+        new Set(
+          [
+            ...(this.opts.dynamicNetTreeRouting?.nets ?? []),
+            ...(this.opts.postRoutingOptimization?.nets ?? []),
+          ].map((plan) => plan.net),
+        ),
+      ),
       this.netToPointPairsSolver?.newConnections ?? [],
     )
+  }
+
+  private getTracesAfterDynamicTree(): SimplifiedPcbTraces {
+    const result = this.getDynamicNetTreeRoutingResult()
+    return result?.status === "accepted"
+      ? result.traces
+      : this.getFinalizedRoutingTraces()
+  }
+
+  getDynamicNetTreeRoutingResult(): PostRoutingOptimizationResult | undefined {
+    return this.dynamicNetTreeValidationSolver?.solved
+      ? this.dynamicNetTreeValidationSolver.getOutput()
+      : undefined
   }
 
   getPostRoutingOptimizationResult():
     | PostRoutingOptimizationResult
     | undefined {
-    return this.dynamicNetTreeValidationSolver?.solved
-      ? this.dynamicNetTreeValidationSolver.getOutput()
-      : undefined
+    return this.postRoutingOptimizationSolver?.solved
+      ? this.postRoutingOptimizationSolver.getOutput()
+      : this.getDynamicNetTreeRoutingResult()
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
@@ -1727,12 +1789,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
     const result = this.getPostRoutingOptimizationResult()
-    if (result?.status === "accepted") {
+    if (
+      result?.status === "accepted" ||
+      this.getDynamicNetTreeRoutingResult()?.status === "accepted"
+    ) {
       const protectedIds = new Set(
         this.getPowerTraceExpansionFixedTraces()
           .filter((trace) => trace.__replaces_pcb_trace_id === undefined)
           .map((trace) => trace.pcb_trace_id),
       )
+      if (!result)
+        throw new Error("Pipeline9: accepted post-routing result missing")
       return result.traces.filter(
         (trace) => !protectedIds.has(trace.pcb_trace_id),
       )
@@ -1755,10 +1822,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
     const result = this.getPostRoutingOptimizationResult()
-    const traces =
-      result?.status === "accepted"
-        ? result.traces
-        : this.getFinalizedRoutingTraces()
+    const traces = result ? result.traces : this.getFinalizedRoutingTraces()
     return {
       ...this.originalSrj,
       traces,

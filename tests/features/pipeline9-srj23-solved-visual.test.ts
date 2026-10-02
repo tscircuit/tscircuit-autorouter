@@ -53,8 +53,31 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
             gridStep: 0.5,
             viaCost: 3,
             bendCost: 0.05,
-            maxExpansions: 300_000,
-            maxMilliseconds: 5_000,
+            maxExpansions: 150_000,
+            maxMilliseconds: 2_500,
+          },
+        },
+        postRoutingOptimization: {
+          enabled: true,
+          nets: [
+            {
+              net: selectedNet,
+              maxNewVias: 2,
+              maxNewViasPerBranch: 1,
+            },
+          ],
+          objective: {
+            priorities: ["viaSites", "copperLength", "bends"],
+            maxCopperLengthIncrease: 0,
+            maxBendIncrease: 0,
+            maxChangedNets: 1,
+          },
+          search: {
+            gridStep: 0.5,
+            viaCost: 3,
+            bendCost: 0.05,
+            maxExpansions: 150_000,
+            maxMilliseconds: 2_500,
           },
         },
       },

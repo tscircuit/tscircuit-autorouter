@@ -11,7 +11,7 @@ import { preparePostRoutingWholeNetInput } from "../../lib/solvers/PostRoutingOp
 /** Explicit benchmark-only opt-in on this comparison branch. Product defaults
  * remain unchanged. The paired workflow runs the same P9 command on its base:
  * main has no profile; the A+B branch's base explicitly selects A. */
-export const PIPELINE9_POST_ROUTING_BENCHMARK_ARM: "A" | "B" | "A+B" = "A"
+export const PIPELINE9_POST_ROUTING_BENCHMARK_ARM: "A" | "B" | "A+B" = "A+B"
 
 /** Limit this comparison profile to the explicitly requested public datasets. */
 export function isPipeline9PostRoutingBenchmarkTask(
