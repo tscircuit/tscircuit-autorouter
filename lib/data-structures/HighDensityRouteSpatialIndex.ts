@@ -156,7 +156,7 @@ export class HighDensityRouteSpatialIndex {
 
           for (let ix = minIndexX; ix <= maxIndexX; ix++) {
             for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-              const bucketKey = `${ix}x${iy}` as BucketCoordinate
+              const bucketKey: BucketCoordinate = `${ix}x${iy}`
               let bucketList = this.segmentBuckets.get(bucketKey)
 
               if (!bucketList) {
@@ -187,7 +187,7 @@ export class HighDensityRouteSpatialIndex {
           // Vias belong to a single bucket
           const ix = Math.floor(via.x / this.CELL_SIZE)
           const iy = Math.floor(via.y / this.CELL_SIZE)
-          const bucketKey = `${ix}x${iy}` as BucketCoordinate
+          const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
           let bucketList = this.viaBuckets.get(bucketKey)
 
@@ -249,7 +249,7 @@ export class HighDensityRouteSpatialIndex {
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         // --- Check Segments in Bucket ---
         const segmentBucketList = this.segmentBuckets.get(bucketKey)
@@ -430,7 +430,7 @@ export class HighDensityRouteSpatialIndex {
 
         for (let ix = minIndexX; ix <= maxIndexX; ix++) {
           for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-            const bucketKey = `${ix}x${iy}` as BucketCoordinate
+            const bucketKey: BucketCoordinate = `${ix}x${iy}`
             let bucketList = this.segmentBuckets.get(bucketKey)
 
             if (!bucketList) {
@@ -460,7 +460,7 @@ export class HighDensityRouteSpatialIndex {
 
         const ix = Math.floor(via.x / this.CELL_SIZE)
         const iy = Math.floor(via.y / this.CELL_SIZE)
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         let bucketList = this.viaBuckets.get(bucketKey)
 
@@ -508,7 +508,7 @@ export class HighDensityRouteSpatialIndex {
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${ix}x${iy}`
 
         // --- Check Segments ---
         const segmentBucketList = this.segmentBuckets.get(bucketKey)

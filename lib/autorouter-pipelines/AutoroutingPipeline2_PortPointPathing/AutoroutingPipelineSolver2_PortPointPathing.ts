@@ -592,7 +592,7 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
 
     const visualizations = [
       problemViz,

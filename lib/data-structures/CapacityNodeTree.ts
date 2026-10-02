@@ -21,7 +21,7 @@ export class CapacityNodeTree {
 
       for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
         for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
-          const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
+          const bucketKey: BucketCoordinate = `${bucketX}x${bucketY}`
           const bucket = this.buckets.get(bucketKey)
 
           if (!bucket) {
@@ -57,7 +57,7 @@ export class CapacityNodeTree {
 
     for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
       for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
-        const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
+        const bucketKey: BucketCoordinate = `${bucketX}x${bucketY}`
         const bucket = this.buckets.get(bucketKey) || []
 
         for (const node of bucket) {

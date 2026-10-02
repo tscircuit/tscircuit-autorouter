@@ -387,7 +387,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         segmentId: randomSegmentId,
         point1Index: randomPointIndex1,
         point2Index: randomPointIndex2,
-      } as SwitchOperation
+      }
     }
 
     const randomPointIndex = Math.floor(
@@ -401,7 +401,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
       segmentId: randomSegmentId,
       pointIndex: randomPointIndex,
       newLayer: point.point.z === 0 ? 1 : 0,
-    } as ChangeLayerOperation
+    }
   }
 
   getNodesNearNode(nodeId: CapacityMeshNodeId, hops = 1): CapacityMeshNodeId[] {
@@ -455,7 +455,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    }
   }
 
   /**
@@ -486,7 +486,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    }
   }
 
   getRandomOperation(): Operation {
@@ -852,7 +852,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
           points,
           strokeDash,
           strokeColor: this.colorMap[conn] || "#000",
-        } as Line)
+        })
       }
     }
 

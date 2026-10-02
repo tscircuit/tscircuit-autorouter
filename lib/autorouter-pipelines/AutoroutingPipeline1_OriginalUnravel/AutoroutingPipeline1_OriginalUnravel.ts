@@ -542,7 +542,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
 
     const visualizations = [
       problemViz,

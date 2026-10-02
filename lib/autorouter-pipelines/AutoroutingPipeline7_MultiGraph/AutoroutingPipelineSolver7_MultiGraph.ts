@@ -1103,7 +1103,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
 
     const visualizationOptions = {
       traceColorMode: this.visualizationTraceColorMode,

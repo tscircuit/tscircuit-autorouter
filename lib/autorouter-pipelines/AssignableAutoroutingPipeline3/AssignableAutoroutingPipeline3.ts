@@ -642,7 +642,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
 
     const visualizations = [
       problemViz,
