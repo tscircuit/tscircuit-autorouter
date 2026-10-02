@@ -98,6 +98,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Opt-in initial selective-rip order; global retries keep their native schedule. */
+  initialRouteOrder?: "short-first"
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

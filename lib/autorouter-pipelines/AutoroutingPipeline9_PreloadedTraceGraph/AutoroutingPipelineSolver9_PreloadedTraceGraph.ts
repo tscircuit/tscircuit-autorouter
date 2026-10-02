@@ -113,6 +113,8 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /** Group nets by mean endpoint span for the initial selective-rip graph pass. */
+  initialRouteOrder?: "short-first"
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -534,6 +536,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            initialRouteOrder: cms.opts.initialRouteOrder,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,

@@ -38,6 +38,7 @@ import type {
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import { ShortFirstSelectiveReripTinyHyperGraphSolver } from "./ShortFirstSelectiveReripTinyHyperGraphSolver"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -912,6 +913,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly initialRouteOrder?: "short-first",
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -931,7 +933,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        initialRouteOrder === "short-first"
+          ? ShortFirstSelectiveReripTinyHyperGraphSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -972,12 +976,15 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-          topology,
-          problem,
-          this.getSolveGraphOptions(),
-        )
+      const InitialSolver =
+        this.initialRouteOrder === "short-first"
+          ? ShortFirstSelectiveReripTinyHyperGraphSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      this.initialVisualizationSolver = new InitialSolver(
+        topology,
+        problem,
+        this.getSolveGraphOptions(),
+      )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
@@ -1128,6 +1135,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.initialRouteOrder,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
