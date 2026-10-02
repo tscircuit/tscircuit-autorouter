@@ -20,17 +20,18 @@ test("clearance projection resumes one generator chunk per step and retains sync
   const originalSteps = repair04.relaxTraceClearanceSteps
   let generatorAdvances = 0
   let referenceChecks = 0
-  const stepsSpy = spyOn(repair04, "relaxTraceClearanceSteps").mockImplementation(
-    function* (input): ReturnType<typeof originalSteps> {
-      const iterator = originalSteps(input)
-      while (true) {
-        generatorAdvances++
-        const result = iterator.next()
-        if (result.done) return result.value
-        yield
-      }
-    },
-  )
+  const stepsSpy = spyOn(
+    repair04,
+    "relaxTraceClearanceSteps",
+  ).mockImplementation(function* (input): ReturnType<typeof originalSteps> {
+    const iterator = originalSteps(input)
+    while (true) {
+      generatorAdvances++
+      const result = iterator.next()
+      if (result.done) return result.value
+      yield
+    }
+  })
   const solver = new Pipeline9ClearanceProjectionSolver({
     ...fixture,
     subdivideSegments: true,
@@ -72,7 +73,9 @@ test("clearance projection resumes one generator chunk per step and retains sync
     }),
   )
   const reference = fixture.drcEvaluator({ traces: [], routes })
-  expect(Array.isArray(reference) ? reference : reference.errors).toHaveLength(0)
+  expect(Array.isArray(reference) ? reference : reference.errors).toHaveLength(
+    0,
+  )
   expect(routes[0]!.route[0]).toEqual(original[0]!.route[0])
   expect(routes[0]!.route.at(-1)).toEqual(original[0]!.route.at(-1))
 })

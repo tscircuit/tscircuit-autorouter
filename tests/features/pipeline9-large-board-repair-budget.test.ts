@@ -67,21 +67,33 @@ test("regional work allowances depend on effort and verified progress rather tha
   // Adding clean routes or changing error density must not switch policies.
   for (const routeCount of [0, 1, 119, 120, 121, 237, 479, 480, 481, 1000]) {
     for (const errors of [0, 1, 9, 10, 20, 199, 500]) {
-      expect(getPipeline9BoundedRepairBudget(routeCount, errors, 1)).toEqual(budget)
+      expect(getPipeline9BoundedRepairBudget(routeCount, errors, 1)).toEqual(
+        budget,
+      )
     }
   }
-  expect(budget.initialMaxPathSearchNodes).toBeLessThan(budget.maxPathSearchNodes)
-  expect(budget.initialMaxCandidateAttempts).toBeLessThan(budget.maxCandidateAttempts)
+  expect(budget.initialMaxPathSearchNodes).toBeLessThan(
+    budget.maxPathSearchNodes,
+  )
+  expect(budget.initialMaxCandidateAttempts).toBeLessThan(
+    budget.maxCandidateAttempts,
+  )
   expect(budget.pathSearchNodesPerAcceptedRepair).toBeGreaterThan(0)
   expect(budget.candidateAttemptsPerAcceptedRepair).toBeGreaterThan(0)
   for (const effort of [1.01, 1.5, 2, 4]) {
     const scaled = getPipeline9BoundedRepairBudget(500, 20, effort)
-    expect(scaled.maxPathSearchNodes).toBe(Math.ceil(budget.maxPathSearchNodes * effort))
-    expect(scaled.initialMaxCandidateAttempts).toBe(Math.ceil(budget.initialMaxCandidateAttempts! * effort))
+    expect(scaled.maxPathSearchNodes).toBe(
+      Math.ceil(budget.maxPathSearchNodes * effort),
+    )
+    expect(scaled.initialMaxCandidateAttempts).toBe(
+      Math.ceil(budget.initialMaxCandidateAttempts! * effort),
+    )
     expect(scaled.maxRegions).toBe(Math.ceil(budget.maxRegions * effort))
   }
   for (const invalidEffort of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
-    expect(() => getPipeline9BoundedRepairBudget(500, 20, invalidEffort)).toThrow()
+    expect(() =>
+      getPipeline9BoundedRepairBudget(500, 20, invalidEffort),
+    ).toThrow()
   }
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)

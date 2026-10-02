@@ -39,7 +39,9 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
     traces: [],
     routes: repaired.routes,
   })
-  expect(Array.isArray(validation) ? validation : validation.errors).toHaveLength(0)
+  expect(
+    Array.isArray(validation) ? validation : validation.errors,
+  ).toHaveLength(0)
   expect(adaptiveFixture.routes).toEqual(original)
   for (let index = 0; index < original.length; index++) {
     expect(repaired.routes[index]!.route[0]).toEqual(original[index]!.route[0])
@@ -76,6 +78,8 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
     routes: partial.routes,
   })
   expect(
-    Array.isArray(partialValidation) ? partialValidation : partialValidation.errors,
+    Array.isArray(partialValidation)
+      ? partialValidation
+      : partialValidation.errors,
   ).toHaveLength(1)
 })

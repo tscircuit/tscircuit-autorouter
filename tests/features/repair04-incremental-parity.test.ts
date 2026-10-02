@@ -15,7 +15,9 @@ import {
 } from "../fixtures/repair04StepFixtures"
 import golden from "../fixtures/repair04-stepped-golden.json"
 
-const drain = <T>(steps: Generator<void, T, void>): { output: T; yields: number } => {
+const drain = <T>(
+  steps: Generator<void, T, void>,
+): { output: T; yields: number } => {
   let result = steps.next()
   let yields = 0
   while (!result.done) {
@@ -26,8 +28,14 @@ const drain = <T>(steps: Generator<void, T, void>): { output: T; yields: number 
 }
 
 test("repair04 incremental APIs preserve the original synchronous geometry and work accounting", (): void => {
-  const original = structuredClone({ routes: negotiationInput.routes, projection: projectionInput.routes })
-  const pathStats: ClearancePathSearchStats = { nodesPopped: 0, completionReason: "no-path" }
+  const original = structuredClone({
+    routes: negotiationInput.routes,
+    projection: projectionInput.routes,
+  })
+  const pathStats: ClearancePathSearchStats = {
+    nodesPopped: 0,
+    completionReason: "no-path",
+  }
   const path = drain(findClearancePathSteps({ ...pathInput, stats: pathStats }))
   expect(path.output).toEqual(golden.path)
   expect(pathStats).toEqual(golden.pathStats)

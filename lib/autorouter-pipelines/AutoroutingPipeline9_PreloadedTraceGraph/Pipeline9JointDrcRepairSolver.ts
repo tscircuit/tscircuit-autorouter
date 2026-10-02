@@ -30,9 +30,7 @@ import {
   applyPipeline9ClearancePrecisionRepairs,
   type ClearanceMarginDrcEvaluator,
 } from "./applyPipeline9ClearancePrecisionRepairs"
-import {
-  getPipeline9BoundedRepairBudget,
-} from "./applyPipeline9BoundedRegionalRepairs"
+import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -1490,7 +1488,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (this.activeSubSolver) {
         this.MAX_ITERATIONS = Math.max(
           this.MAX_ITERATIONS,
-          this.iterations + this.activeSubSolver.MAX_ITERATIONS - this.activeSubSolver.iterations + 2,
+          this.iterations +
+            this.activeSubSolver.MAX_ITERATIONS -
+            this.activeSubSolver.iterations +
+            2,
         )
       }
       return
@@ -1664,7 +1665,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       yield
     }
     if (regionalB01Solver.failed) {
-      throw new Error(`Pipeline9 regional B01 repair failed: ${regionalB01Solver.error}`)
+      throw new Error(
+        `Pipeline9 regional B01 repair failed: ${regionalB01Solver.error}`,
+      )
     }
     const regionalB01RepairResult = regionalB01Solver.getResult()
     const regionalReference = this.cachedReferenceDrcEvaluator!({
@@ -1708,7 +1711,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       yield
     }
     if (boundedRegionalSolver.failed) {
-      throw new Error(`Pipeline9 bounded regional repair failed: ${boundedRegionalSolver.error}`)
+      throw new Error(
+        `Pipeline9 bounded regional repair failed: ${boundedRegionalSolver.error}`,
+      )
     }
     const boundedRegionalRepairResult = boundedRegionalSolver.getResult()
     this.activeSubSolver = null

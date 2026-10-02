@@ -1,5 +1,8 @@
 import { expect, spyOn, test } from "bun:test"
-import { GlobalDrcForceImproveSolver, type DrcEvaluator } from "high-density-repair03/lib"
+import {
+  GlobalDrcForceImproveSolver,
+  type DrcEvaluator,
+} from "high-density-repair03/lib"
 import {
   applyPipeline9RegionalB01Repairs,
   type Pipeline9RegionalB01RepairParams,
@@ -18,27 +21,36 @@ test("regional B01 repair advances one child step and preserves synchronous resu
     minViaDiameter: 0.3,
     bounds: { minX: -3, minY: -3, maxX: 3, maxY: 3 },
     obstacles: [],
-    connections: [{
-      name: "route",
-      pointsToConnect: [
-        { x: -2, y: 0, layer: "top" },
-        { x: 2, y: 0, layer: "top" },
-      ],
-    }],
+    connections: [
+      {
+        name: "route",
+        pointsToConnect: [
+          { x: -2, y: 0, layer: "top" },
+          { x: 2, y: 0, layer: "top" },
+        ],
+      },
+    ],
   }
-  const routes: HighDensityRoute[] = [{
-    connectionName: "route",
-    rootConnectionName: "route",
-    traceThickness: 0.1,
-    viaDiameter: 0.3,
-    vias: [],
-    route: [{ x: -2, y: 0, z: 0 }, { x: 2, y: 0, z: 0 }],
-  }]
-  const errors = [{
-    type: "pcb_trace_error",
-    pcb_trace_id: "route_0",
-    center: { x: 0, y: 0 },
-  }]
+  const routes: HighDensityRoute[] = [
+    {
+      connectionName: "route",
+      rootConnectionName: "route",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      vias: [],
+      route: [
+        { x: -2, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+      ],
+    },
+  ]
+  const errors = [
+    {
+      type: "pcb_trace_error",
+      pcb_trace_id: "route_0",
+      center: { x: 0, y: 0 },
+    },
+  ]
   const drcEvaluator: DrcEvaluator = (): ReturnType<DrcEvaluator> => ({
     errors,
     errorsWithCenters: errors,
@@ -80,10 +92,16 @@ test("regional B01 repair advances one child step and preserves synchronous resu
       solver.activeSubSolver!.MAX_ITERATIONS + 2,
     )
     while (!solver.solved && !solver.failed) {
-      const before = stepSpies.reduce((count, spy) => count + spy.mock.calls.length, 0)
+      const before = stepSpies.reduce(
+        (count, spy) => count + spy.mock.calls.length,
+        0,
+      )
       const previousProgress = solver.progress
       solver.step()
-      const after = stepSpies.reduce((count, spy) => count + spy.mock.calls.length, 0)
+      const after = stepSpies.reduce(
+        (count, spy) => count + spy.mock.calls.length,
+        0,
+      )
       expect(after - before).toBeLessThanOrEqual(1)
       expect(solver.progress).toBeGreaterThanOrEqual(previousProgress)
     }

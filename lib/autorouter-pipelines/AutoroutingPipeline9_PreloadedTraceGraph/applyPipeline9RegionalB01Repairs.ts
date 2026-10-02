@@ -409,8 +409,7 @@ const getRegionalCandidate = function* ({
   effort: number
 }): Generator<
   Pipeline9RegionalB01ChildSolver,
-  | { routes: HighDensityRoute[]; usedFallback: boolean }
-  | undefined,
+  { routes: HighDensityRoute[]; usedFallback: boolean } | undefined,
   void
 > {
   const regionalRoutes = asRegionalRoutes(routes, connMap)

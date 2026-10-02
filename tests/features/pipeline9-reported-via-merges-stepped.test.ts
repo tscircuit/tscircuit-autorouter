@@ -23,7 +23,10 @@ test("reported via repairs advance one merger step and retain repeated route pie
     connectionName: "untouched",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: -2, y: 3, z: 0 }, { x: 2, y: 3, z: 0 }],
+    route: [
+      { x: -2, y: 3, z: 0 },
+      { x: 2, y: 3, z: 0 },
+    ],
     vias: [],
   })
   const srj: SimpleRouteJson = {
@@ -41,10 +44,12 @@ test("reported via repairs advance one merger step and retain repeated route pie
     })),
   }
   const referenceResult = {
-    errors: [{
-      type: "pcb_via_clearance_error",
-      pcb_trace_ids: ["shared-name"],
-    }],
+    errors: [
+      {
+        type: "pcb_via_clearance_error",
+        pcb_trace_ids: ["shared-name"],
+      },
+    ],
   }
   let validations = 0
   const drcEvaluator: DrcEvaluator = (): ReturnType<DrcEvaluator> => {
@@ -59,10 +64,12 @@ test("reported via repairs advance one merger step and retain repeated route pie
     referenceResult,
   }
   const original = structuredClone(routes)
-  const solveSpy = spyOn(SameNetViaMergerSolver.prototype, "solve")
-    .mockImplementation((): void => {
-      throw new Error("Via repairs must advance using step")
-    })
+  const solveSpy = spyOn(
+    SameNetViaMergerSolver.prototype,
+    "solve",
+  ).mockImplementation((): void => {
+    throw new Error("Via repairs must advance using step")
+  })
   try {
     const solver = new Pipeline9ReportedViaMergeSolver(params)
     expect(solver.merger).toBeUndefined()

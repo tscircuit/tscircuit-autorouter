@@ -62,7 +62,9 @@ export const getPipeline9BoundedRepairBudget = (
   effort: number,
 ): Pipeline9BoundedRepairBudget => {
   if (!Number.isFinite(effort) || effort <= 0) {
-    throw new Error("Pipeline9 regional repair effort must be positive and finite")
+    throw new Error(
+      "Pipeline9 regional repair effort must be positive and finite",
+    )
   }
   // Every board starts with the same bounded allowance. Strict whole-board
   // DRC improvements earn more search work; board size never changes policy.
@@ -132,15 +134,16 @@ export const getPipeline9BoundedRepairAllowance = (
 })
 
 /** Searches regional repairs while yielding child solvers and bounded path batches. */
-export function* pipeline9BoundedRegionalRepairSteps({
-  originalSrj,
-  connMap,
-  routes,
-  syntheticConnectionNames,
-  drcEvaluator,
-  viaHoleDiameter,
-  budget = PIPELINE9_BOUNDED_REPAIR_BUDGET,
-}: Pipeline9BoundedRegionalRepairParams,
+export function* pipeline9BoundedRegionalRepairSteps(
+  {
+    originalSrj,
+    connMap,
+    routes,
+    syntheticConnectionNames,
+    drcEvaluator,
+    viaHoleDiameter,
+    budget = PIPELINE9_BOUNDED_REPAIR_BUDGET,
+  }: Pipeline9BoundedRegionalRepairParams,
   onProgress?: (result: Pipeline9BoundedRegionalRepairResult) => void,
 ): Generator<BaseSolver | void, Pipeline9BoundedRegionalRepairResult, void> {
   const result: Pipeline9BoundedRegionalRepairResult = {
@@ -254,12 +257,16 @@ export function* pipeline9BoundedRegionalRepairSteps({
     ),
   )
   while (true) {
-    const allowance = getPipeline9BoundedRepairAllowance(budget, result.acceptedRegionCount)
+    const allowance = getPipeline9BoundedRepairAllowance(
+      budget,
+      result.acceptedRegionCount,
+    )
     if (
       result.attemptedRegionCount >= allowance.maxRegions ||
       result.candidateAttemptCount >= allowance.maxCandidateAttempts ||
       result.pathSearchNodeCount >= allowance.maxPathSearchNodes
-    ) break
+    )
+      break
     onProgress?.(result)
     yield
     const centeredErrors = Array.isArray(reference)
@@ -406,7 +413,8 @@ export function* pipeline9BoundedRegionalRepairSteps({
       budget.revisitChangedRegions &&
       repair.unresolvedSpanCount > 0 &&
       candidateAttempts < maxPathSearchCalls &&
-      pathSearchNodes < allowance.maxPathSearchNodes - result.pathSearchNodeCount
+      pathSearchNodes <
+        allowance.maxPathSearchNodes - result.pathSearchNodeCount
     ) {
       regionSizes.sort((a, b) => b - a)
     }
@@ -592,7 +600,6 @@ export function* pipeline9BoundedRegionalRepairSteps({
   return result
 }
 
-
 /** Synchronous compatibility entrypoint; production callers step the solver. */
 export const applyPipeline9BoundedRegionalRepairs = (
   params: Pipeline9BoundedRegionalRepairParams,
@@ -604,7 +611,9 @@ export const applyPipeline9BoundedRegionalRepairs = (
     if (child) {
       while (!child.solved && !child.failed) child.step()
       if (child.failed) {
-        throw new Error(`Pipeline9 regional repair child failed: ${child.error}`)
+        throw new Error(
+          `Pipeline9 regional repair child failed: ${child.error}`,
+        )
       }
     }
     next = steps.next()

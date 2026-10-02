@@ -43,5 +43,7 @@ test("a blocked regional search stops at its initial allowance without earning w
   expect(result.routes).toBe(fixture.routes)
   expect(fixture.routes).toEqual(original)
   const validation = fixture.drcEvaluator({ traces: [], routes: result.routes })
-  expect(Array.isArray(validation) ? validation : validation.errors).toHaveLength(2)
+  expect(
+    Array.isArray(validation) ? validation : validation.errors,
+  ).toHaveLength(2)
 })

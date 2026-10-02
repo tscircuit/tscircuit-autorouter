@@ -35,7 +35,8 @@ test("regional repair exposes projection children and advances one child step at
         expect(solver.activeSubSolver.iterations).toBe(0)
       }
     }
-    if (!solver.solved) expect(() => solver.getResult()).toThrow("before completion")
+    if (!solver.solved)
+      expect(() => solver.getResult()).toThrow("before completion")
   }
   expect(solver.failed).toBeFalse()
   expect(childNames.has("Pipeline9ClearanceProjectionSolver")).toBeTrue()
@@ -47,5 +48,7 @@ test("regional repair exposes projection children and advances one child step at
   expect(result.publishedDrcIssueCount).toBe(0)
   expect(fixture.routes).toEqual(original)
   const validation = fixture.drcEvaluator({ traces: [], routes: result.routes })
-  expect(Array.isArray(validation) ? validation : validation.errors).toHaveLength(0)
+  expect(
+    Array.isArray(validation) ? validation : validation.errors,
+  ).toHaveLength(0)
 })

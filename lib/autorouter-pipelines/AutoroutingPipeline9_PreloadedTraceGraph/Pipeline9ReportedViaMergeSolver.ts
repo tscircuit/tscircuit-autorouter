@@ -132,9 +132,10 @@ export class Pipeline9ReportedViaMergeSolver extends BaseSolver {
     }
     const routes = this.params.routes
     const beforeFixed = new Map(
-      getFixedObstacleViolations({ srj, routes }).map(
-        ({ key, severity }) => [key, severity],
-      ),
+      getFixedObstacleViolations({ srj, routes }).map(({ key, severity }) => [
+        key,
+        severity,
+      ]),
     )
     const candidateFixed = getFixedObstacleViolations({
       srj,
