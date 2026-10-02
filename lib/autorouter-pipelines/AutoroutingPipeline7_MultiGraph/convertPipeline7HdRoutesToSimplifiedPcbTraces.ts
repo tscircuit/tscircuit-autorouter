@@ -84,28 +84,26 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
-  const connectedObstaclesByConnectionName = new Map<
+  const connectedObstaclesByRouteNet = new Map<
     string,
-    Map<string | undefined, ReadonlyArray<Obstacle>>
+    ReadonlyArray<Obstacle>
   >()
   const getConnectedMultilayerObstacles = (route: HighDensityRoute) => {
-    let byRootConnectionName = connectedObstaclesByConnectionName.get(
-      route.connectionName,
-    )
-    if (!byRootConnectionName) {
-      byRootConnectionName = new Map()
-      connectedObstaclesByConnectionName.set(
-        route.connectionName,
-        byRootConnectionName,
-      )
-    }
-    const cached = byRootConnectionName.get(route.rootConnectionName)
+    const connectionNetId =
+      connMap.getNetConnectedToId?.(route.connectionName) ??
+      route.connectionName
+    const rootNetId = route.rootConnectionName
+      ? (connMap.getNetConnectedToId?.(route.rootConnectionName) ??
+        route.rootConnectionName)
+      : ""
+    const routeNetKey = `${connectionNetId}\0${rootNetId}`
+    const cached = connectedObstaclesByRouteNet.get(routeNetKey)
     if (cached) return cached
 
     const connected = multilayerObstacles.filter((obstacle) =>
       isObstacleConnectedToRoute(obstacle, route, connMap),
     )
-    byRootConnectionName.set(route.rootConnectionName, connected)
+    connectedObstaclesByRouteNet.set(routeNetKey, connected)
     return connected
   }
 
