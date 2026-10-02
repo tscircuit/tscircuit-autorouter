@@ -46,6 +46,7 @@ export class EndpointClusterIndex {
     for (const cluster of clusters) {
       if (cluster.point.z !== point.z) continue
       const clusterDistance = distance(cluster.point, point)
+
       if (
         clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
         (clusterDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
@@ -68,6 +69,7 @@ export class EndpointClusterIndex {
       point: { x: point.x, y: point.y, z: point.z },
     })
     this.endpointClusters.set(connectionName, clusters)
+
     return key
   }
 
@@ -84,13 +86,16 @@ export class EndpointClusterIndex {
       route.route[0]!,
       route.route[route.route.length - 1]!,
     ])
+
     const sameLayerEndpoints = routeEndpoints.filter(
       (endpoint) => endpoint.z === point.z,
     )
+
     const candidateEndpoints =
       this.preferSameLayerTerminalEndpoints && sameLayerEndpoints.length > 0
         ? sameLayerEndpoints
         : routeEndpoints
+
     let bestHash: string | null = null
     let bestEndpoint: Point3 | null = null
     let bestDist = Infinity
@@ -98,6 +103,7 @@ export class EndpointClusterIndex {
     for (const endpoint of candidateEndpoints) {
       const dist = distance(point, endpoint)
       const endpointHash = this.getEndpointKey(connectionName, endpoint)
+
       if (
         dist < bestDist - DISTANCE_TIE_TOLERANCE ||
         (Math.abs(dist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
@@ -123,6 +129,7 @@ const addAdjacencyEdge = (
   edge: EndpointEdge,
 ) => {
   const entries = adjacency.get(fromHash) ?? []
+
   if (
     entries.some(
       (existingEdge) =>
@@ -132,6 +139,7 @@ const addAdjacencyEdge = (
   ) {
     return
   }
+
   entries.push(edge)
   adjacency.set(fromHash, entries)
 }
@@ -146,9 +154,11 @@ export const selectIslandEndpoints = (params: {
   globalEnd: Point3
 }) => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
+
   const start = sortedEndpoints.reduce((bestPoint, point) => {
     const pointDistance = distance(point, params.globalStart)
     const bestDistance = distance(bestPoint, params.globalStart)
+
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(point, bestPoint) < 0)
@@ -166,6 +176,7 @@ export const selectIslandEndpoints = (params: {
   const end = endCandidates.reduce((bestPoint, point) => {
     const pointDistance = distance(point, params.globalEnd)
     const bestDistance = distance(bestPoint, params.globalEnd)
+
     return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(point, bestPoint) < 0)
@@ -190,6 +201,7 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 
   for (const terminal of sortedTerminals.slice(1)) {
     const terminalDistance = distance(params.islandEndpoint, terminal)
+
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&
@@ -227,6 +239,7 @@ export const selectRoutesAlongEndpointPath = (params: {
     canonicalHdRoutes,
     params.start,
   )
+
   const endHash = params.endpointIndex.getClosestEndpointKey(
     params.connectionName,
     canonicalHdRoutes,
@@ -241,10 +254,12 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   for (let i = 0; i < canonicalHdRoutes.length; i++) {
     const route = canonicalHdRoutes[i]!
+
     const routeStartHash = params.endpointIndex.getEndpointKey(
       params.connectionName,
       route.route[0]!,
     )
+
     const routeEndHash = params.endpointIndex.getEndpointKey(
       params.connectionName,
       route.route[route.route.length - 1]!,
@@ -263,11 +278,15 @@ export const selectRoutesAlongEndpointPath = (params: {
   const sortedEndpointClusters = [
     ...params.endpointIndex.getClusters(params.connectionName),
   ].sort((a, b) => comparePoints(a.point, b.point))
+
   for (let i = 0; i < sortedEndpointClusters.length; i++) {
     const endpointA = sortedEndpointClusters[i]!
+
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
       const endpointB = sortedEndpointClusters[j]!
+
       if (endpointA.point.z !== endpointB.point.z) continue
+
       if (
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
       )
@@ -289,14 +308,18 @@ export const selectRoutesAlongEndpointPath = (params: {
       hash,
       [...edges].sort((a, b) => {
         if (a.routeIndex === null && b.routeIndex !== null) return 1
+
         if (a.routeIndex !== null && b.routeIndex === null) return -1
+
         if (a.routeIndex !== null && b.routeIndex !== null) {
           const routeCmp = compareRoutes(
             canonicalHdRoutes[a.routeIndex]!,
             canonicalHdRoutes[b.routeIndex]!,
           )
+
           if (routeCmp !== 0) return routeCmp
         }
+
         return a.nextHash.localeCompare(b.nextHash)
       }),
     )
@@ -304,6 +327,7 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   const queue = [startHash]
   const visitedHashes = new Set<string>([startHash])
+
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
@@ -311,6 +335,7 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   while (queue.length > 0) {
     const currentHash = queue.shift()!
+
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
@@ -328,12 +353,16 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash
+
   while (cursorHash !== startHash) {
     const prev = prevByHash.get(cursorHash)
+
     if (!prev) return canonicalHdRoutes
+
     if (prev.routeIndex !== null) {
       selectedRouteIndexesInReverse.push(prev.routeIndex)
     }
+
     cursorHash = prev.prevHash
   }
 
@@ -369,6 +398,7 @@ export const hasStitchableGapBetweenUnsolvedRoutes = (
       for (const endpointA of endpointsA) {
         for (const endpointB of endpointsB) {
           if (endpointA.z !== endpointB.z) continue
+
           if (distance(endpointA, endpointB) <= MAX_STITCH_GAP_DISTANCE_3) {
             return true
           }

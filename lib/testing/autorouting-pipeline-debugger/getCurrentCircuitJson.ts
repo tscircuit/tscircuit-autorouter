@@ -26,16 +26,20 @@ export const getCurrentCircuitJson = (
     onError?.(
       "No connection information available yet. Wait until point-pair generation completes.",
     )
+
     return null
   }
 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+
   if (!routedTraces) {
     onError?.(
       "No routed traces available yet. Run routing first, then try again.",
     )
+
     return null
   }
+
   const inputSrj = solver.originalSrj ?? solver.srj
   const jointTraces = [...(inputSrj.traces ?? []), ...routedTraces]
 

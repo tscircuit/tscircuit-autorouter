@@ -32,6 +32,7 @@ const clampWithFallback = (params: {
   if (params.min <= params.max) {
     return clamp(params.value, params.min, params.max)
   }
+
   return params.value
 }
 
@@ -67,18 +68,23 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     if (this.routes.length !== 1) {
       this.failed = true
       this.error = `Expected 1 route, but got ${this.routes.length}`
+
       return
     }
 
     const route = this.routes[0]
+
     if (route.A.z === undefined || route.B.z === undefined) {
       this.failed = true
       this.error = "Route points should have predefined z values"
+
       return
     }
+
     if (route.A.z === route.B.z) {
       this.failed = true
       this.error = "Only one route provided, but it has no transition"
+
       return
     }
 
@@ -96,6 +102,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         max: this.bounds.maxY - margin,
       }),
     }
+
     this.solvedRoutes.push(
       this.createTransitionRoute({
         start: route.A,
@@ -119,9 +126,11 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
 
     for (const connectedPort of connectedPorts) {
       const { connectionName } = connectedPort
+
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
+
       connectionGroups.get(connectionName)!.push(connectedPort)
     }
 
@@ -134,6 +143,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         })
       }
     }
+
     return routes
   }
 
@@ -168,6 +178,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     connectionName: string
   }): HighDensityIntraNodeRoute {
     const { start, end, via, connectionName } = params
+
     const route = [
       { x: start.x, y: start.y, z: start.z! },
       { x: via.x, y: via.y, z: start.z! },
@@ -196,6 +207,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
       rects: [],
       circles: [],
     }
+
     graphics.rects!.push({
       center: {
         x: (this.bounds.minX + this.bounds.maxX) / 2,
@@ -233,6 +245,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     for (let si = 0; si < this.solvedRoutes.length; si++) {
       const route = this.solvedRoutes[si]
       const routeColor = "rgba(0, 255, 0, 0.75)"
+
       for (let i = 0; i < route.route.length - 1; i++) {
         const pointA = route.route[i]
         const pointB = route.route[i + 1]
@@ -262,6 +275,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         })
       }
     }
+
     return graphics
   }
 }

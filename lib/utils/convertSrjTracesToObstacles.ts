@@ -4,8 +4,11 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 type RoutePoint = SimplifiedPcbTrace["route"][number]
+
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
+
 type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
+
 type ThroughObstacleRoutePoint = Extract<
   RoutePoint,
   { route_type: "through_obstacle" }

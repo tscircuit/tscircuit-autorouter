@@ -30,6 +30,7 @@ export class StrawSolver extends BaseSolver {
     this.skippedNodes = []
     this.nodeIdCounter = 0
     this.unprocessedNodes = []
+
     for (const node of params.nodes) {
       if (node.availableZ.length === 1) {
         this.unprocessedNodes.push(node)
@@ -130,6 +131,7 @@ export class StrawSolver extends BaseSolver {
    */
   createStrawsForNode(node: CapacityMeshNode): CapacityMeshNode[] {
     const result: CapacityMeshNode[] = []
+
     const {
       leftSurroundingCapacity,
       rightSurroundingCapacity,
@@ -140,6 +142,7 @@ export class StrawSolver extends BaseSolver {
     // Decide whether to create horizontal or vertical straws
     const horizontalCapacity =
       leftSurroundingCapacity + rightSurroundingCapacity
+
     const verticalCapacity = topSurroundingCapacity + bottomSurroundingCapacity
 
     // Layer-specific preferred direction
@@ -205,24 +208,28 @@ export class StrawSolver extends BaseSolver {
 
     if (!rootNode) {
       this.solved = true
+
       return
     }
 
     // Skip nodes that are too small to subdivide
     if (rootNode.width < this.strawSize && rootNode.height < this.strawSize) {
       this.skippedNodes.push(rootNode)
+
       return
     }
 
     // Skip target nodes (keep them intact)
     if (rootNode._containsTarget) {
       this.skippedNodes.push(rootNode)
+
       return
     }
 
     // Create straws for this node
     const strawNodes = this.createStrawsForNode(rootNode)
     this.strawNodes.push(...strawNodes)
+
     if (strawNodes.length === 0) this.strawNodes.push(rootNode) // Keep the original node as well
   }
 

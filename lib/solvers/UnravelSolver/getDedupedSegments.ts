@@ -12,7 +12,9 @@ export const getDedupedSegments = (
   assignedSegments: NodePortSegment[],
 ): SegmentWithAssignedPoints[] => {
   const dedupedSegments: SegmentWithAssignedPoints[] = []
+
   type SegKey = `${number}-${number}-${number}-${number}-${string}`
+
   const dedupedSegPointMap: Map<SegKey, NodePortSegment> = new Map()
   let highestSegmentId = -1
 

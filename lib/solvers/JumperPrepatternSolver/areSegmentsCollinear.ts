@@ -18,6 +18,7 @@ export function areSegmentsCollinear(
 
   // Calculate segment lengths for relative epsilon
   const lenA = Math.sqrt(vx * vx + vy * vy)
+
   const lenB = Math.sqrt(
     (b2.x - b1.x) * (b2.x - b1.x) + (b2.y - b1.y) * (b2.y - b1.y),
   )

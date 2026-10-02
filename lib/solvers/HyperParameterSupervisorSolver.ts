@@ -48,7 +48,9 @@ export class HyperParameterSupervisorSolver<
     if (!hyperParameterDefs) {
       hyperParameterDefs = this.getHyperParameterDefs()
     }
+
     const combinations: Array<Record<string, any>> = []
+
     // Base case - no more hyperparameters to combine
     if (hyperParameterDefs.length === 0) {
       return [{}]
@@ -82,6 +84,7 @@ export class HyperParameterSupervisorSolver<
     ]
 
     this.supervisedSolvers = []
+
     for (const combinationDef of combinationDefs) {
       const hyperParameterCombinations = this.getHyperParameterCombinations(
         hyperParameterDefs.filter((hpd) => combinationDef.includes(hpd.name)),
@@ -120,19 +123,24 @@ export class HyperParameterSupervisorSolver<
   getSupervisedSolverWithBestFitness(): SupervisedSolver<T> | null {
     let bestFitness = Infinity
     let bestSolver: SupervisedSolver<T> | null = null
+
     for (const supervisedSolver of this.supervisedSolvers ?? []) {
       if (supervisedSolver.solver.solved) {
         return supervisedSolver
       }
+
       if (supervisedSolver.solver.failed) {
         continue
       }
+
       const fitness = supervisedSolver.f
+
       if (fitness < bestFitness) {
         bestFitness = fitness
         bestSolver = supervisedSolver
       }
     }
+
     return bestSolver
   }
 
@@ -152,12 +160,14 @@ export class HyperParameterSupervisorSolver<
     if (!supervisedSolver) {
       this.failed = true
       this.error = this.getFailureMessage()
+
       return
     }
 
     for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
       supervisedSolver.solver.step()
     }
+
     this.activeSubSolver = supervisedSolver.solver
 
     supervisedSolver.g = this.computeG(supervisedSolver.solver)
@@ -175,6 +185,7 @@ export class HyperParameterSupervisorSolver<
 
   visualize(): GraphicsObject {
     const bestSupervisedSolver = this.getSupervisedSolverWithBestFitness()
+
     let graphics: GraphicsObject = {
       lines: [],
       circles: [],
@@ -185,6 +196,7 @@ export class HyperParameterSupervisorSolver<
     if (bestSupervisedSolver) {
       graphics = bestSupervisedSolver.solver.visualize()
     }
+
     return graphics
   }
 }

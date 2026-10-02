@@ -21,6 +21,7 @@ export function getGlobalMeshNodesForTopologyMerging({
     const isSyntheticComponentRegion = components.some((component) =>
       isReplacementRegionNode({ node, component }),
     )
+
     if (!isSyntheticComponentRegion) return node
 
     return {
@@ -43,6 +44,7 @@ function isReplacementRegionNode({
   component: SerializedTopologyComponentInput
 }): boolean {
   const { replacementObstacle } = component
+
   const isExactReplacementNode =
     Math.abs(node.center.x - replacementObstacle.center.x) <=
       GEOMETRY_EPSILON &&
@@ -61,19 +63,25 @@ function isReplacementRegionNode({
 
   const replacementMinX =
     replacementObstacle.center.x - replacementObstacle.width / 2
+
   const replacementMaxX =
     replacementObstacle.center.x + replacementObstacle.width / 2
+
   const replacementMinY =
     replacementObstacle.center.y - replacementObstacle.height / 2
+
   const replacementMaxY =
     replacementObstacle.center.y + replacementObstacle.height / 2
+
   const nodeCenterInsideReplacement =
     node.center.x >= replacementMinX - GEOMETRY_EPSILON &&
     node.center.x <= replacementMaxX + GEOMETRY_EPSILON &&
     node.center.y >= replacementMinY - GEOMETRY_EPSILON &&
     node.center.y <= replacementMaxY + GEOMETRY_EPSILON
+
   const nodeArea = node.width * node.height
   const replacementArea = replacementObstacle.width * replacementObstacle.height
+
   const isLargeReplacementNode =
     nodeCenterInsideReplacement && nodeArea >= replacementArea * 0.2
 

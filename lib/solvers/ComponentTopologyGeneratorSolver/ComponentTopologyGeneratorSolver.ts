@@ -29,6 +29,7 @@ export function isObstacleInDetectedComponent(
   if (obstacle.componentId !== detectedComponent.componentId) return false
 
   const { bounds } = detectedComponent
+
   return (
     obstacle.center.x >= bounds.minX &&
     obstacle.center.x <= bounds.maxX &&
@@ -47,11 +48,14 @@ export function createReplacementObstacleForComponent({
   const memberObstacles = inputSrj.obstacles.filter((obstacle) =>
     isObstacleInDetectedComponent(obstacle, detectedComponent),
   )
+
   const zLayers = Array.from({ length: inputSrj.layerCount }, (_, z) => z)
   const layers = zLayers.map((z) => mapZToLayerName(z, inputSrj.layerCount))
+
   const connectedTo = Array.from(
     new Set(memberObstacles.flatMap((obstacle) => obstacle.connectedTo)),
   )
+
   const { bounds } = detectedComponent
 
   return {
@@ -143,6 +147,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
         this.error = this.activeTopologyGenerator.error
         this.failed = true
         this.activeTopologyGenerator = null
+
         return
       }
 
@@ -153,6 +158,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
       )
       this.currentComponentIndex += 1
       this.activeTopologyGenerator = null
+
       return
     }
 
@@ -161,11 +167,13 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
     ) {
       this.finalizeComponentTopology()
       this.solved = true
+
       return
     }
 
     const detectedComponent =
       this.inputProblem.detectedComponents[this.currentComponentIndex]!
+
     this.activeTopologyGenerator = TopologyGenerator.create({
       inputSrj: this.inputProblem.inputSrj,
       detectedComponent,
@@ -202,7 +210,9 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
     const outputNodes = this.solved
       ? this.output
       : this.componentMeshNodes.flat()
+
     const { bounds, outline, obstacles } = this.inputProblem.inputSrj
+
     const boardOutlinePoints = outline?.length
       ? [...outline, outline[0]!]
       : [
@@ -212,6 +222,7 @@ export class ComponentTopologyGeneratorSolver extends BaseSolver {
           { x: bounds.minX, y: bounds.maxY },
           { x: bounds.minX, y: bounds.minY },
         ]
+
     const nonComponentObstacles = obstacles.filter(
       (obstacle) =>
         !isObstacleInsideAnyComponentBounds(

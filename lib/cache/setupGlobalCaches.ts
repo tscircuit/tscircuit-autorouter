@@ -11,6 +11,7 @@ export function getGlobalLocalStorageCache() {
   if (!globalThis.TSCIRCUIT_AUTOROUTER_LOCAL_STORAGE_CACHE) {
     setupGlobalCaches()
   }
+
   return globalThis.TSCIRCUIT_AUTOROUTER_LOCAL_STORAGE_CACHE
 }
 
@@ -18,6 +19,7 @@ export function getGlobalInMemoryCache() {
   if (!globalThis.TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE) {
     setupGlobalCaches()
   }
+
   return globalThis.TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE
 }
 

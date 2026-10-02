@@ -26,6 +26,7 @@ export const applyNetColorsToGraphicsObject = (
   })),
   circles: graphics.circles?.map((circle) => {
     const color = getNetColorForLabel(circle.label, colorMap)
+
     return color ? { ...circle, fill: color, stroke: color } : circle
   }),
 })

@@ -15,6 +15,7 @@ const getTracePairErrorCenters = (
     )
       return []
     const center = error.center
+
     return center &&
       typeof center === "object" &&
       "x" in center &&
@@ -45,8 +46,10 @@ export const getPipeline9PreloadedTraceIdsInInitialDrcRegions = ({
 }): Set<string> => {
   const repairCenters = getTracePairErrorCenters(errorsWithCenters)
   const traceIds = new Set<string>()
+
   for (let traceIndex = 0; traceIndex < traces.length; traceIndex++) {
     const trace = traces[traceIndex]!
+
     const sections = convertPreloadedTraceToHdRoutes(
       trace,
       traceIndex,
@@ -54,10 +57,12 @@ export const getPipeline9PreloadedTraceIdsInInitialDrcRegions = ({
       defaultViaDiameter,
       connMap,
     )
+
     const intersectsRepairRegion = repairCenters.some((center) =>
       sections.some((section) => {
         const xs = section.route.map((point) => point.x)
         const ys = section.route.map((point) => point.y)
+
         return (
           Math.min(...xs) <= center.x + REGIONAL_PROMOTION_HALF_SIZE &&
           Math.max(...xs) >= center.x - REGIONAL_PROMOTION_HALF_SIZE &&
@@ -66,7 +71,9 @@ export const getPipeline9PreloadedTraceIdsInInitialDrcRegions = ({
         )
       }),
     )
+
     if (intersectsRepairRegion) traceIds.add(trace.pcb_trace_id)
   }
+
   return traceIds
 }

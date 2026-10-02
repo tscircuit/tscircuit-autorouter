@@ -90,9 +90,11 @@ export function calculateTraversalPercentages(
 export function pointToAngle(point: Point, bounds: Bounds): number {
   const width = bounds.maxX - bounds.minX
   const height = bounds.maxY - bounds.minY
+
   // Avoid division by zero if width or height is zero
   if (width < EPSILON && height < EPSILON) return 0
   const perimeter = 2 * (width + height)
+
   if (perimeter < EPSILON) return 0 // Avoid division by zero for degenerate rectangles
 
   let distance = 0
@@ -171,10 +173,12 @@ function calculateSidePercentages(
 ): SidePercentages {
   const width = bounds.maxX - bounds.minX
   const height = bounds.maxY - bounds.minY
+
   // Avoid division by zero if width or height is zero
   if (width < EPSILON && height < EPSILON)
     return { left: 0, top: 0, right: 0, bottom: 0 }
   const perimeter = 2 * (width + height)
+
   if (perimeter < EPSILON) return { left: 0, top: 0, right: 0, bottom: 0 }
 
   // Define angle ranges for each side (clockwise from top-left = 0)
@@ -211,12 +215,14 @@ function calculateSidePercentages(
   ): number => {
     // Ensure side range is valid (adjust end slightly if it's 2PI to handle interval logic)
     const effectiveSEnd = sEnd > 2 * Math.PI - EPSILON ? 2 * Math.PI : sEnd
+
     if (effectiveSEnd <= sStart + EPSILON) return 0
 
     if (!wrapsAround) {
       // Simple case: traversal is [tStart, tEnd)
       const overlapStart = Math.max(sStart, tStart)
       const overlapEnd = Math.min(effectiveSEnd, tEnd)
+
       return Math.max(0, overlapEnd - overlapStart)
     } else {
       // Wrap-around case: traversal is [tStart, 2π) U [0, tEnd)
@@ -237,9 +243,11 @@ function calculateSidePercentages(
   for (const side of sides) {
     // Use side.end directly for range calculation, helper handles 2PI case
     const sideAngleRange = side.end - side.start
+
     if (sideAngleRange < EPSILON || side.length < EPSILON) continue
 
     let traversedAngleOnSide = 0
+
     if (turnDirection === "cw") {
       // Clockwise: Traverse from startAngle to endAngle
       const wraps = startAngle > endAngle + EPSILON // Check if CW traversal wraps past 2PI

@@ -16,6 +16,7 @@ type Route = {
   connectionName: string
   rootConnectionName?: string
 }
+
 type LayeredObstacle = Obstacle & { __zLayers: number[] }
 
 const CONTAINS_POINT_TOLERANCE = 1e-6
@@ -93,6 +94,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     if (this.routes.length === 0) {
       this.failed = true
       this.error = "Expected at least 1 route"
+
       return
     }
 
@@ -103,21 +105,25 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     ) {
       this.failed = true
       this.error = "Route points should have predefined z values"
+
       return
     }
 
     if (!this.routes.some((route) => route.A.z !== route.B.z)) {
       this.failed = true
       this.error = "No route transitions through an obstacle"
+
       return
     }
 
     const containingObstacles = this.routes.map((route) =>
       this.getContainingThroughObstacle(route),
     )
+
     if (containingObstacles.some((obstacle) => !obstacle)) {
       this.failed = true
       this.error = "No same-net multilayer obstacle contains every route"
+
       return
     }
 
@@ -160,6 +166,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     layerCount?: number
   }) {
     const solver = new SingleTransitionThroughObstacleIntraNodeSolver(params)
+
     return solver.solved
   }
 
@@ -174,9 +181,11 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
 
     for (const connectedPort of this.nodeWithPortPoints.portPoints) {
       const { connectionName } = connectedPort
+
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
+
       connectionGroups.get(connectionName)!.push(connectedPort)
     }
 
@@ -190,6 +199,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
         })
       }
     }
+
     return routes
   }
 
@@ -202,6 +212,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
   private getContainingThroughObstacle(route: Route) {
     const zA = route.A.z
     const zB = route.B.z
+
     if (zA === undefined || zB === undefined) return null
 
     return (
@@ -209,12 +220,14 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
         if (obstacle.__zLayers.length < 2) {
           return false
         }
+
         if (
           !obstacle.__zLayers.includes(zA) ||
           !obstacle.__zLayers.includes(zB)
         ) {
           return false
         }
+
         if (
           !obstacleIsConnectedToRoute({
             obstacle,
@@ -224,6 +237,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
         ) {
           return false
         }
+
         return (
           pointInsideObstacle({ point: route.A, obstacle }) &&
           pointInsideObstacle({ point: route.B, obstacle })
@@ -263,6 +277,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
         strokeWidth: route.traceThickness,
         label: `${route.connectionName} through_obstacle`,
       })
+
       for (const point of route.route) {
         graphics.points!.push({
           x: point.x,

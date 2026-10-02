@@ -27,11 +27,13 @@ export const lockHdRouteTerminals = (
     }
 
     const connection = connectionByName.get(hdRoute.connectionName)
+
     if (!connection) {
       throw new Error(
         `Cannot lock PCB terminals: connection "${hdRoute.connectionName}" was not found`,
       )
     }
+
     if (connection.pointsToConnect.length !== 2) {
       throw new Error(
         `Cannot lock PCB terminals for "${hdRoute.connectionName}": expected 2 connection points, found ${connection.pointsToConnect.length}`,
@@ -40,28 +42,35 @@ export const lockHdRouteTerminals = (
 
     const terminalIdentity =
       terminalIdentityByConnectionName.get(hdRoute.connectionName) ?? hdRoute
+
     const terminalByPcbPortId = new Map<
       string,
       (typeof connection.pointsToConnect)[number]
     >()
+
     for (const terminal of connection.pointsToConnect) {
       if (!terminal.pcb_port_id) continue
+
       if (terminalByPcbPortId.has(terminal.pcb_port_id)) {
         throw new Error(
           `Cannot lock duplicate PCB terminal "${terminal.pcb_port_id}" for "${hdRoute.connectionName}"`,
         )
       }
+
       terminalByPcbPortId.set(terminal.pcb_port_id, terminal)
     }
+
     if (terminalByPcbPortId.size === 0) return hdRoute
 
     const routeEndpointPcbPortIds = [
       terminalIdentity.startPcbPortId,
       terminalIdentity.endPcbPortId,
     ].filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
+
     if (routeEndpointPcbPortIds.length === 0) return hdRoute
 
     const uniqueRouteEndpointPcbPortIds = new Set(routeEndpointPcbPortIds)
+
     if (
       uniqueRouteEndpointPcbPortIds.size !== routeEndpointPcbPortIds.length ||
       routeEndpointPcbPortIds.some(
@@ -76,6 +85,7 @@ export const lockHdRouteTerminals = (
     const startTerminal = terminalIdentity.startPcbPortId
       ? terminalByPcbPortId.get(terminalIdentity.startPcbPortId)
       : undefined
+
     const endTerminal = terminalIdentity.endPcbPortId
       ? terminalByPcbPortId.get(terminalIdentity.endPcbPortId)
       : undefined
@@ -89,6 +99,7 @@ export const lockHdRouteTerminals = (
           pcb_port_id: startTerminal.pcb_port_id,
         }
       }
+
       if (pointIndex === hdRoute.route.length - 1 && endTerminal) {
         return {
           ...point,
@@ -97,8 +108,10 @@ export const lockHdRouteTerminals = (
           pcb_port_id: endTerminal.pcb_port_id,
         }
       }
+
       const interiorPoint = { ...point }
       delete interiorPoint.pcb_port_id
+
       return interiorPoint
     })
 

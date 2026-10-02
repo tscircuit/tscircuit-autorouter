@@ -19,6 +19,7 @@ export class CapacityPathingSolver3_FlexibleNegativeCapacity_AvoidLowCapacity ex
     endGoal: CapacityMeshNode,
   ) {
     const nodeCapacity = this.getTotalCapacity(node)
+
     const distanceToPrevNode = Math.sqrt(
       (node.center.x - prevCandidate.node.center.x) ** 2 +
         (node.center.y - prevCandidate.node.center.y) ** 2,

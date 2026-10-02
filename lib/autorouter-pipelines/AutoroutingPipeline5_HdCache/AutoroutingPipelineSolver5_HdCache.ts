@@ -49,8 +49,10 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
       getConstructorParams: (cms: AutoroutingPipelineSolver5_HdCache) => {
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
+
         const fallbackNodes =
           cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -89,6 +91,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
     this.step()
 
     const pendingEffects = getPendingEffectsFromSolverTree(this)
+
     if (pendingEffects.length === 0) {
       return
     }

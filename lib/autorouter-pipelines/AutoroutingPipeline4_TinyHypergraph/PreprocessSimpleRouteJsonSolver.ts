@@ -26,12 +26,16 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
 
   override _step(): void {
     this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
+
     if (this.error) {
       this.failed = true
+
       return
     }
+
     const inputSrjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(this.inputSrj)
+
     const srjWithPreloadedRouteObstacles =
       convertSrjTracesToObstacles(inputSrjWithBoardValidObstacleLayers) ??
       inputSrjWithBoardValidObstacleLayers
@@ -39,6 +43,7 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
     const srjWithApproximatingRects = addApproximatingRectsToSrj(
       filterObstaclesOutsideBoard(srjWithPreloadedRouteObstacles),
     )
+
     this.outputSrj = createSrjWithBoardValidObstacleLayers(
       srjWithApproximatingRects,
     )

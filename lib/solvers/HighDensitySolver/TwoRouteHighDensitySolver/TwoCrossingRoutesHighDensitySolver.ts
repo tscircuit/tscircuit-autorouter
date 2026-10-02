@@ -14,6 +14,7 @@ import { computeDumbbellPaths } from "./computeDumbbellPaths"
 import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
 type Point = { x: number; y: number; z?: number }
+
 type Route = {
   startPort: Point
   endPort: Point
@@ -73,30 +74,38 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     if (this.routes.length !== 2) {
       this.failed = true
       this.error = `Expected 2 routes, but got ${this.routes.length}`
+
       return
     }
 
     const [routeA, routeB] = this.routes
+
     const routeAStartsAndEndsOnSameLayer =
       routeA.startPort.z === routeA.endPort.z
+
     if (!routeAStartsAndEndsOnSameLayer) {
       this.failed = true
       this.error = "Route A must start and end on the same layer"
+
       return
     }
 
     const routeBStartsAndEndsOnSameLayer =
       routeB.startPort.z === routeB.endPort.z
+
     if (!routeBStartsAndEndsOnSameLayer) {
       this.failed = true
       this.error = "Route B must start and end on the same layer"
+
       return
     }
 
     const routesAreSameLayer = routeA.startPort.z === routeB.startPort.z
+
     if (!routesAreSameLayer) {
       this.failed = true
       this.error = "Both routes must be on the same layer"
+
       return
     }
     // TODO check to make sure the lines cross
@@ -121,9 +130,11 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     for (const connectedPort of connectedPorts) {
       const { connectionName } = connectedPort
+
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
+
       connectionGroups.get(connectionName)?.push(connectedPort)
     }
 
@@ -248,6 +259,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
         // For each intersection, check if it's also outside the other circle
         intersections.forEach((point) => {
           const otherCircle = circleIndex === 0 ? pointB : pointA
+
           if (distanceBetween(point, otherCircle) >= K1) {
             candidatePoints.push({
               ...point,
@@ -282,10 +294,12 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
             distanceBetween(a, pointA),
             distanceBetween(a, pointB),
           )
+
           const bMinDist = Math.min(
             distanceBetween(b, pointA),
             distanceBetween(b, pointB),
           )
+
           return bMinDist - aMinDist // Larger distances first
         })
 
@@ -295,6 +309,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
             !candidatePoints.some((p) => p.x === corner.x && p.y === corner.y)
           ) {
             candidatePoints.push({ ...corner, type: "forced_corner" })
+
             if (candidatePoints.length >= 2) break
           }
         }
@@ -308,6 +323,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     // Find the pair of points with maximum distance between them
     let maxDist = 0
+
     let optimalPair = [
       candidatePoints[0],
       candidatePoints[candidatePoints.length > 1 ? 1 : 0],
@@ -316,6 +332,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     for (let i = 0; i < candidatePoints.length; i++) {
       for (let j = i + 1; j < candidatePoints.length; j++) {
         const dist = distanceBetween(candidatePoints[i], candidatePoints[j])
+
         if (dist > maxDist) {
           maxDist = dist
           optimalPair = [candidatePoints[i], candidatePoints[j]]
@@ -350,6 +367,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     const viaPositions = swapVias
       ? this.calculateViaPositions(routeA, routeB)
       : this.calculateViaPositions(routeB, routeA)
+
     if (viaPositions) {
       this.debugViaPositions.push(viaPositions)
     } else {
@@ -360,9 +378,11 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     const { via1, via2 } = this.pushViasFromEndpoints(
       this.moveViasAsCloseAsPossible(viaPositions),
     )
+
     this.debugViaPositions.push({ via1, via2 })
 
     const NOT_CIRCULAR_PENALTY_TC = 1.5
+
     const { jPair, optimalPath } = computeDumbbellPaths({
       A: via1,
       B: via2,
@@ -396,7 +416,9 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       vias: [],
     }
+
     jPair.line2.points.reverse()
+
     const routeBSolution: HighDensityIntraNodeRoute = {
       connectionName: routeB.connectionName,
       regionId: this.nodeWithPortPoints.capacityMeshNodeId,
@@ -423,6 +445,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     }
 
     this.solvedRoutes.push(routeASolution, routeBSolution)
+
     return true
   }
 
@@ -444,6 +467,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     ]
 
     const optimalDistBtwViaCenters = this.getMinDistanceBetweenViaCenters()
+
     // Required clearance: via radius + trace thickness + obstacle margin
     const minDistanceBtwViaAndEndpoint =
       this.viaDiameter / 2 + this.traceThickness * 2 + this.obstacleMargin * 2
@@ -460,12 +484,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
       for (const endpoint of endpoints) {
         // Check Via 1
         const dist1 = distance(currentVia1, endpoint)
+
         if (dist1 < minDistanceBtwViaAndEndpoint) {
           const overlap = minDistanceBtwViaAndEndpoint - dist1
           const pushAmount = overlap * pushDecayFactor
           const dx = currentVia1.x - endpoint.x
           const dy = currentVia1.y - endpoint.y
           const norm = Math.sqrt(dx * dx + dy * dy)
+
           if (norm > 1e-6) {
             // Avoid division by zero if via is exactly on endpoint
             currentVia1.x += (dx / norm) * pushAmount
@@ -476,12 +502,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
         // Check Via 2
         const dist2 = distance(currentVia2, endpoint)
+
         if (dist2 < minDistanceBtwViaAndEndpoint) {
           const overlap = minDistanceBtwViaAndEndpoint - dist2
           const pushAmount = overlap * pushDecayFactor
           const dx = currentVia2.x - endpoint.x
           const dy = currentVia2.y - endpoint.y
           const norm = Math.sqrt(dx * dx + dy * dy)
+
           if (norm > 1e-6) {
             currentVia2.x += (dx / norm) * pushAmount
             currentVia2.y += (dy / norm) * pushAmount
@@ -492,6 +520,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
       // --- Ensure Minimum Distance Between Vias ---
       const distBetweenVias = distance(currentVia1, currentVia2)
+
       if (distBetweenVias < optimalDistBtwViaCenters) {
         const overlap = optimalDistBtwViaCenters - distBetweenVias
         const pushAmount = overlap / 2 // Push each via half the distance
@@ -526,12 +555,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     // Final check: ensure vias are not too close after all adjustments
     const finalDist = distance(currentVia1, currentVia2)
+
     if (finalDist < optimalDistBtwViaCenters) {
       const overlap = optimalDistBtwViaCenters - finalDist
       const pushAmount = overlap / 2
       const dx = currentVia2.x - currentVia1.x
       const dy = currentVia2.y - currentVia1.y
       const norm = Math.sqrt(dx * dx + dy * dy)
+
       if (norm > 1e-6) {
         currentVia1.x -= (dx / norm) * pushAmount
         currentVia1.y -= (dy / norm) * pushAmount
@@ -605,6 +636,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
   handleRoutesDontCross() {
     const [routeA, routeB] = this.routes
+
     // Routes don't cross, create simple direct connections
     const routeASolution: HighDensityIntraNodeRoute = {
       connectionName: routeA.connectionName,
@@ -648,6 +680,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
 
     this.solvedRoutes.push(routeASolution, routeBSolution)
     this.solved = true
+
     return
   }
 
@@ -658,6 +691,7 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Check if we have exactly two routes
     if (this.routes.length !== 2) {
       this.failed = true
+
       return
     }
 
@@ -666,17 +700,21 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Check if routes are actually crossing
     if (!this.doRoutesCross(routeA, routeB)) {
       this.handleRoutesDontCross()
+
       return
     }
 
     // Try having route A go over route B
     if (this.trySolveAOverB(routeA, routeB)) {
       this.solved = true
+
       return
     }
+
     // If that fails, try having route B go over route A
     if (this.trySolveAOverB(routeB, routeA)) {
       this.solved = true
+
       return
     }
 
@@ -685,11 +723,14 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Try having route A go over route B
     if (this.trySolveAOverB(routeA, routeB, true)) {
       this.solved = true
+
       return
     }
+
     // If that fails, try having route B go over route A
     if (this.trySolveAOverB(routeB, routeA, true)) {
       this.solved = true
+
       return
     }
 
@@ -808,8 +849,10 @@ export class TwoCrossingRoutesHighDensitySolver extends BaseSolver {
     // Draw solved routes if available
     for (let si = 0; si < this.solvedRoutes.length; si++) {
       const route = this.solvedRoutes[si]
+
       const routeColor =
         si % 2 === 0 ? "rgba(0, 255, 0, 0.75)" : "rgba(255, 0, 255, 0.75)"
+
       for (let i = 0; i < route.route.length - 1; i++) {
         const pointA = route.route[i]
         const pointB = route.route[i + 1]

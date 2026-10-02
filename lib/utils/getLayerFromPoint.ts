@@ -8,5 +8,6 @@ export function getLayerFromPoint({
   point: ConnectionPoint | null | undefined
 }): string | undefined {
   if (!point) return undefined
+
   return getConnectionPointLayer(point)
 }

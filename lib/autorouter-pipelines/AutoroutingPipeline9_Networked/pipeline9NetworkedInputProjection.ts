@@ -8,6 +8,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 
 const MAX_PIPELINE9_ORDINARY_NODE_SCALE = 2 ** DEFAULT_MAX_GROWTH_ATTEMPTS
+
 const OBSTACLE_OVERLAP_TOLERANCE = 1e-6
 
 export type Pipeline9OrdinaryHighDensityProjection = {
@@ -40,10 +41,12 @@ export const getMaximumPipeline9NodeBounds = ({
   viaDiameter: number
 }): Bounds => {
   const nodeBounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
+
   const clearance =
     obstacleMargin +
     Math.max(traceWidth, viaDiameter) / 2 +
     OBSTACLE_OVERLAP_TOLERANCE
+
   return {
     minX:
       nodeWithPortPoints.center.x +
@@ -77,16 +80,19 @@ const obstacleOverlapsBounds = (
   const sin = Math.abs(Math.sin(rotationRadians))
   const rawHalfWidth = obstacle.width / 2
   const rawHalfHeight = obstacle.height / 2
+
   // Some Pipeline9 consumers intentionally use the unrotated bounds while
   // others use the rotated rectangle. The larger envelope preserves both.
   const halfWidth = Math.max(
     rawHalfWidth,
     rawHalfWidth * cos + rawHalfHeight * sin,
   )
+
   const halfHeight = Math.max(
     rawHalfHeight,
     rawHalfWidth * sin + rawHalfHeight * cos,
   )
+
   return (
     obstacle.center.x - halfWidth <= bounds.maxX &&
     obstacle.center.x + halfWidth >= bounds.minX &&
@@ -126,6 +132,7 @@ const projectConnectivityNetMap = (
   Object.fromEntries(
     Object.entries(connMap.netMap).flatMap(([netId, ids]) => {
       const relevantConnectedIds = ids.filter((id) => relevantIds.has(id))
+
       return relevantConnectedIds.length > 0 || relevantIds.has(netId)
         ? [[netId, relevantConnectedIds]]
         : []
@@ -176,9 +183,11 @@ const getRelevantObstacleConnectionRepresentatives = ({
         ) ??
         portPoint.rootConnectionName ??
         portPoint.connectionName
+
       return [portPoint.connectionName, rootConnectionName]
     }),
   )
+
   // The repair stage compares these IDs directly, without a ConnectivityMap.
   // Preserve every exact route/root identity so that direct semantics cannot
   // be changed by projection.
@@ -187,6 +196,7 @@ const getRelevantObstacleConnectionRepresentatives = ({
   )
 
   const idsByNet = new Map<string, string[]>()
+
   for (const routeId of directRouteIds) {
     const netId = connMap.getNetConnectedToId(routeId) ?? routeId
     const routeIds = idsByNet.get(netId) ?? []
@@ -202,6 +212,7 @@ const getRelevantObstacleConnectionRepresentatives = ({
           connMap.areIdsConnected(routeId, representative),
       ),
     )
+
     if (alreadyRepresented) continue
 
     const connectedId = obstacle.connectedTo.find((candidateId) =>
@@ -211,6 +222,7 @@ const getRelevantObstacleConnectionRepresentatives = ({
           connMap.areIdsConnected(routeId, candidateId),
       ),
     )
+
     if (connectedId !== undefined) {
       representatives.add(connectedId)
     }
@@ -250,10 +262,13 @@ export function projectPipeline9RegionalHighDensityInput({
     traceWidth,
     viaDiameter,
   })
+
   const relevantIds = new Set<string>()
+
   for (const portPoint of nodeWithPortPoints.portPoints) {
     addPortPointIds(relevantIds, portPoint)
   }
+
   for (const pair of nodeWithPortPoints.portPointsInPairs ?? []) {
     addPortPointIds(relevantIds, pair[0])
     addPortPointIds(relevantIds, pair[1])
@@ -261,12 +276,15 @@ export function projectPipeline9RegionalHighDensityInput({
 
   const projectedObstacles = obstacles.flatMap((obstacle) => {
     if (!obstacleOverlapsBounds(obstacle, maximumNodeBounds)) return []
+
     const connectedTo = getRelevantObstacleConnectionRepresentatives({
       obstacle,
       nodeWithPortPoints,
       connMap,
     })
+
     for (const id of connectedTo) relevantIds.add(id)
+
     return [
       getMinimalProjectedObstacle({
         obstacle,
@@ -286,13 +304,16 @@ export const mergePipeline9ProjectedConnectivityNetMaps = (
   ...netMaps: Array<Record<string, string[]>>
 ): Record<string, string[]> => {
   const merged = new Map<string, Set<string>>()
+
   for (const netMap of netMaps) {
     for (const [netId, ids] of Object.entries(netMap)) {
       const mergedIds = merged.get(netId) ?? new Set<string>()
+
       for (const id of ids) mergedIds.add(id)
       merged.set(netId, mergedIds)
     }
   }
+
   return Object.fromEntries(
     [...merged].map(([netId, ids]) => [netId, [...ids]]),
   )
@@ -327,6 +348,7 @@ export function projectPipeline9OrdinaryHighDensityInput({
     traceWidth,
     viaDiameter,
   })
+
   const nodeConnectionNames = getNodeConnectionNames(nodeWithPortPoints)
 
   const projectedObstacles = obstacles.flatMap((obstacle) => {
@@ -340,6 +362,7 @@ export function projectPipeline9OrdinaryHighDensityInput({
             connMap.areIdsConnected(connectionName, connectedId),
         ),
     )
+
     if (matchingConnectionNames.length === 0) return []
 
     return [
@@ -352,13 +375,16 @@ export function projectPipeline9OrdinaryHighDensityInput({
   })
 
   const relevantIds = new Set<string>()
+
   for (const portPoint of nodeWithPortPoints.portPoints) {
     addPortPointIds(relevantIds, portPoint)
   }
+
   for (const pair of nodeWithPortPoints.portPointsInPairs ?? []) {
     addPortPointIds(relevantIds, pair[0])
     addPortPointIds(relevantIds, pair[1])
   }
+
   for (const obstacle of projectedObstacles) {
     for (const id of [
       obstacle.circuitJsonMetadata?.pcb_smtpad_id,
@@ -372,6 +398,7 @@ export function projectPipeline9OrdinaryHighDensityInput({
   }
 
   const connectivityNetMap = projectConnectivityNetMap(connMap, relevantIds)
+
   const projectedColorMap = Object.fromEntries(
     Object.entries(colorMap ?? {}).filter(([id]) => relevantIds.has(id)),
   )

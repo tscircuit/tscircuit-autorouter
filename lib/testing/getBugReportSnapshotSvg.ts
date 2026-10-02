@@ -16,6 +16,7 @@ export const getBugReportSnapshotSvg = (
   input: EvaluateRelaxedDrcInput,
 ): string => {
   const { errors } = evaluateRelaxedDrc(input)
+
   const graphics = convertSrjToGraphicsObject({
     ...input.inputSrj,
     traces: combinePreloadedAndRoutedTraces(
@@ -23,12 +24,16 @@ export const getBugReportSnapshotSvg = (
       input.routedTraces,
     ),
   })
+
   // Connection debug dots obscure fine-pitch pads and escape traces.
   graphics.points = []
+
   const svg = getSvgFromGraphicsObject(graphics, {
     backgroundColor: "white",
   })
+
   const color = errors.length === 0 ? "#166534" : "#b91c1c"
   const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text></g>`
+
   return svg.replace("</svg>", `${overlay}</svg>`)
 }

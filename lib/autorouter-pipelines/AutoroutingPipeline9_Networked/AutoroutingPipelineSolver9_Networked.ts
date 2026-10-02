@@ -35,6 +35,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     opts: AutoroutingPipelineSolver9NetworkedOptions = {},
   ) {
     super(srj, opts)
+
     if (this.effort !== 1) {
       throw new Error(
         `AutoroutingPipelineSolver9_Networked is only available at effort=1, received ${this.effort}`,
@@ -51,10 +52,13 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     const highDensityStepIndex = this.pipelineDef.findIndex(
       (step) => step.solverName === "highDensityRouteSolver",
     )
+
     const originalStep = this.pipelineDef[highDensityStepIndex]
+
     if (!originalStep) {
       throw new Error("Pipeline9 highDensityRouteSolver step is missing")
     }
+
     const getOriginalConstructorParams = originalStep.getConstructorParams
 
     this.pipelineDef[highDensityStepIndex] = {
@@ -62,6 +66,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
       solverClass: Pipeline9NetworkedHighDensitySolver as any,
       getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
         const [params] = getOriginalConstructorParams(solver)
+
         return [
           {
             ...params,
@@ -79,6 +84,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     this.step()
 
     const pendingEffects = getPendingEffectsFromSolverTree(this)
+
     if (pendingEffects.length === 0) return
     await Promise.race(
       pendingEffects.map((effect) =>
@@ -94,9 +100,11 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
 
   async solveAsync(): Promise<void> {
     const startTime = Date.now()
+
     while (!this.solved && !this.failed) {
       await this.stepAsync()
     }
+
     this.timeToSolve = Date.now() - startTime
   }
 

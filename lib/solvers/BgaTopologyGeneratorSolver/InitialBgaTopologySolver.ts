@@ -93,11 +93,16 @@ function createMeshNodesFromBgaGap(input: {
   multiLayerThreshold: number
 }): CapacityMeshNode[] {
   const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
+
   const isLargeEnoughForMultiLayer =
     bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
+
   let orientationKey: string = "d"
+
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
+
   if (bgaGap.orientation === "vertical") orientationKey = "v"
+
   const baseNodeId: string = getStableGapNodeToken({
     componentId,
     orientationKey,
@@ -151,6 +156,7 @@ function createMeshNodeFromMissingBgaSlot(input: {
   multiLayerThreshold: number
 }): CapacityMeshNode[] {
   const { componentId, missingBgaSlot, freeLayers, multiLayerThreshold } = input
+
   const baseNodeId = getStableGapNodeToken({
     componentId,
     orientationKey: "missing",
@@ -160,6 +166,7 @@ function createMeshNodeFromMissingBgaSlot(input: {
     width: missingBgaSlot.width,
     height: missingBgaSlot.height,
   })
+
   const isLargeEnoughForMultiLayer =
     missingBgaSlot.width > multiLayerThreshold &&
     missingBgaSlot.height > multiLayerThreshold
@@ -194,12 +201,15 @@ function createFreeObstacleMeshNodes(input: {
   layerCount: number
 }): CapacityMeshNode[] {
   const { componentId, obstacle, freeLayers, layerCount } = input
+
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
   )
+
   const obstacleFreeLayers: number[] = freeLayers.filter(
     (layer) => !obstacleLayers.includes(layer),
   )
+
   const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
 
   return obstacleFreeLayers.map((layer) => ({
@@ -220,7 +230,9 @@ function createObstacleMeshNode(
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, srj.layerCount),
   )
+
   const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
+
   const targetConnectionName = getObstacleTargetConnectionName({
     obstacle,
     srj,
@@ -285,6 +297,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
 
     if (markedComponentObstacles.length === 0 || freeLayers.length === 0) {
       this.solved = true
+
       return
     }
 
@@ -294,16 +307,20 @@ export class InitialBgaTopologySolver extends BaseSolver {
 
     if (!bgaGrid) {
       this.solved = true
+
       return
     }
 
     const axisGaps: BgaGap[] = bgaGrid.getAxisGaps()
     const diagonalGaps: BgaGap[] = bgaGrid.getDiagonalGaps()
     const missingBgaSlots: MissingBgaSlot[] = bgaGrid.getMissingSlots()
+
     const viaDiameter =
       this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
+
     const multiLayerThreshold =
       viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR
+
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({

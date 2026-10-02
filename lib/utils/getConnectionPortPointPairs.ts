@@ -23,6 +23,7 @@ const getPairKey = (pair: PortPointPair) => {
   const [a, b] = pair
   const aKey = getPortPointKey(a)
   const bKey = getPortPointKey(b)
+
   return aKey < bKey ? `${aKey}|${bKey}` : `${bKey}|${aKey}`
 }
 
@@ -41,11 +42,14 @@ const addUniquePair = (
   },
 ) => {
   const [a, b] = pair
+
   if (a === b) return false
   const pairKey = getPairKey(pair)
+
   if (context.seenPairKeys.has(pairKey)) return false
   context.seenPairKeys.add(pairKey)
   context.pairs.push(pair)
+
   return true
 }
 
@@ -81,6 +85,7 @@ export const getConnectionPortPointPairs = (
 ): PortPointPair[] => {
   const pairs: PortPointPair[] = []
   const seenPairKeys = new Set<string>()
+
   const portPointsById = new Map(
     portPoints
       .filter(
@@ -89,17 +94,21 @@ export const getConnectionPortPointPairs = (
       )
       .map((portPoint) => [portPoint.portPointId, portPoint] as const),
   )
+
   const pairCollection = { pairs, seenPairKeys }
 
   for (const portPoint of portPoints) {
     if (portPoint.prevPortPointId) {
       const prev = portPointsById.get(portPoint.prevPortPointId)
+
       if (prev && prev.connectionName === portPoint.connectionName) {
         addUniquePair([prev, portPoint], pairCollection)
       }
     }
+
     if (portPoint.nextPortPointId) {
       const next = portPointsById.get(portPoint.nextPortPointId)
+
       if (next && next.connectionName === portPoint.connectionName) {
         addUniquePair([portPoint, next], pairCollection)
       }
@@ -108,12 +117,14 @@ export const getConnectionPortPointPairs = (
 
   if (pairs.length === 0) {
     addSequentialPairs(portPoints, pairCollection)
+
     return pairs
   }
 
   const linkedIds = new Set(
     pairs.flatMap(([a, b]) => [a.portPointId, b.portPointId]).filter(Boolean),
   )
+
   const unlinkedPortPoints = portPoints.filter(
     (portPoint) =>
       !portPoint.portPointId || !linkedIds.has(portPoint.portPointId),

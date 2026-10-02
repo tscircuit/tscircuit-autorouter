@@ -34,14 +34,17 @@ export class AttachProjectedRectsSolver extends BaseSolver {
     this.outputNodes = this.params.nodesWithPortPoints.map((node) => {
       const requestedExpansionFactor =
         this.params.equivalentAreaExpansionFactor ?? 0
+
       const minProjectedRectDimension =
         this.params.minProjectedRectDimension ?? 0
+
       const requiredRoutingCorridorWidth = getRequiredRoutingCorridorWidth({
         traceWidth: this.params.traceWidth,
         viaDiameter: this.params.viaDiameter,
         obstacleMargin: this.params.obstacleMargin,
         minProjectedRectDimension,
       })
+
       let projectedRect = computeProjectedRect(
         node.polygon,
         requestedExpansionFactor,
@@ -49,8 +52,10 @@ export class AttachProjectedRectsSolver extends BaseSolver {
       )
 
       const minDimension = Math.min(projectedRect.width, projectedRect.height)
+
       const nextTraceLaneWidth =
         requiredRoutingCorridorWidth + (this.params.traceWidth ?? 0)
+
       if (minDimension > nextTraceLaneWidth) {
         return {
           ...node,

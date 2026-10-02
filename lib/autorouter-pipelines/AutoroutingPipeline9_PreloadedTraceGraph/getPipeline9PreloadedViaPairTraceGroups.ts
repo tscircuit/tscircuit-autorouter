@@ -27,11 +27,14 @@ export const getPipeline9PreloadedViaPairTraceGroups = ({
       error.actual_clearance >= 0
     )
       return []
+
     const originalTraceIds = error.pcb_via_ids
       .flatMap((viaId) => {
         if (typeof viaId !== "string") return []
         const preparedTraceId = preparedTraceIdByViaId.get(viaId)
+
         if (!preparedTraceId) return []
+
         return [
           originalTraceIdByPreparedTraceId.get(preparedTraceId) ??
             preparedTraceId,
@@ -41,6 +44,7 @@ export const getPipeline9PreloadedViaPairTraceGroups = ({
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
       )
+
     return originalTraceIds.length > 0 ? [originalTraceIds] : []
   })
 }

@@ -2,6 +2,7 @@ import type { Edge, Rect } from "./types"
 
 export function getPointOnEdge(edge: Edge, t: number, rect: Rect) {
   const { x, y, width, height } = rect
+
   switch (edge) {
     case "top":
       return { x: x + t * width, y }
@@ -24,6 +25,7 @@ export function getTFromMouseOnEdge(
 ) {
   const { x, y, width, height } = rect
   let t = 0.5
+
   switch (edge) {
     case "top":
     case "bottom":
@@ -34,6 +36,7 @@ export function getTFromMouseOnEdge(
       t = (my - y) / height
       break
   }
+
   return Math.max(0.05, Math.min(0.95, t))
 }
 
@@ -44,23 +47,28 @@ export function findEdgeAndT(
 ): { edge: Edge; t: number } | null {
   const { x, y, width, height } = rect
   const threshold = 15
+
   if (Math.abs(py - y) < threshold && px >= x && px <= x + width)
     return { edge: "top", t: Math.max(0.05, Math.min(0.95, (px - x) / width)) }
+
   if (Math.abs(py - (y + height)) < threshold && px >= x && px <= x + width)
     return {
       edge: "bottom",
       t: Math.max(0.05, Math.min(0.95, (px - x) / width)),
     }
+
   if (Math.abs(px - x) < threshold && py >= y && py <= y + height)
     return {
       edge: "left",
       t: Math.max(0.05, Math.min(0.95, (py - y) / height)),
     }
+
   if (Math.abs(px - (x + width)) < threshold && py >= y && py <= y + height)
     return {
       edge: "right",
       t: Math.max(0.05, Math.min(0.95, (py - y) / height)),
     }
+
   return null
 }
 

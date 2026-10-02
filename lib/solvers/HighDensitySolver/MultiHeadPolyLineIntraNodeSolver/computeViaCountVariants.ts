@@ -54,12 +54,14 @@ export const computeViaCountVariants = (
 
     for (let i = 0; i <= segmentsPerPolyline; i++) {
       const isOdd = i % 2 !== 0
+
       if (needsLayerChange && isOdd) {
         possibleCounts.push(i)
       } else if (!needsLayerChange && !isOdd) {
         possibleCounts.push(i)
       }
     }
+
     possibleViaCountsPerPolyline.push(possibleCounts)
   }
 
@@ -73,8 +75,10 @@ export const computeViaCountVariants = (
   ).filter((variant) => {
     for (let i = 0; i < variant.length; i++) {
       const viaCount = variant.reduce((acc, count) => acc + count, 0)
+
       if (viaCount < minViaCount) return false
     }
+
     return true
   })
 
@@ -82,10 +86,12 @@ export const computeViaCountVariants = (
   variants = variants.filter((variant) => {
     for (let i = 0; i < portPairsEntries.length; i++) {
       const [, portPair1] = portPairsEntries[i]
+
       if (portPair1.start.z1 !== portPair1.start.z2) {
         if (variant[i] === 0) return false
       }
     }
+
     return true
   })
 
@@ -93,13 +99,16 @@ export const computeViaCountVariants = (
   variants = variants.filter((variant) => {
     for (let i = 0; i < portPairsEntries.length; i++) {
       const [, portPair1] = portPairsEntries[i]
+
       if (portPairsEntries[i][1].start.z1 !== portPairsEntries[i][1].start.z2)
         continue
+
       for (let j = i + 1; j < portPairsEntries.length; j++) {
         if (portPairsEntries[j][1].start.z1 !== portPairsEntries[j][1].start.z2)
           continue
 
         const [, portPair2] = portPairsEntries[j]
+
         if (
           portPair1.start.z1 === portPair1.end.z1 &&
           portPair2.start.z1 === portPair2.end.z1 &&
@@ -115,12 +124,15 @@ export const computeViaCountVariants = (
         }
       }
     }
+
     return true
   })
 
   variants = variants.filter((variant) => {
     const viaCount = variant.reduce((acc, count) => acc + count, 0)
+
     if (viaCount > maxViaCount) return false
+
     return true
   })
 

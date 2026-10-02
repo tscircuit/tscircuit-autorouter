@@ -40,6 +40,7 @@ export type Pipeline9AxisAlignedRect = {
 }
 
 const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
+
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   Map<string, Pipeline9RouteCopperGeometry>
@@ -54,9 +55,11 @@ export const getPipeline9RouteCopperGeometry = (
 ): Pipeline9RouteCopperGeometry => {
   const cacheKey = `${layerCount}:${allowBlindAndBuriedVias === true}`
   const cachedGeometry = routeCopperGeometryCache.get(route)?.get(cacheKey)
+
   if (cachedGeometry) return cachedGeometry
   const wireSegments: Pipeline9RouteWireSegment[] = []
   const viaSpans: Pipeline9RouteViaSpan[] = []
+
   for (
     let routePointIndex = 1;
     routePointIndex < route.route.length;
@@ -65,17 +68,21 @@ export const getPipeline9RouteCopperGeometry = (
     const start = route.route[routePointIndex - 1]!
     const end = route.route[routePointIndex]!
     const xyDistance = Math.hypot(end.x - start.x, end.y - start.y)
+
     const segmentWidth = Math.max(
       start.traceThickness ?? route.traceThickness,
       end.traceThickness ?? route.traceThickness,
     )
+
     if (start.z !== end.z && start.toNextSegmentType === "through_obstacle") {
       const minZ = Math.min(start.z, end.z)
       const maxZ = Math.max(start.z, end.z)
+
       if (xyDistance <= 1e-9) {
         const hasExplicitVia = route.vias.some(
           (via) => Math.hypot(via.x - end.x, via.y - end.y) <= 1e-9,
         )
+
         viaSpans.push({
           center: { x: end.x, y: end.y },
           minZ,
@@ -84,6 +91,7 @@ export const getPipeline9RouteCopperGeometry = (
         })
         continue
       }
+
       for (let z = minZ; z <= maxZ; z++) {
         wireSegments.push({
           start: { ...start, z },
@@ -92,13 +100,17 @@ export const getPipeline9RouteCopperGeometry = (
           width: segmentWidth,
         })
       }
+
       continue
     }
+
     const viaEndpoint =
       start.z === end.z
         ? undefined
         : getPipeline9LayerTransitionViaEndpoint({ hdRoute: route, start, end })
+
     const wireZ = viaEndpoint === "start" ? end.z : start.z
+
     if (xyDistance > 1e-9) {
       wireSegments.push({
         start: start.z === wireZ ? start : { ...start, z: wireZ },
@@ -107,6 +119,7 @@ export const getPipeline9RouteCopperGeometry = (
         width: segmentWidth,
       })
     }
+
     if (start.z === end.z) continue
     const viaPoint = viaEndpoint === "start" ? start : end
     // Signal endpoints do not limit the drilled copper on a through via.
@@ -120,10 +133,12 @@ export const getPipeline9RouteCopperGeometry = (
       diameter: route.viaDiameter,
     })
   }
+
   const geometry = { wireSegments, viaSpans }
   const geometries = routeCopperGeometryCache.get(route) ?? new Map()
   geometries.set(cacheKey, geometry)
   routeCopperGeometryCache.set(route, geometries)
+
   return geometry
 }
 
@@ -135,10 +150,12 @@ export const getPipeline9AxisAlignedWireApproximations = (
   const dx = segment.end.x - segment.start.x
   const dy = segment.end.y - segment.start.y
   const segmentLength = Math.hypot(dx, dy)
+
   const center = {
     x: (segment.start.x + segment.end.x) / 2,
     y: (segment.start.y + segment.end.y) / 2,
   }
+
   if (Math.abs(dx) <= 1e-9 || Math.abs(dy) <= 1e-9) {
     return [
       {
@@ -148,6 +165,7 @@ export const getPipeline9AxisAlignedWireApproximations = (
       },
     ]
   }
+
   return generateApproximatingRects(
     {
       center,
@@ -175,10 +193,12 @@ export const getPipeline9FixedRouteObstacles = ({
     const connectedTo = [route.connectionName, route.rootConnectionName].filter(
       (connectedId): connectedId is string => typeof connectedId === "string",
     )
+
     const geometry = getPipeline9RouteCopperGeometry(route, {
       layerCount,
       allowBlindAndBuriedVias,
     })
+
     return [
       ...geometry.wireSegments.flatMap((segment, segmentIndex): Obstacle[] => {
         const approximatingRects = getPipeline9AxisAlignedWireApproximations(
@@ -186,6 +206,7 @@ export const getPipeline9FixedRouteObstacles = ({
           FIXED_WIRE_MAX_APPROXIMATION_LENGTH,
           2,
         )
+
         return approximatingRects.map((rect, approximationIndex) => ({
           obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_wire_${segmentIndex}_${approximationIndex}`,
           type: "rect",
@@ -223,9 +244,11 @@ export const arePipeline9RoutesOnSameNet = (
   const leftIds = [left.connectionName, left.rootConnectionName].filter(
     (id): id is string => typeof id === "string",
   )
+
   const rightIds = [right.connectionName, right.rootConnectionName].filter(
     (id): id is string => typeof id === "string",
   )
+
   return leftIds.some((leftId) =>
     rightIds.some(
       (rightId) =>
@@ -256,6 +279,7 @@ const wireSegmentOverlapsBounds = (
     minY: Math.min(segment.start.y, segment.end.y) - segment.width / 2,
     maxY: Math.max(segment.start.y, segment.end.y) + segment.width / 2,
   }
+
   return boundsOverlap(segmentBounds, bounds)
 }
 
@@ -269,6 +293,7 @@ const viaSpanOverlapsBounds = (
     minY: via.center.y - via.diameter / 2,
     maxY: via.center.y + via.diameter / 2,
   }
+
   return boundsOverlap(viaBounds, bounds)
 }
 
@@ -290,21 +315,26 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   const board = { layerCount, allowBlindAndBuriedVias }
   const leftGeometry = getPipeline9RouteCopperGeometry(left, board)
   const rightGeometry = getPipeline9RouteCopperGeometry(right, board)
+
   const leftWires = leftBounds
     ? leftGeometry.wireSegments.filter((segment) =>
         wireSegmentOverlapsBounds(segment, leftBounds),
       )
     : leftGeometry.wireSegments
+
   const leftVias = leftBounds
     ? leftGeometry.viaSpans.filter((via) =>
         viaSpanOverlapsBounds(via, leftBounds),
       )
     : leftGeometry.viaSpans
+
   for (const leftWire of leftWires) {
     for (const rightWire of rightGeometry.wireSegments) {
       if (leftWire.z !== rightWire.z) continue
+
       const requiredClearance =
         leftWire.width / 2 + rightWire.width / 2 + clearance
+
       if (
         minimumDistanceBetweenSegments(
           leftWire.start,
@@ -316,10 +346,13 @@ export const doPipeline9RoutesHaveCopperConflict = ({
         return true
       }
     }
+
     for (const rightVia of rightGeometry.viaSpans) {
       if (leftWire.z < rightVia.minZ || leftWire.z > rightVia.maxZ) continue
+
       const requiredClearance =
         leftWire.width / 2 + rightVia.diameter / 2 + clearance
+
       if (
         minimumDistanceBetweenSegments(
           leftWire.start,
@@ -332,11 +365,14 @@ export const doPipeline9RoutesHaveCopperConflict = ({
       }
     }
   }
+
   for (const leftVia of leftVias) {
     for (const rightWire of rightGeometry.wireSegments) {
       if (rightWire.z < leftVia.minZ || rightWire.z > leftVia.maxZ) continue
+
       const requiredClearance =
         leftVia.diameter / 2 + rightWire.width / 2 + clearance
+
       if (
         minimumDistanceBetweenSegments(
           leftVia.center,
@@ -348,10 +384,13 @@ export const doPipeline9RoutesHaveCopperConflict = ({
         return true
       }
     }
+
     for (const rightVia of rightGeometry.viaSpans) {
       if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
+
       const requiredClearance =
         leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
+
       if (
         Math.hypot(
           leftVia.center.x - rightVia.center.x,
@@ -362,5 +401,6 @@ export const doPipeline9RoutesHaveCopperConflict = ({
       }
     }
   }
+
   return false
 }

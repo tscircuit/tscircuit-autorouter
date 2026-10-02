@@ -19,6 +19,7 @@ export const getInitiallyConnectedMapFromSimpleRouteJson = (
 
   for (const trace of srj.traces ?? []) {
     const connectedIds = trace.connectsTo ?? []
+
     if (connectedIds.length === 0) continue
     initiallyConnectedMap.addConnections([
       [trace.pcb_trace_id, ...connectedIds],
@@ -35,7 +36,9 @@ export const areIdsInitiallyConnected = (
 ): boolean => {
   const initiallyConnectedNet =
     initiallyConnectedMap.getNetConnectedToId(firstId)
+
   if (!initiallyConnectedNet) return false
+
   return (
     initiallyConnectedNet ===
     initiallyConnectedMap.getNetConnectedToId(secondId)

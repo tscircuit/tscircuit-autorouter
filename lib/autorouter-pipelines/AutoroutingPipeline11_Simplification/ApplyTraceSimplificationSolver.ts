@@ -24,9 +24,11 @@ const restoreTerminalMetadata = (
   const wirePoints = route.filter(
     (point): point is SimplifiedWireRoutePoint => point.route_type === "wire",
   )
+
   if (hdRoute.startPcbPortId && wirePoints[0]) {
     wirePoints[0].start_pcb_port_id = hdRoute.startPcbPortId
   }
+
   if (hdRoute.endPcbPortId && wirePoints.at(-1)) {
     wirePoints.at(-1)!.end_pcb_port_id = hdRoute.endPcbPortId
   }
@@ -68,8 +70,10 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
   override _step(): void {
     const preparedTraces = this.inputProblem.preparedInput.preparedTraces
     const preparedTrace = preparedTraces[this.nextTraceIndex]
+
     if (!preparedTrace) {
       this.finishApplication()
+
       return
     }
 
@@ -84,9 +88,11 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
     if (!preparedTrace.mutableHdRoute) {
       return structuredClone(preparedTrace.originalTrace)
     }
+
     const simplifiedRoute = this.simplifiedRouteByTraceId.get(
       preparedTrace.originalTrace.pcb_trace_id,
     )
+
     if (!simplifiedRoute || preparedTrace.uniformTraceWidth === undefined) {
       throw new Error(
         `Simplification removed trace "${preparedTrace.originalTrace.pcb_trace_id}"`,
@@ -102,9 +108,11 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
         connMap: this.inputProblem.preparedInput.connMap,
       },
     )
+
     const jumpers = convertedRoute.filter(
       (point) => point.route_type === "jumper",
     )
+
     const route = restoreUniformWidth(
       [
         ...structuredClone(preparedTrace.leadingTerminalVias),
@@ -114,7 +122,9 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
       ],
       preparedTrace.uniformTraceWidth,
     )
+
     restoreTerminalMetadata(route, simplifiedRoute)
+
     return { ...structuredClone(preparedTrace.originalTrace), route }
   }
 
@@ -146,6 +156,7 @@ export class ApplyTraceSimplificationSolver extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get applied traces before conversion completes")
     }
+
     return {
       ...structuredClone(this.inputProblem.preparedInput.originalSrj),
       traces: structuredClone(this.outputTraces),

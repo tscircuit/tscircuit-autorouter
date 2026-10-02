@@ -68,6 +68,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
     if (this.offBoardConnMap) {
       const netId =
         this.offBoardConnMap.getNetConnectedToId(offBoardConnectionId)
+
       if (netId && this.usedJumperOffBoardObstacleIds.has(netId)) {
         return true
       }
@@ -85,6 +86,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
         const existing = offBoardConnectionToNodeIds.get(
           node._offBoardConnectionId,
         )
+
         if (existing) {
           existing.push(node.capacityMeshNodeId)
         } else {
@@ -128,6 +130,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
             const connectedNode = this.inputNodes.find(
               (n) => n.capacityMeshNodeId === connectedId,
             )
+
             if (
               connectedNode?._offBoardConnectionId &&
               this.removedOffBoardConnectionIds.has(
@@ -136,6 +139,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
             ) {
               return false
             }
+
             return true
           })
 

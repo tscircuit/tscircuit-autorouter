@@ -14,6 +14,7 @@ export const getIntraNodeCrossingsFromSegments = (
 } => {
   // Count the number of crossings
   let numSameLayerCrossings = 0
+
   const pointPairs: {
     points: { x: number; y: number; z: number }[]
     z: number
@@ -33,16 +34,20 @@ export const getIntraNodeCrossingsFromSegments = (
     if (pointPairs.some((p) => p.connectionName === aConnName)) {
       continue
     }
+
     if (transitionPairPoints.some((p) => p.connectionName === aConnName)) {
       continue
     }
+
     const pointPair = {
       connectionName: aConnName,
       z: A.z,
       points: [A],
     }
+
     for (const { connectionName: bConnName, point: B } of portPoints) {
       if (aConnName !== bConnName) continue
+
       if (A === B) continue
       pointPair.points.push(B)
 
@@ -61,6 +66,7 @@ export const getIntraNodeCrossingsFromSegments = (
     for (let j = i + 1; j < pointPairs.length; j++) {
       const pair1 = pointPairs[i]
       const pair2 = pointPairs[j]
+
       if (
         pair1.z === pair2.z &&
         doSegmentsIntersect(
@@ -76,6 +82,7 @@ export const getIntraNodeCrossingsFromSegments = (
   }
 
   let numTransitionCrossings = 0
+
   for (let i = 0; i < transitionPairPoints.length; i++) {
     for (let j = i + 1; j < transitionPairPoints.length; j++) {
       const pair1 = transitionPairPoints[i]
@@ -98,6 +105,7 @@ export const getIntraNodeCrossingsFromSegments = (
     for (let j = 0; j < pointPairs.length; j++) {
       const pair1 = transitionPairPoints[i]
       const pair2 = pointPairs[j]
+
       if (
         doSegmentsIntersect(
           pair1.points[0],

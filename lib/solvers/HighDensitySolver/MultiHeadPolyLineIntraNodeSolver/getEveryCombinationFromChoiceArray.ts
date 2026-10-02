@@ -26,11 +26,13 @@ export const getEveryCombinationFromChoiceArray = <T>(
 
   for (const choiceSet of choiceArray) {
     const newResults: T[][] = []
+
     for (const combination of results) {
       for (const choice of choiceSet) {
         newResults.push([...combination, choice])
       }
     }
+
     results = newResults
   }
 

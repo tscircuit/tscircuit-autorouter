@@ -8,5 +8,6 @@ export const hasZRangeOverlap = (
   const Amax = Math.max(A_z1, A_z2)
   const Bmin = Math.min(B_z1, B_z2)
   const Bmax = Math.max(B_z1, B_z2)
+
   return Amin <= Bmax && Amax >= Bmin
 }

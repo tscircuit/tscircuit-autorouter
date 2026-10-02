@@ -14,6 +14,7 @@ export const redistributePortPointsOnSharedEdge = ({
   if (portPoints.length === 0) return []
 
   const portsByZ = new Map<number, PortPointWithOwnerPair[]>()
+
   for (const portPoint of portPoints) {
     const z = portPoint.z ?? 0
     const existing = portsByZ.get(z) ?? []
@@ -34,14 +35,17 @@ export const redistributePortPointsOnSharedEdge = ({
 
     for (let i = 0; i < count; i++) {
       const fraction = (2 * i + 1) / (2 * count)
+
       const x =
         sharedEdge.orientation === "horizontal"
           ? sharedEdge.x1 + sharedEdge.length * fraction
           : sharedEdge.x1
+
       const y =
         sharedEdge.orientation === "horizontal"
           ? sharedEdge.y1
           : sharedEdge.y1 + sharedEdge.length * fraction
+
       redistributed.push({ ...portsOnZ[i], x, y })
     }
   }

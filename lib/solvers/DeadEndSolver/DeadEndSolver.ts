@@ -70,6 +70,7 @@ export class DeadEndSolver extends BaseSolver {
   _step() {
     if (this.leavesIndex === this.leaves.length) {
       this.solved = true
+
       return
     }
 
@@ -81,9 +82,11 @@ export class DeadEndSolver extends BaseSolver {
       this.removedNodeIds.add(leaf)
       this.adjacencyList.delete(leaf)
       this.leavesIndex += 1
+
       if (this.leavesIndex === this.leaves.length) {
         this.solved = true
       }
+
       return
     }
 
@@ -98,9 +101,11 @@ export class DeadEndSolver extends BaseSolver {
       this.removedNodeIds.add(leaf)
       this.adjacencyList.delete(leaf)
       this.leavesIndex += 1
+
       if (this.leavesIndex === this.leaves.length) {
         this.solved = true
       }
+
       return
     }
 
@@ -135,6 +140,7 @@ export class DeadEndSolver extends BaseSolver {
   visualize(): GraphicsObject {
     if (!this.nodeMap) {
       this.nodeMap = new Map<CapacityMeshNodeId, CapacityMeshNode>()
+
       for (const node of this.nodes) {
         this.nodeMap.set(node.capacityMeshNodeId, node)
       }
@@ -153,6 +159,7 @@ export class DeadEndSolver extends BaseSolver {
       points: [],
       rects: this.nodes.map((node) => {
         const lowestZ = Math.min(...node.availableZ)
+
         return {
           width: Math.max(node.width - 2, node.width * 0.8),
           height: Math.max(node.height - 2, node.height * 0.8),
@@ -183,13 +190,16 @@ export class DeadEndSolver extends BaseSolver {
     for (const edge of this.edges) {
       const node1 = this.nodeMap.get(edge.nodeIds[0])
       const node2 = this.nodeMap.get(edge.nodeIds[1])
+
       if (node1?.center && node2?.center) {
         const lowestZ1 = Math.min(...node1.availableZ)
         const lowestZ2 = Math.min(...node2.availableZ)
+
         const nodeCenter1Adj = {
           x: node1.center.x + lowestZ1 * node1.width * 0.05,
           y: node1.center.y - lowestZ1 * node1.width * 0.05,
         }
+
         const nodeCenter2Adj = {
           x: node2.center.x + lowestZ2 * node2.width * 0.05,
           y: node2.center.y - lowestZ2 * node2.width * 0.05,
@@ -214,6 +224,7 @@ export class DeadEndSolver extends BaseSolver {
         })
       }
     }
+
     return graphics
   }
 }

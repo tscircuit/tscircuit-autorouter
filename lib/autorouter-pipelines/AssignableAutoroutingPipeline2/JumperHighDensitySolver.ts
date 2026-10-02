@@ -178,17 +178,22 @@ export class JumperHighDensitySolver extends BaseSolver {
    */
   _buildNodeAdjacencyMap(): Map<string, Set<string>> {
     const adjacencyMap = new Map<string, Set<string>>()
+
     for (const edge of this.capacityMeshEdges) {
       const [nodeId1, nodeId2] = edge.nodeIds
+
       if (!adjacencyMap.has(nodeId1)) {
         adjacencyMap.set(nodeId1, new Set())
       }
+
       if (!adjacencyMap.has(nodeId2)) {
         adjacencyMap.set(nodeId2, new Set())
       }
+
       adjacencyMap.get(nodeId1)!.add(nodeId2)
       adjacencyMap.get(nodeId2)!.add(nodeId1)
     }
+
     return adjacencyMap
   }
 
@@ -244,6 +249,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         } else {
           this.phase = "done"
         }
+
         break
 
       case "curvy":
@@ -276,6 +282,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
     // Get adjacent node IDs from the edge-computed adjacency map
     const adjacentNodeIds = this.nodeAdjacencyMap.get(node.capacityMeshNodeId)
+
     if (!adjacentNodeIds || adjacentNodeIds.size === 0) {
       return obstacles
     }
@@ -287,6 +294,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
     for (const adjacentNodeId of adjacentNodeIds) {
       const capacityNode = this.capacityMeshNodeMap.get(adjacentNodeId)
+
       if (!capacityNode) {
         continue
       }
@@ -303,6 +311,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
       // Determine networkId based on whether it contains a target
       let networkId: string | undefined
+
       if (capacityNode._containsTarget) {
         // Try to get from _targetConnectionName first
         if (capacityNode._targetConnectionName) {
@@ -311,6 +320,7 @@ export class JumperHighDensitySolver extends BaseSolver {
           // Fall back to looking at port points if this node has them
           const adjacentNodeWithPorts =
             nodeWithPortPointsMap.get(adjacentNodeId)
+
           if (
             adjacentNodeWithPorts &&
             adjacentNodeWithPorts.portPoints.length > 0
@@ -353,6 +363,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         viaDiameter: this.viaDiameter,
         adjacentObstacles,
       })
+
       this.curvyIntraNodeSolvers.push(solver)
     }
   }
@@ -364,20 +375,26 @@ export class JumperHighDensitySolver extends BaseSolver {
   _stepCurvySolvers() {
     if (this.curvyIntraNodeSolvers.length === 0) {
       this.phase = this.nodesWithCrossings.length > 0 ? "jumpers" : "done"
+
       if (this.phase === "jumpers") {
         this._initializeJumperSolvers()
       }
+
       return
     }
 
     const currentSolver =
       this.curvyIntraNodeSolvers[this.currentCurvySolverIndex]
+
     this.activeSubSolver = currentSolver
+
     if (!currentSolver) {
       this.phase = this.nodesWithCrossings.length > 0 ? "jumpers" : "done"
+
       if (this.phase === "jumpers") {
         this._initializeJumperSolvers()
       }
+
       return
     }
 
@@ -408,12 +425,14 @@ export class JumperHighDensitySolver extends BaseSolver {
           viaDiameter: this.viaDiameter,
           adjacentObstacles: additionalObstacles,
         })
+
         this.curvyIntraNodeSolvers[i] = newSolver
       }
 
       if (this.currentCurvySolverIndex >= this.curvyIntraNodeSolvers.length) {
         // Move to jumper phase
         this.phase = this.nodesWithCrossings.length > 0 ? "jumpers" : "done"
+
         if (this.phase === "jumpers") {
           this._initializeJumperSolvers()
         }
@@ -450,6 +469,7 @@ export class JumperHighDensitySolver extends BaseSolver {
         connMap: this.connMap,
         availableJumperTypes: this.availableJumperTypes,
       })
+
       this.jumperSolvers.push(solver)
     }
   }
@@ -458,14 +478,17 @@ export class JumperHighDensitySolver extends BaseSolver {
     if (this.jumperSolvers.length === 0) {
       this.phase = "done"
       this.solved = true
+
       return
     }
 
     const currentSolver = this.jumperSolvers[this.currentJumperSolverIndex]
     this.activeSubSolver = currentSolver
+
     if (!currentSolver) {
       this.phase = "done"
       this.solved = true
+
       return
     }
 
@@ -497,6 +520,7 @@ export class JumperHighDensitySolver extends BaseSolver {
 
   computeProgress(): number {
     const totalNodes = this.allNodes.length
+
     if (totalNodes === 0) return 1
 
     let completedNodes = 0
@@ -507,6 +531,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     // Add progress from current curvy solver
     const currentCurvySolver =
       this.curvyIntraNodeSolvers[this.currentCurvySolverIndex]
+
     if (currentCurvySolver) {
       completedNodes += currentCurvySolver.progress
     }
@@ -517,6 +542,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     // Add progress from current jumper solver
     const currentJumperSolver =
       this.jumperSolvers[this.currentJumperSolverIndex]
+
     if (currentJumperSolver) {
       completedNodes += currentJumperSolver.progress
     }
@@ -582,6 +608,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     // Show completed routes
     for (const route of this.routes) {
       const colorKey = route.rootConnectionName ?? route.connectionName
+
       const mergedSegments = mergeRouteSegments(
         route.route,
         route.connectionName,
@@ -662,6 +689,7 @@ export class JumperHighDensitySolver extends BaseSolver {
     // Draw node boundaries with analysis info
     for (const analysis of this.nodeAnalyses) {
       const node = analysis.node
+
       const bounds = {
         minX: node.center.x - node.width / 2,
         maxX: node.center.x + node.width / 2,

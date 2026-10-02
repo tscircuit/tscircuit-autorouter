@@ -9,6 +9,7 @@ export const calculateNodeProbabilityOfFailure = (params: {
   const { usedCapacity, totalCapacity, layerCount } = params
 
   if (usedCapacity < totalCapacity) return 0
+
   if (totalCapacity < 1 && usedCapacity <= 1) return 0
 
   const ratioOverTotal = usedCapacity / totalCapacity
@@ -50,6 +51,7 @@ export const calculateSingleNodeLogSuccessProbability = (
     totalCapacity,
     layerCount: node.availableZ.length,
   })
+
   const probabilityOfSuccess = 1 - probabilityOfFailure
 
   // Avoid log(0) or log(<0) if probabilityOfFailure results in non-positive success probability
@@ -81,6 +83,7 @@ export const computeSectionScore = ({
     // Skip if node doesn't have capacity info (shouldn't happen if maps are consistent)
     if (!totalNodeCapacityMap.has(nodeId)) continue
     const node = nodeMap.get(nodeId)
+
     if (!node) continue
 
     const totalCapacity = totalNodeCapacityMap.get(nodeId)!

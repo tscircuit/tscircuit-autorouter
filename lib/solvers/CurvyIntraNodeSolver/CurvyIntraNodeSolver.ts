@@ -71,6 +71,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
   _initializeCurvySolver() {
     const node = this.nodeWithPortPoints
+
     const bounds = {
       minX: node.center.x - node.width / 2,
       minY: node.center.y - node.height / 2,
@@ -80,10 +81,12 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
     // Group port points by connectionName to create waypoint pairs
     const connectionGroups = new Map<string, PortPoint[]>()
+
     for (const pt of node.portPoints) {
       if (!connectionGroups.has(pt.connectionName)) {
         connectionGroups.set(pt.connectionName, [])
       }
+
       connectionGroups.get(pt.connectionName)!.push(pt)
     }
 
@@ -91,6 +94,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     // Use connectionName (not rootConnectionName) as networkId to keep different
     // MST connections separate, even if they share the same root connection
     const waypointPairs: CurvyTraceProblem["waypointPairs"] = []
+
     for (const [connectionName, points] of connectionGroups) {
       if (points.length < 2) continue
 
@@ -108,6 +112,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
 
     if (waypointPairs.length === 0) {
       this.phase = "done"
+
       return
     }
 
@@ -139,6 +144,7 @@ export class CurvyIntraNodeSolver extends BaseSolver {
   _stepCurvySolver() {
     if (!this.curvyTraceSolver) {
       this.phase = "done"
+
       return
     }
 
@@ -169,9 +175,11 @@ export class CurvyIntraNodeSolver extends BaseSolver {
       string,
       { connectionName: string; rootConnectionName?: string; z: number }
     >()
+
     for (const pt of node.portPoints) {
       // Use connectionName as networkId (matching waypointPairs above)
       const networkId = pt.connectionName
+
       if (!connectionInfo.has(networkId)) {
         connectionInfo.set(networkId, {
           connectionName: pt.connectionName,
@@ -252,15 +260,19 @@ export class CurvyIntraNodeSolver extends BaseSolver {
     // Draw curvy trace solver visualization if available
     if (this.curvyTraceSolver) {
       const curvyViz = this.curvyTraceSolver.visualize()
+
       if (curvyViz.lines) {
         graphics.lines!.push(...curvyViz.lines)
       }
+
       if (curvyViz.points) {
         graphics.points!.push(...curvyViz.points)
       }
+
       if (curvyViz.rects) {
         graphics.rects!.push(...curvyViz.rects)
       }
+
       if (curvyViz.circles) {
         graphics.circles!.push(...curvyViz.circles)
       }

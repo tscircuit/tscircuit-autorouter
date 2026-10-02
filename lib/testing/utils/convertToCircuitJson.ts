@@ -30,16 +30,19 @@ function convertSimplifiedPcbTraceToCircuitJson(
       .map((segment) => {
         if (segment.route_type === "wire") {
           if (!isLayerName(segment.layer)) return null
+
           const startPcbPortId =
             "start_pcb_port_id" in segment &&
             typeof segment.start_pcb_port_id === "string"
               ? segment.start_pcb_port_id
               : undefined
+
           const endPcbPortId =
             "end_pcb_port_id" in segment &&
             typeof segment.end_pcb_port_id === "string"
               ? segment.end_pcb_port_id
               : undefined
+
           return {
             route_type: "wire" as const,
             x: segment.x,
@@ -56,6 +59,7 @@ function convertSimplifiedPcbTraceToCircuitJson(
           ) {
             return null
           }
+
           return {
             route_type: "via" as const,
             x: segment.x,
@@ -96,6 +100,7 @@ function convertHdRouteToCircuitJsonTraces(
         route: hdRoute.route.map((point, index) => {
           const isFirstPoint = index === 0
           const isLastPoint = index === hdRoute.route.length - 1
+
           return {
             route_type: "wire",
             x: point.x,
@@ -127,12 +132,14 @@ function convertHdRouteToCircuitJsonTraces(
 
     for (let i = 0; i < hdRoute.route.length; i++) {
       const p = hdRoute.route[i]
+
       if (
         Math.abs(p.x - jumper.start.x) < 0.01 &&
         Math.abs(p.y - jumper.start.y) < 0.01
       ) {
         startIdx = i
       }
+
       if (
         Math.abs(p.x - jumper.end.x) < 0.01 &&
         Math.abs(p.y - jumper.end.y) < 0.01
@@ -146,6 +153,7 @@ function convertHdRouteToCircuitJsonTraces(
       if (startIdx > endIdx) {
         ;[startIdx, endIdx] = [endIdx, startIdx]
       }
+
       jumperEndpoints.push({ startIdx, endIdx })
     }
   }
@@ -161,6 +169,7 @@ function convertHdRouteToCircuitJsonTraces(
     // Create trace from currentStart to startIdx (inclusive)
     if (startIdx >= currentStart) {
       const segmentPoints = hdRoute.route.slice(currentStart, startIdx + 1)
+
       if (segmentPoints.length > 0) {
         traces.push({
           type: "pcb_trace",
@@ -169,6 +178,7 @@ function convertHdRouteToCircuitJsonTraces(
           route: segmentPoints.map((point, index) => {
             const isFirstPoint = index === 0 && currentStart === 0
             const isLastPoint = false // Not the overall last point
+
             return {
               route_type: "wire",
               x: point.x,
@@ -184,6 +194,7 @@ function convertHdRouteToCircuitJsonTraces(
         traceIndex++
       }
     }
+
     // Skip from startIdx to endIdx (this is the jumper segment)
     currentStart = endIdx
   }
@@ -191,6 +202,7 @@ function convertHdRouteToCircuitJsonTraces(
   // Create final trace from last jumper end to route end
   if (currentStart < hdRoute.route.length) {
     const segmentPoints = hdRoute.route.slice(currentStart)
+
     if (segmentPoints.length > 0) {
       const isLastSegment = true
       traces.push({
@@ -200,6 +212,7 @@ function convertHdRouteToCircuitJsonTraces(
         route: segmentPoints.map((point, index) => {
           const isLastPoint =
             isLastSegment && index === segmentPoints.length - 1
+
           return {
             route_type: "wire",
             x: point.x,
@@ -236,21 +249,25 @@ const getSrjDeclaredPcbPortIds = ({
     ),
     ...obstacles.flatMap((obstacle) => {
       const pcbPortId = getCircuitJsonMetadata(obstacle).pcb_port_id
+
       return pcbPortId ? [pcbPortId] : []
     }),
   ])
 
 declare const connectivityNetIdBrand: unique symbol
+
 type ConnectivityNetId = string & {
   readonly [connectivityNetIdBrand]: "ConnectivityNetId"
 }
 
 declare const circuitJsonSourceTraceIdBrand: unique symbol
+
 type CircuitJsonSourceTraceId = string & {
   readonly [circuitJsonSourceTraceIdBrand]: "CircuitJsonSourceTraceId"
 }
 
 declare const srjDeclaredConnectionReferenceBrand: unique symbol
+
 type SrjDeclaredConnectionReference = string & {
   readonly [srjDeclaredConnectionReferenceBrand]: "SrjDeclaredConnectionReference"
 }
@@ -303,17 +320,22 @@ const createCircuitJsonSourceTraceIdResolver = (
     SrjDeclaredConnectionReference,
     CircuitJsonSourceTraceId
   >()
+
   const ambiguousSrjDeclaredConnectionReferences =
     new Set<SrjDeclaredConnectionReference>()
+
   const circuitJsonSourceTraceIdsByConnectivityNetId = new Map<
     ConnectivityNetId,
     Set<CircuitJsonSourceTraceId>
   >()
+
   for (const connection of connections) {
     const sourceTraceId = getCircuitJsonSourceTraceId(connection)
+
     for (const reference of getSrjDeclaredConnectionReferences(connection)) {
       const existingSourceTraceId =
         circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.get(reference)
+
       if (existingSourceTraceId && existingSourceTraceId !== sourceTraceId) {
         circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.delete(
           reference,
@@ -328,18 +350,22 @@ const createCircuitJsonSourceTraceIdResolver = (
     }
 
     const connectivityNetId = connMap.getNetConnectedToId(connection.name)
+
     if (!connectivityNetId) continue
     const brandedConnectivityNetId = connectivityNetId as ConnectivityNetId
+
     const sourceTraceIds =
       circuitJsonSourceTraceIdsByConnectivityNetId.get(
         brandedConnectivityNetId,
       ) ?? new Set<CircuitJsonSourceTraceId>()
+
     sourceTraceIds.add(sourceTraceId)
     circuitJsonSourceTraceIdsByConnectivityNetId.set(
       brandedConnectivityNetId,
       sourceTraceIds,
     )
   }
+
   return {
     connMap,
     circuitJsonSourceTraceIdBySrjDeclaredConnectionReference,
@@ -355,18 +381,23 @@ const resolveCircuitJsonSourceTraceId = (
     resolver.circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.get(
       srjConnectivityId as SrjDeclaredConnectionReference,
     )
+
   if (sourceTraceIdForDeclaredConnectionReference) {
     return sourceTraceIdForDeclaredConnectionReference
   }
 
   const connectivityNetId =
     resolver.connMap.getNetConnectedToId(srjConnectivityId)
+
   if (!connectivityNetId) return undefined
+
   const sourceTraceIds =
     resolver.circuitJsonSourceTraceIdsByConnectivityNetId.get(
       connectivityNetId as ConnectivityNetId,
     )
+
   if (sourceTraceIds?.size !== 1) return undefined
+
   return sourceTraceIds.values().next().value
 }
 
@@ -381,11 +412,14 @@ function createSourceTraces(
   sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
+
   const connections =
     sourceSrj === srj
       ? srj.connections
       : [...srj.connections, ...sourceSrj.connections]
+
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
+
   const circuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       connections,
@@ -394,6 +428,7 @@ function createSourceTraces(
           sourceSrj === srj ? srj : { ...sourceSrj, connections },
         ),
     )
+
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
     connections,
     obstacles,
@@ -405,13 +440,16 @@ function createSourceTraces(
     const connectedPortIds = connection.pointsToConnect
       .map((point) => point.pcb_port_id)
       .filter((pointId): pointId is string => Boolean(pointId))
+
     const connectedPortIdSet = new Set(connectedPortIds)
+
     const getNonEndpointObstacleConnectivityIds = (
       matchingObstacles: Obstacle[],
     ) =>
       getObstacleConnectivityIds(matchingObstacles).filter(
         (id) => !connectedPortIdSet.has(id),
       )
+
     const connectedPointIds = connection.pointsToConnect
       .map((point) => point.pointId)
       .filter((pointId): pointId is string => Boolean(pointId))
@@ -425,19 +463,23 @@ function createSourceTraces(
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
+
     const hdRoute = hdRoutes.find(
       (r) =>
         ((r as any).connection_name ?? (r as any).connectionName) ===
         connection.name,
     )
+
     if (hdRoute) {
       const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
         if ("route_type" in segment && segment.route_type === "jumper") {
           return segment.start
         }
+
         if ("x" in segment && "y" in segment) {
           return { x: segment.x, y: segment.y }
         }
+
         return { x: 0, y: 0 }
       }
 
@@ -496,13 +538,16 @@ function createSourceTraces(
     const connectionByName = new Map(
       connections.map((connection) => [connection.name, connection]),
     )
+
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
       const connectedSourcePortIds = [
         ...new Set(
           (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
         ),
       ]
+
       const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
+
       const connectedSourceNetIds = [
         ...new Set(
           (trace.connectsTo ?? []).filter(
@@ -510,6 +555,7 @@ function createSourceTraces(
           ),
         ),
       ]
+
       if (
         connectedSourcePortIds.length === 0 &&
         connectedSourceNetIds.length === 0
@@ -517,6 +563,7 @@ function createSourceTraces(
         continue
 
       const connection = connectionByName.get(trace.connection_name)
+
       const sourceTraceId =
         resolveCircuitJsonSourceTraceId(
           circuitJsonSourceTraceIdResolver,
@@ -533,11 +580,13 @@ function createSourceTraces(
         (connection
           ? getCircuitJsonSourceTraceId(connection)
           : (trace.connection_name as CircuitJsonSourceTraceId))
+
       const existingSourceTrace = sourceTraces.find(
         (sourceTrace) =>
           sourceTrace.type === "source_trace" &&
           sourceTrace.source_trace_id === sourceTraceId,
       )
+
       if (existingSourceTrace?.type === "source_trace") {
         existingSourceTrace.connected_source_port_ids = [
           ...new Set([
@@ -553,6 +602,7 @@ function createSourceTraces(
         ]
         continue
       }
+
       sourceTraces.push({
         type: "source_trace",
         source_trace_id: sourceTraceId,
@@ -612,6 +662,7 @@ function getBestObstaclePcbPortId(
 
   for (const pcbPortId of candidatePortIds) {
     const position = portPositionMap.get(pcbPortId)
+
     if (!position) continue
 
     const distance = Math.hypot(
@@ -663,12 +714,17 @@ function getPadFragmentId(
     obstacle.ccwRotationDegrees ?? 0,
     [...obstacle.layers].sort(),
   ])
+
   const geometries = geometriesById.get(baseId) ?? new Set<string>()
+
   if (geometries.has(geometryKey)) return undefined
+
   const id =
     geometries.size === 0 ? baseId : `${baseId}_fragment_${obstacleIndex}`
+
   geometries.add(geometryKey)
   geometriesById.set(baseId, geometries)
+
   return id
 }
 
@@ -687,6 +743,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         x: obstacle.center.x,
         y: obstacle.center.y,
       }
+
       if (obstacle.shape === "circle") {
         pads.push({
           ...common,
@@ -695,11 +752,13 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         })
       } else {
         const rotation = obstacle.ccwRotationDegrees ?? 0
+
         if (rotation % 90 !== 0) {
           throw new Error(
             `Cannot represent rotated rectangular hole ${common.pcb_hole_id} in Circuit JSON`,
           )
         }
+
         const swapDimensions = rotation % 180 !== 0
         pads.push({
           ...common,
@@ -708,14 +767,18 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           hole_height: swapDimensions ? obstacle.width : obstacle.height,
         })
       }
+
       continue
     }
+
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
+
     if (circuitJsonMetadata.pcb_via_id) continue
 
     const smtPadId = circuitJsonMetadata.pcb_smtpad_id
     const platedHoleId = circuitJsonMetadata.pcb_plated_hole_id
+
     const candidatePortIds = [
       ...new Set([
         ...(circuitJsonMetadata.pcb_port_id
@@ -724,6 +787,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
       ]),
     ]
+
     // Legacy SRJs may identify pad ownership only by the connection name.
     // Require both electrical ownership and the terminal's physical center.
     if (candidatePortIds.length === 0) {
@@ -735,6 +799,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
           )
         )
           continue
+
         for (const point of connection.pointsToConnect) {
           if (
             point.pcb_port_id &&
@@ -747,6 +812,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         }
       }
     }
+
     // Imported metadata may use an older port alias. Prefer it only when
     // that port is present in the SRJ's exported connection points.
     const pcbPortId =
@@ -762,6 +828,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
     const layers = obstacle.layers.filter(isLayerName)
+
     if (layers.length === 0) continue
 
     const width = obstacle.width
@@ -779,6 +846,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         obstacleIndex,
         addedPlatedHoleIds,
       )
+
       if (id === undefined) continue
 
       if (
@@ -849,6 +917,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       obstacleIndex,
       addedSmtPadIds,
     )
+
     if (id === undefined) continue
 
     if (
@@ -900,12 +969,14 @@ function getViaDrillLayers(
   if (allowBlindAndBuriedVias && via.layers !== undefined) {
     return via.layers as LayerName[]
   }
+
   const drillSpan = allowBlindAndBuriedVias
     ? via
     : {
         from_layer: "top",
         to_layer: mapZToLayerName(layerCount - 1, layerCount),
       }
+
   return getViaLayers(drillSpan, layerCount) as LayerName[]
 }
 
@@ -931,10 +1002,14 @@ function extractViasFromRoutes(
             ) {
               return
             }
+
             const viaDiameter = segment.via_diameter ?? minViaDiameter
+
             const viaHoleDiameter =
               segment.via_hole_diameter ?? minViaHoleDiameter
+
             const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
+
             if (!viaLocations.has(locationKey)) {
               vias.push({
                 type: "pcb_via",
@@ -961,6 +1036,7 @@ function extractViasFromRoutes(
         const traceId = `trace_${routeIndex}`
         const viaDiameter = route.viaDiameter ?? minViaDiameter
         const viaHoleDiameter = minViaHoleDiameter
+
         for (let i = 1; i < route.route.length; i++) {
           const prevPoint = route.route[i - 1]
           const currPoint = route.route[i]
@@ -1055,11 +1131,14 @@ export function convertToCircuitJson(
     originalSrj,
     includeOriginalConnections = false,
   } = options
+
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
+
   const requestedMinViaHoleDiameter =
     srjWithPointPairs.min_via_hole_diameter ??
     srjWithPointPairs.minViaHoleDiameter
+
   const resolvedMinViaHoleDiameter =
     minViaHoleDiameter ??
     requestedMinViaHoleDiameter ??
@@ -1108,6 +1187,7 @@ export function convertToCircuitJson(
   const routeConnectionReferences = new Set<string>(
     srjWithPointPairs.connections.flatMap(getSrjDeclaredConnectionReferences),
   )
+
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       includeOriginalConnections && originalSrj
@@ -1141,6 +1221,7 @@ export function convertToCircuitJson(
             )
             .find((mappedConnectionName) => Boolean(mappedConnectionName)) ??
           (trace.connection_name as CircuitJsonSourceTraceId)
+
         circuitJson.push(
           convertSimplifiedPcbTraceToCircuitJson(
             trace,
@@ -1156,6 +1237,7 @@ export function convertToCircuitJson(
             routeCircuitJsonSourceTraceIdResolver,
             route.connectionName,
           ) ?? (route.connectionName as CircuitJsonSourceTraceId)
+
         const traces = convertHdRouteToCircuitJsonTraces(
           route,
           `trace_${index}`,
@@ -1163,6 +1245,7 @@ export function convertToCircuitJson(
           srjWithPointPairs.layerCount,
           minTraceWidth,
         )
+
         circuitJson.push(...(traces as AnyCircuitElement[]))
       })
     }

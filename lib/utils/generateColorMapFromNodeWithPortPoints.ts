@@ -1,5 +1,6 @@
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+
 export const generateColorMapFromNodeWithPortPoints = (
   nodeWithPortPoints: NodeWithPortPoints,
   connMap?: ConnectivityMap,
@@ -9,5 +10,6 @@ export const generateColorMapFromNodeWithPortPoints = (
     colorMap[portPoint.connectionName] =
       `hsl(${(i * 360) / nodeWithPortPoints.portPoints.length}, 100%, 50%)`
   })
+
   return colorMap
 }

@@ -17,12 +17,15 @@ export function getBoundsFromNodeWithPortPoints(
     if (pt.x < bounds.minX) {
       bounds.minX = pt.x
     }
+
     if (pt.x > bounds.maxX) {
       bounds.maxX = pt.x
     }
+
     if (pt.y < bounds.minY) {
       bounds.minY = pt.y
     }
+
     if (pt.y > bounds.maxY) {
       bounds.maxY = pt.y
     }

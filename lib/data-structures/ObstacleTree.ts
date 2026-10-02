@@ -46,6 +46,7 @@ export class ObstacleSpatialHashIndex {
           const centerY = (minY + maxY) / 2
           const width = maxX - minX
           const height = maxY - minY
+
           return this.shi.getNodesInArea(centerX, centerY, width, height)
         }
         clear(): void {
@@ -56,6 +57,7 @@ export class ObstacleSpatialHashIndex {
 
     // bulk-load initial obstacles
     obstacles.forEach((o) => this.insert(o))
+
     if (implementation === "flatbush" && obstacles.length > 0)
       this.idx.finish?.()
   }
@@ -105,6 +107,7 @@ export class NativeObstacleTree {
     // )
     this.buckets = new Map()
     let bucketEntriesCount = 0
+
     // for (const obstacle of obstacles) {
     for (let i = 0; i < obstacles.length; i++) {
       const obstacle = obstacles[i]
@@ -112,10 +115,12 @@ export class NativeObstacleTree {
       const nodeMinY = obstacle.center.y - obstacle.height / 2
       const nodeMaxX = obstacle.center.x + obstacle.width / 2
       const nodeMaxY = obstacle.center.y + obstacle.height / 2
+
       for (let x = nodeMinX; x <= nodeMaxX; x += this.CELL_SIZE) {
         for (let y = nodeMinY; y <= nodeMaxY; y += this.CELL_SIZE) {
           const bucketKey = this.getBucketKey(x, y)
           const bucket = this.buckets.get(bucketKey)
+
           if (!bucket) {
             this.buckets.set(bucketKey, [[obstacle, i]])
           } else {
@@ -146,10 +151,12 @@ export class NativeObstacleTree {
     const minY = centerY - height / 2
     const maxX = centerX + width / 2
     const maxY = centerY + height / 2
+
     for (let x = minX; x <= maxX; x += this.CELL_SIZE) {
       for (let y = minY; y <= maxY; y += this.CELL_SIZE) {
         const bucketKey = this.getBucketKey(x, y)
         const bucket = this.buckets.get(bucketKey) || []
+
         for (const obstacleWithIndex of bucket) {
           if (alreadyAddedObstacles.has(obstacleWithIndex[1])) continue
           alreadyAddedObstacles.add(obstacleWithIndex[1])
@@ -157,6 +164,7 @@ export class NativeObstacleTree {
         }
       }
     }
+
     return obstacles
   }
 }

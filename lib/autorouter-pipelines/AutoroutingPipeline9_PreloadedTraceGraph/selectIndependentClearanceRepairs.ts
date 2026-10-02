@@ -27,6 +27,7 @@ export const selectIndependentClearanceRepairs = ({
   if (routes.length !== proposedRoutes.length) {
     throw new Error("Clearance projection changed the route count")
   }
+
   // The index represents ordinary wires and through vias. Leave unsupported
   // copper to the existing complete-repair path and its reference checks.
   if (
@@ -41,7 +42,9 @@ export const selectIndependentClearanceRepairs = ({
   ) {
     return routes
   }
+
   const { holeDiameter } = getViaDimensions(srj)
+
   const toTrace = (
     route: HighDensityRoute,
     index: number,
@@ -53,35 +56,47 @@ export const selectIndependentClearanceRepairs = ({
       defaultViaHoleDiameter: holeDiameter,
     }),
   })
+
   const traces = routes.map(toTrace)
+
   const indexInput: PowerTraceExpanderInput = {
     ...srj,
     minBoardEdgeClearance: srj.minBoardEdgeClearance ?? 0,
     traces,
   } as PowerTraceExpanderInput
+
   const resolver = new ConnectionNameResolver(indexInput)
+
   const protectedNets = new Set(
     resolver.canonicalize([
       ...(srj.differentialPairs ?? []).flatMap((pair) => pair.connectionNames),
       ...(srj.buses ?? []).flatMap((bus) => bus.connectionNames),
     ]),
   )
+
   const selected = [...routes]
+
   const movedPoints: {
     routeIndex: number
     pointIndex: number
   }[] = []
+
   for (const [ri, projected] of proposedRoutes.entries()) {
     const original = routes[ri]!
+
     if (projected.route.length !== original.route.length) {
       throw new Error("Partial clearance projection changed routing topology")
     }
+
     const names = [traces[ri]!.pcb_trace_id]
+
     if (resolver.canonicalize(names).some((net) => protectedNets.has(net))) {
       continue
     }
+
     // Keep the original via metadata: this pass only moves wires.
     selected[ri] = { ...original, route: [...projected.route] }
+
     for (
       let pointIndex = 0;
       pointIndex < projected.route.length;
@@ -95,6 +110,7 @@ export const selectIndependentClearanceRepairs = ({
       }
     }
   }
+
   let index = new SpatialObstacleIndex(
     indexInput,
     selected.map(toTrace),
@@ -102,11 +118,13 @@ export const selectIndependentClearanceRepairs = ({
     [],
     resolver,
   )
+
   const isPointClear = ({
     routeIndex,
     pointIndex,
   }: (typeof movedPoints)[number]): boolean => {
     const selectedRoute = selected[routeIndex]!
+
     // Check both incident segments against the coordinates actually retained.
     // A restored neighbor changes these segments even if this point stays put.
     for (
@@ -116,9 +134,11 @@ export const selectIndependentClearanceRepairs = ({
     ) {
       const a = selectedRoute.route[pi - 1]!
       const b = selectedRoute.route[pi]!
+
       if (a.z !== b.z) {
         throw new Error("Partial clearance projection moved a layer transition")
       }
+
       if (
         index.collides({
           start: a,
@@ -134,14 +154,19 @@ export const selectIndependentClearanceRepairs = ({
         return false
       }
     }
+
     return true
   }
+
   // A move may need its neighbor to move too. Validate the proposed geometry
   // together instead of rejecting the first move against old neighbor copper.
   let pending = movedPoints
+
   while (pending.length > 0) {
     const blocked = pending.filter((point): boolean => !isPointClear(point))
+
     if (blocked.length === 0) break
+
     // A restored vertex can obstruct a move accepted in this round. Rebuild
     // the index and recheck survivors before publishing anything. Each round
     // removes at least one vertex, so this process is bounded by their count.
@@ -149,6 +174,7 @@ export const selectIndependentClearanceRepairs = ({
       selected[routeIndex]!.route[pointIndex] =
         routes[routeIndex]!.route[pointIndex]!
     }
+
     const rejected = new Set(blocked)
     pending = pending.filter((point): boolean => !rejected.has(point))
     index = new SpatialObstacleIndex(
@@ -159,16 +185,21 @@ export const selectIndependentClearanceRepairs = ({
       resolver,
     )
   }
+
   // Conflicting proposals may have blocked each other even though one clears
   // the restored neighbor. Reconsider contiguous rejected points together so
   // bends that need both segment endpoints to move are not lost here.
   const accepted = new Set(pending)
+
   for (let offset = 0; offset < movedPoints.length; offset++) {
     const first = movedPoints[offset]!
+
     if (accepted.has(first)) continue
     let reconsidered = [first]
+
     while (offset + 1 < movedPoints.length) {
       const next = movedPoints[offset + 1]!
+
       if (
         accepted.has(next) ||
         next.routeIndex !== first.routeIndex ||
@@ -176,28 +207,36 @@ export const selectIndependentClearanceRepairs = ({
       ) {
         break
       }
+
       reconsidered.push(next)
       offset++
     }
+
     for (const { routeIndex, pointIndex } of reconsidered) {
       selected[routeIndex]!.route[pointIndex] =
         proposedRoutes[routeIndex]!.route[pointIndex]!
     }
+
     while (reconsidered.length > 0) {
       const blocked = reconsidered.filter(
         (point): boolean => !isPointClear(point),
       )
+
       if (blocked.length === 0) break
+
       for (const { routeIndex, pointIndex } of blocked) {
         selected[routeIndex]!.route[pointIndex] =
           routes[routeIndex]!.route[pointIndex]!
       }
+
       const rejected = new Set(blocked)
       reconsidered = reconsidered.filter(
         (point): boolean => !rejected.has(point),
       )
     }
+
     if (reconsidered.length === 0) continue
+
     for (const point of reconsidered) accepted.add(point)
     // Only this route changed during reconsideration. Its own net is excluded
     // from collision queries, so rebuild once before testing another route.
@@ -209,9 +248,11 @@ export const selectIndependentClearanceRepairs = ({
       resolver,
     )
   }
+
   const acceptedRouteIndices = new Set(
     [...accepted].map(({ routeIndex }) => routeIndex),
   )
+
   return selected.map((route, routeIndex) =>
     acceptedRouteIndices.has(routeIndex) ? route : routes[routeIndex]!,
   )

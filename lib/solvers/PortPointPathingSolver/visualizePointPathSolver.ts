@@ -37,8 +37,11 @@ function getEdge(
   if (minDist > eps * 1000) return "interior"
 
   if (minDist === distTop) return "top"
+
   if (minDist === distRight) return "right"
+
   if (minDist === distBottom) return "bottom"
+
   return "left"
 }
 
@@ -54,6 +57,7 @@ function areOnSameEdge(
 ): boolean {
   const edge1 = getEdge(p1, nodeCenter, nodeWidth, nodeHeight)
   const edge2 = getEdge(p2, nodeCenter, nodeWidth, nodeHeight)
+
   return edge1 !== "interior" && edge1 === edge2
 }
 
@@ -73,6 +77,7 @@ function calculateBendPoint(
 
   // Calculate what fraction of the edge the points span
   let edgeFraction: number
+
   if (edge === "top" || edge === "bottom") {
     // Horizontal edge - use x coordinates
     const edgeLength = nodeWidth
@@ -121,6 +126,7 @@ export function visualizePointPathSolver(
   for (const node of solver.inputNodes) {
     let pf = 0
     let memPf = 0
+
     let crossings = {
       numSameLayerCrossings: 0,
       numEntryExitLayerChanges: 0,
@@ -128,6 +134,7 @@ export function visualizePointPathSolver(
     }
 
     let numberOfConnectionsInside = 0
+
     if (isPortPointPathingSolver(solver)) {
       pf = solver.computeNodePf(node)
       memPf = solver.nodeMemoryPfMap.get(node.capacityMeshNodeId) ?? 0
@@ -135,19 +142,24 @@ export function visualizePointPathSolver(
       crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
       // Count unique connections in this node
       const connectionsInNode = new Set<string>()
+
       const portPoints =
         solver.nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
+
       for (const pp of portPoints) {
         if (pp.connectionName) {
           connectionsInNode.add(pp.connectionName)
         }
       }
+
       numberOfConnectionsInside = connectionsInNode.size
     } else {
       // For MultiSectionPortPointOptimizer, use nodePfMap
       pf = solver.nodePfMap.get(node.capacityMeshNodeId) ?? 0
+
       const portPoints =
         solver.nodeAssignedPortPoints.get(node.capacityMeshNodeId) ?? []
+
       const nodeWithPortPoints = {
         capacityMeshNodeId: node.capacityMeshNodeId,
         center: node.center,
@@ -156,14 +168,17 @@ export function visualizePointPathSolver(
         portPoints,
         availableZ: node.availableZ,
       }
+
       crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
       // Count unique connections in this node
       const connectionsInNode = new Set<string>()
+
       for (const pp of portPoints) {
         if (pp.connectionName) {
           connectionsInNode.add(pp.connectionName)
         }
       }
+
       numberOfConnectionsInside = connectionsInNode.size
     }
 
@@ -193,6 +208,7 @@ export function visualizePointPathSolver(
   if (isPortPointPathingSolver(solver)) {
     for (const [portPointId, portPoint] of solver.portPointMap) {
       const assignment = solver.assignedPortPoints.get(portPointId)
+
       const color = assignment
         ? (solver.colorMap[assignment.connectionName] ?? "blue")
         : "rgba(150, 150, 150, 0.5)"
@@ -219,6 +235,7 @@ export function visualizePointPathSolver(
   const connectionResults = isPortPointPathingSolver(solver)
     ? solver.connectionsWithResults
     : solver.connectionResults
+
   for (const result of connectionResults) {
     if (!result.path) continue
 
@@ -233,6 +250,7 @@ export function visualizePointPathSolver(
       z: number
       nodeId?: string
     }> = []
+
     for (const candidate of result.path) {
       segmentPoints.push({
         x: candidate.point.x,
@@ -255,6 +273,7 @@ export function visualizePointPathSolver(
       const commonLayer = pointA.z
 
       let strokeDash: string | undefined
+
       if (sameLayer) {
         strokeDash = commonLayer === 0 ? undefined : "10 5"
       } else {
@@ -277,6 +296,7 @@ export function visualizePointPathSolver(
           node.width,
           node.height,
         )
+
         graphics.lines!.push({
           points: [
             { x: pointA.x, y: pointA.y },
@@ -316,6 +336,7 @@ export function visualizePointPathSolver(
     solver.candidates.length > 0
   ) {
     const currentConnection = solver.currentConnection
+
     const connectionColor = currentConnection
       ? (solver.colorMap[currentConnection.connection.name] ?? "blue")
       : "blue"
@@ -326,6 +347,7 @@ export function visualizePointPathSolver(
       const startNode = solver.nodeMap.get(startNodeId)
       const endNode = solver.nodeMap.get(endNodeId)
       const startPoint = currentConnection.connection.pointsToConnect[0]
+
       const endPoint =
         currentConnection.connection.pointsToConnect[
           currentConnection.connection.pointsToConnect.length - 1
@@ -335,6 +357,7 @@ export function visualizePointPathSolver(
         const start = startPoint
           ? { x: startPoint.x, y: startPoint.y }
           : startNode.center
+
         const end = endPoint ? { x: endPoint.x, y: endPoint.y } : endNode.center
 
         graphics.lines!.push({
@@ -385,7 +408,9 @@ export function visualizePointPathSolver(
         lastMoveWasOffBoard?: boolean
         nodeId?: string
       }> = []
+
       let current: PortPointCandidate | null = candidate
+
       while (current) {
         candidatePath.unshift({
           x: current.point.x,
@@ -406,6 +431,7 @@ export function visualizePointPathSolver(
         const commonLayer = pointA.z
 
         let strokeDash: string | undefined
+
         if (pointB.lastMoveWasOffBoard) {
           strokeDash = "2 2"
         } else if (sameLayer) {
@@ -430,6 +456,7 @@ export function visualizePointPathSolver(
             node.width,
             node.height,
           )
+
           graphics.lines!.push({
             points: [
               { x: pointA.x + zOffset, y: pointA.y + zOffset },
@@ -472,6 +499,7 @@ export function visualizePointPathSolver(
         const targetNode = solver.nodeMap.get(
           candidate.prevCandidate?.currentNodeId!,
         )
+
         if (
           targetNode &&
           candidate.prevCandidate &&
@@ -487,6 +515,7 @@ export function visualizePointPathSolver(
             z: candidate.prevCandidate.z,
             connectionName,
           }
+
           const exitPortPoint: PortPoint = {
             x: candidate.portPoint.x,
             y: candidate.portPoint.y,
@@ -498,6 +527,7 @@ export function visualizePointPathSolver(
             targetNode,
             [entryPortPoint, exitPortPoint],
           )
+
           const crossings = getIntraNodeCrossings(nodeWithPortPoints)
 
           xSame = crossings.numSameLayerCrossings
@@ -507,6 +537,7 @@ export function visualizePointPathSolver(
           const capacityMeshNode = solver.capacityMeshNodeMap.get(
             targetNode.capacityMeshNodeId,
           )
+
           if (capacityMeshNode) {
             // Use jumper-based pf calculation for single layer nodes when enabled
             if (
@@ -525,6 +556,7 @@ export function visualizePointPathSolver(
                 xTransition,
               )
             }
+
             costPf = pf ** 2 * solver.NODE_PF_FACTOR
           }
 
@@ -539,18 +571,22 @@ export function visualizePointPathSolver(
         if (!currentConnection) continue
         const [_startNodeId, endNodeId] = currentConnection.nodeIds
         const endNode = solver.nodeMap.get(endNodeId)
+
         const distanceToGoal = endNode
           ? Math.sqrt(
               (head.x - endNode.center.x) ** 2 +
                 (head.y - endNode.center.y) ** 2,
             )
           : 0
+
         const estHops =
           solver.avgNodePitch > 0 ? distanceToGoal / solver.avgNodePitch : 0
+
         const estStepCost = estHops * solver.BASE_CANDIDATE_COST
 
         const memPfHere =
           solver.nodeMemoryPfMap.get(candidate.currentNodeId) ?? 0
+
         const memRiskCost = -Math.log(1 - memPfHere) * solver.MEMORY_PF_FACTOR
 
         graphics.circles!.push({

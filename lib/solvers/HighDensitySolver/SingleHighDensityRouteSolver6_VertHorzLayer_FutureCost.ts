@@ -22,6 +22,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         opts.nearbySegmentClearance ??
         (opts.traceThickness ?? 0.15) / 2 + (opts.obstacleMargin ?? 0.15),
     })
+
     for (const key in opts.hyperParameters) {
       // @ts-ignore
       this[key] = opts.hyperParameters[key]
@@ -46,6 +47,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       const dist =
         distance(node, point) +
         (node.z !== point.z ? this.viaPenaltyDistance : 0)
+
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
@@ -59,6 +61,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     if (this.futureConnectionSegmentsCache) {
       return this.futureConnectionSegmentsCache
     }
+
     const segments: FutureConnectionSegment[] = []
 
     for (const futureConnection of this.futureConnections) {
@@ -69,9 +72,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           futureConnection.connectionName,
         ) ??
           false)
+
       if (isConnected) continue
 
       const [start, ...rest] = futureConnection.points
+
       if (!start) continue
 
       for (const end of rest) {
@@ -81,6 +86,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         ) {
           continue
         }
+
         segments.push({
           connectionName: futureConnection.connectionName,
           start,
@@ -90,6 +96,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     }
 
     this.futureConnectionSegmentsCache = segments
+
     return segments
   }
 
@@ -137,6 +144,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
    */
   diminishCloseToGoal(node: Node) {
     const goalDist = distance(node, this.B)
+
     return 1 - Math.exp((-goalDist / this.straightLineDistance) * 5)
   }
 
@@ -144,18 +152,23 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
     const goalDist = distance(node, this.B)
+
     if (closestFuturePoint) {
       const distToFuturePoint = distance(node, closestFuturePoint)
+
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
       const distRatio = distToFuturePoint / maxDist
+
       const maxPenalty = isVia
         ? this.straightLineDistance *
           this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
         : this.straightLineDistance *
           this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+
       futureConnectionPenalty = maxPenalty * Math.exp(-distRatio * 5)
     }
+
     return futureConnectionPenalty
   }
 
@@ -180,6 +193,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     // Even layers (0, 2, ...) prefer horizontal, odd layers (1, 3, ...) prefer vertical
     const isEvenLayer = node.z % 2 === 0
+
     const misalignedDist = !this.FLIP_TRACE_ALIGNMENT_DIRECTION
       ? isEvenLayer
         ? dy
@@ -206,6 +220,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     const dy = Math.abs(node.y - node.parent!.y)
     const dist = Math.sqrt(dx ** 2 + dy ** 2)
     const isEvenLayer = node.z % 2 === 0
+
     const misalignedDist = !this.FLIP_TRACE_ALIGNMENT_DIRECTION
       ? isEvenLayer
         ? dy
@@ -213,6 +228,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       : isEvenLayer
         ? dx
         : dy
+
     const baseG =
       (node.parent?.g ?? 0) +
       (node.z === node.parent?.z ? 0 : this.viaPenaltyDistance) +
@@ -221,6 +237,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     const goalDist = distance(node, this.B) ** 1.6
     const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+
     const futureConnectionPenalty = this.getFutureConnectionPenalty(
       node,
       node.z !== node.parent?.z,

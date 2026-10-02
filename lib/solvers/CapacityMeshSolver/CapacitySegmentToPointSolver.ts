@@ -80,6 +80,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     // Iterate over unsolved segments.
     for (const seg of unsolved) {
       const n = seg.connectionNames.length
+
       // Already processed? Skip if assignedPoints exists for all connections.
       if ("assignedPoints" in seg && seg.assignedPoints?.length === n) continue
 
@@ -108,11 +109,13 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     if (!updated && unsolved.length > 0) {
       // Choose the unsolved segment with the fewest connections.
       let candidate = unsolved[0]
+
       for (const seg of unsolved) {
         if (seg.connectionNames.length < candidate.connectionNames.length) {
           candidate = seg
         }
       }
+
       // Fallback: assign points evenly spaced along the segment,
       // after sorting connection names alphabetically.
       const sortedConnections = [...candidate.connectionNames].sort()
@@ -120,6 +123,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
       const dy = candidate.end.y - candidate.start.y
       const n = sortedConnections.length
       const points: { x: number; y: number; z: number }[] = []
+
       // Evenly space positions using fractions of the segment distance.
       for (let i = 1; i <= n; i++) {
         const fraction = i / (n + 1)
@@ -164,10 +168,13 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
       )
     }
+
     const map = new Map<string, NodeWithPortPoints>()
+
     for (const seg of this.solvedSegments) {
       const nodeId = seg.capacityMeshNodeId
       const node = this.nodeMap[nodeId]
+
       if (!map.has(nodeId)) {
         map.set(nodeId, {
           capacityMeshNodeId: nodeId,
@@ -177,6 +184,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           height: node.height,
         })
       }
+
       map.get(nodeId)!.portPoints.push(
         ...seg.assignedPoints.map((ap) => ({
           ...ap.point,
@@ -184,6 +192,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         })),
       )
     }
+
     return Array.from(map.values())
   }
 
@@ -206,6 +215,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     // Add points for each assigned point on solved segments
     for (let i = 0; i < this.solvedSegments.length; i++) {
       const seg = this.solvedSegments[i]
+
       for (let j = 0; j < seg.assignedPoints.length; j++) {
         const ap = seg.assignedPoints[j]
 
@@ -248,28 +258,35 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
     // Add a dashed line connecting the assignment points with the same
     // connection name within the same node
     const dashedLines: Line[] = []
+
     const nodeConnections: Record<
       CapacityMeshNodeId,
       Record<string, { x: number; y: number }[]>
     > = {}
+
     for (const seg of this.solvedSegments) {
       const nodeId = seg.capacityMeshNodeId
+
       if (!nodeConnections[nodeId]) {
         nodeConnections[nodeId] = {}
       }
+
       for (const ap of seg.assignedPoints) {
         if (!nodeConnections[nodeId][ap.connectionName]) {
           nodeConnections[nodeId][ap.connectionName] = []
         }
+
         nodeConnections[nodeId][ap.connectionName].push({
           x: ap.point.x,
           y: ap.point.y,
         })
       }
     }
+
     for (const nodeId in nodeConnections) {
       for (const conn in nodeConnections[nodeId]) {
         const points = nodeConnections[nodeId][conn]
+
         if (points.length > 1) {
           dashedLines.push({
             points,
@@ -280,6 +297,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
         }
       }
     }
+
     graphics.lines!.push(...dashedLines)
 
     return graphics

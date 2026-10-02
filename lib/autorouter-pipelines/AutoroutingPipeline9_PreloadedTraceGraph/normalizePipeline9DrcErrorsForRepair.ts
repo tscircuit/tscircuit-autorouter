@@ -25,11 +25,13 @@ export const normalizePipeline9DrcErrorsForRepair = ({
   return errors.map((error) => {
     const primaryTraceId =
       typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+
     const explicitTraceIds = Array.isArray(error.pcb_trace_ids)
       ? error.pcb_trace_ids.filter(
           (traceId): traceId is string => typeof traceId === "string",
         )
       : []
+
     const viaIds = [
       ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
       ...(Array.isArray(error.pcb_via_ids)
@@ -40,18 +42,22 @@ export const normalizePipeline9DrcErrorsForRepair = ({
     ].filter(
       (viaId, viaIndex, allViaIds) => allViaIds.indexOf(viaId) === viaIndex,
     )
+
     if (primaryTraceId && typeof error.pcb_trace_error_id === "string") {
       const pairPrefix = `overlap_${primaryTraceId}_`
+
       const encodedOtherTraceId = error.pcb_trace_error_id.startsWith(
         pairPrefix,
       )
         ? error.pcb_trace_error_id.slice(pairPrefix.length)
         : undefined
+
       const encodedIdentityIsVia =
         encodedOtherTraceId !== undefined &&
         (viaIds.includes(encodedOtherTraceId) ||
           (traceIdByViaId.has(encodedOtherTraceId) &&
             !explicitTraceIds.includes(encodedOtherTraceId)))
+
       const otherTraceId =
         explicitTraceIds.find(
           (traceId) => traceId !== primaryTraceId && newTraceIds.has(traceId),
@@ -59,6 +65,7 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         (encodedOtherTraceId && !encodedIdentityIsVia
           ? encodedOtherTraceId
           : undefined)
+
       if (
         !newTraceIds.has(primaryTraceId) &&
         viaIds.length === 0 &&
@@ -73,6 +80,7 @@ export const normalizePipeline9DrcErrorsForRepair = ({
           (traceId, traceIndex, allTraceIds) =>
             allTraceIds.indexOf(traceId) === traceIndex,
         )
+
         return {
           ...error,
           pcb_trace_id: otherTraceId,
@@ -85,19 +93,23 @@ export const normalizePipeline9DrcErrorsForRepair = ({
     const mappedViaTraceIds = viaIds
       .flatMap((viaId) => {
         const traceId = traceIdByViaId.get(viaId)
+
         return traceId ? [traceId] : []
       })
       .filter(
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
       )
+
     const viaTraceIds =
       mappedViaTraceIds.length > 0
         ? mappedViaTraceIds
         : explicitTraceIds.filter((traceId) => traceId !== primaryTraceId)
+
     const primaryMovableViaTraceId = viaTraceIds.find((traceId) =>
       newTraceIds.has(traceId),
     )
+
     if (
       primaryMovableViaTraceId &&
       (!primaryTraceId || !newTraceIds.has(primaryTraceId))
@@ -111,6 +123,7 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
       )
+
       return {
         ...error,
         pcb_trace_id: primaryMovableViaTraceId,
@@ -129,6 +142,7 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
       )
+
       return {
         ...error,
         pcb_trace_ids: traceIds,

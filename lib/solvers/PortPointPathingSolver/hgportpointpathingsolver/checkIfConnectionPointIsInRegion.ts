@@ -20,13 +20,17 @@ export function checkIfConnectionPointIsInRegion(params: {
     CONNECTION_POINT_REGION_TOLERANCE
   ) {
     const layers = getConnectionPointLayers(params.point)
+
     const intLayers = layers.map((layer) => {
       return mapLayerNameToZ(layer, params.layerCount)
     })
+
     const sharedLayers = sharedZLayers(intLayers, params.region.d.availableZ)
+
     if (sharedLayers.length > 0) {
       return true
     }
   }
+
   return false
 }

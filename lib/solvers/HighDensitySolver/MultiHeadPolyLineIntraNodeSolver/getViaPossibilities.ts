@@ -10,6 +10,7 @@ export interface Point3 {
 }
 
 export type ConnectionName = string
+
 export interface ViaPossibility {
   x: number
   y: number
@@ -29,6 +30,7 @@ export interface ViaPlacement {
 }
 
 export type PortPair = { start: Point3; end: Point3; connectionName?: string }
+
 export type PortPairMap = Map<ConnectionName, PortPair>
 
 export const getViaPossibilitiesFromPortPairs = ({
@@ -48,6 +50,7 @@ export const getViaPossibilitiesFromPortPairs = ({
   viaCombinations: Array<ViaPlacement[]>
 } => {
   const zToSegments: Map<number, Array<Segment>> = new Map()
+
   const zToCentroidResult: Map<
     number,
     ReturnType<typeof getCentroidsFromInnerBoxIntersections>
@@ -56,8 +59,10 @@ export const getViaPossibilitiesFromPortPairs = ({
   // STEP 1: Construct Segments
   for (const z of availableZ) {
     const zSegments: Array<Segment> = []
+
     for (const [connectionName, portPair] of portPairs.entries()) {
       const { start, end } = portPair
+
       if (start.z === z && end.z === z) {
         zSegments.push({ start, end, connectionName })
       } else if (start.z === z || end.z === z) {
@@ -76,6 +81,7 @@ export const getViaPossibilitiesFromPortPairs = ({
         // TODO add to zSegments
       }
     }
+
     zToSegments.set(z, zSegments)
   }
 
@@ -89,8 +95,10 @@ export const getViaPossibilitiesFromPortPairs = ({
 
   // STEP 3: Map Centroids to Via Possibilities
   const viaPossibilities: Array<ViaPossibility> = []
+
   for (const z of availableZ) {
     const { faces } = zToCentroidResult.get(z)!
+
     for (const { centroid, vertices } of faces) {
       const connectionNamesInFace = new Set<string>()
       vertices.forEach((v) => {
@@ -122,6 +130,7 @@ export const getViaPossibilitiesFromPortPairs = ({
       otherTrace,
     ] of portPairs.entries()) {
       if (intersectingConnectionName === connectionName) continue
+
       // TODO check if otherTrace has any shared z
       // Determine if there's an intersection, if so where the intersection is
       const intersection: any = getSegmentIntersection(
@@ -130,6 +139,7 @@ export const getViaPossibilitiesFromPortPairs = ({
         otherTrace.start,
         otherTrace.end,
       )
+
       if (!intersection) continue
 
       intersection.connectionName = intersectingConnectionName
@@ -145,24 +155,29 @@ export const getViaPossibilitiesFromPortPairs = ({
     // Add a via possibility between each intersection
     const keypoints = [start, ...intersections, end]
     console.log({ keypoints })
+
     for (let i = 0; i < keypoints.length - 1; i++) {
       const prev = keypoints[i]
       const next = keypoints[i + 1]
+
       const mid = {
         x: (prev.x + next.x) / 2,
         y: (prev.y + next.y) / 2,
         connectionNames: [connectionName],
       }
+
       viaPossibilities.push(mid)
     }
   }
 
   const candidatesByConn: Map<ConnectionName, Array<ViaPossibility>> = new Map()
+
   for (const via of viaPossibilities) {
     for (const connectionName of via.connectionNames) {
       if (!candidatesByConn.has(connectionName)) {
         candidatesByConn.set(connectionName, [])
       }
+
       candidatesByConn.get(connectionName)!.push(via)
     }
   }

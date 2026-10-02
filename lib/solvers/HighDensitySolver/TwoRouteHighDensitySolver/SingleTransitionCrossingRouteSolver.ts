@@ -26,6 +26,7 @@ import { computeTurnDirection } from "./computeTurnDirection"
 import { findCircleLineIntersections } from "./findCircleLineIntersections"
 
 type Point = { x: number; y: number; z?: number }
+
 type Route = {
   A: Point
   B: Point
@@ -92,10 +93,12 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     if (this.routes.length !== 2) {
       this.failed = true
       this.error = `Expected 2 routes, but got ${this.routes.length}`
+
       return
     }
 
     const routePoints = this.routes.flatMap((route) => [route.A, route.B])
+
     const pointPositions = routePoints.map((point) =>
       this.getPortPointBoundsPosition(point),
     )
@@ -104,11 +107,13 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       this.failed = true
       this.error =
         "Invalid route input: SingleTransitionCrossingRouteSolver received port point(s) outside node bounds"
+
       return
     }
 
     if (pointPositions.includes("inside")) {
       this.failed = true
+
       return
     }
 
@@ -131,6 +136,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     ) {
       this.failed = true
       this.error = "Exactly one route must have a layer transition"
+
       return
     }
   }
@@ -147,9 +153,11 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
 
     for (const connectedPort of connectedPorts) {
       const { connectionName } = connectedPort
+
       if (!connectionGroups.has(connectionName)) {
         connectionGroups.set(connectionName, [])
       }
+
       connectionGroups.get(connectionName)?.push(connectedPort)
     }
 
@@ -197,6 +205,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
   private snapPortPointToBounds(point: Point): Point {
     const clampedX = clamp(point.x, this.bounds.minX, this.bounds.maxX)
     const clampedY = clamp(point.y, this.bounds.minY, this.bounds.maxY)
+
     const candidates = [
       {
         distance: Math.abs(point.y - this.bounds.maxY),
@@ -235,6 +244,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     flatRoute: Route,
   ): Point | null {
     const flatRouteZ = flatRoute.A.z
+
     const ntrP1 =
       transitionRoute.A.z !== flatRouteZ ? transitionRoute.A : transitionRoute.B
 
@@ -243,6 +253,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     // The via must also be far enough from the flat route
     const marginFromBorderWithTrace =
       this.obstacleMargin * 2 + this.viaDiameter / 2 + this.traceThickness
+
     const marginFromBorderWithoutTrace =
       this.obstacleMargin + this.viaDiameter / 2
 
@@ -251,6 +262,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     const C = flatRoute.B
 
     const turnDirection = computeTurnDirection(A, B, C, this.bounds)
+
     const sideTraversal = calculateTraversalPercentages(
       A,
       B,
@@ -373,16 +385,19 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
 
     const minDistFromViaToTrace =
       this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
+
     const p2 = middleWithMargin(
       via,
       this.viaDiameter,
       otherRouteStart.z !== flatStart.z ? otherRouteStart : otherRouteEnd,
       this.traceThickness,
     )
+
     const viaCircle = {
       center: { x: via.x, y: via.y },
       radius: minDistFromViaToTrace,
     }
+
     const p1 = findPointToGetAroundCircle(flatStart, p2, viaCircle).E
     const p3 = findPointToGetAroundCircle(p2, flatEnd, viaCircle).E
 
@@ -435,6 +450,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     const flatRoute = routeAHasTransition ? routeB : routeA
 
     const viaPosition = this.calculateViaPosition(transitionRoute, flatRoute)
+
     if (viaPosition) {
       this.debugViaPositions.push({ via: viaPosition })
     } else {
@@ -460,6 +476,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     )
 
     this.solvedRoutes.push(transitionRouteSolution, flatRouteSolution)
+
     return true
   }
 
@@ -472,12 +489,14 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       this.failed = true
       this.error =
         "Can only solve routes that have a single transition crossing"
+
       return
     }
 
     // Try to solve
     if (this.trySolve()) {
       this.solved = true
+
       return
     }
 
@@ -562,8 +581,10 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     // Draw solved routes if available
     for (let si = 0; si < this.solvedRoutes.length; si++) {
       const route = this.solvedRoutes[si]
+
       const routeColor =
         si % 2 === 0 ? "rgba(0, 255, 0, 0.75)" : "rgba(255, 0, 255, 0.75)"
+
       for (let i = 0; i < route.route.length - 1; i++) {
         const pointA = route.route[i]
         const pointB = route.route[i + 1]

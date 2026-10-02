@@ -28,6 +28,7 @@ export class AssignableViaCapacityPathingSolver_PenalizeNonVia extends CapacityP
 
   private applyTraceOrdering() {
     const seed = this.hyperParams.TRACE_ORDERING_SEED
+
     if (seed === undefined) return
     this.connectionsWithNodes = cloneAndShuffleArray(
       this.connectionsWithNodes,
@@ -60,12 +61,14 @@ export class AssignableViaCapacityPathingSolver_PenalizeNonVia extends CapacityP
     let stepsSinceLayerChange = 0
     const currentLayer = node.availableZ[0]
     let prevCursor: Candidate | null = prevCandidate
+
     while (prevCursor) {
       if (prevCursor.node.availableZ[0] === currentLayer) {
         stepsSinceLayerChange++
       } else {
         break
       }
+
       prevCursor = prevCursor.prevCandidate
     }
 

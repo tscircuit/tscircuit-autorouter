@@ -81,6 +81,7 @@ function createMeshNodesForRegion({
   if (!isValidBounds(bounds)) return []
 
   const region = createRectRegion(bounds)
+
   const isLargeEnoughForMultiZ =
     Math.min(region.width, region.height) > multiLayerThreshold
 
@@ -124,6 +125,7 @@ function getNearestClusterIndex(value: number, clusters: number[]) {
 
   for (let index = 0; index < clusters.length; index++) {
     const distance = Math.abs(value - clusters[index]!)
+
     if (distance < nearestDistance) {
       nearestIndex = index
       nearestDistance = distance
@@ -137,6 +139,7 @@ function getSoicOrientation(obstacles: Obstacle[]): SoicOrientation {
   const rowCount = clusterAxisValues(
     obstacles.map((obstacle) => obstacle.center.y),
   ).length
+
   const columnCount = clusterAxisValues(
     obstacles.map((obstacle) => obstacle.center.x),
   ).length
@@ -172,6 +175,7 @@ function groupSoicPads({
 
     sideGroups.left.sort((a, b) => a.center.y - b.center.y)
     sideGroups.right.sort((a, b) => a.center.y - b.center.y)
+
     return sideGroups
   }
 
@@ -186,6 +190,7 @@ function groupSoicPads({
 
   sideGroups.top.sort((a, b) => a.center.x - b.center.x)
   sideGroups.bottom.sort((a, b) => a.center.x - b.center.x)
+
   return sideGroups
 }
 
@@ -311,38 +316,50 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
   override _step() {
     if (this.output) {
       this.solved = true
+
       return
     }
 
     const { layerCount, obstacles } = this.inputProblem.inputSrj
     const { bounds, componentId } = this.inputProblem.detectedComponent
     const availableZ = getLayerRange(layerCount)
+
     const topologyObstacles = obstacles.filter(
       (obstacle) => obstacle.componentId === componentId,
     )
+
     const soicObstacles =
       topologyObstacles.length > 0 ? topologyObstacles : obstacles
+
     const orientation = getSoicOrientation(soicObstacles)
+
     const sideGroups = groupSoicPads({
       obstacles: soicObstacles,
       orientation,
     })
+
     const centralBounds = getInnerSoicBounds({
       bounds,
       orientation,
       sideGroups,
     })
+
     const nodeScopeId = componentId
+
     const viaDiameter =
       this.inputProblem.viaDiameter ??
       getViaDimensions(this.inputProblem.inputSrj).padDiameter
+
     const obstacleMargin =
       this.inputProblem.obstacleMargin ??
       this.inputProblem.inputSrj.defaultObstacleMargin ??
       0.15
+
     const multiLayerThreshold = (viaDiameter + obstacleMargin) * 2
+
     const activeSides: SoicSide[] =
       orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
+
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
       ...getPadRegions(soicObstacles, layerCount),
@@ -355,6 +372,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         }),
       ),
     ]
+
     const routingRegions = regions.flatMap((region) =>
       createMeshNodesForRegion({
         nodeId: `soic:${nodeScopeId}:${region.key}`,

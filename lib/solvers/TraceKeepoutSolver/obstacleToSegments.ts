@@ -72,6 +72,7 @@ export function traceSegmentToOutlineSegments(
     x: segmentStart.x + px * halfW,
     y: segmentStart.y + py * halfW,
   }
+
   const leftEnd = {
     x: segmentEnd.x + px * halfW,
     y: segmentEnd.y + py * halfW,
@@ -82,6 +83,7 @@ export function traceSegmentToOutlineSegments(
     x: segmentStart.x - px * halfW,
     y: segmentStart.y - py * halfW,
   }
+
   const rightEnd = {
     x: segmentEnd.x - px * halfW,
     y: segmentEnd.y - py * halfW,
@@ -122,12 +124,14 @@ function segmentIsNearPoint(
   // Check if either endpoint is within radius
   const d1 = Math.hypot(segment.start.x - point.x, segment.start.y - point.y)
   const d2 = Math.hypot(segment.end.x - point.x, segment.end.y - point.y)
+
   if (d1 <= radius || d2 <= radius) return true
 
   // Check if the closest point on the segment is within radius
   const dx = segment.end.x - segment.start.x
   const dy = segment.end.y - segment.start.y
   const lenSq = dx * dx + dy * dy
+
   if (lenSq === 0) return false
 
   const t = Math.max(
@@ -138,6 +142,7 @@ function segmentIsNearPoint(
         lenSq,
     ),
   )
+
   const closestX = segment.start.x + t * dx
   const closestY = segment.start.y + t * dy
   const dist = Math.hypot(closestX - point.x, closestY - point.y)

@@ -17,11 +17,13 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         ),
       )
     }
+
     return this.initialAssignmentRouteIds
   }
 
   override resetRoutingStateForRerip(): void {
     super.resetRoutingStateForRerip()
+
     if (!this.problem.initialAssignments?.length) return
 
     applyInitialAssignments({

@@ -23,16 +23,19 @@ const endpointsMatch = (
   if (!line.points || line.points.length < 2) return false
   const lp1 = line.points[0]!
   const lp2 = line.points[line.points.length - 1]!
+
   const forward =
     Math.abs(lp1.x - p1.x) < MATCH_TOLERANCE &&
     Math.abs(lp1.y - p1.y) < MATCH_TOLERANCE &&
     Math.abs(lp2.x - p2.x) < MATCH_TOLERANCE &&
     Math.abs(lp2.y - p2.y) < MATCH_TOLERANCE
+
   const backward =
     Math.abs(lp1.x - p2.x) < MATCH_TOLERANCE &&
     Math.abs(lp1.y - p2.y) < MATCH_TOLERANCE &&
     Math.abs(lp2.x - p1.x) < MATCH_TOLERANCE &&
     Math.abs(lp2.y - p1.y) < MATCH_TOLERANCE
+
   return forward || backward
 }
 
@@ -47,6 +50,7 @@ export const annotateNominalTraceWidth = (
   srj: SimpleRouteJson,
 ): GraphicsObject => {
   const connectionNominalWidth = new Map<string, number>()
+
   for (const connection of srj.connections) {
     if (connection.nominalTraceWidth !== undefined) {
       connectionNominalWidth.set(connection.name, connection.nominalTraceWidth)
@@ -54,12 +58,15 @@ export const annotateNominalTraceWidth = (
   }
 
   const usedWidths = new Set<number>()
+
   if (srj.traces) {
     for (const trace of srj.traces) {
       const w = connectionNominalWidth.get(trace.connection_name)
+
       if (w !== undefined) usedWidths.add(w)
     }
   }
+
   const sortedWidths = Array.from(usedWidths).sort((a, b) => a - b)
   const widthColorMap = new Map<number, string>()
   sortedWidths.forEach((w, i) => {
@@ -76,13 +83,16 @@ export const annotateNominalTraceWidth = (
   if (srj.traces) {
     for (const trace of srj.traces) {
       const nominalWidth = connectionNominalWidth.get(trace.connection_name)
+
       if (nominalWidth === undefined) continue
       const color = widthColorMap.get(nominalWidth)
+
       if (!color) continue
 
       for (let j = 0; j < trace.route.length - 1; j++) {
         const a = trace.route[j]!
         const b = trace.route[j + 1]!
+
         if (
           a.route_type !== "wire" ||
           b.route_type !== "wire" ||
@@ -90,11 +100,14 @@ export const annotateNominalTraceWidth = (
         ) {
           continue
         }
+
         const expectedLayer = `z${mapLayerNameToZ(a.layer, srj.layerCount)}`
         const p1 = { x: a.x, y: a.y }
         const p2 = { x: b.x, y: b.y }
+
         for (const line of updatedLines) {
           if (line.layer !== expectedLayer) continue
+
           if (endpointsMatch(line, p1, p2)) {
             line.strokeColor = color
           }

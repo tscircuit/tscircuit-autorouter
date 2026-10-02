@@ -29,10 +29,12 @@ export const HighDensityDebugger = ({
         setShuffleSeed(Math.floor(Math.random() * 1000000))
         animationRef.current = requestAnimationFrame(animate)
       }
+
       animationRef.current = requestAnimationFrame(animate)
     } else if (animationRef.current) {
       cancelAnimationFrame(animationRef.current)
     }
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

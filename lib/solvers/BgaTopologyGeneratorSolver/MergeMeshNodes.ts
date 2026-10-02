@@ -8,7 +8,9 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 
 const EDGE_EPSILON = 1e-6
+
 const MAX_ASPECT_RATIO = 4
+
 const GAP_FILL_NODE_PREFIX = "bga-gapfill-"
 
 export type MergeMeshNodesInput = {
@@ -107,6 +109,7 @@ function doesNodeOverlapObstacle(
     }
 
     const obstacleBounds: Bounds = getBoundFromCenteredRect(obstacleNode)
+
     if (doBoundsOverlap(nodeBounds, obstacleBounds)) {
       return true
     }
@@ -117,6 +120,7 @@ function doesNodeOverlapObstacle(
 
 function createMergedNode(sourceNodes: CapacityMeshNode[]): CapacityMeshNode {
   const firstNode: CapacityMeshNode | undefined = sourceNodes[0]
+
   if (!firstNode) {
     throw new Error("createMergedNode requires at least one source node")
   }
@@ -150,6 +154,7 @@ function buildMergedNodesForGroup(
   group: MergeCandidateGroup,
 ): GroupBuildResult {
   const firstNode: CapacityMeshNode | undefined = group.nodes[0]
+
   if (!firstNode) {
     return {
       outputNodes: [],
@@ -203,12 +208,16 @@ function buildMergedNodesForGroup(
 
   for (const rootCell of orderedCells) {
     const rootCellKey: string = `${rootCell.col},${rootCell.row}`
+
     if (visitedCellKeys.has(rootCellKey)) continue
 
     let maxWidthCellCount: number = 0
+
     while (true) {
       const candidateCellKey: string = `${rootCell.col + maxWidthCellCount},${rootCell.row}`
+
       if (!nodeByCellKey.has(candidateCellKey)) break
+
       if (visitedCellKeys.has(candidateCellKey)) break
       maxWidthCellCount += 1
     }
@@ -222,9 +231,12 @@ function buildMergedNodesForGroup(
       const rowIndex: number = rootCell.row + heightCellCount - 1
 
       let rowWidthCellCount: number = 0
+
       while (rowWidthCellCount < runningWidthCellCount) {
         const candidateCellKey: string = `${rootCell.col + rowWidthCellCount},${rowIndex}`
+
         if (!nodeByCellKey.has(candidateCellKey)) break
+
         if (visitedCellKeys.has(candidateCellKey)) break
         rowWidthCellCount += 1
       }
@@ -241,6 +253,7 @@ function buildMergedNodesForGroup(
         const mergedWidth: number = widthCellCount * minCellWidth
         const mergedHeight: number = heightCellCount * minCellHeight
         const shorterSide: number = Math.min(mergedWidth, mergedHeight)
+
         const aspectRatio: number =
           shorterSide <= EDGE_EPSILON
             ? Number.POSITIVE_INFINITY
@@ -249,6 +262,7 @@ function buildMergedNodesForGroup(
         if (aspectRatio > MAX_ASPECT_RATIO) continue
 
         const areaCellCount: number = widthCellCount * heightCellCount
+
         if (areaCellCount > bestAreaCellCount) {
           bestAreaCellCount = areaCellCount
           bestWidthCellCount = widthCellCount
@@ -272,8 +286,10 @@ function buildMergedNodesForGroup(
         colOffset += 1
       ) {
         const cellKey: string = `${rootCell.col + colOffset},${rootCell.row + rowOffset}`
+
         const sourceNode: CapacityMeshNode | undefined =
           nodeByCellKey.get(cellKey)
+
         if (!sourceNode) continue
 
         visitedCellKeys.add(cellKey)
@@ -282,11 +298,14 @@ function buildMergedNodesForGroup(
     }
 
     const sourceNodes: CapacityMeshNode[] = [...sourceNodeById.values()]
+
     if (sourceNodes.length <= 1) {
       const passthroughNode: CapacityMeshNode | undefined = sourceNodes[0]
+
       if (passthroughNode) {
         outputNodes.push(passthroughNode)
       }
+
       continue
     }
 
@@ -377,6 +396,7 @@ export class MergeMeshNodes extends BaseSolver {
       }
 
       let isMissingLayer: boolean = false
+
       for (let z: number = 0; z < this.inputProblem.layerCount; z += 1) {
         if (!node.availableZ.includes(z)) {
           isMissingLayer = true
@@ -400,6 +420,7 @@ export class MergeMeshNodes extends BaseSolver {
       }
 
       const groupKey: string = getMergeSignature(node)
+
       const groupNodes: CapacityMeshNode[] | undefined =
         nodesByGroupKey.get(groupKey)
 
@@ -442,6 +463,7 @@ export class MergeMeshNodes extends BaseSolver {
       this.currentRootNodeId = null
       this.solved = true
       this.updateStats("done")
+
       return
     }
 
@@ -458,6 +480,7 @@ export class MergeMeshNodes extends BaseSolver {
 
     const lastMergeEvent: MergeStepEvent | undefined =
       groupBuildResult.mergeEvents[groupBuildResult.mergeEvents.length - 1]
+
     if (lastMergeEvent) {
       this.lastMergedNodeId = lastMergeEvent.mergedNode.capacityMeshNodeId
     }
@@ -471,6 +494,7 @@ export class MergeMeshNodes extends BaseSolver {
 
   computeProgress(): number {
     if (this.totalGroupCount === 0) return 1
+
     return this.processedGroupCount / this.totalGroupCount
   }
 
@@ -517,12 +541,14 @@ export class MergeMeshNodes extends BaseSolver {
 
   override visualize(): GraphicsObject {
     const outputNodes: CapacityMeshNode[] = this.getOutput()
+
     const activeNode: CapacityMeshNode | null = this.currentRootNodeId
       ? (outputNodes.find(
           (node: CapacityMeshNode): boolean =>
             node.capacityMeshNodeId === this.currentRootNodeId,
         ) ?? null)
       : null
+
     const lastMergedNode: CapacityMeshNode | null = this.lastMergedNodeId
       ? (outputNodes.find(
           (node: CapacityMeshNode): boolean =>

@@ -21,10 +21,13 @@ export const shouldIgnorePortPoint = ({
     const inputNode = inputNodes.find(
       (n) => n.capacityMeshNodeId === ownerNodeId,
     )
+
     if (inputNode?._containsTarget) return true
+
     const inputPortPoint = inputNode?.portPoints.find(
       (p) => p.portPointId === portPoint.portPointId,
     )
+
     if (
       inputPortPoint?.connectionNodeIds?.some(
         (id) =>
@@ -34,5 +37,6 @@ export const shouldIgnorePortPoint = ({
       return true
     }
   }
+
   return false
 }

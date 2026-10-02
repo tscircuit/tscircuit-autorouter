@@ -23,14 +23,17 @@ function perimeterT(
   if (Math.abs(p.y - ymax) < eps) {
     return p.x - xmin
   }
+
   // Right edge
   if (Math.abs(p.x - xmax) < eps) {
     return W + (ymax - p.y)
   }
+
   // Bottom edge
   if (Math.abs(p.y - ymin) < eps) {
     return W + H + (xmax - p.x)
   }
+
   // Left edge
   if (Math.abs(p.x - xmin) < eps) {
     return 2 * W + H + (p.y - ymin)
@@ -47,12 +50,15 @@ function perimeterT(
   if (minDist === distTop) {
     return Math.max(0, Math.min(W, p.x - xmin))
   }
+
   if (minDist === distRight) {
     return W + Math.max(0, Math.min(H, ymax - p.y))
   }
+
   if (minDist === distBottom) {
     return W + H + Math.max(0, Math.min(W, xmax - p.x))
   }
+
   // Left edge
   return 2 * W + H + Math.max(0, Math.min(H, p.y - ymin))
 }
@@ -85,6 +91,7 @@ function countChordCrossings(chords: Array<[number, number]>): number {
   // Check all pairs of chords
   for (let i = 0; i < normalizedChords.length; i++) {
     const [a, b] = normalizedChords[i]
+
     for (let j = i + 1; j < normalizedChords.length; j++) {
       const [c, d] = normalizedChords[j]
 
@@ -131,10 +138,12 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
 
   for (const pp of node.portPoints) {
     const points = connectionPointsMap.get(pp.connectionName) ?? []
+
     // Avoid duplicate points
     if (!points.some((p) => p.x === pp.x && p.y === pp.y && p.z === pp.z)) {
       points.push({ x: pp.x, y: pp.y, z: pp.z })
     }
+
     connectionPointsMap.set(pp.connectionName, points)
   }
 
@@ -169,6 +178,7 @@ export const getIntraNodeCrossingsUsingCircle = (node: NodeWithPortPoints) => {
 
   // Count same-layer crossings (per layer, then sum)
   let numSameLayerCrossings = 0
+
   for (const [z, chords] of sameLayerPairsByZ) {
     numSameLayerCrossings += countChordCrossings(chords)
   }

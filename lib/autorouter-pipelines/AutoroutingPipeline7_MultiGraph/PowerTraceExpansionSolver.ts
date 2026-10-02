@@ -20,11 +20,13 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       inputSrj as unknown as PowerTraceExpanderInput,
       options,
     )
+
     if (options.onlyConnectionNames?.length === 0) {
       this.MAX_ITERATIONS = 1
       this.progress = 1
       this.solved = true
       this.stats = { selectedTraceCount: 0, bypassed: true }
+
       return
     }
 
@@ -40,6 +42,7 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     if (solver.failed) {
       this.error = solver.error
       this.failed = true
+
       return
     }
 

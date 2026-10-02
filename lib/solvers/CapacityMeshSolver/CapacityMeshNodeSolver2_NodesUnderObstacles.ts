@@ -53,10 +53,12 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
   isNodeCompletelyOutsideBounds(node: CapacityMeshNode): boolean {
     if (this.outlinePolygon) {
       const nodeRect = this.getNodeRect(node)
+
       if (!isRectOverlappingPolygon(nodeRect, this.outlinePolygon)) {
         return true
       }
     }
+
     return (
       node.center.x + node.width / 2 < this.srj.bounds.minX ||
       node.center.x - node.width / 2 > this.srj.bounds.maxX ||
@@ -68,15 +70,19 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
   isNodePartiallyOutsideBounds(node: CapacityMeshNode): boolean {
     if (this.outlinePolygon) {
       const nodeRect = this.getNodeRect(node)
+
       const overlapsOutline = isRectOverlappingPolygon(
         nodeRect,
         this.outlinePolygon,
       )
+
       if (!overlapsOutline) {
         return false
       }
+
       return !isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon)
     }
+
     return (
       node.center.x - node.width / 2 < this.srj.bounds.minX ||
       node.center.x + node.width / 2 > this.srj.bounds.maxX ||
@@ -90,6 +96,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
    */
   getObstacleCoveragePercentage(node: CapacityMeshNode): number {
     const overlappingObstacles = this.getXYZOverlappingObstacles(node)
+
     if (overlappingObstacles.length === 0) return 0
 
     const nodeLeft = node.center.x - node.width / 2
@@ -106,14 +113,17 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
         nodeLeft,
         obstacle.center.x - obstacle.width / 2,
       )
+
       const overlapRight = Math.min(
         nodeRight,
         obstacle.center.x + obstacle.width / 2,
       )
+
       const overlapTop = Math.max(
         nodeTop,
         obstacle.center.y - obstacle.height / 2,
       )
+
       const overlapBottom = Math.min(
         nodeBottom,
         obstacle.center.y + obstacle.height / 2,
@@ -122,6 +132,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
       if (overlapLeft < overlapRight && overlapTop < overlapBottom) {
         const overlapArea =
           (overlapRight - overlapLeft) * (overlapBottom - overlapTop)
+
         totalOverlapArea += overlapArea
       }
     }
@@ -134,9 +145,11 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
    */
   shouldFilterSingleLayerNodeForObstacle(node: CapacityMeshNode): boolean {
     if (node.availableZ.length !== 1) return false
+
     if (!node._containsObstacle) return false
 
     const coveragePercent = this.getObstacleCoveragePercentage(node)
+
     return coveragePercent > this.OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES
   }
 
@@ -260,9 +273,11 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
         height: childNodeSize.height,
         availableZ: parent.availableZ,
       })
+
       if (this.isNodeCompletelyOutsideBounds(childNode)) {
         continue
       }
+
       childNodes.push(childNode)
     }
 
@@ -271,17 +286,23 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
 
   shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
     if (node._depth! >= this.MAX_DEPTH) return false
+
     if (node._containsTarget) return true
+
     if (node.availableZ.length === 1 && node._depth! <= this.MAX_DEPTH)
       return true
+
     if (node._containsObstacle && !node._completelyInsideObstacle) return true
+
     return false
   }
 
   _step() {
     const nextNode = this.unfinishedNodes.pop()
+
     if (!nextNode) {
       this.solved = true
+
       return
     }
 
@@ -292,11 +313,13 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
 
     for (const childNode of childNodes) {
       const shouldBeXYSubdivided = this.shouldNodeBeXYSubdivided(childNode)
+
       const shouldBeZSubdivided =
         childNode.availableZ.length > 1 &&
         !shouldBeXYSubdivided &&
         (childNode._containsObstacle ||
           childNode.width < this.VIA_DIAMETER + this.OBSTACLE_MARGIN)
+
       if (shouldBeXYSubdivided) {
         unfinishedNewNodes.push(childNode)
       } else if (

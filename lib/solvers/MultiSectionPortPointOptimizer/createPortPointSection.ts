@@ -96,18 +96,23 @@ export function createPortPointSection(
     capacityMeshEdges,
     connectionResults,
   } = input
+
   const { centerOfSectionCapacityNodeId, expansionDegrees } = params
 
   // Build adjacency map from edges
   const adjacencyMap = new Map<CapacityMeshNodeId, Set<CapacityMeshNodeId>>()
+
   for (const edge of capacityMeshEdges) {
     const [nodeId1, nodeId2] = edge.nodeIds
+
     if (!adjacencyMap.has(nodeId1)) {
       adjacencyMap.set(nodeId1, new Set())
     }
+
     if (!adjacencyMap.has(nodeId2)) {
       adjacencyMap.set(nodeId2, new Set())
     }
+
     adjacencyMap.get(nodeId1)!.add(nodeId2)
     adjacencyMap.get(nodeId2)!.add(nodeId1)
   }
@@ -128,6 +133,7 @@ export function createPortPointSection(
     // If we haven't reached max depth, explore neighbors
     if (depth < expansionDegrees) {
       const neighbors = adjacencyMap.get(nodeId) ?? new Set()
+
       for (const neighborId of neighbors) {
         if (!visited.has(neighborId)) {
           visited.add(neighborId)
@@ -173,6 +179,7 @@ export function createPortPointSection(
         // OR if it connects a section node to an external node (boundary)
         const node1InSection = sectionNodeIds.has(connNodeId1)
         const node2InSection = sectionNodeIds.has(connNodeId2)
+
         return node1InSection || node2InSection
       })
 
@@ -221,9 +228,11 @@ function cutPathsToSection(
 
     // Find all indices that are within the section
     const indicesInSection: number[] = []
+
     for (let i = 0; i < result.path.length; i++) {
       const candidate = result.path[i]
       const isInSection = sectionNodeIds.has(candidate.currentNodeId)
+
       if (isInSection) {
         indicesInSection.push(i)
       }
@@ -247,8 +256,10 @@ function cutPathsToSection(
       // There are points before the first section point
       // If index 0 is a connection endpoint, include it
       const firstNodeId = result.path[0].currentNodeId
+
       const isStartEndpoint =
         result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId
+
       if (isStartEndpoint) {
         segmentStartIndex = 0
       }
@@ -260,8 +271,10 @@ function cutPathsToSection(
       // If the last index is a connection endpoint, include it
       const lastPathIdx = result.path.length - 1
       const lastNodeId = result.path[lastPathIdx].currentNodeId
+
       const isEndEndpoint =
         result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId
+
       if (isEndEndpoint) {
         segmentEndIndex = lastPathIdx
       }

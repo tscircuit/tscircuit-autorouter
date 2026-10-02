@@ -14,8 +14,10 @@ export const precomputeSharedEdges = ({
   nodeBounds: Map<string, Bounds>
 }): Map<OwnerPairKey, SharedEdge> => {
   const sharedEdges = new Map<OwnerPairKey, SharedEdge>()
+
   for (const ownerPair of ownerPairs) {
     const [nodeAId, nodeBId] = ownerPair
+
     if (nodeAId === nodeBId) continue
 
     const sharedEdge = getSharedEdgeForNodePair({
@@ -23,9 +25,11 @@ export const precomputeSharedEdges = ({
       nodeBId,
       nodeBounds,
     })
+
     if (!sharedEdge) continue
 
     sharedEdges.set(getOwnerPairKey(ownerPair), sharedEdge)
   }
+
   return sharedEdges
 }

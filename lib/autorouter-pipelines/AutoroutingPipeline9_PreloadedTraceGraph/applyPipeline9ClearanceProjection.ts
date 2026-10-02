@@ -38,16 +38,21 @@ export const applyPipeline9ClearanceProjection = ({
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
+
   if (errors.length === 0) return routes
+
   const srj = {
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
+
   const originalCanonicalRoutes = canonicalizePipeline9HdRoutes(routes)
+
   const canonicalRoutes =
     allowPartialRepair && subdivideSegments
       ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
       : originalCanonicalRoutes
+
   // Whole-board projection needs no cropping or splicing. Preserve every
   // transition's point indices so the via guard can prove its identity.
   let candidate = relaxTraceClearance({
@@ -70,6 +75,7 @@ export const applyPipeline9ClearanceProjection = ({
         : 0),
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
+
   if (allowPartialRepair) {
     candidate = selectIndependentClearanceRepairs({
       srj,
@@ -84,11 +90,13 @@ export const applyPipeline9ClearanceProjection = ({
           : route,
     )
   }
+
   const fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
       (violation) => [violation.key, violation.severity],
     ),
   )
+
   if (
     getFixedObstacleViolations({ srj, routes: candidate }).some(
       ({ key, severity }) =>
@@ -103,16 +111,20 @@ export const applyPipeline9ClearanceProjection = ({
   ) {
     return routes
   }
+
   const candidateReference = drcEvaluator({
     traces: [],
     routes: candidate,
     hdRoutes: candidate,
   })
+
   const candidateErrors = Array.isArray(candidateReference)
     ? candidateReference
     : candidateReference.errors
+
   const canPublish = allowPartialRepair
     ? canPublishIndependentClearanceRepairs(errors, candidateErrors)
     : candidateErrors.length < errors.length
+
   return canPublish ? candidate : routes
 }

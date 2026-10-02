@@ -35,8 +35,10 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
     const START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW = 2
 
     const totalCapacity = this.getTotalCapacity(node)
+
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
+
     const remainingCapacity = totalCapacity - usedCapacity
 
     if (remainingCapacity > START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW) {

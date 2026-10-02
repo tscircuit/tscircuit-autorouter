@@ -12,6 +12,7 @@ type RoutePositionRange = {
 }
 
 const ROUTE_POSITION_EPSILON = 1e-9
+
 const ENDPOINT_POSITION_EPSILON = 1e-6
 
 const getSectionEndpoints = (
@@ -23,11 +24,13 @@ const getSectionEndpoints = (
     y: point.y,
     z: mapLayerNameToZ(getConnectionPointLayer(point), layerCount),
   }))
+
   if (!endpoints[0] || !endpoints[1]) {
     throw new Error(
       `Pipeline9 changed section "${section.connectionName}" is missing an endpoint`,
     )
   }
+
   return [endpoints[0], endpoints[1]]
 }
 
@@ -42,21 +45,27 @@ const getEndpointAlignment = ({
 }): { score: number; reverse: boolean } | null => {
   const routeStart = route.route[0]
   const routeEnd = route.route.at(-1)
+
   if (!routeStart || !routeEnd) return null
 
   const directLayersMatch =
     routeStart.z === sectionStart.z && routeEnd.z === sectionEnd.z
+
   const reverseLayersMatch =
     routeStart.z === sectionEnd.z && routeEnd.z === sectionStart.z
+
   const directScore = directLayersMatch
     ? distance(routeStart, sectionStart) + distance(routeEnd, sectionEnd)
     : Number.POSITIVE_INFINITY
+
   const reverseScore = reverseLayersMatch
     ? distance(routeStart, sectionEnd) + distance(routeEnd, sectionStart)
     : Number.POSITIVE_INFINITY
+
   if (!Number.isFinite(directScore) && !Number.isFinite(reverseScore)) {
     return null
   }
+
   return directScore <= reverseScore
     ? { score: directScore, reverse: false }
     : { score: reverseScore, reverse: true }
@@ -67,17 +76,20 @@ const reverseRoutePoints = (
 ): HighDensityRoute["route"] => {
   const reversed = [...route].reverse().map((point) => {
     const { toNextSegmentType, ...pointWithoutSegmentType } = point
+
     return pointWithoutSegmentType
   }) as HighDensityRoute["route"]
 
   for (let pointIndex = 0; pointIndex < route.length - 1; pointIndex++) {
     const segmentType = route[pointIndex]?.toNextSegmentType
+
     if (!segmentType) continue
     reversed[route.length - pointIndex - 2] = {
       ...reversed[route.length - pointIndex - 2]!,
       toNextSegmentType: segmentType,
     }
   }
+
   return reversed
 }
 
@@ -103,17 +115,21 @@ const connectRouteToSectionEndpoints = ({
   const routePoints = reverse
     ? reverseRoutePoints(route.route)
     : [...route.route]
+
   if (!routePoints[0] || !routePoints.at(-1)) {
     throw new Error(
       `Pipeline9 cannot materialize empty route "${route.connectionName}"`,
     )
   }
+
   if (!pointsMatch(routePoints[0], sectionStart)) {
     routePoints.unshift(sectionStart)
   }
+
   if (!pointsMatch(routePoints.at(-1)!, sectionEnd)) {
     routePoints.push(sectionEnd)
   }
+
   return { ...route, route: routePoints }
 }
 
@@ -132,11 +148,13 @@ const getSectionRangesByTraceIndex = ({
 
   for (const section of sections) {
     const traceIndex = traceIndexById.get(section.traceId)
+
     if (traceIndex === undefined) {
       throw new Error(
         `Pipeline9 hypergraph changed missing preloaded trace "${section.traceId}"`,
       )
     }
+
     const ranges = rangesByTraceIndex.get(traceIndex) ?? []
     ranges.push({
       start: Math.min(section.startRoutePosition, section.endRoutePosition),
@@ -150,6 +168,7 @@ const getSectionRangesByTraceIndex = ({
       (left, right) => left.start - right.start || left.end - right.end,
     )
   }
+
   return rangesByTraceIndex
 }
 
@@ -159,14 +178,17 @@ const interpolateRoutePoint = (
 ): HighDensityRoute["route"][number] => {
   const start = route[0]
   const end = route.at(-1)
+
   if (!start || !end) {
     throw new Error("Pipeline9 cannot split an empty preloaded route")
   }
+
   if (start.z !== end.z) {
     throw new Error(
       "Pipeline9 cannot partially split a preloaded layer transition",
     )
   }
+
   return {
     ...start,
     x: start.x + (end.x - start.x) * fraction,
@@ -192,10 +214,12 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
 
   return fixedHdRoutes.flatMap((fixedRoute) => {
     const sectionRanges = rangesByTraceIndex.get(fixedRoute.preloadedTraceIndex)
+
     if (!sectionRanges?.length) return [fixedRoute]
 
     const routeStart = fixedRoute.preloadedRoutePositionStart
     const routeEnd = fixedRoute.preloadedRoutePositionEnd
+
     if (routeStart === undefined || routeEnd === undefined) {
       throw new Error(
         `Pipeline9 fixed route "${fixedRoute.connectionName}" is missing route-position metadata`,
@@ -215,6 +239,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
     let remainingRanges: RoutePositionRange[] = [
       { start: routeStart, end: routeEnd },
     ]
+
     for (const removedRange of sectionRanges) {
       remainingRanges = remainingRanges.flatMap((remainingRange) => {
         if (
@@ -225,6 +250,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
         }
 
         const splitRanges: RoutePositionRange[] = []
+
         if (
           removedRange.start >
           remainingRange.start + ROUTE_POSITION_EPSILON
@@ -234,12 +260,14 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
             end: Math.min(removedRange.start, remainingRange.end),
           })
         }
+
         if (removedRange.end < remainingRange.end - ROUTE_POSITION_EPSILON) {
           splitRanges.push({
             start: Math.max(removedRange.end, remainingRange.start),
             end: remainingRange.end,
           })
         }
+
         return splitRanges
       })
     }
@@ -247,8 +275,10 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
     return remainingRanges.map((remainingRange, fragmentIndex) => {
       const startFraction =
         (remainingRange.start - routeStart) / (routeEnd - routeStart)
+
       const endFraction =
         (remainingRange.end - routeStart) / (routeEnd - routeStart)
+
       return {
         ...fixedRoute,
         connectionName: `${fixedRoute.connectionName}_hypergraph_fixed_${fragmentIndex}`,
@@ -283,24 +313,31 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
 
   return sections.map((section, sectionIndex) => {
     const traceIndex = traceIndexById.get(section.traceId)
+
     if (traceIndex === undefined) {
       throw new Error(
         `Pipeline9 cannot materialize missing preloaded trace "${section.traceId}"`,
       )
     }
+
     const [sectionStart, sectionEnd] = getSectionEndpoints(section, layerCount)
+
     const alignedRoutes = stitchedHdRoutes.flatMap((route) => {
       if (route.connectionName !== section.connectionName) return []
+
       const alignment = getEndpointAlignment({
         route,
         sectionStart,
         sectionEnd,
       })
+
       return alignment ? [{ route, ...alignment }] : []
     })
+
     alignedRoutes.sort((left, right) => left.score - right.score)
     const selectedRoute = alignedRoutes[0]
     const nextRoute = alignedRoutes[1]
+
     if (
       !selectedRoute ||
       (nextRoute &&
@@ -311,6 +348,7 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
         `Pipeline9 expected one nearest stitched route for changed preloaded section "${section.connectionName}", got ${alignedRoutes.length}`,
       )
     }
+
     const stitchedRoute = connectRouteToSectionEndpoints({
       route: selectedRoute.route,
       reverse: selectedRoute.reverse,

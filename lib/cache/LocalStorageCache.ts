@@ -31,14 +31,17 @@ export class LocalStorageCache implements CacheProvider {
     if (typeof localStorage === "undefined") return undefined
 
     const key = this.getKey(cacheKey)
+
     try {
       const cachedItem = localStorage.getItem(key)
+
       if (cachedItem !== null) {
         const solution = JSON.parse(cachedItem)
         this.cacheHits++
         const prefix = cacheKey.split(":")[0]
         this.cacheHitsByPrefix[prefix] =
           (this.cacheHitsByPrefix[prefix] || 0) + 1
+
         // console.log(`Cache hit (sync) for: ${cacheKey}`)
         return solution // No need for structuredClone, JSON parse creates a new object
       } else {
@@ -46,6 +49,7 @@ export class LocalStorageCache implements CacheProvider {
         const prefix = cacheKey.split(":")[0]
         this.cacheMissesByPrefix[prefix] =
           (this.cacheMissesByPrefix[prefix] || 0) + 1
+
         // console.log(`Cache miss (sync) for: ${cacheKey}`)
         return undefined
       }
@@ -55,6 +59,7 @@ export class LocalStorageCache implements CacheProvider {
       const prefix = cacheKey.split(":")[0]
       this.cacheMissesByPrefix[prefix] =
         (this.cacheMissesByPrefix[prefix] || 0) + 1
+
       // Optionally remove the corrupted item
       // localStorage.removeItem(key);
       return undefined
@@ -81,11 +86,13 @@ export class LocalStorageCache implements CacheProvider {
     if (typeof localStorage === "undefined") return
 
     const key = this.getKey(cacheKey)
+
     try {
       const stringifiedSolution = JSON.stringify(cachedSolution)
       localStorage.setItem(key, stringifiedSolution)
     } catch (error) {
       console.error(`Error setting cached solution sync for ${key}:`, error)
+
       // Handle potential storage quota errors
       if (
         error instanceof DOMException &&
@@ -123,12 +130,15 @@ export class LocalStorageCache implements CacheProvider {
 
     try {
       const keysToRemove: string[] = []
+
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
+
         if (key?.startsWith(CACHE_PREFIX)) {
           keysToRemove.push(key)
         }
       }
+
       keysToRemove.forEach((key) => localStorage.removeItem(key))
       console.log(
         `Cleared ${keysToRemove.length} items from LocalStorage cache.`,
@@ -145,12 +155,16 @@ export class LocalStorageCache implements CacheProvider {
 
   getAllCacheKeys(): string[] {
     const cacheKeys: string[] = []
+
     for (let i = 0; i < 10_000; i++) {
       const keyName = localStorage.key(i)
+
       if (!keyName) break
+
       if (!keyName.includes(CACHE_PREFIX)) continue
       cacheKeys.push(keyName)
     }
+
     return cacheKeys
   }
 }

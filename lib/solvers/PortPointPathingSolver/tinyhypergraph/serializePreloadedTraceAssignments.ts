@@ -2,10 +2,13 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 type SerializedPort = SerializedHyperGraph["ports"][number]
+
 type SerializedRegion = SerializedHyperGraph["regions"][number]
+
 type SerializedConnection = NonNullable<
   SerializedHyperGraph["connections"]
 >[number]
+
 type SerializedSolvedRoute = NonNullable<
   SerializedHyperGraph["solvedRoutes"]
 >[number]
@@ -49,12 +52,14 @@ export type SerializedPreloadedTraceStats = {
 }
 
 const PRELOADED_TRACE_CONNECTION_PREFIX = "__tscircuit_preloaded_trace__:"
+
 const ROUTE_POSITION_TOLERANCE = 1e-6
 
 export const hasPreloadedTraceSectionMetadata = (
   metadata: unknown,
 ): metadata is PreloadedTraceConnectionMetadata => {
   if (typeof metadata !== "object" || metadata === null) return false
+
   const candidate = metadata as {
     connectionId?: unknown
     preloadedTraceSection?: {
@@ -65,7 +70,9 @@ export const hasPreloadedTraceSectionMetadata = (
       endPoint?: { x?: unknown; y?: unknown; z?: unknown }
     }
   }
+
   const section = candidate.preloadedTraceSection
+
   return (
     typeof candidate.connectionId === "string" &&
     typeof section?.traceId === "string" &&
@@ -99,6 +106,7 @@ const getSharedRegionIds = (
   secondPort: SerializedPort,
 ) => {
   const secondRegionIds = new Set(getIncidentRegionIds(secondPort))
+
   return getIncidentRegionIds(firstPort).filter((regionId) =>
     secondRegionIds.has(regionId),
   )
@@ -112,15 +120,20 @@ const chooseAssignmentRegionId = (
   const from = orderedPorts[pairIndex]!
   const to = orderedPorts[pairIndex + 1]!
   const sharedRegionIds = getSharedRegionIds(from.port, to.port)
+
   if (sharedRegionIds.length === 0) return undefined
+
   if (sharedRegionIds.length === 1) return sharedRegionIds[0]
 
   const next = orderedPorts[pairIndex + 2]
+
   if (next) {
     const nextSharedRegionIds = new Set(getSharedRegionIds(to.port, next.port))
+
     const continuingRegionId = sharedRegionIds.find((regionId) =>
       nextSharedRegionIds.has(regionId),
     )
+
     if (continuingRegionId) return continuingRegionId
   }
 
@@ -148,12 +161,14 @@ export const serializePreloadedTraceAssignments = (
 ): SerializedPreloadedTraceStats => {
   const orderedPortsByTraceId = new Map<string, OrderedTracePort[]>()
   const fixedNetIdByTraceId = new Map<string, string>()
+
   const connectedRegionIds = new Set(
     (serializedHyperGraph.connections ?? []).flatMap((connection) => [
       connection.startRegionId,
       connection.endRegionId,
     ]),
   )
+
   const removedObstacleRegionIds = new Set(
     serializedHyperGraph.regions
       .filter((region) => {
@@ -163,6 +178,7 @@ export const serializePreloadedTraceAssignments = (
             : typeof region.d?.NetId === "number"
               ? region.d.NetId
               : undefined
+
         return (
           region.d?._containsObstacle === true &&
           (netId === undefined || netId === -1) &&
@@ -171,12 +187,15 @@ export const serializePreloadedTraceAssignments = (
       })
       .map((region) => region.regionId),
   )
+
   let preloadedPortCount = 0
 
   for (const port of serializedHyperGraph.ports) {
     const metadata = port.d as PortMetadataWithPreloadedAssignments | undefined
     const assignments = metadata?._preloadedTracePortAssignments ?? []
+
     if (assignments.length > 0) preloadedPortCount++
+
     if (
       removedObstacleRegionIds.has(port.region1Id) ||
       removedObstacleRegionIds.has(port.region2Id)
@@ -186,6 +205,7 @@ export const serializePreloadedTraceAssignments = (
 
     for (const assignment of assignments) {
       const existingFixedNetId = fixedNetIdByTraceId.get(assignment.traceId)
+
       if (
         existingFixedNetId !== undefined &&
         existingFixedNetId !== assignment.fixedNetId
@@ -194,6 +214,7 @@ export const serializePreloadedTraceAssignments = (
           `Preloaded trace "${assignment.traceId}" maps to multiple canonical nets`,
         )
       }
+
       fixedNetIdByTraceId.set(assignment.traceId, assignment.fixedNetId)
       const orderedPorts = orderedPortsByTraceId.get(assignment.traceId) ?? []
       orderedPorts.push({ port, assignment })
@@ -204,6 +225,7 @@ export const serializePreloadedTraceAssignments = (
   const regionById = new Map(
     serializedHyperGraph.regions.map((region) => [region.regionId, region]),
   )
+
   const connections = (serializedHyperGraph.connections ??= [])
   const solvedRoutes = (serializedHyperGraph.solvedRoutes ??= [])
   let preloadedTraceCount = 0
@@ -216,17 +238,21 @@ export const serializePreloadedTraceAssignments = (
         left.assignment.z - right.assignment.z ||
         left.port.portId.localeCompare(right.port.portId),
     )
+
     const orderedPorts = tracePorts.filter(
       ({ port }, index) =>
         index === 0 || port.portId !== tracePorts[index - 1]!.port.portId,
     )
+
     if (orderedPorts.length < 2) continue
 
     const segments: PreloadedAssignmentSegment[] = []
     let previousRegionId: string | undefined
+
     for (let pairIndex = 0; pairIndex < orderedPorts.length - 1; pairIndex++) {
       const from = orderedPorts[pairIndex]!
       const to = orderedPorts[pairIndex + 1]!
+
       if (
         from.assignment.z === to.assignment.z &&
         Math.abs(from.assignment.routePosition - to.assignment.routePosition) <=
@@ -235,22 +261,27 @@ export const serializePreloadedTraceAssignments = (
         previousRegionId = undefined
         continue
       }
+
       const regionId = chooseAssignmentRegionId(
         orderedPorts,
         pairIndex,
         previousRegionId,
       )
+
       if (!regionId) {
         previousRegionId = undefined
         continue
       }
+
       segments.push({ regionId, from, to })
       previousRegionId = regionId
     }
 
     const contiguousRuns: PreloadedAssignmentSegment[][] = []
+
     for (const segment of segments) {
       const currentRun = contiguousRuns.at(-1)
+
       if (
         !currentRun ||
         currentRun.at(-1)!.to.port.portId !== segment.from.port.portId
@@ -263,13 +294,16 @@ export const serializePreloadedTraceAssignments = (
 
     for (const [runIndex, run] of contiguousRuns.entries()) {
       const connectionId = getPreloadedTraceConnectionId(traceId, runIndex)
+
       for (const segment of run) {
         const region = regionById.get(segment.regionId)
+
         if (!region) {
           throw new Error(
             `Preloaded trace "${traceId}" references missing region "${segment.regionId}"`,
           )
         }
+
         region.assignments = [
           ...(region.assignments ?? []),
           {
@@ -285,6 +319,7 @@ export const serializePreloadedTraceAssignments = (
       const lastSegment = run.at(-1)!
       const firstPort = firstSegment.from.port
       const lastPort = lastSegment.to.port
+
       const connection: SerializedConnection &
         PreloadedTraceConnectionMetadata = {
         connectionId,
@@ -307,6 +342,7 @@ export const serializePreloadedTraceAssignments = (
           },
         } satisfies PreloadedTraceSectionMetadata,
       }
+
       connections.push(connection)
       solvedRoutes.push({
         requiredRip: false,
@@ -321,6 +357,7 @@ export const serializePreloadedTraceAssignments = (
         })),
       })
     }
+
     if (contiguousRuns.length > 0) {
       preloadedTraceCount++
     }
@@ -341,11 +378,13 @@ export const getSerializedPreloadedTraceStats = (
       .filter(hasPreloadedTraceSectionMetadata)
       .map((connection) => connection.connectionId),
   )
+
   const preloadedPortCount = serializedHyperGraph.ports.filter(
     (port) =>
       ((port.d as PortMetadataWithPreloadedAssignments | undefined)
         ?._preloadedTracePortAssignments?.length ?? 0) > 0,
   ).length
+
   const preloadedAssignmentCount = serializedHyperGraph.regions.reduce(
     (count, region: SerializedRegion) =>
       count +

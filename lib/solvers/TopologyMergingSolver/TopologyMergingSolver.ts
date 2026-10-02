@@ -48,6 +48,7 @@ export class TopologyMergingSolver extends BaseSolver {
 
     const { preparedNodes, preparedNodeBySourceKey } =
       prepareTopologyMergingInput(inputProblem)
+
     this.preparedNodes = preparedNodes
     this.preparedNodeBySourceKey = preparedNodeBySourceKey
     this.xCoordinates = getCanonicalCoordinates(
@@ -69,6 +70,7 @@ export class TopologyMergingSolver extends BaseSolver {
   override _step(): void {
     if (this.inputProblem.nodeGroups.length === 1) {
       this.completePassthroughTopology()
+
       return
     }
 
@@ -77,6 +79,7 @@ export class TopologyMergingSolver extends BaseSolver {
       this.currentXIndex += 1
       this.stats.processedXSlabCount = this.currentXIndex
       this.stats.atomicRegionCount = this.atomicRegions.length
+
       return
     }
 
@@ -84,6 +87,7 @@ export class TopologyMergingSolver extends BaseSolver {
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
+
     const compactedRegions = compactTopologyMergingRegions(topologyRegions)
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
@@ -113,7 +117,9 @@ export class TopologyMergingSolver extends BaseSolver {
 
   computeProgress(): number {
     const slabCount = Math.max(1, this.xCoordinates.length - 1)
+
     if (this.solved) return 1
+
     return Math.min(0.99, this.currentXIndex / slabCount)
   }
 
@@ -136,6 +142,7 @@ export class TopologyMergingSolver extends BaseSolver {
           rectMargin: 0.01,
           zOffset: 0.02,
         })
+
         return {
           ...rect,
           label: `${node.capacityMeshNodeId}\navailableZ: ${node.availableZ.join(",")}\ncomponent: ${node._isComponentTopologyNode ? "yes" : "no"}`,
@@ -151,6 +158,7 @@ export class TopologyMergingSolver extends BaseSolver {
   private completePassthroughTopology(): void {
     const passthroughGroup = this.inputProblem.nodeGroups[0]!
     this.outputNodes = passthroughGroup.nodes
+
     for (const node of this.outputNodes) {
       this.outputProvenance.groupIndexesByNodeId.set(
         node.capacityMeshNodeId,
@@ -160,6 +168,7 @@ export class TopologyMergingSolver extends BaseSolver {
         `${passthroughGroup.groupId}:${node.capacityMeshNodeId}`,
       ])
     }
+
     this.stats.processedXSlabCount = this.stats.xSlabCount
     this.stats.atomicRegionCount = 0
     this.stats.compactedRegionCount = 0
@@ -171,14 +180,17 @@ export class TopologyMergingSolver extends BaseSolver {
   private processCurrentXSlab(): void {
     const minX = this.xCoordinates[this.currentXIndex]!
     const maxX = this.xCoordinates[this.currentXIndex + 1]!
+
     if (maxX - minX <= TOPOLOGY_MERGING_EPSILON) return
 
     const x = (minX + maxX) / 2
+
     const nodesInXSlab = this.preparedNodes.filter(
       ({ bounds }) =>
         x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
         x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON,
     )
+
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
     )
@@ -186,12 +198,15 @@ export class TopologyMergingSolver extends BaseSolver {
     for (let yIndex = 0; yIndex < yCoordinates.length - 1; yIndex++) {
       const minY = yCoordinates[yIndex]!
       const maxY = yCoordinates[yIndex + 1]!
+
       if (maxY - minY <= TOPOLOGY_MERGING_EPSILON) continue
 
       const point = { x, y: (minY + maxY) / 2 }
+
       const coveringNodes = nodesInXSlab.filter(({ bounds }) =>
         doesBoundsContainPoint(bounds, point),
       )
+
       if (coveringNodes.length === 0) continue
 
       const layerTopologies = getLayerTopologiesForCoveredNodes({
@@ -199,6 +214,7 @@ export class TopologyMergingSolver extends BaseSolver {
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
       })
+
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
           bounds: { minX, maxX, minY, maxY },

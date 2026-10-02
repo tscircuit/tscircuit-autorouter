@@ -6,6 +6,7 @@ import type { ConnectionHg } from "./types"
 export const computeCostPerRegion = (region: Region) => {
   if (!region.assignments || region.assignments.length === 0) {
     if (region.d?.assignment) return 0
+
     return 1
   }
 
@@ -14,8 +15,10 @@ export const computeCostPerRegion = (region: Region) => {
     const region2PortPoint = assignment.regionPort2.d
     const connectionName = assignment.connection.connectionId
     const connection = assignment.connection as ConnectionHg
+
     const rootConnectionName =
       connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+
     return [
       {
         x: region1PortPoint.x,
@@ -33,10 +36,12 @@ export const computeCostPerRegion = (region: Region) => {
       },
     ]
   })
+
   const nodeWithPortPoints = {
     ...region.d,
     portPoints: existingPortPoints,
   }
+
   const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
 
   const pf = calculateNodeProbabilityOfFailure(
@@ -45,5 +50,6 @@ export const computeCostPerRegion = (region: Region) => {
     crossings.numEntryExitLayerChanges,
     crossings.numTransitionPairCrossings,
   )
+
   return pf
 }

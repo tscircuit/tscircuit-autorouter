@@ -42,14 +42,19 @@ const getPointToObstacleDistance = (
 ): number => {
   const rotationRadians =
     (-1 * (obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+
   const offsetX = point.x - obstacle.center.x
   const offsetY = point.y - obstacle.center.y
+
   const localX =
     offsetX * Math.cos(rotationRadians) - offsetY * Math.sin(rotationRadians)
+
   const localY =
     offsetX * Math.sin(rotationRadians) + offsetY * Math.cos(rotationRadians)
+
   const outsideX = Math.max(Math.abs(localX) - obstacle.width / 2, 0)
   const outsideY = Math.max(Math.abs(localY) - obstacle.height / 2, 0)
+
   return Math.hypot(outsideX, outsideY)
 }
 
@@ -58,6 +63,7 @@ const getObstacleZLayers = (
   layerCount: number,
 ): number[] => {
   const existingZLayers = obstacle.__zLayers ?? obstacle.zLayers
+
   if (existingZLayers) return existingZLayers
 
   return obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
@@ -73,6 +79,7 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   connMap: ConnectivityMap
 }): boolean => {
   if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
+
   if (!route.rootConnectionName) return false
 
   const routeNetId =
@@ -81,12 +88,14 @@ export const isPipeline9ObstacleConnectedToRoute = ({
     (connMap.netMap[route.rootConnectionName]
       ? route.rootConnectionName
       : undefined)
+
   if (!routeNetId) return false
 
   return obstacle.connectedTo.some((connectedId) => {
     const connectedNetId =
       connMap.getNetConnectedToId(connectedId) ??
       (connMap.netMap[connectedId] ? connectedId : undefined)
+
     return connectedNetId === routeNetId
   })
 }
@@ -112,18 +121,22 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     if (!movablePreloadedConnectionNames.has(route.connectionName)) {
       return false
     }
+
     const viaSpans = getPipeline9RouteCopperGeometry(route, {
       layerCount,
       allowBlindAndBuriedVias,
     }).viaSpans
+
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
         if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
           return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
+
         if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
           return false
         }
+
         return (
           getPointToObstacleDistance(via.center, obstacle) <
           via.diameter / 2 + viaToPadClearance
@@ -183,6 +196,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       movablePreloadedConnectionNames,
       viaToPadClearance,
     } = this.params
+
     if (
       !boardObstacles ||
       !movablePreloadedConnectionNames ||
@@ -190,6 +204,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     ) {
       return true
     }
+
     const hasViaConflict = hasPreloadedViaToBoardObstacleConflict({
       routes,
       movablePreloadedConnectionNames,
@@ -199,31 +214,40 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       viaToPadClearance,
     })
+
     if (hasViaConflict) {
       this.stats.preloadedViaCandidateRejectionCount =
         Number(this.stats.preloadedViaCandidateRejectionCount ?? 0) + 1
     }
+
     return !hasViaConflict
   }
 
   override _step(): void {
     if (this.phase === "route") {
       this.highDensitySolver.step()
+
       if (this.highDensitySolver.failed) {
         this.error = this.highDensitySolver.error
         this.failed = true
+
         return
       }
+
       if (!this.highDensitySolver.solved) return
+
       const routedCandidate = materializePipeline9HdRouteVias(
         this.highDensitySolver.routes,
       )
+
       if (!this.validateCandidateRoutes(routedCandidate)) {
         this.error =
           "Pipeline9 regional route output failed its candidate validator"
         this.failed = true
+
         return
       }
+
       this.forceImproveSolver = new HighDensityForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
@@ -233,26 +257,33 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       })
       this.activeSubSolver = this.forceImproveSolver
       this.phase = "improve"
+
       return
     }
 
     if (this.phase === "improve") {
       this.forceImproveSolver!.step()
+
       if (this.forceImproveSolver!.failed) {
         this.error = this.forceImproveSolver!.error
         this.failed = true
+
         return
       }
+
       if (!this.forceImproveSolver!.solved) return
       const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
+
       if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
         this.stats.forceImproveCandidateRejectionCount =
           Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
         this.error =
           "Pipeline9 regional force-improve output failed its candidate validator"
         this.failed = true
+
         return
       }
+
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: forceImprovedRoutes,
@@ -264,29 +295,37 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       })
       this.activeSubSolver = this.repairSolver
       this.phase = "repair"
+
       return
     }
 
     if (this.phase === "repair") {
       this.repairSolver!.step()
+
       if (this.repairSolver!.failed) {
         this.error = this.repairSolver!.error
         this.failed = true
+
         return
       }
+
       if (!this.repairSolver!.solved) return
       const repairedRoutes = this.repairSolver!.getOutput()
+
       if (!this.validateCandidateRoutes(repairedRoutes)) {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
         this.error =
           "Pipeline9 regional repair output failed its candidate validator"
         this.failed = true
+
         return
       }
+
       this.activeSubSolver = null
       this.phase = "done"
       this.solved = true
+
       return
     }
   }

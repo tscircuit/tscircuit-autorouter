@@ -23,6 +23,7 @@ export class DSU {
     if (this.parent[id] === id) {
       return id
     }
+
     return (this.parent[id] = this.find(this.parent[id]))
   }
 
@@ -32,6 +33,7 @@ export class DSU {
   union(id1: string, id2: string) {
     const root1 = this.find(id1)
     const root2 = this.find(id2)
+
     if (root1 !== root2) {
       this.parent[root2] = root1
     }
@@ -43,11 +45,13 @@ export class DSU {
   getGroup(id: string): string[] {
     const root = this.find(id)
     const group: string[] = []
+
     for (const memberId in this.parent) {
       if (this.find(memberId) === root) {
         group.push(memberId)
       }
     }
+
     return group
   }
 }

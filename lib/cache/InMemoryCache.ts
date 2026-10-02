@@ -21,10 +21,12 @@ export class InMemoryCache implements CacheProvider {
    */
   getCachedSolutionSync(cacheKey: string): any {
     const cachedSolution = this.cache.get(cacheKey)
+
     if (cachedSolution !== undefined) {
       this.cacheHits++
       const prefix = cacheKey.split(":")[0]
       this.cacheHitsByPrefix[prefix] = (this.cacheHitsByPrefix[prefix] || 0) + 1
+
       // Return a structured clone to prevent accidental modification of the cached object
       return structuredClone(cachedSolution)
     } else {
@@ -32,6 +34,7 @@ export class InMemoryCache implements CacheProvider {
       const prefix = cacheKey.split(":")[0]
       this.cacheMissesByPrefix[prefix] =
         (this.cacheMissesByPrefix[prefix] || 0) + 1
+
       return undefined
     }
   }

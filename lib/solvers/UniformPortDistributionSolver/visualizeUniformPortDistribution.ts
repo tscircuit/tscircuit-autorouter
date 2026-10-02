@@ -32,12 +32,14 @@ export const visualizeUniformPortDistribution = ({
   const rects: Rect[] = obstacles
     .filter((o) => !o.isCopperPour)
     .map((o) => ({ ...o, fill: "#ec000070" }))
+
   const points: Array<{ x: number; y: number; label?: string }> = []
   const lines: Line[] = []
 
   const portPointMap = new Map<string, { x: number; y: number }>()
   const portPointZMap = new Map<string, number>()
   const portPointOwnerPairMap = new Map<string, string>()
+
   const getPortPointPosition = (portPoint: {
     portPointId?: string
     x: number
@@ -51,6 +53,7 @@ export const visualizeUniformPortDistribution = ({
         }
       )
     }
+
     return { x: portPoint.x, y: portPoint.y }
   }
 
@@ -78,6 +81,7 @@ export const visualizeUniformPortDistribution = ({
 
   nodeWithPortPoints.forEach((element) => {
     const bounds = mapOfNodeIdToBounds.get(element.capacityMeshNodeId)
+
     if (bounds) {
       const centerX = (bounds.minX + bounds.maxX) / 2
       const centerY = (bounds.minY + bounds.maxY) / 2
@@ -96,6 +100,7 @@ export const visualizeUniformPortDistribution = ({
       if (!e.portPointId) return
       const posE = portPointMap.get(e.portPointId)!
       const zLayer = portPointZMap.get(e.portPointId) ?? 0
+
       const ownerPair =
         portPointOwnerPairMap.get(e.portPointId) ??
         `${element.capacityMeshNodeId}&${element.capacityMeshNodeId}`
@@ -109,6 +114,7 @@ export const visualizeUniformPortDistribution = ({
       if (!element.portPointsInPairs?.length) {
         element.portPoints.forEach((f) => {
           if (!f.portPointId || e === f) return
+
           if (e.connectionName === f.connectionName) {
             const posF = portPointMap.get(f.portPointId)!
             lines.push({
@@ -130,6 +136,7 @@ export const visualizeUniformPortDistribution = ({
 
   for (const ownerPairKey of ownerPairsToProcess) {
     const sharedEdge = mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+
     if (!sharedEdge) continue
     lines.push({
       points: [
@@ -145,6 +152,7 @@ export const visualizeUniformPortDistribution = ({
     const sharedEdge = mapOfOwnerPairToSharedEdge.get(
       currentOwnerPairBeingProcessed,
     )
+
     if (sharedEdge) {
       lines.push({
         points: [
@@ -172,5 +180,6 @@ export const visualizeUniformPortDistribution = ({
       strokeWidth: 0.006,
     })
   }
+
   return { rects, lines, points }
 }

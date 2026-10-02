@@ -18,12 +18,15 @@ export const createSegmentPointMap = (
   segmentIdToNodeIds: Map<SegmentId, CapacityMeshNodeId[]>,
 ): SegmentPointMapAndReverseMaps => {
   const segmentPointMap: SegmentPointMap = new Map()
+
   const nodeToSegmentPointMap: Map<CapacityMeshNodeId, SegmentPointId[]> =
     new Map()
+
   const segmentToSegmentPointMap: Map<SegmentId, SegmentPointId[]> = new Map()
 
   const segmentPoints: SegmentPoint[] = []
   let highestSegmentPointId = 0
+
   for (const segment of dedupedSegments) {
     for (const point of segment.assignedPoints!) {
       const sp = {
@@ -41,6 +44,7 @@ export const createSegmentPointMap = (
       }
 
       segmentPointMap.set(sp.segmentPointId, sp)
+
       for (const nodeId of sp.capacityMeshNodeIds) {
         nodeToSegmentPointMap.set(nodeId, [
           ...(nodeToSegmentPointMap.get(nodeId) ?? []),

@@ -30,6 +30,7 @@ export function computeSectionScore(
 
   for (const nodeWithPortPoints of nodesWithPortPoints) {
     const node = capacityMeshNodeMap.get(nodeWithPortPoints.capacityMeshNodeId)
+
     if (!node) continue
 
     // Skip target nodes (they don't contribute to failure)

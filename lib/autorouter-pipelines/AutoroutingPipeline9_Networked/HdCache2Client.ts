@@ -14,8 +14,11 @@ import type {
 } from "./pipeline9NetworkedTypes"
 
 export const DEFAULT_HD_CACHE2_SERVER_URL = "https://hd-cache2.tscircuit.com"
+
 export const HD_CACHE2_TRANSPORT_TIMEOUT_MS = 310_000
+
 export const HD_CACHE2_MAX_BATCH_ITEMS = 100
+
 export const HD_CACHE2_MAX_BATCH_BODY_BYTES = 1.75 * 1024 * 1024
 
 const MAX_RESPONSE_LINE_CHARACTERS = 16 * 1024 * 1024
@@ -99,6 +102,7 @@ const CIRCUIT_JSON_METADATA_KEYS = new Set([
 
 const isValidCircuitJsonMetadata = (value: unknown): boolean => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
+
   return Object.entries(value).every(
     ([key, metadataValue]) =>
       CIRCUIT_JSON_METADATA_KEYS.has(key) && typeof metadataValue === "string",
@@ -109,7 +113,9 @@ const nearlyEqual = (left: number, right: number): boolean =>
   Math.abs(left - right) <= 1e-9 * Math.max(1, Math.abs(left), Math.abs(right))
 
 const REGIONAL_TERMINAL_TOLERANCE_MM = 0.001
+
 const ORDINARY_VIA_POSITION_TOLERANCE_MM = 1e-6
+
 const REGIONAL_VIA_POSITION_TOLERANCE_MM = 0.001
 
 const hasValidRemoteLayerTransitions = (
@@ -120,48 +126,62 @@ const hasValidRemoteLayerTransitions = (
     solutionStage === "ordinary"
       ? ORDINARY_VIA_POSITION_TOLERANCE_MM
       : REGIONAL_VIA_POSITION_TOLERANCE_MM
+
   const usedViaIndexes = new Set<number>()
+
   for (let index = 0; index < route.route.length - 1; index++) {
     const start = route.route[index]!
     const end = route.route[index + 1]!
     const changesLayer = start.z !== end.z
+
     if (start.toNextSegmentType === "through_obstacle") {
       if (!changesLayer) return false
       continue
     }
+
     if (start.toNextSegmentCircuitJsonMetadata !== undefined) return false
+
     if (!changesLayer) continue
 
     const viaIndexesAtStart: number[] = []
     const viaIndexesAtEnd: number[] = []
+
     for (const [viaIndex, via] of route.vias.entries()) {
       if (
         Math.hypot(via.x - start.x, via.y - start.y) <= viaPositionTolerance
       ) {
         viaIndexesAtStart.push(viaIndex)
       }
+
       if (Math.hypot(via.x - end.x, via.y - end.y) <= viaPositionTolerance) {
         viaIndexesAtEnd.push(viaIndex)
       }
     }
+
     const transitionIsColocated =
       Math.hypot(start.x - end.x, start.y - end.y) <=
       ORDINARY_VIA_POSITION_TOLERANCE_MM
+
     if (transitionIsColocated) {
       if (viaIndexesAtStart.length === 0) return false
+
       for (const viaIndex of viaIndexesAtStart) usedViaIndexes.add(viaIndex)
       continue
     }
+
     if (solutionStage === "regional-fallback") return false
+
     if ((viaIndexesAtStart.length === 0) === (viaIndexesAtEnd.length === 0)) {
       return false
     }
+
     for (const viaIndex of [...viaIndexesAtStart, ...viaIndexesAtEnd]) {
       usedViaIndexes.add(viaIndex)
     }
   }
 
   const lastPoint = route.route.at(-1)!
+
   if (
     lastPoint.toNextSegmentType !== undefined ||
     lastPoint.toNextSegmentCircuitJsonMetadata !== undefined
@@ -177,19 +197,23 @@ const hasRegionalRouteCoverage = (
   node: NodeWithPortPoints,
 ): boolean => {
   type RouteEndpoint = { x: number; y: number; z: number }
+
   type RouteEdge = { start: RouteEndpoint; end: RouteEndpoint }
 
   const pointsTouch = (left: RouteEndpoint, right: RouteEndpoint): boolean => {
     if (left.z !== right.z) return false
     const deltaX = left.x - right.x
     const deltaY = left.y - right.y
+
     return Math.hypot(deltaX, deltaY) <= REGIONAL_TERMINAL_TOLERANCE_MM
   }
 
   const routeEdgesByConnection = new Map<string, RouteEdge[]>()
+
   for (const route of routes) {
     const hasNonzeroSegment = route.route.some((point, index) => {
       const nextPoint = route.route[index + 1]
+
       return (
         nextPoint !== undefined &&
         (!nearlyEqual(point.x, nextPoint.x) ||
@@ -197,12 +221,16 @@ const hasRegionalRouteCoverage = (
           point.z !== nextPoint.z)
       )
     })
+
     const start = route.route[0]
     const end = route.route.at(-1)
+
     if (!hasNonzeroSegment || !start || !end) return false
+
     const connectionPortPoints = node.portPoints.filter(
       (portPoint) => portPoint.connectionName === route.connectionName,
     )
+
     if (
       !connectionPortPoints.some((portPoint) =>
         pointsTouch(start, portPoint),
@@ -211,6 +239,7 @@ const hasRegionalRouteCoverage = (
     ) {
       return false
     }
+
     const edges = routeEdgesByConnection.get(route.connectionName) ?? []
     edges.push({ start, end })
     routeEdgesByConnection.set(route.connectionName, edges)
@@ -225,6 +254,7 @@ const hasRegionalRouteCoverage = (
     const edges = routeEdgesByConnection.get(connectionName) ?? []
     const pendingEdgeIndexes: number[] = []
     const visitedEdgeIndexes = new Set<number>()
+
     for (const [index, edge] of edges.entries()) {
       if (pointsTouch(start, edge.start) || pointsTouch(start, edge.end)) {
         pendingEdgeIndexes.push(index)
@@ -234,24 +264,30 @@ const hasRegionalRouteCoverage = (
 
     while (pendingEdgeIndexes.length > 0) {
       const edge = edges[pendingEdgeIndexes.pop()!]!
+
       if (pointsTouch(end, edge.start) || pointsTouch(end, edge.end))
         return true
+
       for (const [index, candidate] of edges.entries()) {
         if (visitedEdgeIndexes.has(index)) continue
+
         const connectsToEdge =
           pointsTouch(edge.start, candidate.start) ||
           pointsTouch(edge.start, candidate.end) ||
           pointsTouch(edge.end, candidate.start) ||
           pointsTouch(edge.end, candidate.end)
+
         if (!connectsToEdge) continue
         visitedEdgeIndexes.add(index)
         pendingEdgeIndexes.push(index)
       }
     }
+
     return false
   }
 
   const explicitPairs = node.portPointsInPairs ?? []
+
   if (explicitPairs.length > 0) {
     return explicitPairs.every(([start, end]) =>
       arePairEndpointsConnected(start.connectionName, start, end),
@@ -262,12 +298,15 @@ const hasRegionalRouteCoverage = (
     string,
     NodeWithPortPoints["portPoints"]
   >()
+
   for (const portPoint of node.portPoints) {
     const connectionPortPoints =
       portPointsByConnection.get(portPoint.connectionName) ?? []
+
     connectionPortPoints.push(portPoint)
     portPointsByConnection.set(portPoint.connectionName, connectionPortPoints)
   }
+
   return [...portPointsByConnection].every(([, connectionPortPoints]) =>
     getConnectionPortPointPairs(connectionPortPoints).every(([start, end]) =>
       arePairEndpointsConnected(start.connectionName, start, end),
@@ -286,22 +325,27 @@ const isValidRemoteRoutes = (
     string,
     NodeWithPortPoints["portPoints"]
   >()
+
   for (const portPoint of input.nodeWithPortPoints.portPoints) {
     const portPoints =
       portPointsByConnectionName.get(portPoint.connectionName) ?? []
+
     portPoints.push(portPoint)
     portPointsByConnectionName.set(portPoint.connectionName, portPoints)
   }
+
   const ordinaryAllowedZ = new Set(
     input.nodeWithPortPoints.availableZ ??
       input.nodeWithPortPoints.portPoints.map((portPoint) => portPoint.z),
   )
+
   const maximumRouteBounds = getMaximumPipeline9NodeBounds({
     nodeWithPortPoints: input.nodeWithPortPoints,
     obstacleMargin: input.obstacleMargin,
     traceWidth: input.traceWidth,
     viaDiameter: input.viaDiameter,
   })
+
   const isPortPointForConnection = (
     point: Record<string, unknown>,
     connectionName: string,
@@ -318,6 +362,7 @@ const isValidRemoteRoutes = (
   for (const routeValue of value) {
     if (!routeValue || typeof routeValue !== "object") return false
     const route = routeValue as Record<string, unknown>
+
     if (
       typeof route.connectionName !== "string" ||
       route.connectionName.length === 0 ||
@@ -350,6 +395,7 @@ const isValidRemoteRoutes = (
     for (const pointValue of route.route) {
       if (!pointValue || typeof pointValue !== "object") return false
       const point = pointValue as Record<string, unknown>
+
       if (
         typeof point.x !== "number" ||
         !Number.isFinite(point.x) ||
@@ -367,6 +413,7 @@ const isValidRemoteRoutes = (
       ) {
         return false
       }
+
       if (
         point.traceThickness !== undefined &&
         (typeof point.traceThickness !== "number" ||
@@ -375,24 +422,28 @@ const isValidRemoteRoutes = (
       ) {
         return false
       }
+
       if (
         point.pcb_port_id !== undefined &&
         typeof point.pcb_port_id !== "string"
       ) {
         return false
       }
+
       if (
         point.insideJumperPad !== undefined &&
         typeof point.insideJumperPad !== "boolean"
       ) {
         return false
       }
+
       if (
         point.toNextSegmentType !== undefined &&
         point.toNextSegmentType !== "through_obstacle"
       ) {
         return false
       }
+
       if (
         point.toNextSegmentCircuitJsonMetadata !== undefined &&
         !isValidCircuitJsonMetadata(point.toNextSegmentCircuitJsonMetadata)
@@ -402,6 +453,7 @@ const isValidRemoteRoutes = (
     }
 
     const routePoints = route.route as Record<string, unknown>[]
+
     if (
       solutionStage === "ordinary" &&
       (!isPortPointForConnection(routePoints[0]!, route.connectionName) ||
@@ -413,6 +465,7 @@ const isValidRemoteRoutes = (
     for (const viaValue of route.vias) {
       if (!viaValue || typeof viaValue !== "object") return false
       const via = viaValue as Record<string, unknown>
+
       if (
         typeof via.x !== "number" ||
         !Number.isFinite(via.x) ||
@@ -426,6 +479,7 @@ const isValidRemoteRoutes = (
         return false
       }
     }
+
     if (
       !hasValidRemoteLayerTransitions(
         route as unknown as HighDensityIntraNodeRoute,
@@ -437,11 +491,13 @@ const isValidRemoteRoutes = (
 
     if (route.jumpers !== undefined) {
       if (!Array.isArray(route.jumpers)) return false
+
       for (const jumperValue of route.jumpers) {
         if (!jumperValue || typeof jumperValue !== "object") return false
         const jumper = jumperValue as Record<string, unknown>
         const start = jumper.start as Record<string, unknown> | undefined
         const end = jumper.end as Record<string, unknown> | undefined
+
         if (
           jumper.route_type !== "jumper" ||
           (jumper.footprint !== "0603" &&
@@ -471,7 +527,9 @@ const isValidRemoteRoutes = (
       }
     }
   }
+
   const routes = value as HighDensityIntraNodeRoute[]
+
   return solutionStage === "ordinary"
     ? areNodePortPointPairsConnectedByRoutes(routes, input.nodeWithPortPoints)
     : hasRegionalRouteCoverage(routes, input.nodeWithPortPoints)
@@ -484,10 +542,13 @@ export const getHdCache2SolveUrl = (baseUrl: string): string =>
 
 export const getHdCache2SolveBatchUrl = (baseUrl: string): string => {
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "")
+
   if (/\/solve-batch$/.test(normalizedBaseUrl)) return normalizedBaseUrl
+
   if (/\/solve$/.test(normalizedBaseUrl)) {
     return normalizedBaseUrl.replace(/\/solve$/, "/solve-batch")
   }
+
   return `${normalizedBaseUrl}/solve-batch`
 }
 
@@ -512,9 +573,11 @@ export class HdCache2Client {
     options: HdCache2ClientOptions = {},
   ) {
     const { cacheVersion } = options
+
     if (cacheVersion !== undefined && cacheVersion.trim().length === 0) {
       throw new Error("hd-cache2 cacheVersion must not be empty")
     }
+
     this.cacheVersion = cacheVersion
   }
 
@@ -528,13 +591,16 @@ export class HdCache2Client {
     const pendingSolves = inputs.map((input, index) =>
       this.createPendingSolve(String(index), input),
     )
+
     const serializableSolves = pendingSolves.filter(
       (pending): pending is PendingSolve & { serializedItem: string } =>
         pending.serializedItem !== null,
     )
+
     const { batches, singletonSolves } = this.prepareBatches(serializableSolves)
 
     for (const batch of batches) void this.fetchBatch(batch)
+
     for (const pending of singletonSolves) this.launchSingleSolve(pending)
 
     return pendingSolves.map((pending) => pending.promise)
@@ -545,9 +611,11 @@ export class HdCache2Client {
     input: Pipeline9NetworkedHighDensityNodeInput,
   ): PendingSolve {
     let resolve!: (result: HdCache2SolveResult) => void
+
     const promise = new Promise<HdCache2SolveResult>((resolvePromise) => {
       resolve = resolvePromise
     })
+
     const pending: PendingSolve = {
       requestId,
       input,
@@ -557,6 +625,7 @@ export class HdCache2Client {
       settled: false,
       singleSolveStarted: false,
     }
+
     try {
       pending.serializedItem = JSON.stringify({ requestId, input })
     } catch (error) {
@@ -566,6 +635,7 @@ export class HdCache2Client {
         getErrorMessage(error),
       )
     }
+
     return pending
   }
 
@@ -595,6 +665,7 @@ export class HdCache2Client {
     }
 
     const response = value as Record<string, unknown>
+
     if (response.ok !== true) {
       throw new HdCache2RequestError(
         "remote_error",
@@ -603,24 +674,28 @@ export class HdCache2Client {
           : "hd-cache2 returned an unsuccessful response",
       )
     }
+
     if (response.autorouterVersion !== this.autorouterVersion) {
       throw new HdCache2RequestError(
         "version_mismatch",
         `hd-cache2 returned autorouter version ${String(response.autorouterVersion)}, expected ${this.autorouterVersion}`,
       )
     }
+
     if (response.cacheVersion !== this.cacheVersion) {
       throw new HdCache2RequestError(
         "cache_version_mismatch",
         `hd-cache2 returned cache version ${String(response.cacheVersion)}, expected ${String(this.cacheVersion)}`,
       )
     }
+
     if (response.source !== "cache" && response.source !== "solver") {
       throw new HdCache2RequestError(
         "invalid_response",
         "hd-cache2 returned an invalid cache source",
       )
     }
+
     if (
       response.solutionStage !== "ordinary" &&
       response.solutionStage !== "regional-fallback"
@@ -630,6 +705,7 @@ export class HdCache2Client {
         "hd-cache2 returned an invalid solution stage",
       )
     }
+
     if (
       response.solutionStage === "regional-fallback" &&
       (!input.enableRegionalFallback ||
@@ -641,6 +717,7 @@ export class HdCache2Client {
         "hd-cache2 returned invalid regional fallback metadata",
       )
     }
+
     if (
       response.solutionStage === "ordinary" &&
       Object.prototype.hasOwnProperty.call(response, "ordinaryFailure")
@@ -650,6 +727,7 @@ export class HdCache2Client {
         "hd-cache2 returned regional metadata on an ordinary result",
       )
     }
+
     if (
       response.solutionStage === "ordinary" &&
       response.status === "failed" &&
@@ -660,12 +738,14 @@ export class HdCache2Client {
         "hd-cache2 returned an intermediate ordinary failure",
       )
     }
+
     if (
       response.status === "solved" &&
       isValidRemoteRoutes(response.routes, input, response.solutionStage)
     ) {
       return response as Extract<Pipeline9NetworkedSolveResponse, { ok: true }>
     }
+
     if (
       response.status === "failed" &&
       typeof response.error === "string" &&
@@ -684,30 +764,35 @@ export class HdCache2Client {
     value: Record<string, unknown>,
   ): Pipeline9NetworkedSolveBatchCacheMiss | null {
     if (value.ok !== false || value.code !== "CACHE_MISS") return null
+
     if (value.autorouterVersion !== this.autorouterVersion) {
       throw new HdCache2RequestError(
         "version_mismatch",
         `hd-cache2 returned autorouter version ${String(value.autorouterVersion)}, expected ${this.autorouterVersion}`,
       )
     }
+
     if (value.cacheVersion !== this.cacheVersion) {
       throw new HdCache2RequestError(
         "cache_version_mismatch",
         `hd-cache2 returned cache version ${String(value.cacheVersion)}, expected ${String(this.cacheVersion)}`,
       )
     }
+
     if (typeof value.message !== "string") {
       throw new HdCache2RequestError(
         "invalid_response",
         "hd-cache2 returned an invalid cache miss response",
       )
     }
+
     return value as Pipeline9NetworkedSolveBatchCacheMiss
   }
 
   private async fetchSingle(pending: PendingSolve): Promise<void> {
     const controller = new AbortController()
     let didTransportTimeout = false
+
     const timeoutId = setTimeout(() => {
       didTransportTimeout = true
       controller.abort(
@@ -728,7 +813,9 @@ export class HdCache2Client {
           : { cacheVersion: this.cacheVersion }),
         input: pending.input,
       }
+
       let body: string
+
       try {
         body = JSON.stringify(request)
       } catch (error) {
@@ -737,6 +824,7 @@ export class HdCache2Client {
           getErrorMessage(error),
         )
       }
+
       const response = await fetch(getHdCache2SolveUrl(this.serverUrl), {
         method: "POST",
         headers: {
@@ -746,8 +834,10 @@ export class HdCache2Client {
         body,
         signal: controller.signal,
       })
+
       const responseText = await response.text()
       let responseBody: unknown = null
+
       try {
         responseBody = responseText ? JSON.parse(responseText) : null
       } catch {
@@ -757,11 +847,13 @@ export class HdCache2Client {
             `hd-cache2 request failed with status ${response.status}`,
           )
         }
+
         throw new HdCache2RequestError(
           "invalid_json",
           `hd-cache2 returned invalid JSON with status ${response.status}`,
         )
       }
+
       if (!response.ok) {
         const message =
           responseBody &&
@@ -770,8 +862,10 @@ export class HdCache2Client {
           typeof responseBody.message === "string"
             ? responseBody.message
             : `hd-cache2 request failed with status ${response.status}`
+
         throw new HdCache2RequestError("http_error", message)
       }
+
       this.settle(pending, {
         kind: "remote",
         response: this.parseSuccessfulResponse(responseBody, pending.input),
@@ -783,6 +877,7 @@ export class HdCache2Client {
           : didTransportTimeout
             ? "transport_timeout"
             : "transport_error"
+
       this.settleWithFallback(pending, reason, getErrorMessage(error))
     } finally {
       clearTimeout(timeoutId)
@@ -802,6 +897,7 @@ export class HdCache2Client {
     responseRequestIds: Set<string>,
   ): void {
     if (line.trim().length === 0) return
+
     if (line.length > MAX_RESPONSE_LINE_CHARACTERS) {
       throw new HdCache2RequestError(
         "response_too_large",
@@ -810,41 +906,56 @@ export class HdCache2Client {
     }
 
     let value: unknown
+
     try {
       value = JSON.parse(line)
     } catch {
       this.stats.batchInvalidLines += 1
+
       return
     }
+
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       this.stats.batchInvalidLines += 1
+
       return
     }
 
     const responseValue = value as Record<string, unknown>
     const requestId = responseValue.requestId
+
     if (typeof requestId !== "string") {
       this.stats.batchInvalidLines += 1
+
       return
     }
+
     const pending = itemsByRequestId.get(requestId)
+
     if (!pending) {
       this.stats.batchUnknownRequestIds += 1
+
       return
     }
+
     if (responseRequestIds.has(requestId)) {
       this.stats.batchDuplicateRequestIds += 1
+
       return
     }
+
     responseRequestIds.add(requestId)
 
     try {
       const cacheMiss = this.parseBatchCacheMiss(responseValue)
+
       if (cacheMiss) {
         this.stats.batchCacheMisses += 1
         this.launchSingleSolve(pending)
+
         return
       }
+
       this.settle(pending, {
         kind: "remote",
         response: this.parseSuccessfulResponse(responseValue, pending.input),
@@ -875,6 +986,7 @@ export class HdCache2Client {
     const itemsByRequestId = new Map(
       batch.items.map((item) => [item.requestId, item]),
     )
+
     const responseRequestIds = new Set<string>()
     const decoder = new TextDecoder()
     const reader = response.body.getReader()
@@ -883,6 +995,7 @@ export class HdCache2Client {
     while (responseRequestIds.size < batch.items.length) {
       const { done, value } = await reader.read()
       buffer += decoder.decode(value, { stream: !done })
+
       if (
         buffer.length > MAX_RESPONSE_LINE_CHARACTERS &&
         !buffer.includes("\n")
@@ -894,13 +1007,16 @@ export class HdCache2Client {
       }
 
       let newlineIndex = buffer.indexOf("\n")
+
       while (newlineIndex >= 0) {
         const line = buffer.slice(0, newlineIndex)
         buffer = buffer.slice(newlineIndex + 1)
         this.handleBatchResponseLine(line, itemsByRequestId, responseRequestIds)
         newlineIndex = buffer.indexOf("\n")
       }
+
       if (!done) continue
+
       if (buffer.trim().length > 0) {
         this.handleBatchResponseLine(
           buffer,
@@ -908,13 +1024,16 @@ export class HdCache2Client {
           responseRequestIds,
         )
       }
+
       break
     }
 
     if (responseRequestIds.size === batch.items.length) {
       await reader.cancel().catch(() => {})
+
       return
     }
+
     for (const pending of batch.items) {
       if (responseRequestIds.has(pending.requestId)) continue
       this.settleWithFallback(
@@ -928,6 +1047,7 @@ export class HdCache2Client {
   private async fetchBatch(batch: PreparedBatch): Promise<void> {
     const controller = new AbortController()
     let didTransportTimeout = false
+
     const timeoutId = setTimeout(() => {
       didTransportTimeout = true
       controller.abort(
@@ -958,11 +1078,14 @@ export class HdCache2Client {
         body: batch.body,
         signal: controller.signal,
       })
+
       if (!response.ok) {
         const responseText = await response.text().catch(() => "")
         let message = `hd-cache2 batch request failed with status ${response.status}`
+
         try {
           const responseBody = responseText ? JSON.parse(responseText) : null
+
           if (
             responseBody &&
             typeof responseBody === "object" &&
@@ -972,8 +1095,10 @@ export class HdCache2Client {
             message = responseBody.message
           }
         } catch {}
+
         throw new HdCache2RequestError("http_error", message)
       }
+
       await this.readBatchResponse(response, batch)
     } catch (error) {
       const reason =
@@ -982,6 +1107,7 @@ export class HdCache2Client {
           : didTransportTimeout
             ? "transport_timeout"
             : "transport_error"
+
       for (const pending of batch.items) {
         if (pending.singleSolveStarted) continue
         this.settleWithFallback(pending, reason, getErrorMessage(error))
@@ -999,10 +1125,12 @@ export class HdCache2Client {
     singletonSolves: PendingSolve[]
   } {
     const encoder = new TextEncoder()
+
     const cacheVersionField =
       this.cacheVersion === undefined
         ? ""
         : `,"cacheVersion":${JSON.stringify(this.cacheVersion)}`
+
     const prefix = `{"autorouterVersion":${JSON.stringify(this.autorouterVersion)}${cacheVersionField},"items":[`
     const suffix = "]}"
     const fixedBytes = encoder.encode(prefix + suffix).byteLength
@@ -1025,11 +1153,13 @@ export class HdCache2Client {
     for (const item of items) {
       const itemBytes = encoder.encode(item.serializedItem).byteLength
       const separatorBytes = currentItems.length === 0 ? 0 : 1
+
       if (fixedBytes + itemBytes > HD_CACHE2_MAX_BATCH_BODY_BYTES) {
         flushCurrentBatch()
         singletonSolves.push(item)
         continue
       }
+
       if (
         currentItems.length >= HD_CACHE2_MAX_BATCH_ITEMS ||
         currentBytes + separatorBytes + itemBytes >
@@ -1037,10 +1167,13 @@ export class HdCache2Client {
       ) {
         flushCurrentBatch()
       }
+
       currentItems.push(item)
       currentBytes += (currentItems.length === 1 ? 0 : 1) + itemBytes
     }
+
     flushCurrentBatch()
+
     return { batches, singletonSolves }
   }
 }

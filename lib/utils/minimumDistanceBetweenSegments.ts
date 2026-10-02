@@ -47,12 +47,14 @@ function pointToSegmentDistance(P: Point, Q1: Point, Q2: Point): number {
 
   // Calculate squared length of the segment
   const c1 = dotProduct(w, v)
+
   if (c1 <= 0) {
     // Point is behind Q1
     return distance(P, Q1)
   }
 
   const c2 = dotProduct(v, v)
+
   if (c2 <= c1) {
     // Point is beyond Q2
     return distance(P, Q2)
@@ -60,10 +62,12 @@ function pointToSegmentDistance(P: Point, Q1: Point, Q2: Point): number {
 
   // Point projects onto the segment
   const b = c1 / c2
+
   const Pb = {
     x: Q1.x + b * v.x,
     y: Q1.y + b * v.y,
   }
+
   return distance(P, Pb)
 }
 
@@ -83,5 +87,6 @@ function dotProduct(
 function distance(p1: Point, p2: Point): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
+
   return Math.sqrt(dx * dx + dy * dy)
 }

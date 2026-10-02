@@ -65,14 +65,17 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
   _step() {
     const obstacle = this.unprocessedObstacles.pop()
     this.lastProcessedObstacle = obstacle
+
     if (!obstacle) {
       this.solved = true
+
       return
     }
 
     const offBoardConnId = this.offBoardConnMap.getNetConnectedToId(
       obstacle.obstacleId!,
     )!
+
     const nodesNearObstacle = this.nodeTree
       .getNodesInArea(obstacle.center.x, obstacle.center.y, 0.01, 0.01)
       .filter((n) => n.availableZ.some((z) => obstacle.__zLayers?.includes(z)))
@@ -94,6 +97,7 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     for (const existingNode of existingNodesInNet) {
       existingNode._offBoardConnectedCapacityMeshNodeIds = allNodeIdsInNet
     }
+
     for (const newNode of nodesToAddToNet) {
       newNode._offBoardConnectedCapacityMeshNodeIds = allNodeIdsInNet
       newNode._offBoardConnectionId = offBoardConnId
@@ -122,6 +126,7 @@ export class RelateNodesToOffBoardConnectionsSolver extends BaseSolver {
     }
 
     const nodesLinkedToOffBoardConnections = new Set<CapacityMeshNodeId>()
+
     for (const [offBoardConnId, nodes] of this.nodesInNet) {
       for (const node of nodes) {
         nodesLinkedToOffBoardConnections.add(node.capacityMeshNodeId)
