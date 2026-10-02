@@ -29,11 +29,15 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
-type DrcError =
+// A readonly field view keeps Circuit JSON's discriminated union intact while
+// making it assignable to the repair API's Record<string, unknown> contract.
+// Native interfaces are open to declaration merging and lack that index signature.
+type DrcError = Readonly<
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+>
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 

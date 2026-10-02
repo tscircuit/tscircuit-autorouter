@@ -1,0 +1,386 @@
+{
+  "date": "2026-10-02",
+  "sourceCommitBefore": "705cfee7a78e66396cb7d1ebf4c3edbb85ab0733",
+  "bunVersion": "1.3.14",
+  "oxlintVersion": "1.86.0",
+  "command": "bun run lint:anti-slop --format json",
+  "before": {
+    "filesChecked": 453,
+    "warningsByRule": {
+      "anti-slop(no-chained-type-assertions)": 27,
+      "anti-slop(no-widen-then-assert)": 0,
+      "anti-slop(no-reduce-accumulator-copy)": 0,
+      "oxc(no-accumulating-spread)": 0
+    },
+    "errors": 0
+  },
+  "after": {
+    "filesChecked": 453,
+    "warningsByRule": {
+      "anti-slop(no-chained-type-assertions)": 7,
+      "anti-slop(no-widen-then-assert)": 0,
+      "anti-slop(no-reduce-accumulator-copy)": 0,
+      "oxc(no-accumulating-spread)": 0
+    },
+    "errors": 0
+  },
+  "fixedWarnings": 20,
+  "retainedWarnings": 7,
+  "falsePositives": 0,
+  "lintConfigUnchanged": true,
+  "verification": {
+    "focusedTests": {
+      "passed": 15,
+      "failed": 0,
+      "assertions": 111,
+      "files": 11
+    },
+    "cliIntegration": {
+      "passed": 3,
+      "failed": 0,
+      "assertions": 60
+    },
+    "typecheck": "passed",
+    "toolingTypecheck": "passed",
+    "format": "passed",
+    "build": "passed",
+    "originalSnapshotsUnchanged": true,
+    "productionTranspilation": {
+      "baselineCommit": "705cfee7a78e66396cb7d1ebf4c3edbb85ab0733",
+      "options": {
+        "loader": "ts",
+        "minifyWhitespace": true,
+        "trimUnusedImports": true
+      },
+      "files": [
+        {
+          "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getEveryPossibleOrdering.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
+          "identical": true
+        },
+        {
+          "file": "lib/testing/getDrcErrors.ts",
+          "identical": true
+        }
+      ]
+    }
+  },
+  "findings": [
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+      "beforeLine": 328,
+      "beforeColumn": 28,
+      "beforeExpression": "this.fanoutSolver as unknown as BaseSolver",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "unnecessary-compatible-solver-assertion",
+      "action": "fixed",
+      "rationale": "The installed FanoutSolver satisfies the external BaseSolver contract directly; the normal typecheck verifies the assignment.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+      "beforeLine": 380,
+      "beforeColumn": 28,
+      "beforeExpression": "this\n      .autoroutingPipelineSolver as unknown as BaseSolver",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "external-solver-contract-mismatch",
+      "action": "retained-visible",
+      "rationale": "The child lacks external BaseSolver _setupDone/setup/_setup/getOutput members. Its stage explicitly drives the concrete solver, but the active pointer claims the broader contract. Unifying lifecycle types requires separate design; do not hide the mismatch with an artificial wrapper or wider parent type.",
+      "afterLine": 380
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/TraceSimplificationStageSolver.ts",
+      "beforeLine": 43,
+      "beforeColumn": 28,
+      "beforeExpression": "this\n      .traceSimplificationSolver as unknown as BaseSolver",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "external-solver-contract-mismatch",
+      "action": "retained-visible",
+      "rationale": "The child lacks external BaseSolver _setupDone/setup/_setup/getOutput members. Its stage explicitly drives the concrete solver, but the active pointer claims the broader contract. Unifying lifecycle types requires separate design; do not hide the mismatch with an artificial wrapper or wider parent type.",
+      "afterLine": 43
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+      "beforeLine": 33,
+      "beforeColumn": 15,
+      "beforeExpression": "errors as unknown as Record<string, unknown>[]",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+      "beforeLine": 34,
+      "beforeColumn": 26,
+      "beforeExpression": "errorsWithCenters as unknown as Record<\n        string,\n        unknown\n      >[]",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver.ts",
+      "beforeLine": 20,
+      "beforeColumn": 7,
+      "beforeExpression": "inputSrj as unknown as PowerTraceExpanderInput",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "legitimate-schema-dependency-mismatch",
+      "action": "retained-visible",
+      "rationale": "The external expander requires a point.layer. The local schema legitimately permits multilayer points with layers and forbids simultaneous layer. Do not alter geometry/schema fields or choose an arbitrary layer merely to silence lint; the dependency contract remains unresolved.",
+      "afterLine": 20
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input.ts",
+      "beforeLine": 103,
+      "beforeColumn": 61,
+      "beforeExpression": "{\n    ...originalSrj,\n    traces: [...resolverNewlyRoutedTraces, ...preloadedTraces],\n  } as unknown as PowerTraceExpanderInput",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "legitimate-schema-dependency-mismatch",
+      "action": "retained-visible",
+      "rationale": "Same multilayer input mismatch. ConnectionNameResolver currently uses logical point/port identity; physical-position aliases that consume layer data are opt-in and disabled by this caller. A shared narrow dependency contract is preferable to duplicating schema conversion.",
+      "afterLine": 103
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client.ts",
+      "beforeLine": 431,
+      "beforeColumn": 9,
+      "beforeExpression": "route as unknown as HighDensityIntraNodeRoute",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "validated-remote-subset-boundary",
+      "action": "retained-visible",
+      "rationale": "All route/via fields consumed by hasValidRemoteLayerTransitions are validated before the call, but jumpers are validated afterward, so the full asserted route type overstates what is established. A typed subset refinement should preserve remote rejection behavior and deserves a focused follow-up.",
+      "afterLine": 431
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+      "beforeLine": 45,
+      "beforeColumn": 17,
+      "beforeExpression": "errors as unknown as Record<string, unknown>[]",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+      "beforeLine": 50,
+      "beforeColumn": 17,
+      "beforeExpression": "errorsWithCenters as unknown as Record<string, unknown>[]",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 738,
+      "beforeColumn": 15,
+      "beforeExpression": "baselineDrc.errors as unknown as Array<Record<string, unknown>>",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 743,
+      "beforeColumn": 15,
+      "beforeExpression": "baselineDrc.errorsWithCenters as unknown as Array<\n        Record<string, unknown>\n      >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 763,
+      "beforeColumn": 15,
+      "beforeExpression": "currentDrcResult.errors as unknown as Array<\n        Record<string, unknown>\n      >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 770,
+      "beforeColumn": 15,
+      "beforeExpression": "currentDrcResult.errorsWithCenters as unknown as Array<\n        Record<string, unknown>\n      >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 792,
+      "beforeColumn": 15,
+      "beforeExpression": "currentDrc.errors as unknown as Array<Record<string, unknown>>",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 819,
+      "beforeColumn": 26,
+      "beforeExpression": "currentDrc.errorsWithCenters as unknown as Array<\n        Record<string, unknown>\n      >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 915,
+      "beforeColumn": 15,
+      "beforeExpression": "currentDrc.errors as unknown as Array<Record<string, unknown>>",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1246,
+      "beforeColumn": 17,
+      "beforeExpression": "evaluatedDrc.errors as unknown as Array<\n          Record<string, unknown>\n        >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1253,
+      "beforeColumn": 17,
+      "beforeExpression": "evaluatedDrc.errorsWithCenters as unknown as Array<\n          Record<string, unknown>\n        >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1384,
+      "beforeColumn": 17,
+      "beforeExpression": "evaluatedDrc.errors as unknown as Array<\n          Record<string, unknown>\n        >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1391,
+      "beforeColumn": 17,
+      "beforeExpression": "evaluatedDrc.errorsWithCenters as unknown as Array<\n          Record<string, unknown>\n        >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1399,
+      "beforeColumn": 25,
+      "beforeExpression": "autoroutingBaselineDrc.errors as unknown as Array<\n          Record<string, unknown>\n        >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "beforeLine": 1409,
+      "beforeColumn": 13,
+      "beforeExpression": "autoroutingBaselineDrc.errorsWithCenters as unknown as Array<\n              Record<string, unknown>\n            >",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "native-interface-record-boundary",
+      "action": "fixed",
+      "rationale": "Use the producer's shallow Readonly mapped discriminated union, which preserves required native fields and permits direct assignment to the record-based repair API. Remove the chained assertion without runtime cloning or broadening the producer to arbitrary records.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/constructMiddlePointsWithViaPositions.ts",
+      "beforeLine": 71,
+      "beforeColumn": 10,
+      "beforeExpression": "middlePoints as unknown as MHPoint2[]",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "geometry-initialization-invariant",
+      "action": "retained-visible",
+      "rationale": "Via placement and interpolation fill every nullable slot before return, an invariant TypeScript does not prove. A validation/copy pass adds per-candidate work; a typed sparse array hides the same invariant. Keep the existing warning and candidate algorithm.",
+      "afterLine": 71
+    },
+    {
+      "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getEveryPossibleOrdering.ts",
+      "beforeLine": 3,
+      "beforeColumn": 13,
+      "beforeExpression": "[] as unknown as T",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "inaccurate-array-subtype-generic",
+      "action": "fixed",
+      "rationale": "Reordering and recursive shortening cannot preserve arbitrary tuple positions or array subtypes. An element generic accepts readonly inputs and returns T[][] while preserving runtime enumeration, duplicate candidates and references.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
+      "beforeLine": 843,
+      "beforeColumn": 12,
+      "beforeExpression": "new HyperPortPointPathingSolver({\n      simpleRouteJson: sectionSrj,\n      inputNodes: preparedInputNodes,\n      capacityMeshNodes: section.capacityMeshNodes,\n      colorMap: this.colorMap,\n      nodeMemoryPfMap: this.nodePfMap,\n      numShuffleSeeds:\n        this.SHUFFLE_SEEDS_PER_SECTION ??\n        sectionSrj.connections.length * 2 * this.effort,\n      hyperParameters: {\n        ...this.getHyperParametersForScheduleIndex(\n          this.currentScheduleIndex,\n          this.sectionAttempts,\n        ),\n      },\n      precomputedInitialParams: precomputedParams,\n      fixedRoutes: this.currentSectionFixedRoutes,\n    }) as unknown as PortPointPathingSolver",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "inaccurate-solver-class",
+      "action": "fixed",
+      "rationale": "The factory constructs HyperPortPointPathingSolver. Declare that actual supervisor type for its return and activeSubSolver rather than asserting the different child PortPointPathingSolver class.",
+      "afterLine": null
+    },
+    {
+      "file": "lib/testing/CapacityNodeEditor.tsx",
+      "beforeLine": 611,
+      "beforeColumn": 30,
+      "beforeExpression": " unknown as React.MouseEvent<SVGSVGElement>)\n  ",
+      "rule": "anti-slop(no-chained-type-assertions)",
+      "category": "unsafe-keyboard-to-mouse-event",
+      "action": "retained-visible",
+      "rationale": "A keyboard event has no clientX/clientY, yet placement branches read them and can create invalid coordinates. A keyboard placement/focus behavior decision is needed. Widening the handler signature would conceal the bug rather than fix it.",
+      "afterLine": 611
+    }
+  ]
+}
