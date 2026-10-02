@@ -1,3 +1,4 @@
+import { getObstaclesWithUniqueNetConnections } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "../BaseSolver"
 import {
   distance,
@@ -119,10 +120,16 @@ export class TraceWidthSolver extends BaseSolver {
     this.connMap = input.connMap
     this.colorMap = input.colorMap
     const inferredLayerCount = input.layerCount
-    this.obstacles = createObjectsWithZLayers(
+    const obstacles = createObjectsWithZLayers(
       input.obstacles ?? [],
       inferredLayerCount,
     )
+    this.obstacles = input.connMap
+      ? getObstaclesWithUniqueNetConnections({
+          obstacles,
+          connMap: input.connMap,
+        })
+      : obstacles
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {

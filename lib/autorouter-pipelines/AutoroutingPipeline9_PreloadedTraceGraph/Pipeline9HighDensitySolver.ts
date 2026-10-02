@@ -6,6 +6,7 @@ import {
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
+import { getObstaclesWithUniqueNetConnections } from "@tscircuit/trace-simplification-solver"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -412,7 +413,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
-    this.obstacles = params.obstacles
+    this.obstacles = getObstaclesWithUniqueNetConnections({
+      obstacles: params.obstacles,
+      connMap: params.connMap,
+    })
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false

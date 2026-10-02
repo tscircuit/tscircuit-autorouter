@@ -1,3 +1,4 @@
+import { getObstaclesWithUniqueNetConnections } from "@tscircuit/trace-simplification-solver"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRepairSolver } from "high-density-repair02"
@@ -235,10 +236,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
-    this.obstacleSHI = new ObstacleSpatialHashIndex(
-      "flatbush",
-      this.originalObstacles,
-    )
+    const obstacles = params.connMap
+      ? getObstaclesWithUniqueNetConnections({
+          obstacles: params.obstacles,
+          connMap: params.connMap,
+        })
+      : params.obstacles
+    this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", obstacles)
     this.colorMap = params.colorMap ?? {}
     this.connMap = params.connMap
 
@@ -247,7 +251,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       if (
         isSameNetMultilayerObstacleRoute(
           params.hdRoutes[i],
-          params.obstacles,
+          obstacles,
           params.connMap,
         )
       ) {
@@ -265,7 +269,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     }
 
     const layeredObstacles = createObjectsWithZLayers(
-      params.obstacles,
+      obstacles,
       Math.max(
         2,
         ...params.nodeWithPortPoints.flatMap(
