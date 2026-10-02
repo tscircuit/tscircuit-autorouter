@@ -66,7 +66,7 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
                 cms.portPointPathingSolver?.getOutput()
                   .inputNodeWithPortPoints ?? []
               ).map((node) => [
-                node.capacityMeshNodeId as CapacityMeshNodeId,
+                node.capacityMeshNodeId,
                 cms.portPointPathingSolver?.computeNodePf(node) ?? null,
               ]),
             ) as Map<CapacityMeshNodeId, number | null>,

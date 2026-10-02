@@ -86,7 +86,7 @@ export class SplitNodesIntoSingleLayerNodeSolver extends BaseSolver {
     return uniqueSorted(portPoint.availableZ).flatMap((z) => {
       const nodeIds = portPoint.nodeIds.map((nodeId) =>
         this.getSplitNodeId(nodeId, z),
-      ) as Array<CapacityMeshNodeId | undefined>
+      )
 
       if (!nodeIds[0] || !nodeIds[1]) {
         return []

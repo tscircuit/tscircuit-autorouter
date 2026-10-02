@@ -135,7 +135,7 @@ const getPolygonFromMetadata = (metadata: unknown) => {
         typeof (point as { y?: unknown }).y === "number",
     )
   ) {
-    return polygon as Array<{ x: number; y: number }>
+    return polygon
   }
 
   return undefined

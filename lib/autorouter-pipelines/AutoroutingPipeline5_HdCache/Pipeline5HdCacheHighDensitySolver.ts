@@ -332,9 +332,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.hdCacheBaseUrl = hdCacheBaseUrl ?? DEFAULT_HD_CACHE_BASE_URL
-    this.fetchImpl = (fetchImpl ?? globalThis.fetch).bind(
-      globalThis,
-    ) as typeof fetch
+    this.fetchImpl = (fetchImpl ?? globalThis.fetch).bind(globalThis)
     this.nodePfById =
       nodePfById instanceof Map
         ? new Map(nodePfById)

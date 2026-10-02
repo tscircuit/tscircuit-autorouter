@@ -69,7 +69,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   override computeH(candidate: CandidateHg): number {
-    const hgCandidate = candidate as CandidateHg
+    const hgCandidate = candidate
     const distanceTraveled = this.computeDistanceTraveled(hgCandidate)
 
     if (

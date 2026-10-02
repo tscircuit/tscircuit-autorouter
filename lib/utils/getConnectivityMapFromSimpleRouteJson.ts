@@ -33,7 +33,7 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
       ])
 
       if ("pcb_port_id" in point && point.pcb_port_id) {
-        connMap.addConnections([[connection.name, point.pcb_port_id as string]])
+        connMap.addConnections([[connection.name, point.pcb_port_id]])
       }
 
       if (point.pointId) {

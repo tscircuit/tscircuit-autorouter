@@ -33,7 +33,7 @@ export class AssignableViaCapacityPathingSolver_PenalizeNonVia extends CapacityP
     this.connectionsWithNodes = cloneAndShuffleArray(
       this.connectionsWithNodes,
       seed,
-    ) as typeof this.connectionsWithNodes
+    )
   }
 
   getTotalCapacity(node: CapacityMeshNode): number {
