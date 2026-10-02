@@ -8,7 +8,7 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "**/*.json"]
+    "ignore": ["cosmos-export", "dist", "**/*.json", "tools/oxlint/anti-slop"]
   },
   "javascript": {
     "formatter": {
