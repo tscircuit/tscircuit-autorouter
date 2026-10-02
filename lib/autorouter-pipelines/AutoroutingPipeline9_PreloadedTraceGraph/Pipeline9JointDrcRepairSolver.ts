@@ -212,15 +212,18 @@ export const addAutoroutingViaTraceIds = ({
         allTraceIds.indexOf(traceId) === traceIndex,
     )
 
-    return {
-      ...error,
-      ...(viaIds.length > 0
-        ? { pcb_via_id: viaIds[0], pcb_via_ids: viaIds }
-        : {}),
-      ...(viaIds.length > 0 && traceIds.length > 0
-        ? { pcb_trace_ids: traceIds }
-        : {}),
+    const enriched = { ...error }
+
+    if (viaIds.length > 0) {
+      enriched.pcb_via_id = viaIds[0]
+      enriched.pcb_via_ids = viaIds
     }
+
+    if (viaIds.length > 0 && traceIds.length > 0) {
+      enriched.pcb_trace_ids = traceIds
+    }
+
+    return enriched
   })
 }
 
@@ -573,23 +576,25 @@ export const remapDrcTraceIds = (
 
     if (!remappingChangesIdentity) return error
 
-    return {
-      ...error,
-      ...(primaryEvaluationTraceId
-        ? { pcb_trace_id: primarySolverTraceId }
-        : {}),
-      ...(Array.isArray(error.pcb_trace_ids)
-        ? { pcb_trace_ids: explicitSolverTraceIds }
-        : {}),
-      ...(primarySolverTraceId && encodedOtherSolverTraceId
-        ? {
-            pcb_trace_error_id: `overlap_${primarySolverTraceId}_${encodedOtherSolverTraceId}`,
-          }
-        : {}),
-      ...(collapsedTraceParticipants.length > 0
-        ? { __collapsed_trace_participants: collapsedTraceParticipants }
-        : {}),
+    const remapped = { ...error }
+
+    if (primaryEvaluationTraceId) {
+      remapped.pcb_trace_id = primarySolverTraceId
     }
+
+    if (Array.isArray(error.pcb_trace_ids)) {
+      remapped.pcb_trace_ids = explicitSolverTraceIds
+    }
+
+    if (primarySolverTraceId && encodedOtherSolverTraceId) {
+      remapped.pcb_trace_error_id = `overlap_${primarySolverTraceId}_${encodedOtherSolverTraceId}`
+    }
+
+    if (collapsedTraceParticipants.length > 0) {
+      remapped.__collapsed_trace_participants = collapsedTraceParticipants
+    }
+
+    return remapped
   })
 
 const createSyntheticConnection = (
