@@ -103,6 +103,16 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
   expect(denseBudget.maxCandidateAttemptsPerRegion).toBe(512)
   expect(denseBudget.maxCandidateAttempts).toBe(4096)
   expect(denseBudget.maxPathSearchNodes).toBe(40000000)
+  expect(getPipeline9BoundedRepairBudget(238, 199, 1)).toEqual({
+    maxRegions: 8,
+    maxCandidateAttempts: 1032,
+    maxCandidateAttemptsPerRegion: 258,
+    maxPathSearchNodes: 5042016,
+    maxPathSearchNodesPerCall: 500000,
+    pathGridSizeScale: 2,
+    pathHeuristicWeight: 3,
+    revisitChangedRegions: true,
+  })
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)

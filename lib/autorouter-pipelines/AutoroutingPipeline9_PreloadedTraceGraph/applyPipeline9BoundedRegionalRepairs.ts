@@ -52,21 +52,36 @@ export const getPipeline9BoundedRepairBudget = (
   revisitChangedRegions?: boolean
   regionSizes?: readonly number[]
 } => {
-  // Congested boards need coupled path search after the local force repairs.
-  // A regional queue grows with the number of routes. Shrinking its call
-  // allowance on large boards can stop before even two regions are repaired.
-  // Cap total growth and each path separately to retain bounded search work.
+  // Expand the search for the largest congested boards. Their regional queue
+  // outgrows an inverse route-count allowance, but applying the same expansion
+  // to medium boards spends excessive work on infeasible path searches.
   const congested = drcIssueCount >= 10 && routeCount > 120
+  const expanded = congested && routeCount * Math.max(1, effort) >= 480
+  if (expanded) {
+    return {
+      maxRegions: 24,
+      maxCandidateAttempts:
+        PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * 4,
+      maxPathSearchNodes: 40_000_000,
+      maxCandidateAttemptsPerRegion: 512,
+      maxPathSearchNodesPerCall: 1_000_000,
+      pathGridSizeScale: 2,
+      pathHeuristicWeight: 3,
+      revisitChangedRegions: true,
+      regionSizes: [16, 32],
+    }
+  }
   const scale = congested
-    ? Math.min(4, (routeCount * Math.max(1, effort)) / 120)
+    ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
     : 1
+  const coarseGrid = congested && drcIssueCount > routeCount / 4
   const maxCandidateAttempts = Math.max(
     1,
     Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
   )
   return {
-    maxRegions: congested ? 24 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
-    maxCandidateAttempts,
+    maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
+    maxCandidateAttempts: maxCandidateAttempts * (coarseGrid ? 2 : 1),
     maxPathSearchNodes: Math.max(
       1,
       Math.floor(
@@ -75,14 +90,17 @@ export const getPipeline9BoundedRepairBudget = (
           : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes,
       ),
     ),
+    ...(coarseGrid
+      ? {
+          maxCandidateAttemptsPerRegion: Math.ceil(maxCandidateAttempts / 2),
+          pathGridSizeScale: 2,
+        }
+      : {}),
     ...(congested
       ? {
-          maxCandidateAttemptsPerRegion: 512,
-          maxPathSearchNodesPerCall: 1_000_000,
-          pathGridSizeScale: 2,
-          pathHeuristicWeight: 3,
+          maxPathSearchNodesPerCall: 500_000,
+          pathHeuristicWeight: drcIssueCount > routeCount / 4 ? 3 : 2,
           revisitChangedRegions: true,
-          regionSizes: [16, 32],
         }
       : {}),
   }
