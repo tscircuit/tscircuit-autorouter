@@ -316,11 +316,6 @@ const getTinyHyperGraphPipelineInput = (
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
-  // Past the partial-rip limit, another improvement round can only reroute the
-  // entire graph. Keep the first complete route set instead of exhausting the
-  // iteration budget after a valid solution has already been found.
-  const acceptFirstCompleteRouteSet =
-    enablePartialRip && eligibilityCount > maxPartialRipRouteCount
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
@@ -335,9 +330,6 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: false,
-            ...(acceptFirstCompleteRouteSet
-              ? { RIP_THRESHOLD_RAMP_ATTEMPTS: 0 }
-              : {}),
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
@@ -1370,8 +1362,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   getSolveGraphBenchmarkMetrics() {
-    const solveGraphSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+    const solveGraphSolver = this.getSolveGraphSolver()
     if (!solveGraphSolver) return undefined
 
     const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
@@ -1433,6 +1424,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
     }
+  }
+
+  getSolveGraphSolver(): TinyHyperGraphSolver | undefined {
+    return this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
   }
 
   _step() {

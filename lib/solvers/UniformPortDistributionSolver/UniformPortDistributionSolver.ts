@@ -53,7 +53,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
-  readonly inputNodeById = new Map<CapacityMeshNodeId, InputNodeWithPortPoints>()
+  readonly inputNodeById = new Map<
+    CapacityMeshNodeId,
+    InputNodeWithPortPoints
+  >()
   readonly inputPortPointByNodeId = new Map<
     CapacityMeshNodeId,
     Map<PortPointId, InputPortPoint>
@@ -90,10 +93,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
             portPointById.set(portPoint.portPointId, portPoint)
           }
         }
-        this.inputPortPointByNodeId.set(
-          node.capacityMeshNodeId,
-          portPointById,
-        )
+        this.inputPortPointByNodeId.set(node.capacityMeshNodeId, portPointById)
       }
       for (const portPoint of node.portPoints) {
         if (!connectionNodeIdsByPortPointId.has(portPoint.portPointId)) {

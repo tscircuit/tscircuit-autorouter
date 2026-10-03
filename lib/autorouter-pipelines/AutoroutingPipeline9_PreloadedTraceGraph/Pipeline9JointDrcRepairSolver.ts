@@ -1040,7 +1040,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       {
         connMap: params.connMap,
         connectivityMapIsImmutable: true,
-        cacheStaticObstacleNetMembership: true,
         cacheImmutableTraceGeometry: true,
         traceClearance,
         viaClearance,
