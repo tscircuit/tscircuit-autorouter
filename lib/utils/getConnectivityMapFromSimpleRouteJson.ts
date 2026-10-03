@@ -1,13 +1,13 @@
 import { getConnectionPointLayers } from "./connection-point-utils"
 import { SimpleRouteJson } from "lib/types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { IndexedConnectivityMap } from "./IndexedConnectivityMap"
 import { mapLayerNameToZ } from "./mapLayerNameToZ"
 
 const pointHash = (point: { x: number; y: number }) =>
   `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
 
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
-  const connMap = new ConnectivityMap({})
+  const connMap = new IndexedConnectivityMap({})
   for (const connection of srj.connections) {
     for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
       connMap.addConnections([[connection.name, rootConnectionName]])
