@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -32,15 +33,38 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )
   expect(errors).toHaveLength(0)
+  const declaredDrc = evaluateRelaxedDrc({
+    ...drcInput,
+    includeBoardClearance: true,
+    drcOptions: {
+      traceClearance: srj.minTraceToPadEdgeClearance,
+      viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
+    },
+  })
+  if (declaredDrc.errors.length > 0) {
+    writeFileSync(
+      new URL(
+        "./__snapshots__/bugreport107-declared-drc.received.json",
+        import.meta.url,
+      ),
+      JSON.stringify(
+        {
+          input: srj,
+          pointPairs: solver.srjWithPointPairs,
+          newConnections: solver.netToPointPairsSolver!.newConnections,
+          jointRoutes: solver.pipeline9JointDrcRepairSolver!.getOutput(),
+          beforePowerTraces: solver.getNewTracesBeforePowerExpansion(),
+          finalTraces: drcInput.routedTraces,
+          errors: declaredDrc.errors,
+        },
+        null,
+        2,
+      ),
+    )
+  }
   expect(
-    evaluateRelaxedDrc({
-      ...drcInput,
-      includeBoardClearance: true,
-      drcOptions: {
-        traceClearance: srj.minTraceToPadEdgeClearance,
-        viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
-      },
-    }).errors,
+    declaredDrc.errors,
+    JSON.stringify(declaredDrc.errors, null, 2),
   ).toHaveLength(0)
   expect(solver.pipelineDef.at(-1)?.solverName).toBe(
     "powerTraceExpansionSolver",
