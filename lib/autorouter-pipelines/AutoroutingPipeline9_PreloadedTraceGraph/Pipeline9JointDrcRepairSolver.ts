@@ -769,10 +769,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minTraceToPadEdgeClearance ??
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
-    const viaClearance =
-      params.originalSrj.minPadEdgeToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.viaClearance ??
-      0.1
+    // The indexed engine applies one copper gap to both same-net and
+    // different-net vias. Keep its search heuristic separate from the declared
+    // electrical copper rule, which the reference evaluator and projection use.
+    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const viaHoleClearance =
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??

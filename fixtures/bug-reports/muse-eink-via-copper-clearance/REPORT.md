@@ -85,9 +85,12 @@ unrepaired; the projection must receive the declared pad-edge rule too.
 - Upgrade `@tscircuit/checks` to ^0.0.233, whose different-net via check also
   measures copper on shared layers.
 - Preserve `minPadEdgeToPadEdgeClearance` on the reference DRC board element.
-- Use that declared copper rule in joint repair and clearance projection.
-  The drill rule retains its separate relaxed default. Coupled projection
-  retains its existing precision margin.
+- Use that declared copper rule in reference DRC and clearance projection.
+  The drill rule retains its separate relaxed default. The indexed engine's
+  search heuristic stays relaxed because it applies a single copper gap to
+  both same-net and different-net pairs; the electrical pad rule only applies
+  to different nets. Reference DRC validates the declared rules before accepting
+  a candidate. Coupled projection retains its existing precision margin.
 - No new repair stage, report-specific coordinates, or post-routing correction.
 - The full-board test requires zero DRC errors and independently checks gaps.
   Smaller tests use a 0.25 mm pad rule with a distinct 0.05 mm trace rule and
