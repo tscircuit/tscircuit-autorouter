@@ -1457,6 +1457,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ),
       ],
       connMap: params.connMap,
+      connectivityMapIsImmutable: true,
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,

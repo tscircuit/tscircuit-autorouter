@@ -5,6 +5,21 @@ import { FlatbushIndex } from "./FlatbushIndex"
 
 export type BucketCoordinate = `${number}x${number}`
 
+const getObstacleBounds = (obstacle: Obstacle) => {
+  const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cos = Math.abs(Math.cos(rotationRadians))
+  const sin = Math.abs(Math.sin(rotationRadians))
+  const halfWidth = (obstacle.width * cos + obstacle.height * sin) / 2
+  const halfHeight = (obstacle.width * sin + obstacle.height * cos) / 2
+
+  return {
+    minX: obstacle.center.x - halfWidth,
+    minY: obstacle.center.y - halfHeight,
+    maxX: obstacle.center.x + halfWidth,
+    maxY: obstacle.center.y + halfHeight,
+  }
+}
+
 /**
  * ObstacleTree wraps different spatial index implementations:
  * - 'native': original spatial-hash grid
@@ -62,13 +77,8 @@ export class ObstacleSpatialHashIndex {
 
   insert(o: Obstacle) {
     this.storage.push(o)
-    this.idx.insert(
-      o,
-      o.center.x - o.width / 2,
-      o.center.y - o.height / 2,
-      o.center.x + o.width / 2,
-      o.center.y + o.height / 2,
-    )
+    const { minX, minY, maxX, maxY } = getObstacleBounds(o)
+    this.idx.insert(o, minX, minY, maxX, maxY)
   }
 
   search(bbox: {
@@ -108,13 +118,19 @@ export class NativeObstacleTree {
     // for (const obstacle of obstacles) {
     for (let i = 0; i < obstacles.length; i++) {
       const obstacle = obstacles[i]
-      const nodeMinX = obstacle.center.x - obstacle.width / 2
-      const nodeMinY = obstacle.center.y - obstacle.height / 2
-      const nodeMaxX = obstacle.center.x + obstacle.width / 2
-      const nodeMaxY = obstacle.center.y + obstacle.height / 2
-      for (let x = nodeMinX; x <= nodeMaxX; x += this.CELL_SIZE) {
-        for (let y = nodeMinY; y <= nodeMaxY; y += this.CELL_SIZE) {
-          const bucketKey = this.getBucketKey(x, y)
+      const {
+        minX: nodeMinX,
+        minY: nodeMinY,
+        maxX: nodeMaxX,
+        maxY: nodeMaxY,
+      } = getObstacleBounds(obstacle)
+      const minBucketX = Math.floor(nodeMinX / this.CELL_SIZE)
+      const minBucketY = Math.floor(nodeMinY / this.CELL_SIZE)
+      const maxBucketX = Math.floor(nodeMaxX / this.CELL_SIZE)
+      const maxBucketY = Math.floor(nodeMaxY / this.CELL_SIZE)
+      for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
+        for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
+          const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
           const bucket = this.buckets.get(bucketKey)
           if (!bucket) {
             this.buckets.set(bucketKey, [[obstacle, i]])
@@ -146,9 +162,13 @@ export class NativeObstacleTree {
     const minY = centerY - height / 2
     const maxX = centerX + width / 2
     const maxY = centerY + height / 2
-    for (let x = minX; x <= maxX; x += this.CELL_SIZE) {
-      for (let y = minY; y <= maxY; y += this.CELL_SIZE) {
-        const bucketKey = this.getBucketKey(x, y)
+    const minBucketX = Math.floor(minX / this.CELL_SIZE)
+    const minBucketY = Math.floor(minY / this.CELL_SIZE)
+    const maxBucketX = Math.floor(maxX / this.CELL_SIZE)
+    const maxBucketY = Math.floor(maxY / this.CELL_SIZE)
+    for (let bucketX = minBucketX; bucketX <= maxBucketX; bucketX++) {
+      for (let bucketY = minBucketY; bucketY <= maxBucketY; bucketY++) {
+        const bucketKey = `${bucketX}x${bucketY}` as BucketCoordinate
         const bucket = this.buckets.get(bucketKey) || []
         for (const obstacleWithIndex of bucket) {
           if (alreadyAddedObstacles.has(obstacleWithIndex[1])) continue
