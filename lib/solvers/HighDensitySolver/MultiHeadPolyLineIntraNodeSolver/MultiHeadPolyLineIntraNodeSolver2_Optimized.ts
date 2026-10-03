@@ -1,6 +1,6 @@
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
-import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
+import { Candidate2, MHPoint2, PolyLine2 } from "./types2"
 
 type ForceSegment = {
   p1: MHPoint2
@@ -10,6 +10,9 @@ type ForceSegment = {
   p2Idx: number
   p1Force?: NetForce
   p2Force?: NetForce
+  dx: number
+  dy: number
+  lengthSquared: number
 }
 
 type ForceVia = {
@@ -160,23 +163,20 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       epForce: NetForce | undefined,
       otherSeg: ForceSegment,
     ) => {
-      const segmentDx = otherSeg.p2.x - otherSeg.p1.x
-      const segmentDy = otherSeg.p2.y - otherSeg.p1.y
-      const segmentLengthSquared = segmentDx * segmentDx + segmentDy * segmentDy
       const projection =
-        segmentLengthSquared === 0
+        otherSeg.lengthSquared === 0
           ? 0
           : Math.max(
               0,
               Math.min(
                 1,
-                ((ep.x - otherSeg.p1.x) * segmentDx +
-                  (ep.y - otherSeg.p1.y) * segmentDy) /
-                  segmentLengthSquared,
+                ((ep.x - otherSeg.p1.x) * otherSeg.dx +
+                  (ep.y - otherSeg.p1.y) * otherSeg.dy) /
+                  otherSeg.lengthSquared,
               ),
             )
-      const dx = ep.x - (otherSeg.p1.x + projection * segmentDx)
-      const dy = ep.y - (otherSeg.p1.y + projection * segmentDy)
+      const dx = ep.x - (otherSeg.p1.x + projection * otherSeg.dx)
+      const dy = ep.y - (otherSeg.p1.y + projection * otherSeg.dy)
       const dSq = dx * dx + dy * dy
       if (dSq <= EPSILON) return
       const dist = Math.sqrt(dSq)
@@ -206,17 +206,23 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Points move only after all forces have been accumulated.
     const geometry = polyLines.map((polyLine, lineIndex): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segments = points.slice(0, -1).map(
-        (point, index): ForceSegment => ({
+      const segments = points.slice(0, -1).map((point, index): ForceSegment => {
+        const nextPoint = points[index + 1]!
+        const dx = nextPoint.x - point.x
+        const dy = nextPoint.y - point.y
+        return {
           p1: point,
-          p2: points[index + 1]!,
+          p2: nextPoint,
           layer: point.z2,
           p1Idx: index,
           p2Idx: index + 1,
           p1Force: netForces[lineIndex][index - 1],
           p2Force: netForces[lineIndex][index],
-        }),
-      )
+          dx,
+          dy,
+          lengthSquared: dx * dx + dy * dy,
+        }
+      })
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2
           ? []
