@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/muse-eink-via-copper-clearance/muse-eink-via-copper-clearance.srj.json" with {
   type: "json",
@@ -19,11 +20,9 @@ type ViaCopperClearanceViolation = {
   gap: number
 }
 
-// Characterizes the reported bug. Set MUSE_EINK_REQUIRE_DRC_CLEAN=1 to
-// assert the desired fixed behavior instead; that command currently fails.
-test("Pipeline9 reports solved with insufficient Muse e-paper via copper clearance", (): void => {
+test("Pipeline9 honors the Muse e-paper different-net via copper clearance", (): void => {
   const input = structuredClone(capturedInput) as SimpleRouteJson
-  const minimumCopperGap = input.minTraceToPadEdgeClearance
+  const minimumCopperGap = input.minPadEdgeToPadEdgeClearance
   if (typeof minimumCopperGap !== "number") {
     throw new Error("Captured input must declare its copper clearance")
   }
@@ -40,7 +39,21 @@ test("Pipeline9 reports solved with insufficient Muse e-paper via copper clearan
   expect(solver.solved).toBe(true)
   expect(solver.error).toBeNull()
 
+  if (!solver.srjWithPointPairs) {
+    throw new Error("Pipeline9 must produce its point-pair routing input")
+  }
   const traces = solver.getOutputSimplifiedPcbTraces()
+  const drc = evaluateRelaxedDrc({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs,
+    routedTraces: traces,
+    includeBoardClearance: true,
+    drcOptions: {
+      traceClearance: input.minTraceToPadEdgeClearance,
+      viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+    },
+  })
+  expect(drc.errors).toEqual([])
   const vias: RoutedVia[] = []
   for (const trace of traces) {
     for (const point of trace.route) {
@@ -60,7 +73,8 @@ test("Pipeline9 reports solved with insufficient Muse e-paper via copper clearan
             via.connectionName === trace.connection_name &&
             Math.hypot(via.x - point.x, via.y - point.y) < 1e-9,
         )
-      ) continue
+      )
+        continue
       vias.push({
         x: point.x,
         y: point.y,
@@ -77,22 +91,13 @@ test("Pipeline9 reports solved with insufficient Muse e-paper via copper clearan
       const a = vias[i]!
       const b = vias[j]!
       if (a.connectionName === b.connectionName) continue
-      const gap = Math.hypot(a.x - b.x, a.y - b.y) -
-        (a.diameter + b.diameter) / 2
+      const gap =
+        Math.hypot(a.x - b.x, a.y - b.y) - (a.diameter + b.diameter) / 2
       if (gap < minimumCopperGap - 1e-9) violations.push({ a, b, gap })
     }
   }
 
-  if (process.env.MUSE_EINK_REQUIRE_DRC_CLEAN === "1") {
-    expect(violations).toEqual([])
-  } else {
-    expect(traces).toHaveLength(108)
-    expect(vias).toHaveLength(92)
-    expect(violations).toHaveLength(1)
-    const violation = violations[0]!
-    expect(new Set([violation.a.connectionName, violation.b.connectionName]))
-      .toEqual(new Set(["source_net_2", "source_net_1"]))
-    expect(violation.gap).toBeCloseTo(0.13541082528299198, 9)
-    expect(violation.gap).toBeLessThan(minimumCopperGap)
-  }
+  expect(traces.length).toBeGreaterThan(0)
+  expect(vias.length).toBeGreaterThan(0)
+  expect(violations).toEqual([])
 })

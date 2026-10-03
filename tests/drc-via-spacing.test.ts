@@ -60,8 +60,8 @@ test("getDrcErrors enforces 0.1 minimum via-to-via clearance", () => {
   })
 })
 
-test("getDrcErrors allows vias at 0.1 clearance", () => {
-  const centerDistance = VIA_HOLE_DIAMETER + MIN_VIA_TO_VIA_CLEARANCE
+test("getDrcErrors allows vias meeting both drill and copper clearance", () => {
+  const centerDistance = VIA_OUTER_DIAMETER + 0.15
   const { errors } = getDrcErrors(createViaPair(centerDistance))
 
   expect(errors).toHaveLength(0)
