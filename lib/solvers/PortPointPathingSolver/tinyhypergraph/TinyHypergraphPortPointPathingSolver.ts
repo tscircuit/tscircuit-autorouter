@@ -237,15 +237,14 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   GREEDY_FINAL_ROUTE_ITERS: 4,
   PARTIAL_RIP_MIN_ROUTE_COUNT: 100,
-  PARTIAL_RIP_MAX_ROUTE_COUNT: 350,
   PARTIAL_RIP_MAX_ATTEMPTS: 7,
   PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS: 1,
   PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT: 100,
   PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO: 0.02,
-  // Keep the downstream-friendly segment selector, but no longer let it buy
-  // simpler topology with a large peak-congestion regression.
+  // Keep the downstream-friendly segment selector within the same tight
+  // quality envelope for both peak and total congestion.
   PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.05,
-  PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
+  PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.05,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -1055,12 +1054,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     )
     let connections = tinyRouteConnections
     if (params.flags.USE_SELECTIVE_RERIP_ROUTING) {
-      const maxPartialRipRouteCount =
-        TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
-        Number.POSITIVE_INFINITY
       const shouldInterleaveNets =
         params.layerCount > 4 &&
-        tinyRouteConnections.length > maxPartialRipRouteCount &&
         hasNetLargerThanNetCount(
           tinyRouteConnections,
           getTinyRouteConnectionNetId,
