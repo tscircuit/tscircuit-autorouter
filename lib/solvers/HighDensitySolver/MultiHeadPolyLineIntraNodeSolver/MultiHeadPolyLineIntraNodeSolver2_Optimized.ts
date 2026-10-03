@@ -1,6 +1,6 @@
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
-import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
+import { Candidate2, MHPoint2, PolyLine2 } from "./types2"
 
 type ForceSegment = {
   p1: MHPoint2
@@ -8,6 +8,11 @@ type ForceSegment = {
   layer: number
   p1Idx: number
   p2Idx: number
+  p1Force?: NetForce
+  p2Force?: NetForce
+  dx: number
+  dy: number
+  lengthSquared: number
 }
 
 type ForceVia = {
@@ -15,6 +20,8 @@ type ForceVia = {
   layers: number[]
   index: number
 }
+
+type NetForce = { fx: number; fy: number }
 
 type ForceGeometry = {
   segments: ForceSegment[]
@@ -127,7 +134,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const EPSILON = 1e-6 // To avoid division by zero
 
     // 1. Initialize net forces structure: netForces[lineIdx][mPointIdx] = {fx, fy}
-    const netForces: Array<Array<{ fx: number; fy: number }>> = Array.from(
+    const netForces: NetForce[][] = Array.from(
       { length: numPolyLines },
       (_, i) =>
         Array.from({ length: polyLines[i].mPoints.length }, () => ({
@@ -136,22 +143,16 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         })),
     )
 
-    // Helper to add force directly to the netForces array for a given mPoint index
     const addNetForce = (
       lineIndex: number,
-      pointIndexInFullPath: number, // Index in [start, ...mPoints, end]
+      pointIndexInFullPath: number,
       fx: number,
       fy: number,
     ) => {
-      // Only apply force if the target point is an mPoint (not start or end)
-      if (
-        pointIndexInFullPath > 0 &&
-        pointIndexInFullPath < polyLines[lineIndex].mPoints.length + 1
-      ) {
-        const mPointIndex = pointIndexInFullPath - 1
-        netForces[lineIndex][mPointIndex].fx += fx
-        netForces[lineIndex][mPointIndex].fy += fy
-      }
+      const force = netForces[lineIndex][pointIndexInFullPath - 1]
+      if (!force) return
+      force.fx += fx
+      force.fy += fy
     }
 
     // 2. Calculate forces between all pairs of polylines
@@ -159,16 +160,23 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Helper to process one endpoint against the opposite segment
     const endpointForce = (
       ep: MHPoint2,
-      epIdx: number,
-      otherSeg: { p1: MHPoint2; p2: MHPoint2; p1Idx: number; p2Idx: number },
-      targetLine: number,
-      oppLine: number,
-      // srcIdOpp: string, // Not needed with addNetForce
-      // srcIdThis: string, // Not needed with addNetForce
+      epForce: NetForce | undefined,
+      otherSeg: ForceSegment,
     ) => {
-      const cp = pointToSegmentClosestPoint(ep, otherSeg.p1, otherSeg.p2)
-      const dx = ep.x - cp.x
-      const dy = ep.y - cp.y
+      const projection =
+        otherSeg.lengthSquared === 0
+          ? 0
+          : Math.max(
+              0,
+              Math.min(
+                1,
+                ((ep.x - otherSeg.p1.x) * otherSeg.dx +
+                  (ep.y - otherSeg.p1.y) * otherSeg.dy) /
+                  otherSeg.lengthSquared,
+              ),
+            )
+      const dx = ep.x - (otherSeg.p1.x + projection * otherSeg.dx)
+      const dy = ep.y - (otherSeg.p1.y + projection * otherSeg.dy)
       const dSq = dx * dx + dy * dy
       if (dSq <= EPSILON) return
       const dist = Math.sqrt(dSq)
@@ -180,28 +188,51 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       const fy = (dy / dist) * mag
 
       // push this endpoint
-      addNetForce(targetLine, epIdx, fx, fy)
+      if (epForce) {
+        epForce.fx += fx
+        epForce.fy += fy
+      }
       // equal & opposite distributed onto the two endpoints of the other seg
-      addNetForce(oppLine, otherSeg.p1Idx, -fx / 2, -fy / 2)
-      addNetForce(oppLine, otherSeg.p2Idx, -fx / 2, -fy / 2)
+      if (otherSeg.p1Force) {
+        otherSeg.p1Force.fx -= fx / 2
+        otherSeg.p1Force.fy -= fy / 2
+      }
+      if (otherSeg.p2Force) {
+        otherSeg.p2Force.fx -= fx / 2
+        otherSeg.p2Force.fy -= fy / 2
+      }
     }
 
     // Points move only after all forces have been accumulated.
-    const geometry = polyLines.map((polyLine): ForceGeometry => {
+    const geometry = polyLines.map((polyLine, lineIndex): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segments = points.slice(0, -1).map(
-        (point, index): ForceSegment => ({
+      const segments = points.slice(0, -1).map((point, index): ForceSegment => {
+        const nextPoint = points[index + 1]!
+        const dx = nextPoint.x - point.x
+        const dy = nextPoint.y - point.y
+        return {
           p1: point,
-          p2: points[index + 1]!,
+          p2: nextPoint,
           layer: point.z2,
           p1Idx: index,
           p2Idx: index + 1,
-        }),
-      )
+          p1Force: netForces[lineIndex][index - 1],
+          p2Force: netForces[lineIndex][index],
+          dx,
+          dy,
+          lengthSquared: dx * dx + dy * dy,
+        }
+      })
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2
           ? []
-          : [{ point, layers: [point.z1, point.z2], index }],
+          : [
+              {
+                point,
+                layers: [point.z1, point.z2],
+                index,
+              },
+            ],
       )
       return { segments, vias }
     })
@@ -218,11 +249,11 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           for (const seg2 of segments2) {
             if (seg1.layer === seg2.layer) {
               // endpoints of s1 against s2
-              endpointForce(seg1.p1, seg1.p1Idx, seg2, i, j)
-              endpointForce(seg1.p2, seg1.p2Idx, seg2, i, j)
+              endpointForce(seg1.p1, seg1.p1Force, seg2)
+              endpointForce(seg1.p2, seg1.p2Force, seg2)
               // endpoints of s2 against s1
-              endpointForce(seg2.p1, seg2.p1Idx, seg1, j, i)
-              endpointForce(seg2.p2, seg2.p2Idx, seg1, j, i)
+              endpointForce(seg2.p1, seg2.p1Force, seg1)
+              endpointForce(seg2.p2, seg2.p2Force, seg1)
             }
           }
         }

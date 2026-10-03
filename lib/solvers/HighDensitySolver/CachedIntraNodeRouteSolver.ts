@@ -24,7 +24,29 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
+const CACHE_KEY_SCALAR_TAG = "__tscircuit_intra_node_cache_scalar__"
+
+// keyData is assembled below in a stable property order. Serialize that
+// structure once before hashing, while preserving values JSON normally merges.
+const serializeCacheKeyData = (value: unknown): string =>
+  JSON.stringify(value, (_key, nestedValue) => {
+    if (nestedValue === undefined) {
+      return { [CACHE_KEY_SCALAR_TAG]: "undefined" }
+    }
+    if (typeof nestedValue === "number" && !Number.isFinite(nestedValue)) {
+      return { [CACHE_KEY_SCALAR_TAG]: nestedValue.toString() }
+    }
+    if (typeof nestedValue === "bigint") {
+      return { [CACHE_KEY_SCALAR_TAG]: `bigint:${nestedValue.toString()}` }
+    }
+    if (typeof nestedValue === "function" || typeof nestedValue === "symbol") {
+      throw new Error(
+        `Unsupported ${typeof nestedValue} in intra-node cache key`,
+      )
+    }
+    return nestedValue
+  })
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -172,10 +194,7 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
-      respectType: false,
-      unorderedObjects: false,
-    })}`
+    const cacheKey = `intranode-solver:${objectHash(serializeCacheKeyData(keyData))}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey

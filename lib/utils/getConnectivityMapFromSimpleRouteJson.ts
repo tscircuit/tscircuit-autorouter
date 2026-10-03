@@ -1,39 +1,35 @@
-import { getConnectionPointLayers } from "./connection-point-utils"
-import { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { SimpleRouteJson } from "lib/types"
+import { getConnectionPointLayers } from "./connection-point-utils"
 import { mapLayerNameToZ } from "./mapLayerNameToZ"
 
 const pointHash = (point: { x: number; y: number }) =>
   `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
 
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
-  const connMap = new ConnectivityMap({})
+  const connectionGroups: string[][] = []
   for (const connection of srj.connections) {
     for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
-      connMap.addConnections([[connection.name, rootConnectionName]])
+      connectionGroups.push([connection.name, rootConnectionName])
     }
     // Also link the connection name to its overall netConnectionName if available
     if (connection.__netConnectionName) {
-      connMap.addConnections([
-        [connection.name, connection.__netConnectionName],
-      ])
+      connectionGroups.push([connection.name, connection.__netConnectionName])
     }
 
     for (const point of connection.pointsToConnect) {
-      connMap.addConnections([
-        [
-          connection.name,
-          `${pointHash(point)}:${getConnectionPointLayers(point)
-            .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
-            .sort()
-            .join("-")}`,
-        ],
+      connectionGroups.push([
+        connection.name,
+        `${pointHash(point)}:${getConnectionPointLayers(point)
+          .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+          .sort()
+          .join("-")}`,
       ])
       if ("pcb_port_id" in point && point.pcb_port_id) {
-        connMap.addConnections([[connection.name, point.pcb_port_id as string]])
+        connectionGroups.push([connection.name, point.pcb_port_id as string])
       }
       if (point.pointId) {
-        connMap.addConnections([[connection.name, point.pointId]])
+        connectionGroups.push([connection.name, point.pointId])
       }
     }
   }
@@ -54,7 +50,7 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
     )
 
     if (connectionGroup.length > 0) {
-      connMap.addConnections([connectionGroup])
+      connectionGroups.push(connectionGroup)
     }
   }
   for (const trace of srj.traces ?? []) {
@@ -69,8 +65,10 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
     )
 
     if (connectionGroup.length > 0) {
-      connMap.addConnections([connectionGroup])
+      connectionGroups.push(connectionGroup)
     }
   }
+  const connMap = new ConnectivityMap({})
+  connMap.addConnections(connectionGroups)
   return connMap
 }

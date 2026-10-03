@@ -373,19 +373,13 @@ export class TraceWidthSolver extends BaseSolver {
     const searchClearance =
       this.currentTargetWidth / 2 +
       Math.max(this.obstacleMargin, this.minTraceToHoleEdgeClearance ?? 0)
-    const nearbyObstacles = new Set(
+    const nearbyObstacles =
       this.obstacleSHI?.search({
         minX: Math.min(start.x, end.x) - searchClearance,
         minY: Math.min(start.y, end.y) - searchClearance,
         maxX: Math.max(start.x, end.x) + searchClearance,
         maxY: Math.max(start.y, end.y) + searchClearance,
-      }),
-    )
-    // ObstacleTree indexes unrotated extents. Include rotated pads explicitly
-    // so their copper outside those extents is also considered.
-    for (const obstacle of this.obstacles) {
-      if (obstacle.ccwRotationDegrees) nearbyObstacles.add(obstacle)
-    }
+      }) ?? []
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
       if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
@@ -546,7 +540,14 @@ export class TraceWidthSolver extends BaseSolver {
     const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
 
-    for (const obstacle of this.obstacles) {
+    const nearbyObstacles =
+      this.obstacleSHI?.search({
+        minX: endpoint.x,
+        minY: endpoint.y,
+        maxX: endpoint.x,
+        maxY: endpoint.y,
+      }) ?? []
+    for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue

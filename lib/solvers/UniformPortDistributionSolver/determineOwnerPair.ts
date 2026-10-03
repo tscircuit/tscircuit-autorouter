@@ -1,11 +1,18 @@
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type { CapacityMeshNodeId } from "lib/types"
+import type {
+  InputPortPoint,
+  PortPointId,
+} from "../PortPointPathingSolver/PortPointPathingSolver"
 import { normalizeOwnerPair } from "./getOwnerPairKey"
 import { OwnerPair } from "./types"
 
 interface DetermineOwnerPairParams {
-  portPointId?: string
-  currentNodeId: string
-  inputNodes: InputNodeWithPortPoints[]
+  portPointId?: PortPointId
+  currentNodeId: CapacityMeshNodeId
+  connectionNodeIdsByPortPointId: Map<
+    PortPointId,
+    InputPortPoint["connectionNodeIds"]
+  >
 }
 
 /**
@@ -15,19 +22,11 @@ interface DetermineOwnerPairParams {
 export const determineOwnerPair = ({
   portPointId,
   currentNodeId,
-  inputNodes,
+  connectionNodeIdsByPortPointId,
 }: DetermineOwnerPairParams): OwnerPair => {
-  let connectionNodeIds: [string, string] | undefined
-
-  if (portPointId) {
-    for (const node of inputNodes) {
-      const point = node.portPoints.find((p) => p.portPointId === portPointId)
-      if (point?.connectionNodeIds) {
-        connectionNodeIds = point.connectionNodeIds
-        break
-      }
-    }
-  }
+  const connectionNodeIds = portPointId
+    ? connectionNodeIdsByPortPointId.get(portPointId)
+    : undefined
 
   if (!connectionNodeIds || connectionNodeIds.length !== 2) {
     return [currentNodeId, currentNodeId]
