@@ -46,12 +46,12 @@ test("via copper spacing respects pad rules independently of drill and trace rul
     }
     // The 0.27 mm drill gap passes; the 0.12 mm copper gap fails.
     expect(index.collidesVia(query)).toBe(true)
-    expect(
-      index.collidesVia({ ...query, point: { x: 0.450001, y: 0 } }),
-    ).toBe(false)
-    expect(
-      index.collidesVia({ ...query, connectionNames: ["signal"] }),
-    ).toBe(false)
+    expect(index.collidesVia({ ...query, point: { x: 0.450001, y: 0 } })).toBe(
+      false,
+    )
+    expect(index.collidesVia({ ...query, connectionNames: ["signal"] })).toBe(
+      false,
+    )
     // Drill spacing still applies to connected copper.
     expect(
       index.collidesVia({
