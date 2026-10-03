@@ -1,5 +1,6 @@
 import type { Bounds } from "@tscircuit/math-utils"
-import type { CapacityMeshNode } from "lib/types"
+import Flatbush from "flatbush"
+import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import {
   getBoundsIntersection,
   getCapacityMeshNodeBounds,
@@ -124,7 +125,8 @@ export function validateTopologyMergingOutput({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
   provenance: TopologyMergingOutputProvenance
 }): void {
-  const nodeIds = new Set<string>()
+  const nodeIds = new Set<CapacityMeshNodeId>()
+  const boundsByNodeIndex: Bounds[] = []
   for (const node of nodes) {
     if (nodeIds.has(node.capacityMeshNodeId)) {
       throw new Error(
@@ -133,11 +135,13 @@ export function validateTopologyMergingOutput({
     }
     nodeIds.add(node.capacityMeshNodeId)
 
-    if (!isValidCapacityBounds(getCapacityMeshNodeBounds(node))) {
+    const bounds = getCapacityMeshNodeBounds(node)
+    if (!isValidCapacityBounds(bounds)) {
       throw new Error(
         `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has invalid bounds`,
       )
     }
+    boundsByNodeIndex.push(bounds)
     if (node.availableZ.length === 0) {
       throw new Error(
         `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has no available layers`,
@@ -161,9 +165,25 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  if (nodes.length === 0) return
+
+  const nodeBoundsIndex = new Flatbush(nodes.length)
+  for (const bounds of boundsByNodeIndex) {
+    nodeBoundsIndex.add(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+  }
+  nodeBoundsIndex.finish()
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
+    const boundsA = boundsByNodeIndex[aIndex]!
+    const overlappingNodeIndexes = nodeBoundsIndex.search(
+      boundsA.minX,
+      boundsA.minY,
+      boundsA.maxX,
+      boundsA.maxY,
+      (bIndex) => bIndex > aIndex,
+    )
+    for (const bIndex of overlappingNodeIndexes) {
       const nodeB = nodes[bIndex]!
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
@@ -171,8 +191,8 @@ export function validateTopologyMergingOutput({
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
-        getCapacityMeshNodeBounds(nodeB),
+        boundsA,
+        boundsByNodeIndex[bIndex]!,
       )
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX

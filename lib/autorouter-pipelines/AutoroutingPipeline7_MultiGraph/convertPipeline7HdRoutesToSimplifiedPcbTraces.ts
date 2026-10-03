@@ -1,5 +1,4 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -77,6 +76,25 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
+  const obstacleIndexesByConnectivityId = new Map<string, number[]>()
+  const addObstacleConnectivityId = (
+    connectivityId: string,
+    obstacleIndex: number,
+  ) => {
+    const obstacleIndexes =
+      obstacleIndexesByConnectivityId.get(connectivityId) ?? []
+    obstacleIndexes.push(obstacleIndex)
+    obstacleIndexesByConnectivityId.set(connectivityId, obstacleIndexes)
+  }
+  for (const [obstacleIndex, obstacle] of multilayerObstacles.entries()) {
+    for (const connectedId of obstacle.connectedTo) {
+      addObstacleConnectivityId(connectedId, obstacleIndex)
+      const netId = connMap.getNetConnectedToId(connectedId)
+      if (netId && netId !== connectedId) {
+        addObstacleConnectivityId(netId, obstacleIndex)
+      }
+    }
+  }
   const connectedObstaclesByConnectionName = new Map<
     string,
     Map<string | undefined, ReadonlyArray<Obstacle>>
@@ -95,9 +113,24 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     const cached = byRootConnectionName.get(route.rootConnectionName)
     if (cached) return cached
 
-    const connected = multilayerObstacles.filter((obstacle) =>
-      isObstacleConnectedToRoute(obstacle, route, connMap),
-    )
+    const connectedObstacleIndexes = new Set<number>()
+    for (const routeId of [route.connectionName, route.rootConnectionName]) {
+      if (!routeId) continue
+      for (const obstacleIndex of obstacleIndexesByConnectivityId.get(
+        routeId,
+      ) ?? []) {
+        connectedObstacleIndexes.add(obstacleIndex)
+      }
+      const netId = connMap.getNetConnectedToId(routeId)
+      if (!netId) continue
+      for (const obstacleIndex of obstacleIndexesByConnectivityId.get(netId) ??
+        []) {
+        connectedObstacleIndexes.add(obstacleIndex)
+      }
+    }
+    const connected = [...connectedObstacleIndexes]
+      .sort((indexA, indexB) => indexA - indexB)
+      .map((obstacleIndex) => multilayerObstacles[obstacleIndex]!)
     byRootConnectionName.set(route.rootConnectionName, connected)
     return connected
   }
