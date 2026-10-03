@@ -5,6 +5,9 @@ import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSo
 type ForceSegment = {
   p1: MHPoint2
   p2: MHPoint2
+  deltaX: number
+  deltaY: number
+  lengthSquared: number
   layer: number
   p1Idx: number
   p2Idx: number
@@ -160,15 +163,29 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const endpointForce = (
       ep: MHPoint2,
       epIdx: number,
-      otherSeg: { p1: MHPoint2; p2: MHPoint2; p1Idx: number; p2Idx: number },
+      otherSeg: ForceSegment,
       targetLine: number,
       oppLine: number,
       // srcIdOpp: string, // Not needed with addNetForce
       // srcIdThis: string, // Not needed with addNetForce
-    ) => {
-      const cp = pointToSegmentClosestPoint(ep, otherSeg.p1, otherSeg.p2)
-      const dx = ep.x - cp.x
-      const dy = ep.y - cp.y
+    ): void => {
+      let closestX = otherSeg.p1.x
+      let closestY = otherSeg.p1.y
+      if (otherSeg.lengthSquared !== 0) {
+        const projectionRatio = Math.max(
+          0,
+          Math.min(
+            1,
+            ((ep.x - otherSeg.p1.x) * otherSeg.deltaX +
+              (ep.y - otherSeg.p1.y) * otherSeg.deltaY) /
+              otherSeg.lengthSquared,
+          ),
+        )
+        closestX += projectionRatio * otherSeg.deltaX
+        closestY += projectionRatio * otherSeg.deltaY
+      }
+      const dx = ep.x - closestX
+      const dy = ep.y - closestY
       const dSq = dx * dx + dy * dy
       if (dSq <= EPSILON) return
       const dist = Math.sqrt(dSq)
@@ -190,13 +207,21 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const geometry = polyLines.map((polyLine): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
       const segments = points.slice(0, -1).map(
-        (point, index): ForceSegment => ({
-          p1: point,
-          p2: points[index + 1]!,
-          layer: point.z2,
-          p1Idx: index,
-          p2Idx: index + 1,
-        }),
+        (point, index): ForceSegment => {
+          const nextPoint = points[index + 1]!
+          const deltaX = nextPoint.x - point.x
+          const deltaY = nextPoint.y - point.y
+          return {
+            p1: point,
+            p2: nextPoint,
+            deltaX,
+            deltaY,
+            lengthSquared: deltaX * deltaX + deltaY * deltaY,
+            layer: point.z2,
+            p1Idx: index,
+            p2Idx: index + 1,
+          }
+        },
       )
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2

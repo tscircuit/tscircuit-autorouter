@@ -19,7 +19,7 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
-  return ({ routes, hdRoutes }) => {
+  const evaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
       throw new Error("Pipeline9 relaxed DRC evaluation requires HD routes")
@@ -53,4 +53,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
       }),
     }
   }
+  // This evaluator supplies its own SRJ and trace context for every candidate.
+  evaluator.inputMode = "routes-only"
+  return evaluator
 }

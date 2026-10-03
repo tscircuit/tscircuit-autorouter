@@ -1,4 +1,5 @@
 import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
+import { getConnectionPointZLayers } from "../hgportpointpathingsolver/get-connection-point-z-layers"
 import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
@@ -24,12 +25,17 @@ export function getRegionNetIdByRegionId(input: {
       netIndexByConnectionAlias.set(connectionAlias, routeNetIndex)
     }
     for (const point of connection.simpleRouteConnection.pointsToConnect) {
+      const pointZLayers = getConnectionPointZLayers({
+        point,
+        layerCount: input.params.layerCount,
+      })
       for (const region of input.params.graph.regions) {
         if (
           !checkIfConnectionPointIsInRegion({
             point,
             region,
             layerCount: input.params.layerCount,
+            pointZLayers,
           })
         ) {
           continue
