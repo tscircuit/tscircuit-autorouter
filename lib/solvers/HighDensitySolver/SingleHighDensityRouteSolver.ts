@@ -1,8 +1,4 @@
-import {
-  distance,
-  doSegmentsIntersect,
-  pointToSegmentDistance,
-} from "@tscircuit/math-utils"
+import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
@@ -89,6 +85,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
+  cachedPlanarTraceProximity: number | undefined
+  cachedPlanarViaProximity: number | undefined
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -295,6 +294,39 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     const traceProximity = this.traceThickness + margin
+    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    // Planar point clearance is independent of the parent. Supplied queries
+    // must cover the full point rectangle before their result can be reused.
+    const canCachePlanarPoint =
+      !isVia &&
+      this.gridWidth !== undefined &&
+      (!planarObstacleQuery ||
+        planarObstacleQuery.pointQueryProximity === traceProximity) &&
+      (this.obstacleViaIndex !== null ||
+        this.obstacleSegmentIndexByLayer.has(node.z))
+    const pointKey = canCachePlanarPoint
+      ? (planarObstacleQuery?.pointKey ?? this.getNodeKey(node))
+      : undefined
+    if (pointKey !== undefined) {
+      if (
+        this.cachedPlanarTraceProximity !== traceProximity ||
+        this.cachedPlanarViaProximity !== viaProximity
+      ) {
+        this.freePlanarObstaclePoints.clear()
+        this.cachedPlanarTraceProximity = traceProximity
+        this.cachedPlanarViaProximity = viaProximity
+      }
+      const freePoint = this.freePlanarObstaclePoints.get(pointKey)
+      // A rounded grid key can represent different floating-point coordinates.
+      if (
+        freePoint &&
+        freePoint.x === node.x &&
+        freePoint.y === node.y &&
+        freePoint.z === node.z
+      ) {
+        return false
+      }
+    }
     const indexedSegments =
       planarObstacleQuery?.segments ??
       (!isVia
@@ -312,11 +344,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         node.y + traceProximity,
       ) ??
       []
+    const queryBounds = planarObstacleQuery?.segmentBounds
     if (indexedSegments) {
       for (const segmentId of nearbySegmentIds) {
         const segment = indexedSegments[segmentId]
         if (!segment || segment.connectedToCurrentConnection) continue
         if (!isVia && segment.z !== node.z) continue
+        if (
+          queryBounds &&
+          (queryBounds.maxX < segment.minX ||
+            queryBounds.maxY < segment.minY ||
+            queryBounds.minX > segment.maxX ||
+            queryBounds.minY > segment.maxY)
+        ) {
+          continue
+        }
         if (
           planarObstacleQuery &&
           (node.x + traceProximity < segment.minX ||
@@ -327,14 +369,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
         if (
-          pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
+          Math.sqrt(
+            getPointToPrecomputedSegmentDistanceSquared(
+              node,
+              segment.A,
+              segment.deltaX,
+              segment.deltaY,
+              segment.lengthSquared,
+            ),
+          ) < traceProximity
         ) {
           return true
         }
       }
     }
 
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
@@ -350,6 +399,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
+    if (pointKey !== undefined) {
+      this.freePlanarObstaclePoints.set(pointKey, {
+        x: node.x,
+        y: node.y,
+        z: node.z,
+      })
+    }
     return false
   }
 
@@ -405,11 +461,24 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           maxY + clearance,
         ) ??
       []
+    const queryBounds = planarObstacleQuery?.segmentBounds
+    const pathDeltaX = parent.x - node.x
+    const pathDeltaY = parent.y - node.y
+    const pathLengthSquared = pathDeltaX ** 2 + pathDeltaY ** 2
 
     for (const segmentId of nearbySegmentIds) {
       const segment = indexedSegments[segmentId]
       if (!segment || segment.connectedToCurrentConnection) continue
       if (segment.z !== node.z) continue
+      if (
+        queryBounds &&
+        (queryBounds.maxX < segment.minX ||
+          queryBounds.maxY < segment.minY ||
+          queryBounds.minX > segment.maxX ||
+          queryBounds.minY > segment.maxY)
+      ) {
+        continue
+      }
       if (
         planarObstacleQuery &&
         (maxX + clearance < segment.minX ||
@@ -428,8 +497,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         getSegmentToSegmentCenterlineDistance(
           node,
           parent,
-          segment.A,
-          segment.B,
+          pathDeltaX,
+          pathDeltaY,
+          pathLengthSquared,
+          segment,
         ) < clearance
       ) {
         return true
@@ -438,12 +509,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return false
   }
 
-  getPlanarObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
+  getPlanarObstacleQuery(
+    node: Node,
+    sharedQuery?: PlanarObstacleQuery,
+    pointKey?: number,
+  ): PlanarObstacleQuery | undefined {
     const parent = node.parent
     if (!parent) return undefined
-    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
-    const segments = this.obstacleSegmentsByLayer.get(node.z)
-    if (!segmentIndex || !segments) return undefined
+    const segmentIndex = sharedQuery
+      ? undefined
+      : this.obstacleSegmentIndexByLayer.get(node.z)
+    const segments =
+      sharedQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
+    if (!segments || (!sharedQuery && !segmentIndex)) return undefined
 
     const traceProximity = this.traceThickness + this.obstacleMargin
     const clearance =
@@ -451,18 +529,58 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
+    const minX = Math.min(node.x - traceProximity, parent.x - clearance)
+    const minY = Math.min(node.y - traceProximity, parent.y - clearance)
+    const maxX = Math.max(node.x + traceProximity, parent.x + clearance)
+    const maxY = Math.max(node.y + traceProximity, parent.y + clearance)
+    if (sharedQuery) {
+      const queryBounds = (sharedQuery.segmentBounds ??= {
+        minX,
+        minY,
+        maxX,
+        maxY,
+      })
+      queryBounds.minX = minX
+      queryBounds.minY = minY
+      queryBounds.maxX = maxX
+      queryBounds.maxY = maxY
+      sharedQuery.pointQueryProximity = traceProximity
+      sharedQuery.pointKey = pointKey
+      return sharedQuery
+    }
+    return {
+      segments,
+      segmentIds: segmentIndex!.search(minX, minY, maxX, maxY),
+      pointQueryProximity: traceProximity,
+      pointKey,
+    }
+  }
+
+  getPlanarNeighborObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
+    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
+    const segments = this.obstacleSegmentsByLayer.get(node.z)
+    if (!segmentIndex || !segments) return undefined
+    const traceProximity = this.traceThickness + this.obstacleMargin
+    const clearance =
+      this.obstacleSegments.length > 0 ? this.NEARBY_SEGMENT_CLEARANCE : 0
+    const { minX, minY, maxX, maxY } = this.bounds
+    const minimumNeighborX = clamp(node.x - this.cellStep, minX, maxX)
+    const minimumNeighborY = clamp(node.y - this.cellStep, minY, maxY)
+    const maximumNeighborX = clamp(node.x + this.cellStep, minX, maxX)
+    const maximumNeighborY = clamp(node.y + this.cellStep, minY, maxY)
     return {
       segments,
       segmentIds: segmentIndex.search(
-        Math.min(node.x - traceProximity, parent.x - clearance),
-        Math.min(node.y - traceProximity, parent.y - clearance),
-        Math.max(node.x + traceProximity, parent.x + clearance),
-        Math.max(node.y + traceProximity, parent.y + clearance),
+        Math.min(minimumNeighborX - traceProximity, node.x - clearance),
+        Math.min(minimumNeighborY - traceProximity, node.y - clearance),
+        Math.max(maximumNeighborX + traceProximity, node.x + clearance),
+        Math.max(maximumNeighborY + traceProximity, node.y + clearance),
       ),
     }
   }
 
   buildObstacleIndexes() {
+    this.freePlanarObstaclePoints.clear()
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -482,8 +600,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) ?? false
 
       for (const pointPair of getSameLayerPointPairs(route)) {
+        const deltaX = pointPair.B.x - pointPair.A.x
+        const deltaY = pointPair.B.y - pointPair.A.y
         obstacleSegments.push({
           ...pointPair,
+          deltaX,
+          deltaY,
+          lengthSquared: deltaX ** 2 + deltaY ** 2,
           minX: Math.min(pointPair.A.x, pointPair.B.x),
           minY: Math.min(pointPair.A.y, pointPair.B.y),
           maxX: Math.max(pointPair.A.x, pointPair.B.x),
@@ -577,6 +700,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
+    let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
+    let queriedPlanarNeighbors = false
 
     const { maxX, minX, maxY, minY } = this.bounds
 
@@ -600,7 +725,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
 
-        const planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
+        if (!queriedPlanarNeighbors) {
+          sharedPlanarObstacleQuery = this.getPlanarNeighborObstacleQuery(node)
+          queriedPlanarNeighbors = true
+        }
+        const planarObstacleQuery = this.getPlanarObstacleQuery(
+          neighbor,
+          sharedPlanarObstacleQuery,
+          neighborKey,
+        )
         if (
           this.isNodeTooCloseToObstacle(
             neighbor,
@@ -979,6 +1112,9 @@ type IndexedObstacleSegment = {
   z: number
   A: { x: number; y: number; z: number }
   B: { x: number; y: number; z: number }
+  deltaX: number
+  deltaY: number
+  lengthSquared: number
   minX: number
   minY: number
   maxX: number
@@ -988,9 +1124,18 @@ type IndexedObstacleSegment = {
 
 type IndexedObstacleVia = { x: number; y: number }
 
+type FreePlanarObstaclePoint = {
+  x: number
+  y: number
+  z: number
+}
+
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]
   segmentIds: number[]
+  segmentBounds?: { minX: number; minY: number; maxX: number; maxY: number }
+  pointQueryProximity?: number
+  pointKey?: number
 }
 
 function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
@@ -1020,13 +1165,70 @@ function clamp(value: number, min: number, max: number) {
 function getSegmentToSegmentCenterlineDistance(
   leftA: { x: number; y: number },
   leftB: { x: number; y: number },
-  rightA: { x: number; y: number },
-  rightB: { x: number; y: number },
-) {
-  return Math.min(
-    pointToSegmentDistance(leftA, rightA, rightB),
-    pointToSegmentDistance(leftB, rightA, rightB),
-    pointToSegmentDistance(rightA, leftA, leftB),
-    pointToSegmentDistance(rightB, leftA, leftB),
+  leftDeltaX: number,
+  leftDeltaY: number,
+  leftLengthSquared: number,
+  right: IndexedObstacleSegment,
+): number {
+  // Keep the square root before the strict clearance comparison: squaring the
+  // threshold would change rounding at the original distance boundary.
+  return Math.sqrt(
+    Math.min(
+      getPointToPrecomputedSegmentDistanceSquared(
+        leftA,
+        right.A,
+        right.deltaX,
+        right.deltaY,
+        right.lengthSquared,
+      ),
+      getPointToPrecomputedSegmentDistanceSquared(
+        leftB,
+        right.A,
+        right.deltaX,
+        right.deltaY,
+        right.lengthSquared,
+      ),
+      getPointToPrecomputedSegmentDistanceSquared(
+        right.A,
+        leftA,
+        leftDeltaX,
+        leftDeltaY,
+        leftLengthSquared,
+      ),
+      getPointToPrecomputedSegmentDistanceSquared(
+        right.B,
+        leftA,
+        leftDeltaX,
+        leftDeltaY,
+        leftLengthSquared,
+      ),
+    ),
   )
+}
+
+function getPointToPrecomputedSegmentDistanceSquared(
+  point: { x: number; y: number },
+  start: { x: number; y: number },
+  deltaX: number,
+  deltaY: number,
+  lengthSquared: number,
+): number {
+  if (lengthSquared === 0) {
+    const dx = point.x - start.x
+    const dy = point.y - start.y
+    return dx * dx + dy * dy
+  }
+  const projectionRatio = Math.max(
+    0,
+    Math.min(
+      1,
+      ((point.x - start.x) * deltaX + (point.y - start.y) * deltaY) /
+        lengthSquared,
+    ),
+  )
+  const projectionX = start.x + projectionRatio * deltaX
+  const projectionY = start.y + projectionRatio * deltaY
+  const dx = point.x - projectionX
+  const dy = point.y - projectionY
+  return dx * dx + dy * dy
 }

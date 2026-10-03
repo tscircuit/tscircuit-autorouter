@@ -103,6 +103,8 @@ export class TraceWidthSolver extends BaseSolver {
   hdRouteSHI: HighDensityRouteSpatialIndex
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
+  private obstacleConnectivityRoute: HighDensityRoute | undefined
+  private obstacleConnectivityByObstacle = new WeakMap<Obstacle, boolean>()
 
   constructor(input: TraceWidthSolverInput) {
     super()
@@ -156,6 +158,21 @@ export class TraceWidthSolver extends BaseSolver {
       return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
     }
     return undefined
+  }
+
+  private isObstacleConnectedToRouteCached(
+    obstacle: Obstacle,
+    route: HighDensityRoute,
+  ): boolean {
+    if (this.obstacleConnectivityRoute !== route) {
+      this.obstacleConnectivityRoute = route
+      this.obstacleConnectivityByObstacle = new WeakMap()
+    }
+    const cachedConnectivity = this.obstacleConnectivityByObstacle.get(obstacle)
+    if (cachedConnectivity !== undefined) return cachedConnectivity
+    const connected = isObstacleConnectedToRoute(obstacle, route, this.connMap)
+    this.obstacleConnectivityByObstacle.set(obstacle, connected)
+    return connected
   }
 
   _step() {
@@ -388,7 +405,7 @@ export class TraceWidthSolver extends BaseSolver {
     }
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
+      if (this.isObstacleConnectedToRouteCached(obstacle, this.currentTrace))
         continue
       if (
         obstacle.obstacleId &&
@@ -548,7 +565,7 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+      if (!this.isObstacleConnectedToRouteCached(obstacle, route)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
