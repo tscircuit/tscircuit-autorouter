@@ -154,8 +154,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     const layerCount =
       opts.nodeWithPortPoints.availableZ?.length ??
       new Set(opts.nodeWithPortPoints.portPoints.map((point) => point.z)).size
-    this.deferParameterSweeps =
-      layerCount > STANDARD_PORTFOLIO_MAX_LAYER_COUNT
+    this.deferParameterSweeps = layerCount > STANDARD_PORTFOLIO_MAX_LAYER_COUNT
     this.fullPortfolioInitialized = !this.deferParameterSweeps
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -490,9 +489,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["flipTraceAlignmentDirection", "orderings6"],
     ]) {
       const combinations = this.getHyperParameterCombinations(
-        hyperParameterDefs.filter(({ name }) =>
-          combinationDef.includes(name),
-        ),
+        hyperParameterDefs.filter(({ name }) => combinationDef.includes(name)),
       )
       for (const hyperParameters of combinations) {
         const candidateKey = JSON.stringify(
