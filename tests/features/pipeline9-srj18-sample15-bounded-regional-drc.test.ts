@@ -59,7 +59,8 @@ test("regional repair expands a stalled context before exhausting its shared bud
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   const result = solver.getResult()
-  expect(result.initialDrcIssueCount).toBe(117)
+  // checks 0.0.233 also catches the 0.095 mm different-net via copper gap.
+  expect(result.initialDrcIssueCount).toBe(118)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(budget.maxRegions)

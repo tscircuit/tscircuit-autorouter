@@ -197,3 +197,4 @@ result-*
 tmp
 
 *.received.svg
+*-drc.received.json

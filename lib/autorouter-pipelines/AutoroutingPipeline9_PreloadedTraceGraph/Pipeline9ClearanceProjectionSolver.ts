@@ -102,7 +102,10 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           (params.allowPartialRepair || params.usePrecisionMargin
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
-        viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
+        viaClearance:
+          (params.originalSrj.minPadEdgeToPadEdgeClearance ??
+            RELAXED_DRC_OPTIONS.viaClearance!) +
+          (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
       this.activeSubSolver = solver

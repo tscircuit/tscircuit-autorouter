@@ -1037,6 +1037,7 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
       : { shape: "rect" as const }),
     material: "fr4",
     min_trace_to_hole_edge_clearance: srj.minTraceToHoleEdgeClearance,
+    min_pad_edge_to_pad_edge_clearance: srj.minPadEdgeToPadEdgeClearance,
     ...(srj.minBoardEdgeClearance !== undefined
       ? { min_board_edge_clearance: srj.minBoardEdgeClearance }
       : {}),
