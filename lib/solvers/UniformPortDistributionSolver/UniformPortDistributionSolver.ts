@@ -1,9 +1,13 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import type { CapacityMeshNodeId, Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type {
+  InputNodeWithPortPoints,
+  InputPortPoint,
+  PortPointId,
+} from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
   OwnerPair,
@@ -49,6 +53,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  readonly inputNodeById = new Map<
+    CapacityMeshNodeId,
+    InputNodeWithPortPoints
+  >()
+  readonly inputPortPointByNodeId = new Map<
+    CapacityMeshNodeId,
+    Map<PortPointId, InputPortPoint>
+  >()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -68,6 +80,31 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
 
+    const connectionNodeIdsByPortPointId = new Map<
+      PortPointId,
+      InputPortPoint["connectionNodeIds"]
+    >()
+    for (const node of input.inputNodesWithPortPoints) {
+      if (!this.inputNodeById.has(node.capacityMeshNodeId)) {
+        this.inputNodeById.set(node.capacityMeshNodeId, node)
+        const portPointById = new Map<PortPointId, InputPortPoint>()
+        for (const portPoint of node.portPoints) {
+          if (!portPointById.has(portPoint.portPointId)) {
+            portPointById.set(portPoint.portPointId, portPoint)
+          }
+        }
+        this.inputPortPointByNodeId.set(node.capacityMeshNodeId, portPointById)
+      }
+      for (const portPoint of node.portPoints) {
+        if (!connectionNodeIdsByPortPointId.has(portPoint.portPointId)) {
+          connectionNodeIdsByPortPointId.set(
+            portPoint.portPointId,
+            portPoint.connectionNodeIds,
+          )
+        }
+      }
+    }
+
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
     for (const node of input.nodeWithPortPoints) {
       for (const portPoint of node.portPoints) {
@@ -75,13 +112,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
         const ownerNodeIds = determineOwnerPair({
           portPointId: portPoint.portPointId,
           currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodesWithPortPoints,
+          connectionNodeIdsByPortPointId,
         })
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
         const alreadyPresent = existing.some(
-          (point) =>
-            point.portPointId && point.portPointId === portPoint.portPointId,
+          (point) => point.portPointId === portPoint.portPointId,
         )
         if (!alreadyPresent) {
           existing.push({
@@ -128,12 +164,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
       obstacles: this.input.obstacles,
     })
     if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    const blockedByLayer = new Map<number, boolean>()
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
         portPoint.z,
         (portCountByLayer.get(portPoint.z) ?? 0) + 1,
       )
+      if (!blockedByLayer.has(portPoint.z)) {
+        blockedByLayer.set(
+          portPoint.z,
+          shouldIgnoreSharedEdge({
+            sharedEdge,
+            obstacles: this.input.obstacles,
+            z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
+            layerCount: this.input.layerCount,
+          }),
+        )
+      }
     }
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
@@ -147,16 +195,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
         continue
       }
       if (
-        !shouldIgnoreSharedEdge({
-          sharedEdge,
-          obstacles: this.input.obstacles,
-          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
-          layerCount: this.input.layerCount,
-        }) &&
+        !blockedByLayer.get(portPoint.z) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
+          inputNodeById: this.inputNodeById,
+          inputPortPointByNodeId: this.inputPortPointByNodeId,
         })
       ) {
         family.push(portPoint)
