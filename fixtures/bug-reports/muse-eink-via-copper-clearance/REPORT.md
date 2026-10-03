@@ -116,3 +116,24 @@ As a control, removing all saved FPC escapes from the same board without
 changing physical placement routes with 101 vias and zero circuit DRC errors.
 The failing input is preserved intact here. The published Muse design and
 its separate manual correction are not changed by this PR.
+
+## Power-expansion integration regression
+
+The full-board Linux CI regression exposed a second clearance omission after
+routing. Capturing the actual CI geometry proved that its pre-expansion routes
+have zero declared-rule DRC errors, but expansion introduces four different-net
+via copper gaps of 0.130–0.141 mm against the board's 0.15 mm minimum.
+
+The dependency's spatial index used the 0.10 mm trace clearance for those via
+pairs. The companion fix in tscircuit/power-trace-expander#35 reads the declared
+pad-edge rule for via-to-via copper queries and expands the spatial search bounds.
+Same-net copper exemption, mechanical drill spacing, and trace clearance remain
+independent. The autorouter pins the same fix backported onto its existing
+acc9264 dependency to avoid unrelated dependency changes.
+
+Replaying the captured Linux pre-expansion routes with that dependency returns
+zero declared-rule DRC errors. Its regression fails on the previous dependency
+and passes on the fixed version. The dependency passes 48 tests on main and 86
+on the integration base; the autorouter also guards the copper/drill/trace rule
+separation with a dedicated integration test. The changed full-board Linux SVG
+was rendered and inspected before updating the snapshot.
