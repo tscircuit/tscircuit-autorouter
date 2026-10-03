@@ -1,9 +1,6 @@
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { SimpleRouteJson } from "lib/types"
 import { getConnectionPointLayers } from "./connection-point-utils"
-import { SimpleRouteJson } from "lib/types"
-import {
-  ConnectivityMap,
-  findConnectedNetworks,
-} from "circuit-json-to-connectivity-map"
 import { mapLayerNameToZ } from "./mapLayerNameToZ"
 
 const pointHash = (point: { x: number; y: number }) =>
@@ -71,5 +68,7 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
       connectionGroups.push(connectionGroup)
     }
   }
-  return new ConnectivityMap(findConnectedNetworks(connectionGroups))
+  const connMap = new ConnectivityMap({})
+  connMap.addConnections(connectionGroups)
+  return connMap
 }
