@@ -1,3 +1,4 @@
+import type { summarizePostRoutingBenchmark } from "./pipeline9-post-routing-profile"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
 export type BenchmarkTask = {
@@ -134,6 +135,14 @@ export type WorkerResult<
   error?: string
   stageTiming?: BenchmarkStageTimingBreakdown
   routingMetrics?: RoutingBenchmarkMetrics
+  /** Explicit branch profile. Unsupported physical inputs have no scored vias. */
+  postRoutingBenchmark?: {
+    arm: "A" | "B" | "A+B"
+    pipelineSolved: boolean
+    eligible: boolean
+    totalSearchBudget: { maxMilliseconds: number; maxExpansions: number }
+    reports: Array<ReturnType<typeof summarizePostRoutingBenchmark>>
+  }
   benchmarkSnapshot?: TBenchmarkSnapshot
 }
 

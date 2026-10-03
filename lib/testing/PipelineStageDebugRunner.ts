@@ -14,6 +14,7 @@ type PipelineStepLike = {
 }
 
 type VisualizingSolver = {
+  getRecordedGraphics?: () => GraphicsObject
   visualize: () => GraphicsObject
   iterations?: number
   getSolverName?: () => string
@@ -208,7 +209,10 @@ export class PipelineStageDebugRunner<
     await writeFile(pngPath, png)
 
     const stepPngPaths = this.writeStepPngs
-      ? await this.writeStepPngsForGraphics(basePath, graphics)
+      ? await this.writeStepPngsForGraphics(
+          basePath,
+          stageSolver.getRecordedGraphics?.() ?? graphics,
+        )
       : []
     const svgPath = this.writeSvg ? `${basePath}.svg` : undefined
     const graphicsJsonPath = this.writeGraphicsJson

@@ -1,3 +1,13 @@
+import { restorePostRoutingPadMetadata } from "../../utils/restorePostRoutingPadMetadata"
+import type { AnyCircuitElement } from "circuit-json"
+import { preparePostRoutingWholeNetInput } from "../../solvers/PostRoutingOptimization/preparePostRoutingWholeNetInput"
+import { PostRoutingNetTreeSolver } from "../../solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
+import { PostRoutingOptimizationSolver } from "../../solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
+import type {
+  PostRoutingOptimizationInput,
+  PostRoutingOptimizationOptions,
+  PostRoutingOptimizationResult,
+} from "../../solvers/PostRoutingOptimization/optimizePostRouting"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -104,6 +114,10 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Authoritative source pad/drill facts used only by isolated post-routing inputs. */
+  postRoutingSourceCircuitJson?: readonly AnyCircuitElement[]
+  /** Explicit source pcb_hole ID to obstacle index provenance for ID-less holes. */
+  postRoutingSourceHoleObstacleIndices?: Readonly<Record<string, number>>
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -112,6 +126,8 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
+  /** Independent opt-in forest-first post-routing transaction. */
+  postRoutingOptimization?: PostRoutingOptimizationOptions
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
@@ -272,6 +288,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
+  postRoutingForestSolver?: PostRoutingNetTreeSolver
+  postRoutingOptimizationSolver?: PostRoutingOptimizationSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -307,7 +325,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
-  pipelineDef = [
+  pipelineDef: PipelineStep<new (...args: any[]) => BaseSolver>[] = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,
@@ -1080,6 +1098,40 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
+    if (opts.postRoutingOptimization?.enabled) {
+      const configuration = {
+        ...structuredClone({
+          enabled: true,
+          nets: opts.postRoutingOptimization.nets,
+          search: opts.postRoutingOptimization.search,
+          objective: opts.postRoutingOptimization.objective,
+        }),
+        validate: opts.postRoutingOptimization.validate,
+      }
+      configuration.nets = configuration.nets.map((plan) => ({
+        ...plan,
+        componentPlanning: "zero-via-forest",
+      }))
+      this.pipelineDef.push(
+        definePipelineStep(
+          "postRoutingForestSolver",
+          PostRoutingNetTreeSolver,
+          (cms) => [
+            cms.createPostRoutingInput(cms.getFinalizedRoutingTraces()),
+            configuration,
+          ],
+        ),
+        definePipelineStep(
+          "postRoutingOptimizationSolver",
+          PostRoutingOptimizationSolver,
+          (cms) => {
+            if (!cms.postRoutingForestSolver)
+              throw new Error("Pipeline9: post-routing forest proposal missing")
+            return [cms.postRoutingForestSolver.getOutput()]
+          },
+        ),
+      )
+    }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
@@ -1394,6 +1446,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   preview(): GraphicsObject {
+    if (
+      this.activeSubSolver instanceof PostRoutingNetTreeSolver ||
+      this.activeSubSolver instanceof PostRoutingOptimizationSolver
+    )
+      return this.activeSubSolver.preview()
+    if (this.solved && this.postRoutingOptimizationSolver)
+      return this.visualizeFinalOutput()
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
@@ -1617,6 +1676,49 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ).fixedTraces
   }
 
+  private getFinalizedRoutingTraces(): SimplifiedPcbTraces {
+    if (!this.powerTraceExpansionSolver)
+      throw new Error(
+        "Pipeline9: final copper requested before power trace expansion",
+      )
+    return [
+      ...this.getPowerTraceExpansionFixedTraces(),
+      ...this.powerTraceExpansionSolver.getOutput(),
+    ]
+  }
+
+  private createPostRoutingInput(
+    traces: SimplifiedPcbTraces,
+  ): PostRoutingOptimizationInput {
+    return preparePostRoutingWholeNetInput(
+      this.opts.postRoutingSourceCircuitJson
+        ? restorePostRoutingPadMetadata(
+            this.originalSrj,
+            this.opts.postRoutingSourceCircuitJson,
+            this.opts.postRoutingSourceHoleObstacleIndices,
+          )
+        : this.originalSrj,
+      traces,
+      this.getPowerTraceExpansionFixedTraces(),
+      Array.from(
+        new Set(
+          (this.opts.postRoutingOptimization?.nets ?? []).map(
+            (plan) => plan.net,
+          ),
+        ),
+      ),
+      this.netToPointPairsSolver?.newConnections ?? [],
+    )
+  }
+
+  getPostRoutingOptimizationResult():
+    | PostRoutingOptimizationResult
+    | undefined {
+    return this.postRoutingOptimizationSolver?.solved
+      ? this.postRoutingOptimizationSolver.getOutput()
+      : undefined
+  }
+
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
@@ -1624,6 +1726,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.powerTraceExpansionSolver) {
       throw new Error(
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+      )
+    }
+    const result = this.getPostRoutingOptimizationResult()
+    if (result?.status === "accepted") {
+      const protectedIds = new Set(
+        this.getPowerTraceExpansionFixedTraces()
+          .filter((trace) => trace.__replaces_pcb_trace_id === undefined)
+          .map((trace) => trace.pcb_trace_id),
+      )
+      return result.traces.filter(
+        (trace) => !protectedIds.has(trace.pcb_trace_id),
       )
     }
     return [
@@ -1643,10 +1756,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    const traces = [
-      ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    const result = this.getPostRoutingOptimizationResult()
+    const traces = result ? result.traces : this.getFinalizedRoutingTraces()
     return {
       ...this.originalSrj,
       traces,

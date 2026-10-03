@@ -113,3 +113,40 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export { DynamicNetTreeSolver } from "./solvers/DynamicNetTreeSolver/DynamicNetTreeSolver"
+export {
+  routeDynamicNetTree,
+  routeDynamicNetTreeSteps,
+} from "./solvers/DynamicNetTreeSolver/routeDynamicNetTree"
+export type {
+  DynamicNetTreeProblem,
+  DynamicNetTreeOptions,
+  DynamicNetTreeProgress,
+  DynamicNetTreeResult,
+} from "./solvers/DynamicNetTreeSolver/routeDynamicNetTree"
+export {
+  optimizePostRouting,
+  type PostRoutingOptimizationInput,
+  type PostRoutingOptimizationOptions,
+  type PostRoutingOptimizationResult,
+  type PostRoutingObjective,
+  type PostRoutingNetPlan,
+  type PostRoutingChange,
+} from "./solvers/PostRoutingOptimization/optimizePostRouting"
+export {
+  measurePostRoutingMetrics,
+  type PostRoutingMetrics,
+} from "./solvers/PostRoutingOptimization/measurePostRoutingMetrics"
+export {
+  validatePostRoutingCandidate,
+  type PostRoutingValidation,
+} from "./solvers/PostRoutingOptimization/validatePostRoutingCandidate"
+export type {
+  PostRoutingObstacle,
+  PostRoutingPhysicalInput,
+} from "./solvers/DynamicNetTreeSolver/createDynamicNetTreeProblem"
+export { PostRoutingNetTreeSolver } from "./solvers/PostRoutingOptimization/PostRoutingNetTreeSolver"
+export { PostRoutingOptimizationSolver } from "./solvers/PostRoutingOptimization/PostRoutingOptimizationSolver"
+
+export { restorePostRoutingPadMetadata } from "./utils/restorePostRoutingPadMetadata"
+export { UnsupportedPostRoutingInputError } from "./solvers/PostRoutingOptimization/UnsupportedPostRoutingInputError"
