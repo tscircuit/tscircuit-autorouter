@@ -37,6 +37,59 @@ const getSegmentBounds = (segment: Segment) => {
 
 export type BucketCoordinate = `${number}x${number}`
 
+export const getSegmentBucketCoordinates = (
+  segment: Segment,
+  cellSize: number,
+): BucketCoordinate[] => {
+  const [start, end] = segment
+  let ix = Math.floor(start.x / cellSize)
+  let iy = Math.floor(start.y / cellSize)
+  const endIx = Math.floor(end.x / cellSize)
+  const endIy = Math.floor(end.y / cellSize)
+  const stepX = Math.sign(end.x - start.x)
+  const stepY = Math.sign(end.y - start.y)
+  const deltaX = end.x - start.x
+  const deltaY = end.y - start.y
+  const tDeltaX = stepX === 0 ? Infinity : cellSize / Math.abs(deltaX)
+  const tDeltaY = stepY === 0 ? Infinity : cellSize / Math.abs(deltaY)
+  let tMaxX =
+    stepX === 0
+      ? Infinity
+      : ((stepX > 0 ? (ix + 1) * cellSize : ix * cellSize) - start.x) /
+        deltaX
+  let tMaxY =
+    stepY === 0
+      ? Infinity
+      : ((stepY > 0 ? (iy + 1) * cellSize : iy * cellSize) - start.y) /
+        deltaY
+  const bucketCoordinates: BucketCoordinate[] = [`${ix}x${iy}`]
+
+  while (ix !== endIx || iy !== endIy) {
+    if (ix === endIx) {
+      iy += stepY
+      tMaxY += tDeltaY
+    } else if (iy === endIy) {
+      ix += stepX
+      tMaxX += tDeltaX
+    } else if (tMaxX < tMaxY) {
+      ix += stepX
+      tMaxX += tDeltaX
+    } else if (tMaxY < tMaxX) {
+      iy += stepY
+      tMaxY += tDeltaY
+    } else {
+      bucketCoordinates.push(`${ix + stepX}x${iy}`, `${ix}x${iy + stepY}`)
+      ix += stepX
+      iy += stepY
+      tMaxX += tDeltaX
+      tMaxY += tDeltaY
+    }
+    bucketCoordinates.push(`${ix}x${iy}`)
+  }
+
+  return bucketCoordinates
+}
+
 // --- Geometry Helper Functions (Unchanged, but ensure Point2D compatibility) ---
 
 function computeDistSq(p1: Point2D, p2: Point2D): number {
@@ -108,8 +161,6 @@ export class HighDensityRouteSpatialIndex {
     this.segmentBuckets = new Map()
     this.viaBuckets = new Map() // Initialize via buckets
     this.CELL_SIZE = cellSize
-    const epsilon = 1e-9 // For segment boundary checks
-
     for (const route of routes) {
       if (!route || !route.connectionName) {
         console.warn("Skipping route with missing data:", route)
@@ -132,29 +183,22 @@ export class HighDensityRouteSpatialIndex {
           if (p1.insideJumperPad && p2.insideJumperPad) continue
 
           const segment: Segment = [p1, p2]
-          const bounds = getSegmentBounds(segment)
-
           const segmentInfo: StoredSegment = {
             segmentId: `${route.connectionName}-seg-${i}`,
             segment: segment,
             parentRoute: route,
           }
 
-          const minIndexX = Math.floor(bounds.minX / this.CELL_SIZE)
-          const maxIndexX = Math.floor((bounds.maxX + epsilon) / this.CELL_SIZE)
-          const minIndexY = Math.floor(bounds.minY / this.CELL_SIZE)
-          const maxIndexY = Math.floor((bounds.maxY + epsilon) / this.CELL_SIZE)
-
-          for (let ix = minIndexX; ix <= maxIndexX; ix++) {
-            for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-              const bucketKey = `${ix}x${iy}` as BucketCoordinate
-              let bucketList = this.segmentBuckets.get(bucketKey)
-              if (!bucketList) {
-                bucketList = []
-                this.segmentBuckets.set(bucketKey, bucketList)
-              }
-              bucketList.push(segmentInfo)
+          for (const bucketKey of getSegmentBucketCoordinates(
+            segment,
+            this.CELL_SIZE,
+          )) {
+            let bucketList = this.segmentBuckets.get(bucketKey)
+            if (!bucketList) {
+              bucketList = []
+              this.segmentBuckets.set(bucketKey, bucketList)
             }
+            bucketList.push(segmentInfo)
           }
         }
       }
@@ -376,8 +420,6 @@ export class HighDensityRouteSpatialIndex {
       route.viaDiameter / 2,
     )
 
-    const epsilon = 1e-9
-
     // --- Index Segments ---
     if (route.route && route.route.length >= 2) {
       for (let i = 0; i < route.route.length - 1; i++) {
@@ -389,29 +431,22 @@ export class HighDensityRouteSpatialIndex {
         if (p1.insideJumperPad && p2.insideJumperPad) continue
 
         const segment: Segment = [p1, p2]
-        const bounds = getSegmentBounds(segment)
-
         const segmentInfo: StoredSegment = {
           segmentId: `${route.connectionName}-seg-${i}`,
           segment: segment,
           parentRoute: route,
         }
 
-        const minIndexX = Math.floor(bounds.minX / this.CELL_SIZE)
-        const maxIndexX = Math.floor((bounds.maxX + epsilon) / this.CELL_SIZE)
-        const minIndexY = Math.floor(bounds.minY / this.CELL_SIZE)
-        const maxIndexY = Math.floor((bounds.maxY + epsilon) / this.CELL_SIZE)
-
-        for (let ix = minIndexX; ix <= maxIndexX; ix++) {
-          for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-            const bucketKey = `${ix}x${iy}` as BucketCoordinate
-            let bucketList = this.segmentBuckets.get(bucketKey)
-            if (!bucketList) {
-              bucketList = []
-              this.segmentBuckets.set(bucketKey, bucketList)
-            }
-            bucketList.push(segmentInfo)
+        for (const bucketKey of getSegmentBucketCoordinates(
+          segment,
+          this.CELL_SIZE,
+        )) {
+          let bucketList = this.segmentBuckets.get(bucketKey)
+          if (!bucketList) {
+            bucketList = []
+            this.segmentBuckets.set(bucketKey, bucketList)
           }
+          bucketList.push(segmentInfo)
         }
       }
     }
