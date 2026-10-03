@@ -315,6 +315,7 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      EXACT_BIDIRECTIONAL_FALLBACK_EXPANSION_THRESHOLD: 10_000,
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
