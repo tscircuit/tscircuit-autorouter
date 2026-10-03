@@ -121,8 +121,8 @@ test("precomputed geometry preserves strict distance boundaries and point memo i
       )
       expect(solver.doesPathToParentIntersectObstacle(node)).toBe(
         overlapsPathBounds &&
-        (doSegmentsIntersect(point, parent, a, b) ||
-          (clearance > 0 && pathDistance < clearance)),
+          (doSegmentsIntersect(point, parent, a, b) ||
+            (clearance > 0 && pathDistance < clearance)),
       )
     }
   }

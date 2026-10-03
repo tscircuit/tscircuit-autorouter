@@ -140,9 +140,7 @@ test("shared planar broadphase preserves per-neighbor decisions and query bounds
             ])
             expect([
               ...shared.debug_nodePathToParentIntersectsObstacle,
-            ]).toEqual([
-              ...reference.debug_nodePathToParentIntersectsObstacle,
-            ])
+            ]).toEqual([...reference.debug_nodePathToParentIntersectsObstacle])
             comparedNeighborhoods++
           }
         }
