@@ -1352,6 +1352,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       referenceDrcCandidateCache = { candidateKey, result }
       return result
     }
+    cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
     this.clearancePrecisionDrcEvaluator = ({
       routes,
@@ -1499,6 +1500,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.cacheIndexedDrcResult(candidateKey, candidateDrcResult)
       return candidateDrcResult
     }
+    // Candidate preparation above supplies the exact SRJ and trace context.
+    drcEvaluator.inputMode = "routes-only"
     this.drcEvaluator = drcEvaluator
 
     this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({

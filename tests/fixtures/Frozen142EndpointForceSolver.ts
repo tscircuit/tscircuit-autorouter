@@ -1,6 +1,11 @@
+// Frozen force pass from autorouter142e5b097cbaf0cfb27489f77bedf1c1ea3cad91.
+// Source SHA-256: 1731231d39f742ded45135a00c8264b6167b301cd6612ea26cf8b4e6f564faec
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
-import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
-import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
+import { MultiHeadPolyLineIntraNodeSolver2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
+import type {
+  MHPoint2,
+  PolyLine2,
+} from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
 
 type ForceSegment = {
   p1: MHPoint2
@@ -11,11 +16,6 @@ type ForceSegment = {
   layer: number
   p1Idx: number
   p2Idx: number
-  lastTargetLine: number
-  lastEndpointIndex: number
-  lastFx: number
-  lastFy: number
-  lastForceActive: boolean
 }
 
 type ForceVia = {
@@ -29,97 +29,8 @@ type ForceGeometry = {
   vias: ForceVia[]
 }
 
-export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNodeSolver {
-  override getSolverName(): string {
-    return "MultiHeadPolyLineIntraNodeSolver2"
-  }
-
-  computeG(polyLines: any, candidate: any) {
-    return candidate.g + 0.000005 + candidate.viaCount * 0.000005 * 100
-  }
-
-  /**
-   * We don't use the heuristic because we don't queue new candidates with this
-   * solver
-   */
-  computeH(candidate: any) {
-    const { minGaps } = candidate
-    let collisionScore = 0
-    for (const gap of minGaps) {
-      if (gap < 0) {
-        collisionScore += this.obstacleMargin
-      }
-      if (gap < this.obstacleMargin) {
-        collisionScore += this.obstacleMargin - gap
-      }
-    }
-    return collisionScore * 0.011 // 100 iterations @ hdpolyline09_optimized
-  }
-
-  _step() {
-    if (this.phase === "setup") {
-      this.setupInitialPolyLines()
-      this.phase = "solving"
-      return
-    }
-
-    const currentCandidate = this.candidates.shift()
-    if (!currentCandidate) {
-      this.tryFinalAcceptance()
-      if (this.solved) return
-      this.failed = true
-      return
-    }
-    this.lastCandidate = currentCandidate
-
-    if (this.checkIfSolved(currentCandidate)) {
-      this.solved = true
-      this._setSolvedRoutes()
-      return
-    }
-
-    // Apply forces iteratively to the current candidate
-    let lastStepMoved = false
-    let magForceApplied = 0
-    // First run we just do a single step to get the force applied for h
-    // computation
-    const stepsToRun = currentCandidate.magForceApplied === undefined ? 1 : 10
-    for (let step = 0; step < stepsToRun; step++) {
-      const result = this.applyForcesToPolyLines(currentCandidate.polyLines)
-      magForceApplied += result.magForceApplied
-      lastStepMoved = result.lastStepMoved
-      if (!result.lastStepMoved) break
-    }
-    currentCandidate.magForceApplied = magForceApplied
-
-    currentCandidate.minGaps = this.computeMinGapBtwPolyLines(
-      currentCandidate.polyLines,
-    )
-
-    if (this.checkIfSolved(currentCandidate)) {
-      this.solved = true
-      this._setSolvedRoutes()
-      return
-    }
-
-    currentCandidate.g = this.computeG(
-      currentCandidate.polyLines,
-      currentCandidate,
-    )
-    currentCandidate.h = this.computeH(currentCandidate)
-    currentCandidate.f = currentCandidate.g + currentCandidate.h
-
-    if (lastStepMoved) {
-      this.insertCandidate(currentCandidate)
-    }
-  }
-
-  /**
-   * Applies repulsive forces between polylines (segments and vias) and boundary forces
-   * directly modifying the input polyLines array.
-   * Returns true if any mPoint was moved, false otherwise.
-   */
-  applyForcesToPolyLines(polyLines: PolyLine2[]): {
+export class Frozen142EndpointForceSolver extends MultiHeadPolyLineIntraNodeSolver2 {
+  override applyForcesToPolyLines(polyLines: PolyLine2[]): {
     lastStepMoved: boolean
     magForceApplied: number
   } {
@@ -174,53 +85,32 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       // srcIdOpp: string, // Not needed with addNetForce
       // srcIdThis: string, // Not needed with addNetForce
     ): void => {
-      let fx: number
-      let fy: number
-      // Adjacent segments share an endpoint. Geometry stays fixed until all
-      // forces have been summed, and each segment belongs to one opposite line.
-      if (
-        otherSeg.lastTargetLine === targetLine &&
-        otherSeg.lastEndpointIndex === epIdx
-      ) {
-        if (!otherSeg.lastForceActive) return
-        fx = otherSeg.lastFx
-        fy = otherSeg.lastFy
-      } else {
-        let closestX = otherSeg.p1.x
-        let closestY = otherSeg.p1.y
-        if (otherSeg.lengthSquared !== 0) {
-          const projectionRatio = Math.max(
-            0,
-            Math.min(
-              1,
-              ((ep.x - otherSeg.p1.x) * otherSeg.deltaX +
-                (ep.y - otherSeg.p1.y) * otherSeg.deltaY) /
-                otherSeg.lengthSquared,
-            ),
-          )
-          closestX += projectionRatio * otherSeg.deltaX
-          closestY += projectionRatio * otherSeg.deltaY
-        }
-        const dx = ep.x - closestX
-        const dy = ep.y - closestY
-        const dSq = dx * dx + dy * dy
-        otherSeg.lastTargetLine = targetLine
-        otherSeg.lastEndpointIndex = epIdx
-        if (dSq <= EPSILON) {
-          otherSeg.lastForceActive = false
-          return
-        }
-        const dist = Math.sqrt(dSq)
-        const mag =
-          SEGMENT_FORCE_MULTIPLIER *
-          FORCE_MAGNITUDE *
-          Math.exp(-FORCE_DECAY_RATE * dist)
-        fx = (dx / dist) * mag
-        fy = (dy / dist) * mag
-        otherSeg.lastFx = fx
-        otherSeg.lastFy = fy
-        otherSeg.lastForceActive = true
+      let closestX = otherSeg.p1.x
+      let closestY = otherSeg.p1.y
+      if (otherSeg.lengthSquared !== 0) {
+        const projectionRatio = Math.max(
+          0,
+          Math.min(
+            1,
+            ((ep.x - otherSeg.p1.x) * otherSeg.deltaX +
+              (ep.y - otherSeg.p1.y) * otherSeg.deltaY) /
+              otherSeg.lengthSquared,
+          ),
+        )
+        closestX += projectionRatio * otherSeg.deltaX
+        closestY += projectionRatio * otherSeg.deltaY
       }
+      const dx = ep.x - closestX
+      const dy = ep.y - closestY
+      const dSq = dx * dx + dy * dy
+      if (dSq <= EPSILON) return
+      const dist = Math.sqrt(dSq)
+      const mag =
+        SEGMENT_FORCE_MULTIPLIER *
+        FORCE_MAGNITUDE *
+        Math.exp(-FORCE_DECAY_RATE * dist)
+      const fx = (dx / dist) * mag
+      const fy = (dy / dist) * mag
 
       // push this endpoint
       addNetForce(targetLine, epIdx, fx, fy)
@@ -245,11 +135,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           layer: point.z2,
           p1Idx: index,
           p2Idx: index + 1,
-          lastTargetLine: -1,
-          lastEndpointIndex: -1,
-          lastFx: 0,
-          lastFy: 0,
-          lastForceActive: false,
         }
       })
       const vias = points.flatMap((point, index): ForceVia[] =>
