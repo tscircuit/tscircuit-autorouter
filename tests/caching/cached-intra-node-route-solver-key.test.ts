@@ -58,4 +58,33 @@ describe("CachedIntraNodeRouteSolver cache key", () => {
       solverB.computeCacheKeyAndTransform().cacheKey,
     )
   })
+
+  it("preserves non-finite hyperparameter values", () => {
+    const createSolver = (obstacleProximitySigma: number | undefined) =>
+      new CachedIntraNodeRouteSolver({
+        nodeWithPortPoints: makeNode(),
+        traceWidth: 0.15,
+        viaDiameter: 0.3,
+        obstacleMargin: 0.15,
+        hyperParameters: {
+          SHUFFLE_SEED: 0,
+          OBSTACLE_PROX_SIGMA: obstacleProximitySigma,
+        },
+      })
+
+    const infinityKey = createSolver(
+      Number.POSITIVE_INFINITY,
+    ).computeCacheKeyAndTransform().cacheKey
+    const negativeInfinityKey = createSolver(
+      Number.NEGATIVE_INFINITY,
+    ).computeCacheKeyAndTransform().cacheKey
+    const nanKey = createSolver(Number.NaN).computeCacheKeyAndTransform()
+      .cacheKey
+    const undefinedKey =
+      createSolver(undefined).computeCacheKeyAndTransform().cacheKey
+
+    expect(
+      new Set([infinityKey, negativeInfinityKey, nanKey, undefinedKey]),
+    ).toHaveLength(4)
+  })
 })
