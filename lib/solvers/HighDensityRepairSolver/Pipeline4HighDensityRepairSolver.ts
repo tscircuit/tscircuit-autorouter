@@ -80,16 +80,25 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
 
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
-  obstacles: Obstacle[],
+  obstacleSHI: ObstacleSpatialHashIndex,
   connMap?: ConnectivityMap,
-) =>
-  route.route.length > 0 &&
-  obstacles.some(
-    (obstacle) =>
-      isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route, connMap) &&
-      route.route.every((point) => isPointInsideObstacle(point, obstacle)),
-  )
+): boolean => {
+  const firstPoint = route.route[0]
+  if (!firstPoint) return false
+  return obstacleSHI
+    .search({
+      minX: firstPoint.x - 0.001,
+      maxX: firstPoint.x + 0.001,
+      minY: firstPoint.y - 0.001,
+      maxY: firstPoint.y + 0.001,
+    })
+    .some(
+      (obstacle) =>
+        isMultilayerObstacle(obstacle) &&
+        isObstacleConnectedToRoute(obstacle, route, connMap) &&
+        route.route.every((point) => isPointInsideObstacle(point, obstacle)),
+    )
+}
 
 const findNodeIndexForRoute = (
   route: HighDensityRoute,
@@ -247,7 +256,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       if (
         isSameNetMultilayerObstacleRoute(
           params.hdRoutes[i],
-          params.obstacles,
+          this.obstacleSHI,
           params.connMap,
         )
       ) {
@@ -272,6 +281,23 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           (node) => node.availableZ?.map((z) => z + 1) ?? [],
         ),
       ),
+    )
+    const layeredObstacleSHI = new ObstacleSpatialHashIndex(
+      "flatbush",
+      layeredObstacles,
+    )
+    const connectedToWithNetsByObstacle = new Map(
+      layeredObstacles.map((obstacle) => [
+        obstacle,
+        [
+          ...new Set(
+            obstacle.connectedTo.flatMap((id) => {
+              const net = params.connMap?.getNetConnectedToId(id)
+              return net ? [id, net] : [id]
+            }),
+          ),
+        ],
+      ]),
     )
     const repairRoutes = params.hdRoutes.map((route) =>
       toRepairRoute(route, params.connMap, params.minimumTraceWidth),
@@ -350,7 +376,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               .search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
               .filter(({ routeIndex }) => !ownedIndexes.has(routeIndex))
               .map(({ routeIndex }) => repairRoutes[routeIndex]),
-            clearanceObstacles: layeredObstacles
+            clearanceObstacles: layeredObstacleSHI
+              .search(bounds)
               .filter((obstacle) =>
                 doesRectOverlap(bounds, getObstacleBounds(obstacle)),
               )
@@ -360,14 +387,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 width: obstacle.width,
                 height: obstacle.height,
                 zLayers: obstacle.__zLayers,
-                connectedTo: [
-                  ...new Set(
-                    obstacle.connectedTo.flatMap((id) => {
-                      const net = params.connMap?.getNetConnectedToId(id)
-                      return net ? [id, net] : [id]
-                    }),
-                  ),
-                ],
+                connectedTo:
+                  connectedToWithNetsByObstacle.get(obstacle) ??
+                  obstacle.connectedTo,
               })),
             adjacentObstacles: getAdjacentObstacles(
               node,
