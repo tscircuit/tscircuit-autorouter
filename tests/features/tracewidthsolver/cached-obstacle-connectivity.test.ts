@@ -93,7 +93,5 @@ test("trace widths reuse true and false obstacle connectivity within a step whil
   )
   expect(
     cachedMap.connectivityChecksByPair.get("second:first-pad"),
-  ).toBeLessThan(
-    referenceMap.connectivityChecksByPair.get("second:first-pad")!,
-  )
+  ).toBeLessThan(referenceMap.connectivityChecksByPair.get("second:first-pad")!)
 })
