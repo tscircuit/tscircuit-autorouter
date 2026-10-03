@@ -37,6 +37,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import {
+  hasNetLargerThanNetCount,
+  orderConnectionsByNetCardinalityFairly,
+} from "./orderConnectionsByNetCardinalityFairly"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -1048,12 +1052,28 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
-    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
+    let connections = tinyRouteConnections
+    if (params.flags.USE_SELECTIVE_RERIP_ROUTING) {
+      const maxPartialRipRouteCount =
+        TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
+        Number.POSITIVE_INFINITY
+      const shouldInterleaveNets =
+        params.layerCount > 4 &&
+        tinyRouteConnections.length > maxPartialRipRouteCount &&
+        hasNetLargerThanNetCount(
           tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
-      : tinyRouteConnections
+      connections = shouldInterleaveNets
+        ? orderConnectionsByNetCardinalityFairly(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
+        : orderConnectionsByNetCardinality(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
+    }
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
         connection.connectionId,
