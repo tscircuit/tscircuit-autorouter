@@ -40,7 +40,9 @@ test("portfolio candidates preserve standalone routes and own their mutable conn
       hyperParameters,
     ) as CachedIntraNodeRouteSolver
     candidate.cacheProvider = null
-    expect(candidate.unsolvedConnections).toEqual(standalone.unsolvedConnections)
+    expect(candidate.unsolvedConnections).toEqual(
+      standalone.unsolvedConnections,
+    )
     expect(candidate.minDistBetweenEnteringPoints).toBeCloseTo(1e-8, 12)
     expect(candidate.computeCacheKeyAndTransform().cacheKey).toBe(
       standalone.computeCacheKeyAndTransform().cacheKey,

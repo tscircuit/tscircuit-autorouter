@@ -599,7 +599,9 @@ const buildSerializedTinyGraph = (
       },
     })
 
-    const startRegion = serializedRegionById.get(connection.startRegion.regionId)
+    const startRegion = serializedRegionById.get(
+      connection.startRegion.regionId,
+    )
     const endRegion = serializedRegionById.get(connection.endRegion.regionId)
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)

@@ -4,7 +4,10 @@ import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnte
 export type IntraNodeConnectionPoint = { x: number; y: number; z: number }
 
 export type PrecomputedIntraNodeRouteParams = {
-  connectionPointsByName: ReadonlyMap<string, readonly IntraNodeConnectionPoint[]>
+  connectionPointsByName: ReadonlyMap<
+    string,
+    readonly IntraNodeConnectionPoint[]
+  >
   rootConnectionNameByConnectionName: ReadonlyMap<string, string>
   minDistBetweenEnteringPoints: number
 }
@@ -16,7 +19,13 @@ export const precomputeIntraNodeRouteParams = (
   const connectionPointsByName = new Map<string, IntraNodeConnectionPoint[]>()
   const rootConnectionNameByConnectionName = new Map<string, string>()
   const seenPointsByConnectionName = new Map<string, Set<string>>()
-  for (const { connectionName, rootConnectionName, x, y, z } of node.portPoints) {
+  for (const {
+    connectionName,
+    rootConnectionName,
+    x,
+    y,
+    z,
+  } of node.portPoints) {
     if (rootConnectionName) {
       rootConnectionNameByConnectionName.set(connectionName, rootConnectionName)
     }

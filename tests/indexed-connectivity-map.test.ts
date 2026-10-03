@@ -6,7 +6,19 @@ test("indexed connectivity queries match the reference before and after net merg
   const initialNets = { first: ["a", "b"], second: ["c", "d"] }
   const reference = new ConnectivityMap(structuredClone(initialNets))
   const indexed = new IndexedConnectivityMap(structuredClone(initialNets))
-  const ids = ["a", "b", "c", "d", "e", "unknown", "first", "second", "constructor", "__proto__", "toString"]
+  const ids = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "unknown",
+    "first",
+    "second",
+    "constructor",
+    "__proto__",
+    "toString",
+  ]
   const additions = [[], [["b", "c"]], [["d", "e"]], [["new", "another"]]]
 
   for (const connections of additions) {
@@ -15,10 +27,16 @@ test("indexed connectivity queries match the reference before and after net merg
     expect(indexed.netMap).toEqual(reference.netMap)
     expect(indexed.idToNetMap).toEqual(reference.idToNetMap)
     for (const first of ids) {
-      expect(indexed.getNetConnectedToId(first)).toBe(reference.getNetConnectedToId(first))
+      expect(indexed.getNetConnectedToId(first)).toBe(
+        reference.getNetConnectedToId(first),
+      )
       for (const second of ids) {
-        expect(indexed.areIdsConnected(first, second)).toBe(reference.areIdsConnected(first, second))
-        expect(indexed.areAllIdsConnected([first, second])).toBe(reference.areAllIdsConnected([first, second]))
+        expect(indexed.areIdsConnected(first, second)).toBe(
+          reference.areIdsConnected(first, second),
+        )
+        expect(indexed.areAllIdsConnected([first, second])).toBe(
+          reference.areAllIdsConnected([first, second]),
+        )
       }
     }
   }

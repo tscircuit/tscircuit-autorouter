@@ -51,14 +51,18 @@ test("connection region selection preserves layer, boundary and graph-order pref
       layerCount: 2,
     })
 
-  expect(select([wrongLayer, firstCandidate, boundaryCandidate, connectedCandidate]))
-    .toBe(boundaryCandidate)
-  expect(select([firstCandidate, connectedCandidate, boundaryCandidate]))
-    .toBe(connectedCandidate)
-  expect(select([wrongLayer, firstCandidate, distantCandidate]))
-    .toBe(firstCandidate)
+  expect(
+    select([wrongLayer, firstCandidate, boundaryCandidate, connectedCandidate]),
+  ).toBe(boundaryCandidate)
+  expect(select([firstCandidate, connectedCandidate, boundaryCandidate])).toBe(
+    connectedCandidate,
+  )
+  expect(select([wrongLayer, firstCandidate, distantCandidate])).toBe(
+    firstCandidate,
+  )
   expect(select([wrongLayer, distantCandidate])).toBeUndefined()
   port.d.z = 1
-  expect(select([firstCandidate, boundaryCandidate, connectedCandidate]))
-    .toBe(firstCandidate)
+  expect(select([firstCandidate, boundaryCandidate, connectedCandidate])).toBe(
+    firstCandidate,
+  )
 })
