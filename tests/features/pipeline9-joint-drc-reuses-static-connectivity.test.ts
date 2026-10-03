@@ -53,10 +53,10 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
   }
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
   let connectivityChecks = 0
-  const areIdsConnected = connMap.areIdsConnected.bind(connMap)
-  connMap.areIdsConnected = (left: string, right: string): boolean => {
-    if (right === "distant_pad") connectivityChecks += 1
-    return areIdsConnected(left, right)
+  const getNetConnectedToId = connMap.getNetConnectedToId.bind(connMap)
+  connMap.getNetConnectedToId = (id: string): string | undefined => {
+    if (id === "distant_pad") connectivityChecks += 1
+    return getNetConnectedToId(id)
   }
   const solver = new Pipeline9JointDrcRepairSolver({
     srj,
