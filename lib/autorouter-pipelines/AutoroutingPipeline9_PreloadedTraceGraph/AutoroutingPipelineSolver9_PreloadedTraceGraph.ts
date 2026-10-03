@@ -130,7 +130,7 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   onSolved?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
 }
 
-const PIPELINE_STEP_BATCH_SIZE = 10
+const PIPELINE_STEP_BATCH_SIZE = 1_000
 
 /**
  * Collects the capacity mesh node ids produced by component-local topology

@@ -5,7 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 
 class BatchedChildSolver extends BaseSolver {
   override _step(): void {
-    if (this.iterations === 11) this.solved = true
+    if (this.iterations === 1_001) this.solved = true
   }
 }
 
@@ -24,12 +24,12 @@ test("Pipeline 9 batches synchronous child work and still observes completion", 
 
   pipeline.step()
 
-  expect(childSolver.iterations).toBe(10)
+  expect(childSolver.iterations).toBe(1_000)
   expect(pipeline.activeSubSolver).toBe(childSolver)
 
   pipeline.step()
 
-  expect(childSolver.iterations).toBe(11)
+  expect(childSolver.iterations).toBe(1_001)
   expect(pipeline.currentPipelineStepIndex).toBe(2)
   expect(pipeline.activeSubSolver).toBeNull()
 })
