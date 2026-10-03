@@ -1,11 +1,11 @@
-import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectionPoint } from "lib/types"
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { sharedZLayers } from "./sharedZLayers"
 import type { RegionHg } from "./types"
 
-const CONNECTION_POINT_REGION_TOLERANCE = 1e-3
+export const CONNECTION_POINT_REGION_TOLERANCE = 1e-3
 
 /** Checks whether a connection endpoint lies inside a region on at least one shared layer. */
 export function checkIfConnectionPointIsInRegion(params: {

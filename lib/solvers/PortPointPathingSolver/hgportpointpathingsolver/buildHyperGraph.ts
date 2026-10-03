@@ -1,5 +1,10 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import {
+  getAssignableViaAvailableZ,
+  getAssignableViaId,
+  isAssignableViaObstacle,
+} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   CapacityMeshNode,
@@ -7,17 +12,13 @@ import type {
   Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
-import {
-  getAssignableViaAvailableZ,
-  getAssignableViaId,
-  isAssignableViaObstacle,
-} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
+import { ConnectionPointRegionIndex } from "./ConnectionPointRegionIndex"
 import { assertDefined } from "./assertDefined"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
-  RawPort,
   ConnectionHgWithSimpleRouteConnection,
   HyperGraphHg,
+  RawPort,
   RegionHg,
   RegionPortHg,
 } from "./types"
@@ -252,18 +253,23 @@ export function buildHyperGraph(params: {
     layerCount: params.layerCount,
   })
 
+  const connectionPointRegionIndex = new ConnectionPointRegionIndex(
+    graph.regions,
+    params.layerCount,
+  )
+
   for (const connection of params.simpleRouteJsonConnections) {
     const [startPoint, endPoint] = connection.pointsToConnect
 
     const startRegion = selectConnectionPointRegion({
-      graph,
       point: startPoint,
       layerCount: params.layerCount,
+      regionIndex: connectionPointRegionIndex,
     })
     const endRegion = selectConnectionPointRegion({
-      graph,
       point: endPoint,
       layerCount: params.layerCount,
+      regionIndex: connectionPointRegionIndex,
     })
 
     assertDefined(

@@ -1,4 +1,4 @@
-import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
+import { ConnectionPointRegionIndex } from "../hgportpointpathingsolver/ConnectionPointRegionIndex"
 import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
@@ -14,6 +14,10 @@ export function getRegionNetIdByRegionId(input: {
   const regionNetCandidates = new Map<string, Set<number>>()
   const alreadyConnectedEndpointRegionIds = new Set<string>()
   const netIndexByConnectionAlias = new Map<string, number>()
+  const connectionPointRegionIndex = new ConnectionPointRegionIndex(
+    input.params.graph.regions,
+    input.params.layerCount,
+  )
   for (const connection of input.params.connections) {
     const netId = connection.mutuallyConnectedNetworkId
     const routeNetIndex = input.getNetIndex({
@@ -24,17 +28,9 @@ export function getRegionNetIdByRegionId(input: {
       netIndexByConnectionAlias.set(connectionAlias, routeNetIndex)
     }
     for (const point of connection.simpleRouteConnection.pointsToConnect) {
-      for (const region of input.params.graph.regions) {
-        if (
-          !checkIfConnectionPointIsInRegion({
-            point,
-            region,
-            layerCount: input.params.layerCount,
-          })
-        ) {
-          continue
-        }
-
+      for (const region of connectionPointRegionIndex.getRegionsContainingPoint(
+        point,
+      )) {
         const isDesiredConnectionEndpoint =
           point.pcb_port_id !== undefined || region.d._containsTarget === true
         if (!isDesiredConnectionEndpoint) {
