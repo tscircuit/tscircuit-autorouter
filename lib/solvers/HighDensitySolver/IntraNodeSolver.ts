@@ -3,7 +3,6 @@ import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -14,6 +13,10 @@ import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import {
+  precomputeIntraNodeRouteParams,
+  type PrecomputedIntraNodeRouteParams,
+} from "./precomputeIntraNodeRouteParams"
 
 type ConnectionPoint = { x: number; y: number; z: number }
 
@@ -102,6 +105,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
+    precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -115,41 +119,29 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
-    const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
-    this.rootConnectionNameByConnectionName = new Map()
-    for (const {
-      connectionName,
-      rootConnectionName,
-      x,
-      y,
-      z,
-    } of nodeWithPortPoints.portPoints) {
-      if (rootConnectionName) {
-        this.rootConnectionNameByConnectionName.set(
-          connectionName,
-          rootConnectionName,
-        )
-      }
-      unsolvedConnectionsMap.set(connectionName, [
-        ...(unsolvedConnectionsMap.get(connectionName) ?? []),
-        { x, y, z: z ?? 0 },
-      ])
-    }
+    const precomputedParams =
+      params.precomputedIntraNodeRouteParams ??
+      precomputeIntraNodeRouteParams(nodeWithPortPoints)
+    this.rootConnectionNameByConnectionName = new Map(
+      precomputedParams.rootConnectionNameByConnectionName,
+    )
     this.originalConnectionPointsByName = new Map(
-      Array.from(unsolvedConnectionsMap.entries()).map(
+      Array.from(precomputedParams.connectionPointsByName.entries()).map(
         ([connectionName, points]) => [
           connectionName,
-          dedupeConnectionPoints(points),
+          points.map((point) => ({ ...point })),
         ],
       ),
     )
     this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName:
-          this.rootConnectionNameByConnectionName.get(connectionName),
-        points: dedupeConnectionPoints(points),
-      })),
+      this.originalConnectionPointsByName
+        .entries()
+        .map(([connectionName, points]) => ({
+          connectionName,
+          rootConnectionName:
+            this.rootConnectionNameByConnectionName.get(connectionName),
+          points: [...points],
+        })),
     )
     this.rerouteAttemptsByConnection = new Map()
 
@@ -175,9 +167,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.totalConnections = this.unsolvedConnections.length
     this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
 
-    this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
-      this.nodeWithPortPoints,
-    )
+    this.minDistBetweenEnteringPoints =
+      precomputedParams.minDistBetweenEnteringPoints
 
     // const {
     //   numEntryExitLayerChanges,
