@@ -30,7 +30,9 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
   }
   const cases: PolyLine2[][] = []
   for (let sample = 0; sample < 320; sample++) {
-    const scale = [1e-200, 1e-150, 0.0005, 0.001, 0.01, 1, 1e120, 1e200][sample % 8]!
+    const scale = [1e-200, 1e-150, 0.0005, 0.001, 0.01, 1, 1e120, 1e200][
+      sample % 8
+    ]!
     const lines: PolyLine2[] = []
     for (let lineIndex = 0; lineIndex < 5; lineIndex++) {
       const points: MHPoint2[] = []
@@ -38,7 +40,9 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
       const pointCount = 2 + ((sample + lineIndex) % 7)
       for (let index = 0; index < pointCount; index++) {
         const nextLayer =
-          sample % 4 !== 0 && index > 0 && index < pointCount - 1 &&
+          sample % 4 !== 0 &&
+          index > 0 &&
+          index < pointCount - 1 &&
           (sample + index + lineIndex) % 3 === 0
             ? (layer + 1) % 3
             : layer
@@ -64,16 +68,26 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
     }
     cases.push(lines)
   }
-  for (const distance of [0, -0, 0.001 * (1 - Number.EPSILON), 0.001, 0.001 * (1 + Number.EPSILON)]) {
-    cases.push([0, distance].map((y, index): PolyLine2 => ({
-      connectionName: `epsilon-${index}`,
-      start: { x: -1, y, z1: 0, z2: 0 },
-      end: { x: 1, y, z1: 0, z2: 0 },
-      mPoints: [
-        { x: 0, y, z1: 0, z2: 0 },
-        { x: 0, y: index === 0 ? y : 0.002, z1: 0, z2: 0 },
-      ],
-    })))
+  for (const distance of [
+    0,
+    -0,
+    0.001 * (1 - Number.EPSILON),
+    0.001,
+    0.001 * (1 + Number.EPSILON),
+  ]) {
+    cases.push(
+      [0, distance].map(
+        (y, index): PolyLine2 => ({
+          connectionName: `epsilon-${index}`,
+          start: { x: -1, y, z1: 0, z2: 0 },
+          end: { x: 1, y, z1: 0, z2: 0 },
+          mPoints: [
+            { x: 0, y, z1: 0, z2: 0 },
+            { x: 0, y: index === 0 ? y : 0.002, z1: 0, z2: 0 },
+          ],
+        }),
+      ),
+    )
   }
   for (const lines of cases) {
     const expected = structuredClone(lines)
@@ -88,14 +102,21 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
     }
   }
 
-  const parallel: PolyLine2[] = [0, 1, 2].map((line): PolyLine2 => ({
-    connectionName: `parallel-${line}`,
-    start: { x: -2, y: line * 0.2, z1: 0, z2: 0 },
-    end: { x: 2, y: line * 0.2, z1: 0, z2: 0 },
-    mPoints: [-1, 0, 1].map((x): MHPoint2 => ({
-      x, y: line * 0.2, z1: 0, z2: 0,
-    })),
-  }))
+  const parallel: PolyLine2[] = [0, 1, 2].map(
+    (line): PolyLine2 => ({
+      connectionName: `parallel-${line}`,
+      start: { x: -2, y: line * 0.2, z1: 0, z2: 0 },
+      end: { x: 2, y: line * 0.2, z1: 0, z2: 0 },
+      mPoints: [-1, 0, 1].map(
+        (x): MHPoint2 => ({
+          x,
+          y: line * 0.2,
+          z1: 0,
+          z2: 0,
+        }),
+      ),
+    }),
+  )
   const originalExp = Math.exp
   let exponentialCalls = 0
   const expected = structuredClone(parallel)
@@ -126,8 +147,12 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
     nodeWithPortPoints: cn27515.nodeWithPortPoints,
     hyperParameters: { SEGMENTS_PER_POLYLINE: 4 },
   }
-  const oldSolver = new Frozen142EndpointForceSolver(structuredClone(solveParams))
-  const newSolver = new MultiHeadPolyLineIntraNodeSolver2(structuredClone(solveParams))
+  const oldSolver = new Frozen142EndpointForceSolver(
+    structuredClone(solveParams),
+  )
+  const newSolver = new MultiHeadPolyLineIntraNodeSolver2(
+    structuredClone(solveParams),
+  )
   oldSolver.solve()
   newSolver.solve()
   const state = (solver: MultiHeadPolyLineIntraNodeSolver2): object => ({

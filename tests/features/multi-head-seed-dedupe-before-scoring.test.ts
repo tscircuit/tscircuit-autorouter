@@ -84,7 +84,9 @@ class MutatingScoreSolver extends CountingSolver {
   }
 }
 
-function installMutatingInstanceScore(solver: CountingSolver): { calls: number } {
+function installMutatingInstanceScore(solver: CountingSolver): {
+  calls: number
+} {
   const state = { calls: 0 }
   const originalG = MultiHeadPolyLineIntraNodeSolver2.prototype.computeG
   solver.computeG = (polyLines: PolyLine2[], candidate: Candidate): number => {
@@ -155,7 +157,9 @@ test("seed dedupe preserves candidates and forces while skipping duplicate score
     expect(mutating.candidates).toEqual(mutatingReference.candidates)
 
     const instance = new CountingSolver(structuredClone(params))
-    const instanceReference = new ScoreBeforeDedupeSolver(structuredClone(params))
+    const instanceReference = new ScoreBeforeDedupeSolver(
+      structuredClone(params),
+    )
     const instanceScores = installMutatingInstanceScore(instance)
     const referenceScores = installMutatingInstanceScore(instanceReference)
     instance.step()
