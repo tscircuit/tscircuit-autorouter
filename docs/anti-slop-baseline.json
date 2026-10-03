@@ -1,0 +1,153 @@
+{
+  "sourceCommit": "911963b2f539f38140386cb0073332053b2d4582",
+  "upstreamCommit": "c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b",
+  "date": "2026-10-02",
+  "bunVersion": "1.3.14",
+  "oxlintVersion": "1.86.0",
+  "command": "bun run lint:anti-slop --format json",
+  "filesChecked": 453,
+  "warningsByRule": {
+    "anti-slop(no-chained-type-assertions)": 27,
+    "anti-slop(no-widen-then-assert)": 0,
+    "anti-slop(no-reduce-accumulator-copy)": 0,
+    "oxc(no-accumulating-spread)": 0
+  },
+  "errors": 0,
+  "findings": [
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+      "line": 328,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout.ts",
+      "line": 380,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/TraceSimplificationStageSolver.ts",
+      "line": 43,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver.ts",
+      "line": 20,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+      "line": 33,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-relaxed-drc-evaluator.ts",
+      "line": 34,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input.ts",
+      "line": 103,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client.ts",
+      "line": 431,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 738,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 743,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 763,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 770,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 792,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 819,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 915,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1246,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1253,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1384,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1391,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1399,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts",
+      "line": 1409,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+      "line": 45,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator.ts",
+      "line": 50,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/constructMiddlePointsWithViaPositions.ts",
+      "line": 71,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getEveryPossibleOrdering.ts",
+      "line": 3,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
+      "line": 843,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    },
+    {
+      "file": "lib/testing/CapacityNodeEditor.tsx",
+      "line": 611,
+      "rule": "anti-slop(no-chained-type-assertions)"
+    }
+  ]
+}

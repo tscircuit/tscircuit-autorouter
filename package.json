@@ -21,7 +21,10 @@
     "run-sample": "bun scripts/run-sample.ts",
     "repomix:lib": "repomix --ignore 'testing/**,**/TwoRouteHighDensitySolver/**,**/RouteStitchingSolver/**,solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer.ts' lib",
     "bug-report": "bun run scripts/download-bug-report.ts",
-    "bug-report-with-test": "bun run scripts/create-bug-report-test.ts"
+    "bug-report-with-test": "bun run scripts/create-bug-report-test.ts",
+    "lint:anti-slop": "bun --bun oxlint --config oxlint.anti-slop.config.ts lib",
+    "test:anti-slop": "bun test tests/anti-slop --timeout 9999999",
+    "typecheck:anti-slop": "tsc --project tsconfig.anti-slop.json"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -107,7 +110,9 @@
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/ccad3906eb0fe30c9f79f4e28f390d9f41cbf387",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148",
+    "oxlint": "1.86.0",
+    "@oxlint/plugins": "1.86.0"
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",

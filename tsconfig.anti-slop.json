@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "oxlint.anti-slop.config.ts",
+    "tools/oxlint/anti-slop/**/*.ts",
+    "tests/anti-slop/**/*.ts"
+  ],
+  "exclude": []
+}
