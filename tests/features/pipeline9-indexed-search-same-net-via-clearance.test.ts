@@ -26,19 +26,21 @@ test("indexed repair does not apply the different-net copper rule to connected v
       ],
       vias: [],
     },
-    ...[3, 3.45].map((x, index): HighDensityRoute => ({
-      connectionName: `connected_${index}`,
-      rootConnectionName: "shared_net",
-      traceThickness: 0.1,
-      viaDiameter: 0.3,
-      route: [
-        { x, y: -2, z: 0 },
-        { x, y: -1, z: 0 },
-        { x, y: -1, z: 1 },
-        { x, y: -2, z: 1 },
-      ],
-      vias: [{ x, y: -1 }],
-    })),
+    ...[3, 3.45].map(
+      (x, index): HighDensityRoute => ({
+        connectionName: `connected_${index}`,
+        rootConnectionName: "shared_net",
+        traceThickness: 0.1,
+        viaDiameter: 0.3,
+        route: [
+          { x, y: -2, z: 0 },
+          { x, y: -1, z: 0 },
+          { x, y: -1, z: 1 },
+          { x, y: -2, z: 1 },
+        ],
+        vias: [{ x, y: -1 }],
+      }),
+    ),
   ]
   const srj: SimpleRouteJson = {
     layerCount: 2,
