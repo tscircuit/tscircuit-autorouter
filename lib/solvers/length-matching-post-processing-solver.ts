@@ -134,7 +134,7 @@ const assertBusLengthSkew = (
 
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly differentialPairSolver: PostProcessingSolver
+  private readonly differentialPairSolver?: PostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
 
@@ -142,6 +142,17 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
+    const hasLengthMatchingConstraints =
+      params.differentialPairs.length > 0 ||
+      params.buses.some(
+        (bus) =>
+          bus.maxLengthSkew !== undefined && bus.connectionNames.length > 1,
+      )
+    if (!hasLengthMatchingConstraints) {
+      this.outputHdRoutes = params.hdRoutes
+      this.solved = true
+      return
+    }
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
@@ -160,6 +171,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (!this.differentialPairSolver) return
     if (!this.differentialPairSolver.solved) {
       this.differentialPairSolver.step()
       if (this.differentialPairSolver.failed) {
@@ -220,7 +232,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override visualize(): GraphicsObject {
     return (
       this.busLengthMatchingSolver?.visualize() ??
-      this.differentialPairSolver.visualize()
+      this.differentialPairSolver?.visualize() ?? { lines: [] }
     )
   }
 }
