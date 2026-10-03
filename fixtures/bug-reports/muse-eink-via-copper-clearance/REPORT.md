@@ -25,6 +25,37 @@ failure, skipped assertion, or environment switch.
 The sibling `.fixture.tsx` loads this SRJ in the existing Cosmos pipeline
 debugger with cache disabled and effort 1.
 
+## Visual comparison
+
+Both test-generated snapshots use the same board overview, physical via
+magnification and current reference checker with the board's declared rules.
+The right-hand rings add half the required copper clearance to each via:
+they overlap in the original output and touch in the fixed output.
+
+Original output: **1 DRC error**, copper gap **0.135411 mm**.
+
+![Original reproduction: board and affected vias](../../../tests/repro/__snapshots__/pipeline9-muse-eink-original-output.snap.svg)
+
+Fixed output: **0 DRC errors**, copper gap **0.150000 mm**.
+
+![Fixed Pipeline9: board and affected vias](../../../tests/repro/__snapshots__/pipeline9-muse-eink-via-copper-clearance.snap.svg)
+
+The original snapshot test reads `muse-eink-via-copper-clearance.original-output.json`,
+freshly captured from unmodified published capacity-autorouter 0.0.953 with
+cache disabled and effort 1. This preserves the bad geometry independently
+of future solver changes. Its SHA-256 is `60eebc59ef08ffd22801a90403f35cb35cc6a144d73990a3920ac4e11e60f587`.
+The fixed regression freshly solves the identical SRJ with cache disabled
+and effort 1. Neither result is adjusted after routing. The hard assertions
+check the measured gaps and DRC; the SVG assertions preserve the visuals.
+The selected coordinates in the rendering helper only locate the reported
+pair for magnification and never change the solver or clearance assertions.
+
+Regenerate only these snapshots with:
+
+```sh
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/pipeline9-muse-eink-original-output.test.ts tests/repro/pipeline9-muse-eink-via-copper-clearance.test.ts --timeout 9999999
+```
+
 ## Original failure and root cause
 
 On the original base `4fb900bb6f553b2f8e468f6aed9ee68c2841438e`, the default

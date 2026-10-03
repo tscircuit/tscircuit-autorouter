@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
+import { getMuseViaClearanceSnapshot } from "../fixtures/get-muse-via-clearance-snapshot"
 import capturedInput from "../../fixtures/bug-reports/muse-eink-via-copper-clearance/muse-eink-via-copper-clearance.srj.json" with {
   type: "json",
 }
@@ -20,7 +21,7 @@ type ViaCopperClearanceViolation = {
   gap: number
 }
 
-test("Pipeline9 honors the Muse e-paper different-net via copper clearance", (): void => {
+test("Pipeline9 honors the Muse e-paper different-net via copper clearance", async (): Promise<void> => {
   const input = structuredClone(capturedInput) as SimpleRouteJson
   const minimumCopperGap = input.minPadEdgeToPadEdgeClearance
   if (typeof minimumCopperGap !== "number") {
@@ -100,4 +101,16 @@ test("Pipeline9 honors the Muse e-paper different-net via copper clearance", ():
   expect(traces.length).toBeGreaterThan(0)
   expect(vias.length).toBeGreaterThan(0)
   expect(violations).toEqual([])
+  const snapshot = getMuseViaClearanceSnapshot({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs,
+    routedTraces: traces,
+    includeBoardClearance: true,
+    drcOptions: {
+      traceClearance: input.minTraceToPadEdgeClearance,
+      viaClearance: input.minViaHoleEdgeToViaHoleEdgeClearance,
+    },
+  })
+  expect(snapshot.copperGap).toBeGreaterThanOrEqual(minimumCopperGap - 1e-9)
+  await expect(snapshot.svg).toMatchSvgSnapshot(import.meta.path)
 })
