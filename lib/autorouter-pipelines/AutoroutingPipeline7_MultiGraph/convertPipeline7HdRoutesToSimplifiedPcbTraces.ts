@@ -1,5 +1,4 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -77,6 +76,27 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
+  const multilayerObstacleIndex = new Map(
+    multilayerObstacles.map((obstacle, index) => [obstacle, index]),
+  )
+  const multilayerObstaclesByConnectionKey = new Map<string, Obstacle[]>()
+  for (const obstacle of multilayerObstacles) {
+    const connectionKeys = new Set<string>()
+    for (const connectedId of obstacle.connectedTo) {
+      connectionKeys.add(`id:${connectedId}`)
+      const netId = connMap.getNetConnectedToId(connectedId)
+      if (netId !== undefined) connectionKeys.add(`net:${netId}`)
+    }
+    for (const connectionKey of connectionKeys) {
+      const matchingObstacles =
+        multilayerObstaclesByConnectionKey.get(connectionKey)
+      if (matchingObstacles) {
+        matchingObstacles.push(obstacle)
+      } else {
+        multilayerObstaclesByConnectionKey.set(connectionKey, [obstacle])
+      }
+    }
+  }
   const connectedObstaclesByConnectionName = new Map<
     string,
     Map<string | undefined, ReadonlyArray<Obstacle>>
@@ -95,8 +115,27 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     const cached = byRootConnectionName.get(route.rootConnectionName)
     if (cached) return cached
 
-    const connected = multilayerObstacles.filter((obstacle) =>
-      isObstacleConnectedToRoute(obstacle, route, connMap),
+    const connectionKeys = new Set<string>()
+    for (const connectionId of [
+      route.connectionName,
+      route.rootConnectionName,
+    ]) {
+      if (connectionId === undefined) continue
+      connectionKeys.add(`id:${connectionId}`)
+      const netId = connMap.getNetConnectedToId(connectionId)
+      if (netId !== undefined) connectionKeys.add(`net:${netId}`)
+    }
+    const connected = Array.from(
+      new Set(
+        Array.from(connectionKeys).flatMap(
+          (connectionKey) =>
+            multilayerObstaclesByConnectionKey.get(connectionKey) ?? [],
+        ),
+      ),
+    ).sort(
+      (left, right) =>
+        multilayerObstacleIndex.get(left)! -
+        multilayerObstacleIndex.get(right)!,
     )
     byRootConnectionName.set(route.rootConnectionName, connected)
     return connected
