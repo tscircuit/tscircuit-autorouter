@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import type { PolyLine2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
 
-test("shared force geometry preserves segment and via interactions", (): void => {
+test("shared multi-head geometry preserves segment and via interactions", (): void => {
   const lines: PolyLine2[] = [
     {
       connectionName: "a",
@@ -42,6 +42,11 @@ test("shared force geometry preserves segment and via interactions", (): void =>
     },
     viaDiameter: 0.3,
   })
+  expect(solver.computeMinGapBtwPolyLines(lines)).toEqual([
+    -0.15,
+    -0.1370869371219176,
+    -0.175,
+  ])
   solver.applyForcesToPolyLines(lines)
   const result = solver.applyForcesToPolyLines(lines)
   // Captured from the original implementation before sharing pair geometry.
@@ -62,5 +67,10 @@ test("shared force geometry preserves segment and via interactions", (): void =>
       { x: -0.18462292728024113, y: 0.19498154042329316, z1: 0, z2: 0 },
       { x: 0.22713998524009063, y: 0.1781710766839922, z1: 0, z2: 0 },
     ],
+  ])
+  expect(solver.computeMinGapBtwPolyLines(lines)).toEqual([
+    -0.15,
+    0.1750462110561852,
+    0.17826732134036163,
   ])
 })

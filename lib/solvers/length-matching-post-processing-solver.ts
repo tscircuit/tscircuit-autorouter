@@ -7,9 +7,9 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
   DifferentialPair,
   Obstacle,
-  SimplifiedPcbTraces,
   SimpleRouteBus,
   SimpleRouteConnection,
+  SimplifiedPcbTraces,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
 
@@ -134,7 +134,7 @@ const assertBusLengthSkew = (
 
 /** Runs existing differential-pair post-processing, then tunes bus roots. */
 export class LengthMatchingPostProcessingSolver extends BaseSolver {
-  private readonly differentialPairSolver: PostProcessingSolver
+  private readonly differentialPairSolver?: PostProcessingSolver
   private busLengthMatchingSolver?: LengthMatchingSolver
   private outputHdRoutes?: HighDensityRoute[]
 
@@ -142,6 +142,18 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
+    const hasBusLengthConstraints = params.buses.some(
+      (bus) =>
+        bus.maxLengthSkew !== undefined && bus.connectionNames.length >= 2,
+    )
+    if (params.differentialPairs.length === 0 && !hasBusLengthConstraints) {
+      this.outputHdRoutes = params.hdRoutes
+      this.solved = true
+      this.progress = 1
+      this.stats = { bypassed: true }
+      return
+    }
+
     this.differentialPairSolver = new PostProcessingSolver({
       hdRoutes: params.hdRoutes,
       differentialPairs: params.differentialPairs,
@@ -160,17 +172,21 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (!this.differentialPairSolver.solved) {
-      this.differentialPairSolver.step()
-      if (this.differentialPairSolver.failed) {
+    const differentialPairSolver = this.differentialPairSolver
+    if (!differentialPairSolver) {
+      throw new Error("Length matching bypass was stepped after completion")
+    }
+    if (!differentialPairSolver.solved) {
+      differentialPairSolver.step()
+      if (differentialPairSolver.failed) {
         this.failed = true
-        this.error = this.differentialPairSolver.error
+        this.error = differentialPairSolver.error
       }
       return
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      const hdRoutes = differentialPairSolver.getOutput().hdRoutes
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
@@ -220,7 +236,9 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override visualize(): GraphicsObject {
     return (
       this.busLengthMatchingSolver?.visualize() ??
-      this.differentialPairSolver.visualize()
+      this.differentialPairSolver?.visualize() ?? {
+        title: "Length matching bypassed",
+      }
     )
   }
 }

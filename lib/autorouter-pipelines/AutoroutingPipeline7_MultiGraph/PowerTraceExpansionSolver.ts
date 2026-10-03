@@ -9,17 +9,13 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
-  readonly powerTraceExpanderSolver: PowerTraceExpanderSolver
+  readonly powerTraceExpanderSolver?: PowerTraceExpanderSolver
 
   constructor(
     public readonly inputSrj: SimpleRouteJson,
     public readonly options: PowerTraceExpanderOptions = {},
   ) {
     super()
-    this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
-      inputSrj as unknown as PowerTraceExpanderInput,
-      options,
-    )
     if (options.onlyConnectionNames?.length === 0) {
       this.MAX_ITERATIONS = 1
       this.progress = 1
@@ -28,11 +24,20 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       return
     }
 
+    this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
+      inputSrj as unknown as PowerTraceExpanderInput,
+      options,
+    )
     this.MAX_ITERATIONS = this.powerTraceExpanderSolver.MAX_ITERATIONS + 1
   }
 
   override _step(): void {
     const solver = this.powerTraceExpanderSolver
+    if (!solver) {
+      throw new Error(
+        "Power trace expansion bypass was stepped after completion",
+      )
+    }
     solver.step()
     this.progress = solver.progress
     this.stats = solver.stats
@@ -58,7 +63,9 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       throw new Error("Cannot get power trace expansion output before solving")
     }
 
-    return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+    return this.powerTraceExpanderSolver
+      ? (this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces)
+      : [...(this.inputSrj.traces ?? [])]
   }
 
   override visualize(): GraphicsObject {

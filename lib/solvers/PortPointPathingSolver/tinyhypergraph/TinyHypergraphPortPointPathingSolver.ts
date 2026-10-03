@@ -37,6 +37,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import {
+  hasNetLargerThanNetCount,
+  orderConnectionsByNetCardinalityFairly,
+} from "./orderConnectionsByNetCardinalityFairly"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -226,6 +230,7 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
+  USE_LAZY_ROUTE_HEURISTIC: true,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -298,6 +303,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  acceptFirstCompleteRouteSet = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -324,6 +330,9 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: false,
+            ...(acceptFirstCompleteRouteSet
+              ? { RIP_THRESHOLD_RAMP_ATTEMPTS: 0 }
+              : {}),
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
@@ -1048,12 +1057,29 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
-    const connections = params.flags.USE_SELECTIVE_RERIP_ROUTING
-      ? orderConnectionsByNetCardinality(
+    let connections = tinyRouteConnections
+    let acceptFirstCompleteRouteSet = false
+    if (params.flags.USE_SELECTIVE_RERIP_ROUTING) {
+      const maxPartialRipRouteCount =
+        TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
+        Number.POSITIVE_INFINITY
+      acceptFirstCompleteRouteSet =
+        params.layerCount > 4 &&
+        tinyRouteConnections.length > maxPartialRipRouteCount &&
+        hasNetLargerThanNetCount(
           tinyRouteConnections,
           getTinyRouteConnectionNetId,
         )
-      : tinyRouteConnections
+      connections = acceptFirstCompleteRouteSet
+        ? orderConnectionsByNetCardinalityFairly(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
+        : orderConnectionsByNetCardinality(
+            tinyRouteConnections,
+            getTinyRouteConnectionNetId,
+          )
+    }
     this.rootConnectionNameByConnectionId = new Map(
       connections.map((connection) => [
         connection.connectionId,
@@ -1089,6 +1115,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           USE_SPARSE_CANDIDATE_STORAGE: false,
           ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
           GREEDY_FINAL_ROUTE_ITERS: 4,
+          USE_LAZY_ROUTE_HEURISTIC: true,
           MAX_ITERATIONS: Math.ceil(2_000_000 * getEffortScale(params.effort)),
           RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
           STATIC_REACHABILITY_PRECHECK: true,
@@ -1123,6 +1150,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      acceptFirstCompleteRouteSet,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(

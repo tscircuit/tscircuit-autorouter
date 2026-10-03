@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   convertPipeline7HdRoutesToSimplifiedPcbTraces,
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
@@ -99,14 +100,8 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
   })
 })
 
-test("Pipeline7 candidate conversion reuses static obstacle connectivity", () => {
-  let connectivityChecks = 0
-  const connMap = {
-    areIdsConnected: (left: string, right: string) => {
-      connectivityChecks += 1
-      return left === "route" && right === "pad"
-    },
-  } as any
+test("Pipeline7 candidate conversion indexes static obstacle connectivity", () => {
+  const connMap = new ConnectivityMap({ net: ["route", "pad"] })
   const connection = {
     name: "route",
     pointsToConnect: [
@@ -156,5 +151,4 @@ test("Pipeline7 candidate conversion reuses static obstacle connectivity", () =>
       (routePoint) => routePoint.route_type === "through_obstacle",
     ),
   ).toBe(true)
-  expect(connectivityChecks).toBe(1)
 })

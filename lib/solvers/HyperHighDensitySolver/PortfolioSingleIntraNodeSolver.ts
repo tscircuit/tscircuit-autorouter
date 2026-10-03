@@ -30,6 +30,10 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const STANDARD_PORTFOLIO_MAX_LAYER_COUNT = 4
+
+export const shouldDeferPortfolioParameterSweeps = (layerCount: number) =>
+  layerCount > STANDARD_PORTFOLIO_MAX_LAYER_COUNT
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -56,8 +60,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  fullPortfolioInitialized: boolean
   negotiatedSearchStarted = false
+  readonly deferParameterSweeps: boolean
   readonly enableNegotiatedSearch: boolean
+  readonly allowSearchExpansion: boolean
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
@@ -136,6 +143,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchSegmentWork?: number
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
+      allowSearchExpansion?: boolean
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -148,6 +156,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.allowSearchExpansion = opts.allowSearchExpansion ?? true
+    const layerCount =
+      opts.layerCount ??
+      opts.nodeWithPortPoints.availableZ?.length ??
+      new Set(opts.nodeWithPortPoints.portPoints.map((point) => point.z)).size
+    this.deferParameterSweeps = shouldDeferPortfolioParameterSweeps(layerCount)
+    this.fullPortfolioInitialized = !this.deferParameterSweeps
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -206,6 +221,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
+    if (this.deferParameterSweeps) {
+      return [
+        ["throughObstacle"],
+        ["singleLayerNoDifferentRootIntersections"],
+        ["multiHeadPolyLine"],
+        ["defaultSearch"],
+        ["noVias"],
+        ["closedFormSingleTrace"],
+        ["highDensityA01"],
+        ["highDensityA03"],
+        ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
+      ]
+    }
+
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
@@ -224,6 +253,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getHyperParameterDefs() {
     return [
+      {
+        name: "defaultSearch",
+        possibleValues: [
+          {
+            CELL_SIZE_FACTOR: 0.5,
+            SHUFFLE_SEED: 0,
+            FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR: 2,
+            FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR: 1,
+            FUTURE_CONNECTION_PROXIMITY_VD: 10,
+            MISALIGNED_DIST_PENALTY_FACTOR: 5,
+          },
+          {
+            CELL_SIZE_FACTOR: 1,
+            SHUFFLE_SEED: 0,
+            FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR: 2,
+            FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR: 1,
+            FUTURE_CONNECTION_PROXIMITY_VD: 10,
+            MISALIGNED_DIST_PENALTY_FACTOR: 5,
+          },
+        ],
+      },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -431,6 +481,36 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     })
   }
 
+  private initializeFullPortfolio(): void {
+    if (this.fullPortfolioInitialized) return
+
+    const hyperParameterDefs = this.getHyperParameterDefs()
+    const existingCandidateKeys = new Set(
+      this.supervisedSolvers!.map(({ hyperParameters }) =>
+        JSON.stringify(Object.entries(hyperParameters).sort()),
+      ),
+    )
+    for (const combinationDef of [
+      ["majorCombinations", "orderings6", "cellSizeFactor"],
+      ["orderings50"],
+      ["flipTraceAlignmentDirection", "orderings6"],
+    ]) {
+      const combinations = this.getHyperParameterCombinations(
+        hyperParameterDefs.filter(({ name }) => combinationDef.includes(name)),
+      )
+      for (const hyperParameters of combinations) {
+        const candidateKey = JSON.stringify(
+          Object.entries(hyperParameters).sort(),
+        )
+        if (existingCandidateKeys.has(candidateKey)) continue
+        existingCandidateKeys.add(candidateKey)
+        this.addSupervisedCandidate(hyperParameters)
+      }
+    }
+    this.fullPortfolioInitialized = true
+    this.refreshDynamicIterationLimit()
+  }
+
   private expandAdaptiveSearch() {
     if (this.adaptiveSearchExpanded) return
 
@@ -465,10 +545,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
-      !this.adaptiveSearchExpanded &&
+      this.allowSearchExpansion &&
       !this.getSupervisedSolverWithBestFitness()
     ) {
-      this.expandAdaptiveSearch()
+      this.initializeFullPortfolio()
+      if (
+        !this.adaptiveSearchExpanded &&
+        !this.getSupervisedSolverWithBestFitness()
+      ) {
+        this.expandAdaptiveSearch()
+      }
     }
 
     super._step()
@@ -481,7 +567,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.stats.negotiatedSearchStartedAtIteration = this.iterations
     }
 
-    if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
+    if (
+      this.allowSearchExpansion &&
+      !this.solved &&
+      !this.failed &&
+      this.shouldExpandPortfolio()
+    ) {
       this.expandAdaptiveSearch()
     }
   }
@@ -511,10 +602,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeH(solver: IntraNodeRouteSolver): number {
-    if (solver instanceof HighDensitySolverA13) {
-      return 1 - this.getCandidateProgress(solver)
-    }
-    if (this.adaptiveSearchExpanded) {
+    if (
+      !this.fullPortfolioInitialized ||
+      solver instanceof HighDensitySolverA13 ||
+      this.adaptiveSearchExpanded
+    ) {
       return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)

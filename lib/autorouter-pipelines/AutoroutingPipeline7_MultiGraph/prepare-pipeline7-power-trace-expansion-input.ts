@@ -26,6 +26,13 @@ export const preparePipeline7PowerTraceExpansionInput = ({
   resolveConnectedTraceAliases?: boolean
 }): Pipeline7PowerTraceExpansionInput => {
   const preloadedTraces = currentPreloadedTraces ?? originalSrj.traces ?? []
+  if (expandedConnectionNames.length === 0) {
+    return {
+      ...originalSrj,
+      traces: [...newlyRoutedTraces],
+      fixedTraces: [...preloadedTraces],
+    }
+  }
   const mutablePreloadedTraceSet = resolveConnectedTraceAliases
     ? getConnectedMutablePreloadedTraces({
         originalSrj,

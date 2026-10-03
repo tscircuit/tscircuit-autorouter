@@ -83,6 +83,8 @@ export interface InputPortPoint {
   connectsToOffBoardNode?: boolean
 }
 
+export type PortPointId = InputPortPoint["portPointId"]
+
 /**
  * A node with pre-computed port points (without connectionName assigned).
  * This is the input format for PortPointPathingSolver.

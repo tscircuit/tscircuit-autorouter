@@ -5,7 +5,10 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
-import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
+import {
+  PortfolioSingleIntraNodeSolver,
+  shouldDeferPortfolioParameterSweeps,
+} from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
@@ -203,8 +206,17 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
+    const layerCount =
+      portfolioParams.layerCount ??
+      portfolioParams.nodeWithPortPoints.availableZ?.length ??
+      new Set(
+        portfolioParams.nodeWithPortPoints.portPoints.map((point) => point.z),
+      ).size
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      allowSearchExpansion:
+        !shouldDeferPortfolioParameterSweeps(layerCount) ||
+        this.growthAttempts === this.maxGrowthAttempts,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),

@@ -28,6 +28,11 @@ import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
 import { withinBounds } from "./withinBounds"
 
+type PolyLineGapGeometry = {
+  segmentsByLayer: Map<number, [MHPoint2, MHPoint2][]>
+  vias: MHPoint2[]
+}
+
 export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
     return "MultiHeadPolyLineIntraNodeSolver"
@@ -60,6 +65,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
   maxViaCount: number
   minViaCount: number
+
+  // Candidate topology is fixed; force steps only move the referenced points.
+  private readonly gapGeometryByPolyLines = new WeakMap<
+    PolyLine2[],
+    PolyLineGapGeometry[]
+  >()
 
   phase: "setup" | "solving" = "setup"
   progress = 0
@@ -155,30 +166,32 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    */
   computeMinGapBtwPolyLines(polyLines: PolyLine2[]) {
     const minGaps = []
-    const polyLineSegmentsByLayer: Array<Map<number, [MHPoint2, MHPoint2][]>> =
-      []
-    const polyLineVias: Array<MHPoint2[]> = []
-    for (let i = 0; i < polyLines.length; i++) {
-      const polyLine = polyLines[i]
-      const path = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segmentsByLayer: Map<number, [MHPoint2, MHPoint2][]> = new Map(
-        this.availableZ.map((z) => [z, []]),
-      )
-      for (let i = 0; i < path.length - 1; i++) {
-        const segment: [MHPoint2, MHPoint2] = [path[i], path[i + 1]]
-        const layer = segment[0].z2
-        if (!segmentsByLayer.has(layer)) {
-          segmentsByLayer.set(layer, [])
+    let geometry = this.gapGeometryByPolyLines.get(polyLines)
+    if (!geometry) {
+      geometry = polyLines.map((polyLine): PolyLineGapGeometry => {
+        const path = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+        const segmentsByLayer: Map<number, [MHPoint2, MHPoint2][]> = new Map(
+          this.availableZ.map((z) => [z, []]),
+        )
+        for (let i = 0; i < path.length - 1; i++) {
+          const segment: [MHPoint2, MHPoint2] = [path[i]!, path[i + 1]!]
+          const layer = segment[0].z2
+          if (!segmentsByLayer.has(layer)) {
+            segmentsByLayer.set(layer, [])
+          }
+          segmentsByLayer.get(layer)!.push(segment)
         }
-        segmentsByLayer.get(layer)!.push(segment)
-      }
-      polyLineSegmentsByLayer.push(segmentsByLayer)
-      polyLineVias.push(path.filter((p) => p.z1 !== p.z2))
+        return {
+          segmentsByLayer,
+          vias: path.filter((point) => point.z1 !== point.z2),
+        }
+      })
+      this.gapGeometryByPolyLines.set(polyLines, geometry)
     }
 
     for (let i = 0; i < polyLines.length; i++) {
-      const path1SegmentsByLayer = polyLineSegmentsByLayer[i]
-      const path1Vias = polyLineVias[i]
+      const path1SegmentsByLayer = geometry[i]!.segmentsByLayer
+      const path1Vias = geometry[i]!.vias
       // Start j from i + 1 to compare distinct pairs only once
       for (let j = i + 1; j < polyLines.length; j++) {
         if (
@@ -189,8 +202,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         ) {
           continue
         }
-        const path2SegmentsByLayer = polyLineSegmentsByLayer[j]
-        const path2Vias = polyLineVias[j]
+        const path2SegmentsByLayer = geometry[j]!.segmentsByLayer
+        const path2Vias = geometry[j]!.vias
 
         let minGap = 1
         for (const zLayer of this.availableZ) {

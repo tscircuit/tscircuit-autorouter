@@ -18,7 +18,10 @@ import {
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
-import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import {
+  canSolveNodeWithDirectSameLayerRoute,
+  IntraNodeRouteSolver,
+} from "./IntraNodeSolver"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -414,9 +417,11 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
-    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+    this.activeSubSolver = canSolveNodeWithDirectSameLayerRoute(node)
+      ? new IntraNodeRouteSolver(intraNodeSolverParams)
+      : this.useGrowShrinkHighDensityIntraNodeSolver
+        ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+        : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }
 

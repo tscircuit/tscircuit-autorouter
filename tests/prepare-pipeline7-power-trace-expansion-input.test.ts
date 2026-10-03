@@ -45,3 +45,28 @@ test("Pipeline7 makes selected preloaded power traces mutable replacements", () 
   expect(input.fixedTraces).toEqual([signalTrace])
   expect(powerTrace.__replaces_pcb_trace_id).toBeUndefined()
 })
+
+test("Pipeline7 skips connected-trace resolution for an empty selection", () => {
+  const preloadedTrace = createTrace("trace_signal", "SIGNAL")
+  const newlyRoutedTrace = createTrace("trace_new", "NEW")
+  const originalSrj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    bounds: { minX: -1, minY: -1, maxX: 2, maxY: 1 },
+    obstacles: [],
+    connections: [],
+    traces: [preloadedTrace],
+  }
+
+  const input = preparePipeline7PowerTraceExpansionInput({
+    originalSrj,
+    newlyRoutedTraces: [newlyRoutedTrace],
+    expandedConnectionNames: [],
+    resolveConnectedTraceAliases: true,
+  })
+
+  expect(input.traces).toEqual([newlyRoutedTrace])
+  expect(input.fixedTraces).toEqual([preloadedTrace])
+  expect(input.traces).not.toBe(newlyRoutedTrace)
+  expect(input.fixedTraces).not.toBe(originalSrj.traces)
+})
