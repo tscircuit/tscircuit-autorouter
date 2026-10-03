@@ -1,3 +1,4 @@
+import stableStringify from "fast-json-stable-stringify"
 import objectHash from "object-hash"
 
 import {
@@ -172,10 +173,7 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
-      respectType: false,
-      unorderedObjects: false,
-    })}`
+    const cacheKey = `intranode-solver:${objectHash(stableStringify(keyData))}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey
