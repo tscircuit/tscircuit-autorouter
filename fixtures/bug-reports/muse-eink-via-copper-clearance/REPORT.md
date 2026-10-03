@@ -137,3 +137,9 @@ and passes on the fixed version. The dependency passes 48 tests on main and 86
 on the integration base; the autorouter also guards the copper/drill/trace rule
 separation with a dedicated integration test. The changed full-board Linux SVG
 was rendered and inspected before updating the snapshot.
+
+The integrated fix also changes the T113 board's final power routes. Its Linux
+and macOS tests pass all routing and drill-spacing assertions before comparing
+the image. Both platform-specific board snapshots were rendered and inspected:
+the repaired drill-pair focus is unchanged. Only those expected SVGs were
+updated; the 2% image tolerance and all physical assertions remain unchanged.
