@@ -12,10 +12,10 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { BaseSolver } from "../BaseSolver"
-import { safeTransparentize } from "../colors"
-import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { BaseSolver } from "../BaseSolver"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
+import { safeTransparentize } from "../colors"
 import { getConnectedPadSides } from "./getConnectedPadSides"
 
 type RepairSampleEntry = {
@@ -286,7 +286,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       "flatbush",
       layeredObstacles,
     )
-    const connectedToWithNetsByObstacle = new Map(
+    const connectedToWithNetsByObstacle = new Map<Obstacle, string[]>(
       layeredObstacles.map((obstacle) => [
         obstacle,
         [
