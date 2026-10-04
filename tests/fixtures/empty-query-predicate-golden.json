@@ -1,0 +1,116 @@
+{
+  "baseline": "d010db4155513fad6e1cef325180d99a28d6201f",
+  "cases": [
+    "missing-segments-and-index",
+    "missing-segments-present-index",
+    "empty-segments-missing-index",
+    "provided-empty-ids",
+    "query-bounds-mutates-provided-ids",
+    "search-throws-before-bounds",
+    "via-empty-segments",
+    "empty-segments-with-via-index"
+  ],
+  "observations": [
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "segments-map.get",
+        "query.segmentIds",
+        "index-map.get",
+        "query.segmentBounds",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "segments-map.get",
+        "query.segmentIds",
+        "index-map.get",
+        "segment-search:-0.04999999999999999,-0.8,0.55,-0.2",
+        "query.segmentBounds",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "query.segmentIds",
+        "index-map.get",
+        "query.segmentBounds",
+        "array-iterator:other:0",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "query.segmentIds",
+        "query.segmentBounds",
+        "array-iterator:provided:0",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "query.segmentIds",
+        "query.segmentBounds",
+        "array-iterator:provided:1",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "query.segmentIds",
+        "index-map.get",
+        "segment-search:-0.04999999999999999,-0.8,0.55,-0.2"
+      ],
+      "result": null,
+      "error": "original segment search failure"
+    },
+    {
+      "events": [
+        "obstacleSegments",
+        "obstacleSegmentIndex",
+        "array-iterator:other:0",
+        "obstacleViaIndex"
+      ],
+      "result": false,
+      "error": null
+    },
+    {
+      "events": [
+        "query.pointQueryProximity",
+        "query.segments",
+        "query.segmentIds",
+        "index-map.get",
+        "query.segmentBounds",
+        "array-iterator:other:0",
+        "obstacleViaIndex",
+        "obstacleViaIndex",
+        "via-search:-0.125,-0.875,0.625,-0.125",
+        "array-iterator:other:0"
+      ],
+      "result": false,
+      "error": null
+    }
+  ]
+}
