@@ -7,19 +7,28 @@ test("shared DRC geometry observes edited copper without changing ordered errors
   const cache = new PcbConnectivityGeometryCache()
   const circuit: AnyCircuitElement[] = [
     {
-      type: "pcb_via", pcb_via_id: "via", pcb_trace_id: "trace_a",
-      x: 0, y: 0, outer_diameter: 0.3, hole_diameter: 0.1,
+      type: "pcb_via",
+      pcb_via_id: "via",
+      pcb_trace_id: "trace_a",
+      x: 0,
+      y: 0,
+      outer_diameter: 0.3,
+      hole_diameter: 0.1,
       layers: ["top", "bottom"],
     },
     {
-      type: "pcb_trace", pcb_trace_id: "trace_a", source_trace_id: "source_a",
+      type: "pcb_trace",
+      pcb_trace_id: "trace_a",
+      source_trace_id: "source_a",
       route: [
         { route_type: "wire", x: -1, y: 0, layer: "top", width: 0.1 },
         { route_type: "wire", x: 1, y: 0, layer: "top", width: 0.1 },
       ],
     },
     {
-      type: "pcb_trace", pcb_trace_id: "trace_b", source_trace_id: "source_b",
+      type: "pcb_trace",
+      pcb_trace_id: "trace_b",
+      source_trace_id: "source_b",
       route: [
         { route_type: "wire", x: 0, y: -1, layer: "bottom", width: 0.1 },
         { route_type: "wire", x: 0, y: 1, layer: "bottom", width: 0.1 },

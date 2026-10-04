@@ -1272,7 +1272,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ),
       route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
     }
-    const referenceConnectivityGeometryCache = new PcbConnectivityGeometryCache()
+    const referenceConnectivityGeometryCache =
+      new PcbConnectivityGeometryCache()
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
