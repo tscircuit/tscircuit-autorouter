@@ -1,7 +1,9 @@
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
 
-type PlanarObstacleQuery = ReturnType<SingleHighDensityRouteSolver["getPlanarObstacleQuery"]>
+type PlanarObstacleQuery = ReturnType<
+  SingleHighDensityRouteSolver["getPlanarObstacleQuery"]
+>
 
 export function frozenHighDensityGetNeighbors(
   this: SingleHighDensityRouteSolver,
