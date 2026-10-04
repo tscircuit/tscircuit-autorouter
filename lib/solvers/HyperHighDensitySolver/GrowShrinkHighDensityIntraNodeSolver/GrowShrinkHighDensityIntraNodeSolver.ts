@@ -5,6 +5,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { HyperParameterSupervisorSolver } from "../../HyperParameterSupervisorSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
@@ -15,6 +16,13 @@ import {
 type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof PortfolioSingleIntraNodeSolver
 >[0]
+
+type GrowthAttemptFrame = {
+  solver: PortfolioSingleIntraNodeSolver
+  growthAttempts: number
+  scaleFactor: number
+  spaciousNode: boolean
+}
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
@@ -114,6 +122,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   growthAttempts = 0
   maxGrowthAttempts: number
   minimumGrowthAttempts: number
+  private activeAttemptFrame: GrowthAttemptFrame | null = null
+  private suspendedInitialAttempt: GrowthAttemptFrame | null = null
+  private earlyGrowthAttemptTried = false
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -165,7 +176,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ??
       DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitGeometry
-    // Preserve the existing attempt order; only extend the upper search bound.
+    // Preserve the existing attempt bounds after geometry first becomes usable.
     this.minimumGrowthAttempts = Math.min(
       params.maxGrowthAttempts ??
         DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia,
@@ -217,6 +228,91 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt
     }
+    this.activeAttemptFrame = {
+      solver: this.activeSubSolver,
+      growthAttempts: this.growthAttempts,
+      scaleFactor: this.scaleFactor,
+      spaciousNode: false,
+    }
+  }
+
+  private shouldTryNextScaleEarly(): boolean {
+    const frame = this.activeAttemptFrame
+    const solver = this.activeSubSolver
+    if (
+      this.earlyGrowthAttemptTried ||
+      !frame ||
+      frame.spaciousNode ||
+      !solver ||
+      frame.solver !== solver ||
+      frame.growthAttempts !== this.growthAttempts ||
+      frame.scaleFactor !== this.scaleFactor ||
+      this.growthAttempts !== 0 ||
+      this.scaleFactor !== 1 ||
+      !Number.isInteger(this.maxGrowthAttempts) ||
+      this.maxGrowthAttempts < 1 ||
+      !Number.isInteger(this.minimumGrowthAttempts) ||
+      this.minimumGrowthAttempts > 1 ||
+      this.constructorParams.growShrinkSolutionValidator ||
+      this.constructorParams.cacheProvider !== undefined ||
+      this.step !== nativeBaseStep ||
+      this._step !== nativeGrowthStep ||
+      this.createActiveSubSolver !== nativeCreateActiveSubSolver ||
+      this.acceptSolution !== nativeAcceptSolution ||
+      Object.getPrototypeOf(solver) !==
+        PortfolioSingleIntraNodeSolver.prototype ||
+      solver.step !== nativeBaseStep ||
+      solver._step !== nativePortfolioStep ||
+      HyperParameterSupervisorSolver.prototype._step !== nativeSupervisorStep ||
+      solver.initializeSolvers !== nativeInitializeSolvers ||
+      solver.getCombinationDefs !== nativeGetCombinationDefs ||
+      solver.getHyperParameterDefs !== nativeGetHyperParameterDefs ||
+      solver.getHyperParameterCombinations !==
+        nativeGetHyperParameterCombinations ||
+      solver.generateSolver !== nativeGenerateSolver ||
+      solver.computeG !== nativeComputeG ||
+      solver.computeH !== nativeComputeH ||
+      solver.computeF !== nativeComputeF ||
+      solver.getSupervisedSolverWithBestFitness !== nativeSelectBestFitness ||
+      solver.MIN_SUBSTEPS !== 100 ||
+      solver.GREEDY_MULTIPLIER !== 5 ||
+      solver.adaptiveSearchExpanded ||
+      !solver.supervisedSolvers
+    ) {
+      return false
+    }
+
+    const node = this.nodeWithPortPoints
+    const segmentCount = Math.max(
+      1,
+      node.portPointsInPairs?.length ??
+        new Set(node.portPoints.map((point) => point.connectionName)).size,
+    )
+    const routingPitch =
+      (this.constructorParams.traceWidth ?? 0.15) +
+      (this.constructorParams.obstacleMargin ?? 0.1)
+    const channelWidth =
+      segmentCount * routingPitch + (this.constructorParams.viaDiameter ?? 0.3)
+    // This estimates routing pressure only to choose attempt order. Every
+    // suspended candidate retains its original work and search limit.
+    if (Math.min(node.width, node.height) > channelWidth) {
+      // A spacious attempt keeps its native order even if later caller edits
+      // increase pressure. Cache only this decision to retain native order.
+      frame.spaciousNode = true
+      return false
+    }
+
+    for (const candidate of solver.supervisedSolvers) {
+      if (candidate.hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) continue
+      if (
+        !candidate.solver.solved &&
+        !candidate.solver.failed &&
+        candidate.solver.iterations < solver.MIN_SUBSTEPS
+      ) {
+        return false
+      }
+    }
+    return true
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
@@ -265,19 +361,45 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     if (this.activeSubSolver!.solved) {
       if (this.acceptSolution(this.activeSubSolver!)) {
         this.activeSubSolver = null
+        this.activeAttemptFrame = null
+        this.suspendedInitialAttempt = null
         return
       }
     }
 
     if (!this.activeSubSolver!.failed) {
+      if (this.shouldTryNextScaleEarly()) {
+        this.suspendedInitialAttempt = this.activeAttemptFrame
+        this.earlyGrowthAttemptTried = true
+        this.activeSubSolver = null
+        this.activeAttemptFrame = null
+        this.growthAttempts = 1
+        this.scaleFactor = 2
+      }
       return
     }
 
     this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
+    this.activeAttemptFrame = null
 
-    if (this.growthAttempts >= this.maxGrowthAttempts) {
+    if (this.suspendedInitialAttempt) {
+      const frame = this.suspendedInitialAttempt
+      this.suspendedInitialAttempt = null
+      this.activeSubSolver = frame.solver
+      this.activeAttemptFrame = frame
+      this.growthAttempts = frame.growthAttempts
+      this.scaleFactor = frame.scaleFactor
+      return
+    }
+
+    if (
+      this.growthAttempts >= this.maxGrowthAttempts ||
+      (this.earlyGrowthAttemptTried &&
+        this.growthAttempts === 0 &&
+        this.maxGrowthAttempts === 1)
+    ) {
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,
@@ -306,6 +428,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.growthAttempts + 1,
       this.minimumGrowthAttempts,
     )
+    if (this.earlyGrowthAttemptTried && this.growthAttempts === 1) {
+      this.growthAttempts++
+    }
     this.scaleFactor = 2 ** this.growthAttempts
   }
 
@@ -391,3 +516,36 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     )
   }
 }
+
+const nativeGrowthStep = GrowShrinkHighDensityIntraNodeSolver.prototype._step
+const nativeBaseStep = BaseSolver.prototype.step
+const nativePortfolioStep = PortfolioSingleIntraNodeSolver.prototype._step
+const nativeSupervisorStep = HyperParameterSupervisorSolver.prototype._step
+const nativeCreateActiveSubSolver: (
+  this: GrowShrinkHighDensityIntraNodeSolver,
+) => void = Object.getOwnPropertyDescriptor(
+  GrowShrinkHighDensityIntraNodeSolver.prototype,
+  "createActiveSubSolver",
+)!.value
+const nativeAcceptSolution: (
+  this: GrowShrinkHighDensityIntraNodeSolver,
+  solver: PortfolioSingleIntraNodeSolver,
+) => boolean = Object.getOwnPropertyDescriptor(
+  GrowShrinkHighDensityIntraNodeSolver.prototype,
+  "acceptSolution",
+)!.value
+const nativeInitializeSolvers =
+  PortfolioSingleIntraNodeSolver.prototype.initializeSolvers
+const nativeGetCombinationDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs
+const nativeGetHyperParameterDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs
+const nativeGetHyperParameterCombinations =
+  PortfolioSingleIntraNodeSolver.prototype.getHyperParameterCombinations
+const nativeGenerateSolver =
+  PortfolioSingleIntraNodeSolver.prototype.generateSolver
+const nativeComputeG = PortfolioSingleIntraNodeSolver.prototype.computeG
+const nativeComputeH = PortfolioSingleIntraNodeSolver.prototype.computeH
+const nativeComputeF = PortfolioSingleIntraNodeSolver.prototype.computeF
+const nativeSelectBestFitness =
+  PortfolioSingleIntraNodeSolver.prototype.getSupervisedSolverWithBestFitness
