@@ -1,4 +1,8 @@
 import type { GraphicsObject } from "graphics-debug"
+import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -30,6 +34,7 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
+    prioritizeGrowthAfterInitialProbes?: boolean
     fallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
@@ -124,6 +129,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   minimumGrowthAttempts: number
   private activeAttemptFrame: GrowthAttemptFrame | null = null
   private suspendedInitialAttempt: GrowthAttemptFrame | null = null
+  private deferredSolvedAttempt: GrowthAttemptFrame | null = null
   private earlyGrowthAttemptTried = false
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
@@ -212,8 +218,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
+    const {
+      growShrinkSolutionValidator: _,
+      prioritizeGrowthAfterInitialProbes: _prioritizeGrowthAfterInitialProbes,
+      ...portfolioParams
+    } = this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       enableNegotiatedSearch:
@@ -240,6 +249,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     const frame = this.activeAttemptFrame
     const solver = this.activeSubSolver
     if (
+      this.constructorParams.prioritizeGrowthAfterInitialProbes !== true ||
+      !this.constructorParams.connMap ||
       this.earlyGrowthAttemptTried ||
       !frame ||
       frame.spaciousNode ||
@@ -315,6 +326,44 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     return true
   }
 
+  private hasEarlyGrownCopperConflict(
+    solver: PortfolioSingleIntraNodeSolver,
+  ): boolean {
+    const connMap = this.constructorParams.connMap
+    if (!connMap) {
+      throw new Error("Early growth screening requires its connectivity map")
+    }
+    const routes = solver.solvedRoutes.map((route) =>
+      scaleRoute(route, this.nodeWithPortPoints.center, 1 / this.scaleFactor),
+    )
+    const clearance = Math.max(
+      this.constructorParams.obstacleMargin ?? 0.1,
+      0.1,
+    )
+    for (let leftIndex = 0; leftIndex < routes.length; leftIndex++) {
+      const left = routes[leftIndex]!
+      for (
+        let rightIndex = leftIndex + 1;
+        rightIndex < routes.length;
+        rightIndex++
+      ) {
+        const right = routes[rightIndex]!
+        if (arePipeline9RoutesOnSameNet(left, right, connMap)) continue
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left,
+            right,
+            clearance,
+            layerCount: this.constructorParams.layerCount ?? 2,
+          })
+        ) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
     const solvedRoutes =
       this.scaleFactor === 1
@@ -359,10 +408,30 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver!.step()
 
     if (this.activeSubSolver!.solved) {
+      if (
+        this.suspendedInitialAttempt &&
+        this.hasEarlyGrownCopperConflict(this.activeSubSolver!)
+      ) {
+        const grownFrame = this.activeAttemptFrame
+        if (!grownFrame || grownFrame.solver !== this.activeSubSolver) {
+          throw new Error("Early grown solution lost its owned attempt frame")
+        }
+        // A known physical conflict restores the original attempt order. Keep
+        // this solved attempt available if the original search also fails.
+        this.deferredSolvedAttempt = grownFrame
+        const originalFrame = this.suspendedInitialAttempt
+        this.suspendedInitialAttempt = null
+        this.activeSubSolver = originalFrame.solver
+        this.activeAttemptFrame = originalFrame
+        this.growthAttempts = originalFrame.growthAttempts
+        this.scaleFactor = originalFrame.scaleFactor
+        return
+      }
       if (this.acceptSolution(this.activeSubSolver!)) {
         this.activeSubSolver = null
         this.activeAttemptFrame = null
         this.suspendedInitialAttempt = null
+        this.deferredSolvedAttempt = null
         return
       }
     }
@@ -392,6 +461,26 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.growthAttempts = frame.growthAttempts
       this.scaleFactor = frame.scaleFactor
       return
+    }
+
+    if (this.deferredSolvedAttempt) {
+      const frame = this.deferredSolvedAttempt
+      this.deferredSolvedAttempt = null
+      this.activeSubSolver = frame.solver
+      this.activeAttemptFrame = frame
+      this.growthAttempts = frame.growthAttempts
+      this.scaleFactor = frame.scaleFactor
+      // Its native search already finished. Accept at the original attempt's
+      // failure without advancing the solved portfolio or spending another step.
+      if (this.acceptSolution(frame.solver)) {
+        this.activeSubSolver = null
+        this.activeAttemptFrame = null
+        return
+      }
+      this.failedSolvers.push(frame.solver)
+      this.error = frame.solver.error
+      this.activeSubSolver = null
+      this.activeAttemptFrame = null
     }
 
     if (

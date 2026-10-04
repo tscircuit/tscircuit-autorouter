@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { createPipeline9RegularNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { BaseSolver } from "lib/solvers/BaseSolver"
 import { CachedIntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import {
   GrowShrinkHighDensityIntraNodeSolver,
   type GrowShrinkHighDensityIntraNodeSolverParams,
@@ -12,8 +16,9 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 
-type Candidate =
-  NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]
+type Candidate = NonNullable<
+  PortfolioSingleIntraNodeSolver["supervisedSolvers"]
+>[number]
 type AttemptRecord = {
   solver: PortfolioSingleIntraNodeSolver
   growthAttempts: number
@@ -29,22 +34,26 @@ type Scenario = {
   quickOriginalWin: boolean
   suspendedIterations: number | null
   suspendedWork: number[] | null
+  deferredIterations: number | null
+  deferredWork: number[] | null
 }
 
-function createNode(width = 0.8, height = 1.2): NodeWithPortPoints {
+function createNode(width = 0.8, height = 1.2, spacing = 0.4): NodeWithPortPoints {
   const center = { x: 5, y: 7 }
-  const pairs = [-0.4, 0, 0.4].map((offset, index): [PortPoint, PortPoint] => {
-    const connectionName = `connection${index}`
-    return [
-      { x: center.x - width / 2, y: center.y + offset, z: 0, connectionName },
-      {
-        x: center.x + width / 2,
-        y: center.y + offset,
-        z: index === 0 ? 1 : 0,
-        connectionName,
-      },
-    ]
-  })
+  const pairs = [-spacing, 0, spacing].map(
+    (offset, index): [PortPoint, PortPoint] => {
+      const connectionName = `connection${index}`
+      return [
+        { x: center.x - width / 2, y: center.y + offset, z: 0, connectionName },
+        {
+          x: center.x + width / 2,
+          y: center.y + offset,
+          z: index === 0 ? 1 : 0,
+          connectionName,
+        },
+      ]
+    },
+  )
   return {
     capacityMeshNodeId: "attempt-order-node",
     center,
@@ -66,6 +75,8 @@ function createGrow(
     obstacleMargin: 0.1,
     viaDiameter: 0.3,
     maxGrowthAttempts,
+    connMap: new ConnectivityMap({}),
+    prioritizeGrowthAfterInitialProbes: true,
     enableNegotiatedSearch: true,
     fallbackToInvalidGeometryOnFailure: false,
     ...extra,
@@ -198,12 +209,31 @@ function runScenario(
       )
     }
     if (attempt.growthAttempts === 1 && !original.solver.failed) {
-      expect(original.solver.iterations).toBe(scenario.suspendedIterations)
+      expect(original.solver.iterations).toBe(scenario.suspendedIterations!)
       expect(
         original.candidates.map(({ solver }) => solver.iterations),
-      ).toEqual(scenario.suspendedWork)
+      ).toEqual(scenario.suspendedWork!)
+    }
+    const grown = scenario.records.find((record) => record.growthAttempts === 1)
+    if (attempt.growthAttempts === 0 && grown?.solver.solved) {
+      if (scenario.deferredIterations === null) {
+        scenario.deferredIterations = grown.solver.iterations
+        scenario.deferredWork = grown.candidates.map(
+          ({ solver }) => solver.iterations,
+        )
+      }
+      expect(grown.solver.iterations).toBe(scenario.deferredIterations!)
+      expect(grown.candidates.map(({ solver }) => solver.iterations)).toEqual(
+        scenario.deferredWork!,
+      )
     }
     grow.step()
+    if (scenario.deferredIterations !== null) {
+      expect(grown!.solver.iterations).toBe(scenario.deferredIterations!)
+      expect(grown!.candidates.map(({ solver }) => solver.iterations)).toEqual(
+        scenario.deferredWork!,
+      )
+    }
     expect(grow.MAX_ITERATIONS).toBe(attempt.parentLimit)
     for (const [candidate, limit] of attempt.candidateLimits) {
       expect(candidate.MAX_ITERATIONS).toBe(limit)
@@ -222,10 +252,97 @@ function createScenario(
     quickOriginalWin,
     suspendedIterations: null,
     suspendedWork: null,
+    deferredIterations: null,
+    deferredWork: null,
   }
 }
 
 test("growth attempt ordering preserves every native search budget", () => {
+  for (const policyParams of [
+    {},
+    { prioritizeGrowthAfterInitialProbes: false },
+  ]) {
+    const defaultGrow = new GrowShrinkHighDensityIntraNodeSolver({
+      nodeWithPortPoints: createNode(),
+      maxGrowthAttempts: 1,
+      ...policyParams,
+    })
+    const defaultScenario = createScenario(null)
+    runScenario(defaultGrow, defaultScenario)
+    expect(defaultGrow.failedSolvers).toEqual(
+      defaultScenario.records.map(({ solver }) => solver),
+    )
+    expect(defaultScenario.suspendedIterations).toBeNull()
+
+    const defaultHighDensity = new HighDensitySolver({
+      nodePortPoints: [createNode()],
+      useGrowShrinkHighDensityIntraNodeSolver: true,
+      ...policyParams,
+    })
+    defaultHighDensity.step()
+    const defaultChild = defaultHighDensity.activeSubSolver
+    if (!(defaultChild instanceof GrowShrinkHighDensityIntraNodeSolver)) {
+      throw new Error(
+        "HighDensitySolver must construct its configured growth solver",
+      )
+    }
+    expect(defaultHighDensity.prioritizeGrowthAfterInitialProbes).toBe(false)
+    expect(
+      defaultChild.constructorParams.prioritizeGrowthAfterInitialProbes,
+    ).toBe(false)
+  }
+
+  const ordinaryPortfolio = new HighDensitySolver({
+    nodePortPoints: [createNode()],
+    prioritizeGrowthAfterInitialProbes: true,
+  })
+  ordinaryPortfolio.step()
+  const portfolioChild = ordinaryPortfolio.activeSubSolver
+  if (!(portfolioChild instanceof PortfolioSingleIntraNodeSolver)) {
+    throw new Error(
+      "HighDensitySolver must retain its ordinary portfolio branch",
+    )
+  }
+  expect(
+    "prioritizeGrowthAfterInitialProbes" in portfolioChild.constructorParams,
+  ).toBe(false)
+
+  const regularParams = {
+    nodeWithPortPoints: createNode(),
+    connMap: new ConnectivityMap({}),
+    colorMap: {},
+    viaDiameter: 0.3,
+    traceWidth: 0.15,
+    obstacleMargin: 0.1,
+    effort: 1,
+    nodePfById: new Map(),
+    obstacles: [],
+    layerCount: 2,
+  }
+  const defaultRegular = createPipeline9RegularNodeSolver(regularParams)
+  expect(defaultRegular.prioritizeGrowthAfterInitialProbes).toBe(false)
+  const regular = createPipeline9RegularNodeSolver({
+    ...regularParams,
+    prioritizeGrowthAfterInitialProbes: true,
+  })
+  regular.step()
+  const regularChild = regular.activeSubSolver
+  if (!(regularChild instanceof GrowShrinkHighDensityIntraNodeSolver)) {
+    throw new Error("Pipeline9 regular factory must construct a growth solver")
+  }
+  expect(regular.prioritizeGrowthAfterInitialProbes).toBe(true)
+  expect(
+    regularChild.constructorParams.prioritizeGrowthAfterInitialProbes,
+  ).toBe(true)
+  const regularScenario = createScenario(1)
+  runScenario(regularChild, regularScenario)
+  expect(regularScenario.suspendedIterations).not.toBeNull()
+  expect(regularChild.growthAttempts).toBe(1)
+  expect(
+    "prioritizeGrowthAfterInitialProbes" in
+      regularScenario.records[0]!.solver.constructorParams,
+  ).toBe(false)
+
   const quick = createGrow(3)
   const quickScenario = createScenario(0, true)
   runScenario(quick, quickScenario)
@@ -247,10 +364,10 @@ test("growth attempt ordering preserves every native search budget", () => {
     // negative fitness legitimately outranks untouched zero-fitness probes.
     repeatedCandidate.solver.progress = 2
     repeatedCandidate.g = negativeOriginal.solver.computeG(
-      repeatedCandidate.solver,
+      repeatedCandidate.solver as CachedIntraNodeRouteSolver,
     )
     repeatedCandidate.h = negativeOriginal.solver.computeH(
-      repeatedCandidate.solver,
+      repeatedCandidate.solver as CachedIntraNodeRouteSolver,
     )
     repeatedCandidate.f = negativeOriginal.solver.computeF(
       repeatedCandidate.g,
@@ -285,7 +402,7 @@ test("growth attempt ordering preserves every native search budget", () => {
   expect(grown.failedSolvers).toHaveLength(0)
   expect(grownScenario.records[0]!.solver.failed).toBe(false)
   expect(grownScenario.records[0]!.solver.iterations).toBe(
-    grownScenario.suspendedIterations,
+    grownScenario.suspendedIterations!,
   )
   expect(grown.solvedRoutes).toEqual(makeRoutes(grown.nodeWithPortPoints))
   expect(
@@ -315,6 +432,81 @@ test("growth attempt ordering preserves every native search budget", () => {
     resumedScenario.suspendedIterations!,
   )
 
+  for (const maximum of [1, 3]) {
+    for (const originalWins of [false, true]) {
+      const screened = createGrow(maximum, {
+        nodeWithPortPoints: createNode(0.8, 1.2, 0.2),
+      })
+      const screenScenario = createScenario(originalWins ? [0, 1] : 1)
+      runScenario(screened, screenScenario)
+      const original = screenScenario.records[0]!
+      const deferred = screenScenario.records[1]!
+      expect(screened.solved).toBe(true)
+      expect(screened.failed).toBe(false)
+      expect(screenScenario.records).toHaveLength(2)
+      expect(screenScenario.deferredIterations).not.toBeNull()
+      expect(original.solver.iterations).toBeGreaterThan(
+        screenScenario.suspendedIterations!,
+      )
+      expect(deferred.solver.solved).toBe(true)
+      expect(deferred.solver.failed).toBe(false)
+      expect(deferred.solver.iterations).toBe(screenScenario.deferredIterations!)
+      expect(screened.failedSolvers).toEqual(
+        originalWins ? [] : [original.solver],
+      )
+      expect(screened.winningSolver).toBe(
+        originalWins ? original.solver : deferred.solver,
+      )
+      expect(screened.growthAttempts).toBe(originalWins ? 0 : 1)
+      expect(screened.scaleFactor).toBe(originalWins ? 1 : 2)
+      expect(screened.solvedRoutes).toEqual(
+        makeRoutes(screened.nodeWithPortPoints),
+      )
+      // The solved 2x centerlines have room at native copper dimensions. Only
+      // their inverse transform introduces the physical inter-net conflict.
+      expect(
+        doPipeline9RoutesHaveCopperConflict({
+          left: deferred.solver.solvedRoutes[0]!,
+          right: deferred.solver.solvedRoutes[1]!,
+          clearance: 0.1,
+          layerCount: 2,
+        }),
+      ).toBe(false)
+      expect(
+        doPipeline9RoutesHaveCopperConflict({
+          left: screened.solvedRoutes[0]!,
+          right: screened.solvedRoutes[1]!,
+          clearance: 0.1,
+          layerCount: 2,
+        }),
+      ).toBe(true)
+      expect(
+        (screened as unknown as { deferredSolvedAttempt: unknown })
+          .deferredSolvedAttempt,
+      ).toBeNull()
+    }
+  }
+
+  const aliasedConnMap = new ConnectivityMap({})
+  aliasedConnMap.addConnections([["connection0", "connection1", "connection2"]])
+  const aliased = createGrow(1, {
+    nodeWithPortPoints: createNode(0.8, 1.2, 0.2),
+    connMap: aliasedConnMap,
+  })
+  const aliasScenario = createScenario(1)
+  runScenario(aliased, aliasScenario)
+  expect(aliased.growthAttempts).toBe(1)
+  expect(aliasScenario.deferredIterations).toBeNull()
+  expect(aliased.failedSolvers).toHaveLength(0)
+
+  const missingConnMap = createGrow(1, { connMap: undefined })
+  const missingConnMapScenario = createScenario(null)
+  runScenario(missingConnMap, missingConnMapScenario)
+  expect(missingConnMap.failedSolvers).toEqual(
+    missingConnMapScenario.records.map(({ solver }) => solver),
+  )
+  expect(missingConnMapScenario.suspendedIterations).toBeNull()
+
   for (const maximum of [0, 1, 3]) {
     const exhausted = createGrow(maximum)
     const scenario = createScenario(null)
@@ -324,9 +516,7 @@ test("growth attempt ordering preserves every native search budget", () => {
     expect(new Set(exhausted.failedSolvers)).toHaveProperty("size", maximum + 1)
     expect(
       scenario.records.map(({ growthAttempts }) => growthAttempts),
-    ).toEqual(
-      Array.from({ length: maximum + 1 }, (_, index) => index),
-    )
+    ).toEqual(Array.from({ length: maximum + 1 }, (_, index) => index))
     const actualFailures = exhausted.failedSolvers.map(
       (solver) =>
         scenario.records.find((record) => record.solver === solver)!
@@ -377,9 +567,11 @@ test("growth attempt ordering preserves every native search budget", () => {
   prepareAttempt(spacious, spaciousScenario)
   spacious.step()
   expect(
-    (spacious as unknown as {
-      activeAttemptFrame: { spaciousNode: boolean }
-    }).activeAttemptFrame.spaciousNode,
+    (
+      spacious as unknown as {
+        activeAttemptFrame: { spaciousNode: boolean }
+      }
+    ).activeAttemptFrame.spaciousNode,
   ).toBe(true)
   // Later geometry edits retain this attempt's original ordering. The owned
   // portfolio still has the original geometry and its unchanged search work.
