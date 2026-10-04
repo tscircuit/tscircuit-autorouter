@@ -1,5 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { PcbConnectivityGeometryCache } from "@tscircuit/checks"
 import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
@@ -1271,6 +1272,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ),
       route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
     }
+    const referenceConnectivityGeometryCache = new PcbConnectivityGeometryCache()
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
@@ -1290,6 +1292,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           traceClearance,
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
+          connectivityGeometryCache: referenceConnectivityGeometryCache,
         },
       })
       const evaluatedTraceIds = new Set(
