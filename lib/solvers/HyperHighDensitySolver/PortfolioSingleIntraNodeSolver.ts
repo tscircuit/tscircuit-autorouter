@@ -66,6 +66,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  readonly prioritizeInitialPortfolioProbes: boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -127,12 +128,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      prioritizeInitialPortfolioProbes?: boolean
     },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    this.prioritizeInitialPortfolioProbes =
+      opts.prioritizeInitialPortfolioProbes ?? false
+    if ("prioritizeInitialPortfolioProbes" in opts) {
+      const { prioritizeInitialPortfolioProbes: _, ...constructorParams } = opts
+      this.constructorParams = constructorParams
+    }
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -426,8 +434,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private prioritizeInitialProbes(): void {
-    // Custom portfolios retain their declared ordering and fitness policy.
+    // Cached and custom portfolios retain their native ordering and policy.
     if (
+      !this.prioritizeInitialPortfolioProbes ||
+      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
       this.initializeSolvers !== nativeInitializeSolvers ||
       this.getCombinationDefs !== nativeGetCombinationDefs ||
       this.getHyperParameterDefs !== nativeGetHyperParameterDefs ||

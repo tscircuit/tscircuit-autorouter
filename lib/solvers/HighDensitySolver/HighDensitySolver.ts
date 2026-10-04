@@ -63,6 +63,7 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
+  prioritizeInitialPortfolioProbes: boolean
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -103,6 +104,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
+    prioritizeInitialPortfolioProbes = false,
     boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
@@ -124,6 +126,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
+    prioritizeInitialPortfolioProbes?: boolean
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -152,6 +155,7 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
+    this.prioritizeInitialPortfolioProbes = prioritizeInitialPortfolioProbes
     this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
@@ -398,6 +402,7 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
+      prioritizeInitialPortfolioProbes: this.prioritizeInitialPortfolioProbes,
       boardGeometry: this.boardGeometry,
       colorMap: this.colorMap,
       connMap: this.connMap,
