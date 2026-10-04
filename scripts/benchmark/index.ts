@@ -34,6 +34,7 @@ import {
 type BenchmarkOptions = {
   solverName?: string
   networkedColdHot: boolean
+  measureMemory: boolean
   scenarioLimit?: number
   sampleNumbers?: number[]
   concurrency: number
@@ -69,6 +70,7 @@ type BenchmarkSnapshotWriter = {
 }
 
 type RunBenchmarkTasksOptions = {
+  measureMemory?: boolean
   onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
 }
 
@@ -662,12 +664,15 @@ const getTerminateTimeoutMs = () => {
   return parsedTimeout
 }
 
-const getPercentile = (values: number[], percentile: number): number | null => {
-  if (values.length === 0) {
+const getPercentile = (
+  measurements: number[],
+  percentile: number,
+): number | null => {
+  if (measurements.length === 0) {
     return null
   }
 
-  const sorted = [...values].sort((a, b) => a - b)
+  const sorted = [...measurements].sort((a, b) => a - b)
   const index = (sorted.length - 1) * percentile
   const lower = Math.floor(index)
   const upper = Math.ceil(index)
@@ -726,6 +731,7 @@ export const parseArgs = (
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
+    measureMemory: false,
     networkedColdHot: false,
   }
 
@@ -738,6 +744,10 @@ export const parseArgs = (
     }
     if (arg === "--networked-cold-hot") {
       options.networkedColdHot = true
+      continue
+    }
+    if (arg === "--measure-memory") {
+      options.measureMemory = true
       continue
     }
     if (arg === "--scenario-limit") {
@@ -870,6 +880,9 @@ const loadSolverNames = async (
 }
 
 const formatTable = (rows: SolverRunSummary[]) => {
+  const includeMemory = rows.some(
+    (row) => typeof row.maxPeakRssBytes === "number",
+  )
   const includeNetworkCache = rows.some((row) => row.networkCache)
   const headers = [
     "Solver",
@@ -882,10 +895,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P80 Time",
     "P90 Time",
     "P95 Time",
-    "Avg Peak RSS",
-    "P50 Peak RSS",
-    "P95 Peak RSS",
-    "Max Peak RSS",
+    ...(includeMemory
+      ? ["Avg Peak RSS", "P50 Peak RSS", "P95 Peak RSS", "Max Peak RSS"]
+      : []),
     "Avg Via",
     ...(includeNetworkCache
       ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
@@ -903,10 +915,14 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p80TimeMs ?? null),
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
-    formatMemory(row.avgPeakRssBytes),
-    formatMemory(row.p50PeakRssBytes),
-    formatMemory(row.p95PeakRssBytes),
-    formatMemory(row.maxPeakRssBytes),
+    ...(includeMemory
+      ? [
+          formatMemory(row.avgPeakRssBytes),
+          formatMemory(row.p50PeakRssBytes),
+          formatMemory(row.p95PeakRssBytes),
+          formatMemory(row.maxPeakRssBytes),
+        ]
+      : []),
     formatAverage(row.avgVia),
     ...(includeNetworkCache
       ? [
@@ -1376,6 +1392,7 @@ const runBenchmarkTasks = async (
   const queue = tasks.map((task, index) => ({
     taskId: index + 1,
     task,
+    measureMemory: options.measureMemory,
   }))
   const results = new Array<WorkerResult>(queue.length)
   let completedTaskCount = 0
@@ -1483,8 +1500,12 @@ const runBenchmarkTasks = async (
           ? 0
           : (solverProgress.solved / solverProgress.completed) * 100
       const suffix = result.error ? ` (${result.error})` : ""
+      const memorySuffix =
+        result.peakRssBytes === undefined
+          ? ""
+          : ` peakRss=${formatMemory(result.peakRssBytes)}`
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)} peakRss=${formatMemory(result.peakRssBytes)}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${suffix}`,
       )
 
       if (restartWorker) {
@@ -1492,7 +1513,7 @@ const runBenchmarkTasks = async (
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
         )
       }
-      if (restartWorker || queue.length > 0) {
+      if (restartWorker || (options.measureMemory && queue.length > 0)) {
         await replaceWorker(slot)
       }
     }
@@ -1713,6 +1734,7 @@ const main = async () => {
   const {
     solverName,
     networkedColdHot,
+    measureMemory,
     scenarioLimit,
     sampleNumbers,
     concurrency,
@@ -1830,7 +1852,7 @@ const main = async () => {
   const tasks = taskGroups.flat()
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}${measureMemory ? ", isolated memory measurement" : ""})`,
   )
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
@@ -1849,6 +1871,7 @@ const main = async () => {
       }
       results.push(
         ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
+          measureMemory,
           onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
         })),
       )
@@ -1901,6 +1924,9 @@ const main = async () => {
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
+    ...(measureMemory
+      ? { memoryMeasurementMode: "isolated_process_per_sample" as const }
+      : {}),
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,

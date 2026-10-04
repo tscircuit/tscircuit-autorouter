@@ -169,11 +169,18 @@ const renderNetworkedColdHotComparison = (report) => {
       `| P${percentile} time | ${formatTime(coldTime)} | ${formatTime(hotTime)} | ${formatRelativeDelta(coldTime, hotTime)} |`,
     )
   }
+  if (
+    typeof coldSummary.maxPeakRssBytes === "number" ||
+    typeof hotSummary.maxPeakRssBytes === "number"
+  ) {
+    rows.push(
+      `| Average peak RSS | ${formatMemory(coldSummary.avgPeakRssBytes)} | ${formatMemory(hotSummary.avgPeakRssBytes)} | ${formatRelativeDelta(coldSummary.avgPeakRssBytes, hotSummary.avgPeakRssBytes)} |`,
+      `| P50 peak RSS | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
+      `| P95 peak RSS | ${formatMemory(coldSummary.p95PeakRssBytes)} | ${formatMemory(hotSummary.p95PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p95PeakRssBytes, hotSummary.p95PeakRssBytes)} |`,
+      `| Max peak RSS | ${formatMemory(coldSummary.maxPeakRssBytes)} | ${formatMemory(hotSummary.maxPeakRssBytes)} | ${formatRelativeDelta(coldSummary.maxPeakRssBytes, hotSummary.maxPeakRssBytes)} |`,
+    )
+  }
   rows.push(
-    `| Average peak RSS | ${formatMemory(coldSummary.avgPeakRssBytes)} | ${formatMemory(hotSummary.avgPeakRssBytes)} | ${formatRelativeDelta(coldSummary.avgPeakRssBytes, hotSummary.avgPeakRssBytes)} |`,
-    `| P50 peak RSS | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
-    `| P95 peak RSS | ${formatMemory(coldSummary.p95PeakRssBytes)} | ${formatMemory(hotSummary.p95PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p95PeakRssBytes, hotSummary.p95PeakRssBytes)} |`,
-    `| Max peak RSS | ${formatMemory(coldSummary.maxPeakRssBytes)} | ${formatMemory(hotSummary.maxPeakRssBytes)} | ${formatRelativeDelta(coldSummary.maxPeakRssBytes, hotSummary.maxPeakRssBytes)} |`,
     `| Average vias | ${formatAverage(coldSummary.avgVia)} | ${formatAverage(hotSummary.avgVia)} | ${formatRelativeDelta(coldSummary.avgVia, hotSummary.avgVia)} |`,
   )
   for (const type of getTraceLintTypes(coldSummary, hotSummary)) {
@@ -265,11 +272,18 @@ export const renderBenchmarkComparison = ({
         `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`,
       )
     }
+    if (
+      typeof mainSummary?.maxPeakRssBytes === "number" ||
+      typeof prSummary.maxPeakRssBytes === "number"
+    ) {
+      rows.push(
+        `| ${solver} | Average peak RSS | ${formatMemory(mainSummary?.avgPeakRssBytes)} | ${formatMemory(prSummary.avgPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.avgPeakRssBytes, prSummary.avgPeakRssBytes)} |`,
+        `| ${solver} | P50 peak RSS | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
+        `| ${solver} | P95 peak RSS | ${formatMemory(mainSummary?.p95PeakRssBytes)} | ${formatMemory(prSummary.p95PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p95PeakRssBytes, prSummary.p95PeakRssBytes)} |`,
+        `| ${solver} | Max peak RSS | ${formatMemory(mainSummary?.maxPeakRssBytes)} | ${formatMemory(prSummary.maxPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.maxPeakRssBytes, prSummary.maxPeakRssBytes)} |`,
+      )
+    }
     rows.push(
-      `| ${solver} | Average peak RSS | ${formatMemory(mainSummary?.avgPeakRssBytes)} | ${formatMemory(prSummary.avgPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.avgPeakRssBytes, prSummary.avgPeakRssBytes)} |`,
-      `| ${solver} | P50 peak RSS | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
-      `| ${solver} | P95 peak RSS | ${formatMemory(mainSummary?.p95PeakRssBytes)} | ${formatMemory(prSummary.p95PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p95PeakRssBytes, prSummary.p95PeakRssBytes)} |`,
-      `| ${solver} | Max peak RSS | ${formatMemory(mainSummary?.maxPeakRssBytes)} | ${formatMemory(prSummary.maxPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.maxPeakRssBytes, prSummary.maxPeakRssBytes)} |`,
       `| ${solver} | Average vias | ${formatAverage(mainSummary?.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary?.avgVia, prSummary.avgVia)} |`,
     )
     for (const type of getTraceLintTypes(mainSummary, prSummary)) {

@@ -31,6 +31,7 @@ export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
 export type WorkerTaskMessage = {
   taskId: number
   task: BenchmarkTask
+  measureMemory?: boolean
 }
 
 export type BenchmarkStageTiming = {
@@ -222,6 +223,7 @@ export type BenchmarkBestViaCellsReport = {
 export type BenchmarkReport = {
   version: 1
   datasetName: string
+  memoryMeasurementMode?: "isolated_process_per_sample"
   scenarioCount: number
   effortLabel: string
   summary: SolverRunSummary[]

@@ -33,6 +33,25 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   })
   expect(
     parsePrBenchmarkCommand(
+      "/benchmark-long --same-machine --dataset 24 --sample-numbers 21 --measure-memory",
+    ),
+  ).toEqual({
+    kind: "benchmark-long",
+    benchmarkArgs: [
+      "--concurrency",
+      "8",
+      "--dataset",
+      "24",
+      "--sample-numbers",
+      "21",
+      "--measure-memory",
+    ],
+    datasetName: "24",
+    profileSolvers: false,
+    sameMachineCompare: true,
+  })
+  expect(
+    parsePrBenchmarkCommand(
       '/benchmark --solver "Solver With Spaces" --profile-solvers',
     ),
   ).toEqual({
