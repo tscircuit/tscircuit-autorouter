@@ -43,8 +43,9 @@ export function createEmptyQueryPredicateCase(
   })
   const events: string[] = []
   const via = name === "via-empty-segments"
-  const indexedSegments: Segments | undefined =
-    name.startsWith("missing-") ? undefined : []
+  const indexedSegments: Segments | undefined = name.startsWith("missing-")
+    ? undefined
+    : []
   const ids: number[] = []
   const providedIds =
     name === "provided-empty-ids" ||
