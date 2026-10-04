@@ -38,7 +38,11 @@ type Scenario = {
   deferredWork: number[] | null
 }
 
-function createNode(width = 0.8, height = 1.2, spacing = 0.4): NodeWithPortPoints {
+function createNode(
+  width = 0.8,
+  height = 1.2,
+  spacing = 0.4,
+): NodeWithPortPoints {
   const center = { x: 5, y: 7 }
   const pairs = [-spacing, 0, spacing].map(
     (offset, index): [PortPoint, PortPoint] => {
@@ -450,7 +454,9 @@ test("growth attempt ordering preserves every native search budget", () => {
       )
       expect(deferred.solver.solved).toBe(true)
       expect(deferred.solver.failed).toBe(false)
-      expect(deferred.solver.iterations).toBe(screenScenario.deferredIterations!)
+      expect(deferred.solver.iterations).toBe(
+        screenScenario.deferredIterations!,
+      )
       expect(screened.failedSolvers).toEqual(
         originalWins ? [] : [original.solver],
       )

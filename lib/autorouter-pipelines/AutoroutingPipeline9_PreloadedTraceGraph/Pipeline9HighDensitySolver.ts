@@ -504,7 +504,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
-      prioritizeGrowthAfterInitialProbes: this.prioritizeGrowthAfterInitialProbes,
+      prioritizeGrowthAfterInitialProbes:
+        this.prioritizeGrowthAfterInitialProbes,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
