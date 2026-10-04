@@ -1,7 +1,11 @@
 // Frozen d010db4155513fad6e1cef325180d99a28d6201f force solver.
 // Original source SHA-256: 640a5234f3ba314d349f2d64406fe43733f8f5f7f58b46991f5c60f004f55264
 import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
-import { PolyLine2, MHPoint2, Candidate2 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
+import {
+  PolyLine2,
+  MHPoint2,
+  Candidate2,
+} from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver"
 
 type ForceSegment = {

@@ -136,13 +136,11 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       if (forceWorkspace?.geometry) refreshForceWorkspace(forceWorkspace)
       const netForces: Array<Array<{ fx: number; fy: number }>> =
         forceWorkspace?.netForces ??
-        Array.from(
-          { length: numPolyLines },
-          (_, i) =>
-            Array.from({ length: polyLines[i].mPoints.length }, () => ({
-              fx: 0,
-              fy: 0,
-            })),
+        Array.from({ length: numPolyLines }, (_, i) =>
+          Array.from({ length: polyLines[i].mPoints.length }, () => ({
+            fx: 0,
+            fy: 0,
+          })),
         )
 
       // Helper to add force directly to the netForces array for a given mPoint index
@@ -238,26 +236,28 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           if (forceWorkspace) {
             storeForceWorkspacePoints(forceWorkspace, points)
           }
-          const segments = points.slice(0, -1).map((point, index): ForceSegment => {
-            const nextPoint = points[index + 1]!
-            const deltaX = nextPoint.x - point.x
-            const deltaY = nextPoint.y - point.y
-            return {
-              p1: point,
-              p2: nextPoint,
-              deltaX,
-              deltaY,
-              lengthSquared: deltaX * deltaX + deltaY * deltaY,
-              layer: point.z2,
-              p1Idx: index,
-              p2Idx: index + 1,
-              lastTargetLine: -1,
-              lastEndpointIndex: -1,
-              lastFx: 0,
-              lastFy: 0,
-              lastForceActive: false,
-            }
-          })
+          const segments = points
+            .slice(0, -1)
+            .map((point, index): ForceSegment => {
+              const nextPoint = points[index + 1]!
+              const deltaX = nextPoint.x - point.x
+              const deltaY = nextPoint.y - point.y
+              return {
+                p1: point,
+                p2: nextPoint,
+                deltaX,
+                deltaY,
+                lengthSquared: deltaX * deltaX + deltaY * deltaY,
+                layer: point.z2,
+                p1Idx: index,
+                p2Idx: index + 1,
+                lastTargetLine: -1,
+                lastEndpointIndex: -1,
+                lastFx: 0,
+                lastFy: 0,
+                lastForceActive: false,
+              }
+            })
           const vias = points.flatMap((point, index): ForceVia[] =>
             point.z1 === point.z2
               ? []
@@ -416,7 +416,10 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                   } else {
                     // Vias do not overlap
                     // Calculate distance between edges
-                    effectiveDistance = Math.max(EPSILON, dist - this.viaDiameter)
+                    effectiveDistance = Math.max(
+                      EPSILON,
+                      dist - this.viaDiameter,
+                    )
                   }
 
                   // Exponential falloff
@@ -603,6 +606,5 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
 const nativeApplyForcesToPolyLines =
   MultiHeadPolyLineIntraNodeSolver2.prototype.applyForcesToPolyLines
-
 
 markForceOwned(MultiHeadPolyLineIntraNodeSolver2.prototype)

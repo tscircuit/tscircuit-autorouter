@@ -55,9 +55,11 @@ type ForceSolver = {
 const iteratorKey: typeof Symbol.iterator = Symbol.iterator
 const speciesKey: typeof Symbol.species = Symbol.species
 const nativeGlobalObject = globalThis
-const nativeLookupGetterMethod = (Object.prototype as Object & {
-  __lookupGetter__: (key: PropertyKey) => unknown
-}).__lookupGetter__
+const nativeLookupGetterMethod = (
+  Object.prototype as Object & {
+    __lookupGetter__: (key: PropertyKey) => unknown
+  }
+).__lookupGetter__
 const nativeHasOwn = Function.prototype.call.bind(
   Object.prototype.hasOwnProperty,
 ) as (object: object, key: PropertyKey) => boolean
@@ -96,10 +98,17 @@ const nativeFunctionToString = Function.prototype.call.bind(
 ) as (value: Function) => string
 const nativeWeakMapGet = Function.prototype.call.bind(
   WeakMap.prototype.get,
-) as (map: WeakMap<object, ForceWorkspace>, key: object) => ForceWorkspace | undefined
+) as (
+  map: WeakMap<object, ForceWorkspace>,
+  key: object,
+) => ForceWorkspace | undefined
 const nativeWeakMapSet = Function.prototype.call.bind(
   WeakMap.prototype.set,
-) as (map: WeakMap<object, ForceWorkspace>, key: object, value: ForceWorkspace) => void
+) as (
+  map: WeakMap<object, ForceWorkspace>,
+  key: object,
+  value: ForceWorkspace,
+) => void
 const nativeWeakMapDelete = Function.prototype.call.bind(
   WeakMap.prototype.delete,
 ) as (map: WeakMap<object, ForceWorkspace>, key: object) => void
@@ -146,7 +155,9 @@ for (let index = 0; index < capturedBuiltins.length; index++) {
 }
 for (let index = 0; index < nativeArrayMethods.length; index++) {
   if (
-    !nativeFunctionToString(nativeArrayMethods[index]!).includes("[native code]")
+    !nativeFunctionToString(nativeArrayMethods[index]!).includes(
+      "[native code]",
+    )
   ) {
     capturedBuiltinsAreNative = false
   }
@@ -183,45 +194,33 @@ function hasNativeForceBuiltins(): boolean {
   if (!capturedBuiltinsAreNative) return false
   // Array.from's length bags inherit this hook; reuse must never omit a callback.
   if (nativeHasOwn(nativeObjectPrototype, iteratorKey)) return false
-  if (
-    !hasNativeDataProperty(
-      nativeGlobalObject,
-      "Array",
-      nativeArray,
-    )
-  ) return false
-  if (
-    !hasNativeDataProperty(
-      nativeGlobalObject,
-      "Math",
-      nativeMath,
-    )
-  ) return false
+  if (!hasNativeDataProperty(nativeGlobalObject, "Array", nativeArray))
+    return false
+  if (!hasNativeDataProperty(nativeGlobalObject, "Math", nativeMath))
+    return false
   if (!hasNativeDataProperty(nativeArray, "from", nativeArrayFrom)) return false
-  if (
-    !hasNativeDataProperty(
-      nativeArrayPrototype,
-      "constructor",
-      nativeArray,
-    )
-  ) return false
+  if (!hasNativeDataProperty(nativeArrayPrototype, "constructor", nativeArray))
+    return false
   if (
     !hasNativeDataProperty(
       nativeArrayPrototype,
       iteratorKey,
       nativeArrayIterator,
     )
-  ) return false
+  )
+    return false
   if (
     !hasNativeDataProperty(
       nativeArrayIteratorPrototype,
       "next",
       nativeArrayIteratorNext,
     )
-  ) return false
+  )
+    return false
   const species = nativeGetOwnPropertyDescriptor(nativeArray, speciesKey)
   if (!species || nativeHasOwn(species, "value")) return false
-  if (!nativeHasOwn(species, "get") || species.get !== nativeArraySpeciesGetter) return false
+  if (!nativeHasOwn(species, "get") || species.get !== nativeArraySpeciesGetter)
+    return false
   for (let index = 0; index < arrayMethods.length; index++) {
     if (
       !hasNativeDataProperty(
@@ -229,7 +228,8 @@ function hasNativeForceBuiltins(): boolean {
         arrayMethods[index]!,
         nativeArrayMethods[index],
       )
-    ) return false
+    )
+      return false
   }
   for (let index = 0; index < mathMethods.length; index++) {
     if (
@@ -238,12 +238,15 @@ function hasNativeForceBuiltins(): boolean {
         mathMethods[index]!,
         nativeMathMethods[index],
       )
-    ) return false
+    )
+      return false
   }
   return true
 }
 
-function isOrdinaryObject(value: unknown): value is Record<PropertyKey, unknown> {
+function isOrdinaryObject(
+  value: unknown,
+): value is Record<PropertyKey, unknown> {
   if (typeof value !== "object" || value === null) return false
   if (!nativeWeakSetHas(forceOwnedObjects, value)) return false
   if (nativeArrayIsArray(value)) return false
@@ -271,7 +274,8 @@ function isOrdinaryForcePoint(value: unknown): value is MHPoint2 {
   if (!isOrdinaryObject(value)) return false
   for (let index = 0; index < pointKeys.length; index++) {
     const number = getOwnData(value, pointKeys[index]!)
-    if (typeof number !== "number" || !nativeNumberIsFinite(number)) return false
+    if (typeof number !== "number" || !nativeNumberIsFinite(number))
+      return false
   }
   return true
 }
@@ -285,7 +289,9 @@ function hasNativeForceMethod(solver: object, nativeMethod: Function): boolean {
       "applyForcesToPolyLines",
     )
     if (descriptor) {
-      return nativeHasOwn(descriptor, "value") && descriptor.value === nativeMethod
+      return (
+        nativeHasOwn(descriptor, "value") && descriptor.value === nativeMethod
+      )
     }
     current = nativeGetPrototypeOf(current)
   }
@@ -298,22 +304,22 @@ function canUseForceWorkspace(
   nativeMethod: Function,
 ): boolean {
   if (!nativeWeakSetHas(forceOwnedObjects, solver)) return false
-  if (
-    !hasNativeForceBuiltins() ||
-    !hasNativeForceMethod(solver, nativeMethod)
-  ) return false
+  if (!hasNativeForceBuiltins() || !hasNativeForceMethod(solver, nativeMethod))
+    return false
   if (!isOrdinaryObject(candidate)) return false
   const lines = getOwnData(candidate, "polyLines")
   if (!isDenseNativeArray(lines)) return false
   for (let index = 0; index < scalarKeys.length; index++) {
     const number = getOwnData(solver, scalarKeys[index]!)
-    if (typeof number !== "number" || !nativeNumberIsFinite(number)) return false
+    if (typeof number !== "number" || !nativeNumberIsFinite(number))
+      return false
   }
   const bounds = getOwnData(solver, "bounds")
   if (!isOrdinaryObject(bounds)) return false
   for (let index = 0; index < boundKeys.length; index++) {
     const number = getOwnData(bounds, boundKeys[index]!)
-    if (typeof number !== "number" || !nativeNumberIsFinite(number)) return false
+    if (typeof number !== "number" || !nativeNumberIsFinite(number))
+      return false
   }
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex]
@@ -391,7 +397,11 @@ export function refreshForceWorkspace(workspace: ForceWorkspace): void {
   const netForces = workspace.netForces!
   const geometry = workspace.geometry!
   for (let lineIndex = 0; lineIndex < netForces.length; lineIndex++) {
-    for (let pointIndex = 0; pointIndex < netForces[lineIndex]!.length; pointIndex++) {
+    for (
+      let pointIndex = 0;
+      pointIndex < netForces[lineIndex]!.length;
+      pointIndex++
+    ) {
       const force = netForces[lineIndex]![pointIndex]!
       force.fx = 0
       force.fy = 0

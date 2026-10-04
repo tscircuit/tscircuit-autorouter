@@ -30,22 +30,29 @@ function createLines(seed: number): PolyLine2[] {
       const x = (seed / 2 ** 32 - 0.5) * 2
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
       const y = (seed / 2 ** 32 - 0.5) * 2
-      points.push(markForceOwned({ x, y, z1: index % 2, z2: (index + lineIndex) % 2 }))
+      points.push(
+        markForceOwned({ x, y, z1: index % 2, z2: (index + lineIndex) % 2 }),
+      )
     }
     const mPoints: MHPoint2[] = markForceOwned([])
-    for (let index = 1; index < points.length - 1; index++) mPoints.push(points[index]!)
-    lines.push(markForceOwned({
-      connectionName: `line-${lineIndex}`,
-      start: points[0]!,
-      end: points[6]!,
-      mPoints,
-    }))
+    for (let index = 1; index < points.length - 1; index++)
+      mPoints.push(points[index]!)
+    lines.push(
+      markForceOwned({
+        connectionName: `line-${lineIndex}`,
+        start: points[0]!,
+        end: points[6]!,
+        mPoints,
+      }),
+    )
   }
   return lines
 }
 
 function createSolver(
-  constructor: typeof MultiHeadPolyLineIntraNodeSolver2 | typeof FrozenD010ForceSolver,
+  constructor:
+    | typeof MultiHeadPolyLineIntraNodeSolver2
+    | typeof FrozenD010ForceSolver,
   lines: PolyLine2[],
 ): ForceSolver {
   const solver = new constructor({
@@ -117,11 +124,13 @@ function comparePublicSteps(
   }
 }
 
-
 function comparePatchedStep(
   install: (calls: { count: number }) => () => void,
 ): void {
-  const actual = createSolver(MultiHeadPolyLineIntraNodeSolver2, createLines(97))
+  const actual = createSolver(
+    MultiHeadPolyLineIntraNodeSolver2,
+    createLines(97),
+  )
   const expected = createSolver(FrozenD010ForceSolver, createLines(97))
   const actualCalls = { count: 0 }
   const expectedCalls = { count: 0 }
@@ -150,6 +159,10 @@ test("step-local force storage retains frozen math and callback behavior", (): v
     .split("\n")
     .slice(2)
     .join("\n")
+    .replace(
+      /import \{\s+PolyLine2,\s+MHPoint2,\s+Candidate2,\s+\} from/,
+      "import { PolyLine2, MHPoint2, Candidate2 } from",
+    )
     .replace(
       "export class FrozenD010ForceSolver ",
       "export class MultiHeadPolyLineIntraNodeSolver2 ",
@@ -282,7 +295,10 @@ test("step-local force storage retains frozen math and callback behavior", (): v
   let actualFromCalls = 0
   let expectedFromCalls = 0
   try {
-    const customActual = createSolver(MultiHeadPolyLineIntraNodeSolver2, createLines(81))
+    const customActual = createSolver(
+      MultiHeadPolyLineIntraNodeSolver2,
+      createLines(81),
+    )
     const customExpected = createSolver(FrozenD010ForceSolver, createLines(81))
     Math.sqrt = (value: number): number => {
       actualSqrtCalls++
@@ -351,7 +367,13 @@ test("step-local force storage retains frozen math and callback behavior", (): v
 
   // Unsupported public Proxies decline before any added reflective trap.
   const proxySlots = [
-    "receiver", "candidate", "array", "line", "point", "bounds", "prototype",
+    "receiver",
+    "candidate",
+    "array",
+    "line",
+    "point",
+    "bounds",
+    "prototype",
   ]
   for (const slot of proxySlots) {
     comparePublicSteps(createLines(101), (solver, calls): void => {
@@ -516,7 +538,9 @@ test("step-local force storage retains frozen math and callback behavior", (): v
   comparePublicSteps(createLines(103), (solver, calls): void => {
     const method = solver.applyForcesToPolyLines
     const nested = createLines(104)
-    solver.applyForcesToPolyLines = function (lines): ReturnType<typeof method> {
+    solver.applyForcesToPolyLines = function (
+      lines,
+    ): ReturnType<typeof method> {
       calls.push(`outer-${arguments.length}`)
       method.call(this, nested)
       return method.call(this, lines)
@@ -524,31 +548,53 @@ test("step-local force storage retains frozen math and callback behavior", (): v
   })
   comparePublicSteps(createLines(106), (solver, calls): void => {
     const method = solver.applyForcesToPolyLines
-    solver.applyForcesToPolyLines = function (lines): ReturnType<typeof method> {
+    solver.applyForcesToPolyLines = function (
+      lines,
+    ): ReturnType<typeof method> {
       calls.push(`same-argument-${arguments.length}`)
       method.call(this, lines)
       return method.call(this, lines)
     }
   })
-  const readonlyActual = createSolver(MultiHeadPolyLineIntraNodeSolver2, createLines(107))
+  const readonlyActual = createSolver(
+    MultiHeadPolyLineIntraNodeSolver2,
+    createLines(107),
+  )
   const readonlyExpected = createSolver(FrozenD010ForceSolver, createLines(107))
   for (const solver of [readonlyActual, readonlyExpected]) {
     Object.defineProperty(
-      solver.candidates[0]!.polyLines[0]!.mPoints[0]!, "x", { writable: false },
+      solver.candidates[0]!.polyLines[0]!.mPoints[0]!,
+      "x",
+      { writable: false },
     )
     expect(() => solver._step()).toThrow()
     Object.defineProperty(
-      solver.lastCandidate!.polyLines[0]!.mPoints[0]!, "x", { writable: true },
+      solver.lastCandidate!.polyLines[0]!.mPoints[0]!,
+      "x",
+      { writable: true },
     )
   }
-  expectExactNumbers(readonlyActual.lastCandidate, readonlyExpected.lastCandidate)
   expectExactNumbers(
-    readonlyActual.applyForcesToPolyLines(readonlyActual.lastCandidate!.polyLines),
-    readonlyExpected.applyForcesToPolyLines(readonlyExpected.lastCandidate!.polyLines),
+    readonlyActual.lastCandidate,
+    readonlyExpected.lastCandidate,
   )
-  expectExactNumbers(readonlyActual.lastCandidate, readonlyExpected.lastCandidate)
+  expectExactNumbers(
+    readonlyActual.applyForcesToPolyLines(
+      readonlyActual.lastCandidate!.polyLines,
+    ),
+    readonlyExpected.applyForcesToPolyLines(
+      readonlyExpected.lastCandidate!.polyLines,
+    ),
+  )
+  expectExactNumbers(
+    readonlyActual.lastCandidate,
+    readonlyExpected.lastCandidate,
+  )
 
-  const throwing = createSolver(MultiHeadPolyLineIntraNodeSolver2, createLines(105))
+  const throwing = createSolver(
+    MultiHeadPolyLineIntraNodeSolver2,
+    createLines(105),
+  )
   const throwSqrt = Math.sqrt
   try {
     Math.sqrt = (): number => {
