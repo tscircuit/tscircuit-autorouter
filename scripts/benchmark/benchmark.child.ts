@@ -25,22 +25,31 @@ for await (const line of rl) {
     continue
   }
 
+  let peakRssBytes = process.resourceUsage().maxRSS * 1024
   try {
     const result = await runTask(message.task, {
       onProgress: (progress) => {
+        peakRssBytes = process.resourceUsage().maxRSS * 1024
         const payload = {
           taskId: message.taskId,
-          progress,
+          progress: {
+            ...progress,
+            peakRssBytes,
+          },
         }
         process.stdout.write(`${JSON.stringify(payload)}\n`)
       },
     })
     const payload: WorkerResultMessage = {
       taskId: message.taskId,
-      result,
+      result: {
+        ...result,
+        peakRssBytes,
+      },
     }
     process.stdout.write(`${JSON.stringify(payload)}\n`)
   } catch (error) {
+    peakRssBytes = process.resourceUsage().maxRSS * 1024
     const payload: WorkerResultMessage = {
       taskId: message.taskId,
       result: {
@@ -48,6 +57,7 @@ for await (const line of rl) {
         scenarioName: message.task.scenarioName,
         sampleNumber: message.task.sampleNumber,
         elapsedTimeMs: 0,
+        peakRssBytes,
         didSolve: false,
         didTimeout: false,
         relaxedDrcPassed: false,

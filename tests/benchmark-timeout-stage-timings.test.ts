@@ -18,6 +18,7 @@ test("timeout and crash results retain the latest partial stage timing", () => {
     scenarioName: task.scenarioName,
     sampleNumber: task.sampleNumber,
     elapsedTimeMs: 100,
+    peakRssBytes: 96 * 1024 * 1024,
     phaseName: "routeSolver",
     stageTiming: {
       status: "partial",
@@ -36,6 +37,7 @@ test("timeout and crash results retain the latest partial stage timing", () => {
     latestProgress,
   )
   expect(timedOut.didTimeout).toBeTrue()
+  expect(timedOut.peakRssBytes).toBe(96 * 1024 * 1024)
   expect(timedOut.stageTiming).toEqual({
     status: "partial",
     stages: [

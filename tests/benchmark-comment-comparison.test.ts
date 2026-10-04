@@ -46,6 +46,10 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 1_000,
+        avgPeakRssBytes: 100 * 1024 * 1024,
+        p50PeakRssBytes: 90 * 1024 * 1024,
+        p95PeakRssBytes: 110 * 1024 * 1024,
+        maxPeakRssBytes: 120 * 1024 * 1024,
         avgVia: 2,
       },
     ],
@@ -70,6 +74,10 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
         timedOutLabel: "0/2",
         p50TimeMs: 1_350,
         p95TimeMs: 1_755,
+        avgPeakRssBytes: 80 * 1024 * 1024,
+        p50PeakRssBytes: 72 * 1024 * 1024,
+        p95PeakRssBytes: 88 * 1024 * 1024,
+        maxPeakRssBytes: 96 * 1024 * 1024,
         avgVia: 2.2,
       },
     ],
@@ -98,6 +106,10 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Pipeline7 | P80 time | 1.8s | 1.6s | -10.0% |
 | Pipeline7 | P90 time | 1.9s | 1.7s | -10.0% |
 | Pipeline7 | P95 time | 1.9s | 1.8s | -10.0% |
+| Pipeline7 | Average peak RSS | 100.0 MiB | 80.0 MiB | -20.0% |
+| Pipeline7 | P50 peak RSS | 90.0 MiB | 72.0 MiB | -20.0% |
+| Pipeline7 | P95 peak RSS | 110.0 MiB | 88.0 MiB | -20.0% |
+| Pipeline7 | Max peak RSS | 120.0 MiB | 96.0 MiB | -20.0% |
 | Pipeline7 | Average vias | 2.00 | 2.20 | +10.0% |
 | Pipeline7 | Avg Angled Traces | n/a | n/a | n/a |
 

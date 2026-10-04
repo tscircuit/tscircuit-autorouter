@@ -107,6 +107,14 @@ const formatTime = (timeMs: number | null) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
+const formatMemory = (byteCount: number | null | undefined) => {
+  if (byteCount === null || byteCount === undefined) {
+    return "n/a"
+  }
+  const mebibytes = byteCount / (1024 * 1024)
+  return `${mebibytes.toFixed(1)} MiB`
+}
+
 const formatAverage = (value: number | null) => {
   if (value === null) {
     return "n/a"
@@ -654,10 +662,7 @@ const getTerminateTimeoutMs = () => {
   return parsedTimeout
 }
 
-const getPercentileMs = (
-  values: number[],
-  percentile: number,
-): number | null => {
+const getPercentile = (values: number[], percentile: number): number | null => {
   if (values.length === 0) {
     return null
   }
@@ -877,6 +882,10 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P80 Time",
     "P90 Time",
     "P95 Time",
+    "Avg Peak RSS",
+    "P50 Peak RSS",
+    "P95 Peak RSS",
+    "Max Peak RSS",
     "Avg Via",
     ...(includeNetworkCache
       ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
@@ -894,6 +903,10 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p80TimeMs ?? null),
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
+    formatMemory(row.avgPeakRssBytes),
+    formatMemory(row.p50PeakRssBytes),
+    formatMemory(row.p95PeakRssBytes),
+    formatMemory(row.maxPeakRssBytes),
     formatAverage(row.avgVia),
     ...(includeNetworkCache
       ? [
@@ -1140,6 +1153,7 @@ export const createFailedResult = (
   scenarioName: task.scenarioName,
   sampleNumber: task.sampleNumber,
   elapsedTimeMs,
+  peakRssBytes: latestProgress?.peakRssBytes,
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
@@ -1470,13 +1484,15 @@ const runBenchmarkTasks = async (
           : (solverProgress.solved / solverProgress.completed) * 100
       const suffix = result.error ? ` (${result.error})` : ""
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)} peakRss=${formatMemory(result.peakRssBytes)}${suffix}`,
       )
 
       if (restartWorker) {
         console.warn(
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
         )
+      }
+      if (restartWorker || queue.length > 0) {
         await replaceWorker(slot)
       }
     }
@@ -1518,6 +1534,12 @@ export const summarizeSolverResults = (
   const viaCounts = succeeded
     .map((result) => result.viaCount)
     .filter((viaCount): viaCount is number => typeof viaCount === "number")
+  const peakRssValues = results
+    .map((result) => result.peakRssBytes)
+    .filter(
+      (peakRssBytes): peakRssBytes is number =>
+        typeof peakRssBytes === "number" && Number.isFinite(peakRssBytes),
+    )
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
@@ -1570,12 +1592,21 @@ export const summarizeSolverResults = (
       timedOut.length,
     ),
     timedOutLabel: `${timedOut.length}/${results.length}`,
-    p50TimeMs: getPercentileMs(elapsedForPercentiles, 0.5),
-    p60TimeMs: getPercentileMs(elapsedForPercentiles, 0.6),
-    p70TimeMs: getPercentileMs(elapsedForPercentiles, 0.7),
-    p80TimeMs: getPercentileMs(elapsedForPercentiles, 0.8),
-    p90TimeMs: getPercentileMs(elapsedForPercentiles, 0.9),
-    p95TimeMs: getPercentileMs(elapsedForPercentiles, 0.95),
+    p50TimeMs: getPercentile(elapsedForPercentiles, 0.5),
+    p60TimeMs: getPercentile(elapsedForPercentiles, 0.6),
+    p70TimeMs: getPercentile(elapsedForPercentiles, 0.7),
+    p80TimeMs: getPercentile(elapsedForPercentiles, 0.8),
+    p90TimeMs: getPercentile(elapsedForPercentiles, 0.9),
+    p95TimeMs: getPercentile(elapsedForPercentiles, 0.95),
+    avgPeakRssBytes:
+      peakRssValues.length === 0
+        ? null
+        : peakRssValues.reduce((sum, peakRssBytes) => sum + peakRssBytes, 0) /
+          peakRssValues.length,
+    p50PeakRssBytes: getPercentile(peakRssValues, 0.5),
+    p95PeakRssBytes: getPercentile(peakRssValues, 0.95),
+    maxPeakRssBytes:
+      peakRssValues.length === 0 ? null : Math.max(...peakRssValues),
     avgVia,
     avgTraceLintIssues: averageTraceLintIssues(results),
     networkCache,

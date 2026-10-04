@@ -48,6 +48,7 @@ export type WorkerProgress = {
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  peakRssBytes?: number
   phaseName?: string
   phaseSolverName?: string
   solverProgress?: number
@@ -115,6 +116,8 @@ export type WorkerResult<
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  /** Peak resident set size through routing completion in the isolated sample process. */
+  peakRssBytes?: number
   /** Configured per-sample limit used to score unsuccessful runs in percentiles. */
   sampleTimeoutMs?: number
   didSolve: boolean
@@ -171,6 +174,11 @@ export type SolverRunSummary = {
   p80TimeMs?: number | null
   p90TimeMs?: number | null
   p95TimeMs: number | null
+  /** Optional so previously published version 1 artifacts remain readable. */
+  avgPeakRssBytes?: number | null
+  p50PeakRssBytes?: number | null
+  p95PeakRssBytes?: number | null
+  maxPeakRssBytes?: number | null
   avgVia: number | null
   /** Average issues per completed, linted sample; absent in older artifacts. */
   avgTraceLintIssues?: Record<string, number | null>

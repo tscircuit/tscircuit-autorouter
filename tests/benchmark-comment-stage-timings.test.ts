@@ -70,18 +70,27 @@ test("benchmark comments total stage timings by solver and report, including par
     ...report,
     tests: [makeSample("Pipeline9", "complete", [100, 900])],
   }
-  for (const markdown of [
-    renderBenchmarkComparison({ mainReport, prReport: report }).join("\n"),
-    renderSameMachineBenchmarkResults({
-      mainReport,
-      prReport: report,
-      mainSha: "a",
-      prSha: "b",
-      repository: "tscircuit/tscircuit-autorouter",
-      runnerName: "test",
-    }),
-  ]) {
-    expect(markdown).toContain("<summary>Main pipeline stage timings</summary>")
+  const mainComparison = renderBenchmarkComparison({
+    mainReport,
+    prReport: report,
+  }).join("\n")
+  expect(mainComparison).toContain(
+    "<summary>Main pipeline stage timings</summary>",
+  )
+
+  const baseComparison = renderSameMachineBenchmarkResults({
+    baseReport: mainReport,
+    prReport: report,
+    baseSha: "a",
+    prSha: "b",
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "test",
+  })
+  expect(baseComparison).toContain(
+    "<summary>Base pipeline stage timings</summary>",
+  )
+
+  for (const markdown of [mainComparison, baseComparison]) {
     expect(markdown).toContain("| fanout | 0.100s | 10.0% |")
     expect(markdown).toContain(details)
   }

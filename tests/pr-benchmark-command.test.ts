@@ -240,8 +240,10 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(benchmarkWorkflow).toContain(
     "working-directory: same-machine-controller",
   )
-  expect(benchmarkWorkflow).toContain("same-machine-results/main")
+  expect(benchmarkWorkflow).toContain("same-machine-results/base")
   expect(benchmarkWorkflow).toContain("same-machine-results/pr")
+  expect(benchmarkWorkflow).toContain("const baseSha = pr.data.base.sha")
+  expect(benchmarkWorkflow).toContain("--base-report")
   expect(benchmarkWorkflow).toContain(
     "BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}",
   )
