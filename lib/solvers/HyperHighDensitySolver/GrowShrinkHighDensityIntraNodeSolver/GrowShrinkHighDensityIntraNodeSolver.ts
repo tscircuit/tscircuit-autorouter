@@ -9,6 +9,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { CachedIntraNodeRouteSolver } from "../../HighDensitySolver/CachedIntraNodeRouteSolver"
 import { HyperParameterSupervisorSolver } from "../../HyperParameterSupervisorSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
@@ -26,6 +27,10 @@ type GrowthAttemptFrame = {
   growthAttempts: number
   scaleFactor: number
   spaciousNode: boolean
+  initialCachedProbes:
+    | [CachedIntraNodeRouteSolver, CachedIntraNodeRouteSolver]
+    | null
+  initialCachedProbeCount: number | null
 }
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
@@ -242,6 +247,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       growthAttempts: this.growthAttempts,
       scaleFactor: this.scaleFactor,
       spaciousNode: false,
+      initialCachedProbes: null,
+      initialCachedProbeCount: null,
     }
   }
 
@@ -313,17 +320,58 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return false
     }
 
-    for (const candidate of solver.supervisedSolvers) {
-      if (candidate.hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) continue
+    if (!frame.initialCachedProbes) {
+      let firstProbe: CachedIntraNodeRouteSolver | undefined
+      let secondProbe: CachedIntraNodeRouteSolver | undefined
+      let cachedProbeCount = 0
+      for (const candidate of solver.supervisedSolvers) {
+        if (!(candidate.solver instanceof CachedIntraNodeRouteSolver)) continue
+        cachedProbeCount++
+        if (!firstProbe) {
+          firstProbe = candidate.solver
+          continue
+        }
+        if (!secondProbe) secondProbe = candidate.solver
+      }
+      if (!firstProbe || !secondProbe) {
+        throw new Error(
+          "Early growth requires both original native cached probes",
+        )
+      }
+      // Keep the original native probes even if this attempt later expands.
+      // Their actual work chooses when to try the existing next scale.
+      frame.initialCachedProbes = [firstProbe, secondProbe]
+      frame.initialCachedProbeCount = cachedProbeCount
+    }
+
+    for (const probe of frame.initialCachedProbes) {
       if (
-        !candidate.solver.solved &&
-        !candidate.solver.failed &&
-        candidate.solver.iterations < solver.MIN_SUBSTEPS
+        !probe.solved &&
+        !probe.failed &&
+        probe.iterations < solver.MIN_SUBSTEPS
       ) {
         return false
       }
     }
-    return true
+    const workDescriptor = Object.getOwnPropertyDescriptor(
+      solver,
+      "totalCandidateWork",
+    )
+    if (
+      frame.initialCachedProbeCount === null ||
+      !workDescriptor ||
+      !("value" in workDescriptor) ||
+      !Number.isFinite(workDescriptor.value) ||
+      workDescriptor.value < 0
+    ) {
+      throw new Error("Early growth requires native original candidate work")
+    }
+    // Give the original portfolio meaningful aggregate exploration before
+    // interrupting it. This uses real non-negotiated work, not scheduling
+    // credits or a guarantee that every cached probe received a batch.
+    const originalWarmupWork =
+      frame.initialCachedProbeCount * solver.MIN_SUBSTEPS * solver.GREEDY_MULTIPLIER
+    return workDescriptor.value >= originalWarmupWork
   }
 
   private hasEarlyGrownCopperConflict(

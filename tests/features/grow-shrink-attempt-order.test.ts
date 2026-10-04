@@ -24,6 +24,12 @@ type AttemptRecord = {
   growthAttempts: number
   scaleFactor: number
   candidates: Candidate[]
+  initialCachedProbes: [
+    CachedIntraNodeRouteSolver,
+    CachedIntraNodeRouteSolver,
+  ]
+  initialCachedProbeCount: number
+  warmupWork: number
   candidateLimits: Map<BaseSolver, number>
   seenCandidates: Set<BaseSolver>
   parentLimit: number
@@ -42,10 +48,13 @@ function createNode(
   width = 0.8,
   height = 1.2,
   spacing = 0.4,
+  connectionCount = 3,
 ): NodeWithPortPoints {
   const center = { x: 5, y: 7 }
-  const pairs = [-spacing, 0, spacing].map(
-    (offset, index): [PortPoint, PortPoint] => {
+  const pairs = Array.from(
+    { length: connectionCount },
+    (_, index): [PortPoint, PortPoint] => {
+      const offset = (index - (connectionCount - 1) / 2) * spacing
       const connectionName = `connection${index}`
       return [
         { x: center.x - width / 2, y: center.y + offset, z: 0, connectionName },
@@ -101,10 +110,25 @@ function makeRoutes(node: NodeWithPortPoints): HighDensityIntraNodeRoute[] {
   return routes
 }
 
-function completedFirstRound(record: AttemptRecord): boolean {
-  for (const candidate of record.candidates) {
-    if (candidate.hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) continue
-    const solver = candidate.solver
+function getInitialCachedProbes(
+  portfolio: PortfolioSingleIntraNodeSolver,
+): [CachedIntraNodeRouteSolver, CachedIntraNodeRouteSolver] {
+  const probes = portfolio.supervisedSolvers!
+    .map(({ solver }) => solver)
+    .filter(
+      (solver): solver is CachedIntraNodeRouteSolver =>
+        solver instanceof CachedIntraNodeRouteSolver,
+    )
+  const first = probes[0]
+  const second = probes[1]
+  if (!first || !second) {
+    throw new Error("Native portfolio must retain both initial cached probes")
+  }
+  return [first, second]
+}
+
+function completedInitialCachedProbes(record: AttemptRecord): boolean {
+  for (const solver of record.initialCachedProbes) {
     if (
       !solver.solved &&
       !solver.failed &&
@@ -114,6 +138,33 @@ function completedFirstRound(record: AttemptRecord): boolean {
     }
   }
   return true
+}
+
+function getCandidateWork(
+  portfolio: PortfolioSingleIntraNodeSolver,
+): number {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    portfolio,
+    "totalCandidateWork",
+  )
+  if (
+    !descriptor ||
+    !("value" in descriptor) ||
+    typeof descriptor.value !== "number" ||
+    !Number.isFinite(descriptor.value) ||
+    descriptor.value < 0
+  ) {
+    throw new Error("Native portfolio must retain its real candidate work")
+  }
+  return descriptor.value
+}
+
+function completedInitialReadiness(record: AttemptRecord): boolean {
+  if (!completedInitialCachedProbes(record)) {
+    return false
+  }
+  const work = getCandidateWork(record.solver)
+  return work >= record.warmupWork
 }
 
 function prepareAttempt(
@@ -128,11 +179,20 @@ function prepareAttempt(
   let record = scenario.records.find((attempt) => attempt.solver === portfolio)
   if (!record) {
     portfolio.initializeSolvers()
+    const initialCachedProbeCount = portfolio.supervisedSolvers!.filter(
+      ({ solver }) => solver instanceof CachedIntraNodeRouteSolver,
+    ).length
     record = {
       solver: portfolio,
       growthAttempts: grow.growthAttempts,
       scaleFactor: grow.scaleFactor,
       candidates: [...portfolio.supervisedSolvers!],
+      initialCachedProbes: getInitialCachedProbes(portfolio),
+      initialCachedProbeCount,
+      warmupWork:
+        initialCachedProbeCount *
+        portfolio.MIN_SUBSTEPS *
+        portfolio.GREEDY_MULTIPLIER,
       candidateLimits: new Map(),
       seenCandidates: new Set(),
       parentLimit: grow.MAX_ITERATIONS,
@@ -149,7 +209,7 @@ function prepareAttempt(
       )
     }
   }
-  if (attempt.growthAttempts > 0 || completedFirstRound(attempt)) {
+  if (attempt.growthAttempts > 0 || completedInitialReadiness(attempt)) {
     const generateSolver = portfolio.generateSolver
     portfolio.generateSolver = function (
       parameters,
@@ -172,13 +232,25 @@ function scriptCandidate(
 ): void {
   if (attempt.seenCandidates.has(child)) return
   attempt.seenCandidates.add(child)
+  const negotiatedCandidate = attempt.candidates.some(
+    ({ solver, hyperParameters }) =>
+      solver === child && hyperParameters.HIGH_DENSITY_A13,
+  )
   child._step = function (): void {
-    const initialRoundDone = completedFirstRound(attempt)
+    const initialReadiness = completedInitialReadiness(attempt)
     const originalCanFinish =
       scenario.quickOriginalWin ||
-      initialRoundDone ||
+      initialReadiness ||
       scenario.records.some((entry) => entry.growthAttempts === 1)
     if (attempt.growthAttempts === 0 && !originalCanFinish) {
+      // Native A13 work does not contribute to exploration accounting. This
+      // scripted candidate fails after a real step so other native candidates
+      // can accumulate the warmup without running a negotiated geometry search.
+      if (negotiatedCandidate) {
+        this.failed = true
+        this.error = "Scripted negotiated candidate exhausted"
+        return
+      }
       this.progress = 0
       return
     }
@@ -355,6 +427,124 @@ test("growth attempt ordering preserves every native search budget", () => {
   expect(quick.scaleFactor).toBe(1)
   expect(quickScenario.records).toHaveLength(1)
 
+  const cheapOriginal = createGrow(1)
+  const cheapScenario = createScenario(null)
+  const cheapAttempt = prepareAttempt(cheapOriginal, cheapScenario)
+  cheapOriginal.step()
+  cheapOriginal.step()
+  expect(completedInitialCachedProbes(cheapAttempt)).toBe(true)
+  expect(completedInitialReadiness(cheapAttempt)).toBe(false)
+  expect(cheapAttempt.initialCachedProbeCount).toBe(63)
+  expect(cheapAttempt.warmupWork).toBe(31_500)
+  expect(getCandidateWork(cheapAttempt.solver)).toBe(200)
+  expect(cheapOriginal.activeSubSolver).toBe(cheapAttempt.solver)
+  const cheapWinningCandidate = cheapAttempt.candidates.find(
+    ({ solver }) =>
+      solver instanceof CachedIntraNodeRouteSolver &&
+      !cheapAttempt.initialCachedProbes.includes(solver) &&
+      !solver.failed &&
+      solver.iterations === 0,
+  )!
+  cheapWinningCandidate.solver._step = function (): void {
+    expect(this).toBe(cheapWinningCandidate.solver)
+    expect(this.iterations).toBeGreaterThan(0)
+    const cached = this as CachedIntraNodeRouteSolver
+    cached.solvedRoutes = makeRoutes(cheapAttempt.solver.nodeWithPortPoints)
+    this.solved = true
+  }
+  cheapOriginal.step()
+  expect(cheapOriginal.solved).toBe(true)
+  expect(cheapOriginal.winningSolver).toBe(cheapAttempt.solver)
+  expect(cheapOriginal.growthAttempts).toBe(0)
+  expect(cheapOriginal.scaleFactor).toBe(1)
+  expect(getCandidateWork(cheapAttempt.solver)).toBeLessThan(
+    cheapAttempt.warmupWork,
+  )
+  expect(cheapScenario.records).toHaveLength(1)
+
+  const negotiatedOnly = createGrow(1)
+  const negotiatedScenario = createScenario(1)
+  const negotiatedAttempt = prepareAttempt(
+    negotiatedOnly,
+    negotiatedScenario,
+  )
+  const negotiatedCandidate = negotiatedAttempt.candidates.find(
+    ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A13,
+  )!
+  negotiatedCandidate.solver._step = function (): void {
+    expect(this).toBe(negotiatedCandidate.solver)
+    expect(this.iterations).toBeGreaterThan(0)
+    expect(this.MAX_ITERATIONS).toBe(
+      negotiatedAttempt.candidateLimits.get(this)!,
+    )
+    this.progress = 0
+  }
+  for (let step = 0; step < 400; step++) {
+    negotiatedOnly.step()
+    expect(negotiatedOnly.activeSubSolver).toBe(negotiatedAttempt.solver)
+    expect(negotiatedOnly.growthAttempts).toBe(0)
+  }
+  expect(completedInitialCachedProbes(negotiatedAttempt)).toBe(true)
+  expect(negotiatedCandidate.solver.iterations).toBeGreaterThanOrEqual(
+    negotiatedAttempt.warmupWork,
+  )
+  expect(getCandidateWork(negotiatedAttempt.solver)).toBeLessThan(
+    negotiatedAttempt.warmupWork,
+  )
+  expect(completedInitialReadiness(negotiatedAttempt)).toBe(false)
+  negotiatedCandidate.solver._step = function (): void {
+    expect(this).toBe(negotiatedCandidate.solver)
+    expect(this.iterations).toBeGreaterThan(negotiatedAttempt.warmupWork)
+    this.failed = true
+    this.error = "Scripted negotiated candidate exhausted after real work"
+  }
+  runScenario(negotiatedOnly, negotiatedScenario)
+  expect(negotiatedOnly.solved).toBe(true)
+  expect(negotiatedScenario.suspendedIterations).not.toBeNull()
+
+  const corrupted = createGrow(1)
+  const corruptScenario = createScenario(null)
+  const corruptOriginal = prepareAttempt(corrupted, corruptScenario)
+  const retainedProbe = corruptOriginal.initialCachedProbes[0]
+  corruptOriginal.solver.supervisedSolvers =
+    corruptOriginal.solver.supervisedSolvers!.filter(
+      ({ solver }) =>
+        !(solver instanceof CachedIntraNodeRouteSolver) ||
+        solver === retainedProbe,
+    )
+  expect(corrupted.step.bind(corrupted)).toThrow(
+    "Early growth requires both original native cached probes",
+  )
+  expect(retainedProbe.iterations).toBe(100)
+  expect(corrupted.failed).toBe(true)
+  expect(corrupted.growthAttempts).toBe(0)
+  expect(corrupted.scaleFactor).toBe(1)
+  expect(corruptScenario.records).toHaveLength(1)
+
+  const secondProbeWinner = createGrow(1)
+  const secondWinnerScenario = createScenario(null)
+  const secondWinnerOriginal = prepareAttempt(
+    secondProbeWinner,
+    secondWinnerScenario,
+  )
+  const secondWinningProbe = secondWinnerOriginal.initialCachedProbes[1]
+  secondWinningProbe._step = function (): void {
+    expect(this).toBe(secondWinningProbe)
+    expect(this.iterations).toBeGreaterThan(0)
+    this.solvedRoutes = makeRoutes(
+      secondWinnerOriginal.solver.nodeWithPortPoints,
+    )
+    this.solved = true
+    this.failed = false
+  }
+  secondProbeWinner.step()
+  secondProbeWinner.step()
+  expect(secondProbeWinner.solved).toBe(true)
+  expect(secondProbeWinner.growthAttempts).toBe(0)
+  expect(secondProbeWinner.scaleFactor).toBe(1)
+  expect(secondProbeWinner.winningSolver).toBe(secondWinnerOriginal.solver)
+  expect(secondWinnerScenario.records).toHaveLength(1)
+
   const negativeFitness = createGrow(1)
   const negativeScenario = createScenario(1)
   const negativeOriginal = prepareAttempt(negativeFitness, negativeScenario)
@@ -382,6 +572,7 @@ test("growth attempt ordering preserves every native search budget", () => {
     expect(negativeFitness.activeSubSolver).toBe(negativeOriginal.solver)
     expect(negativeFitness.growthAttempts).toBe(0)
     expect(negativeFitness.scaleFactor).toBe(1)
+    expect(negativeOriginal.initialCachedProbes[1].iterations).toBe(0)
     expect(
       negativeOriginal.candidates.some(
         ({ solver, hyperParameters }) =>
@@ -392,6 +583,95 @@ test("growth attempt ordering preserves every native search budget", () => {
       ),
     ).toBe(true)
   }
+  expect(completedInitialCachedProbes(negativeOriginal)).toBe(false)
+  expect(negativeOriginal.solver.adaptiveSearchExpanded).toBe(false)
+  expect(
+    negativeOriginal.candidates.reduce(
+      (work, candidate) => work + candidate.solver.iterations,
+      0,
+    ),
+  ).toBeLessThan(negativeOriginal.solver.stats.dynamicExpansionWorkBudget)
+  negativeFitness.step()
+  expect(completedInitialCachedProbes(negativeOriginal)).toBe(true)
+  expect(completedInitialReadiness(negativeOriginal)).toBe(false)
+  expect(negativeFitness.activeSubSolver).toBe(negativeOriginal.solver)
+  expect(negativeFitness.growthAttempts).toBe(0)
+  expect(negativeFitness.scaleFactor).toBe(1)
+  expect(negativeOriginal.solver.adaptiveSearchExpanded).toBe(false)
+  expect(
+    negativeOriginal.candidates.some(
+      ({ solver }) =>
+        solver instanceof CachedIntraNodeRouteSolver &&
+        !negativeOriginal.initialCachedProbes.includes(solver) &&
+        solver.iterations === 0,
+    ),
+  ).toBe(true)
+  runScenario(negativeFitness, negativeScenario)
+  expect(negativeFitness.solved).toBe(true)
+  expect(getCandidateWork(negativeOriginal.solver)).toBeGreaterThanOrEqual(
+    negativeOriginal.warmupWork,
+  )
+  expect(negativeFitness.winningSolver).toBe(
+    negativeScenario.records[1]!.solver,
+  )
+
+  const expansionNode = createNode(0.8, 12, 0.4, 12)
+  expansionNode.availableZ = [0, 1, 2, 3]
+  const expanded = createGrow(1, {
+    nodeWithPortPoints: expansionNode,
+    layerCount: 4,
+    gridSearchSegmentWork: 300,
+    gridSearchWorkScale: 0.25,
+  })
+  const expansionScenario = createScenario(null)
+  const expandedOriginal = prepareAttempt(expanded, expansionScenario)
+  const [expansionFirst, expansionSecond] =
+    expandedOriginal.initialCachedProbes
+  const expansionThreshold =
+    expandedOriginal.solver.stats.dynamicExpansionWorkBudget
+  expect(expansionThreshold).toBe(expansionFirst.MAX_ITERATIONS)
+  const repeatedRoutes = [
+    ...makeRoutes(expandedOriginal.solver.nodeWithPortPoints),
+    ...makeRoutes(expandedOriginal.solver.nodeWithPortPoints),
+  ]
+  expansionFirst._step = function (): void {
+    expect(this).toBe(expansionFirst)
+    expect(this.MAX_ITERATIONS).toBe(expansionThreshold)
+    expect(this.iterations).toBeGreaterThan(0)
+    // Explicit branches can outnumber distinct connections. Keep native
+    // progress/fitness calculations and spend real BaseSolver steps.
+    this.solvedRoutes = repeatedRoutes
+  }
+  for (
+    let step = 0;
+    !expandedOriginal.solver.adaptiveSearchExpanded &&
+    step <=
+      Math.ceil(expansionThreshold / expandedOriginal.solver.MIN_SUBSTEPS);
+    step++
+  ) {
+    expanded.step()
+    expect(expanded.activeSubSolver).toBe(expandedOriginal.solver)
+    expect(expanded.growthAttempts).toBe(0)
+    expect(expanded.scaleFactor).toBe(1)
+    expect(expansionSecond.iterations).toBe(0)
+  }
+  expect(expandedOriginal.solver.adaptiveSearchExpanded).toBe(true)
+  expect(expansionFirst.failed).toBe(true)
+  expect(expansionFirst.iterations).toBeGreaterThan(expansionThreshold)
+  expect(expandedOriginal.solver.stats.candidateWorkAtExpansion).toBe(
+    expansionFirst.iterations,
+  )
+  expect(completedInitialCachedProbes(expandedOriginal)).toBe(false)
+  expanded.step()
+  expect(completedInitialCachedProbes(expandedOriginal)).toBe(true)
+  expect(expanded.activeSubSolver).toBe(expandedOriginal.solver)
+  expect(expanded.growthAttempts).toBe(0)
+  expect(expanded.scaleFactor).toBe(1)
+  runScenario(expanded, expansionScenario)
+  expect(expanded.failedSolvers).toEqual(
+    expansionScenario.records.map(({ solver }) => solver),
+  )
+  expect(expansionScenario.suspendedIterations).toBeNull()
 
   const grown = createGrow(3)
   const grownScenario = createScenario(1)
@@ -414,13 +694,22 @@ test("growth attempt ordering preserves every native search budget", () => {
       .suspendedInitialAttempt,
   ).toBeNull()
   const originalCandidates = grownScenario.records[0]!.candidates
+  expect(grownScenario.records[0]!.initialCachedProbeCount).toBe(63)
+  expect(getCandidateWork(grownScenario.records[0]!.solver)).toBe(31_500)
   for (const candidate of originalCandidates) {
-    if (candidate.hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
-      expect(candidate.solver.iterations).toBe(0)
-    } else if (!candidate.solver.failed && !candidate.solver.solved) {
-      expect(candidate.solver.iterations).toBe(100)
+    if (
+      candidate.solver instanceof CachedIntraNodeRouteSolver &&
+      grownScenario.records[0]!.initialCachedProbes.includes(candidate.solver)
+    ) {
+      expect(candidate.solver.iterations).toBeGreaterThanOrEqual(100)
     }
   }
+  expect(
+    originalCandidates.some(
+      ({ solver }) =>
+        !solver.solved && !solver.failed && solver.iterations === 0,
+    ),
+  ).toBe(true)
 
   const resumed = createGrow(3)
   const resumedScenario = createScenario(0)
