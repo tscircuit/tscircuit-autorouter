@@ -9,6 +9,20 @@ import {
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+import { SingleHighDensityRouteCandidateQueue } from "./SingleHighDensityRouteCandidateQueue"
+
+const nativeExploredSetHas = Set.prototype.has
+const nativeExploredSetAdd = Set.prototype.add
+const nativeFrontierEnqueue =
+  SingleHighDensityRouteCandidateQueue.prototype.enqueue
+const nativeFrontierDequeue =
+  SingleHighDensityRouteCandidateQueue.prototype.dequeue
+const nativeFrontierHeapifyUp =
+  SingleHighDensityRouteCandidateQueue.prototype.heapifyUp
+const nativeFrontierHeapifyDown =
+  SingleHighDensityRouteCandidateQueue.prototype.heapifyDown
+const nativeDisableFrontierIndexing =
+  SingleHighDensityRouteCandidateQueue.prototype.disableIndexing
 
 export type FutureConnection = {
   connectionName: string
@@ -68,6 +82,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   gridHeight: number
 
   candidates: SingleRouteCandidatePriorityQueue
+  private indexedCandidateGrid:
+    | {
+        cellStep: number
+        gridWidth: number
+        gridHeight: number
+        gridMinXIndex: number
+        gridMinYIndex: number
+      }
+    | undefined
 
   connectionName: string
   rootConnectionName?: string
@@ -241,9 +264,30 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
         this.doesPathToParentIntersectObstacle(roundedInitialNode))
 
-    this.candidates = new SingleRouteCandidatePriorityQueue([
+    const initialCandidates = [
       shouldFallbackToExactStart ? initialParent : roundedInitialNode,
-    ])
+    ]
+    if (
+      this.getNodeKey === nativeCandidateNodeKey &&
+      this.getNeighbors === nativeCandidateNeighbors &&
+      SingleHighDensityRouteCandidateQueue.hasNativeQueueMethods() &&
+      this.exploredNodes.has === nativeExploredSetHas &&
+      this.exploredNodes.add === nativeExploredSetAdd
+    ) {
+      this.candidates = new SingleHighDensityRouteCandidateQueue(
+        initialCandidates,
+        nativeCandidateNodeKey.bind(this),
+      )
+      this.indexedCandidateGrid = {
+        cellStep: this.cellStep,
+        gridWidth: this.gridWidth,
+        gridHeight: this.gridHeight,
+        gridMinXIndex: this.gridMinXIndex,
+        gridMinYIndex: this.gridMinYIndex,
+      }
+    } else {
+      this.candidates = new SingleRouteCandidatePriorityQueue(initialCandidates)
+    }
   }
 
   handleSimpleCases() {
@@ -874,6 +918,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   _step() {
+    this.prepareCandidateQueue()
     let currentNode = this.candidates.dequeue()
     let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
 
@@ -929,9 +974,47 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     const neighbors = this.getNeighbors(currentNode)
+    const indexedCandidates = this.prepareCandidateQueue()
     for (const neighbor of neighbors) {
-      this.candidates.enqueue(neighbor)
+      if (indexedCandidates) {
+        indexedCandidates.enqueueKeyed(neighbor)
+      } else {
+        this.candidates.enqueue(neighbor)
+      }
     }
+  }
+
+  private prepareCandidateQueue(): SingleHighDensityRouteCandidateQueue | null {
+    if (!(this.candidates instanceof SingleHighDensityRouteCandidateQueue)) {
+      return null
+    }
+    const grid = this.indexedCandidateGrid
+    if (!SingleHighDensityRouteCandidateQueue.hasNativeQueueMethods()) {
+      this.candidates.useOriginalQueueMethods()
+      return null
+    }
+    if (
+      !grid ||
+      this.getNodeKey !== nativeCandidateNodeKey ||
+      this.getNeighbors !== nativeCandidateNeighbors ||
+      this.exploredNodes.has !== nativeExploredSetHas ||
+      this.exploredNodes.add !== nativeExploredSetAdd ||
+      Set.prototype.has !== nativeExploredSetHas ||
+      Set.prototype.add !== nativeExploredSetAdd ||
+      this.candidates.enqueue !== nativeFrontierEnqueue ||
+      this.candidates.dequeue !== nativeFrontierDequeue ||
+      this.candidates.heapifyUp !== nativeFrontierHeapifyUp ||
+      this.candidates.heapifyDown !== nativeFrontierHeapifyDown ||
+      this.cellStep !== grid.cellStep ||
+      this.gridWidth !== grid.gridWidth ||
+      this.gridHeight !== grid.gridHeight ||
+      this.gridMinXIndex !== grid.gridMinXIndex ||
+      this.gridMinYIndex !== grid.gridMinYIndex
+    ) {
+      nativeDisableFrontierIndexing.call(this.candidates)
+      return null
+    }
+    return this.candidates
   }
 
   visualize(): GraphicsObject {
@@ -1107,6 +1190,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return graphics
   }
 }
+
+const nativeCandidateNodeKey = SingleHighDensityRouteSolver.prototype.getNodeKey
+const nativeCandidateNeighbors =
+  SingleHighDensityRouteSolver.prototype.getNeighbors
 
 type IndexedObstacleSegment = {
   z: number
