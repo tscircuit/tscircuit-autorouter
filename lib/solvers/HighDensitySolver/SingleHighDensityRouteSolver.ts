@@ -701,7 +701,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let unexposedNeighbor: Node | undefined
-    const nodeKeyArguments: [Node | undefined] = [undefined]
+    let nodeKeyArguments: [Node | undefined] | undefined
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
 
@@ -738,8 +738,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         const getNodeKey = this.getNodeKey
         const canReuseNeighbor = getNodeKey === nativeGetNodeKey
         unexposedNeighbor = undefined
-        nodeKeyArguments[0] = neighbor
-        const neighborKey = applyNodeKey(getNodeKey, this, nodeKeyArguments)
+        let neighborKey: number
+        if (canReuseNeighbor) {
+          neighborKey = callNativeGetNodeKey(this, neighbor)
+        } else {
+          if (!nodeKeyArguments) nodeKeyArguments = [undefined]
+          nodeKeyArguments[0] = neighbor
+          neighborKey = applyNodeKey(getNodeKey, this, nodeKeyArguments)
+        }
 
         if (this.exploredNodes.has(neighborKey)) {
           if (canReuseNeighbor) unexposedNeighbor = neighbor
@@ -1255,4 +1261,5 @@ function getPointToPrecomputedSegmentDistanceSquared(
 }
 
 const nativeGetNodeKey = SingleHighDensityRouteSolver.prototype.getNodeKey
+const callNativeGetNodeKey = Function.prototype.call.bind(nativeGetNodeKey)
 const applyNodeKey = Reflect.apply

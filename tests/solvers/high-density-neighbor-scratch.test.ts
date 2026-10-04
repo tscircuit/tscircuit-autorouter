@@ -261,6 +261,10 @@ test("neighbor scratch preserves frozen outputs, dispatch, and exposed node iden
     Function.prototype,
     "call",
   )!
+  const bindDescriptor = Object.getOwnPropertyDescriptor(
+    Function.prototype,
+    "bind",
+  )!
   let calls = 0
   const trial = new SingleHighDensityRouteSolver(makeParams(1))
   const original = new FrozenSolver(makeParams(1))
@@ -275,9 +279,17 @@ test("neighbor scratch preserves frozen outputs, dispatch, and exposed node iden
         throw new Error("Function.prototype.call must not be used")
       },
     })
+    Object.defineProperty(Function.prototype, "bind", {
+      ...bindDescriptor,
+      value(): never {
+        calls += 1
+        throw new Error("runtime Function.prototype.bind must not be used")
+      },
+    })
     trialResult = trial.getNeighbors(makeNode(0, 0, 0))
     originalResult = original.getNeighbors(makeNode(0, 0, 0))
   } finally {
+    Object.defineProperty(Function.prototype, "bind", bindDescriptor)
     Object.defineProperty(Function.prototype, "call", callDescriptor)
   }
   expect(trialResult).toEqual(originalResult)
