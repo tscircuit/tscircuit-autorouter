@@ -1965,10 +1965,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const contacts = new NativeDrcContactWorkspace()
       const evaluatedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
-        contacts,
       )
       const viaCircuitJson = getAutoroutingViaElements(
         candidateDrcInput.evaluatedTraces,
@@ -2012,7 +2010,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator(
           { traces: [], routes: evaluatedRoutes, hdRoutes: evaluatedRoutes },
-          { input: candidateDrcInput, contacts },
+          {
+            input: candidateDrcInput,
+            contacts: new NativeDrcContactWorkspace(),
+          },
         )
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
