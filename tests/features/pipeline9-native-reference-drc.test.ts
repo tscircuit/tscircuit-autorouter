@@ -23,11 +23,7 @@ import {
   convertToCircuitJson,
   createNativeDrcInputPreparer,
 } from "lib/testing/utils/convertToCircuitJson"
-import type {
-  Obstacle,
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-} from "lib/types"
+import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
@@ -131,20 +127,25 @@ const getFixture = (
       minViaHoleDiameter: 0.15,
       bounds: { minX: -8, minY: -8, maxX: 8, maxY: 8 },
       obstacles: [aliasPad],
-      connections: routes.map((route): SimpleRouteJson["connections"][number] => ({
-        name: route.connectionName,
-        ...(route.rootConnectionName
-          ? { __netConnectionName: route.rootConnectionName }
-          : {}),
-        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
-          (point, index): SimpleRouteJson["connections"][number]["pointsToConnect"][number] => ({
-            x: point.x,
-            y: point.y,
-            layer: point.z === 0 ? "top" : "inner1",
-            pcb_port_id: `${route.connectionName}_${index}`,
-          }),
-        ),
-      })),
+      connections: routes.map(
+        (route): SimpleRouteJson["connections"][number] => ({
+          name: route.connectionName,
+          ...(route.rootConnectionName
+            ? { __netConnectionName: route.rootConnectionName }
+            : {}),
+          pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+            (
+              point,
+              index,
+            ): SimpleRouteJson["connections"][number]["pointsToConnect"][number] => ({
+              x: point.x,
+              y: point.y,
+              layer: point.z === 0 ? "top" : "inner1",
+              pcb_port_id: `${route.connectionName}_${index}`,
+            }),
+          ),
+        }),
+      ),
       traces: withPreloads
         ? [
             preloaded,
@@ -231,14 +232,15 @@ const getLegacyReference = (
         }),
         remapping,
       ),
-      circuitJson: candidate.circuitJson.map((element): AnyCircuitElement =>
-        "pcb_trace_id" in element && typeof element.pcb_trace_id === "string"
-          ? {
-              ...element,
-              pcb_trace_id:
-                remapping.get(element.pcb_trace_id) ?? element.pcb_trace_id,
-            }
-          : element,
+      circuitJson: candidate.circuitJson.map(
+        (element): AnyCircuitElement =>
+          "pcb_trace_id" in element && typeof element.pcb_trace_id === "string"
+            ? {
+                ...element,
+                pcb_trace_id:
+                  remapping.get(element.pcb_trace_id) ?? element.pcb_trace_id,
+              }
+            : element,
       ),
       newTraceIds: new Set(remapping.values()),
     })
@@ -432,27 +434,33 @@ test("Pipeline9 native reference preserves ordered errors, aliases, cache and ma
       holeClearance: 0.2,
     })
     const admitted = admissionScene.prepare(input.traces)
-    expect<unknown>(admitted.vias.map((via) => ({
-      id: via.id,
-      owner: via.traceId,
-      x: via.x,
-      y: via.y,
-      diameter: via.diameter,
-      hole: via.holeDiameter,
-      layers: via.layers,
-    }))).toEqual(converted.flatMap((element) =>
-      element.type === "pcb_via"
-        ? [{
-            id: element.pcb_via_id,
-            owner: element.pcb_trace_id,
-            x: element.x,
-            y: element.y,
-            diameter: element.outer_diameter,
-            hole: element.hole_diameter,
-            layers: element.layers,
-          }]
-        : [],
-    ))
+    expect<unknown>(
+      admitted.vias.map((via) => ({
+        id: via.id,
+        owner: via.traceId,
+        x: via.x,
+        y: via.y,
+        diameter: via.diameter,
+        hole: via.holeDiameter,
+        layers: via.layers,
+      })),
+    ).toEqual(
+      converted.flatMap((element) =>
+        element.type === "pcb_via"
+          ? [
+              {
+                id: element.pcb_via_id,
+                owner: element.pcb_trace_id,
+                x: element.x,
+                y: element.y,
+                diameter: element.outer_diameter,
+                hole: element.hole_diameter,
+                layers: element.layers,
+              },
+            ]
+          : [],
+      ),
+    )
     expect(admitted.vias).toHaveLength(1)
     expect(admitted.vias[0]!.id).toBe("via_0")
 
@@ -506,7 +514,11 @@ test("Pipeline9 native reference preserves ordered errors, aliases, cache and ma
           targets,
         })
         expect(
-          internals.clearanceMarginDrcEvaluator(candidate, targets, marginRoutes),
+          internals.clearanceMarginDrcEvaluator(
+            candidate,
+            targets,
+            marginRoutes,
+          ),
         ).toEqual(expected)
       }
     }

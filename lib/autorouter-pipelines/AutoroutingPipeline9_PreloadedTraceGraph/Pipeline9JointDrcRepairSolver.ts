@@ -259,7 +259,11 @@ const compilePipeline9NativeDrcScene = ({
         componentId: element.pcb_component_id,
       }
       if (element.hole_shape === "circle") {
-        holes.push({ ...common, shape: "circle", diameter: element.hole_diameter })
+        holes.push({
+          ...common,
+          shape: "circle",
+          diameter: element.hole_diameter,
+        })
       } else if (element.hole_shape === "rect") {
         holes.push({
           ...common,
@@ -272,7 +276,9 @@ const compilePipeline9NativeDrcScene = ({
       }
     } else if (element.type === "pcb_board") {
       if (element.width === undefined || element.height === undefined) {
-        throw new Error("Pipeline9 native DRC requires exported board dimensions")
+        throw new Error(
+          "Pipeline9 native DRC requires exported board dimensions",
+        )
       }
       const halfWidth = element.width / 2
       const halfHeight = element.height / 2
@@ -280,14 +286,27 @@ const compilePipeline9NativeDrcScene = ({
         id: element.pcb_board_id,
         outline:
           element.outline && element.outline.length > 0
-            ? element.outline.map(
-                (point): { x: number; y: number } => ({ x: point.x, y: point.y }),
-              )
+            ? element.outline.map((point): { x: number; y: number } => ({
+                x: point.x,
+                y: point.y,
+              }))
             : [
-                { x: element.center.x - halfWidth, y: element.center.y - halfHeight },
-                { x: element.center.x + halfWidth, y: element.center.y - halfHeight },
-                { x: element.center.x + halfWidth, y: element.center.y + halfHeight },
-                { x: element.center.x - halfWidth, y: element.center.y + halfHeight },
+                {
+                  x: element.center.x - halfWidth,
+                  y: element.center.y - halfHeight,
+                },
+                {
+                  x: element.center.x + halfWidth,
+                  y: element.center.y - halfHeight,
+                },
+                {
+                  x: element.center.x + halfWidth,
+                  y: element.center.y + halfHeight,
+                },
+                {
+                  x: element.center.x - halfWidth,
+                  y: element.center.y + halfHeight,
+                },
               ],
         edgeClearance: element.min_board_edge_clearance ?? 0.2,
         padClearance: element.min_pad_edge_to_pad_edge_clearance ?? 0.1,
@@ -324,16 +343,17 @@ const compilePipeline9NativeDrcScene = ({
           ].filter(Boolean),
         ),
         ...fixedConnectivityGroups,
-        ...traceLinks.filter(
-          ([traceId, sourceId]): boolean => Boolean(traceId && sourceId),
+        ...traceLinks.filter(([traceId, sourceId]): boolean =>
+          Boolean(traceId && sourceId),
         ),
       ])
       const logical = new ConnectivityMap(netMap)
       const clearance = new ConnectivityMap(
         Object.fromEntries(
-          Object.entries(netMap).map(
-            ([netId, ids]): [string, string[]] => [netId, [...ids]],
-          ),
+          Object.entries(netMap).map(([netId, ids]): [string, string[]] => [
+            netId,
+            [...ids],
+          ]),
         ),
       )
       clearance.addConnections(viaOwnerLinks)
@@ -386,7 +406,9 @@ const measurePipeline9NativeClearanceMargin = ({
     originalEvaluation.traces.map((trace) => [trace.pcb_trace_id, trace]),
   )
   const obstacles = new Map<string, PreparedNativeDrcPad | NativeDrcVia>([
-    ...getInputOrderedNativePads(evaluation).map((pad) => [pad.id, pad] as const),
+    ...getInputOrderedNativePads(evaluation).map(
+      (pad) => [pad.id, pad] as const,
+    ),
     ...evaluation.vias.map((via) => [via.id, via] as const),
   ])
   const originalObstacles = [
@@ -428,7 +450,9 @@ const measurePipeline9NativeClearanceMargin = ({
       }
       const originalOwner = originalTraces.get(originalObstacle.traceId)
       if (!originalOwner) {
-        throw new Error("Pipeline9 clearance margin lost the original via owner")
+        throw new Error(
+          "Pipeline9 clearance margin lost the original via owner",
+        )
       }
       const originalTransitions = originalOwner.route.filter(
         (point) => point.route_type === "via",
@@ -505,8 +529,9 @@ const measurePipeline9NativeClearanceMargin = ({
     const padGrid =
       obstacle.kind === "via"
         ? undefined
-        : new NativeDrcGrid([obstacle], (pad) =>
-            pad.clearanceBounds ?? pad.bounds,
+        : new NativeDrcGrid(
+            [obstacle],
+            (pad) => pad.clearanceBounds ?? pad.bounds,
           )
     let actualClearance: number | undefined
     let overlaps = false
@@ -537,7 +562,9 @@ const measurePipeline9NativeClearanceMargin = ({
     }
     if (actualClearance === undefined) continue
     if (!Number.isFinite(actualClearance)) {
-      throw new Error("Pipeline9 clearance margin requires a finite measurement")
+      throw new Error(
+        "Pipeline9 clearance margin requires a finite measurement",
+      )
     }
     const minimumClearance =
       target.minimum_clearance + CLEARANCE_PRECISION_MARGIN

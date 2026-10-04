@@ -304,10 +304,7 @@ type PreparedNativeDrcTrace = {
   pcb_trace_id: string
   source_trace_id: string
   route: Array<
-    Extract<
-      SimplifiedPcbTrace["route"][number],
-      { route_type: "wire" | "via" }
-    >
+    Extract<SimplifiedPcbTrace["route"][number], { route_type: "wire" | "via" }>
   >
 }
 
@@ -651,11 +648,13 @@ export const createNativeDrcInputPreparer = ({
       sourceTraces,
       traces: traces.map((trace): PreparedNativeDrcTrace => {
         const sourceTraceId =
-          resolveCircuitJsonSourceTraceId(routeResolver, trace.connection_name) ??
+          resolveCircuitJsonSourceTraceId(
+            routeResolver,
+            trace.connection_name,
+          ) ??
           trace.connectsTo
-            ?.map(
-              (id): CircuitJsonSourceTraceId | undefined =>
-                resolveCircuitJsonSourceTraceId(routeResolver, id),
+            ?.map((id): CircuitJsonSourceTraceId | undefined =>
+              resolveCircuitJsonSourceTraceId(routeResolver, id),
             )
             .find((id): boolean => Boolean(id)) ??
           (trace.connection_name as CircuitJsonSourceTraceId)
