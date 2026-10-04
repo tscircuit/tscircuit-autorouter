@@ -19,7 +19,9 @@ type SolverConstructor = new (
 ) => Solver
 type Query = NonNullable<Parameters<Solver["isNodeTooCloseToObstacle"]>[3]>
 type Segments = Solver["obstacleSegments"]
-type Index = NonNullable<ReturnType<Solver["obstacleIndexByLayer"]["get"]>>
+type Index = NonNullable<
+  ReturnType<Solver["obstacleSegmentIndexByLayer"]["get"]>
+>
 export type PredicateObservation = {
   events: string[]
   result: boolean | null
@@ -68,7 +70,7 @@ export function createEmptyQueryPredicateCase(
     events.push("segments-map.get")
     return indexedSegments
   }
-  solver.obstacleIndexByLayer.get = function (): Index | undefined {
+  solver.obstacleSegmentIndexByLayer.get = function (): Index | undefined {
     events.push("index-map.get")
     return index
   }
@@ -78,9 +80,9 @@ export function createEmptyQueryPredicateCase(
       return []
     },
   })
-  Object.defineProperty(solver, "obstacleIndex", {
+  Object.defineProperty(solver, "obstacleSegmentIndex", {
     get(): null {
-      events.push("obstacleIndex")
+      events.push("obstacleSegmentIndex")
       return null
     },
   })
