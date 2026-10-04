@@ -26,6 +26,7 @@ import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
 import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
 import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
+import { markForceOwned } from "./forceWorkspace"
 import { withinBounds } from "./withinBounds"
 
 export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
@@ -72,6 +73,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     viaDiameter?: number
   }) {
     super()
+    markForceOwned(this)
     this.MAX_ITERATIONS = 10e3
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap =
@@ -90,7 +92,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.candidates = []
     this.availableZ = this.nodeWithPortPoints.availableZ ?? [0, 1]
 
-    this.bounds = {
+    this.bounds = markForceOwned({
       minX:
         this.nodeWithPortPoints.center.x - this.nodeWithPortPoints.width / 2,
       maxX:
@@ -99,7 +101,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints.center.y - this.nodeWithPortPoints.height / 2,
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
-    }
+    })
 
     const areaInsideNode =
       this.nodeWithPortPoints.width * this.nodeWithPortPoints.height
@@ -1369,3 +1371,5 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.solvedRoutes = solvedRoutes
   }
 }
+
+markForceOwned(MultiHeadPolyLineIntraNodeSolver.prototype)
