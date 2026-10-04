@@ -118,9 +118,9 @@ test("early HD probes preserve candidates, work and search limits", () => {
   const candidates = portfolio.supervisedSolvers! as Candidate[]
   expect(candidates).toHaveLength(originalEntries.length)
   expect(new Set(candidates)).toEqual(new Set(originalEntries))
-  const defaults = originalEntries.filter(
-    ({ solver }) => solver instanceof CachedIntraNodeRouteSolver,
-  ).slice(0, 2)
+  const defaults = originalEntries
+    .filter(({ solver }) => solver instanceof CachedIntraNodeRouteSolver)
+    .slice(0, 2)
   const coarse = originalEntries.find(
     ({ hyperParameters }) => hyperParameters.CELL_SIZE_FACTOR === 2,
   )!
@@ -140,9 +140,9 @@ test("early HD probes preserve candidates, work and search limits", () => {
     a03,
   ])
   expect(candidates.slice(originalPrefixEnd + 3)).toEqual(
-    originalEntries.slice(originalPrefixEnd).filter(
-      (candidate) => ![coarse, a01, a03].includes(candidate),
-    ),
+    originalEntries
+      .slice(originalPrefixEnd)
+      .filter((candidate) => ![coarse, a01, a03].includes(candidate)),
   )
   for (const original of capturedCandidates) {
     expect(original.entry.solver).toBe(original.solver)
@@ -166,25 +166,19 @@ test("early HD probes preserve candidates, work and search limits", () => {
   declared.initializeSolvers()
   expect(
     declared.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters),
-  ).toEqual(
-    originalEntries.map(({ hyperParameters }) => hyperParameters),
-  )
+  ).toEqual(originalEntries.map(({ hyperParameters }) => hyperParameters))
   expect(declared.MAX_ITERATIONS).toBe(portfolio.MAX_ITERATIONS)
   expect(declared.stats.dynamicExpansionWorkBudget).toBe(expectedWorkBudget)
   expect(
     declared.supervisedSolvers!.map(({ solver }) => solver.MAX_ITERATIONS),
-  ).toEqual(
-    originalEntries.map(({ solver }) => solver.MAX_ITERATIONS),
-  )
+  ).toEqual(originalEntries.map(({ solver }) => solver.MAX_ITERATIONS))
   const customFitness = new CustomFitnessPortfolio(portfolio.constructorParams)
   customFitness.initializeSolvers()
   expect(
     customFitness.supervisedSolvers!.map(
       ({ hyperParameters }) => hyperParameters,
     ),
-  ).toEqual(
-    originalEntries.map(({ hyperParameters }) => hyperParameters),
-  )
+  ).toEqual(originalEntries.map(({ hyperParameters }) => hyperParameters))
 
   const quickSequence: BaseSolver[] = []
   scriptCandidates(portfolio, quickSequence, defaults[0]!.solver)
