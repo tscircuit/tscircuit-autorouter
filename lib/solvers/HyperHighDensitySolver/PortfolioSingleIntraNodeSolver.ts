@@ -4,6 +4,7 @@ import {
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { InMemoryCache } from "lib/cache/InMemoryCache"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import {
   HighDensityIntraNodeRoute,
@@ -28,6 +29,12 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
+import {
+  getCertifiedStraightIntraNodeRoutes,
+  hasPlainDataProperties,
+  hasNativeDataMethods,
+  type StraightRoutePreflightContext,
+} from "./getCertifiedStraightIntraNodeRoutes"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
@@ -55,6 +62,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    straightRoutePreflightContext?: StraightRoutePreflightContext
+    preserveTerminalPcbPortIds?: boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -66,6 +75,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  private straightPreflightAttempted = false
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -127,6 +137,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      straightRoutePreflightContext?: StraightRoutePreflightContext
+      preserveTerminalPcbPortIds?: boolean
     },
   ) {
     super()
@@ -468,6 +480,26 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override _step() {
+    if (!this.supervisedSolvers && !this.straightPreflightAttempted) {
+      this.straightPreflightAttempted = true
+      if (this.hasNativeStraightPreflightDispatch()) {
+        const routes = getCertifiedStraightIntraNodeRoutes({
+          ...this.constructorParams,
+          nodeWithPortPoints: this.nodeWithPortPoints,
+        })
+        if (routes) {
+          this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+            routes,
+            this.nodeWithPortPoints,
+          )
+          this.solved = true
+          this.progress = 1
+          this.stats.straightPreflightAccepted = true
+          this.stats.straightPreflightRouteCount = routes.length
+          return
+        }
+      }
+    }
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
@@ -490,6 +522,37 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
+  }
+
+  private hasNativeStraightPreflightDispatch(): boolean {
+    if (Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype) {
+      return false
+    }
+    const properties = Object.getOwnPropertyDescriptors(this)
+    if (!Object.values(properties).every((property) => "value" in property)) return false
+    if (!hasPlainDataProperties(this.constructorParams)) return false
+    if (!this.constructorParams.straightRoutePreflightContext) return false
+    if (this.constructorParams.cacheProvider !== undefined) return false
+    if (!hasNativeDataMethods(this, nativePortfolioDispatch)) return false
+    if (this.connMap) {
+      if (Object.getPrototypeOf(this.connMap) !== ConnectivityMap.prototype) return false
+      const mapProperties = Object.getOwnPropertyDescriptors(this.connMap)
+      if (!Object.values(mapProperties).every((property) => "value" in property)) return false
+      if (!hasNativeDataMethods(this.connMap, nativeConnectivityDispatch)) return false
+      if (!hasPlainDataProperties(this.connMap.netMap) || !hasPlainDataProperties(this.connMap.idToNetMap)) return false
+    }
+    const globalCache = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE",
+    )
+    if (!globalCache || !("value" in globalCache)) return false
+    const cache = globalCache.value as InMemoryCache | null | undefined
+    if (!cache || typeof cache !== "object" || Object.getPrototypeOf(cache) !== InMemoryCache.prototype) return false
+    if (!Object.values(Object.getOwnPropertyDescriptors(cache)).every((property) => "value" in property)) return false
+    if (!hasNativeDataMethods(cache, nativeCacheDispatch)) return false
+    if (cache.isSyncCache !== true || !(cache.cache instanceof Map)) return false
+    if (Object.getPrototypeOf(cache.cache) !== Map.prototype || !hasNativeDataMethods(cache.cache, nativeMapDispatch)) return false
+    return true
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
@@ -710,3 +773,37 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 }
+
+const nativePortfolioDispatch: Array<[string, unknown]> = [
+  "initializeSolvers",
+  "generateSolver",
+  "onSolve",
+  "getCombinationDefs",
+  "getHyperParameterDefs",
+  "getHyperParameterCombinations",
+  "getSupervisedSolverWithBestFitness",
+  "computeG",
+  "computeH",
+  "computeF",
+].map((name): [string, unknown] => [
+  name,
+  (PortfolioSingleIntraNodeSolver.prototype as unknown as Record<string, unknown>)[name],
+])
+const nativeConnectivityDispatch: Array<[string, unknown]> = [
+  "areIdsConnected",
+  "getIdsConnectedToNet",
+  "getNetConnectedToId",
+].map((name): [string, unknown] => [
+  name,
+  (ConnectivityMap.prototype as unknown as Record<string, unknown>)[name],
+])
+const nativeCacheDispatch: Array<[string, unknown]> = [
+  ["getCachedSolutionSync", InMemoryCache.prototype.getCachedSolutionSync],
+  ["setCachedSolutionSync", InMemoryCache.prototype.setCachedSolutionSync],
+  ["getCachedSolution", InMemoryCache.prototype.getCachedSolution],
+  ["setCachedSolution", InMemoryCache.prototype.setCachedSolution],
+]
+const nativeMapDispatch: Array<[string, unknown]> = [
+  ["get", Map.prototype.get],
+  ["set", Map.prototype.set],
+]

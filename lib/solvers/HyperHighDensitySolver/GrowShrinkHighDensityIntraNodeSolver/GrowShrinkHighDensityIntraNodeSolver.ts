@@ -212,6 +212,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      straightRoutePreflightContext:
+        this.growthAttempts === 0 && this.scaleFactor === 1
+          ? portfolioParams.straightRoutePreflightContext
+          : undefined,
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =

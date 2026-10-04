@@ -89,6 +89,7 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
+import { getOwnedStraightRoutePreflightBoardRules } from "../../solvers/HyperHighDensitySolver/getCertifiedStraightIntraNodeRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
@@ -610,6 +611,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
         )
+        const straightRouteBoardRules = getOwnedStraightRoutePreflightBoardRules(cms.originalSrj)
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
           traces: cms.originalSrj.traces ?? [],
           fixedHdRoutes: originalFixedHdRoutes,
@@ -634,6 +636,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
+            minTraceToHoleEdgeClearance: straightRouteBoardRules?.minTraceToHoleEdgeClearance,
+            minTraceToPadEdgeClearance: straightRouteBoardRules?.minTraceToPadEdgeClearance,
+            allowStraightRoutePreflight: straightRouteBoardRules !== undefined,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),

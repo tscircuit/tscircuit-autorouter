@@ -16,6 +16,7 @@ import {
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import type { StraightRoutePreflightContext } from "../HyperHighDensitySolver/getCertifiedStraightIntraNodeRoutes"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -64,6 +65,7 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
+  straightRoutePreflightContext?: StraightRoutePreflightContext
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -104,6 +106,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
     boardGeometry,
+    straightRoutePreflightContext,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -125,6 +128,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
+    straightRoutePreflightContext?: StraightRoutePreflightContext
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -153,6 +157,7 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
     this.boardGeometry = boardGeometry
+    this.straightRoutePreflightContext = straightRoutePreflightContext
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -399,6 +404,8 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       boardGeometry: this.boardGeometry,
+      straightRoutePreflightContext: this.straightRoutePreflightContext,
+      preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
