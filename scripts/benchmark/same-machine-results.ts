@@ -238,14 +238,13 @@ export const renderSameMachineBenchmarkResults = ({
       ...timePercentiles,
     )
     if (
-      typeof baseSummary.maxPeakRssBytes === "number" ||
-      typeof prSummary.maxPeakRssBytes === "number"
+      typeof baseSummary.p90PeakRssBytes === "number" ||
+      typeof prSummary.p90PeakRssBytes === "number"
     ) {
       lines.push(
-        `| ${solver} | Average peak RSS | ${formatMemory(baseSummary.avgPeakRssBytes)} | ${formatMemory(prSummary.avgPeakRssBytes)} | ${formatRelativeDelta(baseSummary.avgPeakRssBytes ?? null, prSummary.avgPeakRssBytes ?? null)} |`,
         `| ${solver} | P50 peak RSS | ${formatMemory(baseSummary.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p50PeakRssBytes ?? null, prSummary.p50PeakRssBytes ?? null)} |`,
-        `| ${solver} | P95 peak RSS | ${formatMemory(baseSummary.p95PeakRssBytes)} | ${formatMemory(prSummary.p95PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p95PeakRssBytes ?? null, prSummary.p95PeakRssBytes ?? null)} |`,
-        `| ${solver} | Max peak RSS | ${formatMemory(baseSummary.maxPeakRssBytes)} | ${formatMemory(prSummary.maxPeakRssBytes)} | ${formatRelativeDelta(baseSummary.maxPeakRssBytes ?? null, prSummary.maxPeakRssBytes ?? null)} |`,
+        `| ${solver} | P80 peak RSS | ${formatMemory(baseSummary.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p80PeakRssBytes ?? null, prSummary.p80PeakRssBytes ?? null)} |`,
+        `| ${solver} | P90 peak RSS | ${formatMemory(baseSummary.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p90PeakRssBytes ?? null, prSummary.p90PeakRssBytes ?? null)} |`,
       )
     }
     lines.push(

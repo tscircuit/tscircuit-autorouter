@@ -170,14 +170,13 @@ const renderNetworkedColdHotComparison = (report) => {
     )
   }
   if (
-    typeof coldSummary.maxPeakRssBytes === "number" ||
-    typeof hotSummary.maxPeakRssBytes === "number"
+    typeof coldSummary.p90PeakRssBytes === "number" ||
+    typeof hotSummary.p90PeakRssBytes === "number"
   ) {
     rows.push(
-      `| Average peak RSS | ${formatMemory(coldSummary.avgPeakRssBytes)} | ${formatMemory(hotSummary.avgPeakRssBytes)} | ${formatRelativeDelta(coldSummary.avgPeakRssBytes, hotSummary.avgPeakRssBytes)} |`,
       `| P50 peak RSS | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
-      `| P95 peak RSS | ${formatMemory(coldSummary.p95PeakRssBytes)} | ${formatMemory(hotSummary.p95PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p95PeakRssBytes, hotSummary.p95PeakRssBytes)} |`,
-      `| Max peak RSS | ${formatMemory(coldSummary.maxPeakRssBytes)} | ${formatMemory(hotSummary.maxPeakRssBytes)} | ${formatRelativeDelta(coldSummary.maxPeakRssBytes, hotSummary.maxPeakRssBytes)} |`,
+      `| P80 peak RSS | ${formatMemory(coldSummary.p80PeakRssBytes)} | ${formatMemory(hotSummary.p80PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p80PeakRssBytes, hotSummary.p80PeakRssBytes)} |`,
+      `| P90 peak RSS | ${formatMemory(coldSummary.p90PeakRssBytes)} | ${formatMemory(hotSummary.p90PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p90PeakRssBytes, hotSummary.p90PeakRssBytes)} |`,
     )
   }
   rows.push(
@@ -273,14 +272,13 @@ export const renderBenchmarkComparison = ({
       )
     }
     if (
-      typeof mainSummary?.maxPeakRssBytes === "number" ||
-      typeof prSummary.maxPeakRssBytes === "number"
+      typeof mainSummary?.p90PeakRssBytes === "number" ||
+      typeof prSummary.p90PeakRssBytes === "number"
     ) {
       rows.push(
-        `| ${solver} | Average peak RSS | ${formatMemory(mainSummary?.avgPeakRssBytes)} | ${formatMemory(prSummary.avgPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.avgPeakRssBytes, prSummary.avgPeakRssBytes)} |`,
         `| ${solver} | P50 peak RSS | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
-        `| ${solver} | P95 peak RSS | ${formatMemory(mainSummary?.p95PeakRssBytes)} | ${formatMemory(prSummary.p95PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p95PeakRssBytes, prSummary.p95PeakRssBytes)} |`,
-        `| ${solver} | Max peak RSS | ${formatMemory(mainSummary?.maxPeakRssBytes)} | ${formatMemory(prSummary.maxPeakRssBytes)} | ${formatRelativeDelta(mainSummary?.maxPeakRssBytes, prSummary.maxPeakRssBytes)} |`,
+        `| ${solver} | P80 peak RSS | ${formatMemory(mainSummary?.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p80PeakRssBytes, prSummary.p80PeakRssBytes)} |`,
+        `| ${solver} | P90 peak RSS | ${formatMemory(mainSummary?.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p90PeakRssBytes, prSummary.p90PeakRssBytes)} |`,
       )
     }
     rows.push(

@@ -45,10 +45,9 @@ test("same-machine benchmark comments compare matching reports", () => {
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
-        avgPeakRssBytes: 100 * 1024 * 1024,
         p50PeakRssBytes: 90 * 1024 * 1024,
-        p95PeakRssBytes: 110 * 1024 * 1024,
-        maxPeakRssBytes: 120 * 1024 * 1024,
+        p80PeakRssBytes: 110 * 1024 * 1024,
+        p90PeakRssBytes: 120 * 1024 * 1024,
         avgVia: 2,
         avgTraceLintIssues: { odd_angle: 4, future_rule: 2 },
       },
@@ -75,10 +74,9 @@ test("same-machine benchmark comments compare matching reports", () => {
         timedOutLabel: "0/2",
         p50TimeMs: 900,
         p95TimeMs: 1_800,
-        avgPeakRssBytes: 80 * 1024 * 1024,
         p50PeakRssBytes: 72 * 1024 * 1024,
-        p95PeakRssBytes: 88 * 1024 * 1024,
-        maxPeakRssBytes: 96 * 1024 * 1024,
+        p80PeakRssBytes: 88 * 1024 * 1024,
+        p90PeakRssBytes: 96 * 1024 * 1024,
         avgVia: 2.2,
         avgTraceLintIssues: { odd_angle: 2, future_rule: 0 },
       },
@@ -123,7 +121,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P90 time |")
   expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain(
-    "| Pipeline7 | Average peak RSS | 100.0 MiB | 80.0 MiB | -20.0% |",
+    "| Pipeline7 | P50 peak RSS | 90.0 MiB | 72.0 MiB | -20.0% |",
   )
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(

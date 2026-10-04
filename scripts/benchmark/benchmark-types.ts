@@ -176,10 +176,9 @@ export type SolverRunSummary = {
   p90TimeMs?: number | null
   p95TimeMs: number | null
   /** Optional so previously published version 1 artifacts remain readable. */
-  avgPeakRssBytes?: number | null
   p50PeakRssBytes?: number | null
-  p95PeakRssBytes?: number | null
-  maxPeakRssBytes?: number | null
+  p80PeakRssBytes?: number | null
+  p90PeakRssBytes?: number | null
   avgVia: number | null
   /** Average issues per completed, linted sample; absent in older artifacts. */
   avgTraceLintIssues?: Record<string, number | null>

@@ -881,7 +881,7 @@ const loadSolverNames = async (
 
 const formatTable = (rows: SolverRunSummary[]) => {
   const includeMemory = rows.some(
-    (row) => typeof row.maxPeakRssBytes === "number",
+    (row) => typeof row.p90PeakRssBytes === "number",
   )
   const includeNetworkCache = rows.some((row) => row.networkCache)
   const headers = [
@@ -896,7 +896,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     ...(includeMemory
-      ? ["Avg Peak RSS", "P50 Peak RSS", "P95 Peak RSS", "Max Peak RSS"]
+      ? ["P50 Peak RSS", "P80 Peak RSS", "P90 Peak RSS"]
       : []),
     "Avg Via",
     ...(includeNetworkCache
@@ -917,10 +917,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p95TimeMs),
     ...(includeMemory
       ? [
-          formatMemory(row.avgPeakRssBytes),
           formatMemory(row.p50PeakRssBytes),
-          formatMemory(row.p95PeakRssBytes),
-          formatMemory(row.maxPeakRssBytes),
+          formatMemory(row.p80PeakRssBytes),
+          formatMemory(row.p90PeakRssBytes),
         ]
       : []),
     formatAverage(row.avgVia),
@@ -1619,15 +1618,9 @@ export const summarizeSolverResults = (
     p80TimeMs: getPercentile(elapsedForPercentiles, 0.8),
     p90TimeMs: getPercentile(elapsedForPercentiles, 0.9),
     p95TimeMs: getPercentile(elapsedForPercentiles, 0.95),
-    avgPeakRssBytes:
-      peakRssValues.length === 0
-        ? null
-        : peakRssValues.reduce((sum, peakRssBytes) => sum + peakRssBytes, 0) /
-          peakRssValues.length,
     p50PeakRssBytes: getPercentile(peakRssValues, 0.5),
-    p95PeakRssBytes: getPercentile(peakRssValues, 0.95),
-    maxPeakRssBytes:
-      peakRssValues.length === 0 ? null : Math.max(...peakRssValues),
+    p80PeakRssBytes: getPercentile(peakRssValues, 0.8),
+    p90PeakRssBytes: getPercentile(peakRssValues, 0.9),
     avgVia,
     avgTraceLintIssues: averageTraceLintIssues(results),
     networkCache,
