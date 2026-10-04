@@ -174,9 +174,9 @@ const renderNetworkedColdHotComparison = (report) => {
     typeof hotSummary.p90PeakRssBytes === "number"
   ) {
     rows.push(
-      `| P50 peak RSS | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
-      `| P80 peak RSS | ${formatMemory(coldSummary.p80PeakRssBytes)} | ${formatMemory(hotSummary.p80PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p80PeakRssBytes, hotSummary.p80PeakRssBytes)} |`,
-      `| P90 peak RSS | ${formatMemory(coldSummary.p90PeakRssBytes)} | ${formatMemory(hotSummary.p90PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p90PeakRssBytes, hotSummary.p90PeakRssBytes)} |`,
+      `| Memory P50 | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
+      `| Memory P80 | ${formatMemory(coldSummary.p80PeakRssBytes)} | ${formatMemory(hotSummary.p80PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p80PeakRssBytes, hotSummary.p80PeakRssBytes)} |`,
+      `| Memory P90 | ${formatMemory(coldSummary.p90PeakRssBytes)} | ${formatMemory(hotSummary.p90PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p90PeakRssBytes, hotSummary.p90PeakRssBytes)} |`,
     )
   }
   rows.push(
@@ -276,9 +276,9 @@ export const renderBenchmarkComparison = ({
       typeof prSummary.p90PeakRssBytes === "number"
     ) {
       rows.push(
-        `| ${solver} | P50 peak RSS | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
-        `| ${solver} | P80 peak RSS | ${formatMemory(mainSummary?.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p80PeakRssBytes, prSummary.p80PeakRssBytes)} |`,
-        `| ${solver} | P90 peak RSS | ${formatMemory(mainSummary?.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p90PeakRssBytes, prSummary.p90PeakRssBytes)} |`,
+        `| ${solver} | Memory P50 | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
+        `| ${solver} | Memory P80 | ${formatMemory(mainSummary?.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p80PeakRssBytes, prSummary.p80PeakRssBytes)} |`,
+        `| ${solver} | Memory P90 | ${formatMemory(mainSummary?.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p90PeakRssBytes, prSummary.p90PeakRssBytes)} |`,
       )
     }
     rows.push(

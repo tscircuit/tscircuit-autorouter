@@ -896,7 +896,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     ...(includeMemory
-      ? ["P50 Peak RSS", "P80 Peak RSS", "P90 Peak RSS"]
+      ? ["Memory P50", "Memory P80", "Memory P90"]
       : []),
     "Avg Via",
     ...(includeNetworkCache

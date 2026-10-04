@@ -121,7 +121,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P90 time |")
   expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain(
-    "| Pipeline7 | P50 peak RSS | 90.0 MiB | 72.0 MiB | -20.0% |",
+    "| Pipeline7 | Memory P50 | 90.0 MiB | 72.0 MiB | -20.0% |",
   )
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(

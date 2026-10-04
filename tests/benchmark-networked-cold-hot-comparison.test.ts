@@ -87,9 +87,9 @@ test("networked benchmark comments compare the cold and hot passes", () => {
       "\n",
     ),
   ).toContain(`| P95 time | 4.0s | 1.0s | -75.0% |
-| P50 peak RSS | 100.0 MiB | 80.0 MiB | -20.0% |
-| P80 peak RSS | 100.0 MiB | 80.0 MiB | -20.0% |
-| P90 peak RSS | 100.0 MiB | 80.0 MiB | -20.0% |
+| Memory P50 | 100.0 MiB | 80.0 MiB | -20.0% |
+| Memory P80 | 100.0 MiB | 80.0 MiB | -20.0% |
+| Memory P90 | 100.0 MiB | 80.0 MiB | -20.0% |
 | Average vias | 2.00 | 2.00 | 0.0% |
 | Avg Angled Traces | n/a | n/a | n/a |
 | HD cache hits | 0/3 | 3/3 | +3 |

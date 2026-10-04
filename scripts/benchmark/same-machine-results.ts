@@ -242,9 +242,9 @@ export const renderSameMachineBenchmarkResults = ({
       typeof prSummary.p90PeakRssBytes === "number"
     ) {
       lines.push(
-        `| ${solver} | P50 peak RSS | ${formatMemory(baseSummary.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p50PeakRssBytes ?? null, prSummary.p50PeakRssBytes ?? null)} |`,
-        `| ${solver} | P80 peak RSS | ${formatMemory(baseSummary.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p80PeakRssBytes ?? null, prSummary.p80PeakRssBytes ?? null)} |`,
-        `| ${solver} | P90 peak RSS | ${formatMemory(baseSummary.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p90PeakRssBytes ?? null, prSummary.p90PeakRssBytes ?? null)} |`,
+        `| ${solver} | Memory P50 | ${formatMemory(baseSummary.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p50PeakRssBytes ?? null, prSummary.p50PeakRssBytes ?? null)} |`,
+        `| ${solver} | Memory P80 | ${formatMemory(baseSummary.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p80PeakRssBytes ?? null, prSummary.p80PeakRssBytes ?? null)} |`,
+        `| ${solver} | Memory P90 | ${formatMemory(baseSummary.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p90PeakRssBytes ?? null, prSummary.p90PeakRssBytes ?? null)} |`,
       )
     }
     lines.push(
