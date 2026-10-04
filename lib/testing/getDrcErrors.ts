@@ -7,6 +7,7 @@ import {
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
   checkViaTraceClearance,
+  type PcbConnectivityGeometryCache,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
@@ -54,6 +55,7 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  connectivityGeometryCache?: PcbConnectivityGeometryCache
 }
 
 const createDrcConnectivityMap = (
@@ -117,7 +119,9 @@ export const getDrcErrors = (
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
-      : checkTracesAreContiguous(circuitJson)),
+      : checkTracesAreContiguous(circuitJson, {
+          connectivityGeometryCache: options.connectivityGeometryCache,
+        })),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,

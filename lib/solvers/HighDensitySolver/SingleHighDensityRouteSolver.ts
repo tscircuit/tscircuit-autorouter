@@ -10,11 +10,6 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
-const nativeObstaclePointSearch = Flatbush.prototype.search
-const nativeCollectContained = Flatbush.prototype._collectContained
-
-type ObstaclePointQueries = Map<number, Map<number, number[]>>
-
 export type FutureConnection = {
   connectionName: string
   rootConnectionName?: string
@@ -93,10 +88,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
-  private obstaclePointQueryIds = new WeakMap<
-    Flatbush,
-    Map<number, ObstaclePointQueries>
-  >()
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -344,19 +335,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
       (!isVia
-        ? this.obstacleSegmentIndexByLayer
-            .get(node.z)
-            ?.search(
-              node.x - traceProximity,
-              node.y - traceProximity,
-              node.x + traceProximity,
-              node.y + traceProximity,
-            )
-        : this.getObstaclePointCandidateIds(
-            node,
-            traceProximity,
-            this.obstacleSegmentIndex,
-          )) ??
+        ? this.obstacleSegmentIndexByLayer.get(node.z)
+        : this.obstacleSegmentIndex
+      )?.search(
+        node.x - traceProximity,
+        node.y - traceProximity,
+        node.x + traceProximity,
+        node.y + traceProximity,
+      ) ??
       []
     const queryBounds = planarObstacleQuery?.segmentBounds
     if (indexedSegments) {
@@ -399,10 +385,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (this.obstacleViaIndex) {
-      const nearbyViaIds = this.getObstaclePointCandidateIds(
-        node,
-        viaProximity,
-        this.obstacleViaIndex,
+      const nearbyViaIds = this.obstacleViaIndex.search(
+        node.x - viaProximity,
+        node.y - viaProximity,
+        node.x + viaProximity,
+        node.y + viaProximity,
       )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
@@ -420,50 +407,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       })
     }
     return false
-  }
-
-  private getObstaclePointCandidateIds(
-    node: Node,
-    proximity: number,
-    index: Flatbush | null,
-  ): number[] {
-    if (!index) return []
-    // Native index membership stays fixed until rebuilt. Every caller still
-    // resolves these IDs against the live segment or via objects each time.
-    if (
-      index.search !== nativeObstaclePointSearch ||
-      index._collectContained !== nativeCollectContained ||
-      index._pos !== index._boxes.length
-    ) {
-      this.obstaclePointQueryIds.delete(index)
-      return index.search(
-        node.x - proximity,
-        node.y - proximity,
-        node.x + proximity,
-        node.y + proximity,
-      )
-    }
-    const queriesByProximity = this.obstaclePointQueryIds.get(index)
-    const queriesByX = queriesByProximity?.get(proximity)
-    const queriesByY = queriesByX?.get(node.x)
-    const cachedIds = queriesByY?.get(node.y)
-    if (cachedIds) return cachedIds
-
-    const ids = index.search(
-      node.x - proximity,
-      node.y - proximity,
-      node.x + proximity,
-      node.y + proximity,
-    )
-    const pointQueries = queriesByX ?? new Map<number, Map<number, number[]>>()
-    const columnQueries = queriesByY ?? new Map<number, number[]>()
-    columnQueries.set(node.y, ids)
-    pointQueries.set(node.x, columnQueries)
-    const indexQueries =
-      queriesByProximity ?? new Map<number, ObstaclePointQueries>()
-    indexQueries.set(proximity, pointQueries)
-    this.obstaclePointQueryIds.set(index, indexQueries)
-    return ids
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
@@ -638,7 +581,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   buildObstacleIndexes() {
     this.freePlanarObstaclePoints.clear()
-    this.obstaclePointQueryIds = new WeakMap()
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()

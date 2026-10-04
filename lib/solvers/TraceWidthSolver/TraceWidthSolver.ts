@@ -103,8 +103,6 @@ export class TraceWidthSolver extends BaseSolver {
   hdRouteSHI: HighDensityRouteSpatialIndex
   connMap?: ConnectivityMap
   colorMap?: Record<string, string>
-  private obstacleConnectivityRoute: HighDensityRoute | undefined
-  private obstacleConnectivityByObstacle = new WeakMap<Obstacle, boolean>()
 
   constructor(input: TraceWidthSolverInput) {
     super()
@@ -160,24 +158,7 @@ export class TraceWidthSolver extends BaseSolver {
     return undefined
   }
 
-  private isObstacleConnectedToRouteCached(
-    obstacle: Obstacle,
-    route: HighDensityRoute,
-  ): boolean {
-    if (this.obstacleConnectivityRoute !== route) {
-      this.obstacleConnectivityRoute = route
-      this.obstacleConnectivityByObstacle = new WeakMap()
-    }
-    const cachedConnectivity = this.obstacleConnectivityByObstacle.get(obstacle)
-    if (cachedConnectivity !== undefined) return cachedConnectivity
-    const connected = isObstacleConnectedToRoute(obstacle, route, this.connMap)
-    this.obstacleConnectivityByObstacle.set(obstacle, connected)
-    return connected
-  }
-
   _step() {
-    // Connectivity can change between calls to step(), but remains fixed here.
-    this.obstacleConnectivityByObstacle = new WeakMap()
     // If no current trace, dequeue one
     if (!this.currentTrace) {
       const nextTrace = this.unprocessedRoutes.shift()
@@ -407,7 +388,7 @@ export class TraceWidthSolver extends BaseSolver {
     }
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (this.isObstacleConnectedToRouteCached(obstacle, this.currentTrace))
+      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
         continue
       if (
         obstacle.obstacleId &&
@@ -567,7 +548,7 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!this.isObstacleConnectedToRouteCached(obstacle, route)) continue
+      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
