@@ -422,6 +422,66 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
+    this.prioritizeInitialProbes()
+  }
+
+  private prioritizeInitialProbes(): void {
+    // Custom portfolios retain their declared ordering and fitness policy.
+    if (
+      this.initializeSolvers !== nativeInitializeSolvers ||
+      this.getCombinationDefs !== nativeGetCombinationDefs ||
+      this.getHyperParameterDefs !== nativeGetHyperParameterDefs ||
+      this.getHyperParameterCombinations !==
+        nativeGetHyperParameterCombinations ||
+      this.generateSolver !== nativeGenerateSolver ||
+      this.computeG !== nativeComputeG ||
+      this.computeH !== nativeComputeH ||
+      this.computeF !== nativeComputeF ||
+      this.getSupervisedSolverWithBestFitness !== nativeSelectBestFitness
+    ) {
+      return
+    }
+
+    const candidates = this.supervisedSolvers!
+    const probes: typeof candidates = []
+    let defaultProbeCount = 0
+    let firstRemainingCandidate = 0
+    for (let index = 0; index < candidates.length; index++) {
+      if (candidates[index]!.solver instanceof CachedIntraNodeRouteSolver) {
+        defaultProbeCount++
+      }
+      if (defaultProbeCount === 2) {
+        firstRemainingCandidate = index + 1
+        break
+      }
+    }
+    for (const candidate of candidates) {
+      const parameters = candidate.hyperParameters
+      if (
+        (parameters.CELL_SIZE_FACTOR === 2 &&
+          parameters.VIA_PENALTY_FACTOR_2 === 10) ||
+        parameters.HIGH_DENSITY_A01 ||
+        parameters.HIGH_DENSITY_A03
+      ) {
+        probes.push(candidate)
+      }
+    }
+
+    // Untouched candidates all start with zero fitness. Give the two default
+    // grid resolutions their original first batches, then sample the coarse
+    // and external grids before trying every legacy ordering. Only tie order
+    // changes; the same objects retain their fitness, work and search limits.
+    const ordered = candidates.slice(0, firstRemainingCandidate)
+    ordered.push(...probes)
+    for (
+      let index = firstRemainingCandidate;
+      index < candidates.length;
+      index++
+    ) {
+      const candidate = candidates[index]!
+      if (!probes.includes(candidate)) ordered.push(candidate)
+    }
+    candidates.splice(0, candidates.length, ...ordered)
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
@@ -710,3 +770,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 }
+
+const nativeGetCombinationDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs
+const nativeInitializeSolvers =
+  PortfolioSingleIntraNodeSolver.prototype.initializeSolvers
+const nativeGetHyperParameterDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs
+const nativeGetHyperParameterCombinations =
+  HyperParameterSupervisorSolver.prototype.getHyperParameterCombinations
+const nativeGenerateSolver =
+  PortfolioSingleIntraNodeSolver.prototype.generateSolver
+const nativeComputeG = PortfolioSingleIntraNodeSolver.prototype.computeG
+const nativeComputeH = PortfolioSingleIntraNodeSolver.prototype.computeH
+const nativeComputeF = HyperParameterSupervisorSolver.prototype.computeF
+const nativeSelectBestFitness =
+  HyperParameterSupervisorSolver.prototype.getSupervisedSolverWithBestFitness
