@@ -21,6 +21,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 function convertSimplifiedPcbTraceToCircuitJson(
   simplifiedTrace: SimplifiedPcbTrace,
   connectionName: string,
+  includeViaDimensions = false,
 ): PcbTrace {
   return {
     type: "pcb_trace",
@@ -62,6 +63,13 @@ function convertSimplifiedPcbTraceToCircuitJson(
             y: segment.y,
             from_layer: segment.from_layer,
             to_layer: segment.to_layer,
+            ...(includeViaDimensions
+              ? {
+                  via_diameter: segment.via_diameter,
+                  via_hole_diameter: segment.via_hole_diameter,
+                  layers: segment.layers,
+                }
+              : {}),
           }
         } else {
           // jumper/through_obstacle - skip for now as circuit-json doesn't support these route types
@@ -271,6 +279,38 @@ type CircuitJsonSourceTraceIdResolver = {
   circuitJsonSourceTraceIdsByConnectivityNetId: CircuitJsonSourceTraceIdsByConnectivityNetId
 }
 
+type PreparedSourceTraceContext = {
+  circuitJsonSourceTraceIdResolver: CircuitJsonSourceTraceIdResolver
+  declaredPcbPortIds: ReadonlySet<string>
+}
+
+export type CircuitJsonNativeDrcPreparationContext = {
+  source: PreparedSourceTraceContext
+  route: CircuitJsonSourceTraceIdResolver
+}
+
+type PreparedNativeDrcSourceTrace = {
+  id: string
+  portIds: string[]
+  netIds: string[]
+}
+
+type PreparedNativeDrcInput = {
+  traces: PreparedNativeDrcTrace[]
+  sourceTraces: PreparedNativeDrcSourceTrace[]
+}
+
+type PreparedNativeDrcTrace = {
+  pcb_trace_id: string
+  source_trace_id: string
+  route: Array<
+    Extract<
+      SimplifiedPcbTrace["route"][number],
+      { route_type: "wire" | "via" }
+    >
+  >
+}
+
 const getCircuitJsonSourceTraceId = (
   connection: SimpleRouteJson["connections"][number],
 ): CircuitJsonSourceTraceId =>
@@ -379,6 +419,8 @@ function createSourceTraces(
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
   sourceSrj = srj,
   sourceConnectivityMap?: ConnectivityMap,
+  preparedContext?: PreparedSourceTraceContext,
+  onPreparedContext?: (context: PreparedSourceTraceContext) => void,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
   const connections =
@@ -387,6 +429,7 @@ function createSourceTraces(
       : [...srj.connections, ...sourceSrj.connections]
   const obstacles = sourceSrj === srj ? srj.obstacles : sourceSrj.obstacles
   const circuitJsonSourceTraceIdResolver =
+    preparedContext?.circuitJsonSourceTraceIdResolver ??
     createCircuitJsonSourceTraceIdResolver(
       connections,
       sourceConnectivityMap ??
@@ -394,9 +437,12 @@ function createSourceTraces(
           sourceSrj === srj ? srj : { ...sourceSrj, connections },
         ),
     )
-  const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
-    connections,
-    obstacles,
+  const declaredPcbPortIds =
+    preparedContext?.declaredPcbPortIds ??
+    getSrjDeclaredPcbPortIds({ connections, obstacles })
+  onPreparedContext?.({
+    circuitJsonSourceTraceIdResolver,
+    declaredPcbPortIds,
   })
 
   // Process each connection to create a source_trace
@@ -563,6 +609,64 @@ function createSourceTraces(
   }
 
   return sourceTraces
+}
+
+/**
+ * Reuses context captured by converting these same original/point-pair SRJs
+ * with includeOriginalConnections=true. Declared connectivity, source aliases
+ * and the supplied maps must remain unchanged throughout its lifetime.
+ * Candidate endpoint/connectsTo groups are still rebuilt from live traces.
+ */
+export const createNativeDrcInputPreparer = ({
+  srjWithPointPairs,
+  originalSrj,
+  preparedContext,
+}: {
+  srjWithPointPairs: SimpleRouteJson
+  originalSrj: SimpleRouteJson
+  preparedContext: CircuitJsonNativeDrcPreparationContext
+}): ((traces: SimplifiedPcbTrace[]) => PreparedNativeDrcInput) => {
+  const routeResolver = preparedContext.route
+  return (traces): PreparedNativeDrcInput => {
+    const sourceTraces = createSourceTraces(
+      srjWithPointPairs,
+      traces,
+      originalSrj,
+      preparedContext.source.circuitJsonSourceTraceIdResolver.connMap,
+      preparedContext.source,
+    ).map((element): PreparedNativeDrcSourceTrace => {
+      if (
+        element.type !== "source_trace" ||
+        !Array.isArray(element.connected_source_net_ids)
+      ) {
+        throw new Error("Native DRC preparation requires source traces")
+      }
+      return {
+        id: element.source_trace_id,
+        portIds: element.connected_source_port_ids,
+        netIds: element.connected_source_net_ids,
+      }
+    })
+    return {
+      sourceTraces,
+      traces: traces.map((trace): PreparedNativeDrcTrace => {
+        const sourceTraceId =
+          resolveCircuitJsonSourceTraceId(routeResolver, trace.connection_name) ??
+          trace.connectsTo
+            ?.map(
+              (id): CircuitJsonSourceTraceId | undefined =>
+                resolveCircuitJsonSourceTraceId(routeResolver, id),
+            )
+            .find((id): boolean => Boolean(id)) ??
+          (trace.connection_name as CircuitJsonSourceTraceId)
+        return convertSimplifiedPcbTraceToCircuitJson(
+          trace,
+          sourceTraceId,
+          true,
+        ) as PreparedNativeDrcTrace
+      }),
+    }
+  }
 }
 
 /**
@@ -1019,6 +1123,10 @@ export type ConvertToCircuitJsonOptions = {
   includeOriginalConnections?: boolean
   /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Share only while the declared connectivity and source identities are fixed. */
+  onPreparedNativeDrcContext?: (
+    context: CircuitJsonNativeDrcPreparationContext,
+  ) => void
 }
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
@@ -1070,6 +1178,7 @@ export function convertToCircuitJson(
 
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
+  let nativeSourceContext: PreparedSourceTraceContext | undefined
 
   // Add source traces from connection information
   circuitJson.push(
@@ -1080,6 +1189,12 @@ export function convertToCircuitJson(
         ? originalSrj
         : srjWithPointPairs,
       options.connectivityMaps?.source,
+      undefined,
+      options.onPreparedNativeDrcContext
+        ? (context): void => {
+            nativeSourceContext = context
+          }
+        : undefined,
     ),
   )
 
@@ -1122,6 +1237,15 @@ export function convertToCircuitJson(
       options.connectivityMaps?.route ??
         getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
+  if (options.onPreparedNativeDrcContext) {
+    if (!nativeSourceContext) {
+      throw new Error("Circuit JSON conversion lost its source context")
+    }
+    options.onPreparedNativeDrcContext({
+      source: nativeSourceContext,
+      route: routeCircuitJsonSourceTraceIdResolver,
+    })
+  }
 
   // Process routes based on their type
   if (routes.length > 0) {
