@@ -469,6 +469,12 @@ const buildSerializedTinyGraph = (
       ),
     }),
   )
+  const serializedRegionById = new Map<string, (typeof regions)[number]>()
+  for (const region of regions) {
+    if (!serializedRegionById.has(region.regionId)) {
+      serializedRegionById.set(region.regionId, region)
+    }
+  }
 
   const ports: SerializedHyperGraph["ports"] = params.graph.ports.map(
     (port) => ({
@@ -593,12 +599,10 @@ const buildSerializedTinyGraph = (
       },
     })
 
-    const startRegion = regions.find(
-      (region) => region.regionId === connection.startRegion.regionId,
+    const startRegion = serializedRegionById.get(
+      connection.startRegion.regionId,
     )
-    const endRegion = regions.find(
-      (region) => region.regionId === connection.endRegion.regionId,
-    )
+    const endRegion = serializedRegionById.get(connection.endRegion.regionId)
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
 
@@ -1042,6 +1046,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
+  private statsSnapshot: Record<string, any> = {}
+  private statsSnapshotDirty = false
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1154,6 +1160,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params,
       graphForTiny,
     )
+    // Most routing steps have no stats consumer. Build the same snapshot when
+    // it is read, so progress reporting stays current without per-step copies.
+    Object.defineProperty(this, "stats", {
+      configurable: true,
+      enumerable: true,
+      get: (): Record<string, any> => this.getStatsSnapshot(),
+      set: (stats: Record<string, any>): void => {
+        this.statsSnapshot = stats
+        this.statsSnapshotDirty = false
+      },
+    })
   }
 
   getSolverName(): string {
@@ -1461,12 +1478,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.finishCandidatePortfolio()
     }
 
-    const optimizeSectionSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
-        "optimizeSection",
-      )
-    const currentTinySolver = this.getCurrentTinySolver()
-
     this.solved =
       this.candidatePortfolioPhase === "complete" &&
       this.tinyPipelineSolver.solved
@@ -1482,7 +1493,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           : this.alternativeTinyPipelineInput
             ? this.tinyPipelineSolver.progress * 0.5
             : this.tinyPipelineSolver.progress
-    this.stats = {
+    this.statsSnapshotDirty = true
+    this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+  }
+
+  private getStatsSnapshot(): Record<string, any> {
+    if (!this.statsSnapshotDirty) return this.statsSnapshot
+    const optimizeSectionSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
+        "optimizeSection",
+      )
+    const currentTinySolver = this.getCurrentTinySolver()
+    this.statsSnapshot = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
@@ -1511,7 +1533,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
-    this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+    this.statsSnapshotDirty = false
+    return this.statsSnapshot
   }
 
   preview(): GraphicsObject {
