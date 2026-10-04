@@ -437,7 +437,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // Cached and custom portfolios retain their native ordering and policy.
     if (
       !this.prioritizeInitialPortfolioProbes ||
-      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
+      Object.getPrototypeOf(this) !==
+        PortfolioSingleIntraNodeSolver.prototype ||
       this.initializeSolvers !== nativeInitializeSolvers ||
       this.getCombinationDefs !== nativeGetCombinationDefs ||
       this.getHyperParameterDefs !== nativeGetHyperParameterDefs ||

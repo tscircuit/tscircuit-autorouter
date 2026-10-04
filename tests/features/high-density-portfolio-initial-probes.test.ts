@@ -147,9 +147,9 @@ function getOwnerParams(
     ({ solverName }) => solverName === "highDensityRouteSolver",
   )
   if (!step) throw new Error("Pipeline9 must retain its high-density stage")
-  return (
-    step.getConstructorParams(pipeline)[0] as Pipeline9HighDensitySolverParams
-  )
+  return step.getConstructorParams(
+    pipeline,
+  )[0] as Pipeline9HighDensitySolverParams
 }
 
 function scriptCandidates(
@@ -295,9 +295,9 @@ test("early HD probes preserve candidates, work and search limits", () => {
   expect(cachedPortfolio.computeCacheKeyAndTransform().cacheKey).toBe(
     defaultCachedPortfolio.computeCacheKeyAndTransform().cacheKey,
   )
-  expect("prioritizeInitialPortfolioProbes" in portfolio.constructorParams).toBe(
-    false,
-  )
+  expect(
+    "prioritizeInitialPortfolioProbes" in portfolio.constructorParams,
+  ).toBe(false)
   for (const permission of [undefined, false]) {
     const defaultPortfolio = new PortfolioSingleIntraNodeSolver({
       ...portfolio.constructorParams,
@@ -377,7 +377,9 @@ test("early HD probes preserve candidates, work and search limits", () => {
   regular.step()
   const growth = regular.activeSubSolver
   if (!(growth instanceof GrowShrinkHighDensityIntraNodeSolver)) {
-    throw new Error("Pipeline9 regular factory must construct its growth solver")
+    throw new Error(
+      "Pipeline9 regular factory must construct its growth solver",
+    )
   }
   expect(growth.constructorParams.prioritizeInitialPortfolioProbes).toBe(true)
   const nativeGrowth = growth as unknown as {
@@ -393,7 +395,9 @@ test("early HD probes preserve candidates, work and search limits", () => {
     false,
   )
   const regional = new Pipeline9RegionalFallbackSolver(regularParams)
-  expect(regional.highDensitySolver.prioritizeInitialPortfolioProbes).toBe(false)
+  expect(regional.highDensitySolver.prioritizeInitialPortfolioProbes).toBe(
+    false,
+  )
   const capturedRemotePermissions: boolean[] = []
   const nativeSolve = HighDensitySolver.prototype.solve
   HighDensitySolver.prototype.solve = function (): void {
