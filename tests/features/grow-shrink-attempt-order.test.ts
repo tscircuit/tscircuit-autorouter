@@ -24,10 +24,7 @@ type AttemptRecord = {
   growthAttempts: number
   scaleFactor: number
   candidates: Candidate[]
-  initialCachedProbes: [
-    CachedIntraNodeRouteSolver,
-    CachedIntraNodeRouteSolver,
-  ]
+  initialCachedProbes: [CachedIntraNodeRouteSolver, CachedIntraNodeRouteSolver]
   initialCachedProbeCount: number
   warmupWork: number
   candidateLimits: Map<BaseSolver, number>
@@ -113,8 +110,8 @@ function makeRoutes(node: NodeWithPortPoints): HighDensityIntraNodeRoute[] {
 function getInitialCachedProbes(
   portfolio: PortfolioSingleIntraNodeSolver,
 ): [CachedIntraNodeRouteSolver, CachedIntraNodeRouteSolver] {
-  const probes = portfolio.supervisedSolvers!
-    .map(({ solver }) => solver)
+  const probes = portfolio
+    .supervisedSolvers!.map(({ solver }) => solver)
     .filter(
       (solver): solver is CachedIntraNodeRouteSolver =>
         solver instanceof CachedIntraNodeRouteSolver,
@@ -140,9 +137,7 @@ function completedInitialCachedProbes(record: AttemptRecord): boolean {
   return true
 }
 
-function getCandidateWork(
-  portfolio: PortfolioSingleIntraNodeSolver,
-): number {
+function getCandidateWork(portfolio: PortfolioSingleIntraNodeSolver): number {
   const descriptor = Object.getOwnPropertyDescriptor(
     portfolio,
     "totalCandidateWork",
@@ -464,10 +459,7 @@ test("growth attempt ordering preserves every native search budget", () => {
 
   const negotiatedOnly = createGrow(1)
   const negotiatedScenario = createScenario(1)
-  const negotiatedAttempt = prepareAttempt(
-    negotiatedOnly,
-    negotiatedScenario,
-  )
+  const negotiatedAttempt = prepareAttempt(negotiatedOnly, negotiatedScenario)
   const negotiatedCandidate = negotiatedAttempt.candidates.find(
     ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A13,
   )!
@@ -625,8 +617,7 @@ test("growth attempt ordering preserves every native search budget", () => {
   })
   const expansionScenario = createScenario(null)
   const expandedOriginal = prepareAttempt(expanded, expansionScenario)
-  const [expansionFirst, expansionSecond] =
-    expandedOriginal.initialCachedProbes
+  const [expansionFirst, expansionSecond] = expandedOriginal.initialCachedProbes
   const expansionThreshold =
     expandedOriginal.solver.stats.dynamicExpansionWorkBudget
   expect(expansionThreshold).toBe(expansionFirst.MAX_ITERATIONS)

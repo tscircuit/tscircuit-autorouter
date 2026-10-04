@@ -370,7 +370,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     // interrupting it. This uses real non-negotiated work, not scheduling
     // credits or a guarantee that every cached probe received a batch.
     const originalWarmupWork =
-      frame.initialCachedProbeCount * solver.MIN_SUBSTEPS * solver.GREEDY_MULTIPLIER
+      frame.initialCachedProbeCount *
+      solver.MIN_SUBSTEPS *
+      solver.GREEDY_MULTIPLIER
     return workDescriptor.value >= originalWarmupWork
   }
 
