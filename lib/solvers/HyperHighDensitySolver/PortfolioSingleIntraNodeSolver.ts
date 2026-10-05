@@ -10,7 +10,11 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
-import type { BaseSolver } from "../BaseSolver"
+import { BaseSolver } from "../BaseSolver"
+import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+} from "../../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -66,6 +70,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  readonly enableEarlyCoarsePortfolioProbe: boolean
+  private earlyCoarseSolver?: CachedIntraNodeRouteSolver
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -127,12 +133,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      enableEarlyCoarsePortfolioProbe?: boolean
     },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    this.enableEarlyCoarsePortfolioProbe =
+      opts.enableEarlyCoarsePortfolioProbe ?? false
+    if ("enableEarlyCoarsePortfolioProbe" in opts) {
+      const { enableEarlyCoarsePortfolioProbe: _, ...constructorParams } = opts
+      this.constructorParams = constructorParams
+    }
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -420,8 +433,132 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
     }
+    this.addEarlyCoarsePortfolioCandidate()
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
+  }
+
+  private addEarlyCoarsePortfolioCandidate(): void {
+    if (
+      !this.enableEarlyCoarsePortfolioProbe ||
+      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
+      this.constructorParams.cacheProvider !== undefined ||
+      this.initializeSolvers !== nativeInitializeSolvers ||
+      this.getCombinationDefs !== nativeGetCombinationDefs ||
+      this.getHyperParameterDefs !== nativeGetHyperParameterDefs ||
+      this.getHyperParameterCombinations !== nativeGetCombinations ||
+      this.generateSolver !== nativeGenerateSolver ||
+      this.computeG !== nativeComputeG ||
+      this.computeH !== nativeComputeH ||
+      this.computeF !== nativeComputeF ||
+      this.getSupervisedSolverWithBestFitness !== nativeSelectBestFitness ||
+      this._step !== nativePortfolioStep ||
+      this.onSolve !== nativeOnSolve ||
+      this.step !== nativeBaseStep ||
+      HyperParameterSupervisorSolver.prototype._step !== nativeSupervisorStep ||
+      this.MIN_SUBSTEPS !== 100 ||
+      this.GREEDY_MULTIPLIER !== 5 ||
+      !this.connMap ||
+      Object.getPrototypeOf(this.connMap) !== ConnectivityMap.prototype ||
+      this.connMap.areIdsConnected !== nativeAreIdsConnected ||
+      this.connMap.getNetConnectedToId !== nativeGetNetConnectedToId
+    ) {
+      return
+    }
+
+    const candidates = this.supervisedSolvers!
+    const fine = candidates.find(
+      ({ solver, hyperParameters: parameters }) =>
+        solver instanceof CachedIntraNodeRouteSolver &&
+        parameters.CELL_SIZE_FACTOR === 0.5 &&
+        parameters.SHUFFLE_SEED === 3 &&
+        parameters.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR === 10 &&
+        parameters.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR === 1 &&
+        parameters.FUTURE_CONNECTION_PROXIMITY_VD === 5 &&
+        parameters.MISALIGNED_DIST_PENALTY_FACTOR === 10 &&
+        parameters.VIA_PENALTY_FACTOR_2 === 1,
+    )
+    if (!fine) {
+      throw new Error(
+        "Native early coarse portfolio requires its fine seed3 candidate",
+      )
+    }
+    const hyperParameters = {
+      ...fine.hyperParameters,
+      CELL_SIZE_FACTOR: 2,
+    }
+    const solver = new CachedIntraNodeRouteSolver({
+      ...this.constructorParams,
+      hyperParameters,
+      cacheProvider: null,
+      precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
+    })
+    this.initializeCandidateBudget(solver)
+    const g = this.computeG(solver)
+    let cachedProbeCount = 0
+    const insertAfter = candidates.findIndex((candidate) => {
+      if (candidate.solver instanceof CachedIntraNodeRouteSolver) {
+        cachedProbeCount++
+      }
+      return cachedProbeCount === 2
+    })
+    if (insertAfter < 0) {
+      throw new Error(
+        "Native early coarse portfolio requires two default cached probes",
+      )
+    }
+    candidates.splice(insertAfter + 1, 0, {
+      hyperParameters,
+      solver,
+      h: 0,
+      g,
+      f: g,
+    })
+    this.earlyCoarseSolver = solver
+  }
+
+  private hasEarlyCoarseCopperConflict(
+    routes: HighDensityIntraNodeRoute[],
+  ): boolean {
+    const connMap = this.connMap
+    if (!connMap) {
+      throw new Error(
+        "Early coarse copper validation requires its connectivity map",
+      )
+    }
+    const layerCount =
+      this.constructorParams.layerCount ??
+      Math.max(
+        2,
+        ...this.nodeWithPortPoints.portPoints.map(
+          (point) => (point.z ?? 0) + 1,
+        ),
+      )
+    const clearance = this.earlyCoarseSolver!.obstacleMargin
+    for (let left = 0; left < routes.length; left++) {
+      for (let right = left + 1; right < routes.length; right++) {
+        if (
+          arePipeline9RoutesOnSameNet(
+            routes[left]!,
+            routes[right]!,
+            connMap,
+          )
+        ) {
+          continue
+        }
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left: routes[left]!,
+            right: routes[right]!,
+            clearance,
+            layerCount,
+          })
+        ) {
+          return true
+        }
+      }
+    }
+    return false
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
@@ -708,5 +845,38 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (
+      solver.solver === this.earlyCoarseSolver &&
+      this.hasEarlyCoarseCopperConflict(this.solvedRoutes)
+    ) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error =
+        "Early coarse portfolio routes conflict at the original copper clearance"
+      this.solved = false
+      this.winningSolver = undefined
+      this.solvedRoutes = []
+    }
   }
 }
+
+const nativeInitializeSolvers =
+  PortfolioSingleIntraNodeSolver.prototype.initializeSolvers
+const nativeGetCombinationDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs
+const nativeGetHyperParameterDefs =
+  PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs
+const nativeGetCombinations =
+  HyperParameterSupervisorSolver.prototype.getHyperParameterCombinations
+const nativeGenerateSolver = PortfolioSingleIntraNodeSolver.prototype.generateSolver
+const nativeComputeG = PortfolioSingleIntraNodeSolver.prototype.computeG
+const nativeComputeH = PortfolioSingleIntraNodeSolver.prototype.computeH
+const nativeComputeF = HyperParameterSupervisorSolver.prototype.computeF
+const nativeSelectBestFitness =
+  HyperParameterSupervisorSolver.prototype.getSupervisedSolverWithBestFitness
+const nativePortfolioStep = PortfolioSingleIntraNodeSolver.prototype._step
+const nativeOnSolve = PortfolioSingleIntraNodeSolver.prototype.onSolve
+const nativeSupervisorStep = HyperParameterSupervisorSolver.prototype._step
+const nativeBaseStep = BaseSolver.prototype.step
+const nativeAreIdsConnected = ConnectivityMap.prototype.areIdsConnected
+const nativeGetNetConnectedToId = ConnectivityMap.prototype.getNetConnectedToId
