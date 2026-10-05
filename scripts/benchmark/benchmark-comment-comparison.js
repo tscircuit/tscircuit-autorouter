@@ -17,6 +17,14 @@ const formatAverage = (value) => {
   return value.toFixed(2)
 }
 
+const formatMemory = (byteCount) => {
+  if (typeof byteCount !== "number" || !Number.isFinite(byteCount)) {
+    return "n/a"
+  }
+  const mebibytes = byteCount / (1024 * 1024)
+  return `${mebibytes.toFixed(1)} MiB`
+}
+
 const formatSolverDisplayName = (solverName, effortLabel) => {
   const solver = String(solverName ?? "").replace(
     /^AutoroutingPipelineSolver(\d+).*$/,
@@ -161,6 +169,16 @@ const renderNetworkedColdHotComparison = (report) => {
       `| P${percentile} time | ${formatTime(coldTime)} | ${formatTime(hotTime)} | ${formatRelativeDelta(coldTime, hotTime)} |`,
     )
   }
+  if (
+    typeof coldSummary.p90PeakRssBytes === "number" ||
+    typeof hotSummary.p90PeakRssBytes === "number"
+  ) {
+    rows.push(
+      `| Memory P50 | ${formatMemory(coldSummary.p50PeakRssBytes)} | ${formatMemory(hotSummary.p50PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p50PeakRssBytes, hotSummary.p50PeakRssBytes)} |`,
+      `| Memory P80 | ${formatMemory(coldSummary.p80PeakRssBytes)} | ${formatMemory(hotSummary.p80PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p80PeakRssBytes, hotSummary.p80PeakRssBytes)} |`,
+      `| Memory P90 | ${formatMemory(coldSummary.p90PeakRssBytes)} | ${formatMemory(hotSummary.p90PeakRssBytes)} | ${formatRelativeDelta(coldSummary.p90PeakRssBytes, hotSummary.p90PeakRssBytes)} |`,
+    )
+  }
   rows.push(
     `| Average vias | ${formatAverage(coldSummary.avgVia)} | ${formatAverage(hotSummary.avgVia)} | ${formatRelativeDelta(coldSummary.avgVia, hotSummary.avgVia)} |`,
   )
@@ -251,6 +269,16 @@ export const renderBenchmarkComparison = ({
       )
       rows.push(
         `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`,
+      )
+    }
+    if (
+      typeof mainSummary?.p90PeakRssBytes === "number" ||
+      typeof prSummary.p90PeakRssBytes === "number"
+    ) {
+      rows.push(
+        `| ${solver} | Memory P50 | ${formatMemory(mainSummary?.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p50PeakRssBytes, prSummary.p50PeakRssBytes)} |`,
+        `| ${solver} | Memory P80 | ${formatMemory(mainSummary?.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p80PeakRssBytes, prSummary.p80PeakRssBytes)} |`,
+        `| ${solver} | Memory P90 | ${formatMemory(mainSummary?.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(mainSummary?.p90PeakRssBytes, prSummary.p90PeakRssBytes)} |`,
       )
     }
     rows.push(

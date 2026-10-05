@@ -62,7 +62,7 @@ on:
         default: false
         type: boolean
       same_machine_compare:
-        description: Run current main and the PR head sequentially on one Blacksmith runner
+        description: Run the PR base and head sequentially on one Blacksmith runner
         required: false
         default: false
         type: boolean
@@ -1542,12 +1542,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             })
-            const base = await github.rest.repos.getBranch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: pr.data.base.ref,
-            })
-            const mainSha = base.data.commit.sha
+            const baseSha = pr.data.base.sha
             const prSha = pr.data.head.sha
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
@@ -1557,7 +1552,7 @@ jobs:
               body: [
                 '## Same Machine Benchmark Results',
                 '',
-                `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
+                `Queued \`${dataset}\` on PR base \`${baseSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
                 '',
                 'Both revisions will run sequentially in one Blacksmith job.',
                 '',
@@ -1566,7 +1561,7 @@ jobs:
             })
 
             core.setOutput('dataset', dataset)
-            core.setOutput('main_sha', mainSha)
+            core.setOutput('base_sha', baseSha)
             core.setOutput('pr_sha', prSha)
             core.setOutput('status_comment_id', String(statusComment.data.id))
 
@@ -1577,11 +1572,11 @@ jobs:
           path: same-machine-controller
           persist-credentials: false
 
-      - name: Checkout current main
+      - name: Checkout PR base
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.refs.outputs.main_sha }}
-          path: same-machine-main
+          ref: ${{ steps.refs.outputs.base_sha }}
+          path: same-machine-base
           persist-credentials: false
 
       - name: Checkout PR head
@@ -1596,8 +1591,8 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install main dependencies
-        working-directory: same-machine-main
+      - name: Install base dependencies
+        working-directory: same-machine-base
         run: bun install
 
       - name: Install PR dependencies
@@ -1605,10 +1600,10 @@ jobs:
         run: bun install
 
       - name: Prepare comparison artifacts
-        run: mkdir -p same-machine-results/main same-machine-results/pr
+        run: mkdir -p same-machine-results/base same-machine-results/pr
 
-      - name: Benchmark current main
-        working-directory: same-machine-main
+      - name: Benchmark PR base
+        working-directory: same-machine-base
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
@@ -1627,9 +1622,9 @@ jobs:
           if (result.error) throw result.error
           process.exit(result.status ?? 1)
           NODE
-          cp benchmark-result.json ../same-machine-results/main/benchmark-result.json
-          cp benchmark-result.txt ../same-machine-results/main/benchmark-result.txt
-          cp benchmark-snapshots.html ../same-machine-results/main/benchmark-snapshots.html
+          cp benchmark-result.json ../same-machine-results/base/benchmark-result.json
+          cp benchmark-result.txt ../same-machine-results/base/benchmark-result.txt
+          cp benchmark-snapshots.html ../same-machine-results/base/benchmark-snapshots.html
 
       - name: Benchmark PR head
         working-directory: same-machine-pr
@@ -1658,14 +1653,14 @@ jobs:
       - name: Render same-machine comparison
         working-directory: same-machine-controller
         env:
-          MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
+          BASE_SHA: ${{ steps.refs.outputs.base_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}
           RUNNER_NAME: ${{ runner.name }}
         run: |
           bun scripts/benchmark/same-machine-results.ts \
-            --main-report ../same-machine-results/main/benchmark-result.json \
+            --base-report ../same-machine-results/base/benchmark-result.json \
             --pr-report ../same-machine-results/pr/benchmark-result.json \
-            --main-sha "$MAIN_SHA" \
+            --base-sha "$BASE_SHA" \
             --pr-sha "$PR_SHA" \
             --repository "${{ github.repository }}" \
             --runner-name "$RUNNER_NAME" \

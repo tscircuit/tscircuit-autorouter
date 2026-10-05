@@ -36,7 +36,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     tests: [],
     ...overrides,
   })
-  const mainReport = makeReport({
+  const baseReport = makeReport({
     summary: [
       {
         solverName,
@@ -45,6 +45,9 @@ test("same-machine benchmark comments compare matching reports", () => {
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
+        p50PeakRssBytes: 90 * 1024 * 1024,
+        p80PeakRssBytes: 110 * 1024 * 1024,
+        p90PeakRssBytes: 120 * 1024 * 1024,
         avgVia: 2,
         avgTraceLintIssues: { odd_angle: 4, future_rule: 2 },
       },
@@ -71,6 +74,9 @@ test("same-machine benchmark comments compare matching reports", () => {
         timedOutLabel: "0/2",
         p50TimeMs: 900,
         p95TimeMs: 1_800,
+        p50PeakRssBytes: 72 * 1024 * 1024,
+        p80PeakRssBytes: 88 * 1024 * 1024,
+        p90PeakRssBytes: 96 * 1024 * 1024,
         avgVia: 2.2,
         avgTraceLintIssues: { odd_angle: 2, future_rule: 0 },
       },
@@ -85,9 +91,9 @@ test("same-machine benchmark comments compare matching reports", () => {
   })
 
   const markdown = renderSameMachineBenchmarkResults({
-    mainReport,
+    baseReport,
     prReport,
-    mainSha: "a".repeat(40),
+    baseSha: "a".repeat(40),
     prSha: "b".repeat(40),
     repository: "tscircuit/tscircuit-autorouter",
     runnerName: "blacksmith-test-runner",
@@ -114,44 +120,47 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P80 time |")
   expect(markdown).toContain("| Pipeline7 | P90 time |")
   expect(markdown).toContain("| Pipeline7 | P95 time |")
+  expect(markdown).toContain(
+    "| Pipeline7 | Memory P50 | 90.0 MiB | 72.0 MiB | -20.0% |",
+  )
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(
     "Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
-  mainReport.tests[0] = {
-    ...mainReport.tests[0],
+  baseReport.tests[0] = {
+    ...baseReport.tests[0],
     didTimeout: false,
     elapsedTimeMs: 10,
   }
-  const renderFailedMain = (): string =>
+  const renderFailedBase = (): string =>
     renderSameMachineBenchmarkResults({
-      mainReport,
+      baseReport,
       prReport,
-      mainSha: "a".repeat(40),
+      baseSha: "a".repeat(40),
       prSha: "b".repeat(40),
       repository: "tscircuit/tscircuit-autorouter",
       runnerName: "blacksmith-test-runner",
     })
-  expect(renderFailedMain()).toContain(
+  expect(renderFailedBase()).toContain(
     "| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |",
   )
-  expect(renderFailedMain()).toContain(
+  expect(renderFailedBase()).toContain(
     "| Pipeline7 | 1 | Failed | DRC passed | 10ms |",
   )
-  delete mainReport.summary[0].avgTraceLintIssues
-  expect(renderFailedMain()).toContain(
+  delete baseReport.summary[0].avgTraceLintIssues
+  expect(renderFailedBase()).toContain(
     "| Pipeline7 | Avg Angled Traces | n/a | 2.00 | n/a |",
   )
-  delete mainReport.tests[0].sampleTimeoutMs
-  expect(renderFailedMain()).toContain(
+  delete baseReport.tests[0].sampleTimeoutMs
+  expect(renderFailedBase()).toContain(
     "| Pipeline7 | P50 time | n/a | 1.4s | n/a |",
   )
   expect(() =>
     renderSameMachineBenchmarkResults({
-      mainReport,
+      baseReport,
       prReport: { ...prReport, datasetName: "srj19" },
-      mainSha: "a".repeat(40),
+      baseSha: "a".repeat(40),
       prSha: "b".repeat(40),
       repository: "tscircuit/tscircuit-autorouter",
       runnerName: "blacksmith-test-runner",

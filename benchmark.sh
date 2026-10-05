@@ -98,6 +98,7 @@ Options:
 
 Defaults:
   Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver9_PreloadedTraceGraph.
+  Every sample runs in a fresh process so its peak memory can be reported.
   Use "all" to benchmark every available solver.
 
 Examples:
@@ -116,6 +117,7 @@ Examples:
   ./benchmark.sh --pipeline 6
   ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline 9
+  ./benchmark.sh --pipeline 9 --dataset 24 --sample 21
   ./benchmark.sh --pipeline 9net --dataset 18
   ./benchmark.sh --pipeline 10 --dataset 29
   ./benchmark.sh --pipeline krt

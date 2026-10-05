@@ -19,6 +19,9 @@ test("networked benchmark comments compare the cold and hot passes", () => {
         timedOutLabel: "0/1",
         p50TimeMs: 4_000,
         p95TimeMs: 4_000,
+        p50PeakRssBytes: 100 * 1024 * 1024,
+        p80PeakRssBytes: 100 * 1024 * 1024,
+        p90PeakRssBytes: 100 * 1024 * 1024,
         avgVia: 2,
         networkCache: {
           remoteRequests: 3,
@@ -35,6 +38,9 @@ test("networked benchmark comments compare the cold and hot passes", () => {
         timedOutLabel: "0/1",
         p50TimeMs: 1_000,
         p95TimeMs: 1_000,
+        p50PeakRssBytes: 80 * 1024 * 1024,
+        p80PeakRssBytes: 80 * 1024 * 1024,
+        p90PeakRssBytes: 80 * 1024 * 1024,
         avgVia: 2,
         networkCache: {
           remoteRequests: 3,
@@ -81,6 +87,9 @@ test("networked benchmark comments compare the cold and hot passes", () => {
       "\n",
     ),
   ).toContain(`| P95 time | 4.0s | 1.0s | -75.0% |
+| Memory P50 | 100.0 MiB | 80.0 MiB | -20.0% |
+| Memory P80 | 100.0 MiB | 80.0 MiB | -20.0% |
+| Memory P90 | 100.0 MiB | 80.0 MiB | -20.0% |
 | Average vias | 2.00 | 2.00 | 0.0% |
 | Avg Angled Traces | n/a | n/a | n/a |
 | HD cache hits | 0/3 | 3/3 | +3 |

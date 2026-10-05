@@ -107,6 +107,14 @@ const formatTime = (timeMs: number | null) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
+const formatMemory = (byteCount: number | null | undefined) => {
+  if (byteCount === null || byteCount === undefined) {
+    return "n/a"
+  }
+  const mebibytes = byteCount / (1024 * 1024)
+  return `${mebibytes.toFixed(1)} MiB`
+}
+
 const formatAverage = (value: number | null) => {
   if (value === null) {
     return "n/a"
@@ -654,15 +662,15 @@ const getTerminateTimeoutMs = () => {
   return parsedTimeout
 }
 
-const getPercentileMs = (
-  values: number[],
+const getPercentile = (
+  measurements: number[],
   percentile: number,
 ): number | null => {
-  if (values.length === 0) {
+  if (measurements.length === 0) {
     return null
   }
 
-  const sorted = [...values].sort((a, b) => a - b)
+  const sorted = [...measurements].sort((a, b) => a - b)
   const index = (sorted.length - 1) * percentile
   const lower = Math.floor(index)
   const upper = Math.ceil(index)
@@ -877,6 +885,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P80 Time",
     "P90 Time",
     "P95 Time",
+    "Memory P50",
+    "Memory P80",
+    "Memory P90",
     "Avg Via",
     ...(includeNetworkCache
       ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
@@ -894,6 +905,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p80TimeMs ?? null),
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
+    formatMemory(row.p50PeakRssBytes),
+    formatMemory(row.p80PeakRssBytes),
+    formatMemory(row.p90PeakRssBytes),
     formatAverage(row.avgVia),
     ...(includeNetworkCache
       ? [
@@ -1140,6 +1154,7 @@ export const createFailedResult = (
   scenarioName: task.scenarioName,
   sampleNumber: task.sampleNumber,
   elapsedTimeMs,
+  peakRssBytes: latestProgress?.peakRssBytes,
   didSolve: false,
   didTimeout,
   relaxedDrcPassed: false,
@@ -1469,14 +1484,20 @@ const runBenchmarkTasks = async (
           ? 0
           : (solverProgress.solved / solverProgress.completed) * 100
       const suffix = result.error ? ` (${result.error})` : ""
+      const memorySuffix =
+        result.peakRssBytes === undefined
+          ? ""
+          : ` peakRss=${formatMemory(result.peakRssBytes)}`
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${suffix}`,
       )
 
       if (restartWorker) {
         console.warn(
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
         )
+      }
+      if (queue.length > 0) {
         await replaceWorker(slot)
       }
     }
@@ -1518,6 +1539,12 @@ export const summarizeSolverResults = (
   const viaCounts = succeeded
     .map((result) => result.viaCount)
     .filter((viaCount): viaCount is number => typeof viaCount === "number")
+  const peakRssValues = results
+    .map((result) => result.peakRssBytes)
+    .filter(
+      (peakRssBytes): peakRssBytes is number =>
+        typeof peakRssBytes === "number" && Number.isFinite(peakRssBytes),
+    )
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
   ).length
@@ -1570,12 +1597,15 @@ export const summarizeSolverResults = (
       timedOut.length,
     ),
     timedOutLabel: `${timedOut.length}/${results.length}`,
-    p50TimeMs: getPercentileMs(elapsedForPercentiles, 0.5),
-    p60TimeMs: getPercentileMs(elapsedForPercentiles, 0.6),
-    p70TimeMs: getPercentileMs(elapsedForPercentiles, 0.7),
-    p80TimeMs: getPercentileMs(elapsedForPercentiles, 0.8),
-    p90TimeMs: getPercentileMs(elapsedForPercentiles, 0.9),
-    p95TimeMs: getPercentileMs(elapsedForPercentiles, 0.95),
+    p50TimeMs: getPercentile(elapsedForPercentiles, 0.5),
+    p60TimeMs: getPercentile(elapsedForPercentiles, 0.6),
+    p70TimeMs: getPercentile(elapsedForPercentiles, 0.7),
+    p80TimeMs: getPercentile(elapsedForPercentiles, 0.8),
+    p90TimeMs: getPercentile(elapsedForPercentiles, 0.9),
+    p95TimeMs: getPercentile(elapsedForPercentiles, 0.95),
+    p50PeakRssBytes: getPercentile(peakRssValues, 0.5),
+    p80PeakRssBytes: getPercentile(peakRssValues, 0.8),
+    p90PeakRssBytes: getPercentile(peakRssValues, 0.9),
     avgVia,
     avgTraceLintIssues: averageTraceLintIssues(results),
     networkCache,
@@ -1799,7 +1829,7 @@ const main = async () => {
   const tasks = taskGroups.flat()
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
@@ -1870,6 +1900,7 @@ const main = async () => {
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
+    memoryMeasurementMode: "isolated_process_per_sample",
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,

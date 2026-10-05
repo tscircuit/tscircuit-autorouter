@@ -4,9 +4,9 @@ import { readFile, writeFile } from "node:fs/promises"
 import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
 
 type SameMachineBenchmarkInput = {
-  mainReport: BenchmarkReport
+  baseReport: BenchmarkReport
   prReport: BenchmarkReport
-  mainSha: string
+  baseSha: string
   prSha: string
   repository: string
   runnerName: string
@@ -22,6 +22,14 @@ const formatTime = (timeMs: number | null): string => {
 const formatAverage = (value: number | null): string =>
   value === null || !Number.isFinite(value) ? "n/a" : value.toFixed(2)
 
+const formatMemory = (byteCount: number | null | undefined): string => {
+  if (byteCount === null || byteCount === undefined) {
+    return "n/a"
+  }
+  const mebibytes = byteCount / (1024 * 1024)
+  return `${mebibytes.toFixed(1)} MiB`
+}
+
 const parsePercentLabel = (label: string): number | null => {
   const match = label.trim().match(/^(-?\d+(?:\.\d+)?)%/)
   if (!match) return null
@@ -32,35 +40,35 @@ const parsePercentLabel = (label: string): number | null => {
 const formatSigned = (value: number, suffix = ""): string =>
   `${value > 0 ? "+" : ""}${value.toFixed(1)}${suffix}`
 
-const formatPercentPointDelta = (main: string, pr: string): string => {
-  const mainValue = parsePercentLabel(main)
+const formatPercentPointDelta = (base: string, pr: string): string => {
+  const baseValue = parsePercentLabel(base)
   const prValue = parsePercentLabel(pr)
-  if (mainValue === null || prValue === null) return "n/a"
-  return formatSigned(prValue - mainValue, " pp")
+  if (baseValue === null || prValue === null) return "n/a"
+  return formatSigned(prValue - baseValue, " pp")
 }
 
 const formatRelativeDelta = (
-  mainValue: number | null,
+  baseValue: number | null,
   prValue: number | null,
 ): string => {
   if (
-    mainValue === null ||
+    baseValue === null ||
     prValue === null ||
-    !Number.isFinite(mainValue) ||
+    !Number.isFinite(baseValue) ||
     !Number.isFinite(prValue) ||
-    mainValue === 0
+    baseValue === 0
   ) {
     return "n/a"
   }
-  return formatSigned(((prValue - mainValue) / mainValue) * 100, "%")
+  return formatSigned(((prValue - baseValue) / baseValue) * 100, "%")
 }
 
 const formatCountDelta = (
-  mainValue: number | null,
+  baseValue: number | null,
   prValue: number | null,
 ): string => {
-  if (mainValue === null || prValue === null) return "n/a"
-  const delta = prValue - mainValue
+  if (baseValue === null || prValue === null) return "n/a"
+  const delta = prValue - baseValue
   return `${delta > 0 ? "+" : ""}${delta}`
 }
 
@@ -140,23 +148,23 @@ const escapeTableCell = (value: unknown): string =>
     .replace(/\r?\n/g, " ")
 
 const getChangedOutcomes = (
-  mainReport: BenchmarkReport,
+  baseReport: BenchmarkReport,
   prReport: BenchmarkReport,
 ) => {
-  const mainTests = new Map(
-    mainReport.tests.map((test) => [testKey(test), test]),
+  const baseTests = new Map(
+    baseReport.tests.map((test) => [testKey(test), test]),
   )
   return prReport.tests.flatMap((prTest) => {
-    const mainTest = mainTests.get(testKey(prTest))
-    if (!mainTest || outcomeScore(mainTest) === outcomeScore(prTest)) return []
+    const baseTest = baseTests.get(testKey(prTest))
+    if (!baseTest || outcomeScore(baseTest) === outcomeScore(prTest)) return []
     return [
       {
         solverName: prTest.solverName,
         sampleNumber: prTest.sampleNumber,
-        mainTest,
+        baseTest,
         prTest,
         delta:
-          outcomeScore(prTest) > outcomeScore(mainTest)
+          outcomeScore(prTest) > outcomeScore(baseTest)
             ? "Improved"
             : "Regressed",
       },
@@ -165,52 +173,52 @@ const getChangedOutcomes = (
 }
 
 export const renderSameMachineBenchmarkResults = ({
-  mainReport,
+  baseReport,
   prReport,
-  mainSha,
+  baseSha,
   prSha,
   repository,
   runnerName,
 }: SameMachineBenchmarkInput): string => {
-  if (mainReport.datasetName !== prReport.datasetName) {
+  if (baseReport.datasetName !== prReport.datasetName) {
     throw new Error(
-      `Dataset mismatch: main=${mainReport.datasetName}, PR=${prReport.datasetName}`,
+      `Dataset mismatch: base=${baseReport.datasetName}, PR=${prReport.datasetName}`,
     )
   }
 
-  const mainSummaries = new Map(
-    mainReport.summary.map((summary) => [summary.solverName, summary]),
+  const baseSummaries = new Map(
+    baseReport.summary.map((summary) => [summary.solverName, summary]),
   )
-  const changedOutcomes = getChangedOutcomes(mainReport, prReport)
+  const changedOutcomes = getChangedOutcomes(baseReport, prReport)
   const lines = [
     "## Same Machine Benchmark Results",
     "",
     `Both revisions ran sequentially in one Blacksmith job on \`${runnerName}\`.`,
     "",
-    `Dataset: \`${mainReport.datasetName}\` · Scenarios: ${mainReport.scenarioCount}`,
-    `Main: [\`${mainSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
+    `Dataset: \`${baseReport.datasetName}\` · Scenarios: ${baseReport.scenarioCount}`,
+    `Base: [\`${baseSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${baseSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
     "",
-    "| Solver | Metric | Main | PR | Delta |",
+    "| Solver | Metric | Base | PR | Delta |",
     "| --- | --- | ---: | ---: | ---: |",
   ]
 
   for (const prSummary of prReport.summary) {
-    const mainSummary = mainSummaries.get(prSummary.solverName)
-    if (!mainSummary) {
-      throw new Error(`Main report is missing solver ${prSummary.solverName}`)
+    const baseSummary = baseSummaries.get(prSummary.solverName)
+    if (!baseSummary) {
+      throw new Error(`Base report is missing solver ${prSummary.solverName}`)
     }
     const solver = formatSolverName(prSummary.solverName)
-    const mainTimeouts = mainReport.tests.filter(
+    const baseTimeouts = baseReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
-    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
+    const baseDrcIssues = getDrcIssueCount(baseReport, prSummary.solverName)
     const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
-      const mainTime = getTimePercentile(
-        mainReport,
+      const baseTime = getTimePercentile(
+        baseReport,
         prSummary.solverName,
         percentile / 100,
       )
@@ -219,22 +227,34 @@ export const renderSameMachineBenchmarkResults = ({
         prSummary.solverName,
         percentile / 100,
       )
-      return `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`
+      return `| ${solver} | P${percentile} time | ${formatTime(baseTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(baseTime, prTime)} |`
     })
 
     lines.push(
-      `| ${solver} | Completion | ${mainSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
-      `| ${solver} | Relaxed DRC pass | ${mainSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
-      `| ${solver} | DRC issues | ${mainDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(mainDrcIssues, prDrcIssues)} |`,
-      `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
+      `| ${solver} | Completion | ${baseSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(baseSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
+      `| ${solver} | Relaxed DRC pass | ${baseSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(baseSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
+      `| ${solver} | DRC issues | ${baseDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(baseDrcIssues, prDrcIssues)} |`,
+      `| ${solver} | Timeouts | ${baseTimeouts} | ${prTimeouts} | ${prTimeouts - baseTimeouts > 0 ? "+" : ""}${prTimeouts - baseTimeouts} |`,
       ...timePercentiles,
-      `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
     )
-    for (const type of getTraceLintTypes(mainSummary, prSummary)) {
-      const mainAverage = mainSummary.avgTraceLintIssues?.[type] ?? null
+    if (
+      typeof baseSummary.p90PeakRssBytes === "number" ||
+      typeof prSummary.p90PeakRssBytes === "number"
+    ) {
+      lines.push(
+        `| ${solver} | Memory P50 | ${formatMemory(baseSummary.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p50PeakRssBytes ?? null, prSummary.p50PeakRssBytes ?? null)} |`,
+        `| ${solver} | Memory P80 | ${formatMemory(baseSummary.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p80PeakRssBytes ?? null, prSummary.p80PeakRssBytes ?? null)} |`,
+        `| ${solver} | Memory P90 | ${formatMemory(baseSummary.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p90PeakRssBytes ?? null, prSummary.p90PeakRssBytes ?? null)} |`,
+      )
+    }
+    lines.push(
+      `| ${solver} | Average vias | ${formatAverage(baseSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(baseSummary.avgVia, prSummary.avgVia)} |`,
+    )
+    for (const type of getTraceLintTypes(baseSummary, prSummary)) {
+      const baseAverage = baseSummary.avgTraceLintIssues?.[type] ?? null
       const prAverage = prSummary.avgTraceLintIssues?.[type] ?? null
       lines.push(
-        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(mainAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(mainAverage, prAverage)} |`,
+        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(baseAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(baseAverage, prAverage)} |`,
       )
     }
   }
@@ -250,7 +270,7 @@ export const renderSameMachineBenchmarkResults = ({
 
   lines.push(
     "Style errors are averaged per completed sample with recorded lint counts for that type; historical/unlinted results are n/a. Angled traces counts violating segments.",
-    ...renderBenchmarkStageTimings(mainReport, "Main"),
+    ...renderBenchmarkStageTimings(baseReport, "Base"),
     ...renderBenchmarkStageTimings(prReport, "PR"),
   )
 
@@ -260,11 +280,11 @@ export const renderSameMachineBenchmarkResults = ({
       "<details>",
       `<summary>Changed outcomes (${changedOutcomes.length})</summary>`,
       "",
-      "| Solver | Sample | Main | PR | Main time | PR time | Delta |",
+      "| Solver | Sample | Base | PR | Base time | PR time | Delta |",
       "| --- | ---: | --- | --- | ---: | ---: | --- |",
       ...changedOutcomes.map(
-        ({ solverName, sampleNumber, mainTest, prTest, delta }) =>
-          `| ${escapeTableCell(formatSolverName(solverName))} | ${sampleNumber} | ${escapeTableCell(outcomeLabel(mainTest))} | ${escapeTableCell(outcomeLabel(prTest))} | ${formatTime(mainTest.elapsedTimeMs)} | ${formatTime(prTest.elapsedTimeMs)} | ${delta} |`,
+        ({ solverName, sampleNumber, baseTest, prTest, delta }) =>
+          `| ${escapeTableCell(formatSolverName(solverName))} | ${sampleNumber} | ${escapeTableCell(outcomeLabel(baseTest))} | ${escapeTableCell(outcomeLabel(prTest))} | ${formatTime(baseTest.elapsedTimeMs)} | ${formatTime(prTest.elapsedTimeMs)} | ${delta} |`,
       ),
       "",
       "</details>",
@@ -282,11 +302,11 @@ const getRequiredArg = (name: string): string => {
 }
 
 if (import.meta.main) {
-  const mainReportPath = getRequiredArg("--main-report")
+  const baseReportPath = getRequiredArg("--base-report")
   const prReportPath = getRequiredArg("--pr-report")
   const outputPath = getRequiredArg("--output")
-  const mainReport = JSON.parse(
-    await readFile(mainReportPath, "utf8"),
+  const baseReport = JSON.parse(
+    await readFile(baseReportPath, "utf8"),
   ) as BenchmarkReport
   const prReport = JSON.parse(
     await readFile(prReportPath, "utf8"),
@@ -295,9 +315,9 @@ if (import.meta.main) {
   await writeFile(
     outputPath,
     renderSameMachineBenchmarkResults({
-      mainReport,
+      baseReport,
       prReport,
-      mainSha: getRequiredArg("--main-sha"),
+      baseSha: getRequiredArg("--base-sha"),
       prSha: getRequiredArg("--pr-sha"),
       repository: getRequiredArg("--repository"),
       runnerName: getRequiredArg("--runner-name"),

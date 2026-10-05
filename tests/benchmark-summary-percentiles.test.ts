@@ -13,6 +13,7 @@ test("benchmark timing percentiles count failures at each sample timeout", () =>
     scenarioName: `sample${sampleNumber}`,
     sampleNumber,
     elapsedTimeMs,
+    peakRssBytes: sampleNumber * 1024 * 1024,
     sampleTimeoutMs: 1_000,
     didSolve: true,
     didTimeout: false,
@@ -44,6 +45,9 @@ test("benchmark timing percentiles count failures at each sample timeout", () =>
   expect(summary.p80TimeMs).toBeCloseTo(1_000)
   expect(summary.p90TimeMs).toBeCloseTo(1_500)
   expect(summary.p95TimeMs).toBeCloseTo(1_750)
+  expect(summary.p50PeakRssBytes).toBe(3.5 * 1024 * 1024)
+  expect(summary.p80PeakRssBytes).toBe(5 * 1024 * 1024)
+  expect(summary.p90PeakRssBytes).toBeCloseTo(5.5 * 1024 * 1024)
   expect(summary.completedRateLabel).toBe("66.7% (🕒16.7%)")
   expect(summary.timedOutLabel).toBe("1/6")
   expect(summarizeSolverResults(solverName, results.slice(4)).p50TimeMs).toBe(
@@ -52,6 +56,7 @@ test("benchmark timing percentiles count failures at each sample timeout", () =>
   expect(results[5].elapsedTimeMs).toBe(10)
   expect(results[5].didTimeout).toBe(false)
   expect(summarizeSolverResults(solverName, []).p50TimeMs).toBeNull()
+  expect(summarizeSolverResults(solverName, []).p90PeakRssBytes).toBeNull()
   expect(() =>
     summarizeSolverResults(solverName, [
       makeResult(7, 5, { didSolve: false, sampleTimeoutMs: undefined }),
