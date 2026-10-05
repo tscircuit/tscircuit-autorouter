@@ -184,6 +184,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         {
           capacityMeshNodes: cms.capacityNodes!,
           sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
+          preservedSharedEdgeSegments: [],
           simpleRouteJson: cms.srjWithPointPairs!,
         },
       ],

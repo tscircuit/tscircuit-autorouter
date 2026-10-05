@@ -479,6 +479,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
             }),
+            preservedSharedEdgeSegments: cms
+              .availableSegmentPointSolver!.getOutput()
+              .filter((segment) =>
+                isComponentSharedEdgeSegment(
+                  segment,
+                  componentCapacityMeshNodeIds,
+                ),
+              ),
             simpleRouteJson: cms.srjWithPointPairs!,
           },
         ]

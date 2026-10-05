@@ -256,6 +256,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         {
           capacityMeshNodes: cms.capacityNodes!,
           sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
+          preservedSharedEdgeSegments: [],
           simpleRouteJson: cms.srjWithPointPairs!,
         },
       ],
