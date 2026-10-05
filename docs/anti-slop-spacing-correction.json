@@ -1,0 +1,61 @@
+{
+  "recordedAtUtc": "2026-10-05",
+  "sourceBefore": "9175e22e4f6859f11e89491fc2116c65832e86d1",
+  "sourceAfter": "e62f2bbc8716ae75dafce7ec017ca7d90ced7cb0",
+  "stackBase": "b8824d359f1c0afba8d3c989d0724bd5d550d3d5",
+  "disabledRules": [
+    "anti-slop/require-readable-spacing"
+  ],
+  "retainedRules": 23,
+  "upstreamVendorBytesUnchanged": true,
+  "removedSpacingExceptions": 10,
+  "retainedSchemaExceptions": 15,
+  "productionDiff": {
+    "beforeFiles": 377,
+    "afterFiles": 61,
+    "formattingOnlyFilesRemaining": 0,
+    "allPreviousAstAndRawLiteralBytesIdentical": true,
+    "allPreviousMinifiedJsIdentical": true,
+    "behavioralChangesRetained": 23
+  },
+  "prDiff": {
+    "before": {
+      "files": 410,
+      "additions": 21428,
+      "deletions": 471
+    },
+    "after": {
+      "files": 95,
+      "additions": 13257,
+      "deletions": 471
+    }
+  },
+  "lint": {
+    "files": 453,
+    "rules": 23,
+    "comparableBaselineErrors": 982,
+    "currentErrors": 851,
+    "exitCode": 1,
+    "configSha256": "3f651b8c555e16c5b5290b3a6cb2c0434d3093708cca1022225b2697fc82a142"
+  },
+  "validation": {
+    "focusedTests": 38,
+    "assertions": 370,
+    "snapshots": 8,
+    "originalSnapshotsChanged": false,
+    "repositoryTypecheck": "passed",
+    "toolingTypecheck": "passed",
+    "esmAndDeclarationBuild": "passed",
+    "biomeFormat": "passed",
+    "publicDeclarationBytesIdentical": true,
+    "publicDeclarationsSha256": "70c3b442707c56334430b2febe0fdad133a69d726c6fe0c016ae5d1c1240d8a3",
+    "serializedSharedMacLock": true,
+    "wallSeconds": 19.21,
+    "peakSampledProcessTreeRssMib": 3535.9,
+    "rssMibCap": 4096.0,
+    "secondsCap": 240.0,
+    "cliTests": 5,
+    "cliAssertions": 101
+  },
+  "ci": "Verify the final pushed PR head; the advisory lint step still fails on visible unresolved errors."
+}

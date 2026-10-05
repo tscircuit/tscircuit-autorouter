@@ -1,4 +1,4 @@
-# Continued full-rule review
+# Continued rule review
 
 The continuation from `fc68d2b` to `2d57cee` resolves **78 additional diagnostics**
 without new suppressions, `SAFETY:` comments, public schema changes, or dependency
@@ -17,7 +17,7 @@ lint exits 1; the count is not a completion criterion.
 | `unknown` returns | 4 | Heterogeneous serializers and boundary values need an explicit output contract decision. |
 | Broad object parameters | 1 | A container allocator inside the arbitrary-object debug serializer. |
 
-The other 15 enabled rules have zero findings. These categories are review queues;
+The other 14 retained rules have zero findings. These categories are review queues;
 they do not label all remaining diagnostics as unavoidable or safe.
 
 ## Safe changes made
@@ -107,8 +107,8 @@ There is no blanket suppression or claim that this queue has been completed.
 ## Evidence
 
 The shared Mac benchmark wrapper serialized typecheck, tests, build and formatting.
-Repository and tooling typechecks pass, as do **38 focused tests / 393 assertions**
-across 27 files, including the **five Bun CLI tests / 124 assertions** and original
+Repository and tooling typechecks pass, as do **38 focused tests / 370 assertions**
+across 27 files, including the **five Bun CLI tests / 101 assertions** and original
 routing/SVG fixtures. Eight existing Bun snapshots pass; no original snapshot or
 fixture changed. Biome checks the entire repository.
 
@@ -116,10 +116,12 @@ The ESM/declaration build passes. Published `dist/index.d.ts` is byte-for-byte
 identical to `fc68d2b` (SHA-256
 `70c3b442707c56334430b2febe0fdad133a69d726c6fe0c016ae5d1c1240d8a3`).
 That previous head was already byte-identical to the stacked base. The complete
-lint report has 453 files and 24 active rules. Counts and every remaining UTF-8
-source span are refreshed at `2d57cee`; all 25 existing exception locations are
-also refreshed. [The machine-readable verification record](anti-slop-full-follow-up.json)
-includes each changed file's emission result.
+current lint report has 453 files and 23 active rules. Only
+`anti-slop/require-readable-spacing` is disabled; its spacing-only changes and
+ten exceptions have been removed while retaining every substantive fix above.
+Current source spans and the 15 public-schema exceptions are refreshed for the
+correction. See [current correction evidence](anti-slop-spacing-correction.json) and the
+[historical continuation verification record](anti-slop-full-follow-up.json).
 
 These checks do not establish behavior for arbitrary getters, proxies or altered
 array methods. No routing metric improvement, clean lint migration, merge or

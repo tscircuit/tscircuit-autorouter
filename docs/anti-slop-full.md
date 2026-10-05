@@ -1,21 +1,22 @@
-# Full anti-slop adoption
+# Selected anti-slop adoption
 
-The follow-up user-approved configuration enables **all 24 pinned rules at error
-severity**: 18 generic rules, five Effect plugin rules, and the paired native
+The configuration retains **23 pinned rules at error severity**: 17 generic
+rules, five Effect plugin rules, and the paired native
 `oxc/no-accumulating-spread`. Run `bun run lint:anti-slop` at the repository root.
 It explicitly uses Bun for TypeScript config/plugin loading. Biome, Bun tests,
 existing snapshots, typecheck and build retain their existing commands and role.
 
 This is a full diagnostic rollout with reviewed initial code fixes, not a completed
-migration. Lint currently exits **1** with **851 errors**. No enabled rule has been
-downgraded, capped or switched off. The CI job remains advisory and records each
-step outcome plus the full JSON diagnostic artifact. A green advisory job can
+migration. Lint currently exits **1** with **851 errors**. No retained rule has been
+downgraded or capped. `anti-slop/require-readable-spacing` is explicitly off;
+its blank-line autofix caused formatting-only diff noise. Biome owns formatting. The CI job remains advisory and records each step
+outcome plus the full JSON diagnostic artifact. A green advisory job can
 contain a failed lint step; inspect its summary and artifact. Setup, plugin,
 integration and typecheck failures are not caught or converted into success.
 The diagnostic step redirects JSON directly to a regular file and retains the
 lint failure status. Under CI Bun 1.3.8, the earlier pipe through `tee` truncated
 JSON at exactly 65,536 characters. A separate step parses and validates the whole
-report, requires 24 active rules, and publishes per-rule counts. A malformed or
+report, requires 23 active rules, and publishes per-rule counts. A malformed or
 missing report fails that step visibly. The advisory job also checks repository
 Biome formatting.
 
@@ -49,10 +50,12 @@ in their existing harness; no upstream test accidentally enters Bun discovery.
 ## Counts and reviewed changes
 
 The before run uses PR #2817 head `b8824d359f1c0afba8d3c989d0724bd5d550d3d5`
-with the full configuration. The after run uses production source revision
-`2d57cee` and the same configuration. Both checked **453 files** under Bun 1.3.14,
-Oxlint 1.86.0, on 2026-10-02. These observations are not an error ceiling or a
-snapshot assertion. See [machine-readable counts](anti-slop-full-counts.json).
+with the original 24-rule configuration. The historical first-pass and
+continuation counts are retained below. The current configuration disables only
+spacing: its comparable 23-rule baseline is **982 errors**, and **851 remain**
+after the substantive fixes. All runs cover **453 files** under Bun 1.3.14 and
+Oxlint 1.86.0. The current counts and source spans were refreshed on 2026-10-05.
+See [machine-readable counts](anti-slop-full-counts.json).
 
 | Rule | Before | First pass | Current |
 | --- | ---: | ---: | ---: |
@@ -72,7 +75,7 @@ snapshot assertion. See [machine-readable counts](anti-slop-full-counts.json).
 | `anti-slop/no-unknown-returns` | 4 | 4 | 4 |
 | `anti-slop/no-unknown-type-aliases` | 0 | 0 | 0 |
 | `anti-slop/no-widen-then-assert` | 0 | 0 | 0 |
-| `anti-slop/require-readable-spacing` | 6976 | 0 | 0 |
+| `anti-slop/require-readable-spacing` (disabled) | 6976 | 0 | off |
 | `anti-slop/require-safety-comment-for-type-assertion` | 442 | 425 | 361 |
 | `anti-slop-effect/no-manual-effect-error-tag` | 0 | 0 | 0 |
 | `anti-slop-effect/no-manual-tag-comparison` | 0 | 0 | 0 |
@@ -81,12 +84,13 @@ snapshot assertion. See [machine-readable counts](anti-slop-full-counts.json).
 | `anti-slop-effect/prefer-effect-match` | 5 | 0 | 0 |
 | `oxc/no-accumulating-spread` | 0 | 0 | 0 |
 
-**Total: 7,958 → 851 errors.** The commits separate mechanical spacing,
-compiler-checked assertion removal, narrow exceptions, and behavioral rewrites.
-The 376-file spacing commit changes whitespace only. Of 377 changed production
-files, **354 emit identical minified JavaScript** against the base; the remaining
-23 contain the reviewed behavioral transformations below. This is an emission
-comparison, not a proof of semantic equivalence. See
+**Active-policy total: 982 → 851 errors.** The original 7,958-error baseline
+included 6,976 spacing findings; those are no longer part of the active policy.
+The spacing rollout has been reversed in an additive corrective commit. All 377
+previously changed production files preserve their previous syntax trees, raw
+literal bytes and emitted minified JavaScript. The diff against PR #2817 now
+contains **61 production files**, each with substantive changes or public-schema
+exceptions; **23 retain reviewed behavioral transformations**. See
 [per-file emission results](anti-slop-full-emission.json).
 
 - Remove 16 redundant assertions where the compiler already establishes the
@@ -111,7 +115,7 @@ getters, proxies, or externally monkey-patched array methods. No routing speed,
 solve rate or DRC quality improvement is inferred from the lint results.
 
 The continuation from `fc68d2b` resolves another **78 diagnostics** in three
-reviewable commits: 64 assertions and 14 conditional spreads. All 24 policies
+reviewable commits: 64 assertions and 14 conditional spreads. All 23 retained policies
 stay enabled; no suppression was added. See [follow-up review and decisions](anti-slop-full-follow-up.md)
 and [the verification record](anti-slop-full-follow-up.json). The first-pass
 929-error checkpoint remains in the counts alongside the original baseline.
@@ -119,16 +123,15 @@ and [the verification record](anti-slop-full-follow-up.json). The first-pass
 ## Narrow exceptions and visible remaining work
 
 [The exception inventory](anti-slop-full-exceptions.json) lists every one of the
-**25** rule-specific, next-line exceptions with its reason and target location:
+**15** rule-specific, next-line exceptions with its reason and target location:
 
 - **15 shape-name findings** are public SRJ/Circuit JSON keys (`shape`,
   `hole_shape`, `pad_shape`) or the exported `preloadedTraceShapeCount` statistic.
   Their spelling is part of existing wire/consumer contracts. The symbol rule
   remains active and integration tests prove it rejects an unrelated bad name.
-- **10 spacing findings** occur at leading semicolon guards for automatic
-  semicolon insertion. Biome removes the blank line requested by the upstream
-  spacing fixer at those locations. The exception keeps the guard and both
-  tools active; it suppresses only spacing, not any assertion on the same line.
+The ten spacing-only exceptions were removed. Leading semicolon guards remain
+intact, and the original whitespace is restored without changing strings,
+templates, JSX text or statement parsing.
 
 [The remaining diagnostic inventory](anti-slop-full-remaining.json) records all
 **851** errors with rule, exact file/line/column, UTF-8 byte span, expression excerpt
@@ -165,20 +168,20 @@ serially, without modifying other checkouts or dependencies. Checks completed:
 
 - Repository `tsc --noEmit`, tooling `tsc --project tsconfig.anti-slop.json`,
   the existing ESM/declaration build, and repository Biome format check.
-- **38 focused tests / 485 assertions**, including existing routing/SVG snapshots,
+- **38 focused tests / 370 assertions**, including existing routing/SVG snapshots,
   DRC adapters/baselines, topology restoration, jumpers, layer transitions and
   simplification. Two new tests cover invalid/empty node pitch, duplicate
   assignable via keys, unchanged obstacle inputs, optional field omission,
   metadata identity, copied jumper endpoints and property insertion order.
-- A further capacity-visualization regression (**one test / six assertions**)
+- The included capacity-visualization regression (**one test / six assertions**)
   covers rect omission plus top/bottom/transition colors, points and dash styles.
   The actual graphics object and white-background SVG match the base byte for
   byte on this fixture (SVG SHA-256
   `0faf1d4f633114dfd09c0bd4b89975141b1570affdb6119510f7c3b5b4b9a3ce`).
-- Actual Bun CLI integration: **five tests / 124 assertions**. Deliberately bad
-  examples trigger every one of the 24 rules at error severity and exit 1.
-  Legitimate geometry, owned accumulation, const assertions and the two narrow
-  exception forms pass. Ignored paths, missing config/plugin failures, exact
+- Actual Bun CLI integration: **five CLI tests / 101 assertions**. Deliberately bad
+  examples trigger every one of the 23 retained rules at error severity and exit 1.
+  Legitimate geometry, owned accumulation, const assertions and the public-schema
+  exceptions and adjacent statements without spacing suppressions pass. Ignored paths, missing config/plugin failures, exact
   dependency pins and all 39 vendor file hashes are verified. A regression runs
   the actual Bash pipeline and verifies that both rule errors and missing-config
   errors retain exit 1 through a Bash pipeline. A further regression generates
@@ -190,3 +193,6 @@ serially, without modifying other checkouts or dependencies. Checks completed:
 The GitHub advisory check runs the same CLI under CI Bun 1.3.8. Follow the current
 PR's exact head and step outcomes rather than treating its advisory job conclusion
 as proof of a clean lint run. Normal Bun test shards retain their existing behavior.
+
+The current correction and local verification are recorded in
+[spacing correction evidence](anti-slop-spacing-correction.json).

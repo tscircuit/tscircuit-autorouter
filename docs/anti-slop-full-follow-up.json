@@ -162,5 +162,7 @@
       }
     ]
   },
-  "limitation": "These checks preserve the tested contracts and published declaration bytes. They do not prove equivalence for arbitrary getters/proxies or certify unresolved diagnostics as safe. No routing metric improvement is claimed."
+  "limitation": "These checks preserve the tested contracts and published declaration bytes. They do not prove equivalence for arbitrary getters/proxies or certify unresolved diagnostics as safe. No routing metric improvement is claimed.",
+  "historicalContinuationCheckpoint": true,
+  "currentCorrection": "anti-slop-spacing-correction.json"
 }
