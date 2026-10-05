@@ -97,7 +97,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_vert_1trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertOneTrace.cols,
           ROWS: max0603VertOneTrace.rows,
           ORIENTATION: "vertical" as const,
@@ -119,7 +119,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_vert_1trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertOneTraceStaggered.cols,
           ROWS: max0603VertOneTraceStaggered.rows,
           ORIENTATION: "vertical" as const,
@@ -139,7 +139,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_vert_2trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertTwoTrace.cols,
           ROWS: max0603VertTwoTrace.rows,
           ORIENTATION: "vertical" as const,
@@ -161,7 +161,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_vert_2trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603VertTwoTraceStaggered.cols,
           ROWS: max0603VertTwoTraceStaggered.rows,
           ORIENTATION: "vertical" as const,
@@ -181,7 +181,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_horz_1trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzOneTrace.cols,
           ROWS: max0603HorzOneTrace.rows,
           ORIENTATION: "horizontal" as const,
@@ -203,7 +203,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_horz_1trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzOneTraceStaggered.cols,
           ROWS: max0603HorzOneTraceStaggered.rows,
           ORIENTATION: "horizontal" as const,
@@ -223,7 +223,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_horz_2trace_grid",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzTwoTrace.cols,
           ROWS: max0603HorzTwoTrace.rows,
           ORIENTATION: "horizontal" as const,
@@ -245,7 +245,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       name: "0603_max_rows_and_cols_horz_2trace_staggered",
       possibleValues: [
         {
-          JUMPER_TYPE: "0603" as JumperType,
+          JUMPER_TYPE: "0603",
           COLS: max0603HorzTwoTraceStaggered.cols,
           ROWS: max0603HorzTwoTraceStaggered.rows,
           ORIENTATION: "horizontal" as const,
@@ -258,7 +258,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     // 1206x4 jumper type
     defs.push({
       name: "1206x4",
-      possibleValues: [{ JUMPER_TYPE: "1206x4" as JumperType }],
+      possibleValues: [{ JUMPER_TYPE: "1206x4" }],
     })
 
     // 1206x4 cols and rows

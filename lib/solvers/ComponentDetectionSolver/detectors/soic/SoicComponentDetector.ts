@@ -52,7 +52,7 @@ function getTwoAxisInnerGap({
   columnAxisValues: number[]
 }) {
   if (rowAxisValues.length === 2 && columnAxisValues.length >= 4) {
-    const rows = [[], []] as [Obstacle[], Obstacle[]]
+    const rows: [Obstacle[], Obstacle[]] = [[], []]
 
     for (const obstacle of memberObstacles) {
       rows[getNearestClusterIndex(obstacle.center.y, rowAxisValues)]!.push(
@@ -71,7 +71,7 @@ function getTwoAxisInnerGap({
   }
 
   if (columnAxisValues.length === 2 && rowAxisValues.length >= 4) {
-    const columns = [[], []] as [Obstacle[], Obstacle[]]
+    const columns: [Obstacle[], Obstacle[]] = [[], []]
 
     for (const obstacle of memberObstacles) {
       columns[

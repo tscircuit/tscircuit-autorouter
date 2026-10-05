@@ -358,7 +358,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         segmentId: randomSegmentId,
         point1Index: randomPointIndex1,
         point2Index: randomPointIndex2,
-      } as SwitchOperation
+      }
     }
 
     const randomPointIndex = Math.floor(
@@ -372,7 +372,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
       segmentId: randomSegmentId,
       pointIndex: randomPointIndex,
       newLayer: point.point.z === 0 ? 1 : 0,
-    } as ChangeLayerOperation
+    }
   }
 
   getNodesNearNode(nodeId: CapacityMeshNodeId, hops = 1): CapacityMeshNodeId[] {
@@ -416,7 +416,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    }
   }
 
   /**
@@ -442,7 +442,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    }
   }
 
   getRandomOperation(): Operation {
@@ -687,34 +687,38 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
           points: [seg.start, seg.end],
         })),
         rects: [
-          ...[...this.nodeMap.values()]
-            .map((node) => {
-              const segmentIds = this.nodeIdToSegmentIds.get(
-                node.capacityMeshNodeId,
-              )
-              if (!segmentIds) return null
+          ...[...this.nodeMap.values()].flatMap((node): Rect[] => {
+            const segmentIds = this.nodeIdToSegmentIds.get(
+              node.capacityMeshNodeId,
+            )
 
-              const segments = segmentIds.map(
-                (segmentId) => this.currentMutatedSegments.get(segmentId)!,
-              )!
-              let label: string
-              if (node._containsTarget) {
-                label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
-              } else {
-                const intraNodeCrossings =
-                  getIntraNodeCrossingsFromSegments(segments)
-                label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node, 1, { viaDiameter: this.VIA_DIAMETER }).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
-              }
+            if (!segmentIds) return []
 
-              return {
+            const segments = segmentIds.map(
+              (segmentId) => this.currentMutatedSegments.get(segmentId)!,
+            )!
+
+            let label: string
+
+            if (node._containsTarget) {
+              label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+            } else {
+              const intraNodeCrossings =
+                getIntraNodeCrossingsFromSegments(segments)
+
+              label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node, 1, { viaDiameter: this.VIA_DIAMETER }).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+            }
+
+            return [
+              {
                 center: node.center,
                 label,
                 color: "red",
                 width: node.width / 8,
                 height: node.height / 8,
-              } as Rect
-            })
-            .filter((r) => r !== null),
+              },
+            ]
+          }),
         ],
         circles: [],
         coordinateSystem: "cartesian",
@@ -756,12 +760,24 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
             : "bottom"
           : "transition"
 
+        let strokeDash: string | undefined
+
+        switch (type) {
+          case "top":
+            strokeDash = undefined
+            break
+          case "bottom":
+            strokeDash = "10 5"
+            break
+          default:
+            strokeDash = "3 3 10"
+        }
+
         dashedLines.push({
           points,
-          strokeDash:
-            type === "top" ? undefined : type === "bottom" ? "10 5" : "3 3 10",
+          strokeDash,
           strokeColor: this.colorMap[conn] || "#000",
-        } as Line)
+        })
       }
     }
     graphics.lines.push(...(dashedLines as any))

@@ -125,26 +125,42 @@ const normalizeRemoteRoutes = (
 ): HighDensityIntraNodeRoute[] => {
   const connectionRootMap = createConnectionRootMap(node)
 
-  return routes.map((route) => ({
-    connectionName: route.connectionName,
-    rootConnectionName:
-      route.rootConnectionName ??
-      connectionRootMap.get(route.connectionName) ??
-      undefined,
-    traceThickness: route.traceThickness ?? defaults.traceWidth,
-    viaDiameter: route.viaDiameter ?? defaults.viaDiameter,
-    route: (route.route ?? []).map((point) => ({
-      x: point.x,
-      y: point.y,
-      z: point.z,
-      ...(point.insideJumperPad ? { insideJumperPad: true } : {}),
-    })),
-    vias: (route.vias ?? []).map((via) => ({
-      x: via.x,
-      y: via.y,
-    })),
-    ...(route.jumpers ? { jumpers: route.jumpers } : {}),
-  }))
+  return routes.map((route): HighDensityIntraNodeRoute => {
+    const normalized: HighDensityIntraNodeRoute = {
+      connectionName: route.connectionName,
+      rootConnectionName:
+        route.rootConnectionName ??
+        connectionRootMap.get(route.connectionName) ??
+        undefined,
+      traceThickness: route.traceThickness ?? defaults.traceWidth,
+      viaDiameter: route.viaDiameter ?? defaults.viaDiameter,
+      route: (route.route ?? []).map(
+        (point): HighDensityIntraNodeRoute["route"][number] => {
+          const normalizedPoint: HighDensityIntraNodeRoute["route"][number] = {
+            x: point.x,
+            y: point.y,
+            z: point.z,
+          }
+
+          if (point.insideJumperPad) {
+            normalizedPoint.insideJumperPad = true
+          }
+
+          return normalizedPoint
+        },
+      ),
+      vias: (route.vias ?? []).map((via) => ({
+        x: via.x,
+        y: via.y,
+      })),
+    }
+
+    if (route.jumpers) {
+      normalized.jumpers = route.jumpers
+    }
+
+    return normalized
+  })
 }
 
 const getErrorMessage = (error: unknown) =>
@@ -323,9 +339,7 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.hdCacheBaseUrl = hdCacheBaseUrl ?? DEFAULT_HD_CACHE_BASE_URL
-    this.fetchImpl = (fetchImpl ?? globalThis.fetch).bind(
-      globalThis,
-    ) as typeof fetch
+    this.fetchImpl = (fetchImpl ?? globalThis.fetch).bind(globalThis)
     this.nodePfById =
       nodePfById instanceof Map
         ? new Map(nodePfById)

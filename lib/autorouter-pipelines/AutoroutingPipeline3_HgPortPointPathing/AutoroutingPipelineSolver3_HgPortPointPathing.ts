@@ -539,7 +539,8 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
+
     const visualizations = [
       problemViz,
       netToPPSolver,

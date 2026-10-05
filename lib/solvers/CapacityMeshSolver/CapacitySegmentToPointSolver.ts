@@ -276,7 +276,7 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
             step: 4,
             strokeDash: "5 5",
             strokeColor: this.colorMap[conn] || "#000",
-          } as Line)
+          })
         }
       }
     }

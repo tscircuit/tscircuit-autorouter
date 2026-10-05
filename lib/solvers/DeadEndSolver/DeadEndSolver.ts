@@ -61,10 +61,12 @@ export class DeadEndSolver extends BaseSolver {
     // Determine all nodes that have only a single link (leaves of a tree) and
     //  are not a target.
     this.leavesIndex = 0
-    this.leaves = [...this.adjacencyList.entries()]
-      .filter(([_, neighbours]) => neighbours.size === 1)
-      .filter(([nodeId, _]) => !this.targetNodeIds.has(nodeId))
-      .map(([nodeId, _]) => nodeId)
+    this.leaves = [...this.adjacencyList.entries()].flatMap(
+      ([nodeId, neighbours]) =>
+        neighbours.size === 1 && !this.targetNodeIds.has(nodeId)
+          ? [nodeId]
+          : [],
+    )
   }
 
   _step() {

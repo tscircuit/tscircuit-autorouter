@@ -1,0 +1,110 @@
+{
+  "count": 15,
+  "exceptions": [
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver.ts",
+      "commentLine": 288,
+      "targetLine": 289,
+      "reason": "Existing exported solver statistic; preserve its consumer-facing name."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 693,
+      "targetLine": 694,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 707,
+      "targetLine": 708,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 794,
+      "targetLine": 795,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 796,
+      "targetLine": 797,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 798,
+      "targetLine": 799,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 822,
+      "targetLine": 823,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 837,
+      "targetLine": 838,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 839,
+      "targetLine": 840,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 870,
+      "targetLine": 871,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 886,
+      "targetLine": 887,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 1046,
+      "targetLine": 1047,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/testing/utils/convertToCircuitJson.ts",
+      "commentLine": 1048,
+      "targetLine": 1049,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/types/srj-types.ts",
+      "commentLine": 147,
+      "targetLine": 148,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "file": "lib/utils/getRerouteSimpleRouteJson.ts",
+      "commentLine": 11,
+      "targetLine": 12,
+      "reason": "Public SRJ/Circuit JSON geometry key; renaming would change the wire schema."
+    }
+  ]
+}

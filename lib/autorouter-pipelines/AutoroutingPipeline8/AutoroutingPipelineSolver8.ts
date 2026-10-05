@@ -708,7 +708,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
+
     const routeViz = getPresuppliedTraceVisualization({ srj: srjToVisualize })
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
     const visualizations = [
@@ -840,11 +841,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   }
 
   private getMovableHighDensityRouteIndexes(routes: HighDensityRoute[]) {
-    return routes
-      .map((route, index) =>
-        this.isFixedPreplacedViaRoute(route) ? -1 : index,
-      )
-      .filter((index) => index !== -1)
+    return routes.flatMap((route, index) =>
+      this.isFixedPreplacedViaRoute(route) ? [] : [index],
+    )
   }
 
   private getMovableHighDensityRoutes(routes: HighDensityRoute[]) {

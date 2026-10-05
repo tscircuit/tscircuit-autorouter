@@ -285,6 +285,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     )
     this.stats = {
       preloadedTraceCount: this.srj.traces?.length ?? 0,
+      // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Existing exported solver statistic; preserve its consumer-facing name.
       preloadedTraceShapeCount: this.primitives.length,
       inputBoundaryCount: this.sharedEdgeSegments.length,
       outputBoundaryCount: this.sharedEdgeSegments.length,

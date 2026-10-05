@@ -222,12 +222,12 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       (cms) => {
         // Convert capacity nodes and segment points to InputNodeWithPortPoints
         const inputNodes: InputNodeWithPortPoints[] = cms.capacityNodes!.map(
-          (node) => ({
+          (node): InputNodeWithPortPoints => ({
             capacityMeshNodeId: node.capacityMeshNodeId,
             center: node.center,
             width: node.width,
             height: node.height,
-            portPoints: [] as InputPortPoint[],
+            portPoints: [],
             availableZ: node.availableZ,
             _containsTarget: node._containsTarget,
             _containsObstacle: node._containsObstacle,
@@ -291,7 +291,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
               CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
               FORCE_CENTER_FIRST: true,
             },
-          } as HyperPortPointPathingSolverParams,
+          },
         ]
       },
       {
@@ -582,7 +582,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
+
     const visualizations = [
       problemViz,
       netToPPSolver,

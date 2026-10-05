@@ -30,5 +30,12 @@
   "vendor/eslint-stylistic/padding-line-options.d.ts": "ff3d52f2b1c103bc429e030976641715caec676af4b8a0be802c0009874a0d58",
   "vendor/eslint-stylistic/padding-line-ast.ts": "ae3624502620452022691c89a30ed95d669dc961a5802dbe27c44e45a647c3d0",
   "vendor/eslint-stylistic/padding-line-between-statements.ts": "6974d23a3d2769bfcd5211f1c1fb29c966be122dd37e764c2cf84c5f639a380d",
-  "LICENSE": "10ed33bf340d6d63dc0633dfc917a346b369b6aa41fe20734aefc6a3fb75ba17"
+  "LICENSE": "10ed33bf340d6d63dc0633dfc917a346b369b6aa41fe20734aefc6a3fb75ba17",
+  "effect/index.ts": "da7851d2c89a66b31ece6a36e88a78065d12dff6f92676d119981574bcd3669f",
+  "effect/shared/tagged-values.ts": "91e65bc7ebba81eda53c049fb3a07e03982a20476546cb9b4f3cbe2e66297d1c",
+  "effect/rules/no-service-constructor-imports.ts": "c397d1132329fbe82213dda80059c86acb99f0fe243e59615f615a86069c6fb1",
+  "effect/rules/no-manual-tag-comparison.ts": "f1e7c36b878f872b3cd4482e751bede505aafc21dabf93353a16e1c305bdb0bb",
+  "effect/rules/no-manual-tagged-construction.ts": "fc264fcbd8b2809f458ac11fd33f242ccc9cfbc4b605cee85ce490c9dd1d8f44",
+  "effect/rules/prefer-effect-match.ts": "94309ecd136d12b6b5424fccb6fde222adb1c2c278fb8f198c4c115febbfa69c",
+  "effect/rules/no-manual-effect-error-tag.ts": "41434abb14bdb73760a2dfa4121b9e037f3ca741b0530c4f04d36f3a9e1041fd"
 }

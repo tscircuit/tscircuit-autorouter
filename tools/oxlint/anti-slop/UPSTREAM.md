@@ -15,8 +15,11 @@ integration and tooling type checks.
   `src/vendor/eslint-stylistic/` production files live here with identical bytes.
 - All upstream `*.test.ts` files are excluded. They are upstream's test harness,
   not this project's Bun tests; the spacing CLI test invokes pnpm.
-- `src/effect/`, installers, agent assets, upstream configuration and manifests
-  are excluded. No upstream installer was executed.
+- The seven `src/effect/` production files are also copied with identical bytes
+  for the user-approved full-rule adoption. They add five syntactic rules, not
+  an Effect runtime dependency.
+- Installers, agent assets, upstream configuration and manifests are excluded.
+  No upstream installer was executed.
 - Root `LICENSE` is the original MIT license, copyright Dillon Mulroy.
 - Nested `vendor/eslint-stylistic/LICENSE` and `UPSTREAM.md` remain verbatim,
   preserving OpenJS Foundation and ESLint Stylistic attribution and commit
@@ -27,8 +30,11 @@ integration and tooling type checks.
 ## Local policy and review
 
 No vendored production code was modified. `oxlint.anti-slop.config.ts` enables
-three custom rules and native `oxc/no-accumulating-spread` as warnings only in
-`lib`. All other generic policies are off, including the `shape` symbol ban.
+17 generic rules, all five Effect plugin rules and native
+`oxc/no-accumulating-spread` at upstream error severity, only in `lib`.
+The CI job remains advisory. Narrow source exceptions preserve public geometry
+keys; remaining diagnostics stay
+active. The initial four-warning policy is retained as dated history in the docs.
 Biome excludes this directory to preserve reviewed source and nested attribution.
 The normal package publishes only `dist`, so this tooling is not shipped to users.
 
@@ -37,7 +43,12 @@ and top-level registration were inspected, and the generic production tree was
 checked for filesystem, network, process execution and dynamic evaluation APIs.
 Imports are limited to `@oxlint/plugins` and local production modules. The copied
 code examines AST/scope/token data and reports diagnostics; it does not run the
-source being linted. The retained spacing factory constructs a disabled rule.
+source being linted. Before enabling the Effect plugin, all seven production
+files and their imports were reviewed for the same capabilities. They import
+only `@oxlint/plugins` and local AST helpers. `anti-slop/require-readable-spacing`
+is disabled because its autofix inserts blank lines throughout the source.
+Biome owns formatting. All vendored rule bytes remain unchanged. Other source
+rewrites were reviewed manually.
 This review and integration coverage do not constitute a comprehensive security
 audit or full upstream rule conformance suite. Official package metadata lists
 no lifecycle scripts for either new dependency; Oxlint uses a platform native
@@ -46,4 +57,4 @@ binding distributed by the official npm package.
 For updates, stage an explicit upstream commit separately, compare the recorded
 files and licenses, retain local policy, review changed code before executing it,
 then update this record and hashes. Do not copy upstream tests or enable newly
-added policies automatically. See [the local adoption notes](../../../docs/anti-slop.md).
+added policies automatically. See [the current adoption notes](../../../docs/anti-slop-full.md).

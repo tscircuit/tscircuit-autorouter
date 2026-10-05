@@ -147,12 +147,12 @@ export function restoreAuthoritativeTargetRegions({
   }
 
   const restorableSourceKeys = new Set(
-    [...topologyModesBySourceKey.entries()]
-      .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
-      )
-      .map(([sourceKey]) => sourceKey),
+    [...topologyModesBySourceKey.entries()].flatMap(
+      ([sourceKey, topologyModes]) =>
+        topologyModes.size === 1 && topologyModes.has("target-passthrough")
+          ? [sourceKey]
+          : [],
+    ),
   )
   if (restorableSourceKeys.size === 0) return regions
 

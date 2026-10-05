@@ -721,7 +721,7 @@ export const GenericSolverDebugger = ({
               )}
             {selectedSolver?.cacheKey && (
               <div className="border p-2 rounded mb-2 whitespace-pre">
-                Cache Key: {selectedSolver.cacheKey as string}
+                Cache Key: {selectedSolver.cacheKey}
               </div>
             )}
             {(selectedSolver as any)?.candidates !== undefined && (

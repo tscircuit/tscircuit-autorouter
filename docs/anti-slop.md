@@ -1,6 +1,11 @@
 # Initial anti-slop adoption
 
-Run `bun run lint:anti-slop` from the repository root. It runs Oxlint under Bun
+This page records the initial four-warning setup on 2026-10-02. The subsequent
+user-approved full-rule configuration and current behavior are documented in
+[Full anti-slop adoption](anti-slop-full.md). The policy, counts and verification
+below describe the initial setup rather than the current branch.
+
+The initial `bun run lint:anti-slop` command runs from the repository root under Bun
 explicitly (`bun --bun`), so TypeScript config/plugin loading does not depend on
 the machine's Node version. This is a separate advisory command alongside the
 existing Biome formatter, Bun tests, snapshots, build and type check.

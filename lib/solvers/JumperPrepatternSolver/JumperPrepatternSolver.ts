@@ -201,12 +201,12 @@ export class JumperPrepatternSolver extends BaseSolver {
       (solver) => {
         // Build input nodes with port points from the segment solver
         const inputNodes: InputNodeWithPortPoints[] = solver.capacityNodes.map(
-          (node) => ({
+          (node): InputNodeWithPortPoints => ({
             capacityMeshNodeId: node.capacityMeshNodeId,
             center: node.center,
             width: node.width,
             height: node.height,
-            portPoints: [] as InputPortPoint[],
+            portPoints: [],
             availableZ: node.availableZ,
             _containsTarget: node._containsTarget,
             _containsObstacle: node._containsObstacle,
@@ -267,7 +267,7 @@ export class JumperPrepatternSolver extends BaseSolver {
               RANDOM_RIP_FRACTION: 0.1,
               MAX_RIPS: 1000,
             },
-          } as HyperPortPointPathingSolverParams,
+          },
         ]
       },
       {

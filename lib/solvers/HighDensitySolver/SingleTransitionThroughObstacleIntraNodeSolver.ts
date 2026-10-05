@@ -122,33 +122,32 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     }
 
     this.solvedRoutes.push(
-      ...this.routes.map((route, routeIndex) => ({
-        connectionName: route.connectionName,
-        rootConnectionName: route.rootConnectionName,
-        regionId: this.nodeWithPortPoints.capacityMeshNodeId,
-        route: [
-          {
-            x: route.A.x,
-            y: route.A.y,
-            z: route.A.z!,
-            ...(route.A.z !== route.B.z
-              ? {
-                  toNextSegmentType: "through_obstacle" as const,
-                  ...(containingObstacles[routeIndex]!.circuitJsonMetadata
-                    ? {
-                        toNextSegmentCircuitJsonMetadata:
-                          containingObstacles[routeIndex]!.circuitJsonMetadata,
-                      }
-                    : {}),
-                }
-              : {}),
-          },
-          { x: route.B.x, y: route.B.y, z: route.B.z! },
-        ],
-        traceThickness: this.traceThickness,
-        viaDiameter: this.viaDiameter,
-        vias: [],
-      })),
+      ...this.routes.map((route, routeIndex): HighDensityIntraNodeRoute => {
+        const start: HighDensityIntraNodeRoute["route"][number] = {
+          x: route.A.x,
+          y: route.A.y,
+          z: route.A.z!,
+        }
+
+        if (route.A.z !== route.B.z) {
+          start.toNextSegmentType = "through_obstacle"
+
+          if (containingObstacles[routeIndex]!.circuitJsonMetadata) {
+            start.toNextSegmentCircuitJsonMetadata =
+              containingObstacles[routeIndex]!.circuitJsonMetadata
+          }
+        }
+
+        return {
+          connectionName: route.connectionName,
+          rootConnectionName: route.rootConnectionName,
+          regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+          route: [start, { x: route.B.x, y: route.B.y, z: route.B.z! }],
+          traceThickness: this.traceThickness,
+          viaDiameter: this.viaDiameter,
+          vias: [],
+        }
+      }),
     )
     this.solved = true
   }

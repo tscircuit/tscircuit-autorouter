@@ -5,9 +5,6 @@ import {
   UnravelTransitionViaIssue,
   SegmentPoint,
   SegmentPointId,
-  UnravelSameLayerCrossingIssue,
-  UnravelSingleTransitionCrossingIssue,
-  UnravelDoubleTransitionCrossingIssue,
 } from "./types"
 import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
@@ -84,41 +81,49 @@ export const getIssuesInSection = (
         const isSameLayer = A.z === B.z && C.z === D.z && A.z === C.z
         if (areCrossing) {
           if (isSameLayer) {
-            issues.push({
-              type: "same_layer_crossing",
+            const issue = {
+              type: "same_layer_crossing" as const,
               segmentPoints: [pair1, pair2],
               capacityMeshNodeId: nodeId,
               crossingLine1: pair1,
               crossingLine2: pair2,
               probabilityOfFailure: 0,
-            } as UnravelSameLayerCrossingIssue)
+            }
+
+            issues.push(issue)
           } else if (A.z === B.z && C.z !== D.z) {
-            issues.push({
-              type: "single_transition_crossing",
+            const issue = {
+              type: "single_transition_crossing" as const,
               segmentPoints: [pair1, pair2],
               capacityMeshNodeId: nodeId,
               sameLayerCrossingLine: pair1,
               transitionCrossingLine: pair2,
               probabilityOfFailure: 0,
-            } as UnravelSingleTransitionCrossingIssue)
+            }
+
+            issues.push(issue)
           } else if (A.z !== B.z && C.z === D.z) {
-            issues.push({
-              type: "single_transition_crossing",
+            const issue = {
+              type: "single_transition_crossing" as const,
               segmentPoints: [pair1, pair2],
               capacityMeshNodeId: nodeId,
               sameLayerCrossingLine: pair2,
               transitionCrossingLine: pair1,
               probabilityOfFailure: 0,
-            } as UnravelSingleTransitionCrossingIssue)
+            }
+
+            issues.push(issue)
           } else if (A.z !== B.z && C.z !== D.z) {
-            issues.push({
-              type: "double_transition_crossing",
+            const issue = {
+              type: "double_transition_crossing" as const,
               segmentPoints: [pair1, pair2],
               capacityMeshNodeId: nodeId,
               crossingLine1: pair1,
               crossingLine2: pair2,
               probabilityOfFailure: 0,
-            } as UnravelDoubleTransitionCrossingIssue)
+            }
+
+            issues.push(issue)
           }
         }
       }

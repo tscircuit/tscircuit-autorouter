@@ -386,7 +386,7 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
     return convertObstacleToOldFormat({
       ...obstacle,
       type: "rect",
-    } as Obstacle)
+    })
   }
 
   const rotationDegrees = obstacle.ccwRotationDegrees

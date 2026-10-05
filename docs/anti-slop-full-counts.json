@@ -1,0 +1,197 @@
+{
+  "recordedAtUtc": "2026-10-05",
+  "upstreamCommit": "c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b",
+  "oxlint": "1.86.0",
+  "plugins": "1.86.0",
+  "bun": "1.3.14",
+  "command": "bun run lint:anti-slop --format json",
+  "sourceBefore": "b8824d359f1c0afba8d3c989d0724bd5d550d3d5",
+  "sourceAfter": "e62f2bbc8716ae75dafce7ec017ca7d90ced7cb0",
+  "configSha256": "3f651b8c555e16c5b5290b3a6cb2c0434d3093708cca1022225b2697fc82a142",
+  "severity": "error",
+  "fileCount": 453,
+  "ruleCount": 23,
+  "beforeTotal": 982,
+  "afterTotal": 851,
+  "lintExitCode": 1,
+  "rules": [
+    {
+      "rule": "anti-slop/no-array-filter-map",
+      "before": 14,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-reduce-accumulator-copy",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-chained-type-assertions",
+      "before": 7,
+      "after": 7,
+      "firstPassAfter": 7,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-conditional-empty-object-spread",
+      "before": 59,
+      "after": 43,
+      "firstPassAfter": 57,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-known-value-widening",
+      "before": 95,
+      "after": 95,
+      "firstPassAfter": 95,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-module-mocking",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-object-parameters",
+      "before": 1,
+      "after": 1,
+      "firstPassAfter": 1,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-reflect-apply",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-reflect-get",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-runtime-typeof",
+      "before": 254,
+      "after": 254,
+      "firstPassAfter": 254,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-unsafe-dictionary-type",
+      "before": 62,
+      "after": 62,
+      "firstPassAfter": 62,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-shape-in-symbol-names",
+      "before": 15,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-unknown-parameters",
+      "before": 24,
+      "after": 24,
+      "firstPassAfter": 24,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-unknown-returns",
+      "before": 4,
+      "after": 4,
+      "firstPassAfter": 4,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-unknown-type-aliases",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/no-widen-then-assert",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop/require-readable-spacing",
+      "before": null,
+      "after": null,
+      "firstPassAfter": 0,
+      "enabled": false,
+      "historicalBefore": 6976
+    },
+    {
+      "rule": "anti-slop/require-safety-comment-for-type-assertion",
+      "before": 442,
+      "after": 361,
+      "firstPassAfter": 425,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop-effect/no-manual-effect-error-tag",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop-effect/no-manual-tag-comparison",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop-effect/no-manual-tagged-construction",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop-effect/no-service-constructor-imports",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "anti-slop-effect/prefer-effect-match",
+      "before": 5,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    },
+    {
+      "rule": "oxc/no-accumulating-spread",
+      "before": 0,
+      "after": 0,
+      "firstPassAfter": 0,
+      "enabled": true
+    }
+  ],
+  "continuationFrom": "fc68d2bf85684780c656decafb9100d57907af2d",
+  "firstPassSourceAfter": "abd54c96c94e318553e4283df762368bf2acdd3a",
+  "firstPassAfterTotal": 929,
+  "availableRuleCount": 24,
+  "historical24RuleBaselineTotal": 7958,
+  "disabledRules": [
+    "anti-slop/require-readable-spacing"
+  ],
+  "baselineExplanation": "The comparable active-policy baseline excludes the 6,976 historical spacing diagnostics; all 23 retained rules use error severity."
+}

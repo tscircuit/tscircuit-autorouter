@@ -1458,7 +1458,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
   }
 
   _step() {
-    let currentNode = this.candidates.dequeue() as JumperNode | null
+    let currentNode = this.candidates.dequeue()
     let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
 
     while (
@@ -1466,7 +1466,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
       currentNodeKey &&
       this.exploredNodes.has(currentNodeKey)
     ) {
-      currentNode = this.candidates.dequeue() as JumperNode | null
+      currentNode = this.candidates.dequeue()
       currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
     }
 
@@ -1753,7 +1753,7 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
     // Visualize top 5 candidates with gray points
     const topCandidates = this.candidates.getTopN(5)
     for (let i = 0; i < topCandidates.length; i++) {
-      const candidate = topCandidates[i] as JumperNode
+      const candidate = topCandidates[i]
       const isJumperNode = candidate.isJumperExit ?? false
       const gComp = candidate.gComponents
       const hComp = candidate.hComponents

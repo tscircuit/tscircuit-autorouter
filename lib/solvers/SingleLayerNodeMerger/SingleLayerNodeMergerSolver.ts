@@ -350,15 +350,16 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    const graphics = {
-      circles: [],
-      lines: [],
-      points: [],
-      rects: [],
-      coordinateSystem: "cartesian",
-      title: "Same Layer Node Merger",
-    } as GraphicsObject &
-      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles">
+    const graphics: GraphicsObject &
+      Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
+      {
+        circles: [],
+        lines: [],
+        points: [],
+        rects: [],
+        coordinateSystem: "cartesian",
+        title: "Same Layer Node Merger",
+      }
 
     for (const node of this.newNodes) {
       graphics.rects.push(createRectFromCapacityNode(node))

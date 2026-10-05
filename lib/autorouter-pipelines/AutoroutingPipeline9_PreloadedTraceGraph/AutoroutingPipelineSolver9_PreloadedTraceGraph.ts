@@ -680,14 +680,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "highDensityStitchSolver",
       MultipleHighDensityRouteStitchSolver3,
-      (cms) => [
+      (
+        cms,
+      ): ConstructorParameters<
+        typeof MultipleHighDensityRouteStitchSolver3
+      > => [
         {
           connections: [
             ...cms.srjWithPointPairs!.connections,
             ...cms
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
-          ] as SimpleRouteConnection[],
+          ],
           hdRoutes:
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
@@ -1310,7 +1314,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    }
+
     const visualizationOptions = {
       traceColorMode: this.visualizationTraceColorMode,
     } as const

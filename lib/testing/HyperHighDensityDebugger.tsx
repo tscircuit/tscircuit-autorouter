@@ -121,17 +121,17 @@ export const HyperHighDensityDebugger = ({
       ? "failed"
       : "running"
 
+  let overallStatusClass = "border-amber-300 bg-amber-50"
+
+  if (overallStatus === "solved") {
+    overallStatusClass = "border-green-300 bg-green-50"
+  } else if (overallStatus === "failed") {
+    overallStatusClass = "border-red-300 bg-red-50"
+  }
+
   return (
     <div className="p-1">
-      <div
-        className={`mb-2 rounded border p-2 text-sm ${
-          overallStatus === "solved"
-            ? "border-green-300 bg-green-50"
-            : overallStatus === "failed"
-              ? "border-red-300 bg-red-50"
-              : "border-amber-300 bg-amber-50"
-        }`}
-      >
+      <div className={`mb-2 rounded border p-2 text-sm ${overallStatusClass}`}>
         <div>
           Overall hyper solver status: <b>{overallStatus}</b>
         </div>

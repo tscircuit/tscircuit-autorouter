@@ -695,7 +695,7 @@ const buildInputNodesWithPortPoints = (
           connectionNodeIds: [
             serializedPort.region1Id,
             serializedPort.region2Id,
-          ] as [CapacityMeshNodeId, CapacityMeshNodeId],
+          ],
           distToCentermostPortOnZ: Number(
             portMetadata.distToCentermostPortOnZ ?? 0,
           ),

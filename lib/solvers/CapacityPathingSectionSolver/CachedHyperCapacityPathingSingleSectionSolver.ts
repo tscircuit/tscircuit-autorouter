@@ -156,7 +156,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
     >()
 
     nodeOrdering.forEach((realNodeId, i) => {
-      const cacheNodeId = `node${i}` as CacheSpaceNodeId
+      const cacheNodeId: CacheSpaceNodeId = `node${i}`
       realToCacheSpaceNodeIdMap.set(realNodeId, cacheNodeId)
       cacheSpaceToRealNodeIdMap.set(cacheNodeId, realNodeId)
     })
@@ -166,9 +166,7 @@ export class CachedHyperCapacityPathingSingleSectionSolver
       const cacheNodeId = realToCacheSpaceNodeIdMap.get(realNodeId)!
       const node = this.constructorParams.nodeMap!.get(realNodeId)!
       const capacity = getTunedTotalCapacity1(node)
-      node_capacity_map[cacheNodeId] = roundCapacity(capacity).toFixed(
-        1,
-      ) as CacheCapacity
+      node_capacity_map[cacheNodeId] = roundCapacity(capacity).toFixed(1)
     }
 
     const node_edge_map_set = new Set<string>()

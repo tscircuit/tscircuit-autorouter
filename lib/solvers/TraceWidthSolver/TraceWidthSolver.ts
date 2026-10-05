@@ -439,7 +439,7 @@ export class TraceWidthSolver extends BaseSolver {
       requiredClearance,
     )
     for (const { conflictingRoute } of nearbyRoutes) {
-      const route = conflictingRoute as HighDensityRoute
+      const route: HighDensityRoute = conflictingRoute
       const otherRoot = route.rootConnectionName ?? route.connectionName
       if (otherRoot === rootConnectionName) continue
       if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue

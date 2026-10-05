@@ -1141,7 +1141,7 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
           const savedAssignedPortPoints = new Map(this.assignedPortPoints)
           const savedNodeAssignedPortPoints = new Map(
             Array.from(this.nodeAssignedPortPoints.entries()).map(
-              ([k, v]) => [k, [...v]] as [string, PortPoint[]],
+              ([k, v]): [string, PortPoint[]] => [k, [...v]],
             ),
           )
 

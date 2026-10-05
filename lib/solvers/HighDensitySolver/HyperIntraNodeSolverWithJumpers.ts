@@ -155,9 +155,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
     if (solver.solver instanceof JumperPrepatternSolver) {
       this.solvedRoutes = solver.solver.getOutput()
     } else {
-      this.solvedRoutes = (
-        solver.solver as IntraNodeSolverWithJumpers
-      ).solvedRoutes
+      this.solvedRoutes = solver.solver.solvedRoutes
     }
   }
 

@@ -239,9 +239,12 @@ export const createRegionalFallbackProblem = (
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
-  const localSlices = fixedRoutes
-    .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
-    .filter((slice): slice is FixedRouteSlice => slice !== null)
+  const localSlices = fixedRoutes.flatMap((fixedRoute) => {
+    const slice = getFixedRouteSlice(fixedRoute, node)
+
+    return slice === null ? [] : [slice]
+  })
+
   const slices = localSlices
     .filter(
       (slice) =>
@@ -257,9 +260,11 @@ export const createRegionalFallbackProblem = (
         a.sourceRoute.preloadedRouteIndex - b.sourceRoute.preloadedRouteIndex,
     )
   const movableFixedRoutes = new Set(slices.map((slice) => slice.sourceRoute))
-  const fixedObstacleRoutes = localSlices
-    .map((slice) => slice.sourceRoute)
-    .filter((route) => !movableFixedRoutes.has(route))
+
+  const fixedObstacleRoutes = localSlices.flatMap((slice) =>
+    movableFixedRoutes.has(slice.sourceRoute) ? [] : [slice.sourceRoute],
+  )
+
   const sections: FixedRouteSection[] = []
 
   for (let sliceIndex = 0; sliceIndex < slices.length; sliceIndex++) {

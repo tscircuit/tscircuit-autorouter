@@ -1168,9 +1168,9 @@ export class PortPointPathingSolver extends BaseSolver {
       }
     }
 
-    const assignedPortPointIds = assignedPortPoints
-      .map((portPoint) => portPoint.portPointId)
-      .filter((portPointId): portPointId is string => Boolean(portPointId))
+    const assignedPortPointIds = assignedPortPoints.flatMap((portPoint) =>
+      portPoint.portPointId ? [portPoint.portPointId] : [],
+    )
 
     let assignedPortPointIdIndex = 0
     for (const portPoint of assignedPortPoints) {

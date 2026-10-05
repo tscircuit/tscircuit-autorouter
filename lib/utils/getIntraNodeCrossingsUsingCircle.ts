@@ -76,8 +76,8 @@ function countChordCrossings(chords: Array<[number, number]>): number {
   if (chords.length < 2) return 0
 
   // Normalize each chord so first endpoint is smaller
-  const normalizedChords = chords.map(([t1, t2]) =>
-    t1 < t2 ? ([t1, t2] as [number, number]) : ([t2, t1] as [number, number]),
+  const normalizedChords = chords.map(([t1, t2]): [number, number] =>
+    t1 < t2 ? [t1, t2] : [t2, t1],
   )
 
   let crossings = 0

@@ -146,12 +146,9 @@ const attachTerminalViasToSimplifiedRoute = ({
     return route
   }
 
-  const linearRoute = route.filter(
-    (segment) => segment.route_type !== "jumper",
-  ) as SimplifiedPcbTraces[number]["route"]
-  const jumpers = route.filter(
-    (segment) => segment.route_type === "jumper",
-  ) as SimplifiedPcbTraces[number]["route"]
+  const linearRoute = route.filter((segment) => segment.route_type !== "jumper")
+
+  const jumpers = route.filter((segment) => segment.route_type === "jumper")
 
   if (linearRoute.length === 0) {
     return route
@@ -183,7 +180,10 @@ const attachTerminalViasToSimplifiedRoute = ({
   const endTraceThickness = endPoint.traceThickness ?? hdRoute.traceThickness
 
   if (startTerminalViaPoint?.terminalVia) {
-    prependSegments.push({
+    const via: Extract<
+      SimplifiedPcbTraces[number]["route"][number],
+      { route_type: "via" }
+    > = {
       route_type: "via",
       x: startTerminalViaPoint.x,
       y: startTerminalViaPoint.y,
@@ -191,10 +191,13 @@ const attachTerminalViasToSimplifiedRoute = ({
       to_layer: startTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
-      ...(defaultViaHoleDiameter !== undefined
-        ? { via_hole_diameter: defaultViaHoleDiameter }
-        : {}),
-    })
+    }
+
+    if (defaultViaHoleDiameter !== undefined) {
+      via.via_hole_diameter = defaultViaHoleDiameter
+    }
+
+    prependSegments.push(via)
 
     if (
       !(
@@ -230,7 +233,10 @@ const attachTerminalViasToSimplifiedRoute = ({
       })
     }
 
-    appendSegments.push({
+    const via: Extract<
+      SimplifiedPcbTraces[number]["route"][number],
+      { route_type: "via" }
+    > = {
       route_type: "via",
       x: endTerminalViaPoint.x,
       y: endTerminalViaPoint.y,
@@ -238,10 +244,13 @@ const attachTerminalViasToSimplifiedRoute = ({
       to_layer: endTerminalViaPoint.terminalVia.toLayer,
       via_diameter:
         endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
-      ...(defaultViaHoleDiameter !== undefined
-        ? { via_hole_diameter: defaultViaHoleDiameter }
-        : {}),
-    })
+    }
+
+    if (defaultViaHoleDiameter !== undefined) {
+      via.via_hole_diameter = defaultViaHoleDiameter
+    }
+
+    appendSegments.push(via)
   }
 
   return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers]
@@ -283,20 +292,24 @@ export const convertHdRouteToSimplifiedRoute = (
         previousPoint &&
         isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
       ) {
-        result.push({
+        const throughObstacle: Extract<
+          SimplifiedPcbTraces[number]["route"][number],
+          { route_type: "through_obstacle" }
+        > = {
           route_type: "through_obstacle",
           start: { x: previousPoint.x, y: previousPoint.y },
           end: { x: point.x, y: point.y },
           from_layer: layerName,
           to_layer: nextLayerName,
           width: previousPoint.traceThickness ?? hdRoute.traceThickness,
-          ...(previousPoint.toNextSegmentCircuitJsonMetadata
-            ? {
-                circuitJsonMetadata:
-                  previousPoint.toNextSegmentCircuitJsonMetadata,
-              }
-            : {}),
-        })
+        }
+
+        if (previousPoint.toNextSegmentCircuitJsonMetadata) {
+          throughObstacle.circuitJsonMetadata =
+            previousPoint.toNextSegmentCircuitJsonMetadata
+        }
+
+        result.push(throughObstacle)
       } else {
         // Check if a via exists at this position
         const viaExists = hdRoute.vias.some(
@@ -307,17 +320,23 @@ export const convertHdRouteToSimplifiedRoute = (
 
         // Add a via if one exists
         if (viaExists) {
-          result.push({
+          const via: Extract<
+            SimplifiedPcbTraces[number]["route"][number],
+            { route_type: "via" }
+          > = {
             route_type: "via",
             x: point.x,
             y: point.y,
             from_layer: layerName,
             to_layer: nextLayerName,
             via_diameter: hdRoute.viaDiameter,
-            ...(opts.defaultViaHoleDiameter !== undefined
-              ? { via_hole_diameter: opts.defaultViaHoleDiameter }
-              : {}),
-          })
+          }
+
+          if (opts.defaultViaHoleDiameter !== undefined) {
+            via.via_hole_diameter = opts.defaultViaHoleDiameter
+          }
+
+          result.push(via)
         }
       }
 
