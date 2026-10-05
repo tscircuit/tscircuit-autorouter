@@ -19,11 +19,9 @@ const countErrorsByType = (
   result: AutoroutingDrcResult,
 ): Record<string, number> => {
   const counts: Record<string, number> = {}
-
   for (const error of result.errors) {
     counts[error.type] = (counts[error.type] ?? 0) + 1
   }
-
   return counts
 }
 
@@ -61,17 +59,14 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
       )
       this.phase = "output"
       this.progress = 1 / 3
-
       return
     }
-
     if (this.phase === "output") {
       this.outputErrorCounts = this.evaluateErrorCounts(
         this.inputProblem.outputSrj,
       )
       this.phase = "compare"
       this.progress = 2 / 3
-
       return
     }
 
@@ -88,7 +83,6 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
     const result = this.drcEngine.evaluate(
       (srj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
-
     return countErrorsByType(result)
   }
 
@@ -97,13 +91,11 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
       ...Object.keys(this.baselineErrorCounts),
       ...Object.keys(this.outputErrorCounts),
     ])
-
     const regressions = [...errorTypes].filter(
       (type) =>
         (this.outputErrorCounts[type] ?? 0) >
         (this.baselineErrorCounts[type] ?? 0),
     )
-
     if (regressions.length === 0) return
 
     const details = regressions
@@ -112,7 +104,6 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
           `${type}: ${this.baselineErrorCounts[type] ?? 0} -> ${this.outputErrorCounts[type] ?? 0}`,
       )
       .join(", ")
-
     throw new Error(
       `Pipeline 11 simplification introduced DRC errors (${details})`,
     )
@@ -128,7 +119,6 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get Pipeline 11 output before DRC validation")
     }
-
     return structuredClone(this.inputProblem.outputSrj)
   }
 }

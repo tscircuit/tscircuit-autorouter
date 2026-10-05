@@ -11,7 +11,6 @@ export const extractCapacityMeshNodeIdFromObjectLabel = (
 
   for (const pattern of NODE_ID_PATTERNS) {
     const match = label.match(pattern)
-
     if (match?.[1]) {
       return match[1]
     }

@@ -48,7 +48,6 @@ export function visualizePortPoints(
     const isAssigned =
       portPoint.connectionName !== null &&
       portPoint.connectionName !== undefined
-
     const color = isAssigned
       ? (colorMap[portPoint.connectionName!] ?? "blue")
       : unassignedColor
@@ -58,7 +57,6 @@ export function visualizePortPoints(
       : String(portPoint.z)
 
     let label: string
-
     if (isAssigned) {
       label = includeZInLabel
         ? `${portPoint.id}\n${portPoint.connectionName}\n${zValue}`

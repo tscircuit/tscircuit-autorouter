@@ -123,7 +123,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     const initialSectionNodeIds = new Set(
       this.sectionNodes.map((n) => n.capacityMeshNodeId),
     )
-
     this.currentSectionScore = computeSectionScore({
       totalNodeCapacityMap: this.totalNodeCapacityMap,
       usedNodeCapacityMap: this.usedNodeCapacityMap, // Reflects initial capacities
@@ -160,10 +159,8 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     const MIN_PENALTY = 0.05
 
     const totalCapacity = this.getTotalCapacity(node)
-
     const usedCapacity =
       this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-
     const remainingCapacity = totalCapacity - usedCapacity - 1
 
     if (remainingCapacity > 0) {
@@ -177,7 +174,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     // )
 
     let singleLayerUsagePenaltyFactor = 1
-
     if (node.availableZ.length === 1) {
       singleLayerUsagePenaltyFactor = 10
     }
@@ -192,7 +188,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   getDistanceBetweenNodes(A: CapacityMeshNode, B: CapacityMeshNode): number {
     const dx = A.center.x - B.center.x
     const dy = A.center.y - B.center.y
-
     return Math.sqrt(dx ** 2 + dy ** 2)
   }
 
@@ -226,10 +221,8 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   getBacktrackedPath(candidate: Candidate): CapacityMeshNode[] {
     const path: CapacityMeshNode[] = []
     let currentCandidate: Candidate | null = candidate
-
     while (currentCandidate) {
       path.push(currentCandidate.node)
-
       // Ensure the node exists in our section map before adding
       if (this.nodeMap.has(currentCandidate.node.capacityMeshNodeId)) {
         currentCandidate = currentCandidate.prevCandidate
@@ -239,7 +232,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
         break
       }
     }
-
     return path.reverse() // Path is built end-to-start, reverse it
   }
 
@@ -308,7 +300,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
             totalCapacity,
             nodeInSection, // Use the node object from the section's map
           )
-
         this.currentSectionScore -= oldNodeScoreContribution
 
         // Increment the used capacity for the node
@@ -322,7 +313,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
             totalCapacity,
             nodeInSection, // Use the node object from the section's map
           )
-
         this.currentSectionScore += newNodeScoreContribution
       }
     }
@@ -335,10 +325,8 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   _step() {
     const currentTerminal =
       this.sectionConnectionTerminals[this.currentConnectionIndex]
-
     if (!currentTerminal) {
       this.solved = true // All connections processed
-
       return
     }
 
@@ -353,7 +341,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
       this.currentConnectionIndex++
       this.candidates = null
       this.visitedNodes = null
-
       // Consider setting this.failed = true if any connection fails critically
       return
     }
@@ -367,13 +354,11 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 
     if (candidates.length === 0) {
       this._handleCandidatesExhausted(currentTerminal)
-
       return
     }
 
     candidates.sort((a, b) => a.f - b.f)
     const currentCandidate = candidates.shift()! // Not null due to check above
-
     if (candidates.length > this.MAX_CANDIDATES_IN_MEMORY) {
       candidates.splice(
         this.MAX_CANDIDATES_IN_MEMORY,
@@ -390,13 +375,11 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
       currentCandidate.node.capacityMeshNodeId === endNode.capacityMeshNodeId
     ) {
       this._handleGoalReached(currentCandidate, currentTerminal, endNode)
-
       return
     }
 
     // Explore neighbors
     const neighborNodes = this.getNeighboringNodes(currentCandidate.node)
-
     for (const neighborNode of neighborNodes) {
       // Skip if already visited
       if (this.queuedNodes?.has(neighborNode.capacityMeshNodeId)) {
@@ -416,10 +399,8 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
       if (neighborNode._containsObstacle) {
         const isStartTerminal =
           neighborNode.capacityMeshNodeId === currentTerminal.startNodeId
-
         const isEndTerminal =
           neighborNode.capacityMeshNodeId === currentTerminal.endNodeId
-
         if (!isStartTerminal && !isEndTerminal) {
           continue // Skip this neighbor as it's an obstacle and not a terminal
         }
@@ -444,7 +425,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
         g,
         h,
       }
-
       this.queuedNodes?.add(neighborNode.capacityMeshNodeId)
       candidates!.push(newCandidate)
       // Do NOT add to visitedNodes here. Add only when a node is popped from candidates.
@@ -457,7 +437,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 
   computeProgress(): number {
     const totalConnections = this.sectionConnectionTerminals.length
-
     if (totalConnections === 0) return 1 // No work to do
 
     // Base progress based on completed connections
@@ -594,19 +573,14 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
       const rectIndex = baseGraphics.rects!.findIndex((r) =>
         r.label?.includes(node.capacityMeshNodeId),
       )
-
       if (rectIndex !== -1) {
         const costs = this.debug_lastNodeCostMap.get(node.capacityMeshNodeId)
-
         const usedCapacity =
           this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-
         const totalCapacity = this.getTotalCapacity(node)
-
         const capacityLabel = `${usedCapacity.toFixed(1)}/${totalCapacity.toFixed(
           1,
         )}`
-
         const costLabel = costs
           ? `f:${costs.f.toFixed(1)} g:${costs.g.toFixed(
               1,
@@ -636,14 +610,12 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 
       const currentTerminal =
         this.sectionConnectionTerminals[this.currentConnectionIndex]
-
       const connectionName = currentTerminal?.connectionName ?? "unknown"
       const connectionColor = this.colorMap[connectionName] ?? "purple" // Default color
 
       topCandidates.forEach((candidate, index) => {
         const opacity = 0.8 * (1 - index / 5) // Decreasing opacity
         const path = this.getBacktrackedPath(candidate)
-
         if (path.length > 0) {
           baseGraphics.lines!.push({
             points: path.map(({ center: { x, y } }) => ({ x, y })),
@@ -661,7 +633,6 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
 /* @deprecated use CapacityPathingSingleSectionPathingSolver */
 export const CapacityPathingSingleSectionPathingSolver =
   CapacityPathingSingleSectionSolver
-
 export type CapacityPathingSingleSectionPathingSolver = InstanceType<
   typeof CapacityPathingSingleSectionSolver
 >

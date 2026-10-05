@@ -78,12 +78,10 @@ export class CapacityMeshNodeSolver extends BaseSolver {
       x: (srj.bounds.minX + srj.bounds.maxX) / 2,
       y: (srj.bounds.minY + srj.bounds.maxY) / 2,
     }
-
     const boundsSize = {
       width: srj.bounds.maxX - srj.bounds.minX,
       height: srj.bounds.maxY - srj.bounds.minY,
     }
-
     const maxWidthHeight = Math.max(boundsSize.width, boundsSize.height)
     this.unfinishedNodes = [
       {
@@ -102,19 +100,16 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     this.finishedNodes = []
     this.nodeToXYOverlappingObstaclesMap = new Map()
     this.obstacleZLayersByObstacle = new WeakMap()
-
     const normalizedObstacles = createObjectsWithZLayers(
       this.srj.obstacles,
       this.layerCount,
     )
-
     for (const [index, obstacle] of this.srj.obstacles.entries()) {
       this.obstacleZLayersByObstacle.set(
         obstacle,
         normalizedObstacles[index].__zLayers,
       )
     }
-
     this.obstacleTree = new ObstacleSpatialHashIndex(
       "flatbush",
       this.srj.obstacles,
@@ -125,18 +120,14 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
   computeTargets(): Target[] {
     const targets: Target[] = []
-
     for (const conn of this.srj.connections) {
       for (const ptc of conn.pointsToConnect) {
         const ptcLayers = getConnectionPointLayers(ptc)
-
         const obstacles = this.obstacleTree
           .searchArea(ptc.x, ptc.y, 0.01, 0.01)
           .filter((o) => {
             const obstacleZLayers = this.getObstacleZLayers(o)
-
             if (!obstacleZLayers || obstacleZLayers.length === 0) return false
-
             return obstacleZLayers.some((z) =>
               ptcLayers.some(
                 (layer) => z === mapLayerNameToZ(layer, this.layerCount),
@@ -155,7 +146,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
           maxX: ptc.x + 0.005,
           maxY: ptc.y + 0.005,
         }
-
         if (obstacles.length > 0) {
           bounds = {
             minX: Math.min(...obstacles.map((o) => o.center.x - o.width / 2)),
@@ -164,7 +154,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
             maxY: Math.max(...obstacles.map((o) => o.center.y + o.height / 2)),
           }
         }
-
         const target = {
           ...ptc,
           connectionName: conn.name,
@@ -173,18 +162,15 @@ export class CapacityMeshNodeSolver extends BaseSolver {
           ),
           bounds,
         }
-
         targets.push(target)
       }
     }
-
     return targets
   }
 
   protected getNodeBounds(node: CapacityMeshNode) {
     const halfWidth = node.width / 2
     const halfHeight = node.height / 2
-
     return {
       minX: node.center.x - halfWidth,
       maxX: node.center.x + halfWidth,
@@ -220,7 +206,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
             node.width,
             node.height,
           )
-
     for (const target of nearbyTargets) {
       if (
         // Check if the node and target bounds overlap
@@ -233,7 +218,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         return target
       }
     }
-
     return null
   }
 
@@ -241,11 +225,9 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     const cachedObstacles = this.nodeToXYOverlappingObstaclesMap.get(
       node.capacityMeshNodeId,
     )
-
     if (cachedObstacles) {
       return cachedObstacles
     }
-
     const overlappingObstacles: Obstacle[] = []
 
     const nodeBounds = this.getNodeBounds(node)
@@ -257,7 +239,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     const obstacles = node._parent
       ? this.getXYOverlappingObstacles(node._parent)
       : this.srj.obstacles
-
     for (const obstacle of obstacles) {
       const obsLeft = obstacle.center.x - obstacle.width / 2
       const obsRight = obstacle.center.x + obstacle.width / 2
@@ -311,7 +292,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     // For each obstacle, check if it has any overlap in the z-axis
     const xyzOverlappingObstacles: Obstacle[] = []
-
     for (const obstacle of xyOverlappingObstacles) {
       if (
         node.availableZ.some((z) =>
@@ -340,7 +320,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     if (this.outlinePolygon) {
       const nodeRect = this.getNodeRect(node)
-
       if (!isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon)) {
         return true
       }
@@ -355,7 +334,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     ) {
       return true
     }
-
     return false
   }
 
@@ -369,7 +347,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     if (this.outlinePolygon) {
       const nodeRect = this.getNodeRect(node)
-
       if (!isRectOverlappingPolygon(nodeRect, this.outlinePolygon)) {
         return true
       }
@@ -440,7 +417,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         _depth: (parent._depth ?? 0) + 1,
         _parent: parent,
       }
-
       childNode._containsObstacle = this.doesNodeOverlapObstacle(childNode)
 
       const target = this.getTargetIfNodeContainsTarget(childNode)
@@ -455,7 +431,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         childNode._completelyInsideObstacle =
           this.isNodeCompletelyInsideObstacle(childNode)
       }
-
       if (childNode._completelyInsideObstacle && !childNode._containsTarget)
         continue
       childNodes.push(childNode)
@@ -466,20 +441,15 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
   shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
     if (node._depth! >= this.MAX_DEPTH) return false
-
     if (node._containsTarget) return true
-
     if (node._containsObstacle && !node._completelyInsideObstacle) return true
-
     return false
   }
 
   _step() {
     const nextNode = this.unfinishedNodes.pop()
-
     if (!nextNode) {
       this.solved = true
-
       return
     }
 
@@ -490,7 +460,6 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     for (const newNode of newNodes) {
       const shouldBeSubdivided = this.shouldNodeBeXYSubdivided(newNode)
-
       if (shouldBeSubdivided) {
         unfinishedNewNodes.push(newNode)
       } else if (!shouldBeSubdivided && !newNode._containsObstacle) {
@@ -569,10 +538,8 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
     // Draw mesh nodes (both finished and unfinished)
     const allNodes = [...this.finishedNodes, ...this.unfinishedNodes]
-
     for (const node of allNodes) {
       const lowestZ = Math.min(...node.availableZ)
-
       const isNextToBeProcessed =
         this.unfinishedNodes.length > 0 &&
         node === this.unfinishedNodes[this.unfinishedNodes.length - 1]
@@ -602,13 +569,11 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         ].join("\n"),
       })
     }
-
     graphics.rects!.sort((a, b) => a.center.y - b.center.y)
 
     // Draw connection points (each connection gets a unique color).
     this.srj.connections.forEach((connection, index) => {
       const color = COLORS[index % COLORS.length]
-
       for (const pt of connection.pointsToConnect) {
         const layers = getConnectionPointLayers(pt)
         graphics.points!.push({

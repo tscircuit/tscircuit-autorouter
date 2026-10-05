@@ -16,15 +16,12 @@ const normalizePreparedTraceIds = (
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string => {
   let normalized = value
-
   const aliases = [...originalTraceIdByPreparedTraceId].sort(
     ([left], [right]) => right.length - left.length,
   )
-
   for (const [preparedTraceId, originalTraceId] of aliases) {
     normalized = normalized.replaceAll(preparedTraceId, originalTraceId)
   }
-
   return normalized
 }
 
@@ -53,13 +50,11 @@ const getViaClearanceErrorIdentity = (
       : error.pcb_center && typeof error.pcb_center === "object"
         ? (error.pcb_center as Record<string, unknown>)
         : undefined
-
   const center =
     typeof centerCandidate?.x === "number" &&
     typeof centerCandidate.y === "number"
       ? { x: centerCandidate.x, y: centerCandidate.y }
       : undefined
-
   const netRelation =
     typeof error.pcb_via_pair_net_relation === "string"
       ? error.pcb_via_pair_net_relation
@@ -69,7 +64,6 @@ const getViaClearanceErrorIdentity = (
   // that a candidate violation was inherited. Missing stable metadata is kept
   // repairable instead of risking a false baseline match.
   if (traceIds.length === 0 || !center || !netRelation) return undefined
-
   return `pcb_via_clearance_error:${JSON.stringify({ traceIds, center, netRelation })}`
 }
 
@@ -78,14 +72,11 @@ const getDrcErrorIdentity = (
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string | undefined => {
   const errorType = String(error.type ?? error.error_type ?? "unknown")
-
   if (errorType === "pcb_via_clearance_error") {
     return getViaClearanceErrorIdentity(error, originalTraceIdByPreparedTraceId)
   }
-
   for (const idKey of DRC_ERROR_ID_KEYS) {
     const errorId = error[idKey]
-
     if (typeof errorId === "string") {
       return `${errorType}:${normalizePreparedTraceIds(errorId, originalTraceIdByPreparedTraceId)}`
     }
@@ -106,7 +97,6 @@ const getDrcErrorIdentity = (
           : value,
       ]),
   )
-
   return `${errorType}:${JSON.stringify(identityFields)}`
 }
 
@@ -130,15 +120,12 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
       .filter((error) => !isMissingConnectionError(error))
       .map((error) => getDrcErrorIdentity(error, new Map())),
   )
-
   baselineErrorIdentities.delete(undefined)
-
   return errors.filter((error) => {
     const identity = getDrcErrorIdentity(
       error,
       originalTraceIdByPreparedTraceId,
     )
-
     return identity === undefined || !baselineErrorIdentities.has(identity)
   })
 }

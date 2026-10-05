@@ -54,7 +54,6 @@ export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSuper
     } else if (numConnections === 4) {
       return [["orderings24_for4"]]
     }
-
     return [["orderings30"]]
   }
 

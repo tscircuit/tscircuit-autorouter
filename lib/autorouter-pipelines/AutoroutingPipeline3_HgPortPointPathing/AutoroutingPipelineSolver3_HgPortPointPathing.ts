@@ -54,7 +54,6 @@ interface CapacityMeshSolverOptions {
   cacheProvider?: CacheProvider | null
   effort?: number
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -196,7 +195,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         const sharedEdgeSegments =
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
-
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
@@ -420,16 +418,13 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -443,7 +438,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -469,7 +463,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     if (!this.solved && this.activeSubSolver) {
       return this.activeSubSolver.visualize()
     }
-
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const nodeViz = this.nodeSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
@@ -477,23 +470,17 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
-
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
-
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
-
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
-
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
@@ -579,14 +566,12 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     return combineVisualizations(...visualizations)
   }
 
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -596,13 +581,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
-
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
@@ -638,7 +620,6 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -666,5 +647,4 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
 
 /** @deprecated Use AutoroutingPipelineSolver instead */
 export const CapacityMeshSolver = AutoroutingPipelineSolver3_HgPortPointPathing
-
 export type CapacityMeshSolver = AutoroutingPipelineSolver3_HgPortPointPathing

@@ -33,11 +33,9 @@ export function getConnectionPointLayers(point: ConnectionPoint): string[] {
   if (isMultiLayerConnectionPoint(point)) {
     return point.layers
   }
-
   if (isSingleLayerConnectionPoint(point)) {
     return [point.layer]
   }
-
   throw new Error(
     "Connection point must specify either layer or layers, never both",
   )

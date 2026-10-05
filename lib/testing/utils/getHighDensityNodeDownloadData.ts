@@ -109,7 +109,6 @@ const findNodeById = <T extends NodeLike>(
 ): T | null => {
   for (const nodes of collections) {
     const match = nodes?.find((node) => node.capacityMeshNodeId === nodeId)
-
     if (match) {
       return match
     }
@@ -124,7 +123,6 @@ const findHighDensityNodeById = (
 ): NodeWithPortPoints | null => {
   const solverMetadataNode =
     solver.highDensityRouteSolver?.nodeSolveMetadataById?.get(nodeId)?.node
-
   if (solverMetadataNode) {
     return solverMetadataNode
   }
@@ -165,10 +163,8 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (match) return match
     }
-
     return null
   }
 
@@ -182,7 +178,6 @@ const findPortPointNodeInUnknownValue = <
     if (seen.has(value)) {
       return null
     }
-
     seen.add(value)
 
     for (const [key, item] of value.entries()) {
@@ -194,7 +189,6 @@ const findPortPointNodeInUnknownValue = <
               item.node.capacityMeshNodeId === nodeId
             ? item.node
             : null
-
       if (directMatch) return directMatch
 
       const keyMatch = findPortPointNodeInUnknownValue(
@@ -203,7 +197,6 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (keyMatch) return keyMatch
 
       const valueMatch = findPortPointNodeInUnknownValue(
@@ -212,17 +205,14 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (valueMatch) return valueMatch
     }
-
     return null
   }
 
   if (seen.has(value)) {
     return null
   }
-
   seen.add(value)
 
   if (predicate(value) && value.capacityMeshNodeId === nodeId) {
@@ -233,7 +223,6 @@ const findPortPointNodeInUnknownValue = <
     const nodesWithPortPoints = safelyCall(() =>
       solverLike.getNodesWithPortPoints!(),
     )
-
     if (nodesWithPortPoints !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
@@ -241,14 +230,12 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (match) return match
     }
   }
 
   if (typeof solverLike.getOutput === "function") {
     const output = safelyCall(() => solverLike.getOutput!())
-
     if (output !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
@@ -256,7 +243,6 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (match) return match
     }
   }
@@ -265,7 +251,6 @@ const findPortPointNodeInUnknownValue = <
     const constructorParams = safelyCall(() =>
       solverLike.getConstructorParams!(),
     )
-
     if (constructorParams !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
@@ -273,7 +258,6 @@ const findPortPointNodeInUnknownValue = <
         predicate,
         seen,
       )
-
       if (match) return match
     }
   }
@@ -285,7 +269,6 @@ const findPortPointNodeInUnknownValue = <
       predicate,
       seen,
     )
-
     if (match) {
       return match
     }
@@ -300,7 +283,6 @@ export const getHighDensityNodeDownloadData = (
 ): HighDensityNodeDownloadData => {
   const nodeSolverOutput = solver.nodeSolver?.getOutput?.()
   const portPointPathingOutput = solver.portPointPathingSolver?.getOutput?.()
-
   const knownResolvedPortPointNode =
     findHighDensityNodeById(solver, nodeId) ??
     findNodeById(
@@ -312,7 +294,6 @@ export const getHighDensityNodeDownloadData = (
       solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
       portPointPathingOutput?.nodesWithPortPoints,
     )
-
   const knownInputPortPointNode = findNodeById(
     nodeId,
     portPointPathingOutput?.inputNodeWithPortPoints,

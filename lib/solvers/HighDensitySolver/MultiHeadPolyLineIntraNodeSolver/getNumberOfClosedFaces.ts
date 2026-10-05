@@ -1,5 +1,4 @@
 type Point = { x: number; y: number }
-
 type Segment = [Point, Point]
 
 /**
@@ -39,7 +38,6 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
 
   // 1. Find all intersection points between segments
   const intersections: Point[] = []
-
   function findIntersection(
     p1: Point,
     p2: Point,
@@ -53,13 +51,10 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
     const b2 = p3.x - p4.x
     const c2 = p4.x * p3.y - p3.x * p4.y
     const det = a1 * b2 - a2 * b1
-
     if (Math.abs(det) < epsilon) return null
     const x = (b1 * c2 - b2 * c1) / det
     const y = (a2 * c1 - a1 * c2) / det
-
     if (isOnSeg(p1, p2, { x, y }) && isOnSeg(p3, p4, { x, y })) return { x, y }
-
     return null
   }
 
@@ -68,13 +63,10 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
     const maxX = Math.max(a.x, b.x) + epsilon
     const minY = Math.min(a.y, b.y) - epsilon
     const maxY = Math.max(a.y, b.y) + epsilon
-
     if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) return false
-
     const cross = Math.abs(
       (p.y - a.y) * (b.x - a.x) - (b.y - a.y) * (p.x - a.x),
     )
-
     return cross < epsilon
   }
 
@@ -86,39 +78,32 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
         segments[j][0],
         segments[j][1],
       )
-
       if (p) intersections.push(p)
     }
   }
 
   // 2. Build unique vertex list (endpoints + intersections)
   const vertices: Point[] = []
-
   function addPoint(pt: Point) {
     if (!vertices.some((v) => Math.hypot(v.x - pt.x, v.y - pt.y) < epsilon)) {
       vertices.push({ x: pt.x, y: pt.y })
     }
   }
-
   for (const seg of segments) {
     addPoint(seg[0])
     addPoint(seg[1])
   }
-
   intersections.forEach(addPoint)
 
   // 3. Build edge list by splitting each segment at its intersections
   const edges: [number, number][] = []
-
   function findIdx(pt: Point): number {
     return vertices.findIndex(
       (v) => Math.hypot(v.x - pt.x, v.y - pt.y) < epsilon,
     )
   }
-
   function addEdge(u: number, v: number) {
     if (u === v) return
-
     if (
       !edges.some(
         (e) => (e[0] === u && e[1] === v) || (e[0] === v && e[1] === u),
@@ -131,7 +116,6 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
   for (const [A, B] of segments) {
     const u0 = findIdx(A)
     const u1 = findIdx(B)
-
     // collect all intersection indices on this segment
     const onSeg = intersections
       .flatMap((p) => {
@@ -144,14 +128,11 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
         return isOnSeg(A, B, p) ? [intersection] : []
       })
       .sort((a, b) => a.d - b.d)
-
     let prev = u0
-
     for (const { idx } of onSeg) {
       addEdge(prev, idx)
       prev = idx
     }
-
     addEdge(prev, u1)
   }
 
@@ -159,15 +140,12 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
   const adj: number[][] = Array(vertices.length)
     .fill(0)
     .map(() => [])
-
   edges.forEach(([u, v]) => {
     adj[u].push(v)
     adj[v].push(u)
   })
-
   const angleAt = (center: Point, p: Point) =>
     Math.atan2(p.y - center.y, p.x - center.x)
-
   adj.forEach((nbrs, v) => {
     const C = vertices[v]
     nbrs.sort((a, b) => angleAt(C, vertices[a]) - angleAt(C, vertices[b]))
@@ -177,7 +155,6 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
   const visited = Array(vertices.length)
     .fill(0)
     .map(() => Array(vertices.length).fill(false))
-
   const faces: number[][] = []
 
   for (let u = 0; u < vertices.length; u++) {
@@ -194,9 +171,7 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
         // at currV, find neighbor just before currU in CCW list
         const nbrs = adj[currV]
         const idx = nbrs.indexOf(currU)
-
         const next = nbrs[(idx - 1 + nbrs.length) % nbrs.length]
-        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;[currU, currV] = [currV, next]
       } while (!(currU === u && currV === v))
 
@@ -209,18 +184,14 @@ export function getNumberOfClosedFaces(segments: Segment[]): number {
   // 6. Discard the outer face (the one with largest absolute signed area)
   function polygonArea(ids: number[]): number {
     let area = 0
-
     for (let i = 0; i < ids.length; i++) {
       const a = vertices[ids[i]]
       const b = vertices[ids[(i + 1) % ids.length]]
       area += a.x * b.y - b.x * a.y
     }
-
     return area / 2
   }
-
   const areas = faces.map(polygonArea)
-
   const outerIdx = areas
     .map((a) => Math.abs(a))
     .indexOf(Math.max(...areas.map((a) => Math.abs(a))))

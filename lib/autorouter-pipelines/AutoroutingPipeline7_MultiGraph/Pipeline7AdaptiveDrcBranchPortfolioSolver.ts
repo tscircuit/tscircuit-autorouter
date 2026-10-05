@@ -68,7 +68,6 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
     // The selected portfolio branch already evaluated its final routes with
     // this DRC evaluator. Reuse that result instead of repeating a full pass.
     const solverReportedCount = this.fastProbeSolver?.stats.finalDrcIssueCount
-
     if (
       typeof solverReportedCount === "number" &&
       Number.isFinite(solverReportedCount) &&
@@ -83,9 +82,7 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
       routes,
       hdRoutes: routes,
     })
-
     if (!result) return undefined
-
     return Array.isArray(result) ? result.length : result.errors.length
   }
 
@@ -118,7 +115,6 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
       } else {
         this.startFallback()
       }
-
       return
     }
 
@@ -127,47 +123,37 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
         this.fastProbeSolver!.step()
       } catch {
         this.startFallback()
-
         return
       }
-
       if (this.fastProbeSolver!.failed) {
         this.startFallback()
-
         return
       }
-
       if (!this.fastProbeSolver!.solved) return
 
       const fastProbeRoutes = this.fastProbeSolver!.getOutput()
-
       try {
         this.fastProbeDrcIssueCount =
           this.evaluateFastProbeDrcIssueCount(fastProbeRoutes)
       } catch {
         this.startFallback()
-
         return
       }
-
       if (this.fastProbeDrcIssueCount === 0) {
         this.finish(this.fastProbeSolver!, true)
       } else {
         this.startFallback()
       }
-
       return
     }
 
     if (this.phase === "fallback") {
       this.fallbackSolver!.step()
-
       if (this.fallbackSolver!.failed) {
         throw new Error(
           `Pipeline7 full DRC repair portfolio failed: ${this.fallbackSolver!.error}`,
         )
       }
-
       if (this.fallbackSolver!.solved) {
         this.finish(this.fallbackSolver!, false)
       }
@@ -180,13 +166,11 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     const visualizer = this.activeSubSolver ?? this.selectedSolver
-
     return visualizer?.visualize() ?? super.visualize()
   }
 
   override preview(): GraphicsObject {
     const visualizer = this.activeSubSolver ?? this.selectedSolver
-
     return visualizer?.preview() ?? this.visualize()
   }
 }

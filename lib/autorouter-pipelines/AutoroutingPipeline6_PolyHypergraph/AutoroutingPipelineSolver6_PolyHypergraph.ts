@@ -160,7 +160,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
         const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-
         return [
           inputSrj,
           cms.colorMap,
@@ -364,16 +363,13 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -387,7 +383,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -414,7 +409,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     includeRoutes = true,
   }: { includeRoutes?: boolean } = {}): GraphicsObject {
     const srjToVisualize = this.originalSrj
-
     const problemLines: Line[] = [
       {
         points: [
@@ -448,7 +442,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
         x: point.x,
         y: point.y,
       }))
-
       outlinePoints.push({ ...outlinePoints[0]! })
       problemLines.push({
         points: outlinePoints,
@@ -457,7 +450,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     }
 
     const formatObstacleLabel = createObstacleLabelFormatter(srjToVisualize)
-
     const problemBaseViz = {
       points: [
         ...srjToVisualize.connections.flatMap((connection) =>
@@ -504,18 +496,14 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     }
 
     const problemViz = this.getProblemVisualization()
-
     const problemBaseViz = this.getProblemVisualization({
       includeRoutes: false,
     })
-
     const polyGraphViz = this.polyGraphSolver?.visualize()
     const projectedRectViz = this.attachProjectedRectsSolver?.visualize()
     const highDensityViz = this.highDensityRouteSolver?.visualize()
-
     const projectHighDensityToPolygonViz =
       this.projectHighDensityToPolgonSolver?.visualize()
-
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
 
@@ -551,7 +539,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   preview(): GraphicsObject {
     if (this.projectHighDensityToPolgonSolver) {
       const lines: Line[] = []
-
       for (
         let i = this.projectHighDensityToPolgonSolver.routes.length - 1;
         i >= 0;
@@ -565,16 +552,13 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -584,10 +568,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
@@ -598,11 +580,9 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
-
     if (this.escapeViaLocationSolver) {
       return this.escapeViaLocationSolver.visualize()
     }
-
     if (this.preprocessSimpleRouteJsonSolver) {
       return this.preprocessSimpleRouteJsonSolver.visualize()
     }
@@ -639,7 +619,6 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]!
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,

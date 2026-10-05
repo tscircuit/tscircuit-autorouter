@@ -61,7 +61,6 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
     const numSeeds = this.params.numShuffleSeeds ?? 50
-
     const shuffleSeeds = Array.from({ length: numSeeds }, (_, i) => ({
       SHUFFLE_SEED: i + (this.params.hyperParameters?.SHUFFLE_SEED ?? 0) * 1700,
     }))
@@ -138,7 +137,6 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
    */
   computeG(solver: PortPointPathingSolver): number {
     const boardScore = solver.computeBoardScore()
-
     return -boardScore
   }
 
@@ -177,14 +175,11 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.getNodesWithPortPoints()
     }
-
     // If not solved yet, get from the best current solver
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.getNodesWithPortPoints()
     }
-
     return []
   }
 
@@ -195,13 +190,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.connectionsWithResults
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.connectionsWithResults
     }
-
     return []
   }
 
@@ -212,13 +204,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.inputNodes
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.inputNodes
     }
-
     return this.params.inputNodes
   }
 
@@ -229,13 +218,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.nodeMap
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.nodeMap
     }
-
     return new Map(this.params.inputNodes.map((n) => [n.capacityMeshNodeId, n]))
   }
 
@@ -246,13 +232,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.assignedPortPoints
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.assignedPortPoints
     }
-
     return new Map()
   }
 
@@ -263,13 +246,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.nodeAssignedPortPoints
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.nodeAssignedPortPoints
     }
-
     return new Map()
   }
 
@@ -277,13 +257,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.computeNodePf(node)
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.computeNodePf(node)
     }
-
     return null
   }
 
@@ -294,13 +271,10 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.computeBoardScore()
     }
-
     const best = this.getSupervisedSolverWithBestFitness()
-
     if (best) {
       return best.solver.computeBoardScore()
     }
-
     return 0
   }
 
@@ -315,7 +289,6 @@ export class HyperPortPointPathingSolver extends HyperParameterSupervisorSolver<
     if (this.winningSolver) {
       return this.winningSolver.visualize()
     }
-
     return super.visualize()
   }
 }

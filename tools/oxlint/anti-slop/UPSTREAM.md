@@ -30,10 +30,10 @@ integration and tooling type checks.
 ## Local policy and review
 
 No vendored production code was modified. `oxlint.anti-slop.config.ts` enables
-all 18 generic rules, all five Effect plugin rules and native
+17 generic rules, all five Effect plugin rules and native
 `oxc/no-accumulating-spread` at upstream error severity, only in `lib`.
 The CI job remains advisory. Narrow source exceptions preserve public geometry
-keys and resolve a documented Biome/spacing conflict; remaining diagnostics stay
+keys; remaining diagnostics stay
 active. The initial four-warning policy is retained as dated history in the docs.
 Biome excludes this directory to preserve reviewed source and nested attribution.
 The normal package publishes only `dist`, so this tooling is not shipped to users.
@@ -45,8 +45,10 @@ Imports are limited to `@oxlint/plugins` and local production modules. The copie
 code examines AST/scope/token data and reports diagnostics; it does not run the
 source being linted. Before enabling the Effect plugin, all seven production
 files and their imports were reviewed for the same capabilities. They import
-only `@oxlint/plugins` and local AST helpers. The spacing factory is now enabled;
-its autofix inserts blank lines. Other source rewrites were reviewed manually.
+only `@oxlint/plugins` and local AST helpers. `anti-slop/require-readable-spacing`
+is disabled because its autofix inserts blank lines throughout the source.
+Biome owns formatting. All vendored rule bytes remain unchanged. Other source
+rewrites were reviewed manually.
 This review and integration coverage do not constitute a comprehensive security
 audit or full upstream rule conformance suite. Official package metadata lists
 no lifecycle scripts for either new dependency; Oxlint uses a platform native

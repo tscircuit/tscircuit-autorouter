@@ -67,14 +67,12 @@ export type ClearanceMarginDrcEvaluator = (
 export const CLEARANCE_PRECISION_MARGIN = 0.01
 
 const MAX_PASSES = 8
-
 const FORCE_SCALES = [0.03, 0.1, 0.25]
 
 const getIndexedClearanceDeficit = (
   errors: Pipeline9DrcError[],
 ): number | undefined => {
   let deficit = 0
-
   for (const error of errors) {
     if (
       typeof error.actual_clearance !== "number" ||
@@ -84,12 +82,9 @@ const getIndexedClearanceDeficit = (
     ) {
       return undefined
     }
-
     deficit += Math.max(0, error.minimum_clearance - error.actual_clearance)
-
     if (!Number.isFinite(deficit)) return undefined
   }
-
   return deficit
 }
 
@@ -106,11 +101,9 @@ const prepareClearanceErrors = ({
 }): PreparedClearanceErrors | undefined => {
   const preparedErrors: PreparedClearanceError[] = []
   let deficit = 0
-
   for (const error of errors) {
     const isViaTrace = error.type === "pcb_via_trace_clearance_error"
     const isPadTrace = error.type === "pcb_pad_trace_clearance_error"
-
     if (
       (!isViaTrace && !isPadTrace) ||
       typeof error.pcb_trace_id !== "string" ||
@@ -122,16 +115,13 @@ const prepareClearanceErrors = ({
     ) {
       return undefined
     }
-
     const traceIds = getPipeline9DrcErrorTraceIds(error)
-
     if (
       (isViaTrace && traceIds.length < 2) ||
       traceIds.some((traceId) => !routeIndexByTraceId.has(traceId))
     ) {
       return undefined
     }
-
     const centeredError = errorsWithCenters.find(
       (candidate) =>
         candidate.type === error.type &&
@@ -139,15 +129,12 @@ const prepareClearanceErrors = ({
         candidate.pcb_pad_id === error.pcb_pad_id &&
         candidate.pcb_via_id === error.pcb_via_id,
     )
-
     const center = isPadTrace
       ? typeof error.pcb_pad_id === "string"
         ? padPositionById.get(error.pcb_pad_id)
         : undefined
       : (centeredError?.center ?? error.center)
-
     if (!center || typeof center !== "object") return undefined
-
     if (
       !("x" in center) ||
       !("y" in center) ||
@@ -158,7 +145,6 @@ const prepareClearanceErrors = ({
     ) {
       return undefined
     }
-
     const measuredError = {
       ...error,
       pcb_trace_id: error.pcb_trace_id,
@@ -166,7 +152,6 @@ const prepareClearanceErrors = ({
       minimum_clearance: error.minimum_clearance,
       center: { x: center.x, y: center.y },
     }
-
     if (isViaTrace) {
       if (typeof error.pcb_via_id !== "string") return undefined
       preparedErrors.push({
@@ -184,12 +169,9 @@ const prepareClearanceErrors = ({
         pcb_via_id: undefined,
       })
     }
-
     deficit += Math.max(0, error.minimum_clearance - error.actual_clearance)
-
     if (!Number.isFinite(deficit)) return undefined
   }
-
   return { errors: preparedErrors, deficit }
 }
 
@@ -226,21 +208,16 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     referenceValidationCount: 0,
     repaired: false,
   }
-
   if ((srj.traces?.length ?? 0) > 0 || syntheticConnectionNames.size > 0) {
     return unchanged
   }
-
   if (initialErrors.length === 0) return unchanged
-
   const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
     routes,
     newConnections,
     syntheticConnectionNames,
   })
-
   const padPositionById = new Map<string, Point>()
-
   for (const obstacle of srj.obstacles) {
     for (const id of [
       obstacle.obstacleId,
@@ -251,42 +228,33 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       if (typeof id === "string") padPositionById.set(id, obstacle.center)
     }
   }
-
   const initial = prepareClearanceErrors({
     errors: initialErrors,
     errorsWithCenters: initialErrorsWithCenters,
     routeIndexByTraceId,
     padPositionById,
   })
-
   if (!initial) return unchanged
   let current: PreparedClearanceErrors = initial
   const marginTargets = initial.errors
-
   const initialMarginErrors = initial.errors.map((error) => ({
     ...error,
     minimum_clearance: error.minimum_clearance + CLEARANCE_PRECISION_MARGIN,
   }))
-
   const initialMarginDeficit = getIndexedClearanceDeficit(initialMarginErrors)
-
   if (initialMarginDeficit === undefined) return unchanged
-
   let currentMargin: PreparedClearanceErrors = {
     errors: initialMarginErrors,
     deficit: initialMarginDeficit,
   }
-
   let currentRoutes = routes
   let attemptedCandidateCount = 0
   let candidateValidationCount = 0
   let referenceValidationCount = 0
-
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     // Keep the original failing pairs active until their physical gaps have
     // margin, even after the relaxed checker stops reporting those pairs.
     const forceErrorsByPair = new Map<string, PreparedClearanceError>()
-
     for (const error of [...currentMargin.errors, ...current.errors]) {
       const pairKey = JSON.stringify([
         error.type,
@@ -294,16 +262,12 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         error.pcb_pad_id,
         error.pcb_via_id,
       ])
-
       forceErrorsByPair.set(pairKey, error)
     }
-
     const forceErrors = [...forceErrorsByPair.values()]
     let bestCandidate: IndexedClearanceCandidate | undefined
-
     for (const scale of FORCE_SCALES) {
       const candidateRoutes = cloneRoutes(currentRoutes)
-
       const changed = applyDrcErrorForces(
         srj as RepairSimpleRouteJson,
         candidateRoutes,
@@ -316,21 +280,17 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         true,
         false,
       )
-
       if (!changed) continue
       const materializedRoutes = materializeRoutes(candidateRoutes)
       attemptedCandidateCount++
-
       const indexedResult = indexedDrcEvaluator({
         traces: [],
         routes: materializedRoutes,
         hdRoutes: materializedRoutes,
       })
-
       const deficit = getIndexedClearanceDeficit(
         Array.isArray(indexedResult) ? indexedResult : indexedResult.errors,
       )
-
       // Conservative indexed errors rank candidates only. Their absence never
       // establishes that a candidate is reference-clean.
       if (
@@ -340,20 +300,16 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         bestCandidate = { routes: materializedRoutes, deficit }
       }
     }
-
     if (!bestCandidate) break
     candidateValidationCount++
-
     const candidateResult = candidateDrcEvaluator({
       traces: [],
       routes: bestCandidate.routes,
       hdRoutes: bestCandidate.routes,
     })
-
     const candidateErrors = Array.isArray(candidateResult)
       ? candidateResult
       : candidateResult.errors
-
     const prepared = prepareClearanceErrors({
       errors: candidateErrors,
       errorsWithCenters: Array.isArray(candidateResult)
@@ -362,9 +318,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       routeIndexByTraceId,
       padPositionById,
     })
-
     if (!prepared) break
-
     // Measure only the selected candidate. Indexed ranking stays bounded to
     // the existing three candidates without repeating exact margin checks.
     const marginMeasurement = marginDrcEvaluator(
@@ -372,34 +326,27 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       marginTargets,
       routes,
     )
-
     if (marginMeasurement.status === "unsupported-identity") break
     const marginErrors = marginMeasurement.errors
-
     const preparedMargin = prepareClearanceErrors({
       errors: marginErrors,
       errorsWithCenters: marginErrors,
       routeIndexByTraceId,
       padPositionById,
     })
-
     if (!preparedMargin) break
-
     if (candidateErrors.length === 0 && marginErrors.length === 0) {
       // Private geometry validation omits continuity. Publish only after every
       // full reference check passes, including continuity and errors with no center.
       referenceValidationCount++
-
       const referenceResult = drcEvaluator({
         traces: [],
         routes: bestCandidate.routes,
         hdRoutes: bestCandidate.routes,
       })
-
       const referenceErrors = Array.isArray(referenceResult)
         ? referenceResult
         : referenceResult.errors
-
       if (referenceErrors.length === 0) {
         return {
           routes: bestCandidate.routes,
@@ -409,10 +356,8 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
           repaired: true,
         }
       }
-
       break
     }
-
     // A coupled move can temporarily split one deficit between two objects.
     // Such intermediate routes stay private until every reference error clears.
     if (
@@ -421,12 +366,10 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     ) {
       break
     }
-
     currentRoutes = bestCandidate.routes
     current = prepared
     currentMargin = preparedMargin
   }
-
   return {
     routes,
     attemptedCandidateCount,

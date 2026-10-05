@@ -28,7 +28,6 @@ export function generateBinaryCombinations(oneCount: number, length: number) {
       if (onesLeft === 0) {
         result.push([...current])
       }
-
       return
     }
 

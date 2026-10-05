@@ -60,10 +60,8 @@ export class TraceSimplificationStageSolver extends BaseSolver {
         this.traceSimplificationSolver.error ?? "Trace simplification failed"
       this.failed = true
       this.activeSubSolver = null
-
       return
     }
-
     if (this.traceSimplificationSolver.solved) {
       this.progress = 1
       this.solved = true
@@ -81,7 +79,6 @@ export class TraceSimplificationStageSolver extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get simplified routes before cleanup completes")
     }
-
     return structuredClone(this.traceSimplificationSolver.simplifiedHdRoutes)
   }
 

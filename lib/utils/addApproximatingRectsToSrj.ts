@@ -12,17 +12,11 @@ const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
 
 const QUARTER_TURN_TOLERANCE_DEGREES = 0.01
-
 const TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
-
 const ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.4
-
 const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
-
 const SLENDER_OBSTACLE_ASPECT_RATIO = 2
-
 const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
-
 const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
@@ -63,7 +57,6 @@ const removeAxisAlignedRotation = (
     ccwRotationDegrees: _ccwRotationDegrees,
     ...obstacleWithoutRotation
   } = obstacle
-
   const axisAlignedRotation = getNearestAxisAlignedRotation(rotationDegrees)
 
   if (axisAlignedRotation === 90 || axisAlignedRotation === 270) {
@@ -145,7 +138,6 @@ export function generateApproximatingRects(
 
       const coverageWidth =
         Math.abs(sliceWidth * cosAngle) + Math.abs(height * sinAngle)
-
       const coverageHeight =
         Math.abs(sliceWidth * sinAngle) + Math.abs(height * cosAngle)
 
@@ -168,7 +160,6 @@ export function generateApproximatingRects(
 
       const coverageWidth =
         Math.abs(width * cosAngle) + Math.abs(sliceHeight * sinAngle)
-
       const coverageHeight =
         Math.abs(width * sinAngle) + Math.abs(sliceHeight * cosAngle)
 
@@ -230,19 +221,16 @@ const generateConservativeApproximatingRects = (
   const angleRad = (rotatedRect.rotation * Math.PI) / 180
   const cosAngle = Math.cos(angleRad)
   const sinAngle = Math.sin(angleRad)
-
   const corners: Point[] = [-1, 1].flatMap((xSign) =>
     [-1, 1].map((ySign) => {
       const localX = xSign * (rotatedRect.width / 2)
       const localY = ySign * (rotatedRect.height / 2)
-
       return {
         x: rotatedRect.center.x + localX * cosAngle - localY * sinAngle,
         y: rotatedRect.center.y + localX * sinAngle + localY * cosAngle,
       }
     }),
   )
-
   const orderedCorners = [corners[0]!, corners[2]!, corners[3]!, corners[1]!]
   const minX = Math.min(...orderedCorners.map((point) => point.x))
   const maxX = Math.max(...orderedCorners.map((point) => point.x))
@@ -251,12 +239,10 @@ const generateConservativeApproximatingRects = (
   const sliceAxis = maxX - minX <= maxY - minY ? "x" : "y"
   const min = sliceAxis === "x" ? minX : minY
   const max = sliceAxis === "x" ? maxX : maxY
-
   const sliceCount = Math.max(
     1,
     Math.ceil((max - min) / ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH),
   )
-
   const sliceSize = (max - min) / sliceCount
 
   const clipAt = (
@@ -272,22 +258,18 @@ const generateConservativeApproximatingRects = (
       const end = polygon[(index + 1) % polygon.length]!
       const startCoordinate = getCoordinate(start)
       const endCoordinate = getCoordinate(end)
-
       const startInside = keepGreater
         ? startCoordinate >= boundary
         : startCoordinate <= boundary
-
       const endInside = keepGreater
         ? endCoordinate >= boundary
         : endCoordinate <= boundary
 
       if (startInside) clipped.push(start)
-
       if (startInside === endInside) continue
 
       const fraction =
         (boundary - startCoordinate) / (endCoordinate - startCoordinate)
-
       clipped.push({
         x: start.x + (end.x - start.x) * fraction,
         y: start.y + (end.y - start.y) * fraction,
@@ -298,17 +280,14 @@ const generateConservativeApproximatingRects = (
   }
 
   const rects: Rect[] = []
-
   for (let index = 0; index < sliceCount; index++) {
     const sliceMin = min + index * sliceSize
     const sliceMax = index === sliceCount - 1 ? max : sliceMin + sliceSize
-
     const clipped = clipAt(
       clipAt(orderedCorners, sliceMin, true),
       sliceMax,
       false,
     )
-
     if (clipped.length === 0) continue
 
     const clippedMinX = Math.min(...clipped.map((point) => point.x))
@@ -340,20 +319,16 @@ const generateCenterlineApproximatingRects = (
   const angleRad = (rotation * Math.PI) / 180
   const cosAngle = Math.cos(angleRad)
   const sinAngle = Math.sin(angleRad)
-
   const rectSize = Math.max(
     stepLength,
     shortSide * CENTERLINE_APPROX_RECT_SIZE_FACTOR,
   )
-
   const rects: Rect[] = []
 
   for (let i = 0; i < clampedRectCount; i++) {
     const localOffset = (i - clampedRectCount / 2 + 0.5) * stepLength
-
     const rotatedX =
       width >= height ? localOffset * cosAngle : -localOffset * sinAngle
-
     const rotatedY =
       width >= height ? localOffset * sinAngle : localOffset * cosAngle
 
@@ -438,16 +413,12 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
     height: obstacle.height,
     rotation: rotationDegrees,
   }
-
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
-
   const useConservativeApproximation =
     obstacle.connectedTo.length > 0 &&
     !obstacle.obstacleId?.startsWith("trace_obstacle_")
-
   const needsConservativeApproximation =
     obstacle.isNonPlatedHole || useConservativeApproximation
-
   const rects = needsConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
@@ -458,16 +429,13 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
       : obstacle.obstacleId?.startsWith("trace_obstacle_")
         ? generateApproximatingRects(rotatedRect, rectCount)
         : generateCenterlineApproximatingRects(rotatedRect, rectCount)
-
   const connectedRectIndex =
     obstacle.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {
           const closestRect = rects[closestIndex]!
-
           const closestDistance =
             (closestRect.center.x - obstacle.center.x) ** 2 +
             (closestRect.center.y - obstacle.center.y) ** 2
-
           const distance =
             (rect.center.x - obstacle.center.x) ** 2 +
             (rect.center.y - obstacle.center.y) ** 2
@@ -513,7 +481,6 @@ export const addApproximatingRectsToSrj = (
         converted.layers.join(","),
         converted.isNonPlatedHole ? "hole" : "",
       ].join(":")
-
       const existingObstacle = obstaclesByRect.get(key)
 
       if (!existingObstacle) {
@@ -531,7 +498,6 @@ export const addApproximatingRectsToSrj = (
     ...connection,
     pointsToConnect: connection.pointsToConnect.map((point) => {
       const pointIds = getPointConnectionIds(point)
-
       if (pointIds.length === 0) return point
 
       for (const [sourceKey, originalObstacle] of originalObstaclesBySource) {
@@ -547,7 +513,6 @@ export const addApproximatingRectsToSrj = (
 
         const approximatedObstacles =
           approximatedObstaclesBySource.get(sourceKey) ?? []
-
         if (approximatedObstacles.length === 0) continue
 
         if (

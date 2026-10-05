@@ -27,7 +27,6 @@ export function mergeConnections(
   const connectionTempIds: ConnectionTempId[] = simpleRouteConnections.map(
     (_, i) => `conn_${i}`,
   )
-
   const disjointSetUnion = new DSU(connectionTempIds)
 
   // Map each unique point to the list of connection IDs that touch it
@@ -37,11 +36,9 @@ export function mergeConnections(
     const connectionTempId: ConnectionTempId = `conn_${index}`
     simpleRouteConnection.pointsToConnect.forEach((connectionPoint) => {
       const pointKey: PointKey = getPointKey(connectionPoint)
-
       if (!pointKeyToConnectionTempIds.has(pointKey)) {
         pointKeyToConnectionTempIds.set(pointKey, [])
       }
-
       pointKeyToConnectionTempIds.get(pointKey)!.push(connectionTempId)
     })
   })
@@ -51,7 +48,6 @@ export function mergeConnections(
     if (connectionTempIdsSharingPoint.length > 1) {
       // Union all connections that share this point
       const firstConnectionTempId = connectionTempIdsSharingPoint[0]
-
       for (let i = 1; i < connectionTempIdsSharingPoint.length; i++) {
         disjointSetUnion.union(
           firstConnectionTempId,
@@ -66,17 +62,13 @@ export function mergeConnections(
     ConnectionTempId,
     SimpleRouteConnection[]
   >() // Key is ConnectionTempId (the root)
-
   simpleRouteConnections.forEach((simpleRouteConnection, index) => {
     const connectionTempId: ConnectionTempId = `conn_${index}`
-
     const rootConnectionTempId: ConnectionTempId =
       disjointSetUnion.find(connectionTempId)
-
     if (!connectionTempIdGroups.has(rootConnectionTempId)) {
       connectionTempIdGroups.set(rootConnectionTempId, [])
     }
-
     connectionTempIdGroups
       .get(rootConnectionTempId)!
       .push(simpleRouteConnection)
@@ -108,7 +100,6 @@ export function mergeConnections(
       )
 
       const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
-
       if (rootConnectionNames && rootConnectionNames.length > 0) {
         for (const rootConnectionName of rootConnectionNames) {
           mergedRootConnectionNames.add(rootConnectionName)

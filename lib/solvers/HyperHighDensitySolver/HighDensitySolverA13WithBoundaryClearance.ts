@@ -2,9 +2,7 @@ import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import type { PortPoint } from "lib/types/high-density-types"
 
 type A13Params = ConstructorParameters<typeof HighDensitySolverA13>[0]
-
 const originalPortPoint = Symbol("originalPortPoint")
-
 type InsetPortPoint = PortPoint & { [originalPortPoint]: PortPoint }
 
 /** Keeps unrelated copper away from adjacent nodes while preserving terminals. */
@@ -17,32 +15,26 @@ export class HighDensitySolverA13WithBoundaryClearance extends HighDensitySolver
     const maxX = node.center.x + node.width / 2 - inset
     const minY = node.center.y - node.height / 2 + inset
     const maxY = node.center.y + node.height / 2 - inset
-
     const portPoints: InsetPortPoint[] = node.portPoints.map((point) => ({
       ...point,
       x: Math.max(minX, Math.min(maxX, point.x)),
       y: Math.max(minY, Math.min(maxY, point.y)),
       [originalPortPoint]: point,
     }))
-
     const projectedTerminals = new Map<string, PortPoint>()
     let collapsedTerminals = false
-
     for (const point of portPoints) {
       const key = `${point.x},${point.y},${point.z}`
       const previous = projectedTerminals.get(key)
       const original = point[originalPortPoint]
-
       if (
         previous &&
         (previous.x !== original.x || previous.y !== original.y)
       ) {
         collapsedTerminals = true
       }
-
       projectedTerminals.set(key, original)
     }
-
     super({
       ...props,
       nodeWithPortPoints: hasInterior
@@ -54,12 +46,10 @@ export class HighDensitySolverA13WithBoundaryClearance extends HighDensitySolver
           }
         : node,
     })
-
     if (collapsedTerminals) {
       this.failed = true
       this.error = "Boundary clearance collapses distinct terminals"
     }
-
     if (!hasInterior) {
       this.failed = true
       this.error = "Node has no interior after copper boundary clearance"
@@ -70,11 +60,9 @@ export class HighDensitySolverA13WithBoundaryClearance extends HighDensitySolver
     return super.getOutput().map((route) => {
       const start = route.route[0] as InsetPortPoint
       const end = route.route[route.route.length - 1] as InsetPortPoint
-
       if (!start[originalPortPoint] || !end[originalPortPoint]) {
         throw new Error("A13 route lost its original terminal metadata")
       }
-
       return {
         ...route,
         route: [

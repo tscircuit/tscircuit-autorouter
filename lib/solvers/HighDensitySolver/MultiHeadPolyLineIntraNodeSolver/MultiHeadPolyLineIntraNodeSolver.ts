@@ -103,14 +103,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
     const areaInsideNode =
       this.nodeWithPortPoints.width * this.nodeWithPortPoints.height
-
     const areaPerVia =
       (this.viaDiameter + this.obstacleMargin * 2 + this.traceWidth / 2) ** 2
 
     const uniqueConnections = new Set(
       this.nodeWithPortPoints.portPoints.map((pp) => pp.connectionName),
     ).size
-
     this.uniqueConnections = uniqueConnections
 
     const { numSameLayerCrossings, numEntryExitLayerChanges } =
@@ -134,7 +132,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     ) {
       this.failed = true
       this.error = `Not possible to solve problem with given SEGMENTS_PER_POLYLINE (${this.SEGMENTS_PER_POLYLINE}), atleast ${this.minViaCount} vias are required`
-
       return
     }
 
@@ -158,31 +155,23 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    */
   computeMinGapBtwPolyLines(polyLines: PolyLine2[]) {
     const minGaps = []
-
     const polyLineSegmentsByLayer: Array<Map<number, [MHPoint2, MHPoint2][]>> =
       []
-
     const polyLineVias: Array<MHPoint2[]> = []
-
     for (let i = 0; i < polyLines.length; i++) {
       const polyLine = polyLines[i]
       const path = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-
       const segmentsByLayer: Map<number, [MHPoint2, MHPoint2][]> = new Map(
         this.availableZ.map((z) => [z, []]),
       )
-
       for (let i = 0; i < path.length - 1; i++) {
         const segment: [MHPoint2, MHPoint2] = [path[i], path[i + 1]]
         const layer = segment[0].z2
-
         if (!segmentsByLayer.has(layer)) {
           segmentsByLayer.set(layer, [])
         }
-
         segmentsByLayer.get(layer)!.push(segment)
       }
-
       polyLineSegmentsByLayer.push(segmentsByLayer)
       polyLineVias.push(path.filter((p) => p.z1 !== p.z2))
     }
@@ -190,7 +179,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     for (let i = 0; i < polyLines.length; i++) {
       const path1SegmentsByLayer = polyLineSegmentsByLayer[i]
       const path1Vias = polyLineVias[i]
-
       // Start j from i + 1 to compare distinct pairs only once
       for (let j = i + 1; j < polyLines.length; j++) {
         if (
@@ -201,12 +189,10 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         ) {
           continue
         }
-
         const path2SegmentsByLayer = polyLineSegmentsByLayer[j]
         const path2Vias = polyLineVias[j]
 
         let minGap = 1
-
         for (const zLayer of this.availableZ) {
           const path1Segments = path1SegmentsByLayer.get(zLayer) ?? []
           const path2Segments = path2SegmentsByLayer.get(zLayer) ?? []
@@ -237,7 +223,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
               )
             }
           }
-
           for (const via of path2Vias) {
             for (const segment of path1Segments) {
               minGap = Math.min(
@@ -256,11 +241,9 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             }
           }
         }
-
         minGaps.push(minGap)
       }
     }
-
     return minGaps
   }
 
@@ -268,17 +251,14 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     // Binary search to find the correct position
     let low = 0
     let high = this.candidates.length - 1
-
     while (low <= high) {
       const mid = Math.floor((low + high) / 2)
-
       if (this.candidates[mid].f < candidate.f) {
         low = mid + 1
       } else {
         high = mid - 1
       }
     }
-
     this.candidates.splice(low, 0, candidate)
   }
 
@@ -318,7 +298,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (portPairs.size === 0) {
       this.failed = true
       this.error = "No port pairs found, can't solve"
-
       return
     }
 
@@ -338,10 +317,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     })
 
     const possibleViaPositionsWithReorderings = []
-
     for (const { viaCountVariant, viaPositions } of possibleViaPositions) {
       const viaPositionsWithReorderings = getEveryPossibleOrdering(viaPositions)
-
       for (const viaPositions of viaPositionsWithReorderings) {
         possibleViaPositionsWithReorderings.push({
           viaCountVariant,
@@ -365,16 +342,13 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     } of possibleViaPositionsWithReorderings) {
       const polyLines: PolyLine[] = []
       let viaPositionIndicesUsed = 0
-
       for (let i = 0; i < portPairsEntries.length; i++) {
         const [connectionName, portPair] = portPairsEntries[i]
         const viaCount = viaCountVariant[i]
-
         const viaPositionsForPolyline = viaPositions.slice(
           viaPositionIndicesUsed,
           viaPositionIndicesUsed + viaCount,
         )
-
         const middlePoints = constructMiddlePointsWithViaPositions({
           start: portPair.start,
           end: portPair.end,
@@ -383,7 +357,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
           viaCount,
           availableZ: this.availableZ,
         })
-
         viaPositionIndicesUsed += viaCount
 
         polyLines.push({
@@ -393,7 +366,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
           mPoints: middlePoints,
         })
       }
-
       const hasClosedSameLayerFace =
         detectMultiConnectionClosedFacesWithoutVias(polyLines, this.bounds)
 
@@ -401,7 +373,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
       const minGaps = this.computeMinGapBtwPolyLines(polyLines)
       const h = this.computeH({ minGaps, forces: [] })
-
       const newCandidate = {
         polyLines,
         g: 0,
@@ -414,7 +385,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
       if (this.checkIfSolved(newCandidate)) {
         this.candidates = [newCandidate]
-
         return
       }
 
@@ -426,7 +396,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         return
       }
     }
-
     this.candidates.sort((a, b) => a.f - b.f)
   }
 
@@ -446,7 +415,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   computeH(candidate: Pick<Candidate, "minGaps" | "forces">) {
     // Compute the total force magnitude
     let totalForceMagnitude = 0
-
     for (const force of candidate.forces ?? []) {
       for (const forceMap of force) {
         for (const force of forceMap.values()) {
@@ -454,7 +422,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         }
       }
     }
-
     return totalForceMagnitude
   }
 
@@ -517,13 +484,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
           p1Idx: number
           p2Idx: number
         }> = []
-
         const vias1: Array<{
           point: MHPoint
           layers: number[]
           index: number
         }> = []
-
         for (let k = 0; k < points1.length - 1; k++) {
           segments1.push({
             p1: points1[k],
@@ -533,7 +498,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             p2Idx: k + 1,
           })
         }
-
         points1.forEach((p, k) => {
           if (p.z1 !== p.z2)
             vias1.push({ point: p, layers: [p.z1, p.z2], index: k })
@@ -546,13 +510,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
           p1Idx: number
           p2Idx: number
         }> = []
-
         const vias2: Array<{
           point: MHPoint
           layers: number[]
           index: number
         }> = []
-
         for (let k = 0; k < points2.length - 1; k++) {
           segments2.push({
             p1: points2[k],
@@ -562,7 +524,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             p2Idx: k + 1,
           })
         }
-
         points2.forEach((p, k) => {
           if (p.z1 !== p.z2)
             vias2.push({ point: p, layers: [p.z1, p.z2], index: k })
@@ -580,7 +541,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                 seg2.p1,
                 seg2.p2,
               )
-
               if (minDist < EPSILON) continue // Avoid division by zero if segments overlap significantly
 
               // Simple repulsive force based on center-to-center distance for now
@@ -589,25 +549,21 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                 x: (seg1.p1.x + seg1.p2.x) / 2,
                 y: (seg1.p1.y + seg1.p2.y) / 2,
               }
-
               const center2 = {
                 x: (seg2.p1.x + seg2.p2.x) / 2,
                 y: (seg2.p1.y + seg2.p2.y) / 2,
               }
-
               const dx = center1.x - center2.x
               const dy = center1.y - center2.y
               const dSq = dx * dx + dy * dy
 
               if (dSq > EPSILON) {
                 const dist = Math.sqrt(dSq)
-
                 // Exponential falloff: force = base * exp(-decay_rate * distance)
                 const forceMag =
                   SEGMENT_FORCE_MULTIPLIER *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * dist)
-
                 const fx = (dx / dist) * forceMag
                 const fy = (dy / dist) * forceMag
 
@@ -635,19 +591,15 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                     otherSeg.p1,
                     otherSeg.p2,
                   )
-
                   const dx = ep.x - cp.x
                   const dy = ep.y - cp.y
                   const dSq = dx * dx + dy * dy
-
                   if (dSq <= EPSILON) return
                   const dist = Math.sqrt(dSq)
-
                   const mag =
                     SEGMENT_FORCE_MULTIPLIER *
                     FORCE_MAGNITUDE *
                     Math.exp(-FORCE_DECAY_RATE * dist)
-
                   const fx = (dx / dist) * mag
                   const fy = (dy / dist) * mag
 
@@ -722,7 +674,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                 seg2.p1,
                 seg2.p2,
               )
-
               const dx = via1.point.x - closestPointOnSeg.x
               const dy = via1.point.y - closestPointOnSeg.y
               const dSq = dx * dx + dy * dy
@@ -751,7 +702,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_j_on_i = (dx / dist) * forceMag // Direction is still based on center-to-point vector
                 const fy_j_on_i = (dy / dist) * forceMag
                 const sourceIdSeg2 = `seg:${j}:${seg2.p1Idx}:${seg2.p2Idx}`
@@ -782,7 +732,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             }
           }
         }
-
         for (const via2 of vias2) {
           for (const seg1 of segments1) {
             if (via2.layers.includes(seg1.layer)) {
@@ -791,7 +740,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                 seg1.p1,
                 seg1.p2,
               )
-
               const dx = via2.point.x - closestPointOnSeg.x
               const dy = via2.point.y - closestPointOnSeg.y
               const dSq = dx * dx + dy * dy
@@ -820,7 +768,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_i_on_j = (dx / dist) * forceMag // Direction is still based on center-to-point vector
                 const fy_i_on_j = (dy / dist) * forceMag
                 const sourceIdSeg1 = `seg:${i}:${seg1.p1Idx}:${seg1.p2Idx}`
@@ -858,7 +805,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             const commonLayers = via1.layers.filter((z) =>
               via2.layers.includes(z),
             )
-
             if (commonLayers.length > 0) {
               const dx = via1.point.x - via2.point.x
               const dy = via1.point.y - via2.point.y
@@ -885,7 +831,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_j_on_i = (dx / dist) * forceMag // Force applied by via2 (j) onto via1 (i)
                 const fy_j_on_i = (dy / dist) * forceMag
                 const sourceIdVia2 = `via:${j}:${via2.index}`
@@ -915,10 +860,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     for (let i = 0; i < numPolyLines; i++) {
       const polyLine = polyLines[i]
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-
       const vias: Array<{ point: MHPoint; layers: number[]; index: number }> =
         []
-
       points.forEach((p, k) => {
         if (p.z1 !== p.z2)
           vias.push({ point: p, layers: [p.z1, p.z2], index: k })
@@ -955,7 +898,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
               forceMultiplier *
               FORCE_MAGNITUDE *
               Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
             const fx_2_on_1 = (dx / dist) * forceMag // Force applied by via2 onto via1
             const fy_2_on_1 = (dy / dist) * forceMag
             const sourceIdVia2 = `via:${i}:${via2.index}` // Source is via2 on line i
@@ -990,7 +932,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     }))
 
     let pointsMoved = false
-
     for (let i = 0; i < numPolyLines; i++) {
       for (let k = 0; k < newPolyLines[i].mPoints.length; k++) {
         const mPoint = newPolyLines[i].mPoints[k]
@@ -998,7 +939,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
         // Calculate the net force by summing contributions
         const netForce = { fx: 0, fy: 0 }
-
         for (const force of forceMap.values()) {
           netForce.fx += force.fx
           netForce.fy += force.fy
@@ -1105,7 +1045,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     const minGaps = this.computeMinGapBtwPolyLines(newPolyLines)
     const g = this.computeG(newPolyLines, candidate) // G might represent something else now, e.g., total displacement or just step count
     const h = this.computeH({ minGaps, forces })
-
     const newNeighbor: Candidate = {
       polyLines: newPolyLines,
       g,
@@ -1131,9 +1070,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       return polyLine.mPoints.every((mPoint) => {
         const basePadding =
           mPoint.z1 !== mPoint.z2 ? this.viaDiameter / 2 : this.traceWidth / 2
-
         const padding = basePadding + this.BOUNDARY_PADDING
-
         return withinBounds(mPoint, this.bounds, padding)
       })
     })
@@ -1147,7 +1084,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   tryFinalAcceptance() {
     const minGapTarget =
       this.hyperParameters?.MINIMUM_FINAL_ACCEPTANCE_GAP ?? undefined
-
     if (
       minGapTarget === undefined ||
       this.lastCandidate === null ||
@@ -1157,15 +1093,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
     // take the smallest layer-to-layer gap of the last explored candidate
     const minGapAchieved = Math.min(...this.lastCandidate.minGaps)
-
     if (minGapAchieved >= minGapTarget) {
       // Accept this imperfect but good-enough solution
       this.solved = true
       this._setSolvedRoutes()
-
       return
     }
-
     return
   }
 
@@ -1173,39 +1106,27 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (this.phase === "setup") {
       this.setupInitialPolyLines()
       this.phase = "solving"
-
       return
     }
-
     const currentCandidate = this.candidates.shift()
-
     if (!currentCandidate) {
       this.tryFinalAcceptance()
-
       if (this.solved) return
       this.failed = true
       this.error = "No candidates left"
-
       return
     }
-
     this.lastCandidate = currentCandidate
-
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
       this._setSolvedRoutes()
-
       return
     }
-
     if (!currentCandidate) {
       this.failed = true
-
       return
     }
-
     const neighbors = this.getNeighbors(currentCandidate)
-
     for (const neighbor of neighbors) {
       this.insertCandidate(neighbor)
     }
@@ -1269,7 +1190,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (candidateToVisualize) {
       candidateToVisualize.polyLines.forEach((polyLine, polyLineIndex) => {
         const color = this.colorMap[polyLine.connectionName] ?? "purple"
-
         const pointsInPolyline = [
           polyLine.start,
           ...polyLine.mPoints,
@@ -1301,7 +1221,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         pointsInPolyline.forEach((point, pointIndex) => {
           const isVia = point.z1 !== point.z2
           const pointLayer = point.z1 // Layer before potential via
-
           const isMPoint =
             pointIndex > 0 && pointIndex < pointsInPolyline.length - 1
 
@@ -1310,7 +1229,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
 
           if (isMPoint) {
             const mPointIndex = pointIndex - 1
-
             const forceMap =
               candidateToVisualize.forces?.[polyLineIndex]?.[mPointIndex]
 
@@ -1324,22 +1242,17 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   const parts = sourceId.split(":")
                   const sourceType = parts[0] // "via" or "seg"
                   const applyingLineIndex = parseInt(parts[1], 10)
-
                   const applyingPolyline =
                     candidateToVisualize.polyLines[applyingLineIndex]
-
                   const applyingColor =
                     this.colorMap[applyingPolyline.connectionName] ?? "gray"
-
                   const forceScale = 20 // Adjust scale for visibility
-
                   const forceEndPoint = {
                     x: point.x + force.fx * forceScale,
                     y: point.y + force.fy * forceScale,
                   }
 
                   let sourceLabel = applyingPolyline.connectionName
-
                   if (sourceType === "via") {
                     const pointIdx = parseInt(parts[2], 10)
                     sourceLabel += ` Via ${pointIdx}`
@@ -1358,7 +1271,6 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
                   })
                 }
               })
-
               // Update the label to show the net force
               if (
                 Math.abs(netForce.fx) > 1e-6 ||
@@ -1382,13 +1294,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
             // Draw regular point (only draw mPoints for clarity, start/end are ports)
             if (isMPoint) {
               const isLayer0 = pointLayer === 0
-
               // Regular mPoint (not a via)
               // const isLayer0 = pointLayer === 0 // Removed duplicate declaration
               const pointColor = isLayer0
                 ? color
                 : safeTransparentize(color, 0.5)
-
               label = `mPoint (${polyLine.connectionName} z=${pointLayer})${forceLabel}`
 
               // Draw the circle for the mPoint itself

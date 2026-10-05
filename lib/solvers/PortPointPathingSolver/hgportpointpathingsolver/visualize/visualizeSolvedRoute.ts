@@ -14,7 +14,6 @@ export function visualizeSolvedRoute(
   for (const solvedRoute of solvedRoutes) {
     const connectionColor =
       colorMap[solvedRoute.connection.connectionId] ?? "rgba(255, 50, 50, 1)"
-
     const segmentPoints: Array<{ x: number; y: number; z: number }> = [
       {
         x: solvedRoute.connection.startRegion.d.center.x,
@@ -22,7 +21,6 @@ export function visualizeSolvedRoute(
         z: solvedRoute.connection.startRegion.d?.availableZ?.[0] ?? 0,
       },
     ]
-
     for (const candidate of solvedRoute.path) {
       segmentPoints.push({
         x: candidate.port.d.x,
@@ -30,7 +28,6 @@ export function visualizeSolvedRoute(
         z: candidate.port.d.z,
       })
     }
-
     segmentPoints.push({
       x: solvedRoute.connection.endRegion.d.center.x,
       y: solvedRoute.connection.endRegion.d.center.y,
@@ -42,7 +39,6 @@ export function visualizeSolvedRoute(
       const pointB = segmentPoints[i + 1]
       const sameLayer = pointA.z === pointB.z
       let strokeDash: string | undefined
-
       if (sameLayer) {
         strokeDash = pointA.z === 0 ? undefined : "10 5"
       } else {
@@ -58,10 +54,8 @@ export function visualizeSolvedRoute(
         strokeWidth: 0.01,
         strokeDash,
       }
-
       graphics.lines!.push(line)
     }
   }
-
   return graphics
 }

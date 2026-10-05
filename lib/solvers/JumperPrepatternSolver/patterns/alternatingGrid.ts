@@ -51,11 +51,9 @@ export function alternatingGrid(jps: JumperPrepatternSolver): PatternResult {
 
   while (true) {
     const result = generateAlternatingGrid(jps, jumperMargin, borderPadding)
-
     if (result.prepatternJumpers.length <= MAX_JUMPERS) {
       return result
     }
-
     // Increase padding and margin by 10%
     jumperMargin *= 1.1
     borderPadding *= 1.1
@@ -71,7 +69,6 @@ function generateAlternatingGrid(
   const jumperPadObstacles: Obstacle[] = []
 
   const node = jps.nodeWithPortPoints
-
   const bounds = {
     minX: node.center.x - node.width / 2 + borderPadding,
     maxX: node.center.x + node.width / 2 - borderPadding,
@@ -80,7 +77,6 @@ function generateAlternatingGrid(
     width: 0,
     height: 0,
   }
-
   bounds.width = bounds.maxX - bounds.minX
   bounds.height = bounds.maxY - bounds.minY
 
@@ -152,11 +148,9 @@ function generateAlternatingGrid(
       const distToStart = Math.sqrt(
         (pp.x - start.x) ** 2 + (pp.y - start.y) ** 2,
       )
-
       if (distToStart < margin) return true
 
       const distToEnd = Math.sqrt((pp.x - end.x) ** 2 + (pp.y - end.y) ** 2)
-
       if (distToEnd < margin) return true
     }
 
@@ -206,7 +200,6 @@ function generateAlternatingGrid(
     )
 
     jumperIndex++
-
     return true
   }
 
@@ -215,14 +208,12 @@ function generateAlternatingGrid(
       // Center of this grid cell
       const cellCenterX =
         bounds.minX + cellSize / 2 + col * cellSize + gridOffsetX
-
       const cellCenterY =
         bounds.minY + cellSize / 2 + row * cellSize + gridOffsetY
 
       // Alternate orientation based on checkerboard pattern
       // XOR with firstOrientationVertical to flip the pattern if needed
       const baseIsVertical = (row + col) % 2 === 1
-
       const isVertical = firstOrientationVertical
         ? !baseIsVertical
         : baseIsVertical

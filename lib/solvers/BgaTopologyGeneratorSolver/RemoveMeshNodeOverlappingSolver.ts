@@ -34,16 +34,13 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
   override _step(): void {
     if (this.obstacleQueueIndex >= this.obstacleQueue.length) {
       this.solved = true
-
       return
     }
 
     const obstacle: Obstacle = this.obstacleQueue[this.obstacleQueueIndex]!
-
     const obstacleAvailableZ: number[] = obstacle.layers.map((layerName) =>
       mapLayerNameToZ(layerName, this.inputProblem.layerCount),
     )
-
     const nextMeshNodes: CapacityMeshNode[] = []
 
     for (const node of this.meshNodes) {
@@ -86,7 +83,6 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
           availableZ: [z],
           layer: `z${z}`,
         }
-
         nextMeshNodes.push(nextMeshNode)
       }
     }
@@ -102,7 +98,6 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
 
   computeProgress(): number {
     if (this.obstacleQueue.length === 0) return 1
-
     return this.obstacleQueueIndex / this.obstacleQueue.length
   }
 
@@ -121,12 +116,10 @@ export class RemoveMeshNodeOverlappingWithUnmarkedObstacle extends BaseSolver {
       this.obstacleQueueIndex < this.obstacleQueue.length
         ? (this.obstacleQueue[this.obstacleQueueIndex] ?? null)
         : null
-
     const processedObstacles: Obstacle[] = this.obstacleQueue.slice(
       0,
       this.obstacleQueueIndex,
     )
-
     const pendingObstacles: Obstacle[] = currentObstacle
       ? this.obstacleQueue.slice(this.obstacleQueueIndex + 1)
       : []

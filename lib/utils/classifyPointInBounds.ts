@@ -62,19 +62,16 @@ export const classifyPointInBounds = ({
     target: bounds.minX,
     epsilon,
   })
-
   const isNearMaxX = isWithinEpsilon({
     value: point.x,
     target: bounds.maxX,
     epsilon,
   })
-
   const isNearMinY = isWithinEpsilon({
     value: point.y,
     target: bounds.minY,
     epsilon,
   })
-
   const isNearMaxY = isWithinEpsilon({
     value: point.y,
     target: bounds.maxY,
@@ -94,7 +91,6 @@ export const classifyPointInBounds = ({
     min: bounds.minY,
     max: bounds.maxY,
   })
-
   const isWithinXRange = isWithinRange({
     value: point.x,
     min: bounds.minX,

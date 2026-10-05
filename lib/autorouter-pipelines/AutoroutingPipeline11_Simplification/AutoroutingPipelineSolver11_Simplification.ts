@@ -102,7 +102,6 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
     ) {
       throw new Error("Simplification iterations must be a positive integer")
     }
-
     super({ inputSrj, options: { ...options } })
     this.MAX_ITERATIONS = 100e6
   }
@@ -122,7 +121,6 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
     if (!this.validateTraceSimplificationSolver?.solved) {
       throw new Error("Pipeline 11 simplification has not solved yet")
     }
-
     return this.validateTraceSimplificationSolver.getOutput()
   }
 

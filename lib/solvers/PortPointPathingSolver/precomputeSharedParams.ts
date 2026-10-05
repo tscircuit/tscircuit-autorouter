@@ -72,7 +72,6 @@ export function precomputeSharedParams(
       // Add to both nodes that share this port point
       for (const nodeId of pp.connectionNodeIds) {
         const nodePortPoints = nodePortPointsMap.get(nodeId)
-
         if (
           nodePortPoints &&
           !nodePortPoints.some((p) => p.portPointId === pp.portPointId)
@@ -108,7 +107,6 @@ export function clonePrecomputedMutableParams(
 ): Pick<PrecomputedInitialParams, "nodeAssignedPortPoints"> {
   // Clone nodeAssignedPortPoints - this is mutated during solving
   const nodeAssignedPortPoints = new Map<CapacityMeshNodeId, PortPoint[]>()
-
   for (const [nodeId, portPoints] of params.nodeAssignedPortPoints) {
     nodeAssignedPortPoints.set(nodeId, [...portPoints])
   }

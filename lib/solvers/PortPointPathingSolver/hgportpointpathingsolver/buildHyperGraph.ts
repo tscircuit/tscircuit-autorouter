@@ -28,11 +28,9 @@ const getNetIdFromConnMapOrThrow = (
   connectionId: string,
 ): string => {
   const netId = connectivityMap.getNetConnectedToId(connectionId)
-
   if (!netId) {
     throw new Error(`Could not resolve net ID for connection "${connectionId}"`)
   }
-
   return netId
 }
 
@@ -60,7 +58,6 @@ const getCandidateRegionsForAssignableVia = (params: {
     )
 
   const nearestDistance = candidates[0]?.distance
-
   if (nearestDistance === undefined) {
     return []
   }
@@ -88,13 +85,11 @@ const addAssignableViaRegions = (params: {
       obstacle,
       layerCount: params.layerCount,
     })
-
     if (availableZ.length < 2) continue
 
     const assignableViaId = getAssignableViaId(obstacle, index)
     const viaRegionId = `assignable-via:${assignableViaId}`
     const viaRadius = Math.min(obstacle.width, obstacle.height) / 2
-
     const viaRegion: RegionHg = {
       regionId: viaRegionId,
       d: {
@@ -114,7 +109,6 @@ const addAssignableViaRegions = (params: {
     }
 
     const viaPorts: RegionPortHg[] = []
-
     for (const z of availableZ) {
       for (const region of getCandidateRegionsForAssignableVia({
         graph: params.graph,
@@ -131,14 +125,12 @@ const addAssignableViaRegions = (params: {
           cramped: false,
           regions: [region, viaRegion],
         }
-
         const hgPort: RegionPortHg = {
           portId: rawPort.portId,
           d: rawPort,
           region1: region,
           region2: viaRegion,
         }
-
         viaPorts.push(hgPort)
         region.ports.push(hgPort)
       }
@@ -150,7 +142,6 @@ const addAssignableViaRegions = (params: {
           (existingPort) => existingPort !== port,
         )
       }
-
       continue
     }
 
@@ -178,14 +169,12 @@ export function buildHyperGraph(params: {
     ports: [],
     regions: [],
   }
-
   const connections: ConnectionHgWithSimpleRouteConnection[] = []
 
   for (const cmnNode of params.capacityMeshNodes) {
     const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
       getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
     )
-
     graph.regions.push({
       regionId: cmnNode.capacityMeshNodeId,
       d: connectedNetIds
@@ -200,11 +189,9 @@ export function buildHyperGraph(params: {
 
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-
     const region1 = graph.regions.find(
       (region) => region.regionId === region1Id,
     )
-
     const region2 = graph.regions.find(
       (region) => region.regionId === region2Id,
     )
@@ -223,7 +210,6 @@ export function buildHyperGraph(params: {
         spp._preloadedTracePortAssignments?.filter(
           (assignment) => assignment.z === z,
         )
-
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
         x: spp.x,
@@ -246,14 +232,12 @@ export function buildHyperGraph(params: {
             : undefined,
         _preloadedTracePortAssignments: preloadedTracePortAssignments,
       }
-
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,
         d: port,
         region1,
         region2,
       }
-
       graph.ports.push(hgPort)
       region1.ports.push(hgPort)
       region2.ports.push(hgPort)
@@ -274,7 +258,6 @@ export function buildHyperGraph(params: {
       point: startPoint,
       layerCount: params.layerCount,
     })
-
     const endRegion = selectConnectionPointRegion({
       graph,
       point: endPoint,

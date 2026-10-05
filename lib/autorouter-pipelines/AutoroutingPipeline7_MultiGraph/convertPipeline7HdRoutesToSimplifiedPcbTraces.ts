@@ -41,7 +41,6 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     string,
     string | undefined
   >()
-
   for (const connection of originalConnections) {
     if (!netConnectionNameByOriginalConnectionName.has(connection.name)) {
       netConnectionNameByOriginalConnectionName.set(
@@ -60,7 +59,6 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       }
 
       const [startPoint, endPoint] = connection.pointsToConnect
-
       return {
         connection,
         connectsTo: [startPoint?.pointId, endPoint?.pointId].filter(
@@ -79,17 +77,14 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
-
   const connectedObstaclesByConnectionName = new Map<
     string,
     Map<string | undefined, ReadonlyArray<Obstacle>>
   >()
-
   const getConnectedMultilayerObstacles = (route: HighDensityRoute) => {
     let byRootConnectionName = connectedObstaclesByConnectionName.get(
       route.connectionName,
     )
-
     if (!byRootConnectionName) {
       byRootConnectionName = new Map()
       connectedObstaclesByConnectionName.set(
@@ -97,27 +92,21 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
         byRootConnectionName,
       )
     }
-
     const cached = byRootConnectionName.get(route.rootConnectionName)
-
     if (cached) return cached
 
     const connected = multilayerObstacles.filter((obstacle) =>
       isObstacleConnectedToRoute(obstacle, route, connMap),
     )
-
     byRootConnectionName.set(route.rootConnectionName, connected)
-
     return connected
   }
 
   return (hdRoutes: HighDensityRoute[]): SimplifiedPcbTraces => {
     const traces: SimplifiedPcbTraces = []
     const routesByConnectionName = new Map<string, HighDensityRoute[]>()
-
     for (const route of hdRoutes) {
       const connectionRoutes = routesByConnectionName.get(route.connectionName)
-
       if (connectionRoutes) {
         connectionRoutes.push(route)
       } else {

@@ -22,7 +22,6 @@ export function selectConnectionPointRegion({
       layerCount,
     }),
   )
-
   const pointZLayers = getConnectionPointZLayers({ point, layerCount })
 
   return (

@@ -43,7 +43,7 @@ test("large redirected CI reports retain every diagnostic, parse completely and 
     expect(lint.status).toBe(1)
     expect(statSync(artifact).size).toBeGreaterThan(65_536)
     const report = JSON.parse(readFileSync(artifact, "utf8"))
-    expect(report.number_of_rules).toBe(24)
+    expect(report.number_of_rules).toBe(23)
     expect(report.number_of_files).toBe(1)
     expect(report.diagnostics.length).toBe(1000)
     const summarized = spawnSync(
@@ -59,7 +59,7 @@ test("large redirected CI reports retain every diagnostic, parse completely and 
     const summary = JSON.parse(readFileSync(summaryPath, "utf8"))
     expect(summary).toEqual({
       files: 1,
-      rules: 24,
+      rules: 23,
       errors: 1000,
       countsByRule: {
         "anti-slop(require-safety-comment-for-type-assertion)": 1000,

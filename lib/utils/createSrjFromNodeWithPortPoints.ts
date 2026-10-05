@@ -9,12 +9,10 @@ export function createSrjFromNodeWithPortPoints(
 
   // Group port points by connection name
   const connectionGroups = new Map<string, typeof portPoints>()
-
   for (const portPoint of portPoints) {
     if (!connectionGroups.has(portPoint.connectionName)) {
       connectionGroups.set(portPoint.connectionName, [])
     }
-
     connectionGroups.get(portPoint.connectionName)!.push(portPoint)
   }
 

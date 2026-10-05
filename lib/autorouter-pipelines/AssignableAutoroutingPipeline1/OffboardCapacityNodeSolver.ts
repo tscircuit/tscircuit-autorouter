@@ -79,7 +79,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
       const assignedObstacle = (node as any)._assignedViaObstacle as
         | Obstacle
         | undefined
-
       if (
         assignedObstacle?.offBoardConnectsTo &&
         assignedObstacle.offBoardConnectsTo.length > 0
@@ -95,13 +94,11 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
 
     for (const node of this.assignableNodes) {
       const assignedObstacle = (node as any)._assignedViaObstacle as Obstacle
-
       if (assignedObstacle?.offBoardConnectsTo) {
         for (const netName of assignedObstacle.offBoardConnectsTo) {
           if (!offboardGroups.has(netName)) {
             offboardGroups.set(netName, [])
           }
-
           offboardGroups.get(netName)!.push(node)
         }
       }
@@ -109,7 +106,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
 
     // Create direct connections between all nodes in each group
     this.pendingEdges = []
-
     for (const [netName, obstacleNodes] of offboardGroups) {
       if (obstacleNodes.length > 1) {
         for (let i = 0; i < obstacleNodes.length; i++) {
@@ -136,7 +132,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
           // All nodes shown, move to edges
           this.animationState = "showing_edges"
         }
-
         break
       }
 
@@ -152,7 +147,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
           this.animationState = "done"
           this.solved = true
         }
-
         break
       }
 
@@ -211,7 +205,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
     for (let i = 0; i < this.shownNodes.length; i++) {
       const node = this.shownNodes[i]
       const assignedObstacle = (node as any)._assignedViaObstacle as Obstacle
-
       const isNewest =
         i === this.shownNodes.length - 1 &&
         this.animationState === "showing_nodes"
@@ -238,7 +231,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
     // Draw created offboard edges
     for (let i = 0; i < this.createdEdges.length; i++) {
       const edge = this.createdEdges[i]
-
       const isNewest =
         i === this.createdEdges.length - 1 &&
         this.animationState === "showing_edges"
@@ -269,7 +261,6 @@ export class OffboardCapacityNodeSolver extends BaseSolver {
 
     // Build title based on state
     let title = "Offboard Capacity Node Solver"
-
     switch (this.animationState) {
       case "showing_nodes":
         title += ` - Showing nodes (${this.shownNodes.length}/${this.shownNodes.length + this.assignableNodes.length})`

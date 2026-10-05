@@ -16,7 +16,6 @@ export class FlatbushIndex<T> implements ISpatialIndex<T> {
     if (this.currentIndex >= this.index.numItems) {
       throw new Error("Exceeded initial capacity")
     }
-
     this.items[this.currentIndex] = item
     this.index.add(minX, minY, maxX, maxY)
     this.currentIndex++
@@ -28,7 +27,6 @@ export class FlatbushIndex<T> implements ISpatialIndex<T> {
 
   search(minX: number, minY: number, maxX: number, maxY: number): T[] {
     const ids = this.index.search(minX, minY, maxX, maxY)
-
     return ids.map((id) => this.items[id] || null).filter(Boolean) as T[]
   }
 

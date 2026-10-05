@@ -95,7 +95,6 @@ export class CachedIntraNodeRouteSolver
     cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform
   } {
     const center = this.nodeWithPortPoints.center
-
     const normalizedConnections = this.initialUnsolvedConnections.map(
       ({ connectionName, rootConnectionName, points }) => ({
         connectionName,
@@ -108,21 +107,16 @@ export class CachedIntraNodeRouteSolver
         })),
       }),
     )
-
     const normalizedPortPoints = [...this.nodeWithPortPoints.portPoints]
       .sort((a, b) => {
         if (a.connectionName !== b.connectionName) {
           return a.connectionName.localeCompare(b.connectionName)
         }
-
         if ((a.portPointId ?? "") !== (b.portPointId ?? "")) {
           return (a.portPointId ?? "").localeCompare(b.portPointId ?? "")
         }
-
         if (a.x !== b.x) return a.x - b.x
-
         if (a.y !== b.y) return a.y - b.y
-
         return (a.z ?? 0) - (b.z ?? 0)
       })
       .map((portPoint) => ({
@@ -182,7 +176,6 @@ export class CachedIntraNodeRouteSolver
       respectType: false,
       unorderedObjects: false,
     })}`
-
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey
@@ -203,7 +196,6 @@ export class CachedIntraNodeRouteSolver
       this.failed = true
       this.error = cachedSolution.error ?? this.error
     }
-
     this.unsolvedConnections = []
     this.activeSubSolver = null
     this.cacheHit = true
@@ -212,7 +204,6 @@ export class CachedIntraNodeRouteSolver
 
   attemptToUseCacheSync(): boolean {
     this.hasAttemptedToUseCache = true
-
     if (!this.cacheProvider?.isSyncCache) {
       return false
     }
@@ -222,14 +213,12 @@ export class CachedIntraNodeRouteSolver
         this.computeCacheKeyAndTransform()
       } catch (error) {
         console.error("Error computing cache key:", error)
-
         return false
       }
     }
 
     if (!this.cacheKey) {
       console.error("Failed to compute cache key.")
-
       return false
     }
 
@@ -240,7 +229,6 @@ export class CachedIntraNodeRouteSolver
 
       if (cachedSolution !== undefined && cachedSolution !== null) {
         this.applyCachedSolution(cachedSolution)
-
         return true
       }
     } catch (error) {
@@ -260,14 +248,12 @@ export class CachedIntraNodeRouteSolver
         this.computeCacheKeyAndTransform()
       } catch (error) {
         console.error("Error computing cache key during save:", error)
-
         return
       }
     }
 
     if (!this.cacheKey) {
       console.error("Failed to compute cache key before saving.")
-
       return
     }
 

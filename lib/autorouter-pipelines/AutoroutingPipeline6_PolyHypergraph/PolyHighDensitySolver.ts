@@ -69,11 +69,9 @@ export class PolyHighDensitySolver extends BaseSolver {
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         const nodeId =
           this.activeSubSolver.params.nodeWithPortPoints.capacityMeshNodeId
-
         const routes = this.activeSubSolver.solvedRoutes
         this.routesByNodeId.set(nodeId, [
           ...(this.routesByNodeId.get(nodeId) ?? []),
@@ -85,7 +83,6 @@ export class PolyHighDensitySolver extends BaseSolver {
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -96,12 +93,10 @@ export class PolyHighDensitySolver extends BaseSolver {
           .slice(0, 5)
           .map((solver) => solver.params.nodeWithPortPoints.capacityMeshNodeId)
           .join(", ")}. err0: ${this.failedSolvers[0]?.error}`
-
         return
       }
 
       this.solved = true
-
       return
     }
 
@@ -123,9 +118,7 @@ export class PolyHighDensitySolver extends BaseSolver {
       this.failedSolvers.length +
       this.unsolvedNodePortPoints.length +
       (this.activeSubSolver ? 1 : 0)
-
     if (total === 0) return 1
-
     return (
       (this.routes.length +
         this.failedSolvers.length +
@@ -188,14 +181,11 @@ export class PolyHighDensitySolver extends BaseSolver {
       const node = this.nodePortPoints.find(
         (candidate) => candidate.capacityMeshNodeId === nodeId,
       )
-
       const projectedRect = node?.projectedRect
-
       if (!projectedRect) continue
 
       for (const route of routes) {
         const routeColor = this.colorMap[route.connectionName] ?? "#0000ff"
-
         const projectedRectRoute = {
           ...route,
           route: route.route.map((point) => ({
@@ -206,7 +196,6 @@ export class PolyHighDensitySolver extends BaseSolver {
             solveSpacePointToProjectedRectPoint(via, projectedRect),
           ),
         }
-
         const mergedSegments = mergeRouteSegments(
           projectedRectRoute.route,
           route.connectionName,
@@ -240,7 +229,6 @@ export class PolyHighDensitySolver extends BaseSolver {
     }
 
     const activeSubSolverViz = this.activeSubSolver?.visualize()
-
     if (activeSubSolverViz) {
       polygonViz.polygons!.push(
         ...this.unsolvedNodePortPoints.map((node) => ({

@@ -15,7 +15,6 @@ export const createPipeline7RelaxedDrcEvaluator = (
 ): DrcEvaluator => {
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
-
     if (!evaluatedRoutes) {
       throw new Error("Pipeline7 relaxed DRC evaluation requires HD routes")
     }
@@ -24,7 +23,6 @@ export const createPipeline7RelaxedDrcEvaluator = (
       ...conversionOptions,
       hdRoutes: evaluatedRoutes,
     })
-
     const { errors, errorsWithCenters } = evaluateRelaxedDrc({
       inputSrj: conversionOptions.originalSrj,
       srjWithPointPairs: conversionOptions.srjWithPointPairs,

@@ -95,24 +95,20 @@ export class PipelineStageDebugRunner<
     await writeFile(this.logsPath, "")
 
     await this.log(`startedAt=${new Date().toISOString()}`)
-
     for (const [key, value] of Object.entries(this.context)) {
       await this.log(`${key}=${value ?? ""}`)
     }
-
     await this.log(
       `pngSize=${this.pngWidth}x${this.pngHeight} outputDir=${this.toDisplayPath(this.outputDir)}`,
     )
 
     let currentPhase = this.pipelineSolver.getCurrentPhase()
     let stoppedAfterStage: string | null = null
-
     if (currentPhase !== "none") {
       await this.log(this.getStageEnterLogLine(currentPhase))
     }
 
     let thrownError: unknown = null
-
     while (!this.pipelineSolver.solved && !this.pipelineSolver.failed) {
       const previousPhase = currentPhase
 
@@ -126,7 +122,6 @@ export class PipelineStageDebugRunner<
 
       if (currentPhase !== previousPhase && previousPhase !== "none") {
         await this.captureStage(previousPhase)
-
         if (previousPhase === this.stopAfterStage) {
           stoppedAfterStage = previousPhase
           break
@@ -161,7 +156,6 @@ export class PipelineStageDebugRunner<
         : this.pipelineSolver.failed
           ? "failed"
           : "incomplete"
-
     await this.log(
       `completed status=${status} iterations=${this.pipelineSolver.iterations} error=${this.pipelineSolver.error ?? ""}`,
     )
@@ -191,20 +185,16 @@ export class PipelineStageDebugRunner<
     }
 
     const stageSolver = this.getStageSolver(stageName)
-
     if (!stageSolver) {
       throw new Error(`Unable to resolve solver for stage "${stageName}"`)
     }
 
     const stageNumber = this.getStageNumber(stageName)
-
     const pngPath = path.join(
       this.outputDir,
       `stage${String(stageNumber).padStart(2, "0")}-${this.getSafeStageName(stageName)}.png`,
     )
-
     const basePath = pngPath.slice(0, -".png".length)
-
     const graphics =
       this.pipelineSolver.visualizeStage?.(stageSolver) ??
       this.getStageGraphics(stageSolver)
@@ -220,9 +210,7 @@ export class PipelineStageDebugRunner<
     const stepPngPaths = this.writeStepPngs
       ? await this.writeStepPngsForGraphics(basePath, graphics)
       : []
-
     const svgPath = this.writeSvg ? `${basePath}.svg` : undefined
-
     const graphicsJsonPath = this.writeGraphicsJson
       ? `${basePath}.graphics.json`
       : undefined
@@ -246,7 +234,6 @@ export class PipelineStageDebugRunner<
       graphicsJsonPath,
       stepPngPaths,
     } satisfies PipelineStageArtifact
-
     this.stageArtifacts.push(artifact)
 
     const elapsedTimeMs = this.pipelineSolver.timeSpentOnPhase?.[stageName]
@@ -282,7 +269,6 @@ export class PipelineStageDebugRunner<
 
   private getStageGraphics(stageSolver: VisualizingSolver): GraphicsObject {
     const graphics = stageSolver.visualize()
-
     return this.pipelineSolver.visualizationTraceColorMode === "net" &&
       this.pipelineSolver.colorMap
       ? applyNetColorsToGraphicsObject(graphics, this.pipelineSolver.colorMap)
@@ -291,7 +277,6 @@ export class PipelineStageDebugRunner<
 
   private getObjectSteps(graphics: GraphicsObject): number[] {
     const steps = new Set<number>()
-
     const collect = (objects: Array<{ step?: number }> | undefined): void => {
       for (const object of objects ?? []) {
         if (typeof object.step === "number") steps.add(object.step)
@@ -345,7 +330,6 @@ export class PipelineStageDebugRunner<
 
   private getStageEnterLogLine(stageName: string) {
     const stageNumber = this.getStageNumber(stageName)
-
     return `enter stage=${stageNumber} name=${stageName}`
   }
 
@@ -353,7 +337,6 @@ export class PipelineStageDebugRunner<
     const stepIndex = this.pipelineSolver.pipelineDef.findIndex(
       (step) => step.solverName === stageName,
     )
-
     return stepIndex === -1 ? this.stageArtifacts.length + 1 : stepIndex + 1
   }
 
@@ -370,7 +353,6 @@ export class PipelineStageDebugRunner<
     const candidate = (this.pipelineSolver as Record<string, unknown>)[
       stageName
     ]
-
     if (this.isVisualizingSolver(candidate)) {
       return candidate
     }
@@ -399,7 +381,6 @@ export class PipelineStageDebugRunner<
 
   private toDisplayPath(filePath: string) {
     const relativePath = path.relative(process.cwd(), filePath)
-
     return relativePath && !relativePath.startsWith("..")
       ? `./${relativePath}`
       : filePath

@@ -57,7 +57,6 @@ const getViasFromRoutePoints = (
 ): Array<{ x: number; y: number }> =>
   route.slice(0, -1).flatMap((point, pointIndex) => {
     const nextPoint = route[pointIndex + 1]!
-
     return point.z !== nextPoint.z &&
       Math.abs(point.x - nextPoint.x) <= POINT_EPSILON &&
       Math.abs(point.y - nextPoint.y) <= POINT_EPSILON
@@ -70,13 +69,11 @@ const getRoutePositionRange = (
 ): { start: number; end: number } => {
   const routePositionStart = route.preloadedRoutePositionStart
   const routePositionEnd = route.preloadedRoutePositionEnd
-
   if (routePositionStart === undefined || routePositionEnd === undefined) {
     throw new Error(
       `Pipeline9 fixed route "${route.connectionName}" is missing route-position metadata`,
     )
   }
-
   return {
     start: Math.min(routePositionStart, routePositionEnd),
     end: Math.max(routePositionStart, routePositionEnd),
@@ -89,7 +86,6 @@ const compareFixedRoutes = (
 ): number => {
   const leftRange = getRoutePositionRange(left)
   const rightRange = getRoutePositionRange(right)
-
   return (
     left.preloadedTraceIndex - right.preloadedTraceIndex ||
     leftRange.start - rightRange.start ||
@@ -105,7 +101,6 @@ const routesAreContiguous = (
 ): boolean => {
   const leftEnd = left.route.at(-1)
   const rightStart = right.route[0]
-
   return Boolean(
     leftEnd &&
       rightStart &&
@@ -121,7 +116,6 @@ const interpolateRoutePosition = (
   const start = route.preloadedRoutePositionStart ?? route.preloadedRouteIndex
   const end = route.preloadedRoutePositionEnd ?? route.preloadedRouteIndex
   const segmentCount = route.route.length - 1
-
   return start + ((end - start) * segmentBoundaryIndex) / segmentCount
 }
 
@@ -143,34 +137,27 @@ const getMutationMasksWithLockedBoundaries = ({
   "updatedFixedRoutes" | "regionalMutationMasks"
 >): Map<string, boolean[]> => {
   const mutationMasks = new Map<string, boolean[]>()
-
   for (const sourceRoute of updatedFixedRoutes) {
     if (sourceRoute.route.length === 0) {
       throw new Error(
         `Pipeline9 cannot normalize empty fixed route "${sourceRoute.connectionName}"`,
       )
     }
-
     const segmentCount = sourceRoute.route.length - 1
-
     if (mutationMasks.has(sourceRoute.connectionName)) {
       throw new Error(
         `Pipeline9 cannot normalize duplicate fixed route "${sourceRoute.connectionName}"`,
       )
     }
-
     const sourceMask = regionalMutationMasks.get(sourceRoute.connectionName)
-
     if (sourceMask && sourceMask.length !== segmentCount) {
       throw new Error(
         `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${sourceMask.length} segments, expected ${segmentCount}`,
       )
     }
-
     const maySimplify =
       sourceRoute.isThroughObstacle !== true &&
       (sourceRoute.jumpers?.length ?? 0) === 0
-
     mutationMasks.set(
       sourceRoute.connectionName,
       Array.from(
@@ -185,7 +172,6 @@ const getMutationMasksWithLockedBoundaries = ({
     route: PreloadedHighDensityRoute
     segmentIndex: number
   }> = []
-
   const lockCurrentRunBoundaries = (): void => {
     while (
       currentMutationRun[0] &&
@@ -198,7 +184,6 @@ const getMutationMasksWithLockedBoundaries = ({
       mutationMasks.get(boundary.route.connectionName)![boundary.segmentIndex] =
         false
     }
-
     while (
       currentMutationRun.at(-1) &&
       segmentIsLayerTransition(
@@ -210,39 +195,30 @@ const getMutationMasksWithLockedBoundaries = ({
       mutationMasks.get(boundary.route.connectionName)![boundary.segmentIndex] =
         false
     }
-
     currentMutationRun = []
   }
 
   let previousRoute: PreloadedHighDensityRoute | undefined
-
   for (const route of [...updatedFixedRoutes].sort(compareFixedRoutes)) {
     if (previousRoute && !routesAreContiguous(previousRoute, route)) {
       lockCurrentRunBoundaries()
     }
-
     const mask = mutationMasks.get(route.connectionName)!
-
     if (mask.length === 0) {
       lockCurrentRunBoundaries()
       previousRoute = route
       continue
     }
-
     for (let segmentIndex = 0; segmentIndex < mask.length; segmentIndex++) {
       if (!mask[segmentIndex]) {
         lockCurrentRunBoundaries()
         continue
       }
-
       currentMutationRun.push({ route, segmentIndex })
     }
-
     previousRoute = route
   }
-
   lockCurrentRunBoundaries()
-
   return mutationMasks
 }
 
@@ -260,27 +236,21 @@ const normalizeFixedRoutesByMutationMask = ({
   "updatedFixedRoutes" | "regionalMutationMasks"
 >): NormalizedFixedRoute[] => {
   const normalizedRoutes: NormalizedFixedRoute[] = []
-
   const mutationMasks = getMutationMasksWithLockedBoundaries({
     updatedFixedRoutes,
     regionalMutationMasks,
   })
-
   for (const sourceRoute of updatedFixedRoutes) {
     const segmentCount = sourceRoute.route.length - 1
     const mask = mutationMasks.get(sourceRoute.connectionName)!
-
     if (segmentCount === 0) {
       normalizedRoutes.push({ route: sourceRoute, mutated: false })
       continue
     }
-
     const runs: Array<{ start: number; end: number; mutated: boolean }> = []
-
     for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
       const mutated = mask[segmentIndex]!
       const previousRun = runs.at(-1)
-
       if (previousRun?.mutated === mutated) {
         previousRun.end = segmentIndex + 1
       } else {
@@ -291,10 +261,8 @@ const normalizeFixedRoutesByMutationMask = ({
         })
       }
     }
-
     for (const [runIndex, run] of runs.entries()) {
       const route = sourceRoute.route.slice(run.start, run.end + 1)
-
       const splitRoute: PreloadedHighDensityRoute = {
         ...sourceRoute,
         connectionName:
@@ -314,11 +282,9 @@ const normalizeFixedRoutesByMutationMask = ({
         route,
         vias: getViasFromRoutePoints(route),
       }
-
       normalizedRoutes.push({ route: splitRoute, mutated: run.mutated })
     }
   }
-
   return normalizedRoutes
 }
 
@@ -327,28 +293,22 @@ const createRegionalMutationSections = (
 ): FixedRouteSection[] => {
   const sections: FixedRouteSection[] = []
   let currentSection: FixedRouteSection | undefined
-
   for (const normalizedRoute of [...normalizedRoutes].sort((left, right) =>
     compareFixedRoutes(left.route, right.route),
   )) {
     const route = normalizedRoute.route
-
     if (!normalizedRoute.mutated) {
       currentSection = undefined
       continue
     }
-
     const firstPoint = route.route[0]
     const lastPoint = route.route.at(-1)
-
     if (!firstPoint || !lastPoint || route.route.length < 2) {
       throw new Error(
         `Pipeline9 cannot simplify empty fixed route "${route.connectionName}"`,
       )
     }
-
     const previousRoute = currentSection?.sourceRoutes.at(-1)
-
     if (
       currentSection &&
       previousRoute &&
@@ -361,7 +321,6 @@ const createRegionalMutationSections = (
       }
       continue
     }
-
     currentSection = {
       sourceRoutes: [route],
       start: { segmentIndex: 0, point: firstPoint },
@@ -369,7 +328,6 @@ const createRegionalMutationSections = (
     }
     sections.push(currentSection)
   }
-
   return sections
 }
 
@@ -379,13 +337,10 @@ const createEditableHdRoute = (
 ): HighDensityRoute => {
   const firstSourceRoute = section.sourceRoutes[0]
   const lastSourceRoute = section.sourceRoutes.at(-1)
-
   if (!firstSourceRoute || !lastSourceRoute) {
     throw new Error("Pipeline9 cannot simplify an empty mutation section")
   }
-
   const route: RoutePoint[] = [section.start.point]
-
   for (const [
     sourceRouteIndex,
     sourceRoute,
@@ -393,25 +348,20 @@ const createEditableHdRoute = (
     const isFirstRoute = sourceRouteIndex === 0
     const isLastRoute = sourceRouteIndex === section.sourceRoutes.length - 1
     const sliceStart = isFirstRoute ? section.start.segmentIndex + 1 : 0
-
     const sliceEnd = isLastRoute
       ? section.end.segmentIndex + 1
       : sourceRoute.route.length
-
     appendSectionRoutePoints(
       route,
       sourceRoute.route.slice(sliceStart, sliceEnd),
     )
   }
-
   appendSectionRoutePoints(route, [section.end.point])
-
   if (route.length < 2) {
     throw new Error(
       `Pipeline9 mutation section for "${firstSourceRoute.connectionName}" has no routable span`,
     )
   }
-
   return {
     connectionName: `pipeline9_mutated_preload_${firstSourceRoute.preloadedTraceIndex}_${sectionIndex}`,
     rootConnectionName: firstSourceRoute.rootConnectionName,
@@ -434,26 +384,21 @@ export const preparePipeline9MutatedPreloadedSections = ({
     updatedFixedRoutes,
     regionalMutationMasks,
   })
-
   const normalizedFixedRoutes = normalized.map(({ route }) => route)
   const mutationSections = createRegionalMutationSections(normalized)
-
   const sections = mutationSections.map((section, sectionIndex) => {
     const hdRoute = createEditableHdRoute(section, sectionIndex)
-
     return {
       connectionName: hdRoute.connectionName,
       section,
       hdRoute,
     }
   })
-
   const editableConnectionNames = new Set(
     sections.flatMap(({ section }) =>
       section.sourceRoutes.map((route) => route.connectionName),
     ),
   )
-
   return {
     sections,
     immutableHdRoutes: normalizedFixedRoutes.filter(
@@ -471,11 +416,9 @@ export const applyPipeline9MutatedPreloadedSections = ({
   const expectedConnectionNames = new Set(
     sections.map((section) => section.connectionName),
   )
-
   const simplifiedRouteByConnectionName = new Map(
     simplifiedHdRoutes.map((route) => [route.connectionName, route]),
   )
-
   if (
     simplifiedRouteByConnectionName.size !== sections.length ||
     simplifiedHdRoutes.some(
@@ -486,28 +429,22 @@ export const applyPipeline9MutatedPreloadedSections = ({
       `Pipeline9 trace simplification changed the mutation-section set (expected ${sections.length}, got ${simplifiedHdRoutes.length})`,
     )
   }
-
   const replacementBySourceConnectionName = new Map<
     string,
     PreloadedHighDensityRoute
   >()
-
   const firstSourceConnectionNames = new Set<string>()
-
   for (const preparedSection of sections) {
     const simplifiedRoute = simplifiedRouteByConnectionName.get(
       preparedSection.connectionName,
     )
-
     if (!simplifiedRoute) {
       throw new Error(
         `Pipeline9 trace simplification lost mutation section "${preparedSection.connectionName}"`,
       )
     }
-
     const simplifiedStart = simplifiedRoute.route[0]
     const simplifiedEnd = simplifiedRoute.route.at(-1)
-
     if (
       !simplifiedStart ||
       !simplifiedEnd ||
@@ -518,36 +455,29 @@ export const applyPipeline9MutatedPreloadedSections = ({
         `Pipeline9 trace simplification changed mutation-section boundary "${preparedSection.connectionName}"`,
       )
     }
-
     const replacement = spliceFixedRouteSection(
       preparedSection.section,
       simplifiedRoute,
     )
-
     const firstSourceRoute = preparedSection.section.sourceRoutes[0]!
     firstSourceConnectionNames.add(firstSourceRoute.connectionName)
-
     for (const sourceRoute of preparedSection.section.sourceRoutes) {
       if (replacementBySourceConnectionName.has(sourceRoute.connectionName)) {
         throw new Error(
           `Pipeline9 attempted to simplify fixed route "${sourceRoute.connectionName}" more than once`,
         )
       }
-
       replacementBySourceConnectionName.set(
         sourceRoute.connectionName,
         replacement,
       )
     }
   }
-
   return updatedFixedRoutes.flatMap((route) => {
     const replacement = replacementBySourceConnectionName.get(
       route.connectionName,
     )
-
     if (!replacement) return [route]
-
     return firstSourceConnectionNames.has(route.connectionName)
       ? [replacement]
       : []

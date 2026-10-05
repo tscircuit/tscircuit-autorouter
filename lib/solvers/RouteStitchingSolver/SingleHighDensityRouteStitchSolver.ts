@@ -5,9 +5,7 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { BaseSolver } from "../BaseSolver"
 
 const VIA_PENALTY = 1000
-
 const GAP_PENALTY = 100000
-
 const GEOMETRIC_TOLERANCE = 1e-3
 
 export class SingleHighDensityRouteStitchSolver extends BaseSolver {
@@ -37,18 +35,15 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     if (opts.hdRoutes.length === 0) {
       this.start = opts.start
       this.end = opts.end
-
       const routePoints = [
         { x: opts.start.x, y: opts.start.y, z: opts.start.z },
       ]
-
       const vias = []
 
       if (opts.start.z !== opts.end.z) {
         routePoints.push({ x: opts.start.x, y: opts.start.y, z: opts.end.z })
         vias.push({ x: opts.start.x, y: opts.start.y })
       }
-
       routePoints.push({ x: opts.end.x, y: opts.end.y, z: opts.end.z })
 
       this.mergedHdRoute = {
@@ -61,7 +56,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
         traceThickness: opts.defaultTraceThickness ?? 0.15,
       }
       this.solved = true
-
       return
     }
 
@@ -88,7 +82,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       if (minDist < bestDist) {
         bestDist = minDist
         firstRoute = route
-
         if (
           Math.min(distEndToFirst, distEndToLast) <
           Math.min(distStartToFirst, distStartToLast)
@@ -112,7 +105,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
-
     const closestFirstRoutePoint =
       distToFirst <= distToLast ? firstRouteFirstPoint : firstRouteLastPoint
 
@@ -145,12 +137,10 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       const hasLonelyEnd = candidateEnds.some((end) => {
         return !this.remainingHdRoutes.some((other) => {
           if (other === candidate) return false
-
           const otherEnds = [
             other.route[0],
             other.route[other.route.length - 1],
           ]
-
           return otherEnds.some(
             (oe) => oe.z === end.z && distance(end, oe) < TOL,
           )
@@ -169,14 +159,12 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     if (this.remainingHdRoutes.length === 0) {
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
-
       this.mergedHdRoute.route.push({
         x: this.end.x,
         y: this.end.y,
         z: lastMergedPoint.z,
       })
       this.solved = true
-
       return
     }
 
@@ -196,7 +184,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       const distToLast = distance(lastMergedPoint, lastPointInCandidate)
 
       let scoreFirst = Infinity
-
       if (lastMergedPoint.z === firstPointInCandidate.z) {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
@@ -216,7 +203,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
       }
 
       let scoreLast = Infinity
-
       if (lastMergedPoint.z === lastPointInCandidate.z) {
         if (distToLast < GEOMETRIC_TOLERANCE) {
           scoreLast = distToLast
@@ -239,7 +225,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     if (closestRouteIndex === -1) {
       // Should not happen given the gap fallback, but if no routes remain, we are done
       this.remainingHdRoutes = [] // Force exit next step
-
       return
     }
 
@@ -247,7 +232,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
     this.remainingHdRoutes.splice(closestRouteIndex, 1)
 
     let pointsToAdd: Array<{ x: number; y: number; z: number }>
-
     if (matchedOn === "first") {
       pointsToAdd = hdRouteToMerge.route
     } else {
@@ -324,7 +308,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
           color: "green",
           label: this.mergedHdRoute.connectionName,
         })
-
         graphics.rects!.push(...(jumperGraphics.rects ?? []))
         graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
@@ -363,7 +346,6 @@ export class SingleHighDensityRouteStitchSolver extends BaseSolver {
           color: routeColor,
           label: hdRoute.connectionName,
         })
-
         graphics.rects!.push(...(jumperGraphics.rects ?? []))
         graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }

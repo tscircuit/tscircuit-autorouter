@@ -21,7 +21,6 @@ export function projectPointOnSegment(
     0,
     Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq),
   )
-
   return {
     t,
     point: { x: a.x + t * dx, y: a.y + t * dy },

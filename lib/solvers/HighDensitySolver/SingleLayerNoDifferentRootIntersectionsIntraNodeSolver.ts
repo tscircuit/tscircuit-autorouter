@@ -13,7 +13,6 @@ import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPai
 import { BaseSolver } from "../BaseSolver"
 
 type Point3 = { x: number; y: number; z: number }
-
 type Point2 = { x: number; y: number }
 
 type PairTask = {
@@ -30,7 +29,6 @@ type ObstacleSegment = {
 }
 
 const EPS = 1e-6
-
 const POINT_OFFSET = 0.02
 
 const pointKey = (point: Point2) =>
@@ -42,15 +40,12 @@ const samePoint = (a: Point2, b: Point2) =>
 const dedupePoints = <T extends Point2>(points: T[]) => {
   const seen = new Set<string>()
   const deduped: T[] = []
-
   for (const point of points) {
     const key = pointKey(point)
-
     if (seen.has(key)) continue
     seen.add(key)
     deduped.push(point)
   }
-
   return deduped
 }
 
@@ -58,7 +53,6 @@ const uniqueAvailableZ = (node: NodeWithPortPoints) => {
   if (node.availableZ?.length) {
     return [...new Set(node.availableZ)].sort((a, b) => a - b)
   }
-
   return [...new Set(node.portPoints.map((p) => p.z ?? 0))].sort(
     (a, b) => a - b,
   )
@@ -76,13 +70,9 @@ const getEdge = (
   bounds: { minX: number; maxX: number; minY: number; maxY: number },
 ): "top" | "right" | "bottom" | "left" | null => {
   if (Math.abs(point.y - bounds.minY) < 1e-3) return "top"
-
   if (Math.abs(point.x - bounds.maxX) < 1e-3) return "right"
-
   if (Math.abs(point.y - bounds.maxY) < 1e-3) return "bottom"
-
   if (Math.abs(point.x - bounds.minX) < 1e-3) return "left"
-
   return null
 }
 
@@ -102,12 +92,10 @@ const segmentIntersectsForeignPort = (
 ) => {
   for (const port of foreignPorts) {
     if (samePoint(port, A) || samePoint(port, B)) continue
-
     if (pointToSegmentDistance(port, A, B) < 1e-4) {
       return true
     }
   }
-
   return false
 }
 
@@ -125,12 +113,10 @@ const segmentIntersectsObstacles = (
     ) {
       continue
     }
-
     if (doSegmentsIntersect(A, B, segment.A, segment.B)) {
       return true
     }
   }
-
   return false
 }
 
@@ -139,16 +125,12 @@ const getObstacleSegments = (
   currentRootConnectionName: string,
 ) => {
   const segments: ObstacleSegment[] = []
-
   for (const route of routes) {
     const routeRoot = route.rootConnectionName ?? route.connectionName
-
     if (routeRoot === currentRootConnectionName) continue
-
     for (let i = 0; i < route.route.length - 1; i++) {
       const A = route.route[i]!
       const B = route.route[i + 1]!
-
       if (A.z !== B.z) continue
       segments.push({
         A: { x: A.x, y: A.y },
@@ -157,7 +139,6 @@ const getObstacleSegments = (
       })
     }
   }
-
   return segments
 }
 
@@ -176,10 +157,8 @@ const getForeignPorts = (
 function* permutations<T>(items: T[], n = items.length): Generator<T[]> {
   if (n <= 1) {
     yield items.slice()
-
     return
   }
-
   for (let i = 0; i < n; i++) {
     ;[items[i], items[n - 1]] = [items[n - 1]!, items[i]!]
     yield* permutations(items, n - 1)
@@ -221,7 +200,6 @@ const findPath = ({
     for (const dx of [-POINT_OFFSET, 0, POINT_OFFSET]) {
       for (const dy of [-POINT_OFFSET, 0, POINT_OFFSET]) {
         const candidate = { x: point.x + dx, y: point.y + dy }
-
         if (!isInsideBounds(candidate, bounds)) continue
         candidatePoints.push(candidate)
       }
@@ -246,10 +224,8 @@ const findPath = ({
   while (queue.size > 0) {
     let currentKey: string | null = null
     let currentDistance = Infinity
-
     for (const key of queue) {
       const candidateDistance = distanceByKey.get(key) ?? Infinity
-
       if (
         candidateDistance < currentDistance - EPS ||
         (Math.abs(candidateDistance - currentDistance) <= EPS &&
@@ -262,30 +238,23 @@ const findPath = ({
 
     if (!currentKey || currentDistance === Infinity) break
     queue.delete(currentKey)
-
     if (currentKey === endKey) break
 
     const currentNode = nodeByKey.get(currentKey)!
-
     for (const nextKey of queue) {
       const nextNode = nodeByKey.get(nextKey)!
-
       if (samePoint(currentNode, nextNode)) continue
-
       if (segmentIntersectsObstacles(currentNode, nextNode, obstacleSegments)) {
         continue
       }
-
       if (segmentIntersectsForeignPort(currentNode, nextNode, foreignPorts)) {
         continue
       }
 
       const candidateDistance =
         currentDistance + distance(currentNode, nextNode)
-
       const nextDistance = distanceByKey.get(nextKey) ?? Infinity
       const nextPreviousKey = previousByKey.get(nextKey)
-
       if (
         candidateDistance < nextDistance - EPS ||
         (Math.abs(candidateDistance - nextDistance) <= EPS &&
@@ -303,12 +272,10 @@ const findPath = ({
 
   const path: Point2[] = []
   let currentKey: string | null = endKey
-
   while (currentKey) {
     path.push(nodeByKey.get(currentKey)!)
     currentKey = previousByKey.get(currentKey) ?? null
   }
-
   path.reverse()
 
   return path.map((point) => ({ x: point.x, y: point.y, z: A.z }))
@@ -338,19 +305,15 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
 
   static isApplicable(node: NodeWithPortPoints) {
     const availableZ = uniqueAvailableZ(node)
-
     if (availableZ.length !== 1) return false
-
     if (node.portPoints.length > 12) return false
 
     const bounds = getBounds(node)
-
     if (node.portPoints.some((point) => getEdge(point, bounds) === null)) {
       return false
     }
 
     const pointCountByConnection = new Map<string, number>()
-
     for (const portPoint of node.portPoints) {
       pointCountByConnection.set(
         portPoint.connectionName,
@@ -363,20 +326,17 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
 
   private buildTaskGroups() {
     const groups = new Map<string, PortPoint[]>()
-
     for (const portPoint of this.nodeWithPortPoints.portPoints) {
       const existing = groups.get(portPoint.connectionName) ?? []
       existing.push(portPoint)
       groups.set(portPoint.connectionName, existing)
     }
-
     return groups
   }
 
   private trySolveNode() {
     const bounds = getBounds(this.nodeWithPortPoints)
     const groups = this.buildTaskGroups()
-
     const pairTasks: PairTask[] = Array.from(groups.entries()).flatMap(
       ([connectionName, points]) =>
         getConnectionPortPointPairs(points).map(([A, B]) => ({
@@ -400,12 +360,10 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
           solvedRoutes,
           task.rootConnectionName,
         )
-
         const foreignPorts = getForeignPorts(
           this.nodeWithPortPoints,
           task.rootConnectionName,
         )
-
         const path = findPath({
           A: task.A,
           B: task.B,
@@ -440,12 +398,10 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Base
 
   _step() {
     const solvedRoutes = this.trySolveNode()
-
     if (!solvedRoutes) {
       this.failed = true
       this.error =
         "Failed to find a single-layer route set without different-root intersections"
-
       return
     }
 

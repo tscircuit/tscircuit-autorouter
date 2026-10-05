@@ -34,7 +34,6 @@ const getProjectedPortsForNode = (
       portPoint,
       nodeWithPortPoints.projectedRect!,
     )
-
     return {
       original: portPoint,
       projected: {
@@ -58,7 +57,6 @@ const findOriginalPortForRouteEndpoint = (
       projected.connectionName === connectionName &&
       (projectedPoint.z === undefined || projected.z === projectedPoint.z),
   )
-
   if (sameConnectionPorts.length === 0) return undefined
 
   return sameConnectionPorts.reduce((best, candidate) =>
@@ -74,19 +72,16 @@ export const projectHighDensityRouteToPolygon = (
   nodeWithPortPoints: PolyNodeWithPortPoints,
 ): HighDensityIntraNodeRoute => {
   const projectedRect = nodeWithPortPoints.projectedRect
-
   if (!projectedRect) {
     throw new Error("Poly node is missing projectedRect")
   }
 
   const matrix = projectedRect.rectToPolygonMatrix
   const projectedPorts = getProjectedPortsForNode(nodeWithPortPoints)
-
   const projectedRoute = route.route.map((point) => ({
     ...point,
     ...applyMatrixToPoint(matrix, point),
   }))
-
   const projectedVias = route.vias.map((via) => applyMatrixToPoint(matrix, via))
 
   const firstOriginal = findOriginalPortForRouteEndpoint(
@@ -94,7 +89,6 @@ export const projectHighDensityRouteToPolygon = (
     route.connectionName,
     route.route[0]!,
   )
-
   const lastOriginal = findOriginalPortForRouteEndpoint(
     projectedPorts,
     route.connectionName,
@@ -109,7 +103,6 @@ export const projectHighDensityRouteToPolygon = (
       z: firstOriginal.z,
     }
   }
-
   if (lastOriginal && projectedRoute[projectedRoute.length - 1]) {
     projectedRoute[projectedRoute.length - 1] = {
       ...projectedRoute[projectedRoute.length - 1]!,
@@ -170,11 +163,9 @@ export class ProjectHighDensityToPolygonSolver extends BaseSolver {
     for (const node of this.nodePortPoints) {
       const rawRoutes =
         this.rawRoutesByNodeId.get(node.capacityMeshNodeId) ?? []
-
       const projectedRoutes = rawRoutes.map((route) =>
         projectHighDensityRouteToPolygon(route, node),
       )
-
       if (projectedRoutes.length > 0) {
         this.routesByNodeId.set(node.capacityMeshNodeId, projectedRoutes)
         this.routes.push(...projectedRoutes)
@@ -224,7 +215,6 @@ export class ProjectHighDensityToPolygonSolver extends BaseSolver {
 
     for (const route of this.routes) {
       const routeColor = this.colorMap[route.connectionName] ?? "#0000ff"
-
       const mergedSegments = mergeRouteSegments(
         route.route,
         route.connectionName,

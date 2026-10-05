@@ -138,7 +138,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       if (!node1 || !node2) continue
 
       const segment = this.computeSharedEdgeSegment(edge, node1, node2)
-
       if (segment) {
         this.sharedEdgeSegments.push(segment)
         this.edgeSegmentMap.set(edge.capacityMeshEdgeId, segment)
@@ -156,14 +155,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     node2: CapacityMeshNode,
   ): SharedEdgeSegment | null {
     const overlap = this.findOverlappingSegment(node1, node2)
-
     if (!overlap) return null
 
     // Compute mutually available Z layers
     const availableZ = node1.availableZ.filter((z) =>
       node2.availableZ.includes(z),
     )
-
     if (availableZ.length === 0) return null
 
     // Compute how many port points can fit on this segment
@@ -171,7 +168,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       (overlap.end.x - overlap.start.x) ** 2 +
         (overlap.end.y - overlap.start.y) ** 2,
     )
-
     const edgeTouchesNarrowQfpPadGap = Boolean(
       node1._isNarrowQfpPadGap || node2._isNarrowQfpPadGap,
     )
@@ -189,9 +185,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       if (!this.shouldReturnCrampedPortPoints) {
         return null
       }
-
       const crampedPortPoints: SegmentPortPoint[] = []
-
       for (const z of availableZ) {
         crampedPortPoints.push({
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}_cramped`,
@@ -205,7 +199,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           cramped: true,
         })
       }
-
       return {
         edgeId: edge.capacityMeshEdgeId,
         nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
@@ -215,7 +208,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         portPoints: crampedPortPoints,
       }
     }
-
     // At minimum we need 1 port point, at maximum we space them minPortSpacing apart
     let maxPortPoints = Math.max(
       1,
@@ -234,7 +226,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           return null
         }
       }
-
       maxPortPoints = 1
     }
 
@@ -255,10 +246,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     // First pass: compute all XY positions and find which is closest to segment center
     const xyPositions: Array<{ x: number; y: number; distToCenter: number }> =
       []
-
     for (let i = 0; i < maxPortPoints; i++) {
       let fraction: number
-
       if (segmentLength === 0) {
         fraction = 0.5
       } else if (maxPortPoints === 1) {
@@ -268,7 +257,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           (edgeMargin + (effectiveLength * i) / (maxPortPoints - 1)) /
           segmentLength
       }
-
       const x = overlap.start.x + dx * fraction
       const y = overlap.start.y + dy * fraction
       const distToCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
@@ -302,7 +290,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           distToCentermostPortOnZ,
           cramped: edgeTouchesNarrowQfpPadGap,
         }
-
         portPoints.push(portPoint)
       }
     }
@@ -328,16 +315,13 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   ): boolean {
     const middleNodeEdges =
       this.nodeEdgeMap.get(middleNode.capacityMeshNodeId) ?? []
-
     for (const e of middleNodeEdges) {
       const otherNodeId =
         e.nodeIds[0] === middleNode.capacityMeshNodeId
           ? e.nodeIds[1]
           : e.nodeIds[0]
-
       if (otherNodeId === offBoardNode.capacityMeshNodeId) continue
       const otherNode = this.nodeMap.get(otherNodeId)!
-
       if (
         otherNode?._offBoardConnectionId !== offBoardNode._offBoardConnectionId
       )
@@ -347,7 +331,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       const nodesWithSameOffBoardId = this.nodes.filter(
         (n) => n._offBoardConnectionId === offBoardNode._offBoardConnectionId,
       )
-
       if (nodesWithSameOffBoardId.length !== 2) continue
 
       // Check that the midpoint of the two off-board nodes is inside the middle node
@@ -355,18 +338,15 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         x: (offBoardNode.center.x + otherNode.center.x) / 2,
         y: (offBoardNode.center.y + otherNode.center.y) / 2,
       }
-
       const insideMiddleNode =
         midpoint.x >= middleNode.center.x - middleNode.width / 2 &&
         midpoint.x <= middleNode.center.x + middleNode.width / 2 &&
         midpoint.y >= middleNode.center.y - middleNode.height / 2 &&
         midpoint.y <= middleNode.center.y + middleNode.height / 2
-
       if (insideMiddleNode) {
         return true
       }
     }
-
     return false
   }
 
@@ -403,14 +383,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     // If there's no overlap, return null
     // Use small epsilon to handle floating-point precision issues at node boundaries
     const epsilon = 0.0001
-
     if (xRange < -epsilon || yRange < -epsilon) return null
 
     // If the x-range is smaller then the nodes touch vertically (common vertical edge).
     if (xRange < yRange) {
       // They are horizontally adjacent: shared vertical edge.
       const x = (xOverlap.start + xOverlap.end) / 2
-
       return {
         start: { x, y: yOverlap.start },
         end: { x, y: yOverlap.end },
@@ -418,7 +396,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     } else {
       // Otherwise, they are vertically adjacent: shared horizontal edge.
       const y = (yOverlap.start + yOverlap.end) / 2
-
       return {
         start: { x: xOverlap.start, y },
         end: { x: xOverlap.end, y },
@@ -439,11 +416,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         (e.nodeIds[0] === nodeId1 && e.nodeIds[1] === nodeId2) ||
         (e.nodeIds[0] === nodeId2 && e.nodeIds[1] === nodeId1),
     )
-
     if (!edge) return []
 
     const segment = this.edgeSegmentMap.get(edge.capacityMeshEdgeId)
-
     if (!segment) return []
 
     // Return port points that are not currently assigned
@@ -462,11 +437,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         (e.nodeIds[0] === nodeId1 && e.nodeIds[1] === nodeId2) ||
         (e.nodeIds[0] === nodeId2 && e.nodeIds[1] === nodeId1),
     )
-
     if (!edge) return []
 
     const segment = this.edgeSegmentMap.get(edge.capacityMeshEdgeId)
-
     return segment?.portPoints ?? []
   }
 
@@ -479,14 +452,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     rootConnectionName?: string,
   ): boolean {
     const portPoint = this.portPointMap.get(segmentPortPointId)
-
     if (!portPoint) return false
-
     if (portPoint.connectionName !== null) return false // Already assigned
 
     portPoint.connectionName = connectionName
     portPoint.rootConnectionName = rootConnectionName
-
     return true
   }
 
@@ -495,12 +465,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
    */
   releasePortPoint(segmentPortPointId: string): boolean {
     const portPoint = this.portPointMap.get(segmentPortPointId)
-
     if (!portPoint) return false
 
     portPoint.connectionName = null
     portPoint.rootConnectionName = undefined
-
     return true
   }
 

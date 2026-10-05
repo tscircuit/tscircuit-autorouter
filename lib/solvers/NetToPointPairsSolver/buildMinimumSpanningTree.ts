@@ -152,7 +152,6 @@ class KDTree {
 
     // Get the kth distance if we have k neighbors
     let kthDistance = Infinity
-
     if (neighbors.length >= k) {
       neighbors.sort((a, b) => a.distance - b.distance)
       kthDistance = neighbors[k - 1]?.distance || Infinity
@@ -196,20 +195,17 @@ export class DisjointSet {
 
   find(point: Point): string {
     const key = this.pointToKey(point)
-
     if (!this.parent.has(key)) {
       throw new Error(`Point ${key} not found in DisjointSet`)
     }
 
     let root = key
-
     while (root !== this.parent.get(root)) {
       root = this.parent.get(root)!
     }
 
     // Path compression
     let current = key
-
     while (current !== root) {
       const next = this.parent.get(current)!
       this.parent.set(current, root)

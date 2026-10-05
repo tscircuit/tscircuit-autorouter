@@ -52,11 +52,9 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
 
     // Sort nodes by area (smallest to largest)
     const nodesWithArea: Array<[string, number]> = []
-
     for (const node of nodes) {
       nodesWithArea.push([node.capacityMeshNodeId, node.width * node.height])
     }
-
     nodesWithArea.sort((a, b) => a[1] - b[1])
 
     this.currentBatchNodeIds = nodesWithArea.map((n) => n[0])
@@ -105,7 +103,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
 
   _step() {
     let rootNodeId = this.currentBatchNodeIds.pop()
-
     while (rootNodeId && this.absorbedNodeIds.has(rootNodeId)) {
       rootNodeId = this.currentBatchNodeIds.pop()
     }
@@ -116,12 +113,10 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
         this.currentBatchNodeIds = this.nextBatchNodeIds.sort((a, b) => {
           const A = this.nodeMap.get(a)!
           const B = this.nodeMap.get(b)!
-
           return A.width * A.height - B.width * B.height
         })
         this.nextBatchNodeIds = []
         this.batchHadModifications = false
-
         return
       }
 
@@ -130,7 +125,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
       this.newNodes.push(
         ...this.nextBatchNodeIds.map((id) => this.nodeMap.get(id)!),
       )
-
       return
     }
 
@@ -142,7 +136,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
 
     if (adjacentNodes.length === 0) {
       this.nextBatchNodeIds.push(rootNodeId)
-
       return
     }
 
@@ -158,7 +151,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
     if (adjacentNodesToLeft.length > 0) {
       const { width: leftAdjNodeWidth, height: leftAdjNodeHeight } =
         adjacentNodesToLeft[0]
-
       const leftAdjNodesAreAllSameSize = adjacentNodesToLeft.every(
         (adjNode) =>
           adjNode.width === leftAdjNodeWidth &&
@@ -201,7 +193,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
     if (adjacentNodesToRight.length > 0 && !rootNodeHasGrown) {
       const { width: rightAdjNodeWidth, height: rightAdjNodeHeight } =
         adjacentNodesToRight[0]
-
       const rightAdjNodesAreAllSameSize = adjacentNodesToRight.every(
         (adjNode) =>
           adjNode.width === rightAdjNodeWidth &&
@@ -244,7 +235,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
     if (adjacentNodesToTop.length > 0 && !rootNodeHasGrown) {
       const { width: topAdjNodeWidth, height: topAdjNodeHeight } =
         adjacentNodesToTop[0]
-
       const topAdjNodesAreAllSameSize = adjacentNodesToTop.every(
         (adjNode) =>
           adjNode.width === topAdjNodeWidth &&
@@ -287,7 +277,6 @@ export class CapacityNodeTargetMerger2 extends BaseSolver {
     if (adjacentNodesToBottom.length > 0 && !rootNodeHasGrown) {
       const { width: bottomAdjNodeWidth, height: bottomAdjNodeHeight } =
         adjacentNodesToBottom[0]
-
       const bottomAdjNodesAreAllSameSize = adjacentNodesToBottom.every(
         (adjNode) =>
           adjNode.width === bottomAdjNodeWidth &&

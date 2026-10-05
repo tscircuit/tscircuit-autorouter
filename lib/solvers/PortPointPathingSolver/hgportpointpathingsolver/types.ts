@@ -86,9 +86,7 @@ export type RegionPortAssignmentHg = Omit<
 }
 
 export type RegionId = CapacityMeshNodeId
-
 export type RegionMemoryPfMap = Map<RegionId, number>
-
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {

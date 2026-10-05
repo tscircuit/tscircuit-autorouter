@@ -9,13 +9,10 @@ export function mergeGraphicsArray(
     if (!acc || !obj) {
       return {}
     }
-
     return mergeGraphics(acc, obj)
   }, merged)
-
   if (!merged) {
     return {}
   }
-
   return merged
 }

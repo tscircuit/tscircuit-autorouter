@@ -23,13 +23,11 @@ export function getViaCombinations(
     if (sameZ) {
       // even or zero
       opts.push([]) // zero vias
-
       if (cands.length >= 2) {
         // pick exactly two (closest two)
         const two = cands
           .slice(0, 2)
           .map((vp) => ({ x: vp.x, y: vp.y, connectionName: conn }))
-
         opts.push(two)
       }
     } else {
@@ -88,13 +86,11 @@ export function getViaCombinations(
 
   for (const connOpts of allOpts) {
     const newCombos: ViaPlacement[][] = []
-
     for (const base of combos) {
       for (const picks of connOpts) {
         newCombos.push(base.concat(picks))
       }
     }
-
     combos = newCombos
   }
 

@@ -7,7 +7,6 @@ const intSpace = (a: number) => Math.round(a * 10000)
 export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
   // Count the number of crossings
   let numSameLayerCrossings = 0
-
   let pointPairs: {
     points: { x: number; y: number; z: number }[]
     z: number
@@ -23,31 +22,25 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     if (pointPairs.some((p) => p.connectionName === A.connectionName)) {
       continue
     }
-
     if (
       transitionPairPoints.some((p) => p.connectionName === A.connectionName)
     ) {
       continue
     }
-
     const pointPair = {
       connectionName: A.connectionName,
       z: A.z,
       points: [{ x: intSpace(A.x), y: intSpace(A.y), z: A.z }],
     }
-
     for (const B of node.portPoints) {
       if (A.connectionName !== B.connectionName) continue
-
       if (A.x === B.x && A.y === B.y) continue
       pointPair.points.push({ x: intSpace(B.x), y: intSpace(B.y), z: B.z })
     }
-
     if (pointPair.points.some((p) => p.z !== pointPair.z)) {
       transitionPairPoints.push(pointPair)
       continue
     }
-
     pointPairs.push(pointPair)
   }
 
@@ -58,7 +51,6 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
     for (let j = i + 1; j < pointPairs.length; j++) {
       const pair1 = pointPairs[i]
       const pair2 = pointPairs[j]
-
       if (
         pair1.z === pair2.z &&
         doSegmentsIntersect(
@@ -74,7 +66,6 @@ export const getIntraNodeCrossings = (node: NodeWithPortPoints) => {
   }
 
   let numTransitionPairCrossings = 0
-
   for (let i = 0; i < transitionPairPoints.length; i++) {
     for (let j = i + 1; j < transitionPairPoints.length; j++) {
       const pair1 = transitionPairPoints[i]

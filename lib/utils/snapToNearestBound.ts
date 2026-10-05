@@ -13,7 +13,6 @@ export function snapToNearestBound(
   // Find the minimum distance for X and snap X coordinate
   let snappedX = point.x
   const minDistX = Math.min(distToLeft, distToRight)
-
   if (minDistX === distToLeft) {
     snappedX = bounds.minX
   } else if (minDistX === distToRight) {
@@ -23,7 +22,6 @@ export function snapToNearestBound(
   // Find the minimum distance for Y and snap Y coordinate
   let snappedY = point.y
   const minDistY = Math.min(distToTop, distToBottom)
-
   if (minDistY === distToTop) {
     snappedY = bounds.minY
   } else if (minDistY === distToBottom) {

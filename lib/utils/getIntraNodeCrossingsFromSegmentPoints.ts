@@ -16,7 +16,6 @@ export const getIntraNodeCrossingsFromSegmentPoints = (
     if (!connectionGroups.has(point.connectionName)) {
       connectionGroups.set(point.connectionName, [])
     }
-
     connectionGroups.get(point.connectionName)!.push(point)
   }
 

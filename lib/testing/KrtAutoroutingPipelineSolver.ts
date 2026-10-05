@@ -121,13 +121,11 @@ const addStitchesToTraces = (
     const trace = tracesWithStitches.find(
       (candidate) => candidate.connection_name === stitch.connectionName,
     )
-
     if (!trace) continue
 
     const firstRoutePoint = trace.route.find(
       (point) => "x" in point && "y" in point,
     )
-
     const lastRoutePoint = [...trace.route]
       .reverse()
       .find((point) => "x" in point && "y" in point)
@@ -228,16 +226,13 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
 
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -250,7 +245,6 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -275,7 +269,6 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
     if (!this.solved || !this.krtAutorouterSolver) {
       throw new Error("Cannot get output before solving is complete")
     }
-
     return this.krtAutorouterSolver.traces
   }
 
@@ -292,7 +285,6 @@ export class KrtAutoroutingPipelineSolver extends BaseSolver {
     }
 
     const inputViz = convertSrjToGraphicsObject(this.srj)
-
     if (!this.solved) {
       return inputViz
     }

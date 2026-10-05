@@ -55,7 +55,6 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -245,7 +244,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       {
         onSolved: (cms) => {
           const winningSolver = cms.initialPathingHyperSolver?.winningSolver
-
           if (winningSolver) {
             cms.initialPathingSolver = winningSolver
           }
@@ -266,7 +264,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       {
         onSolved: (cms) => {
           const solver = cms.offboardPathFragmentSolver
-
           if (!solver) return
 
           // Add colors for fragmented connection names based on original connection
@@ -275,7 +272,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           for (const path of fragmentedPaths) {
             if (path.isFragmentedPath && path.mstPairConnectionName) {
               const originalColor = cms.colorMap[path.mstPairConnectionName]
-
               if (originalColor && !cms.colorMap[path.connectionName]) {
                 cms.colorMap[path.connectionName] = originalColor
               }
@@ -285,7 +281,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           // Update srjWithPointPairs: remove original connections, add fragment connections
           const fragmentedOriginalNames =
             solver.getFragmentedOriginalConnectionNames()
-
           const fragmentedConnections = solver.getFragmentedConnections()
 
           if (fragmentedOriginalNames.size > 0 && cms.srjWithPointPairs) {
@@ -328,13 +323,11 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       CapacitySegmentToPointSolver,
       (cms) => {
         const allSegments: NodePortSegment[] = []
-
         if (cms.edgeToPortSegmentSolver?.nodePortSegments) {
           cms.edgeToPortSegmentSolver.nodePortSegments.forEach((segs) => {
             allSegments.push(...segs)
           })
         }
-
         return [
           {
             segments: allSegments,
@@ -492,16 +485,13 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -515,7 +505,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -554,22 +543,17 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     const pathingOptimizerViz = this.pathingOptimizer?.visualize()
     const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize()
     const segmentToPointViz = this.segmentToPointSolver?.visualize()
-
     const segmentOptimizationViz =
       this.unravelMultiSectionSolver?.visualize() ??
       this.segmentToPointOptimizer?.visualize()
-
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const uselessViaRemovalViz1 = this.uselessViaRemovalSolver1?.visualize()
     const uselessViaRemovalViz2 = this.uselessViaRemovalSolver2?.visualize()
-
     const simplifiedPathSolverViz1 =
       this.multiSimplifiedPathSolver1?.visualize()
-
     const simplifiedPathSolverViz2 =
       this.multiSimplifiedPathSolver2?.visualize()
-
     const problemOutline = this.srj.outline
     const problemLines: Line[] = []
 
@@ -665,7 +649,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     // return visualizations[visualizations.length - 1]
     return combineVisualizations(...visualizations)
   }
@@ -682,7 +665,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -692,16 +674,13 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
     if (this.pathingOptimizer) {
       const lines: Line[] = []
-
       for (const connection of this.pathingOptimizer.connectionsWithNodes) {
         if (!connection.path) continue
         lines.push({
@@ -712,7 +691,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           strokeColor: this.colorMap[connection.connection.name],
         })
       }
-
       return { lines }
     }
 
@@ -759,7 +737,6 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,

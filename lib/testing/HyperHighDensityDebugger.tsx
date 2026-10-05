@@ -41,20 +41,15 @@ export const HyperHighDensityDebugger = ({
     if (solverAction === "step") {
       if (!solver.solved && !solver.failed) {
         solver.step()
-
         if (solver.iterations % 100 === 0) {
           const bestFitnessSolver = solver.getSupervisedSolverWithBestFitness()
-
           if (bestFitnessSolver) {
             setTab(solver.supervisedSolvers?.indexOf(bestFitnessSolver) ?? 0)
           }
         }
-
         setIters(solver.iterations)
       }
-
       onActionComplete?.()
-
       return
     }
 
@@ -62,16 +57,12 @@ export const HyperHighDensityDebugger = ({
       while (!solver.solved && !solver.failed) {
         solver.step()
       }
-
       const bestFitnessSolver = solver.getSupervisedSolverWithBestFitness()
-
       if (bestFitnessSolver) {
         setTab(solver.supervisedSolvers?.indexOf(bestFitnessSolver) ?? 0)
       }
-
       setIters(solver.iterations)
       onActionComplete?.()
-
       return
     }
 
@@ -81,30 +72,23 @@ export const HyperHighDensityDebugger = ({
       if (solver.solved || solver.failed) {
         clearInterval(interval)
         onActionComplete?.()
-
         return
       }
-
       solver.step()
-
       if (solver.iterations % 100 === 0) {
         const bestFitnessSolver = solver.getSupervisedSolverWithBestFitness()
-
         if (bestFitnessSolver) {
           setTab(solver.supervisedSolvers?.indexOf(bestFitnessSolver) ?? 0)
         }
       }
-
       setIters(solver.iterations)
     }, animationSpeed)
-
     return () => clearInterval(interval)
   }, [solver, solverAction, animationSpeed, onActionComplete])
 
   useEffect(() => {
     if (!solver.solved) return
     const bestFitnessSolver = solver.getSupervisedSolverWithBestFitness()
-
     if (bestFitnessSolver) {
       setTab(solver.supervisedSolvers?.indexOf(bestFitnessSolver) ?? 0)
     }
@@ -112,7 +96,6 @@ export const HyperHighDensityDebugger = ({
 
   let graphics: GraphicsObject | null
   const focusedSolver = solver.supervisedSolvers?.[tab]?.solver
-
   if (!focusedSolver) {
     graphics = null
   } else if (focusedSolver.failed) {
@@ -132,7 +115,6 @@ export const HyperHighDensityDebugger = ({
     : solver.failed
       ? "failed"
       : "running"
-
   const focusedStatus = focusedSolver?.solved
     ? "solved"
     : focusedSolver?.failed

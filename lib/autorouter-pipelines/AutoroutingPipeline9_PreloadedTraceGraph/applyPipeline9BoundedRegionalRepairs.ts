@@ -56,18 +56,14 @@ export const getPipeline9BoundedRepairBudget = (
   // Scale total search work with route count, and cap each path separately so
   // an infeasible span cannot consume the other regions' work allowance.
   const congested = drcIssueCount >= 10 && routeCount > 120
-
   const scale = congested
     ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
     : 1
-
   const coarseGrid = congested && drcIssueCount > routeCount / 4
-
   const maxCandidateAttempts = Math.max(
     1,
     Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
   )
-
   return {
     maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
     maxCandidateAttempts: maxCandidateAttempts * (coarseGrid ? 2 : 1),
@@ -145,43 +141,35 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     publishedDrcIssueCount: undefined,
     repaired: false,
   }
-
   if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
     return result
   }
-
   const clearance = Math.max(
     originalSrj.defaultObstacleMargin ?? 0.2,
     originalSrj.minTraceToPadEdgeClearance ?? 0,
     originalSrj.minTraceToHoleEdgeClearance ?? 0,
     originalSrj.minViaEdgeToPadEdgeClearance ?? 0,
   )
-
   let maxCopperDiameter = Math.max(
     originalSrj.minTraceWidth,
     originalSrj.minViaDiameter ?? 0,
   )
-
   for (const route of routes) {
     maxCopperDiameter = Math.max(
       maxCopperDiameter,
       route.traceThickness,
       route.viaDiameter,
     )
-
     for (const point of route.route) {
       maxCopperDiameter = Math.max(maxCopperDiameter, point.traceThickness ?? 0)
     }
   }
-
   // Repair04 requires a fixed collar of one copper diameter plus clearance.
   // Keep only bounded contexts that leave room for mutable copper.
   const boundaryMargin = Math.max(0.5, maxCopperDiameter + clearance)
-
   const regionSizes = REGION_SIZES.filter(
     (size) => !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
   )
-
   if (regionSizes.length === 0) return result
   let currentRoutes = routes
   let reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
@@ -191,7 +179,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   result.publishedDrcIssueCount = currentErrors.length
   result.initialDrcIssueCount = currentErrors.length
   result.finalDrcIssueCount = currentErrors.length
-
   if (currentErrors.length === 0) {
     return result
   }
@@ -201,11 +188,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     routes: currentRoutes,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
-
       return drcEvaluator(input)
     },
   })
-
   if (projectedRoutes !== currentRoutes) {
     currentRoutes = projectedRoutes
     reference = drcEvaluator({
@@ -216,12 +201,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.referenceValidationCount++
     currentErrors = Array.isArray(reference) ? reference : reference.errors
     result.finalDrcIssueCount = currentErrors.length
-
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
       result.publishedDrcIssueCount = 0
       result.repaired = true
-
       return result
     }
   }
@@ -232,9 +215,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
-
   const obstacleCenterById = new Map<string, { x: number; y: number }>()
-
   for (const obstacle of originalSrj.obstacles) {
     for (const id of [
       obstacle.obstacleId,
@@ -245,16 +226,13 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       if (typeof id === "string") obstacleCenterById.set(id, obstacle.center)
     }
   }
-
   const attemptedRegions: Array<{ bounds: Bounds; size: number }> = []
   currentRoutes = canonicalizePipeline9HdRoutes(currentRoutes)
-
   let fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: currentRoutes }).map(
       (violation) => [violation.key, violation.severity],
     ),
   )
-
   while (
     result.attemptedRegionCount < budget.maxRegions &&
     result.candidateAttemptCount < budget.maxCandidateAttempts &&
@@ -263,13 +241,11 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     const centeredErrors = Array.isArray(reference)
       ? reference
       : (reference.errorsWithCenters ?? reference.errors)
-
     const centers = centeredErrors
       .map((error) => {
         // Pad clearance reports can place their display marker at the trace's
         // midpoint, far from the offending copper. Crop around the pad itself.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
-
         const padId =
           typeof error.pcb_pad_id === "string"
             ? error.pcb_pad_id
@@ -277,7 +253,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
                 error.pcb_trace_error_id.startsWith(pairPrefix)
               ? error.pcb_trace_error_id.slice(pairPrefix.length)
               : undefined
-
         return (
           (padId ? obstacleCenterById.get(padId) : undefined) ??
           error.center ??
@@ -295,9 +270,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           Number.isFinite(point.x) &&
           Number.isFinite(point.y),
       )
-
     let nextRegion: RepairRegionLocation | undefined
-
     // Wider context can move coupled errors away from a smaller region's
     // locked collar. Both sizes share the same call and search-node budgets.
     for (const size of regionSizes) {
@@ -312,9 +285,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
               y <= bounds.maxY,
           ),
       )
-
       const seed = pendingCenters[0]
-
       if (seed) {
         // Center the mutable area around nearby errors as a group. Centering
         // on the first error can leave another repairable pad in the collar.
@@ -323,26 +294,22 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         let minY = seed.y
         let maxY = seed.y
         const mutableSize = size - 2 * boundaryMargin
-
         for (const point of pendingCenters.slice(1)) {
           const nextMinX = Math.min(minX, point.x)
           const nextMaxX = Math.max(maxX, point.x)
           const nextMinY = Math.min(minY, point.y)
           const nextMaxY = Math.max(maxY, point.y)
-
           if (
             nextMaxX - nextMinX >= mutableSize ||
             nextMaxY - nextMinY >= mutableSize
           ) {
             continue
           }
-
           minX = nextMinX
           maxX = nextMaxX
           minY = nextMinY
           maxY = nextMaxY
         }
-
         nextRegion = {
           center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
           size,
@@ -350,10 +317,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         break
       }
     }
-
     if (!nextRegion) break
     const { center, size } = nextRegion
-
     const region = extractRepairRegion({
       srj,
       routes: currentRoutes,
@@ -364,13 +329,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         maxY: center.y + size / 2,
       },
     })
-
     attemptedRegions.push({ bounds: region.mutableBounds, size })
     result.attemptedRegionCount++
-
     if (region.routes.length === 0) continue
     const dirtyTraceIds = new Set(currentErrors.flatMap(getDrcErrorTraceIds))
-
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(
@@ -381,7 +343,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           ? [routeIndex]
           : [],
     )
-
     // Keep congestion history within each coupled group, but reserve calls
     // for another region instead of letting one stalled queue consume them
     // all. Every region still shares the same total call and node limits.
@@ -392,7 +353,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           : budget.maxCandidateAttempts),
       budget.maxCandidateAttempts - result.candidateAttemptCount,
     )
-
     const repair = negotiateTraceClearance({
       srj: region.srj,
       routes: region.routes,
@@ -414,9 +374,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter,
     })
-
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
-
     // An exhausted queue with unresolved spans means the local context is
     // blocked. Expand it rather than spending later retries on the same collar.
     // Keep the small context while search is still consuming its work allowance.
@@ -428,7 +386,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ) {
       regionSizes.sort((a, b) => b - a)
     }
-
     if (
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
@@ -442,22 +399,18 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         "Pipeline9 bounded regional repair exceeded its work budget",
       )
     }
-
     result.candidateAttemptCount += candidateAttempts
     result.pathSearchNodeCount += pathSearchNodes
-
     const negotiatedRoutes = mergeRepairRegion({
       routes: currentRoutes,
       region,
       repairedRoutes: repair.routes,
     })
-
     if (
       negotiatedRoutes.every((route, index) => route === currentRoutes[index])
     ) {
       continue
     }
-
     // Negotiation can leave small coupled gaps. Project the complete proposal
     // before atomically validating it against the incoming physical copper.
     let candidateRoutes = applyPipeline9ClearanceProjection({
@@ -466,33 +419,25 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       previousRoutes: currentRoutes,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
-
         return drcEvaluator(input)
       },
     })
-
     let candidateReference: ReturnType<DrcEvaluator> | undefined
-
     if (connMap) {
       const beforeMerge = drcEvaluator({
         traces: [],
         routes: candidateRoutes,
         hdRoutes: candidateRoutes,
       })
-
       result.referenceValidationCount++
       candidateReference = beforeMerge
-
       const beforeMergeErrors = Array.isArray(beforeMerge)
         ? beforeMerge
         : beforeMerge.errors
-
       const mergeErrors = beforeMergeErrors.filter(
         (error): boolean => error.type === "pcb_via_clearance_error",
       )
-
       const mergeTraceIds = mergeErrors.flatMap(getDrcErrorTraceIds)
-
       const movableRoutes = candidateRoutes.filter((route): boolean =>
         mergeTraceIds.some(
           (traceId): boolean =>
@@ -500,7 +445,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
             traceId.startsWith(`${route.connectionName}_`),
         ),
       )
-
       if (
         movableRoutes.length > 0 &&
         mergeErrors.length === beforeMergeErrors.length
@@ -508,7 +452,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         // Merge only reported same-net conflicts. Other copper stays fixed,
         // and the complete proposal still passes the physical guards below.
         const movable = new Set(movableRoutes)
-
         const merger = new SameNetViaMergerSolver({
           inputHdRoutes: movableRoutes,
           otherHdRoutes: candidateRoutes.filter(
@@ -524,20 +467,16 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           colorMap: {},
           preserveRouteEndpoints: true,
         })
-
         merger.solve()
-
         if (!merger.solved || merger.failed) {
           throw new Error(`Regional via merge failed: ${merger.error}`)
         }
-
         const mergedByName = new Map(
           merger.mergedViaHdRoutes.map((route) => [
             route.connectionName,
             route,
           ]),
         )
-
         candidateReference = undefined
         candidateRoutes = candidateRoutes.map(
           (route): HighDensityRoute =>
@@ -545,12 +484,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         )
       }
     }
-
     const candidateFixedViolations = getFixedObstacleViolations({
       srj,
       routes: candidateRoutes,
     })
-
     if (
       !candidateFixedViolations.every(
         ({ key, severity }) =>
@@ -565,7 +502,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ) {
       continue
     }
-
     if (candidateReference === undefined) {
       candidateReference = drcEvaluator({
         traces: [],
@@ -574,11 +510,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       })
       result.referenceValidationCount++
     }
-
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-
     if (candidateErrors.length >= currentErrors.length) continue
     currentRoutes = candidateRoutes
     currentErrors = candidateErrors
@@ -590,22 +524,18 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       ]),
     )
     result.acceptedRegionCount++
-
     // Moving neighboring copper can open a path in an already visited region.
     // Revisit against the new geometry; strict DRC improvement and the shared
     // work limits bound these retries.
     if (budget.revisitChangedRegions) attemptedRegions.length = 0
     result.finalDrcIssueCount = currentErrors.length
-
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
       result.publishedDrcIssueCount = 0
       result.repaired = true
-
       return result
     }
   }
-
   if (
     canPublishPartialFixedObstacleRepair({
       originalSrj,
@@ -615,10 +545,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   ) {
     result.routes = currentRoutes
     result.publishedDrcIssueCount = currentErrors.length
-
     return result
   }
-
   // Independent wire repairs must not replace the coupled search's geometry:
   // fixing vias and adding slack can block otherwise feasible regional repairs.
   // When that search cannot publish, select safe nudges from the original input
@@ -629,11 +557,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     allowPartialRepair: true,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
-
       return drcEvaluator(input)
     },
   })
-
   // Refine the retained geometry separately: subdividing before the first
   // projection changes its forces and can discard already feasible nudges.
   independentRoutes = applyPipeline9ClearanceProjection({
@@ -643,11 +569,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     subdivideSegments: true,
     drcEvaluator: (input): ReturnType<DrcEvaluator> => {
       result.referenceValidationCount++
-
       return drcEvaluator(input)
     },
   })
-
   if (independentRoutes !== routes) {
     // The earlier whole-board pass already checked the original layout. Once
     // wire-only improvements have made room, try moving wires and vias together.
@@ -658,28 +582,22 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       usePrecisionMargin: true,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
-
         return drcEvaluator(input)
       },
     })
-
     const independentReference = drcEvaluator({
       traces: [],
       routes: independentRoutes,
       hdRoutes: independentRoutes,
     })
-
     result.referenceValidationCount++
-
     const independentErrors = Array.isArray(independentReference)
       ? independentReference
       : independentReference.errors
-
     result.routes = independentRoutes
     result.publishedDrcIssueCount = independentErrors.length
     result.finalDrcIssueCount = independentErrors.length
     result.repaired = independentErrors.length === 0
   }
-
   return result
 }

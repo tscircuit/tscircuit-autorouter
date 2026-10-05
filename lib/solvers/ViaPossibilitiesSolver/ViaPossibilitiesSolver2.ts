@@ -46,7 +46,6 @@ STEP LOOP:
 5. After the currentPath reaches the end for the connection, we delete the placeholder path and select the next currentHead by popping the unprocessedConnections, reset currentPath and set currentConnectionName
 6. When there are no more unprocessed connections, we set this.solved = true
 */
-
 export class ViaPossibilitiesSolver2 extends BaseSolver {
   override getSolverName(): string {
     return "ViaPossibilitiesSolver2"
@@ -101,7 +100,6 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.viaDiameter = viaDiameter ?? 0.3
 
     this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
-
     if (hyperParameters?.SHUFFLE_SEED) {
       this.unprocessedConnections = cloneAndShuffleArray(
         this.unprocessedConnections,
@@ -137,13 +135,11 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
           y: midY,
           z: start.z,
         })
-
         const midEnd: Point3 = this._padByPlaceholderWallBuffer({
           x: midX,
           y: midY,
           z: end.z,
         })
-
         this.placeholderPaths.set(connectionName, [
           start,
           this._padByPlaceholderWallBuffer(start),
@@ -210,12 +206,10 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       for (const path of pathMap.values()) {
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
-
           // Skip checking intersection if segment is just a via (z change)
           if (segment[0].x === segment[1].x && segment[0].y === segment[1].y) {
             continue
           }
-
           // Only check intersections on the same Z plane as the proposed move start
           // Or if the proposed move itself involves a Z change (handled later)
           if (segment[0].z !== this.currentHead.z) {
@@ -228,11 +222,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
             segment[0],
             segment[1],
           )
-
           if (intersection) {
             // Ignore intersection if it's exactly at the start point (currentHead)
             const distToIntersection = distance(this.currentHead, intersection)
-
             if (distToIntersection < 1e-6) continue // Tolerance for floating point
 
             if (
@@ -263,7 +255,6 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       if (this.currentViaCount >= this.maxViaCount) {
         this.failed = true
         this.error = `Exceeded max via count of ${this.maxViaCount}`
-
         return
       }
     }
@@ -281,12 +272,10 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
         const intersectionPoint = closestIntersection.point
         const vectorX = intersectionPoint.x - this.currentHead.x
         const vectorY = intersectionPoint.y - this.currentHead.y
-
         // Calculate the point VIA_INTERSECTION_BUFFER_DISTANCE away from the intersection towards the current head
         const ratio =
           (distToIntersection - this.VIA_INTERSECTION_BUFFER_DISTANCE) /
           distToIntersection
-
         viaXY = {
           x: this.currentHead.x + vectorX * ratio,
           y: this.currentHead.y + vectorY * ratio,
@@ -295,11 +284,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
 
       // Determine the Z level to switch to (the one NOT occupied by the intersected segment)
       const nextZ = this.availableZ.find((z) => z !== intersectedSegmentZ)!
-
       if (nextZ === undefined) {
         this.error = "Could not determine next Z level for via placement!"
         this.failed = true // Mark as failed if Z logic breaks
-
         return
       }
 
@@ -320,11 +307,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
         // Otherwise, place via VIA_INTERSECTION_BUFFER_DISTANCE before the target end point
         const vectorX = targetEnd.x - this.currentHead.x
         const vectorY = targetEnd.y - this.currentHead.y
-
         // Calculate the point VIA_INTERSECTION_BUFFER_DISTANCE away from the target towards the current head
         const ratio =
           (distToTarget - this.VIA_INTERSECTION_BUFFER_DISTANCE) / distToTarget
-
         viaXY = {
           x: this.currentHead.x + vectorX * ratio,
           y: this.currentHead.y + vectorY * ratio,
@@ -408,7 +393,6 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     ) => {
       for (const [connectionName, path] of pathMap.entries()) {
         const color = colorMap[connectionName] ?? "black"
-
         for (let i = 0; i < path.length - 1; i++) {
           const p1 = path[i]
           const p2 = path[i + 1]
@@ -444,11 +428,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     // 4. Draw Current Path (if any)
     if (this.currentPath && this.currentPath.length > 0) {
       const color = colorMap[this.currentConnectionName] ?? "orange" // Use a distinct color
-
       for (let i = 0; i < this.currentPath.length - 1; i++) {
         const p1 = this.currentPath[i]
         const p2 = this.currentPath[i + 1]
-
         if (p1.x === p2.x && p1.y === p2.y && p1.z !== p2.z) {
           graphics.circles!.push({
             center: { x: p1.x, y: p1.y },
@@ -466,7 +448,6 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
           })
         }
       }
-
       // Highlight current head
       graphics.points!.push({
         x: this.currentHead.x,

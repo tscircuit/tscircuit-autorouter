@@ -209,34 +209,27 @@ const getIntraNodeStrategyName = (
   if (hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
     return "MultiHeadPolyLineIntraNodeSolver3"
   }
-
   if (hyperParameters?.CLOSED_FORM_SINGLE_TRANSITION) {
     return "SingleTransitionIntraNodeSolver"
   }
-
   if (hyperParameters?.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
     return "TwoCrossingRoutesHighDensitySolver"
   }
-
   if (hyperParameters?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
     return "SingleTransitionCrossingRouteSolver"
   }
-
   if (hyperParameters?.HIGH_DENSITY_A01) {
     return "HighDensitySolverA01"
   }
-
   if (hyperParameters?.HIGH_DENSITY_A03) {
     return "HighDensitySolverA03"
   }
-
   return "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 }
 
 const getConcreteSolverTypeName = (solver: unknown): string => {
   if (solver instanceof CachedIntraNodeRouteSolver) {
     const concreteName = getIntraNodeStrategyName(solver.hyperParameters)
-
     return solver.cacheHit ? `${concreteName} [cached]` : concreteName
   }
 
@@ -260,7 +253,6 @@ const getConcreteSolverTypeName = (solver: unknown): string => {
       }
     } | null
   )?.constructor
-
   if (typeof solverConstructor?.name === "string") {
     return solverConstructor.name
   }
@@ -272,7 +264,6 @@ const getSolvedNodeSolverType = (solver: PortfolioSingleIntraNodeSolver) => {
   if (solver.winningSolver) {
     return getConcreteSolverTypeName(solver.winningSolver)
   }
-
   return getConcreteSolverTypeName(solver)
 }
 
@@ -406,7 +397,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       const errorMessage =
         localSolver.error ??
         `Local intra-node solver failed for ${node.capacityMeshNodeId}`
-
       const pairCount = getNodePairCount(node)
       this.failedNodeResults.push({
         node,
@@ -437,7 +427,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
               },
         error: errorMessage,
       })
-
       return
     }
 
@@ -464,14 +453,12 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
               attempted: false,
             },
     })
-
     if (opts.resolution === "local-fallback") {
       this.stats.localFallbackNodeCount += 1
       this.stats.remoteFallbackNodeCount += 1
     } else {
       this.stats.localDirectNodeCount += 1
     }
-
     this.stats.localSolvedNodeCount += 1
   }
 
@@ -480,15 +467,12 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     nodeIndex: number,
   ): Promise<void> {
     const requestUrl = getHdCacheSolveUrl(this.hdCacheBaseUrl)
-
     const requestHeaders = {
       "content-type": "application/json" as const,
     }
-
     const requestBodyJson = {
       nodeWithPortPoints: node,
     }
-
     const requestBody = JSON.stringify(requestBodyJson)
     const requestStartedAt = Date.now()
     let remoteDurationMs: number | null = null
@@ -496,7 +480,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     let responseOk: boolean | undefined
     let responseText: string | undefined
     let responseBody: HdCacheSolveResponseBody | null = null
-
     try {
       const response = await this.fetchImpl(requestUrl, {
         method: "POST",
@@ -603,7 +586,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     this.unsolvedNodePortPoints.forEach((node, nodeIndex) => {
       if (!shouldSolveNodeViaHdCache(node)) {
         this.solveNodeLocally(node, nodeIndex)
-
         return
       }
 
@@ -648,7 +630,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
 
     let slowest: { nodeId: CapacityMeshNodeId; durationMs: number } | null =
       null
-
     for (const measurement of this.remoteResponseMeasurements) {
       if (!slowest || measurement.durationMs > slowest.durationMs) {
         slowest = measurement
@@ -677,7 +658,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     failedRequest: FailedHdCacheRequestRecord,
   ) {
     const failedRequestStore = getFailedHdCacheRequestStore()
-
     if (!failedRequestStore) return
     failedRequestStore.push(failedRequest)
   }
@@ -724,11 +704,9 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     }
 
     const visibleRoutes: HighDensityIntraNodeRoute[] = []
-
     for (let i = 0; i < this.unsolvedNodePortPoints.length; i++) {
       visibleRoutes.push(...(this.solvedRoutesByNodeIndex.get(i) ?? []))
     }
-
     return visibleRoutes
   }
 
@@ -770,7 +748,6 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
     if (!this.launchedRemoteSolves) {
       this.launchedRemoteSolves = true
       this.launchRemoteSolves()
-
       return
     }
 
@@ -783,16 +760,13 @@ export class Pipeline5HdCacheHighDensitySolver extends BaseSolver {
       const firstFailure = this.failedNodeResults[0]
       this.failed = true
       this.error = `Failed to solve ${this.failedNodeResults.length} nodes via hd-cache. First failure: ${firstFailure?.node.capacityMeshNodeId} (${firstFailure?.error})`
-
       return
     }
 
     this.routes = []
-
     for (let i = 0; i < this.unsolvedNodePortPoints.length; i++) {
       this.routes.push(...(this.solvedRoutesByNodeIndex.get(i) ?? []))
     }
-
     this.solved = true
   }
 

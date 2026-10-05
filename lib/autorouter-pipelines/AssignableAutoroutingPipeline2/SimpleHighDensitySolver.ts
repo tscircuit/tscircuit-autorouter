@@ -8,13 +8,9 @@ import type {
 } from "../../types/high-density-types"
 
 const STEPS_PER_NODE = 10
-
 const BORDER_MARGIN = 0.3
-
 const POINT_FORCE_STRENGTH = 0.002
-
 const BORDER_FORCE_STRENGTH = 0.1
-
 const MOVABLE_POINT_OFFSET = 0.1
 
 /**
@@ -78,11 +74,8 @@ function segmentsIntersect(
 
   // Check collinear cases
   if (d1 === 0 && onSegment(p3x, p3y, p4x, p4y, p1x, p1y)) return true
-
   if (d2 === 0 && onSegment(p3x, p3y, p4x, p4y, p2x, p2y)) return true
-
   if (d3 === 0 && onSegment(p1x, p1y, p2x, p2y, p3x, p3y)) return true
-
   if (d4 === 0 && onSegment(p1x, p1y, p2x, p2y, p4x, p4y)) return true
 
   return false
@@ -110,7 +103,6 @@ function closestPointOnSegment(
   if (abLenSq === 0) {
     // Segment is a point
     const distSq = apx * apx + apy * apy
-
     return { x: ax, y: ay, distSq }
   }
 
@@ -198,13 +190,11 @@ export class SimpleHighDensitySolver extends BaseSolver {
     pushMargin?: number
   }) {
     super()
-
     if (numMovablePoints < 1 || numMovablePoints > 3) {
       throw new Error(
         `numMovablePoints must be 1, 2, or 3, got ${numMovablePoints}`,
       )
     }
-
     this.allNodes = [...nodePortPoints]
     this.unsolvedNodes = [...nodePortPoints]
     this.colorMap = colorMap ?? {}
@@ -221,7 +211,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
     if (this.currentNode === null) {
       if (this.unsolvedNodes.length === 0) {
         this.solved = true
-
         return
       }
 
@@ -267,7 +256,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
       if (!connectionGroups.has(pt.connectionName)) {
         connectionGroups.set(pt.connectionName, [])
       }
-
       connectionGroups.get(pt.connectionName)!.push({
         x: pt.x,
         y: pt.y,
@@ -342,14 +330,12 @@ export class SimpleHighDensitySolver extends BaseSolver {
 
     // Collect all movable points
     const allMovablePoints: MovablePoint[] = []
-
     for (const route of this.routesInProgress) {
       allMovablePoints.push(...route.movablePoints)
     }
 
     // Initialize force accumulators
     const forces = new Map<MovablePoint, { fx: number; fy: number }>()
-
     for (const point of allMovablePoints) {
       forces.set(point, { fx: 0, fy: 0 })
     }
@@ -364,7 +350,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
     }
 
     const routeSegments = new Map<RouteInProgress, SegmentInfo[]>()
-
     for (const route of this.routesInProgress) {
       const segmentPoints: SegmentInfo[] = [
         { x: route.startPoint.x, y: route.startPoint.y, movablePoint: null },
@@ -428,17 +413,14 @@ export class SimpleHighDensitySolver extends BaseSolver {
         pointForce.fx +=
           BORDER_FORCE_STRENGTH * (forceEffectMargin - distToLeft)
       }
-
       if (distToRight < forceEffectMargin) {
         pointForce.fx -=
           BORDER_FORCE_STRENGTH * (forceEffectMargin - distToRight)
       }
-
       if (distToBottom < forceEffectMargin) {
         pointForce.fy +=
           BORDER_FORCE_STRENGTH * (forceEffectMargin - distToBottom)
       }
-
       if (distToTop < forceEffectMargin) {
         pointForce.fy -= BORDER_FORCE_STRENGTH * (forceEffectMargin - distToTop)
       }
@@ -512,7 +494,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
       if (segPoint.movablePoint) {
         return { x: segPoint.movablePoint.x, y: segPoint.movablePoint.y }
       }
-
       return { x: segPoint.x, y: segPoint.y }
     }
 
@@ -520,28 +501,24 @@ export class SimpleHighDensitySolver extends BaseSolver {
     const wouldCauseIntersection = (point: MovablePoint): boolean => {
       // Find the route this point belongs to
       let pointRoute: RouteInProgress | null = null
-
       for (const route of this.routesInProgress) {
         if (route.movablePoints.includes(point)) {
           pointRoute = route
           break
         }
       }
-
       if (!pointRoute) return false
 
       const pointSegments = routeSegments.get(pointRoute)!
 
       // Find index of this point in the segment points
       let pointIndex = -1
-
       for (let i = 0; i < pointSegments.length; i++) {
         if (pointSegments[i].movablePoint === point) {
           pointIndex = i
           break
         }
       }
-
       if (pointIndex === -1) return false
 
       // Get segments involving this point (before and after)
@@ -561,7 +538,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
           by: point.y,
         })
       }
-
       if (pointIndex < pointSegments.length - 1) {
         const nextPoint = getSegmentPointCoords(pointSegments[pointIndex + 1])
         segmentsToCheck.push({
@@ -780,12 +756,10 @@ export class SimpleHighDensitySolver extends BaseSolver {
         string,
         Array<{ x: number; y: number }>
       >()
-
       for (const pt of node.portPoints) {
         if (!connectionGroups.has(pt.connectionName)) {
           connectionGroups.set(pt.connectionName, [])
         }
-
         connectionGroups.get(pt.connectionName)!.push({ x: pt.x, y: pt.y })
       }
 
@@ -825,14 +799,12 @@ export class SimpleHighDensitySolver extends BaseSolver {
 
       // Add points with labels for each route point
       const routePoints = route.route
-
       for (let i = 0; i < routePoints.length; i++) {
         const pt = routePoints[i]
         const isStart = i === 0
         const isEnd = i === routePoints.length - 1
         const isMovable = !isStart && !isEnd
         let label: string
-
         if (isStart) {
           label = "start"
         } else if (isEnd) {
@@ -840,7 +812,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
         } else {
           label = `M${i}`
         }
-
         graphics.points!.push({
           x: pt.x,
           y: pt.y,
@@ -854,7 +825,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
     for (const routeInProgress of this.routesInProgress) {
       const { startPoint, endPoint, movablePoints, connectionName } =
         routeInProgress
-
       const color = this.colorMap[connectionName] ?? "gray"
 
       // Build line points in correct order
@@ -889,7 +859,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
         label: "start",
         color: "blue",
       })
-
       for (let i = 0; i < movablePoints.length; i++) {
         const mp = movablePoints[i]
         graphics.points!.push({
@@ -904,7 +873,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
           const forceMagnitude = Math.sqrt(
             mp.forceX * mp.forceX + mp.forceY * mp.forceY,
           )
-
           if (forceMagnitude > 0.001) {
             // Scale force for visibility (multiply by a factor to make vectors visible)
             const scale = 5
@@ -947,7 +915,6 @@ export class SimpleHighDensitySolver extends BaseSolver {
           }
         }
       }
-
       graphics.points!.push({
         x: endPoint.x,
         y: endPoint.y,

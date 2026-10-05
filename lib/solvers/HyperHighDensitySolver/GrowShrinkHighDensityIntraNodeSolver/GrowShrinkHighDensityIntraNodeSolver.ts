@@ -119,7 +119,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
-
     // Sub-via-sized nodes spend their first growth attempts just reaching a
     // usable routing scale. Preserve the normal search budget after that scale
     // is reached instead of exhausting it before the portfolio can place vias.
@@ -127,7 +126,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.nodeWithPortPoints.width,
       this.nodeWithPortPoints.height,
     )
-
     const growthAttemptsToFitVia =
       minNodeDimension > 0
         ? Math.max(
@@ -137,15 +135,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             ),
           )
         : 0
-
     let minimumPortGap = Number.POSITIVE_INFINITY
     const ports = this.nodeWithPortPoints.portPoints
-
     for (let i = 0; i < ports.length; i++) {
       for (let j = i + 1; j < ports.length; j++) {
         const a = ports[i]!
         const b = ports[j]!
-
         if (
           a.z !== b.z ||
           (a.rootConnectionName ?? a.connectionName) ===
@@ -153,25 +148,20 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         ) {
           continue
         }
-
         const gap = Math.hypot(a.x - b.x, a.y - b.y)
-
         if (gap > 1e-9) minimumPortGap = Math.min(minimumPortGap, gap)
       }
     }
-
     // Crowded terminals can consume the initial scales just as sub-via nodes
     // do. Keep the normal search budget after unrelated copper can first fit.
     const growthAttemptsToFitPorts = Math.max(
       0,
       Math.ceil(Math.log2((params.traceWidth ?? 0.15) / minimumPortGap)),
     )
-
     const growthAttemptsToFitGeometry = Math.max(
       growthAttemptsToFitVia,
       growthAttemptsToFitPorts,
     )
-
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ??
       DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitGeometry
@@ -190,10 +180,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.progress = 1
         this.error =
           "GrowShrinkHighDensityIntraNodeSolver cannot route an impossible single-layer crossing"
-
         return
       }
-
       this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
         this.nodeWithPortPoints,
         params.traceWidth ?? 0.15,
@@ -215,7 +203,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       enableNegotiatedSearch:
@@ -226,7 +213,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.scaleFactor,
       ),
     })
-
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt
@@ -244,7 +230,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
-
     if (
       this.constructorParams.growShrinkSolutionValidator &&
       !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
@@ -252,16 +237,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       solver.solved = false
       solver.failed = true
       solver.error = "High-density scale solution rejected by validator"
-
       return false
     }
-
     this.winningSolver = solver
     this.error = null
     this.solvedRoutes = solvedRoutes
     this.solved = true
     this.failed = false
-
     return true
   }
 
@@ -283,7 +265,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     if (this.activeSubSolver!.solved) {
       if (this.acceptSolution(this.activeSubSolver!)) {
         this.activeSubSolver = null
-
         return
       }
     }
@@ -313,13 +294,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           lastError: this.error,
         }
         this.error = null
-
         return
       }
 
       this.failed = true
       this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
-
       return
     }
 
@@ -333,7 +312,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   visualize(): GraphicsObject {
     const delegatedVisualization =
       this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize()
-
     if (delegatedVisualization) return delegatedVisualization
 
     if (this.solvedRoutes.length > 0) {
@@ -344,7 +322,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         lines: this.solvedRoutes.flatMap((route, routeIndex) =>
           route.route.slice(0, -1).map((point, pointIndex) => {
             const nextPoint = route.route[pointIndex + 1]
-
             return {
               points: [point, nextPoint],
               strokeColor: routeColors[routeIndex % routeColors.length],

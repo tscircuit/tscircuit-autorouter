@@ -24,7 +24,6 @@ export function smoothRoute(
 
   // Step 1: Resample the route at regular intervals
   const resampled = resampleRoute(route, sampleInterval)
-
   if (resampled.length < 3) return [...route]
 
   // Step 2: Apply Gaussian smoothing while preserving endpoints and layer transitions
@@ -64,7 +63,6 @@ function resampleRoute(route: Point3D[], interval: number): Point3D[] {
     const dirY = dy / segmentLength
 
     let distInSegment = interval - currentDist
-
     while (distInSegment < segmentLength) {
       result.push({
         x: start.x + dirX * distInSegment,
@@ -80,7 +78,6 @@ function resampleRoute(route: Point3D[], interval: number): Point3D[] {
   // Always add the final point
   const lastPoint = route[route.length - 1]!
   const lastResult = result[result.length - 1]!
-
   if (lastResult.x !== lastPoint.x || lastResult.y !== lastPoint.y) {
     result.push({ ...lastPoint })
   }
@@ -110,7 +107,6 @@ function gaussianSmooth(route: Point3D[], smoothDistance: number): Point3D[] {
     // Check for layer transitions - keep these points fixed
     const prev = route[i - 1]!
     const next = route[i + 1]!
-
     if (current.z !== prev.z || current.z !== next.z) {
       result.push({ ...current })
       continue
@@ -123,7 +119,6 @@ function gaussianSmooth(route: Point3D[], smoothDistance: number): Point3D[] {
 
     // Look at points within the smooth distance
     let cumulativeDistBack = 0
-
     for (let j = i; j >= 0 && cumulativeDistBack <= smoothDistance; j--) {
       const pt = route[j]!
 
@@ -142,7 +137,6 @@ function gaussianSmooth(route: Point3D[], smoothDistance: number): Point3D[] {
     }
 
     let cumulativeDistForward = 0
-
     for (
       let j = i + 1;
       j < route.length && cumulativeDistForward <= smoothDistance;
@@ -189,7 +183,6 @@ function gaussianWeight(distance: number, sigma: number): number {
 function distance(a: Point3D, b: Point3D): number {
   const dx = b.x - a.x
   const dy = b.y - a.y
-
   return Math.sqrt(dx * dx + dy * dy)
 }
 
@@ -229,7 +222,6 @@ function simplifyRoute(points: Point3D[]): Point3D[] {
   }
 
   result.push(points[points.length - 1]!)
-
   return result
 }
 

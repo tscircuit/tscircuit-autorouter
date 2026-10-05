@@ -13,7 +13,6 @@ export type StitchSegment = {
 export type IsStitchSegmentClear = (stitchSegment: StitchSegment) => boolean
 
 type ConnectionName = HighDensityIntraNodeRoute["connectionName"]
-
 type RootConnectionName = NonNullable<
   HighDensityIntraNodeRoute["rootConnectionName"]
 >
@@ -28,7 +27,6 @@ type RouteVia = {
 }
 
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
-
 const CLEARANCE_TOLERANCE = 1e-6
 
 /**
@@ -50,12 +48,10 @@ const preservesEndpointClearance = ({
     startGap < requiredGap &&
     endGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= startGap - CLEARANCE_TOLERANCE
-
   const escapesFromEnd =
     endGap < requiredGap &&
     startGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= endGap - CLEARANCE_TOLERANCE
-
   const preservesExistingViolation =
     startGap < requiredGap &&
     endGap < requiredGap &&
@@ -89,18 +85,15 @@ export class RouteStitchClearanceValidator {
     minClearance?: number
   }) {
     this.minClearance = minClearance
-
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
     }
-
     this.buildSpatialIndexes()
   }
 
   addRoute(hdRoute: HighDensityIntraNodeRoute): void {
     const roots =
       this.rootsByConnection.get(hdRoute.connectionName) ?? new Set()
-
     roots.add(hdRoute.rootConnectionName ?? hdRoute.connectionName)
     this.rootsByConnection.set(hdRoute.connectionName, roots)
     this.sameNetCache.clear()
@@ -108,18 +101,14 @@ export class RouteStitchClearanceValidator {
     for (let index = 0; index < hdRoute.route.length - 1; index += 1) {
       const start = hdRoute.route[index]!
       const end = hdRoute.route[index + 1]!
-
       if (start.z !== end.z) continue
-
       if (start.insideJumperPad && end.insideJumperPad) continue
-
       const segment = {
         connectionName: hdRoute.connectionName,
         start,
         end,
         traceThickness: hdRoute.traceThickness,
       }
-
       this.segments.push(segment)
       this.insertSegmentIntoSpatialIndex(segment)
     }
@@ -131,7 +120,6 @@ export class RouteStitchClearanceValidator {
         y: via.y,
         diameter: hdRoute.viaDiameter,
       }
-
       this.vias.push(routeVia)
       this.insertViaIntoSpatialIndex(routeVia)
     }
@@ -140,12 +128,10 @@ export class RouteStitchClearanceValidator {
   private insertSegmentIntoSpatialIndex(segment: RouteSegment): void {
     if (!this.segmentIndexesByLayer) return
     let index = this.segmentIndexesByLayer.get(segment.start.z)
-
     if (!index) {
       index = new RbushIndex<RouteSegment>()
       this.segmentIndexesByLayer.set(segment.start.z, index)
     }
-
     const radius = segment.traceThickness / 2
     index.insert(
       segment,
@@ -171,20 +157,16 @@ export class RouteStitchClearanceValidator {
   private buildSpatialIndexes(): void {
     this.segmentIndexesByLayer = new Map()
     const segmentsByLayer = new Map<number, RouteSegment[]>()
-
     for (const segment of this.segments) {
       const layerSegments = segmentsByLayer.get(segment.start.z)
-
       if (layerSegments) layerSegments.push(segment)
       else segmentsByLayer.set(segment.start.z, [segment])
     }
-
     for (const [z, layerSegments] of segmentsByLayer) {
       const index = new RbushIndex<RouteSegment>()
       index.bulkLoad(
         layerSegments.map((segment) => {
           const radius = segment.traceThickness / 2
-
           return {
             item: segment,
             minX: Math.min(segment.start.x, segment.end.x) - radius,
@@ -201,7 +183,6 @@ export class RouteStitchClearanceValidator {
     this.viaIndex.bulkLoad(
       this.vias.map((via) => {
         const radius = via.diameter / 2
-
         return {
           item: via,
           minX: via.x - radius,
@@ -218,16 +199,13 @@ export class RouteStitchClearanceValidator {
     secondConnectionName: ConnectionName,
   ): boolean {
     if (firstConnectionName === secondConnectionName) return true
-
     const cached = this.sameNetCache
       .get(firstConnectionName)
       ?.get(secondConnectionName)
-
     if (cached !== undefined) return cached
     const firstRoots = this.rootsByConnection.get(firstConnectionName)
     const secondRoots = this.rootsByConnection.get(secondConnectionName)
     let sameNet = false
-
     if (firstRoots && secondRoots) {
       for (const root of firstRoots) {
         if (secondRoots.has(root)) {
@@ -236,16 +214,12 @@ export class RouteStitchClearanceValidator {
         }
       }
     }
-
     let connectionsFromFirst = this.sameNetCache.get(firstConnectionName)
-
     if (!connectionsFromFirst) {
       connectionsFromFirst = new Map()
       this.sameNetCache.set(firstConnectionName, connectionsFromFirst)
     }
-
     connectionsFromFirst.set(secondConnectionName, sameNet)
-
     return sameNet
   }
 
@@ -266,20 +240,17 @@ export class RouteStitchClearanceValidator {
       this.segmentIndexesByLayer
         ?.get(start.z)
         ?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ?? []
-
     for (const segment of nearbySegments) {
       if (this.areSameNet(connectionName, segment.connectionName)) continue
 
       const requiredGap =
         this.minClearance + traceRadius + segment.traceThickness / 2
-
       const segmentGap = minimumDistanceBetweenSegments(
         start,
         end,
         segment.start,
         segment.end,
       )
-
       if (
         segmentGap < requiredGap &&
         !preservesEndpointClearance({
@@ -295,13 +266,11 @@ export class RouteStitchClearanceValidator {
 
     const nearbyVias =
       this.viaIndex?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ?? []
-
     for (const via of nearbyVias) {
       if (this.areSameNet(connectionName, via.connectionName)) continue
 
       const requiredGap = this.minClearance + traceRadius + via.diameter / 2
       const segmentGap = pointToSegmentDistance(via, start, end)
-
       if (
         segmentGap < requiredGap &&
         !preservesEndpointClearance({

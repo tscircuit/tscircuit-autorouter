@@ -223,11 +223,9 @@ export class JumperPrepatternSolver extends BaseSolver {
 
         // Add port points from the available segment point solver
         const segmentPointSolver = solver.availableSegmentPointSolver!
-
         for (const segment of segmentPointSolver.sharedEdgeSegments) {
           for (const segmentPortPoint of segment.portPoints) {
             const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
-
             const inputPortPoint: InputPortPoint = {
               portPointId: segmentPortPoint.segmentPortPointId,
               x: segmentPortPoint.x,
@@ -242,7 +240,6 @@ export class JumperPrepatternSolver extends BaseSolver {
 
             // Add to first node
             const node1 = nodeMap.get(nodeId1)
-
             if (node1) {
               node1.portPoints.push(inputPortPoint)
             }
@@ -276,7 +273,6 @@ export class JumperPrepatternSolver extends BaseSolver {
       {
         onSolved: (solver) => {
           const pathingSolver = solver.portPointPathingSolver
-
           if (!pathingSolver) return
 
           const result = processPathingSolverResults({
@@ -383,13 +379,11 @@ export class JumperPrepatternSolver extends BaseSolver {
 
     // Generate jumpers using the pattern function (before creating SimpleRouteJson since it needs the obstacles)
     const patternType = this.hyperParameters.PATTERN_TYPE ?? "alternating_grid"
-
     if (patternType === "staggered_grid") {
       this.patternResult = staggeredGrid(this)
     } else {
       this.patternResult = alternatingGrid(this)
     }
-
     this.prepatternJumpers = this.patternResult.prepatternJumpers
 
     // Initialize data before pipeline starts
@@ -406,16 +400,13 @@ export class JumperPrepatternSolver extends BaseSolver {
 
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -428,7 +419,6 @@ export class JumperPrepatternSolver extends BaseSolver {
         this.error = this.activeSubSolver?.error
         this.failed = true
       }
-
       return
     }
 
@@ -456,7 +446,6 @@ export class JumperPrepatternSolver extends BaseSolver {
 
     for (const pp of this.nodeWithPortPoints.portPoints) {
       const existing = connectionMap.get(pp.connectionName)
-
       if (existing) {
         existing.points.push({ x: pp.x, y: pp.y, z: pp.z })
       } else {
@@ -486,7 +475,6 @@ export class JumperPrepatternSolver extends BaseSolver {
     this._addPortPointObstacles(obstacles)
 
     const node = this.nodeWithPortPoints
-
     return {
       layerCount: 1,
       minTraceWidth: this.traceWidth,
@@ -563,7 +551,6 @@ export class JumperPrepatternSolver extends BaseSolver {
         const jumperNet = this.offBoardConnMap.getNetConnectedToId(
           prepatternJumper.offBoardConnectionId,
         )
-
         if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
           isUsed = true
         }
@@ -685,7 +672,6 @@ export class JumperPrepatternSolver extends BaseSolver {
     // Only draw jumpers that are used (if portPointPathingSolver has run)
     // After routing completes, usedJumperOffBoardObstacleIds contains net IDs of used jumpers
     const hasRunPathing = this.portPointPathingSolver?.solved
-
     const jumpersToVisualize = hasRunPathing
       ? this.prepatternJumpers.filter((jumper) => {
           // Check if the jumper's offBoardConnectionId maps to a used net ID
@@ -693,7 +679,6 @@ export class JumperPrepatternSolver extends BaseSolver {
             const jumperNet = this.offBoardConnMap.getNetConnectedToId(
               jumper.offBoardConnectionId,
             )
-
             // The usedJumperOffBoardObstacleIds contains net IDs directly
             if (
               jumperNet &&
@@ -701,10 +686,8 @@ export class JumperPrepatternSolver extends BaseSolver {
             ) {
               return true
             }
-
             return false
           }
-
           // Fallback to direct match if no connectivity map
           return this.usedJumperOffBoardObstacleIds.has(
             jumper.offBoardConnectionId,

@@ -69,7 +69,6 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -282,13 +281,11 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
       CapacitySegmentToPointSolver,
       (cms) => {
         const allSegments: NodePortSegment[] = []
-
         if (cms.edgeToPortSegmentSolver?.nodePortSegments) {
           cms.edgeToPortSegmentSolver.nodePortSegments.forEach((segs) => {
             allSegments.push(...segs)
           })
         }
-
         return [
           {
             segments: allSegments,
@@ -411,16 +408,13 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -434,7 +428,6 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -470,11 +463,9 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
     const pathingOptimizerViz = this.pathingOptimizer?.visualize()
     const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize()
     const segmentToPointViz = this.segmentToPointSolver?.visualize()
-
     const segmentOptimizationViz =
       this.unravelMultiSectionSolver?.visualize() ??
       this.segmentToPointOptimizer?.visualize()
-
     const highDensityViz = this.highDensityRouteSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
@@ -568,7 +559,6 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     // return visualizations[visualizations.length - 1]
     return combineVisualizations(...visualizations)
   }
@@ -585,7 +575,6 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -595,16 +584,13 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
     if (this.pathingOptimizer) {
       const lines: Line[] = []
-
       for (const connection of this.pathingOptimizer.connectionsWithNodes) {
         if (!connection.path) continue
         lines.push({
@@ -615,7 +601,6 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
           strokeColor: this.colorMap[connection.connection.name],
         })
       }
-
       return { lines }
     }
 
@@ -658,7 +643,6 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
@@ -686,5 +670,4 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
 
 /** @deprecated Use AutoroutingPipelineSolver instead */
 export const CapacityMeshSolver = AutoroutingPipeline1_OriginalUnravel
-
 export type CapacityMeshSolver = AutoroutingPipeline1_OriginalUnravel

@@ -43,7 +43,6 @@ export const combinePreloadedAndRoutedTraces = (
       trace.__replaces_pcb_trace_id ? [trace.__replaces_pcb_trace_id] : [],
     ),
   )
-
   return [
     ...preloadedTraces.filter(
       (trace) => !replacedTraceIds.has(trace.pcb_trace_id),
@@ -62,12 +61,10 @@ export const evaluateRelaxedDrc = ({
   connectivityMaps,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
-
   const jointTraces = combinePreloadedAndRoutedTraces(
     preloadedTraces,
     routedTraces,
   )
-
   const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
     minViaDiameter: inputSrj.minViaDiameter,

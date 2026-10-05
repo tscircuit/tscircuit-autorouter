@@ -20,7 +20,6 @@ const genericRules = [
   "no-unknown-returns",
   "no-unknown-type-aliases",
   "no-widen-then-assert",
-  "require-readable-spacing",
   "require-safety-comment-for-type-assertion",
 ]
 
@@ -32,7 +31,7 @@ const effectRules = [
   "prefer-effect-match",
 ]
 
-test("the Bun CLI enforces every pinned rule at error severity and preserves schema exceptions", () => {
+test("the Bun CLI enforces 23 retained rules without blank-line mandates at error severity and preserves schema exceptions", () => {
   const directory = mkdtempSync(join(repoRoot, "lib/anti-slop-integration-"))
   try {
     writeFileSync(
@@ -74,7 +73,7 @@ const label = state === "one" ? "1" : state === "two" ? "2" : "3"
       "oxc(no-accumulating-spread)",
     ]
     expect([...reported].sort()).toEqual(expected.sort())
-    expect(bad.number_of_rules).toBe(24)
+    expect(bad.number_of_rules).toBe(23)
     expect(bad.number_of_files).toBe(1)
     for (const diagnostic of bad.diagnostics) {
       expect(diagnostic.severity).toBe("error")
@@ -93,6 +92,9 @@ type RectObstacle = {
 
 const obstacles: RectObstacle[] = []
 
+const adjacentA = 1
+const adjacentB = 2
+function adjacentReturn() { return adjacentA + adjacentB }
 const points = obstacles.reduce((acc, item) => {
   acc.push({ ...item.center })
 
@@ -104,7 +106,6 @@ const compact = "rect" as const
 const constChain = "rect" as const as const
 
 const pair = [1, 2]
-// oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
 ;[pair[0], pair[1]] = [pair[1], pair[0]]
 `,
     )

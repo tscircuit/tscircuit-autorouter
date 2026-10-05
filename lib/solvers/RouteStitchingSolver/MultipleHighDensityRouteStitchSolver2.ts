@@ -56,17 +56,14 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
     // Create a map from connection name to path results
     const pathResultMap = new Map<string, ConnectionPathResult>()
-
     for (const result of params.connectionPathResults) {
       pathResultMap.set(result.connection.name, result)
     }
 
     // Group routes by connectionName
     const routesByConnection = new Map<string, HighDensityIntraNodeRoute[]>()
-
     for (const hdRoute of params.hdRoutes) {
       const existing = routesByConnection.get(hdRoute.connectionName)
-
       if (existing) {
         existing.push(hdRoute)
       } else {
@@ -80,13 +77,11 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       const connection = params.connections.find(
         (c) => c.name === connectionName,
       )
-
       if (!connection) continue
 
       // Get node order from pathing results
       const pathResult = pathResultMap.get(connectionName)
       let nodeOrder: string[] = []
-
       if (pathResult?.path) {
         // Extract node IDs from path in order
         nodeOrder = pathResult.path.map((candidate) => candidate.currentNodeId)
@@ -100,7 +95,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
           params.layerCount,
         ),
       }
-
       const end = {
         ...connection.pointsToConnect[1],
         z: mapLayerNameToZ(
@@ -126,7 +120,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
     if (!unsolvedRoute) {
       this.solved = true
-
       return
     }
 
@@ -162,7 +155,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
     // If we have node order, use it to sort routes
     let orderedRoutes: HighDensityIntraNodeRoute[]
-
     if (nodeOrder.length > 0) {
       orderedRoutes = this.orderRoutesByNodePath(
         hdRoutes,
@@ -205,7 +197,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       }
 
       let pointsToAdd: Array<{ x: number; y: number; z: number }>
-
       if (distToStart <= distToEnd) {
         pointsToAdd = [...hdRoute.route]
       } else {
@@ -214,7 +205,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
       // Skip first point if it's close to the last merged point
       const TOLERANCE = 0.001
-
       if (
         pointsToAdd.length > 0 &&
         distance(lastPoint, pointsToAdd[0]) < TOLERANCE
@@ -239,7 +229,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     const TOLERANCE = 0.001
     const MAX_END_JUMP_DISTANCE = MAX_SEGMENT_GAP
     const distToEnd = distance(lastMergedPoint, end)
-
     if (distToEnd > TOLERANCE && distToEnd < MAX_END_JUMP_DISTANCE) {
       mergedRoute.push({ x: end.x, y: end.y, z: end.z })
     }
@@ -279,16 +268,13 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     // Phase 1: Find the first route (closest to start)
     let firstRoute: HighDensityIntraNodeRoute | null = null
     let firstRouteDist = Infinity
-
     for (const route of remainingRoutes) {
       const routeStart = route.route[0]
       const routeEnd = route.route[route.route.length - 1]
-
       const minDist = Math.min(
         distance(start, routeStart),
         distance(start, routeEnd),
       )
-
       if (minDist < firstRouteDist) {
         firstRouteDist = minDist
         firstRoute = route
@@ -308,7 +294,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
     // connectionPoint is where start connects, chainPoint is where chain continues
     let connectionPoint: { x: number; y: number; z: number }
     let chainPoint: { x: number; y: number; z: number }
-
     if (distStartToFirst <= distStartToEnd) {
       connectionPoint = firstStart
       chainPoint = firstEnd
@@ -323,12 +308,10 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       excludeRoute: HighDensityIntraNodeRoute,
     ) => {
       let count = 0
-
       for (const r of remainingRoutes) {
         if (r === excludeRoute) continue
         const rs = r.route[0]
         const re = r.route[r.route.length - 1]
-
         if (
           distance(point, rs) < CHAIN_THRESHOLD ||
           distance(point, re) < CHAIN_THRESHOLD
@@ -336,7 +319,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
           count++
         }
       }
-
       return count
     }
 
@@ -369,7 +351,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         const distDiff = minDist - bestDist
 
         let isBetter = false
-
         if (bestRoute === null) {
           // No previous best, this is better
           isBetter = true
@@ -437,7 +418,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         // significantly move away from start)
         const continuationDistToStart = distance(continuation, start)
         const BACKWARD_TOLERANCE = 2.0 // Allow up to 2 units movement away from start
-
         if (continuationDistToStart > currentDistToStart + BACKWARD_TOLERANCE) {
           // This route moves significantly away from start, skip it
           continue
@@ -451,7 +431,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
         const distDiff = minDist - bestDist
 
         let isBetter = false
-
         if (bestRoute === null) {
           isBetter = true
         } else if (!isDeadEnd && bestIsDeadEnd && distDiff < 5) {
@@ -493,10 +472,8 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       const skippedInfo = [...remainingRoutes].map((r) => {
         const rs = r.route[0]
         const re = r.route[r.route.length - 1]
-
         return `start=(${rs.x.toFixed(2)},${rs.y.toFixed(2)}) end=(${re.x.toFixed(2)},${re.y.toFixed(2)})`
       })
-
       console.warn(
         `[StitchSolver] Skipped ${remainingRoutes.size} routes for connection ${hdRoutes[0]?.connectionName ?? "?"}, skipped routes: ${skippedInfo.join("; ")}`,
       )
@@ -533,7 +510,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
           bestRoute = route
           bestIsReversed = false
         }
-
         if (distToEnd < bestDist) {
           bestDist = distToEnd
           bestRoute = route
@@ -576,7 +552,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       for (let j = 0; j < mergedRoute.route.length - 1; j++) {
         const p1 = mergedRoute.route[j]
         const p2 = mergedRoute.route[j + 1]
-
         const segmentColor =
           p1.z !== 0 ? safeTransparentize(solvedColor, 0.5) : solvedColor
 
@@ -594,7 +569,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
       for (const point of mergedRoute.route) {
         const pointColor =
           point.z !== 0 ? safeTransparentize(solvedColor, 0.5) : solvedColor
-
         graphics.points?.push({
           x: point.x,
           y: point.y,
@@ -617,7 +591,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
           color: solvedColor,
           label: mergedRoute.connectionName,
         })
-
         graphics.rects!.push(...(jumperGraphics.rects ?? []))
         graphics.lines!.push(...(jumperGraphics.lines ?? []))
       }
@@ -644,7 +617,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
 
       for (let idx = 0; idx < unsolvedRoute.hdRoutes.length; idx++) {
         const hdRoute = unsolvedRoute.hdRoutes[idx]
-
         if (hdRoute.route.length > 1) {
           graphics.lines?.push({
             points: hdRoute.route.map((p) => ({ x: p.x, y: p.y })),
@@ -659,7 +631,6 @@ export class MultipleHighDensityRouteStitchSolver2 extends BaseSolver {
             color: routeColor,
             label: hdRoute.connectionName,
           })
-
           graphics.rects!.push(...(jumperGraphics.rects ?? []))
           graphics.lines!.push(...(jumperGraphics.lines ?? []))
         }

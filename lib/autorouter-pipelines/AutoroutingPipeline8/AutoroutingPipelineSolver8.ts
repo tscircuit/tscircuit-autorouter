@@ -69,7 +69,6 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -188,7 +187,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
         const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-
         return [
           inputSrj,
           cms.colorMap,
@@ -292,7 +290,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       (cms) => {
         const singleLayerOutput =
           cms.splitNodesIntoSingleLayerNodeSolver!.getOutput()
-
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: singleLayerOutput.capacityMeshNodes,
           layerCount: cms.srj.layerCount,
@@ -357,10 +354,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
       const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
-
       const fallbackNodes =
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
-
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -441,7 +436,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             cms.highDensityForceImproveRoutes ??
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes
-
           cms.highDensityRepairRoutes = cms.mergeMovableHighDensityRoutesBack(
             inputRoutes,
             cms.highDensityRepairSolver!.getOutput(),
@@ -567,16 +561,13 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -590,7 +581,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -616,7 +606,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     if (!this.solved && this.activeSubSolver) {
       return this.activeSubSolver.visualize()
     }
-
     const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const nodeViz = this.nodeSolver?.visualize()
@@ -626,31 +615,22 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
-
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
-
     const splitNodesIntoSingleLayerNodeSolverViz =
       this.splitNodesIntoSingleLayerNodeSolver?.visualize()
-
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
-
     const highDensityViz = this.highDensityRouteSolver?.visualize()
-
     const highDensityForceImproveViz =
       this.highDensityForceImproveSolver?.visualize()
-
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
-
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const srjToVisualize = this.originalSrj
     const problemOutline = srjToVisualize.outline
@@ -732,7 +712,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
 
     const routeViz = getPresuppliedTraceVisualization({ srj: srjToVisualize })
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
-
     const visualizations = [
       problemViz,
       escapeViaLocationViz,
@@ -765,14 +744,12 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     return combineVisualizations(...visualizations)
   }
 
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -782,10 +759,8 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
@@ -796,11 +771,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
-
     if (this.escapeViaLocationSolver) {
       return this.escapeViaLocationSolver.visualize()
     }
-
     if (this.preprocessSimpleRouteJsonSolver) {
       return this.preprocessSimpleRouteJsonSolver.visualize()
     }
@@ -810,7 +783,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
 
   _getOutputHdRoutes(): HighDensityRoute[] {
     const globalDrcRoutes = this.globalDrcForceImproveSolver?.getOutput()
-
     if (globalDrcRoutes && this.routesOnlyUsePreplacedVias(globalDrcRoutes)) {
       return globalDrcRoutes
     }
@@ -828,7 +800,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     const allowedLayerTransitionPointKeys = getAssignableViaPointKeys(
       this.originalSrj.obstacles,
     )
-
     if (allowedLayerTransitionPointKeys.size === 0) return true
 
     return routes.every((route) =>
@@ -842,12 +813,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
     return [...(this.highDensityNodePortPoints ?? [])].sort((a, b) => {
       const aIsAssignableVia =
         a.capacityMeshNodeId.startsWith("assignable-via:")
-
       const bIsAssignableVia =
         b.capacityMeshNodeId.startsWith("assignable-via:")
-
       if (aIsAssignableVia === bIsAssignableVia) return 0
-
       return aIsAssignableVia ? -1 : 1
     })
   }
@@ -861,7 +829,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
 
   private isFixedPreplacedViaRoute(route: HighDensityRoute) {
     const assignableViaObstacles = this.getPreplacedAssignableViaObstacles()
-
     if (assignableViaObstacles.length === 0 || route.vias.length === 0) {
       return false
     }
@@ -891,11 +858,9 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
   ) {
     const routeIndexes = this.getMovableHighDensityRouteIndexes(inputRoutes)
     const combinedRoutes = [...inputRoutes]
-
     for (let i = 0; i < routeIndexes.length; i++) {
       combinedRoutes[routeIndexes[i]!] = movableRoutesAfterPostProcessing[i]!
     }
-
     return combinedRoutes
   }
 
@@ -919,7 +884,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,

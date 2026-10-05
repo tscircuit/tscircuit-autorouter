@@ -22,7 +22,6 @@ export const determineOwnerPair = ({
   if (portPointId) {
     for (const node of inputNodes) {
       const point = node.portPoints.find((p) => p.portPointId === portPointId)
-
       if (point?.connectionNodeIds) {
         connectionNodeIds = point.connectionNodeIds
         break
@@ -35,7 +34,6 @@ export const determineOwnerPair = ({
   }
 
   const [nodeA, nodeB] = connectionNodeIds
-
   if (!nodeA || !nodeB) return [currentNodeId, currentNodeId]
 
   return normalizeOwnerPair(nodeA, nodeB)

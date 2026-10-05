@@ -46,9 +46,7 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     boardGeometry: input.boardGeometry,
     layerCount: input.layerCount,
   })
-
   solver.solve()
-
   return solver.solved
     ? { status: "solved", routes: solver.routes }
     : {
@@ -70,7 +68,6 @@ export function solvePipeline9NetworkedHighDensityNode(
       `Unsupported Pipeline9 networked solve policy ${String(input.solvePolicy)}`,
     )
   }
-
   if (input.effort !== 1) {
     throw new Error(
       `Pipeline9 networked high-density solving requires effort=1, received ${input.effort}`,
@@ -78,12 +75,10 @@ export function solvePipeline9NetworkedHighDensityNode(
   }
 
   const connMap = new ConnectivityMap(input.connectivityNetMap)
-
   const ordinaryResult = solvePipeline9OrdinaryHighDensityNode({
     input,
     connMap,
   })
-
   if (ordinaryResult.status === "solved") {
     return {
       status: "solved",
@@ -93,7 +88,6 @@ export function solvePipeline9NetworkedHighDensityNode(
   }
 
   const ordinaryFailure = ordinaryResult.error
-
   if (!input.enableRegionalFallback) {
     return {
       status: "failed",
@@ -106,7 +100,6 @@ export function solvePipeline9NetworkedHighDensityNode(
     input.nodeWithPortPoints,
     connMap,
   )
-
   const regionalProblem = createRegionalFallbackProblem(
     {
       ...normalizedNode,
@@ -114,7 +107,6 @@ export function solvePipeline9NetworkedHighDensityNode(
     },
     [],
   )
-
   const regionalSolver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: regionalProblem.nodeWithPortPoints,
     colorMap: input.colorMap,
@@ -129,9 +121,7 @@ export function solvePipeline9NetworkedHighDensityNode(
     obstacles: input.regionalObstacles,
     layerCount: input.layerCount,
   })
-
   regionalSolver.solve()
-
   if (regionalSolver.solved) {
     return {
       status: "solved",
@@ -143,7 +133,6 @@ export function solvePipeline9NetworkedHighDensityNode(
 
   const regionalFailure =
     regionalSolver.error || "Pipeline9 regional fallback solver failed"
-
   return {
     status: "failed",
     solutionStage: "regional-fallback",

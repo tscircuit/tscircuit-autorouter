@@ -18,9 +18,7 @@ import {
 import { safeTransparentize } from "../colors"
 
 export type CandidateHash = string
-
 export type ConnectionName = string
-
 export type FaceId = string
 
 export interface Candidate {
@@ -43,15 +41,12 @@ export const hashCandidate = (candidate: Candidate): CandidateHash => {
     .sort()
     .map(([faceId, connName]) => `${faceId}:${connName}`)
     .join("|")
-
   const currentHeadsString = Array.from(candidate.currentHeads.entries())
     .sort()
     .map(([connName, { faceId, z }]) => `${connName}:${faceId}@${z}`)
     .join("|")
-
   return `${viaAssignmentsString}$${currentHeadsString}`
 }
-
 export const hashViaLocation = (p: Point) => {
   return `${p.x},${p.y}`
 }
@@ -145,13 +140,10 @@ export class ViaPossibilitiesSolver extends BaseSolver {
       this.bounds,
       segments,
     )
-
     this.faces = new Map()
-
     for (let i = 0; i < faces.length; i++) {
       const { vertices } = faces[i]
       const segments: Array<{ start: Point; end: Point }> = []
-
       for (let u = 0; u < vertices.length; u++) {
         segments.push({
           start: vertices[u],
@@ -163,15 +155,12 @@ export class ViaPossibilitiesSolver extends BaseSolver {
       // vertices that show the trace is on the same layer
       let requiresViaFromOneOfConnections: ConnectionName[] | undefined =
         undefined
-
       const connectionNamesInFace = new Set<string>()
-
       for (const vertex of vertices) {
         for (const connectionName of vertex.connectionNames ?? []) {
           connectionNamesInFace.add(connectionName)
         }
       }
-
       // -------------------------- REVISE THIS ---------------------------------------
       const sameLayerConnectionNames = this.sameLayerConnectionNames
         .filter((cn) => connectionNamesInFace.has(cn))
@@ -199,12 +188,10 @@ export class ViaPossibilitiesSolver extends BaseSolver {
     }
 
     this.connectionEndpointFaceMap = new Map()
-
     for (const [connectionName, { start, end }] of this.portPairMap) {
       // Determine which face is the contains the start or end
       let startFaceId: string | null = null
       let endFaceId: string | null = null
-
       for (const [faceId, { segments }] of this.faces.entries()) {
         for (const seg of segments) {
           if (
@@ -214,7 +201,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
             startFaceId = faceId
             break
           }
-
           if (
             !endFaceId &&
             pointToSegmentDistance(end, seg.start, seg.end) < 0.001
@@ -223,7 +209,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
             break
           }
         }
-
         if (startFaceId && endFaceId) break
       }
 
@@ -243,13 +228,11 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
     for (let i = 0; i < faceIds.length; i++) {
       const faceId1 = faceIds[i]
-
       if (!this.faceEdges.has(faceId1)) this.faceEdges.set(faceId1, [])
       const face1 = this.faces.get(faceId1)!
 
       for (let j = i + 1; j < faceIds.length; j++) {
         const faceId2 = faceIds[j]
-
         if (!this.faceEdges.has(faceId2)) this.faceEdges.set(faceId2, [])
         const face2 = this.faces.get(faceId2)!
 
@@ -275,9 +258,7 @@ export class ViaPossibilitiesSolver extends BaseSolver {
               const vertex1 = face1.vertices.find(
                 (v) => distance(v, seg1.start) < 0.001,
               )
-
               const connectionNames = vertex1?.connectionNames
-
               if (connectionNames && connectionNames.size > 0) {
                 // Heuristic: Pick the first connection name found. This might need refinement.
                 const crossesOverConnectionName = connectionNames
@@ -287,7 +268,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
                 const portPair = this.portPairMap.get(
                   crossesOverConnectionName!,
                 )
-
                 if (!portPair) {
                   console.warn(
                     `Could not find port pair for connection: ${crossesOverConnectionName} while creating face edge between ${faceId1} and ${faceId2}`,
@@ -343,7 +323,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
     // Initialize currentHeads with faceId and starting z-layer
     const initialHeads: Map<ConnectionName, { faceId: FaceId; z: number }> =
       new Map()
-
     for (const [
       connectionName,
       { startFaceId },
@@ -357,7 +336,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
       ConnectionName,
       { faceId: FaceId; z: number }[]
     > = new Map()
-
     for (const [connectionName, { faceId, z }] of initialHeads.entries()) {
       initialHeadPaths.set(connectionName, [{ faceId, z }]) // Start path with the initial face and layer
     }
@@ -378,13 +356,10 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
   _step() {
     const currentCandidate = this.candidates.shift()
-
     if (!currentCandidate) {
       this.solved = true
-
       return
     }
-
     this.lastCandidate = currentCandidate
 
     if (currentCandidate.incompleteHeads.length === 0) {
@@ -408,7 +383,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
     // Count vias per connection
     const viasPerConnection = new Map<ConnectionName, number>()
-
     for (const connectionName of candidate.viaLocationAssignments.values()) {
       viasPerConnection.set(
         connectionName,
@@ -419,7 +393,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
     // Check 2: Transition connection names must have an odd number of vias
     for (const connectionName of this.transitionConnectionNames) {
       const viaCount = viasPerConnection.get(connectionName) ?? 0
-
       if (viaCount % 2 === 0) {
         // Must have at least one via, and an odd number
         return false
@@ -429,7 +402,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
     // Check 3: Same layer connection names must have an even number of vias (or 0)
     for (const connectionName of this.sameLayerConnectionNames) {
       const viaCount = viasPerConnection.get(connectionName) ?? 0
-
       if (viaCount % 2 !== 0) {
         return false
       }
@@ -441,14 +413,12 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
   computeG(candidate: Candidate, parent: Candidate) {
     const DEPTH_PENALTY_DIST = this.nodeWidth * 0.2
-
     return candidate.depth * DEPTH_PENALTY_DIST
   }
 
   computeH(candidate: Candidate) {
     // Sum of the distance remaining for each head
     let distanceSum = 0
-
     for (const connectionName of candidate.incompleteHeads) {
       const { faceId } = candidate.currentHeads.get(connectionName)!
       const centroid = this.faces.get(faceId)!.centroid
@@ -464,17 +434,13 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
   getUnexploredNeighbors(candidate: Candidate): Candidate[] {
     const newCandidates: Candidate[] = []
-
     for (const currentHeadConnName of candidate.incompleteHeads) {
       // Move the incomplete head forward in every possible direction, also consider the placement of any vias
       const currentHead = candidate.currentHeads.get(currentHeadConnName)!
-
       const { start: startPort, end: endPort } =
         this.portPairMap.get(currentHeadConnName)!
-
       const finalFaceIdForHead =
         this.connectionEndpointFaceMap.get(currentHeadConnName)!.endFaceId
-
       const neighborFaceEdges = this.faceEdges.get(currentHead.faceId)! // Now using FaceEdge[]
       const currentFace = this.faces.get(currentHead.faceId)!
       const currentPath = candidate.headPaths.get(currentHeadConnName)!
@@ -485,7 +451,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
         const crossesOverConnectionName = neighborEdge.crossesOverConnectionName
         const possibleZOfConnection = neighborEdge.possibleZOfConnection
         const isFinalFace = finalFaceIdForHead === neighborFaceId
-
         const onWrongLayerForFinalFace =
           isFinalFace && currentHead.z !== endPort.z
 
@@ -524,7 +489,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
           const faceHasNoVia = !candidate.viaLocationAssignments.has(
             currentHead.faceId,
           )
-
           const viaCountOk =
             candidate.viaLocationAssignments.size < this.maxViaCount
 
@@ -535,7 +499,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
             const newViaLocationAssignments = new Map(
               candidate.viaLocationAssignments,
             )
-
             newViaLocationAssignments.set(
               currentHead.faceId,
               currentHeadConnName,
@@ -546,7 +509,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
                 (this.availableZ.indexOf(currentHead.z) + 1) %
                   this.availableZ.length
               ]
-
             // Prevent cycles: Check if this exact {faceId, z} state was already visited
             if (
               !currentPath.some(
@@ -566,11 +528,9 @@ export class ViaPossibilitiesSolver extends BaseSolver {
               ])
 
               let newIncompleteHeads = candidate.incompleteHeads
-
               // Check if this head reached its destination
               if (neighborFaceId === finalFaceIdForHead) {
                 const endZ = this.portPairMap.get(currentHeadConnName)!.end.z
-
                 if (newZ === endZ) {
                   // Head is complete only if it reaches the final face AND the correct Z layer
                   newIncompleteHeads = candidate.incompleteHeads.filter(
@@ -588,7 +548,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
                 depth: candidate.depth + 1,
                 // incompleteHeads remains the same for this step
               }
-
               viaCandidate.h = this.computeH(viaCandidate)
               viaCandidate.g = this.computeG(viaCandidate, candidate)
               viaCandidate.f =
@@ -623,11 +582,9 @@ export class ViaPossibilitiesSolver extends BaseSolver {
           ])
 
           let newIncompleteHeads = candidate.incompleteHeads
-
           // Check if this head reached its destination
           if (neighborFaceId === finalFaceIdForHead) {
             const endZ = this.portPairMap.get(currentHeadConnName)!.end.z
-
             if (currentHead.z === endZ) {
               // Head is complete only if it reaches the final face AND the correct Z layer
               newIncompleteHeads = candidate.incompleteHeads.filter(
@@ -656,15 +613,12 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
     // Filter out explored candidates before returning
     const unexploredNewCandidates: Candidate[] = []
-
     for (const newCandidate of newCandidates) {
       const candidateHash = hashCandidate(newCandidate)
-
       if (this.exploredCandidateHashes.has(candidateHash)) continue
       this.exploredCandidateHashes.add(candidateHash)
       unexploredNewCandidates.push(newCandidate)
     }
-
     return unexploredNewCandidates
   }
 
@@ -746,7 +700,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
 
         for (const entry of pathEntries) {
           const face = this.faces.get(entry.faceId)
-
           if (!face) continue // Should not happen, but safety check
 
           const currentCentroid = face.centroid
@@ -776,7 +729,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
             // label: `Path End: ${connectionName} z${previousZ}`, // Optional: for debugging
           })
         }
-
         // Add a single label for the whole path for clarity
         graphics.lines![graphics.lines!.length - 1].label =
           `Path: ${connectionName}`
@@ -788,7 +740,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
         { faceId, z }, // Destructure faceId and z
       ] of this.lastCandidate.currentHeads.entries()) {
         const face = this.faces.get(faceId)
-
         if (face) {
           const color = colorMap[connectionName] ?? "black"
           // Add z-layer info to the label
@@ -807,7 +758,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
         connectionName,
       ] of this.lastCandidate.viaLocationAssignments.entries()) {
         const face = this.faces.get(faceId)
-
         if (face) {
           const color = colorMap[connectionName] ?? "black"
           graphics.circles!.push({
@@ -820,7 +770,6 @@ export class ViaPossibilitiesSolver extends BaseSolver {
         }
       }
     }
-
     return graphics
   }
 }

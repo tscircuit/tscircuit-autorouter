@@ -18,11 +18,8 @@ import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 
 const CURSOR_STEP_DISTANCE = 0.1
-
 const MIN_TERMINAL_TAPER_DISTANCE = 0.75
-
 const TERMINAL_TAPER_SEGMENT_COUNT = 8
-
 const COORDINATE_EPSILON = 1e-9
 
 interface Point2D {
@@ -35,12 +32,10 @@ interface Point3D extends Point2D {
 }
 
 type RoutePoint = HighDensityRoute["route"][number]
-
 type TerminalPadLimit = {
   width: number
   neckDistance: number
 }
-
 type TaperRoutePointEntry = {
   distanceFromStart: number
   originalPointIndex?: number
@@ -134,7 +129,6 @@ export class TraceWidthSolver extends BaseSolver {
       if (connection.nominalTraceWidth === undefined) {
         continue
       }
-
       this.connectionNominalTraceWidthMap.set(
         connection.name,
         connection.nominalTraceWidth,
@@ -155,15 +149,12 @@ export class TraceWidthSolver extends BaseSolver {
     route: HighDensityRoute,
   ): number | undefined {
     const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
-
     if (byName !== undefined) {
       return byName
     }
-
     if (route.rootConnectionName) {
       return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
     }
-
     return undefined
   }
 
@@ -176,20 +167,17 @@ export class TraceWidthSolver extends BaseSolver {
         // All traces processed
         this.hdRoutesWithWidths = this.processedRoutes
         this.solved = true
-
         return
       }
 
       // Initialize the new trace processing
       const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
-
       if (nominalTraceWidth === undefined) {
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
           this.createRouteWithWidth(nextTrace, traceWidth),
         )
         this.currentTrace = null
-
         return
       }
 
@@ -197,14 +185,12 @@ export class TraceWidthSolver extends BaseSolver {
       this.nominalTraceWidth = nominalTraceWidth
       const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
-
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through with minTraceWidth
         this.processedRoutes.push(
           this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
         )
         this.currentTrace = null
-
         return
       }
 
@@ -212,7 +198,6 @@ export class TraceWidthSolver extends BaseSolver {
       this.currentScheduleIndex = 0
       this.currentTargetWidth = this.TRACE_WIDTH_SCHEDULE[0]!
       this.initializeCursor()
-
       return
     }
 
@@ -227,7 +212,6 @@ export class TraceWidthSolver extends BaseSolver {
 
     // Hole distances are normalized to the existing obstacle margin below.
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
-
     if (clearance < requiredClearance) {
       // Collision found - this width doesn't work, try the next narrower width
       this.hasInsufficientClearance = true
@@ -317,7 +301,6 @@ export class TraceWidthSolver extends BaseSolver {
         if (this.currentTraceSegmentIndex >= route.length - 1) {
           const lastPoint = route[route.length - 1]!
           this.cursorPosition = { ...lastPoint }
-
           return false
         }
       }
@@ -341,7 +324,6 @@ export class TraceWidthSolver extends BaseSolver {
         (obstacle.center.x - jumper.start.x) ** 2 +
           (obstacle.center.y - jumper.start.y) ** 2,
       )
-
       const distToEnd = Math.sqrt(
         (obstacle.center.x - jumper.end.x) ** 2 +
           (obstacle.center.y - jumper.end.y) ** 2,
@@ -350,7 +332,6 @@ export class TraceWidthSolver extends BaseSolver {
       // Jumper pads are typically small rectangles at the start/end of jumpers
       // Check if obstacle center is within half the pad width of the jumper endpoint
       const maxDist = Math.max(obstacle.width, obstacle.height) / 2 + TOLERANCE
-
       if (distToStart < maxDist || distToEnd < maxDist) {
         return true
       }
@@ -367,28 +348,21 @@ export class TraceWidthSolver extends BaseSolver {
     if (!this.currentTrace) return Infinity
     let clearance = Infinity
     const route = this.currentTrace.route
-
     for (let index = 0; index < route.length - 1; index++) {
       const start = route[index]!
       const end = route[index + 1]!
-
       if (start.z !== end.z) continue
-
       if (start.insideJumperPad && end.insideJumperPad) continue
-
       if (start.toNextSegmentType === "through_obstacle") continue
       clearance = Math.min(clearance, this.getClearanceForSegment(start, end))
     }
-
     return clearance
   }
 
   private getClearanceForSegment(start: Point3D, end: Point3D): number {
     if (!this.currentTrace) return Infinity
-
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
-
     const requiredClearance = this.currentTargetWidth / 2 + this.obstacleMargin
     let minClearance = Infinity
     this.lastCollidingObstacles = []
@@ -399,7 +373,6 @@ export class TraceWidthSolver extends BaseSolver {
     const searchClearance =
       this.currentTargetWidth / 2 +
       Math.max(this.obstacleMargin, this.minTraceToHoleEdgeClearance ?? 0)
-
     const nearbyObstacles = new Set(
       this.obstacleSHI?.search({
         minX: Math.min(start.x, end.x) - searchClearance,
@@ -408,30 +381,24 @@ export class TraceWidthSolver extends BaseSolver {
         maxY: Math.max(start.y, end.y) + searchClearance,
       }),
     )
-
     // ObstacleTree indexes unrotated extents. Include rotated pads explicitly
     // so their copper outside those extents is also considered.
     for (const obstacle of this.obstacles) {
       if (obstacle.ccwRotationDegrees) nearbyObstacles.add(obstacle)
     }
-
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-
       if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
         continue
-
       if (
         obstacle.obstacleId &&
         this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
       )
         continue
-
       if (this.isObstacleOwnJumperPad(obstacle)) continue
       const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
       const cos = Math.cos(angle)
       const sin = Math.sin(angle)
-
       const localStart = {
         x:
           (start.x - obstacle.center.x) * cos -
@@ -440,14 +407,12 @@ export class TraceWidthSolver extends BaseSolver {
           (start.x - obstacle.center.x) * sin +
           (start.y - obstacle.center.y) * cos,
       }
-
       const localEnd = {
         x:
           (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
         y:
           (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
-
       const physicalClearance =
         obstacle.isNonPlatedHole && obstacle.shape === "circle"
           ? segmentToCircleMinDistance(start, end, {
@@ -459,14 +424,11 @@ export class TraceWidthSolver extends BaseSolver {
               width: obstacle.width,
               height: obstacle.height,
             })
-
       const margin = obstacle.isNonPlatedHole
         ? (this.minTraceToHoleEdgeClearance ?? this.obstacleMargin)
         : this.obstacleMargin
-
       const clearance = physicalClearance - (margin - this.obstacleMargin)
       minClearance = Math.min(minClearance, clearance)
-
       if (clearance < requiredClearance)
         this.lastCollidingObstacles.push(obstacle)
     }
@@ -476,24 +438,17 @@ export class TraceWidthSolver extends BaseSolver {
       end,
       requiredClearance,
     )
-
     for (const { conflictingRoute } of nearbyRoutes) {
       const route: HighDensityRoute = conflictingRoute
       const otherRoot = route.rootConnectionName ?? route.connectionName
-
       if (otherRoot === rootConnectionName) continue
-
       if (this.connMap?.areIdsConnected(rootConnectionName, otherRoot)) continue
       let clearance = Infinity
-
       for (let index = 0; index < route.route.length - 1; index++) {
         const a = route.route[index]!
         const b = route.route[index + 1]!
-
         if (a.z !== b.z || a.z !== start.z) continue
-
         if (a.insideJumperPad && b.insideJumperPad) continue
-
         if (a.toNextSegmentType === "through_obstacle") continue
         clearance = Math.min(
           clearance,
@@ -501,7 +456,6 @@ export class TraceWidthSolver extends BaseSolver {
             (a.traceThickness ?? route.traceThickness) / 2,
         )
       }
-
       // The spatial index returns owning routes for both traces and vias.
       // Measure each via's copper radius, not its owner's trace half-width.
       for (const via of route.vias) {
@@ -513,16 +467,12 @@ export class TraceWidthSolver extends BaseSolver {
           }),
         )
       }
-
       minClearance = Math.min(minClearance, clearance)
-
       if (clearance < requiredClearance) {
         this.lastCollidingRoutes.push(route)
       }
     }
-
     this.lastClearance = minClearance
-
     return minClearance
   }
 
@@ -535,18 +485,15 @@ export class TraceWidthSolver extends BaseSolver {
     endpointIndex: number,
   ): RoutePoint | undefined {
     const endpoint = route.route[endpointIndex]
-
     if (!endpoint) return undefined
 
     const step = endpointIndex === 0 ? 1 : -1
-
     for (
       let index = endpointIndex + step;
       index >= 0 && index < route.route.length;
       index += step
     ) {
       const candidate = route.route[index]!
-
       if (distance(candidate, endpoint) > COORDINATE_EPSILON) {
         return candidate
       }
@@ -579,14 +526,12 @@ export class TraceWidthSolver extends BaseSolver {
     traceWidth: number,
   ): TerminalPadLimit | undefined {
     const endpoint = route.route[endpointIndex]
-
     if (!endpoint) return undefined
 
     const adjacent = this.getAdjacentNonCoincidentRoutePoint(
       route,
       endpointIndex,
     )
-
     if (!adjacent) return undefined
 
     const tangent =
@@ -603,18 +548,14 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
-
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
-
       if (limit <= COORDINATE_EPSILON) continue
 
       const neckDistance =
         this.getObstacleWidthAlongVector(obstacle, tangent) / 2
-
       if (
         !narrowestLimit ||
         limit < narrowestLimit.width ||
@@ -626,7 +567,6 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     if (!narrowestLimit) return undefined
-
     if (narrowestLimit.width >= traceWidth - COORDINATE_EPSILON) {
       return undefined
     }
@@ -664,7 +604,6 @@ export class TraceWidthSolver extends BaseSolver {
 
       const start = route[index - 1]!
       const end = route[index]!
-
       if (segmentLength <= COORDINATE_EPSILON) {
         return { ...end }
       }
@@ -703,14 +642,12 @@ export class TraceWidthSolver extends BaseSolver {
 
     if (startLimit !== undefined && distanceFromStart <= taperDistance) {
       const neckDistance = Math.min(startLimit.neckDistance, taperDistance)
-
       if (distanceFromStart <= neckDistance) {
         width = Math.min(width, startLimit.width)
       } else {
         const t =
           (distanceFromStart - neckDistance) /
           Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
-
         width = Math.min(
           width,
           startLimit.width + (traceWidth - startLimit.width) * t,
@@ -720,17 +657,14 @@ export class TraceWidthSolver extends BaseSolver {
 
     if (endLimit !== undefined) {
       const distanceFromEnd = totalDistance - distanceFromStart
-
       if (distanceFromEnd <= taperDistance) {
         const neckDistance = Math.min(endLimit.neckDistance, taperDistance)
-
         if (distanceFromEnd <= neckDistance) {
           width = Math.min(width, endLimit.width)
         } else {
           const t =
             (distanceFromEnd - neckDistance) /
             Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
-
           width = Math.min(
             width,
             endLimit.width + (traceWidth - endLimit.width) * t,
@@ -754,7 +688,6 @@ export class TraceWidthSolver extends BaseSolver {
     }
 
     const startLimit = this.getTerminalPadWidthLimit(route, 0, traceWidth)
-
     const endLimit = this.getTerminalPadWidthLimit(
       route,
       route.route.length - 1,
@@ -762,13 +695,11 @@ export class TraceWidthSolver extends BaseSolver {
     )
 
     const { distances, totalDistance } = this.getRouteDistanceInfo(route.route)
-
     if (totalDistance <= COORDINATE_EPSILON) {
       const terminalLimit = Math.min(
         startLimit?.width ?? traceWidth,
         endLimit?.width ?? traceWidth,
       )
-
       return route.route.map((point) => ({
         ...point,
         traceThickness: terminalLimit,
@@ -779,19 +710,16 @@ export class TraceWidthSolver extends BaseSolver {
       Math.max(traceWidth * 2, MIN_TERMINAL_TAPER_DISTANCE),
       totalDistance / 2,
     )
-
     const routePointEntries: TaperRoutePointEntry[] = distances.map(
       (distanceFromStart, originalPointIndex) => ({
         distanceFromStart,
         originalPointIndex,
       }),
     )
-
     const insertionDistances: number[] = []
 
     if (startLimit !== undefined) {
       insertionDistances.push(startLimit.neckDistance)
-
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
         insertionDistances.push(
           (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
@@ -801,7 +729,6 @@ export class TraceWidthSolver extends BaseSolver {
 
     if (endLimit !== undefined) {
       insertionDistances.push(totalDistance - endLimit.neckDistance)
-
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
         insertionDistances.push(
           totalDistance -
@@ -816,13 +743,11 @@ export class TraceWidthSolver extends BaseSolver {
         0,
         Math.min(totalDistance, rawDistance),
       )
-
       const hasExistingEntry = routePointEntries.some(
         (entry) =>
           Math.abs(entry.distanceFromStart - distanceFromStart) <=
           COORDINATE_EPSILON,
       )
-
       if (!hasExistingEntry) {
         routePointEntries.push({ distanceFromStart })
       }
@@ -830,11 +755,9 @@ export class TraceWidthSolver extends BaseSolver {
 
     routePointEntries.sort((a, b) => {
       const distanceDelta = a.distanceFromStart - b.distanceFromStart
-
       if (Math.abs(distanceDelta) > COORDINATE_EPSILON) {
         return distanceDelta
       }
-
       return (
         (a.originalPointIndex ?? Infinity) - (b.originalPointIndex ?? Infinity)
       )
@@ -842,7 +765,6 @@ export class TraceWidthSolver extends BaseSolver {
 
     return routePointEntries.map((entry) => {
       const { distanceFromStart } = entry
-
       const point =
         entry.originalPointIndex !== undefined
           ? { ...route.route[entry.originalPointIndex]! }
@@ -922,7 +844,6 @@ export class TraceWidthSolver extends BaseSolver {
     const collidingObstacleIds = new Set(
       this.lastCollidingObstacles.map((o) => o.obstacleId),
     )
-
     const collidingRouteNames = new Set(
       this.lastCollidingRoutes.map((r) => r.connectionName),
     )
@@ -934,7 +855,6 @@ export class TraceWidthSolver extends BaseSolver {
       const isOnLayer1 = obstacle.__zLayers?.includes(1)
 
       let fillColor: string
-
       if (isColliding) {
         fillColor = "rgba(255, 0, 0, 0.6)"
       } else if (isOnLayer0 && isOnLayer1) {
@@ -965,7 +885,6 @@ export class TraceWidthSolver extends BaseSolver {
 
       const isNominalWidth = route.traceThickness === this.nominalTraceWidth
       const isMidWidth = route.traceThickness === this.TRACE_WIDTH_SCHEDULE[1]
-
       const strokeColor = isNominalWidth
         ? "green"
         : isMidWidth
@@ -1011,7 +930,6 @@ export class TraceWidthSolver extends BaseSolver {
           color: strokeColor,
           label: route.connectionName,
         })
-
         visualization.rects.push(...(jumperGraphics.rects ?? []))
         visualization.lines.push(...(jumperGraphics.lines ?? []))
       }

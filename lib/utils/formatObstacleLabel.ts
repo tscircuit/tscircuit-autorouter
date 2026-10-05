@@ -6,7 +6,6 @@ const getUniqueValues = (values: readonly string[]) => {
   return values.filter((value) => {
     if (seen.has(value)) return false
     seen.add(value)
-
     return true
   })
 }
@@ -22,7 +21,6 @@ const addRootConnectionMapping = (
 
   if (!existingRootConnectionNames) {
     rootConnectionIndex.set(identifier, [rootConnectionName])
-
     return
   }
 
@@ -64,7 +62,6 @@ export const createObstacleLabelFormatter = (srj: SimpleRouteJson) => {
     const rootConnectionNames = connection.__rootConnectionNames ?? [
       connection.name,
     ]
-
     for (const rootConnectionName of rootConnectionNames) {
       addRootConnectionMapping(
         rootConnectionIndex,

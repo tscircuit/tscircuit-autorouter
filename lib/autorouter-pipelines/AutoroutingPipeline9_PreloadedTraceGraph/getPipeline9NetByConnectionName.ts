@@ -15,7 +15,6 @@ export const getPipeline9NetByConnectionName = (
               ? route.rootConnectionName
               : undefined))
           : undefined)
-
       return netName ? [[route.connectionName, netName] as const] : []
     }),
   )

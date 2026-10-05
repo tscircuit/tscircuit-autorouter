@@ -5,7 +5,6 @@ interface Point {
   x: number
   y: number
 }
-
 interface Rect {
   center: Point
   width: number

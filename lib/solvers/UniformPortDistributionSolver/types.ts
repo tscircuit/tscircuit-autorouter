@@ -1,11 +1,8 @@
 import { PortPoint } from "lib/types/high-density-types"
 
 export type Side = "left" | "right" | "top" | "bottom"
-
 export type OwnerPair = [string, string]
-
 export type OwnerPairKey = string
-
 export type EdgeOrientation = "vertical" | "horizontal"
 
 export type Bounds = {

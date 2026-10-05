@@ -33,15 +33,12 @@ const getLogicalConnectionLength = (
     (route) =>
       (route.rootConnectionName ?? route.connectionName) === connectionName,
   )
-
   if (matchingRoutes.length === 0) return undefined
-
   return matchingRoutes.reduce(
     (connectionLength, route) =>
       connectionLength +
       route.route.slice(1).reduce((routeLength, point, pointIndex) => {
         const previousPoint = route.route[pointIndex]!
-
         return (
           routeLength +
           Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
@@ -57,24 +54,18 @@ const getBusLengthMatchingPairs = (
 ): DifferentialPair[] =>
   buses.flatMap((bus) => {
     const maxLengthSkew = bus.maxLengthSkew
-
     if (maxLengthSkew === undefined || bus.connectionNames.length < 2) return []
-
     const memberLengths = bus.connectionNames.map((connectionName) => {
       const length = getLogicalConnectionLength(routes, connectionName)
-
       if (length === undefined)
         throw new Error(
           `Length matching: bus "${bus.busId}" has no routed geometry for connection "${connectionName}"`,
         )
-
       return { connectionName, length }
     })
-
     const longestMember = memberLengths.reduce((longest, member) =>
       member.length > longest.length ? member : longest,
     )
-
     return memberLengths.flatMap((member): DifferentialPair[] =>
       member.connectionName === longestMember.connectionName
         ? []
@@ -99,17 +90,14 @@ const getLogicalLengthMatchingConnections = (
       bus.maxLengthSkew === undefined ? [] : bus.connectionNames,
     ),
   )
-
   return connections.flatMap((connection) => {
     if (!constrainedConnectionNames.has(connection.name)) return []
     const firstPoint = connection.pointsToConnect[0]
     const lastPoint = connection.pointsToConnect.at(-1)
-
     if (!firstPoint || !lastPoint || firstPoint === lastPoint)
       throw new Error(
         `Length matching: bus connection "${connection.name}" needs at least two points`,
       )
-
     return [
       {
         ...connection,
@@ -128,20 +116,15 @@ const assertBusLengthSkew = (
   for (const bus of buses) {
     if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
       continue
-
     const lengths = bus.connectionNames.map((connectionName) => {
       const length = getLogicalConnectionLength(routes, connectionName)
-
       if (length === undefined)
         throw new Error(
           `Length matching: bus "${bus.busId}" lost routed geometry for connection "${connectionName}"`,
         )
-
       return length
     })
-
     const routedSkew = Math.max(...lengths) - Math.min(...lengths)
-
     if (routedSkew > bus.maxLengthSkew + 1e-6)
       throw new Error(
         `Length matching: bus "${bus.busId}" routed length skew ${routedSkew.toFixed(4)}mm exceeds ${bus.maxLengthSkew.toFixed(4)}mm`,
@@ -179,30 +162,24 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
   override _step(): void {
     if (!this.differentialPairSolver.solved) {
       this.differentialPairSolver.step()
-
       if (this.differentialPairSolver.failed) {
         this.failed = true
         this.error = this.differentialPairSolver.error
       }
-
       return
     }
 
     if (!this.busLengthMatchingSolver) {
       const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
-
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
       )
-
       if (differentialPairs.length === 0) {
         this.outputHdRoutes = hdRoutes
         this.solved = true
-
         return
       }
-
       this.busLengthMatchingSolver = new LengthMatchingSolver({
         hdRoutes,
         originalConnections: getLogicalLengthMatchingConnections(
@@ -216,19 +193,15 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
         layerCount: this.params.layerCount,
         obstacleMargin: this.params.obstacleMargin,
       })
-
       return
     }
 
     this.busLengthMatchingSolver.step()
-
     if (this.busLengthMatchingSolver.failed) {
       this.failed = true
       this.error = this.busLengthMatchingSolver.error
-
       return
     }
-
     if (!this.busLengthMatchingSolver.solved) return
     this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
@@ -241,7 +214,6 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       throw new Error(
         "LengthMatchingPostProcessingSolver output requested before completion",
       )
-
     return { hdRoutes: this.outputHdRoutes }
   }
 

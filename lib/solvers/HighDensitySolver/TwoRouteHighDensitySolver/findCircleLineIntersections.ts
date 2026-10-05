@@ -28,12 +28,10 @@ export const findCircleLineIntersections = (
     if (Math.abs(a) < 0.001) {
       // One intersection
       const y = cy
-
       // Check if this point is within the line segment
       if (y >= Math.min(y1, y2) && y <= Math.max(y1, y2)) {
         return [{ x, y }]
       }
-
       return []
     }
 
@@ -42,11 +40,9 @@ export const findCircleLineIntersections = (
     const y_2 = cy - Math.sqrt(a)
 
     const points: Point[] = []
-
     if (y_1 >= Math.min(y1, y2) && y_1 <= Math.max(y1, y2)) {
       points.push({ x, y: y_1 })
     }
-
     if (y_2 >= Math.min(y1, y2) && y_2 <= Math.max(y1, y2)) {
       points.push({ x, y: y_2 })
     }
@@ -82,7 +78,6 @@ export const findCircleLineIntersections = (
     ) {
       return [{ x, y }]
     }
-
     return []
   }
 
@@ -93,7 +88,6 @@ export const findCircleLineIntersections = (
   const y_2 = m * x_2 + b
 
   const points: Point[] = []
-
   if (
     x_1 >= Math.min(x1, x2) &&
     x_1 <= Math.max(x1, x2) &&
@@ -102,7 +96,6 @@ export const findCircleLineIntersections = (
   ) {
     points.push({ x: x_1, y: y_1 })
   }
-
   if (
     x_2 >= Math.min(x1, x2) &&
     x_2 <= Math.max(x1, x2) &&

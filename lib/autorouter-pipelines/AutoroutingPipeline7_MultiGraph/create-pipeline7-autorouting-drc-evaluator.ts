@@ -12,7 +12,6 @@ import {
 } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
 const AUTOROUTING_TRACE_CLEARANCE = 0.1
-
 const AUTOROUTING_VIA_CLEARANCE = 0.1
 
 /**
@@ -36,7 +35,6 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
-
   // DRC interactions cannot span farther than the widest copper feature plus
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
@@ -45,7 +43,6 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       getViaDimensions(conversionOptions.originalSrj).padDiameter,
       engineSrj.minTraceWidth,
     ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
-
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
     includeTraceViaOwnerMetadata: true,
@@ -53,21 +50,17 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     spatialCellSize,
   })
-
   const convertCandidateRoutes =
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(conversionOptions)
-
   const originalTraces = conversionOptions.originalSrj.traces ?? []
 
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
-
     if (!evaluatedRoutes) {
       throw new Error("Pipeline7 autorouting DRC evaluation requires HD routes")
     }
 
     const candidateTraces = convertCandidateRoutes(evaluatedRoutes)
-
     const tracesToEvaluate = (
       originalTraces.length
         ? [...originalTraces, ...candidateTraces]

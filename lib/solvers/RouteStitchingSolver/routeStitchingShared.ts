@@ -19,9 +19,7 @@ export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
 
 export const compareNumbers = (a: number, b: number) => {
   if (a < b) return -1
-
   if (a > b) return 1
-
   return 0
 }
 
@@ -44,7 +42,6 @@ export const getPoint3Key = (point: Point3) =>
 export const getCanonicalRoutePointKey = (route: HighDensityIntraNodeRoute) => {
   const forwardKey = route.route.map(getPoint3Key).join("|")
   const reverseKey = [...route.route].reverse().map(getPoint3Key).join("|")
-
   return forwardKey <= reverseKey ? forwardKey : reverseKey
 }
 
@@ -57,19 +54,16 @@ export const compareRoutes = (
   b: HighDensityIntraNodeRoute,
 ) => {
   const connectionNameCmp = a.connectionName.localeCompare(b.connectionName)
-
   if (connectionNameCmp !== 0) return connectionNameCmp
 
   const rootConnectionNameCmp = (a.rootConnectionName ?? "").localeCompare(
     b.rootConnectionName ?? "",
   )
-
   if (rootConnectionNameCmp !== 0) return rootConnectionNameCmp
 
   const routeKeyCmp = getCanonicalRoutePointKey(a).localeCompare(
     getCanonicalRoutePointKey(b),
   )
-
   if (routeKeyCmp !== 0) return routeKeyCmp
 
   return (

@@ -5,7 +5,6 @@ import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 // Give clearance projection a bend within short pad/trace gaps.
 const MAX_SEGMENT_LENGTH = 0.25
-
 const MAX_SUBDIVISIONS = 32
 
 /** Gives local clearance projection movable vertices without changing copper. */
@@ -14,7 +13,6 @@ export const subdividePipeline9ClearanceSegments = (
   errors: Pipeline9DrcError[],
 ): HighDensityRoute[] => {
   const traceIds = [...new Set(errors.flatMap(getDrcErrorTraceIds))]
-
   return routes.map((route): HighDensityRoute => {
     if (
       route.jumpers?.length ||
@@ -26,10 +24,8 @@ export const subdividePipeline9ClearanceSegments = (
     ) {
       return route
     }
-
     const points = route.route.flatMap((point, index) => {
       const next = route.route[index + 1]
-
       // Keep transitions, terminal identities and varying-width spans intact.
       if (
         !next ||
@@ -42,7 +38,6 @@ export const subdividePipeline9ClearanceSegments = (
       ) {
         return [point]
       }
-
       const divisions = Math.min(
         MAX_SUBDIVISIONS,
         Math.ceil(
@@ -50,7 +45,6 @@ export const subdividePipeline9ClearanceSegments = (
             MAX_SEGMENT_LENGTH,
         ),
       )
-
       return [
         point,
         ...Array.from({ length: Math.max(0, divisions - 1) }, (_, offset) => ({
@@ -61,7 +55,6 @@ export const subdividePipeline9ClearanceSegments = (
         })),
       ]
     })
-
     return points.length === route.route.length
       ? route
       : { ...route, route: points }

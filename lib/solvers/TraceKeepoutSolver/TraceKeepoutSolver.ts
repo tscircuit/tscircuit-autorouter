@@ -121,7 +121,6 @@ export class TraceKeepoutSolver extends BaseSolver {
       ...this.input.obstacles,
       ...this.getJumperPadObstacles(),
     ]
-
     this.obstacleSHI = new ObstacleSpatialHashIndex(
       "flatbush",
       obstaclesWithJumperPads,
@@ -158,7 +157,6 @@ export class TraceKeepoutSolver extends BaseSolver {
       const obstacles = this.obstacleSHI
         .searchArea(endpoint.x, endpoint.y, 0.01, 0.01)
         .filter((o) => o.__zLayers?.includes(endpoint.z))
-
       if (obstacles.length === 0) continue
       const obstacle = obstacles[0]!
 
@@ -238,32 +236,26 @@ export class TraceKeepoutSolver extends BaseSolver {
           (segStart.x - jumper.start.x) ** 2 +
             (segStart.y - jumper.start.y) ** 2,
         )
-
         const forwardEndDist = Math.sqrt(
           (segEnd.x - jumper.end.x) ** 2 + (segEnd.y - jumper.end.y) ** 2,
         )
-
         const forwardTotalDist = forwardStartDist + forwardEndDist
 
         // Check backward match (segStart -> jumper.end, segEnd -> jumper.start)
         const backwardStartDist = Math.sqrt(
           (segStart.x - jumper.end.x) ** 2 + (segStart.y - jumper.end.y) ** 2,
         )
-
         const backwardEndDist = Math.sqrt(
           (segEnd.x - jumper.start.x) ** 2 + (segEnd.y - jumper.start.y) ** 2,
         )
-
         const backwardTotalDist = backwardStartDist + backwardEndDist
 
         // Use the better match direction
         const totalDist = Math.min(forwardTotalDist, backwardTotalDist)
-
         const startDist =
           forwardTotalDist <= backwardTotalDist
             ? forwardStartDist
             : backwardStartDist
-
         const endDist =
           forwardTotalDist <= backwardTotalDist
             ? forwardEndDist
@@ -297,7 +289,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         // All traces processed for this schedule pass
         // Check if there's another keepout radius in the schedule
         this.currentScheduleIndex++
-
         if (this.currentScheduleIndex < this.KEEPOUT_RADIUS_SCHEDULE.length) {
           // Requeue all traces with the new keepout radius
           this.currentKeepoutRadius =
@@ -314,25 +305,21 @@ export class TraceKeepoutSolver extends BaseSolver {
             ...this.unprocessedRoutes,
             ...this.boardOutlineRoutes,
           ])
-
           return
         }
 
         // All schedule passes complete
         this.redrawnHdRoutes = this.processedRoutes
         this.solved = true
-
         return
       }
 
       // Initialize the new trace processing
       this.currentTrace = nextTrace
-
       if (this.currentTrace.route.length < 2) {
         // Trace is too short to process, just pass it through
         this.processedRoutes.push(this.currentTrace)
         this.currentTrace = null
-
         return
       }
 
@@ -348,7 +335,6 @@ export class TraceKeepoutSolver extends BaseSolver {
       this.currentTraceSegmentIndex = 0
       this.currentTraceSegmentT = 0
       this.recordedDrawPositions = [{ ...startPoint }]
-
       return
     }
 
@@ -361,7 +347,6 @@ export class TraceKeepoutSolver extends BaseSolver {
     if (stepResult === "end") {
       // Reached end of trace, finalize it
       this.finalizeCurrentTrace()
-
       return
     }
 
@@ -373,7 +358,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         x: this.cursorPosition!.x,
         y: this.cursorPosition!.y,
       }
-
       return
     }
 
@@ -410,14 +394,12 @@ export class TraceKeepoutSolver extends BaseSolver {
     // Check if the new segment would intersect with any other route
     const lastRecorded =
       this.recordedDrawPositions[this.recordedDrawPositions.length - 1]
-
     if (lastRecorded && this.drawPosition) {
       const newSegmentStart = {
         x: lastRecorded.x,
         y: lastRecorded.y,
         z: lastRecorded.z,
       }
-
       const newSegmentEnd = {
         x: this.drawPosition.x,
         y: this.drawPosition.y,
@@ -451,7 +433,6 @@ export class TraceKeepoutSolver extends BaseSolver {
       // We're already partway through the segment, not at the start
       return null
     }
-
     return (
       this.currentTraceJumperSegments.get(this.currentTraceSegmentIndex) ?? null
     )
@@ -475,7 +456,6 @@ export class TraceKeepoutSolver extends BaseSolver {
 
       // Check if we're about to enter a jumper segment
       const jumper = this.getJumperAtCurrentSegmentStart()
-
       if (jumper) {
         // We're at the start of a jumper segment
         const segStart = route[this.currentTraceSegmentIndex]!
@@ -487,7 +467,6 @@ export class TraceKeepoutSolver extends BaseSolver {
           (segStart.x - jumper.start.x) ** 2 +
             (segStart.y - jumper.start.y) ** 2,
         )
-
         const distToJumperEnd = Math.sqrt(
           (segStart.x - jumper.end.x) ** 2 + (segStart.y - jumper.end.y) ** 2,
         )
@@ -496,7 +475,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         // This ensures jumper positions are preserved exactly across passes
         const jumperStartPoint =
           distToJumperStart <= distToJumperEnd ? jumper.start : jumper.end
-
         const jumperEndPoint =
           distToJumperStart <= distToJumperEnd ? jumper.end : jumper.start
 
@@ -572,7 +550,6 @@ export class TraceKeepoutSolver extends BaseSolver {
           // Reached end of trace
           const lastPoint = route[route.length - 1]!
           this.cursorPosition = { ...lastPoint }
-
           return "end"
         }
       }
@@ -593,7 +570,6 @@ export class TraceKeepoutSolver extends BaseSolver {
 
     const rootConnectionName =
       this.currentTrace.rootConnectionName ?? this.currentTrace.connectionName
-
     const searchRadius = this.currentKeepoutRadius * 2
     const segments: Segment[] = []
 
@@ -627,7 +603,6 @@ export class TraceKeepoutSolver extends BaseSolver {
 
       // Check connectivity via connMap
       let isConnected = false
-
       for (const connectedId of obstacle.connectedTo) {
         if (
           this.input.connMap.areIdsConnected(rootConnectionName, connectedId)
@@ -636,7 +611,6 @@ export class TraceKeepoutSolver extends BaseSolver {
           break
         }
       }
-
       if (isConnected) continue
 
       // Convert obstacle to edge segments
@@ -701,7 +675,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         return true
       }
     }
-
     return false
   }
 
@@ -775,10 +748,8 @@ export class TraceKeepoutSolver extends BaseSolver {
     // Add the final point if not already there
     const lastRoutePoint =
       this.currentTrace.route[this.currentTrace.route.length - 1]!
-
     const lastRecorded =
       this.recordedDrawPositions[this.recordedDrawPositions.length - 1]
-
     if (
       !lastRecorded ||
       lastRecorded.x !== lastRoutePoint.x ||
@@ -844,7 +815,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         return true
       }
     }
-
     return false
   }
 
@@ -891,7 +861,6 @@ export class TraceKeepoutSolver extends BaseSolver {
     }
 
     result.push(points[points.length - 1]!)
-
     return result
   }
 
@@ -928,7 +897,6 @@ export class TraceKeepoutSolver extends BaseSolver {
     // We create separate routes for each edge so the spatial index can find them efficiently
     // Each route needs a unique connection name for the spatial index
     const layerCount = this.input.srj.layerCount ?? 2
-
     for (let i = 0; i < outlinePoints.length; i++) {
       const start = outlinePoints[i]!
       const end = outlinePoints[(i + 1) % outlinePoints.length]!
@@ -992,7 +960,6 @@ export class TraceKeepoutSolver extends BaseSolver {
         for (const pad of jumper.pads) {
           const connectedToLabel =
             pad.connectedTo.length > 0 ? pad.connectedTo.join(", ") : "unused"
-
           const color =
             pad.connectedTo.length > 0
               ? this.input.colorMap[pad.connectedTo[0]!] || "#888888"
@@ -1085,7 +1052,6 @@ export class TraceKeepoutSolver extends BaseSolver {
 
       // Build a set of jumper segments for this route
       const jumperSegmentSet = new Set<number>()
-
       if (route.jumpers && route.jumpers.length > 0) {
         for (const jumper of route.jumpers) {
           for (let i = 0; i < route.route.length - 1; i++) {
@@ -1159,7 +1125,6 @@ export class TraceKeepoutSolver extends BaseSolver {
           color,
           label: route.connectionName,
         })
-
         visualization.rects.push(...(jumperGraphics.rects ?? []))
         visualization.lines.push(...(jumperGraphics.lines ?? []))
       }
@@ -1206,17 +1171,14 @@ export class TraceKeepoutSolver extends BaseSolver {
           const tdy = this.cursorPosition.y - this.lastCursorPosition.y
           const tLen = Math.sqrt(tdx * tdx + tdy * tdy)
           const epsilon = 0.0001
-
           const traceDir =
             tLen > epsilon ? { x: tdx / tLen, y: tdy / tLen } : { x: 1, y: 0 }
 
           const halfLength = this.currentKeepoutRadius / 4
-
           const projectedStart = {
             x: this.cursorPosition.x - traceDir.x * halfLength,
             y: this.cursorPosition.y - traceDir.y * halfLength,
           }
-
           const projectedEnd = {
             x: this.cursorPosition.x + traceDir.x * halfLength,
             y: this.cursorPosition.y + traceDir.y * halfLength,

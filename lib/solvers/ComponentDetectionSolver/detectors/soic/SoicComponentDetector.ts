@@ -4,9 +4,7 @@ import { clusterAxisValues } from "../bga/BgaComponentDetector"
 import type { ComponentDetector, ComponentDetectorParams } from "../types"
 
 const MIN_SOIC_SHORT_AXIS_COUNT = 2
-
 const MIN_SOIC_LONG_AXIS_COUNT = 4
-
 const MAX_SOIC_PAD_SIZE_VARIANCE = 0.01
 
 function hasUniformDimensionWithinTolerance(values: number[]) {
@@ -35,7 +33,6 @@ function getNearestClusterIndex(value: number, clusters: number[]) {
 
   for (let index = 0; index < clusters.length; index++) {
     const distance = Math.abs(value - clusters[index]!)
-
     if (distance < nearestDistance) {
       nearestIndex = index
       nearestDistance = distance
@@ -107,11 +104,9 @@ export function isSoicLikeComponent({
   const rowAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.y),
   )
-
   const columnAxisValues = clusterAxisValues(
     memberObstacles.map((obstacle) => obstacle.center.x),
   )
-
   const isTwoRowOrColumnBga =
     (rowAxisValues.length === MIN_SOIC_SHORT_AXIS_COUNT &&
       columnAxisValues.length >= MIN_SOIC_LONG_AXIS_COUNT) ||
@@ -125,7 +120,6 @@ export function isSoicLikeComponent({
     rowAxisValues,
     columnAxisValues,
   })
-
   if (innerGap === null) return false
 
   const viaDiameter = getViaDimensions(inputSrj).padDiameter

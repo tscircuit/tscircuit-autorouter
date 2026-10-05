@@ -1,6 +1,6 @@
 import { defineConfig } from "oxlint"
 
-// This command supplements Biome. All pinned upstream rules run at their recommended error severity.
+// This command supplements Biome. Keep 23 semantic rules at upstream error severity.
 export default defineConfig({
   plugins: ["oxc"],
   categories: {
@@ -53,7 +53,8 @@ export default defineConfig({
         "anti-slop/no-unknown-returns": "error",
         "anti-slop/no-unknown-type-aliases": "error",
         "anti-slop/no-widen-then-assert": "error",
-        "anti-slop/require-readable-spacing": "error",
+        // Biome owns formatting; this upstream rule adds blank lines throughout lib.
+        "anti-slop/require-readable-spacing": "off",
         "anti-slop/require-safety-comment-for-type-assertion": "error",
         "anti-slop-effect/no-manual-effect-error-tag": "error",
         "anti-slop-effect/no-manual-tag-comparison": "error",

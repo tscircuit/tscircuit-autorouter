@@ -17,16 +17,12 @@ export type RerouteRectRegion = {
 }
 
 type RoutePoint = SimplifiedPcbTrace["route"][number]
-
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
-
 type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
-
 type ThroughObstacleRoutePoint = Extract<
   RoutePoint,
   { route_type: "through_obstacle" }
 >
-
 type LocatableRoutePoint = {
   route_type: RoutePoint["route_type"]
   x: number
@@ -65,7 +61,6 @@ const getRoutePointLocation = (
   point: RoutePoint,
 ): LocatableRoutePoint | null => {
   if (isWireRoutePoint(point) || isViaRoutePoint(point)) return point
-
   if (
     isThroughObstacleRoutePoint(point) &&
     Math.hypot(point.end.x - point.start.x, point.end.y - point.start.y) <=
@@ -80,7 +75,6 @@ const getRoutePointLocation = (
       width: point.width,
     }
   }
-
   return null
 }
 
@@ -172,26 +166,19 @@ const getRectInsideInterval = (
   const clip = (p: number, q: number) => {
     if (Math.abs(p) < EPSILON) return q >= 0
     const r = q / p
-
     if (p < 0) {
       if (r > t1) return false
-
       if (r > t0) t0 = r
     } else {
       if (r < t0) return false
-
       if (r < t1) t1 = r
     }
-
     return true
   }
 
   if (!clip(-dx, start.x - region.minX)) return null
-
   if (!clip(dx, region.maxX - start.x)) return null
-
   if (!clip(-dy, start.y - region.minY)) return null
-
   if (!clip(dy, region.maxY - start.y)) return null
 
   return { startT: t0, endT: t1 }
@@ -354,7 +341,6 @@ const maybeCreateRerouteConnection = ({
   }
 
   const connection = createRerouteConnection({ trace, ripIndex, start, end })
-
   const endpointObstacles: Obstacle[] = [
     createRerouteEndpointObstacle({
       connection,
@@ -410,7 +396,6 @@ const getClippedTracePieces = (
       )
       continue
     }
-
     hadIntersection = true
 
     if (interval.startT > EPSILON) {
@@ -421,7 +406,6 @@ const getClippedTracePieces = (
         layer,
         width,
       )
-
       const clippedTraceSegmentObstacle = createClippedTraceSegmentObstacle({
         obstacleId: `${trace.pcb_trace_id}_keep_${keptSegmentIndex}_bounds`,
         start: segmentStart,
@@ -429,11 +413,9 @@ const getClippedTracePieces = (
         layer,
         width,
       })
-
       if (clippedTraceSegmentObstacle) {
         clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)
       }
-
       appendClippedTraceSegment(
         keptTraces,
         trace,
@@ -450,12 +432,10 @@ const getClippedTracePieces = (
       layer,
       width,
     )
-
     const rerouteStart = snapPointToRegionBounds(
       getInterpolatedPoint(start, end, interval.startT, layer, width),
       region,
     )
-
     const rerouteEnd = snapPointToRegionBounds(
       getInterpolatedPoint(start, end, interval.endT, layer, width),
       region,
@@ -476,15 +456,12 @@ const getClippedTracePieces = (
         region,
         allowInteriorStart: activeRipStartAllowsInterior,
       })
-
       if (rerouteConnection) {
         rerouteConnections.push(rerouteConnection.connection)
         rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles)
       }
-
       activeRipStart = null
       activeRipStartAllowsInterior = false
-
       const clippedTraceSegmentObstacle = createClippedTraceSegmentObstacle({
         obstacleId: `${trace.pcb_trace_id}_keep_${keptSegmentIndex}_bounds`,
         start: rippedEnd,
@@ -492,11 +469,9 @@ const getClippedTracePieces = (
         layer,
         width,
       })
-
       if (clippedTraceSegmentObstacle) {
         clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)
       }
-
       appendClippedTraceSegment(
         keptTraces,
         trace,
@@ -530,7 +505,6 @@ const getClippedTracePieces = (
         allowInteriorStart: activeRipStartAllowsInterior,
         allowInteriorEnd: true,
       })
-
       if (rerouteConnection) {
         rerouteConnections.push(rerouteConnection.connection)
         rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles)
@@ -611,7 +585,6 @@ export const reconnectReroutedSimpleRouteJsonRegion = (
     const rootConnectionName = rerouteConnectionToRoot.get(
       trace.connection_name,
     )
-
     if (!rootConnectionName) return structuredClone(trace)
 
     return {

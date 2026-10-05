@@ -30,7 +30,6 @@ export const isPointInOrOnPolygon = (
   for (let i = 0; i < polygon.length; i++) {
     const start = polygon[i]
     const end = polygon[(i + 1) % polygon.length]
-
     if (isPointOnSegment(point, start, end)) {
       return true
     }

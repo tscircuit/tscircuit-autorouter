@@ -18,7 +18,6 @@ const setColorOpacity = (color: string | undefined, opacity: number) => {
 
   try {
     const parsedColor = parseToRgb(color)
-
     return `rgba(${parsedColor.red},${parsedColor.green},${parsedColor.blue},${opacity})`
   } catch {
     return safeTransparentize(color, 1 - opacity)

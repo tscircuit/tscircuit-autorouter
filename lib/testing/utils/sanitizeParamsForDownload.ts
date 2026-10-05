@@ -14,7 +14,6 @@ const getReferenceSummary = (value: unknown) => {
   }
 
   const summary: Record<string, string | number | boolean> = {}
-
   for (const key of [
     "capacityMeshNodeId",
     "regionId",
@@ -26,7 +25,6 @@ const getReferenceSummary = (value: unknown) => {
     "name",
   ] as const) {
     const fieldValue = (value as Record<string, unknown>)[key]
-
     if (
       typeof fieldValue === "string" ||
       typeof fieldValue === "number" ||
@@ -84,18 +82,15 @@ export const sanitizeParamsForDownload = (
   }
 
   const rootLeafValue = sanitizeLeafValue(value)
-
   if (rootLeafValue !== undefined) {
     if (rootLeafValue === omitValue) {
       return null
     }
-
     return rootLeafValue
   }
 
   const rootValue = value as object
   const seenPath = seen.get(rootValue)
-
   if (seenPath) {
     return createReferenceMarker(rootValue, seenPath)
   }
@@ -104,7 +99,6 @@ export const sanitizeParamsForDownload = (
     if (Array.isArray(input) || input instanceof Set) {
       return [] as unknown[]
     }
-
     return {} as Record<string, unknown>
   }
 
@@ -130,23 +124,19 @@ export const sanitizeParamsForDownload = (
       frame.source.forEach((item, index) => {
         const childPath = getObjectPath(frame.path, index)
         const leafValue = sanitizeLeafValue(item)
-
         if (leafValue !== undefined) {
           ;(frame.target as unknown[])[index] =
             leafValue === omitValue ? null : leafValue
-
           return
         }
 
         const childValue = item as object
         const existingPath = seen.get(childValue)
-
         if (existingPath) {
           ;(frame.target as unknown[])[index] = createReferenceMarker(
             childValue,
             existingPath,
           )
-
           return
         }
 
@@ -166,23 +156,19 @@ export const sanitizeParamsForDownload = (
       Array.from(frame.source.values()).forEach((item, index) => {
         const childPath = getObjectPath(frame.path, index)
         const leafValue = sanitizeLeafValue(item)
-
         if (leafValue !== undefined) {
           ;(frame.target as unknown[])[index] =
             leafValue === omitValue ? null : leafValue
-
           return
         }
 
         const childValue = item as object
         const existingPath = seen.get(childValue)
-
         if (existingPath) {
           ;(frame.target as unknown[])[index] = createReferenceMarker(
             childValue,
             existingPath,
           )
-
           return
         }
 
@@ -203,18 +189,15 @@ export const sanitizeParamsForDownload = (
         const stringKey = String(key)
         const childPath = `${frame.path}.<map:${stringKey}>`
         const leafValue = sanitizeLeafValue(item)
-
         if (leafValue !== undefined) {
           if (leafValue !== omitValue) {
             ;(frame.target as Record<string, unknown>)[stringKey] = leafValue
           }
-
           continue
         }
 
         const childValue = item as object
         const existingPath = seen.get(childValue)
-
         if (existingPath) {
           ;(frame.target as Record<string, unknown>)[stringKey] =
             createReferenceMarker(childValue, existingPath)
@@ -230,7 +213,6 @@ export const sanitizeParamsForDownload = (
           path: childPath,
         })
       }
-
       continue
     }
 
@@ -243,7 +225,6 @@ export const sanitizeParamsForDownload = (
           typeof propertyValue === "object" && propertyValue !== null
             ? (seen.get(propertyValue) ?? childPath)
             : childPath
-        // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
         ;(frame.target as Record<string, unknown>)[key] = createReferenceMarker(
           propertyValue,
           parentPath,
@@ -252,18 +233,15 @@ export const sanitizeParamsForDownload = (
       }
 
       const leafValue = sanitizeLeafValue(propertyValue)
-
       if (leafValue !== undefined) {
         if (leafValue !== omitValue) {
           ;(frame.target as Record<string, unknown>)[key] = leafValue
         }
-
         continue
       }
 
       const childValue = propertyValue as object
       const existingPath = seen.get(childValue)
-
       if (existingPath) {
         ;(frame.target as Record<string, unknown>)[key] = createReferenceMarker(
           childValue,

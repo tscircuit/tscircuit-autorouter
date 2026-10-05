@@ -2,9 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 
 type Point = { x: number; y: number }
-
 type Segment = { start: Point; end: Point }
-
 type JLine = {
   index: number
   startsAt: "C" | "D"
@@ -117,7 +115,6 @@ export function computeDumbbellPaths({
     const segmentLength = distance(segment.start, segment.end)
     // Allow a small tolerance for floating-point errors
     const tolerance = 0.0001
-
     // Check if point is on segment (d1 + d2 should approximately equal segmentLength)
     return Math.abs(d1 + d2 - segmentLength) < tolerance
   }
@@ -143,7 +140,6 @@ export function computeDumbbellPaths({
     const d2y = p4.y - p3.y
 
     const det = d1x * d2y - d1y * d2x
-
     if (Math.abs(det) < 0.0001) return false // Parallel or collinear
 
     const dx = p3.x - p1.x
@@ -158,14 +154,12 @@ export function computeDumbbellPaths({
   const doPathsIntersect = (path1: Point[], path2: Point[]): boolean => {
     // Create segments from path1
     const segments1 = []
-
     for (let i = 0; i < path1.length - 1; i++) {
       segments1.push({ start: path1[i], end: path1[i + 1] })
     }
 
     // Create segments from path2
     const segments2 = []
-
     for (let i = 0; i < path2.length - 1; i++) {
       segments2.push({ start: path2[i], end: path2[i + 1] })
     }
@@ -185,13 +179,11 @@ export function computeDumbbellPaths({
   // Path length calculation
   const pathLength = (points: Point[]): number => {
     let len = 0
-
     for (let i = 1; i < points.length; i++) {
       const dx = points[i].x - points[i - 1].x
       const dy = points[i].y - points[i - 1].y
       len += Math.sqrt(dx * dx + dy * dy)
     }
-
     return len
   }
 
@@ -251,7 +243,6 @@ export function computeDumbbellPaths({
 
     // Normalize direction vector
     const norm = Math.sqrt(dirX * dirX + dirY * dirY)
-
     if (norm === 0) {
       // If closest point is the circle center, use segment direction
       const segDirX = segment.end.x - segment.start.x
@@ -322,7 +313,6 @@ export function computeDumbbellPaths({
         const adjustedPointA = needsRadiusPointA
           ? getSubdivisionPoint(segment, A, radius)
           : null
-
         const adjustedPointB = needsRadiusPointB
           ? getSubdivisionPoint(segment, B, radius)
           : null
@@ -332,7 +322,6 @@ export function computeDumbbellPaths({
 
         // Only add regular subdivisions if segment isn't too short
         const segmentLength = distance(segment.start, segment.end)
-
         if (segmentLength > radius / 2 && numSubdivisions > 0) {
           for (let j = 1; j <= numSubdivisions; j++) {
             const t = j / (numSubdivisions + 1)
@@ -720,7 +709,6 @@ export function computeDumbbellPaths({
     numSubdivisions: number, // Keep consistent with optimal path subdivision
   ): Point[] => {
     const path = jLine.points
-
     if (path.length < 2) return path
 
     const minDistThreshold = r + m
@@ -748,7 +736,6 @@ export function computeDumbbellPaths({
         const norm = Math.sqrt(dirX * dirX + dirY * dirY)
 
         let adjustedPoint: Point | null = null
-
         if (norm > 1e-6) {
           // Calculate the point pushed away to the minimum distance threshold
           adjustedPoint = {
@@ -764,7 +751,6 @@ export function computeDumbbellPaths({
           const segDirX = segment.end.x - segment.start.x
           const segDirY = segment.end.y - segment.start.y
           const segNorm = Math.sqrt(segDirX * segDirX + segDirY * segDirY)
-
           if (segNorm > 1e-6) {
             adjustedPoint = {
               x: oppositePoint.x + (minDistThreshold * segDirX) / segNorm,
@@ -795,7 +781,6 @@ export function computeDumbbellPaths({
       // Add the original end point of the segment
       // Ensure no duplicates or very close points are added
       const lastPointInResult = result[result.length - 1]
-
       if (distance(lastPointInResult, segment.end) > radius / 10) {
         result.push(segment.end)
       }
@@ -804,7 +789,6 @@ export function computeDumbbellPaths({
     // Final filter for close points
     if (result.length > 1) {
       const filteredResult = [result[0]]
-
       for (let i = 1; i < result.length; i++) {
         if (
           distance(filteredResult[filteredResult.length - 1], result[i]) >
@@ -813,7 +797,6 @@ export function computeDumbbellPaths({
           filteredResult.push(result[i])
         }
       }
-
       return filteredResult
     }
 
@@ -828,12 +811,10 @@ export function computeDumbbellPaths({
     for (let i = 0; i < paths.length; i++) {
       const path = paths[i]
       const firstSeg = { start: path[0], end: path[1] }
-
       const lastSeg = {
         start: path[path.length - 2],
         end: path[path.length - 1],
       }
-
       const midSeg = { start: path[3], end: path[4] }
 
       // Check constraints

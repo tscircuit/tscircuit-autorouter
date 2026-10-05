@@ -41,7 +41,6 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
 
   for (const point of points) {
     const key = pointKey(point)
-
     if (seen.has(key)) continue
     seen.add(key)
     deduped.push(point)
@@ -118,7 +117,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.captureSearchDebug = params.captureSearchDebug ?? true
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
-
     for (const {
       connectionName,
       rootConnectionName,
@@ -132,13 +130,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
           rootConnectionName,
         )
       }
-
       unsolvedConnectionsMap.set(connectionName, [
         ...(unsolvedConnectionsMap.get(connectionName) ?? []),
         { x, y, z: z ?? 0 },
       ])
     }
-
     this.originalConnectionPointsByName = new Map(
       Array.from(unsolvedConnectionsMap.entries()).map(
         ([connectionName, points]) => [
@@ -231,7 +227,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }) {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
-
     return {
       connectionName,
       rootConnectionName,
@@ -279,10 +274,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }) {
     const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
-
     const obstacleChecker =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
-
     const { A, B } = opts
     const viaPoint = { x: A.x, y: A.y }
 
@@ -312,7 +305,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
       route,
       vias: [{ x: viaPoint.x, y: viaPoint.y }],
     })
-
     return true
   }
 
@@ -397,7 +389,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private queueConnectionForPostrouteRepair(connectionName: string) {
     const points = this.originalConnectionPointsByName.get(connectionName)
-
     if (!points || points.length < 2) {
       return false
     }
@@ -415,7 +406,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
       connectionName,
       (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
     )
-
     return true
   }
 
@@ -423,7 +413,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
-
       if (this.activeSubSolver.solved) {
         this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
         this.activeSubSolver = null
@@ -433,16 +422,13 @@ export class IntraNodeRouteSolver extends BaseSolver {
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
       }
-
       return
     }
 
     const unsolvedConnection = this.unsolvedConnections.pop()
     this.progress = this.computeProgress()
-
     if (!unsolvedConnection) {
       const viaTraceConflict = this.getFirstSolvedViaTraceConflict()
-
       if (viaTraceConflict) {
         const repairAttempts =
           this.rerouteAttemptsByConnection.get(
@@ -457,7 +443,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
             `via: (${viaTraceConflict.via.x.toFixed(3)}, ${viaTraceConflict.via.y.toFixed(3)})`,
           ].join("\n")
           this.failed = true
-
           return
         }
 
@@ -467,26 +452,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         ) {
           this.progress = this.computeProgress()
-
           return
         }
       }
 
       this.solved = this.failedSubSolvers.length === 0
-
       return
     }
-
     if (unsolvedConnection.points.length === 1) {
       return
     }
-
     if (unsolvedConnection.points.length > 2) {
       if (this.queueExtraBranchesForMultiPointConnection(unsolvedConnection)) {
         return
       }
     }
-
     if (unsolvedConnection.points.length === 2) {
       const [A, B] = unsolvedConnection.points
       const sameX = Math.abs(A.x - B.x) < 1e-6
@@ -504,7 +484,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
         if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
       }
     }
-
     this.activeSubSolver =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
         this.getSingleRouteSolverOpts(unsolvedConnection),
@@ -550,10 +529,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       routeIndex++
     ) {
       const route = this.solvedRoutes[routeIndex]
-
       if (route.route.length > 0) {
         const routeColor = this.colorMap[route.connectionName] ?? "blue"
-
         const rootConnectionName =
           route.rootConnectionName ??
           this.rootConnectionNameByConnectionName.get(route.connectionName)

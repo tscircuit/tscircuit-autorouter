@@ -50,7 +50,6 @@ export function findPointToGetAroundCircle(
     }
 
     const distFromCenter = distance(midAC, Q.center)
-
     if (distFromCenter < Q.radius * 1.1) {
       // Too close to circle, move away from center
       const dirFromCenter = {
@@ -98,7 +97,6 @@ export function findPointToGetAroundCircle(
 
     // Final safety check: make sure E is outside the circle
     const distEToCenter = distance(E, Q.center)
-
     if (distEToCenter < Q.radius * 1.05) {
       // E is too close to the circle, adjust it
       const dirFromCenter = {
@@ -136,7 +134,6 @@ function computeTangentPoint(
     circleCenter.x - observationPoint.x,
     circleCenter.y - observationPoint.y,
   ]
-
   const CQLength = Math.sqrt(CQ[0] * CQ[0] + CQ[1] * CQ[1])
 
   // Check if tangent is possible (point is inside or on the circle)
@@ -149,7 +146,6 @@ function computeTangentPoint(
         referencePoint.x - observationPoint.x,
         referencePoint.y - observationPoint.y,
       ]
-
       const refLength = Math.sqrt(refVec[0] * refVec[0] + refVec[1] * refVec[1])
 
       if (refLength < 1e-8) {
@@ -168,7 +164,6 @@ function computeTangentPoint(
 
     // Move away from circle center along the same line
     const CQUnit = [CQ[0] / CQLength, CQ[1] / CQLength]
-
     return {
       x: circleCenter.x - CQUnit[0] * radius,
       y: circleCenter.y - CQUnit[1] * radius,
@@ -219,6 +214,5 @@ function computeTangentPoint(
 function distance(p1: Point, p2: Point): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
-
   return Math.sqrt(dx * dx + dy * dy)
 }

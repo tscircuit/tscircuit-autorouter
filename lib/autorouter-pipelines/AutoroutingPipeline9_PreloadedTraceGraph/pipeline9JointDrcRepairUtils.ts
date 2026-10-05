@@ -31,7 +31,6 @@ export const getPipeline9DrcErrors = (
   routes: HighDensityRoute[],
 ): Pipeline9DrcError[] => {
   const result = drcEvaluator({ hdRoutes: routes, traces: [] })
-
   return (
     Array.isArray(result) ? result : (result.errorsWithCenters ?? result.errors)
   ) as Pipeline9DrcError[]
@@ -42,33 +41,27 @@ const getPipeline9DrcErrorParticipantTraceIds = (
 ): string[] => {
   const primaryTraceId =
     typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
-
   const explicitTraceIds = Array.isArray(error.pcb_trace_ids)
     ? error.pcb_trace_ids.filter(
         (traceId): traceId is string => typeof traceId === "string",
       )
     : []
-
   const viaIds = [
     ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
     ...(Array.isArray(error.pcb_via_ids) ? error.pcb_via_ids : []),
   ].filter((viaId): viaId is string => typeof viaId === "string")
-
   const pairPrefix = primaryTraceId ? `overlap_${primaryTraceId}_` : undefined
-
   const encodedOtherTraceId =
     pairPrefix &&
     typeof error.pcb_trace_error_id === "string" &&
     error.pcb_trace_error_id.startsWith(pairPrefix)
       ? error.pcb_trace_error_id.slice(pairPrefix.length)
       : undefined
-
   if (explicitTraceIds.length > 0) {
     const participantTraceIds =
       primaryTraceId && !explicitTraceIds.includes(primaryTraceId)
         ? [primaryTraceId, ...explicitTraceIds]
         : [...explicitTraceIds]
-
     if (
       participantTraceIds.length < 2 &&
       encodedOtherTraceId &&
@@ -76,10 +69,8 @@ const getPipeline9DrcErrorParticipantTraceIds = (
     ) {
       participantTraceIds.push(encodedOtherTraceId)
     }
-
     return participantTraceIds
   }
-
   return [primaryTraceId, encodedOtherTraceId].filter(
     (traceId): traceId is string =>
       typeof traceId === "string" && !viaIds.includes(traceId),
@@ -103,13 +94,11 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   preloadRepairTraceIds: Pipeline9PreloadRepairTraceIds
 }): boolean => {
   const participantTraceIds = getPipeline9DrcErrorParticipantTraceIds(error)
-
   if (
     participantTraceIds.some((traceId) => preloadRepairTraceIds.has(traceId))
   ) {
     return true
   }
-
   const collapsedTraceIds = (
     error.__collapsed_trace_participants ?? []
   ).flatMap((participant) =>
@@ -117,7 +106,6 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
       ? [participant.solverTraceId]
       : [],
   )
-
   return collapsedTraceIds.some((traceId) =>
     preloadRepairTraceIds.collidingFixedTraceIds?.has(traceId),
   )
@@ -133,14 +121,11 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
         score + Math.max(0, error.minimum_clearance - error.actual_clearance)
       )
     }
-
     const message = typeof error.message === "string" ? error.message : ""
     const gap = message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
-
     if (gap) {
       return score + Math.max(0, 0.1 - Number.parseFloat(gap[1]!))
     }
-
     return score + 1
   }, 0)
 
@@ -166,18 +151,13 @@ export const getPipeline9RouteIndexByTraceId = ({
     ...newConnections.map((connection) => connection.name),
     ...syntheticConnectionNames,
   ])
-
   const routeCountByConnectionName = new Map<string, number>()
   const routeIndexByTraceId = new Map<string, number>()
-
   for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
     const route = routes[routeIndex]!
-
     if (!routableConnectionNames.has(route.connectionName)) continue
-
     const connectionRouteIndex =
       routeCountByConnectionName.get(route.connectionName) ?? 0
-
     routeCountByConnectionName.set(
       route.connectionName,
       connectionRouteIndex + 1,
@@ -187,6 +167,5 @@ export const getPipeline9RouteIndexByTraceId = ({
       routeIndex,
     )
   }
-
   return routeIndexByTraceId
 }

@@ -9,7 +9,6 @@ export const createRectFromCapacityNode = (
   } = {},
 ): Rect => {
   const lowestZ = Math.min(...node.availableZ)
-
   return {
     center:
       !opts.rectMargin || opts.zOffset

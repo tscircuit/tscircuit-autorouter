@@ -28,11 +28,8 @@ import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
-
 const MIN_FANOUT_BOUNDARY_MARGIN_MM = 2
-
 const MIN_POST_FANOUT_CORRIDOR_MM = 2
-
 const INWARD_ESCAPE_DEPTH_MM = 1.2
 
 type AutoroutingPipeline10Input = {
@@ -70,7 +67,6 @@ function getCenterX(component: DetectedComponent): number {
       `Detected component ${component.componentId} has bad bounds`,
     )
   }
-
   return centerX
 }
 
@@ -83,7 +79,6 @@ function getCenterY(component: DetectedComponent): number {
       `Detected component ${component.componentId} has bad bounds`,
     )
   }
-
   return centerY
 }
 
@@ -106,7 +101,6 @@ function getPhysicalComponent(
   const memberObstacles = inputSrj.obstacles.filter(
     (obstacle) => obstacle.componentId === detectedComponent.componentId,
   )
-
   if (memberObstacles.length === 0) {
     throw new Error(
       `Detected component ${detectedComponent.componentId} has no physical obstacles`,
@@ -165,18 +159,15 @@ function getBgaPair(
       `Pipeline 10 requires exactly two detected BGAs; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
     )
   }
-
   const [first, second] = bgaComponents as [
     DetectedComponent,
     DetectedComponent,
   ]
-
   if (first.componentId === second.componentId) {
     throw new Error("Pipeline 10 requires two distinct BGA component IDs")
   }
 
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(first, second)
-
   if (fanoutBoundaryMargin < MIN_FANOUT_BOUNDARY_MARGIN_MM) {
     throw new Error(
       `Pipeline 10 cannot provide ${MIN_FANOUT_BOUNDARY_MARGIN_MM}mm fanout margins while retaining a ${MIN_POST_FANOUT_CORRIDOR_MM}mm routing corridor`,
@@ -221,10 +212,8 @@ function getPhysicalFanoutBuses({
   // 25-signal address group is not incorrectly forced through one BGA layer.
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
   const boundary = getExpandedBounds(source, fanoutBoundaryMargin)
-
   const inwardDirection: FanoutDirection =
     getCenterX(target) > getCenterX(source) ? "right" : "left"
-
   const outwardDirection: FanoutDirection =
     inwardDirection === "right" ? "left" : "right"
 
@@ -236,7 +225,6 @@ function getPhysicalFanoutBuses({
         point.y >= source.bounds.minY &&
         point.y <= source.bounds.maxY,
     )
-
     if (sourcePoints.length !== 1) {
       throw new Error(
         `Connection ${connection.name} must touch ${source.componentId} exactly once before fanout`,
@@ -244,12 +232,10 @@ function getPhysicalFanoutBuses({
     }
 
     const sourcePoint = sourcePoints[0]!
-
     const inwardDistance =
       inwardDirection === "right"
         ? boundary.maxX - sourcePoint.x
         : sourcePoint.x - boundary.minX
-
     const nonInwardCandidates: Array<{
       direction: FanoutDirection
       distance: number
@@ -264,11 +250,9 @@ function getPhysicalFanoutBuses({
             : sourcePoint.x - boundary.minX,
       },
     ]
-
     const nearestNonInwardDirection = nonInwardCandidates.toSorted(
       (first, second) => first.distance - second.distance,
     )[0]!.direction
-
     const direction: FanoutDirection =
       inwardDistance <= fanoutBoundaryMargin + INWARD_ESCAPE_DEPTH_MM
         ? inwardDirection
@@ -316,7 +300,6 @@ function getFanoutOptions({
   target,
 }: FanoutPairInput): FanoutSolverOptions {
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
-
   const availableCornersAndSides: FanoutAvailableCornerAndSideInput[] = [
     "top_left",
     "top_middle",
@@ -367,10 +350,8 @@ class FanoutStage extends BaseSolver {
       this.error = this.fanoutSolver.error ?? "Fanout solver failed"
       this.failed = true
       this.activeSubSolver = null
-
       return
     }
-
     if (this.fanoutSolver.solved) {
       this.solved = true
       this.activeSubSolver = null
@@ -423,10 +404,8 @@ class AutoroutingStage extends BaseSolver {
         this.autoroutingPipelineSolver.error ?? "Autorouting pipeline failed"
       this.failed = true
       this.activeSubSolver = null
-
       return
     }
-
     if (this.autoroutingPipelineSolver.solved) {
       this.solved = true
       this.activeSubSolver = null
@@ -484,7 +463,6 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
           pipeline.inputProblem.inputSrj,
           pipeline.componentDetectionSolver!.getOutput(),
         )
-
         return [
           {
             inputSrj: pipeline.inputProblem.inputSrj,
@@ -505,10 +483,8 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
           pipeline.inputProblem.inputSrj,
           pipeline.componentDetectionSolver!.getOutput(),
         )
-
         const firstBgaFanoutSrj =
           pipeline.firstBgaFanoutSolver!.getOutputSimpleRouteJson()
-
         return [
           {
             inputSrj: firstBgaFanoutSrj,
@@ -556,7 +532,6 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
     if (!this.autoroutingPipelineSolver?.solved) {
       throw new Error("Pipeline 10 has not solved yet")
     }
-
     return this.autoroutingPipelineSolver.getOutput()
   }
 

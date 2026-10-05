@@ -15,31 +15,23 @@ export const getTerminalLayerIndicesByPcbPortId = (
 ): ReadonlyMap<string, ReadonlySet<number>> => {
   const getCenterKey = (point: { x: number; y: number }) =>
     `${point.x}:${point.y}`
-
   const obstaclesByCenter = new Map<string, Obstacle[]>()
-
   for (const obstacle of obstacles) {
     const centerKey = getCenterKey(obstacle.center)
     const centeredObstacles = obstaclesByCenter.get(centerKey) ?? []
     centeredObstacles.push(obstacle)
     obstaclesByCenter.set(centerKey, centeredObstacles)
   }
-
   const terminalLayerIndicesByPcbPortId = new Map<string, Set<number>>()
-
   for (const connection of connections) {
     for (const point of connection.pointsToConnect) {
       if (!point.pcb_port_id) continue
-
       const terminalLayerIndices =
         terminalLayerIndicesByPcbPortId.get(point.pcb_port_id) ?? new Set()
-
       const layerNames = getConnectionPointLayers(point)
-
       for (const layerName of layerNames) {
         terminalLayerIndices.add(mapLayerNameToZ(layerName, layerCount))
       }
-
       // A plated-hole connection point may name only its preferred layer. A
       // single exactly centered multilayer obstacle proves every physical layer
       // the terminal spans. Coincident same-net single-layer pads do not.
@@ -50,18 +42,15 @@ export const getTerminalLayerIndicesByPcbPortId = (
         ) {
           continue
         }
-
         for (const layerName of obstacle.layers) {
           terminalLayerIndices.add(mapLayerNameToZ(layerName, layerCount))
         }
       }
-
       terminalLayerIndicesByPcbPortId.set(
         point.pcb_port_id,
         terminalLayerIndices,
       )
     }
   }
-
   return terminalLayerIndicesByPcbPortId
 }

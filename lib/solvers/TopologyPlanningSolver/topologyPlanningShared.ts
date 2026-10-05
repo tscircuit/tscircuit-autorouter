@@ -65,7 +65,6 @@ export function createComponentSrj({
   component: SerializedTopologyComponentInput
 }): SimpleRouteJson {
   const obstacleBounds = getBoundsForObstacles(component.memberObstacles)
-
   const localPointMargin = Math.max(
     inputSrj.minViaPadDiameter ??
       inputSrj.min_via_pad_diameter ??
@@ -74,21 +73,17 @@ export function createComponentSrj({
     inputSrj.defaultObstacleMargin ?? 0.15,
     inputSrj.minTraceWidth * 2,
   )
-
   const memberConnectionIds = new Set(
     component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
   )
-
   const connectedPoints = inputSrj.connections.flatMap((connection) =>
     connection.pointsToConnect.filter((point) => {
       const pointIds = [point.pointId, point.pcb_port_id].filter(
         (pointId): pointId is string => typeof pointId === "string",
       )
-
       const isConnectedToComponent = pointIds.some((pointId) =>
         memberConnectionIds.has(pointId),
       )
-
       const isNearComponentBounds =
         point.x >= obstacleBounds.minX - localPointMargin &&
         point.x <= obstacleBounds.maxX + localPointMargin &&
@@ -98,7 +93,6 @@ export function createComponentSrj({
       return isConnectedToComponent && isNearComponentBounds
     }),
   )
-
   const componentBounds = connectedPoints.reduce(
     (bounds, point) => ({
       minX: Math.min(bounds.minX, point.x),
@@ -108,7 +102,6 @@ export function createComponentSrj({
     }),
     obstacleBounds,
   )
-
   const componentObstacles = inputSrj.obstacles
     .filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), componentBounds),
@@ -127,12 +120,10 @@ export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
   const detectedComponents = input.componentDetectionOutput ?? []
-
   const serializedDetectedComponents = serializeDetectedComponents({
     detectedComponents,
     inputSrj: input.inputSrj,
   })
-
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
     (detectedComponents.length > 0
@@ -142,7 +133,6 @@ export function normalizeInput(
         })
       : input.inputSrj) ??
     input.brokenSrj?.componentsAsObstaclesSrj
-
   const components =
     input.components ??
     serializedDetectedComponents ??
@@ -337,13 +327,11 @@ function isRectFullyInsideObstacle({
   }
 
   const epsilon = 1e-9
-
   const rectBounds = getBoundFromCenteredRect({
     center: rect.center,
     width: rect.width,
     height: rect.height,
   })
-
   const obstacleBounds = getBoundFromCenteredRect({
     center: obstacle.center,
     width: obstacle.width,
@@ -412,7 +400,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
         this.error = this.activeSubSolver.error
         this.failed = true
         this.activeSubSolver = null
-
         return
       }
 
@@ -423,20 +410,17 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       )
       this.currentIndex += 1
       this.activeSubSolver = null
-
       return
     }
 
     if (this.currentIndex >= this.inputProblem.componentSrjs.length) {
       this.solved = true
-
       return
     }
 
     const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
     const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
     const componentId = this.inputProblem.componentIds[this.currentIndex]!
-
     const solverInput = {
       inputSrj: componentSrj,
       detectedComponent: {
@@ -450,7 +434,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
     }
-
     this.activeSubSolver = TopologyGenerator.create(solverInput)
   }
 
@@ -467,7 +450,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
 
     const activeComponentSrj: SimpleRouteJson | null =
       this.inputProblem.componentSrjs[this.currentIndex] ?? null
-
     const completedMeshNodes: CapacityMeshNode[] =
       this.componentMeshNodes.flatMap(
         (componentMeshNodes: CapacityMeshNode[]): CapacityMeshNode[] =>

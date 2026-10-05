@@ -16,10 +16,8 @@ export function visualizeHgConnections(
     const endCenter = connection.endRegion.d.center
     const midX = (startCenter.x + endCenter.x) / 2
     const midY = (startCenter.y + endCenter.y) / 2
-
     const connectionColor =
       colorMap[connection.connectionId] ?? "rgba(255, 50, 150, 0.8)"
-
     graphics.points!.push({
       x: midX,
       y: midY,
@@ -36,6 +34,5 @@ export function visualizeHgConnections(
           : "10 5",
     })
   }
-
   return graphics
 }

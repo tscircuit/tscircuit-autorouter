@@ -87,7 +87,6 @@ interface CapacityMeshSolverOptions {
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -311,7 +310,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       NetToPointPairsSolver2_OffBoardConnection,
       (cms) => {
         const inputSrj = cms.srjWithEscapeViaLocations ?? cms.srj
-
         return [
           inputSrj,
           cms.colorMap,
@@ -469,7 +467,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
-
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
@@ -535,10 +532,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
       const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
-
       const fallbackNodes =
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
-
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -679,7 +674,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
         const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
-
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
@@ -719,14 +713,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       DifferentialPairPostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
-
         if (!netToPointPairsSolver)
           throw new Error(
             "Pipeline7: length-matching post-processing requires NetToPointPairsSolver output",
           )
         const connections = netToPointPairsSolver.newConnections
         const finalHdConnectionNames = new Map<string, string>()
-
         for (const pair of cms.srj.differentialPairs ?? []) {
           for (const connectionName of pair.connectionNames) {
             const matchingConnections = connections.filter(
@@ -735,7 +727,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                 connection.__rootConnectionNames?.includes(connectionName) ||
                 connection.__netConnectionName === connectionName,
             )
-
             if (matchingConnections.length !== 1)
               throw new Error(
                 `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final point-pair connection, got ${matchingConnections.length}`,
@@ -746,50 +737,40 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-
         const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
-
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
               (connectionName) => {
                 const finalHdConnectionName =
                   finalHdConnectionNames.get(connectionName)
-
                 if (!finalHdConnectionName)
                   throw new Error(
                     `Pipeline7: differential pair connection "${connectionName}" is missing from final routed output`,
                   )
-
                 return finalHdConnectionName
               },
             ) as [string, string]
-
             if (connectionNames[0] === connectionNames[1])
               throw new Error(
                 `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
-
             if (pair.traceGap === undefined)
               return {
                 connectionNames,
                 lengthTolerance: pair.lengthTolerance,
                 maxUncoupledLength: pair.maxUncoupledLength,
               }
-
             const pairRoutes = connectionNames.map((connectionName) => {
               const matchingRoutes = hdRoutes.filter(
                 (route) => route.connectionName === connectionName,
               )
-
               if (matchingRoutes.length !== 1)
                 throw new Error(
                   `Pipeline7: differential pair connection "${connectionName}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
                 )
-
               return matchingRoutes[0]!
             })
-
             const centerlineDistance =
               pair.traceGap +
               pairRoutes.reduce(
@@ -797,7 +778,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                   halfWidthTotal + route.traceThickness / 2,
                 0,
               )
-
             return {
               connectionNames,
               lengthTolerance: pair.lengthTolerance,
@@ -807,7 +787,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             }
           },
         )
-
         return [
           {
             hdRoutes,
@@ -824,11 +803,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       PowerTraceExpansionSolver,
       (cms) => {
         const configuredOptions = cms.opts.powerTraceExpansion ?? {}
-
         const onlyConnectionNames =
           configuredOptions.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
-
         return [
           preparePipeline7PowerTraceExpansionInput({
             originalSrj: cms.originalSrj,
@@ -850,10 +827,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
-
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -907,7 +882,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   computeProgress(): number {
     const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
-
     return (
       (this.currentPipelineStepIndex + activeSubSolverProgress) /
       this.pipelineDef.length
@@ -916,16 +890,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -939,21 +910,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-
     if (this.activeSubSolver instanceof TraceSimplificationSolver) {
       this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS = Math.ceil(
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
           Math.min(1, this.effort),
       )
     }
-
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
@@ -981,17 +949,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     if (!this.solved && this.activeSubSolver) {
       return this.visualizeStage(this.activeSubSolver)
     }
-
     const escapeViaLocationViz = this.escapeViaLocationSolver?.visualize()
     const netToPPSolver = this.netToPointPairsSolver?.visualize()
     const componentDetectionViz = this.componentDetectionSolver?.visualize()
-
     const componentTopologyGeneratorViz =
       this.componentTopologyGeneratorSolver?.visualize()
-
     const globalTopologyGeneratorViz =
       this.globalTopologyGeneratorSolver?.visualize()
-
     const topologyMergingViz = this.topologyMergingSolver?.visualize()
     const nodeSubdivisionViz = this.nodeDimensionSubdivisionSolver?.visualize()
     const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
@@ -999,33 +963,23 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
-
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
-
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
-
     const uniformPortDistributionViz =
       this.uniformPortDistributionSolver?.visualize()
-
     const highDensityViz = this.highDensityRouteSolver?.visualize()
-
     const highDensityForceImproveViz =
       this.highDensityForceImproveSolver?.visualize()
-
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
-
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
-
     const traceWidthViz = this.traceWidthSolver?.visualize()
-
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
-
     const highDensityRouteSolverViz = this.highDensityRouteSolver?.visualize()
     const srjToVisualize = this.originalSrj
     const problemOutline = srjToVisualize.outline
@@ -1108,23 +1062,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const visualizationOptions = {
       traceColorMode: this.visualizationTraceColorMode,
     } as const
-
     const routeViz = getPresuppliedTraceVisualization({
       srj: srjToVisualize,
       visualizationOptions,
     })
-
     const problemViz = combineVisualizations(problemBaseViz, routeViz)
-
     const processedProblemViz =
       this.preprocessSimpleRouteJsonSolver?.visualize()
-
     const globalDrcForceImproveViz =
       this.globalDrcForceImproveSolver?.visualize()
-
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1167,9 +1115,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     const graphics = combineVisualizations(...visualizations)
-
     return this.visualizationTraceColorMode === "net"
       ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
       : graphics
@@ -1179,7 +1125,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     visualize: () => GraphicsObject
   }): GraphicsObject {
     const graphics = stageSolver.visualize()
-
     return this.visualizationTraceColorMode === "net"
       ? applyNetColorsToGraphicsObject(graphics, this.colorMap)
       : graphics
@@ -1188,18 +1133,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   visualizeFinalOutput(): GraphicsObject {
     const traceColorMode = this.visualizationTraceColorMode
     const outputSrj = this.getOutputSimpleRouteJson()
-
     const graphics = convertSrjToGraphicsObject(outputSrj, {
       traceColorMode,
     })
-
     return graphics
   }
 
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
       const lines: Line[] = []
-
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
         const route = this.highDensityRouteSolver.routes[i]
         lines.push({
@@ -1209,10 +1151,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
@@ -1223,19 +1163,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     if (this.netToPointPairsSolver) {
       return this.netToPointPairsSolver.visualize()
     }
-
     if (this.escapeViaLocationSolver) {
       return this.escapeViaLocationSolver.visualize()
     }
-
     if (this.componentTopologyGeneratorSolver) {
       return this.componentTopologyGeneratorSolver.visualize()
     }
-
     if (this.componentDetectionSolver) {
       return this.componentDetectionSolver.visualize()
     }
-
     if (this.preprocessSimpleRouteJsonSolver) {
       return this.preprocessSimpleRouteJsonSolver.visualize()
     }
@@ -1246,10 +1182,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _getOutputHdRoutes(): HighDensityRoute[] {
     if (this.lengthMatchingPostProcessingSolver) {
       const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
-
       return hdRoutes
     }
-
     return (
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??

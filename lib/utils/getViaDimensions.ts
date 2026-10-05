@@ -19,7 +19,6 @@ export const getViaDimensions = (srj: ViaDimensionInput) => {
     srj.min_via_hole_diameter,
     srj.minViaHoleDiameter,
   )
-
   // Prefer the explicit pad-diameter fields; only fall back to the deprecated
   // legacy single-diameter field when no pad diameter was provided.
   const requestedPadDiameter = firstFiniteNumber(
@@ -27,7 +26,6 @@ export const getViaDimensions = (srj: ViaDimensionInput) => {
     srj.minViaPadDiameter,
     srj.minViaDiameter,
   )
-
   const padDiameter = Math.max(
     requestedPadDiameter ?? srj.minViaDiameter ?? 0.3,
     requestedHoleDiameter ?? 0,

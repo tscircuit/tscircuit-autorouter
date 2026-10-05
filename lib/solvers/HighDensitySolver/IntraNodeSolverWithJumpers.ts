@@ -100,11 +100,9 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
 
     const portPointsByConnection = new Map<string, PortPoint[]>()
-
     for (const portPoint of nodeWithPortPoints.portPoints) {
       const existing =
         portPointsByConnection.get(portPoint.connectionName) ?? []
-
       existing.push(portPoint)
       portPointsByConnection.set(portPoint.connectionName, existing)
     }
@@ -113,7 +111,6 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
 
     for (const [connectionName, portPoints] of portPointsByConnection) {
       const pointPairs = getConnectionPortPointPairs(portPoints)
-
       for (const [A, B] of pointPairs) {
         this.unsolvedConnections.push({
           connectionName,
@@ -181,7 +178,6 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       this.progress = this.computeProgress()
-
       if (this.activeSubSolver.solved) {
         this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
         this.lastActiveSubSolver = this.activeSubSolver
@@ -193,23 +189,18 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
         this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
         this.failed = true
       }
-
       return
     }
 
     const unsolvedConnection = this.unsolvedConnections.pop()
     this.progress = this.computeProgress()
-
     if (!unsolvedConnection) {
       this.solved = this.failedSubSolvers.length === 0
-
       return
     }
-
     if (unsolvedConnection.points.length === 1) {
       return
     }
-
     if (unsolvedConnection.points.length === 2) {
       const [A, B] = unsolvedConnection.points
       const sameX = Math.abs(A.x - B.x) < 1e-6
@@ -242,12 +233,10 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
         ) {
           return false
         }
-
         // Skip routes that are connected via connMap
         if (this.connMap?.areIdsConnected(sr.connectionName, connectionName)) {
           return false
         }
-
         return true
       }),
       futureConnections: this.unsolvedConnections,
@@ -323,11 +312,9 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     if (this.activeSubSolver && !this.solved) {
       return this.activeSubSolver.visualize()
     }
-
     if (this.failed && this.lastActiveSubSolver) {
       return this.lastActiveSubSolver.visualize()
     }
-
     const graphics: GraphicsObject = {
       lines: [],
       points: [],
@@ -354,7 +341,6 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       routeIndex++
     ) {
       const route = this.solvedRoutes[routeIndex]
-
       if (route.route.length > 0) {
         const routeColor = this.colorMap[route.connectionName] ?? "blue"
 

@@ -17,10 +17,8 @@ export const getConnectedPadSides = (
   // Repair01 rounds coordinates to 0.001 mm before handing them to repair02.
   const tolerance = 0.001
   const sides = new Set<BoundarySide>()
-
   for (const point of [route.route[0], route.route.at(-1)]) {
     if (!point) continue
-
     const entersConnectedPad = obstacles.some(
       (obstacle) =>
         obstacle.__zLayers.includes(point.z) &&
@@ -30,25 +28,19 @@ export const getConnectedPadSides = (
           obstacle.height / 2 + tolerance &&
         isObstacleConnectedToRoute(obstacle, route, connMap),
     )
-
     if (!entersConnectedPad) continue
-
     if (Math.abs(point.x - (node.center.x - node.width / 2)) <= tolerance) {
       sides.add("left")
     }
-
     if (Math.abs(point.x - (node.center.x + node.width / 2)) <= tolerance) {
       sides.add("right")
     }
-
     if (Math.abs(point.y - (node.center.y - node.height / 2)) <= tolerance) {
       sides.add("bottom")
     }
-
     if (Math.abs(point.y - (node.center.y + node.height / 2)) <= tolerance) {
       sides.add("top")
     }
   }
-
   return [...sides]
 }

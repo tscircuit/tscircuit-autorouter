@@ -52,7 +52,6 @@ export function findClosestPointToABCWithinBounds(
   // Function to check if a point is on the boundary
   const isOnBoundary = (point: Point) => {
     const epsilon = 1e-6
-
     return (
       Math.abs(point.x - bounds.minX) < epsilon ||
       Math.abs(point.x - bounds.maxX) < epsilon ||
@@ -158,7 +157,6 @@ export function findClosestPointToABCWithinBounds(
       interiorCandidates.sort(
         (a, b) => distance(a, avgPoint) - distance(b, avgPoint),
       )
-
       return interiorCandidates[0]
     }
   }
@@ -172,10 +170,8 @@ export function findClosestPointToABCWithinBounds(
   for (let x = bounds.minX + 1; x < bounds.maxX; x += gridStep) {
     for (let y = bounds.minY + 1; y < bounds.maxY; y += gridStep) {
       const point = { x, y }
-
       if (isValidPoint(point)) {
         const dist = distance(point, avgPoint)
-
         if (dist < bestDistance) {
           bestDistance = dist
           bestPoint = point
@@ -230,7 +226,6 @@ export function findClosestPointToABCWithinBounds(
     validBoundaryPoints.sort(
       (a, b) => distance(a, avgPoint) - distance(b, avgPoint),
     )
-
     return validBoundaryPoints[0]
   }
 

@@ -11,7 +11,6 @@ import {
 } from "lib/utils/mapLayerNameToZ"
 
 const CORNER_SPLIT_RATIO = 0.25
-
 const MIN_AXIS_EPSILON = 1e-6
 
 type RectRegion = {
@@ -93,7 +92,6 @@ function regionContainsObstacle({
   const overlapWidth =
     Math.min(regionBounds.maxX, obstacleBounds.maxX) -
     Math.max(regionBounds.minX, obstacleBounds.minX)
-
   const overlapHeight =
     Math.min(regionBounds.maxY, obstacleBounds.maxY) -
     Math.max(regionBounds.minY, obstacleBounds.minY)
@@ -103,7 +101,6 @@ function regionContainsObstacle({
   }
 
   const obstacleAvailableZ = getObstacleAvailableZ(obstacle, layerCount)
-
   return availableZ.some((z) => obstacleAvailableZ.includes(z))
 }
 
@@ -233,7 +230,6 @@ function createFallbackRingNodes({
   return [
     ...diagonalBounds.flatMap(({ key, bounds }) => {
       const region = createRectRegion(bounds)
-
       const shouldSplitByLayer = regionContainsAnyObstacle({
         region,
         obstacles,
@@ -339,7 +335,6 @@ function getExactObstacleForRegion({
   return (
     obstacles.find((obstacle) => {
       const obstacleBounds = getBoundingBox(obstacle)
-
       return (
         Math.abs(regionBounds.minX - obstacleBounds.minX) <= MIN_AXIS_EPSILON &&
         Math.abs(regionBounds.maxX - obstacleBounds.maxX) <= MIN_AXIS_EPSILON &&
@@ -481,18 +476,15 @@ export function clusterAxisValues(values: number[]): number[] {
 
   for (let index = 1; index < sortedValues.length; index++) {
     const gap = sortedValues[index]! - sortedValues[index - 1]!
-
     if (gap > MIN_AXIS_EPSILON) gaps.push(gap)
   }
 
   const tolerance =
     gaps.length > 0 ? Math.max(MIN_AXIS_EPSILON, Math.min(...gaps) / 4) : 1e-3
-
   const clustered: number[] = []
 
   for (const value of sortedValues) {
     const previousValue = clustered[clustered.length - 1]
-
     if (
       previousValue === undefined ||
       Math.abs(value - previousValue) > tolerance
@@ -535,21 +527,18 @@ export function createMeshNodesForSrj({
   }
 
   const axisObstacles = getTopologyAxisObstacles({ bounds, obstacles })
-
   const xEdges = createGridAxisEdges({
     start: bounds.minX,
     end: bounds.maxX,
     obstacles: axisObstacles,
     axis: "x",
   })
-
   const yEdges = createGridAxisEdges({
     start: bounds.minY,
     end: bounds.maxY,
     obstacles: axisObstacles,
     axis: "y",
   })
-
   const meshNodes: CapacityMeshNode[] = []
 
   for (let row = 0; row < yEdges.length - 1; row++) {

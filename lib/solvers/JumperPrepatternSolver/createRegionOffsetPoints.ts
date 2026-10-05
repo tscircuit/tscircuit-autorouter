@@ -24,7 +24,6 @@ export function createRegionOffsetPoints(
     insideJumperPad,
     offsetDistance = 0.02,
   } = params
-
   const createOffsetPoint = (
     regionCenter: { x: number; y: number } | undefined,
   ) => {
@@ -53,6 +52,5 @@ export function createRegionOffsetPoints(
   if (cameFromRegion1) {
     return [createOffsetPoint(r1Center), createOffsetPoint(r2Center)]
   }
-
   return [createOffsetPoint(r2Center), createOffsetPoint(r1Center)]
 }

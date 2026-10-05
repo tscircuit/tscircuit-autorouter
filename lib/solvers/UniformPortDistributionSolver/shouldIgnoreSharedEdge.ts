@@ -25,11 +25,9 @@ export const shouldIgnoreSharedEdge = ({
       (layerCount === undefined
         ? undefined
         : obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)))
-
     if (z !== undefined && obstacleZLayers && !obstacleZLayers.includes(z)) {
       continue
     }
-
     const obsMinX = obstacle.center.x - obstacle.width / 2
     const obsMaxX = obstacle.center.x + obstacle.width / 2
     const obsMinY = obstacle.center.y - obstacle.height / 2
@@ -42,10 +40,8 @@ export const shouldIgnoreSharedEdge = ({
       ) {
         const overlapMinY = Math.max(sharedEdge.y1, obsMinY)
         const overlapMaxY = Math.min(sharedEdge.y2, obsMaxY)
-
         if (overlapMaxY - overlapMinY > EPSILON) return true
       }
-
       continue
     }
 
@@ -55,7 +51,6 @@ export const shouldIgnoreSharedEdge = ({
     ) {
       const overlapMinX = Math.max(sharedEdge.x1, obsMinX)
       const overlapMaxX = Math.min(sharedEdge.x2, obsMaxX)
-
       if (overlapMaxX - overlapMinX > EPSILON) return true
     }
   }

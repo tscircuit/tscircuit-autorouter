@@ -24,13 +24,11 @@ export function getInitialCapacityNodeEditorView({
   const heightMm = Math.max(nodeWithPortPoints.height, 0.2)
   const availableWidth = Math.max(viewportWidth - paddingPx * 2, 1)
   const availableHeight = Math.max(viewportHeight - paddingPx * 2, 1)
-
   const pixelsPerMm = Math.min(
     maxPixelsPerMm,
     availableWidth / widthMm,
     availableHeight / heightMm,
   )
-
   const rectWidth = widthMm * pixelsPerMm
   const rectHeight = heightMm * pixelsPerMm
 

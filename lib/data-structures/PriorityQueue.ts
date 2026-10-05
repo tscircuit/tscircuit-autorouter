@@ -16,12 +16,10 @@ export class PriorityQueue<T extends Node = Node> {
    */
   constructor(nodes: T[] = [], maxSize = 10_000) {
     this.maxSize = maxSize
-
     // More efficient heap construction (Heapify) - O(n)
     if (nodes.length > 0) {
       // Ensure initial nodes don't exceed maxSize immediately
       this.heap = [...nodes].sort((a, b) => a.f - b.f).slice(0, this.maxSize)
-
       // Build the heap property starting from the last non-leaf node
       for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
         this._siftDown(i)
@@ -57,7 +55,6 @@ export class PriorityQueue<T extends Node = Node> {
     if (this.isEmpty()) {
       return null
     }
-
     return this.heap[0]
   }
 
@@ -80,7 +77,6 @@ export class PriorityQueue<T extends Node = Node> {
       // This branch means pop() removed the only element, which was minNode
       return minNode
     }
-
     // If heap is not empty after pop(), move the last node to the root
     // Use non-null assertion as we know pop returned a value if heap wasn't empty before
     if (lastNode !== undefined) {
@@ -117,15 +113,12 @@ export class PriorityQueue<T extends Node = Node> {
    */
   private _siftUp(index: number): void {
     let currentIndex = index
-
     while (currentIndex > 0) {
       const parentIndex = this._parentIndex(currentIndex)
-
       // If parent's f is smaller or equal, heap property is satisfied
       if (this.heap[parentIndex].f <= this.heap[currentIndex].f) {
         break
       }
-
       // Otherwise, swap and continue sifting up
       this._swap(currentIndex, parentIndex)
       currentIndex = parentIndex

@@ -21,7 +21,6 @@ export const createPipeline9RelaxedDrcEvaluator = (
 ): DrcEvaluator => {
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
-
     if (!evaluatedRoutes) {
       throw new Error("Pipeline9 relaxed DRC evaluation requires HD routes")
     }
@@ -30,9 +29,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
       ...options,
       hdRoutes: evaluatedRoutes,
     })
-
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
-
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
       srjWithPointPairs: options.srjWithPointPairs,

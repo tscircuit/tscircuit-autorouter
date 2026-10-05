@@ -68,7 +68,6 @@ interface CapacityMeshSolverOptions {
   cacheProvider?: CacheProvider | null
   effort?: number
 }
-
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
@@ -245,11 +244,9 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
         // Add port points from the available segment point solver
         const segmentPointSolver = cms.availableSegmentPointSolver!
-
         for (const segment of segmentPointSolver.sharedEdgeSegments) {
           for (const segmentPortPoint of segment.portPoints) {
             const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
-
             const inputPortPoint: InputPortPoint = {
               portPointId: segmentPortPoint.segmentPortPointId,
               x: segmentPortPoint.x,
@@ -264,7 +261,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
             // Add to first node
             const node1 = nodeMap.get(nodeId1)
-
             if (node1) {
               node1.portPoints.push(inputPortPoint)
             }
@@ -301,7 +297,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       {
         onSolved: (cms) => {
           const solver = cms.portPointPathingSolver
-
           if (!solver) return
           updateConnMapWithOffboardObstacleConnections({
             connMap: cms.connMap,
@@ -317,7 +312,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       MultiSectionPortPointOptimizer,
       (cms) => {
         const portPointSolver = cms.portPointPathingSolver!
-
         return [
           {
             simpleRouteJson: cms.srjWithPointPairs!,
@@ -461,16 +455,13 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   currentPipelineStepIndex = 0
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
-
     if (!pipelineStepDef) {
       this.solved = true
-
       return
     }
 
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-
       if (this.activeSubSolver.solved) {
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
@@ -484,7 +475,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
-
       return
     }
 
@@ -516,10 +506,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     const strawSolverViz = this.strawSolver?.visualize()
     const edgeViz = this.edgeSolver?.visualize()
     const deadEndViz = this.deadEndSolver?.visualize()
-
     const availableSegmentPointViz =
       this.availableSegmentPointSolver?.visualize()
-
     const offboardPathFragmentViz = this.offboardPathFragmentSolver?.visualize()
     const portPointPathingViz = this.portPointPathingSolver?.visualize()
     const multiSectionOptViz = this.multiSectionPortPointOptimizer?.visualize()
@@ -627,7 +615,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           )
         : null,
     ].filter(Boolean) as GraphicsObject[]
-
     // return visualizations[visualizations.length - 1]
     return combineVisualizations(...visualizations)
   }
@@ -646,10 +633,8 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       this.highDensitySolver?.routes ??
       this.simpleHighDensityRouteSolver?.routes ??
       this.highDensityRouteSolver?.routes
-
     if (hdRoutes) {
       const lines: Line[] = []
-
       for (let i = hdRoutes.length - 1; i >= 0; i--) {
         const route = hdRoutes[i]
         lines.push({
@@ -659,16 +644,13 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           })),
           strokeColor: this.colorMap[route.connectionName],
         })
-
         if (lines.length > 200) break
       }
-
       return { lines }
     }
 
     if (this.portPointPathingSolver) {
       const lines: Line[] = []
-
       for (const connection of this.portPointPathingSolver
         .connectionsWithResults) {
         if (!connection.path) continue
@@ -680,7 +662,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
           strokeColor: this.colorMap[connection.connection.name],
         })
       }
-
       return { lines }
     }
 
@@ -707,7 +688,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
   getConnectedOffboardObstacles(): Record<ObstacleId, RootConnectionName> {
     const connectedOffboardObstacles: Record<ObstacleId, RootConnectionName> =
       {}
-
     const rootConnectionNames = new Set(
       this.srj.connections.flatMap(
         (connection) => connection.__rootConnectionNames ?? [connection.name],
@@ -719,15 +699,12 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       const obstacleId = obstacle.obstacleId ?? `__obs${index}`
 
       const netId = this.connMap.getNetConnectedToId(obstacleId)
-
       if (!netId) continue
 
       const connectedIds = this.connMap.getIdsConnectedToNet(netId)
-
       const rootConnectionName = connectedIds.find((id) =>
         rootConnectionNames.has(id),
       )
-
       if (!rootConnectionName) continue
 
       connectedOffboardObstacles[obstacleId] = rootConnectionName
@@ -765,7 +742,6 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
 
       for (let i = 0; i < hdRoutes.length; i++) {
         const hdRoute = hdRoutes[i]
-
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,

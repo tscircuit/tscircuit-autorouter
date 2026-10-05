@@ -27,9 +27,7 @@ import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
 import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
 
 const ESCAPE_POINT_ID_PREFIX = "escape-via:"
-
 const GEOMETRIC_TOLERANCE = 1e-4
-
 const MAX_PROJECTED_FREE_SPACE_BONUS = 3
 
 type Point2D = {
@@ -152,7 +150,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     if (obstacle.__zLayers && obstacle.__zLayers.length > 0) {
       return obstacle.__zLayers
     }
-
     return obstacle.layers.map((layer) =>
       mapLayerNameToZ(layer, this.ogSrj.layerCount),
     )
@@ -169,7 +166,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
     const minZ = Math.min(sourceZ, targetZ)
     const maxZ = Math.max(sourceZ, targetZ)
-
     const zLayers = Array.from(
       { length: maxZ - minZ + 1 },
       (_, index) => minZ + index,
@@ -186,7 +182,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     connectionNetIds: Set<string>
   }): Obstacle {
     const { escapeVia, connectionNetIds } = params
-
     const { layers, __zLayers } = this.getViaSpanLayers(
       escapeVia.sourceLayer,
       escapeVia.targetLayer,
@@ -213,7 +208,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     connectionNetIds: Set<string>
   }): Obstacle | undefined {
     const { point, sourceLayer, connectionNetIds } = params
-
     return this.ogSrj.obstacles
       .filter(
         (obstacle) =>
@@ -226,16 +220,13 @@ export class EscapeViaLocationSolver extends BaseSolver {
           a.connectedTo.includes(point.pointId ?? "") ||
           a.connectedTo.includes(point.pcb_port_id ?? "") ||
           this.obstacleMatchesConnectionNet(a, connectionNetIds)
-
         const bDirectHit =
           b.connectedTo.includes(point.pointId ?? "") ||
           b.connectedTo.includes(point.pcb_port_id ?? "") ||
           this.obstacleMatchesConnectionNet(b, connectionNetIds)
-
         if (aDirectHit !== bDirectHit) {
           return aDirectHit ? -1 : 1
         }
-
         return a.width * a.height - b.width * b.height
       })[0]
   }
@@ -284,7 +275,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     for (const y of ySamples) {
       candidates.push({ x: leftX, y }, { x: rightX, y })
     }
-
     for (const x of xSamples) {
       candidates.push({ x, y: bottomY }, { x, y: topY })
     }
@@ -294,15 +284,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
   private dedupeCandidatePositions(candidates: Point2D[]): Point2D[] {
     const deduped: Point2D[] = []
-
     for (const candidate of candidates) {
       if (deduped.some((existing) => pointMatches(existing, candidate))) {
         continue
       }
-
       deduped.push(candidate)
     }
-
     return deduped
   }
 
@@ -313,7 +300,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     max: number,
   ) {
     const clampedValue = Math.max(min, Math.min(max, value))
-
     if (
       samples.some(
         (existingValue) =>
@@ -322,7 +308,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     ) {
       return
     }
-
     samples.push(clampedValue)
   }
 
@@ -362,7 +347,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
       candidate.x <= this.ogSrj.bounds.maxX - this.viaRadius &&
       candidate.y >= this.ogSrj.bounds.minY + this.viaRadius &&
       candidate.y <= this.ogSrj.bounds.maxY - this.viaRadius
-
     if (!withinBounds) {
       return false
     }
@@ -381,7 +365,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     sourceObstacle?: Obstacle
   }): boolean {
     const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params
-
     if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
       const crossesOutline = doesSegmentCrossPolygonBoundary({
         start: sourcePoint,
@@ -397,7 +380,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
-
       if (!obstacle.layers.includes(sourceLayer)) continue
 
       if (isPointInRect(candidate, obstacle)) {
@@ -405,7 +387,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
       }
 
       const obstacleSegments = obstacleToSegments(obstacle)
-
       const minDistance = Math.min(
         ...obstacleSegments.map((segment) =>
           minimumDistanceBetweenSegments(
@@ -434,7 +415,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     }
 
     const { minX, maxX, minY, maxY } = this.ogSrj.bounds
-
     return [
       {
         start: { x: minX, y: minY },
@@ -457,7 +437,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
   private getRayProbeDistance(): number {
     const { minX, maxX, minY, maxY } = this.ogSrj.bounds
-
     return Math.hypot(maxX - minX, maxY - minY) * 2 + this.viaDiameter
   }
 
@@ -468,7 +447,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     segmentEnd: Point2D
   }): number | null {
     const { rayStart, rayEnd, segmentStart, segmentEnd } = params
-
     if (!doSegmentsIntersect(rayStart, rayEnd, segmentStart, segmentEnd)) {
       return null
     }
@@ -485,7 +463,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     }
 
     const hitDistance = distance(rayStart, intersection)
-
     if (hitDistance <= GEOMETRIC_TOLERANCE) {
       return null
     }
@@ -560,9 +537,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       direction,
       travelDistance,
     } = params
-
     const directionLength = Math.hypot(direction.x, direction.y)
-
     if (
       directionLength <= GEOMETRIC_TOLERANCE ||
       travelDistance <= GEOMETRIC_TOLERANCE
@@ -573,7 +548,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const probeDistance = this.getRayProbeDistance()
     const directionX = direction.x / directionLength
     const directionY = direction.y / directionLength
-
     const rayEnd = {
       x: sourcePoint.x + directionX * probeDistance,
       y: sourcePoint.y + directionY * probeDistance,
@@ -583,7 +557,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     for (const obstacle of this.ogSrj.obstacles) {
       if (obstacle === sourceObstacle) continue
-
       if (!obstacle.layers.includes(sourceLayer)) continue
 
       for (const segment of obstacleToSegments(obstacle)) {
@@ -593,7 +566,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
           segmentStart: segment.start,
           segmentEnd: segment.end,
         })
-
         if (hitDistance !== null) {
           firstHitDistance = Math.min(firstHitDistance, hitDistance)
         }
@@ -607,7 +579,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
         segmentStart: segment.start,
         segmentEnd: segment.end,
       })
-
       if (hitDistance !== null) {
         firstHitDistance = Math.min(firstHitDistance, hitDistance)
       }
@@ -633,7 +604,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     for (const obstacle of this.ogSrj.obstacles) {
       const obstacleZs = this.getObstacleZs(obstacle)
-
       if (!obstacleZs.some((z) => z >= spanMinZ && z <= spanMaxZ)) {
         continue
       }
@@ -655,18 +625,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
   private getMinPlacedEscapeViaClearance(candidate: Point2D): number {
     let minClearance = Number.POSITIVE_INFINITY
-
     for (const existingEscapeVia of this.createdEscapeVias) {
       const clearance =
         distance(candidate, existingEscapeVia) - this.viaDiameter
-
       minClearance = Math.min(minClearance, clearance)
-
       if (minClearance + GEOMETRIC_TOLERANCE < this.obstacleMargin) {
         return minClearance
       }
     }
-
     return minClearance
   }
 
@@ -700,7 +666,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
           this.getConnectionNetIds(a.connection),
         ),
       )
-
       const bDirectMatch = matchingCopperPours.some((obstacle) =>
         this.obstacleMatchesConnectionNet(
           obstacle,
@@ -741,7 +706,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
     const sourceLayer = point.layer
     const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
-
     const sourceObstacle =
       sourceObstacleOverride ??
       this.selectSourceObstacle({
@@ -749,14 +713,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
         sourceLayer,
         connectionNetIds,
       })
-
     const candidates = this.getCandidatePositions(point, sourceObstacle)
 
     let bestCandidate: EscapeViaCandidate | null = null
 
     for (const copperPour of matchingCopperPours) {
       const targetLayer = copperPour.layers[0]
-
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
@@ -764,9 +726,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
       for (const candidate of candidates) {
         if (!this.isInsideBoard(candidate)) continue
-
         if (!isPointInRect(candidate, copperPour)) continue
-
         if (
           !this.hasClearEscapePath({
             sourcePoint: point,
@@ -784,36 +744,30 @@ export class EscapeViaLocationSolver extends BaseSolver {
           sourceZ,
           targetZ,
         })
-
         if (
           minClearance + GEOMETRIC_TOLERANCE <
           this.requiredViaToPadClearance
         ) {
           continue
         }
-
         const minPlacedEscapeViaClearance =
           this.getMinPlacedEscapeViaClearance(candidate)
-
         if (
           minPlacedEscapeViaClearance + GEOMETRIC_TOLERANCE <
           this.obstacleMargin
         ) {
           continue
         }
-
         const projectedFreeSpace = this.getProjectedFreeSpace({
           sourcePoint: point,
           candidate,
           sourceLayer,
           sourceObstacle,
         })
-
         const cappedProjectedFreeSpace = Math.min(
           projectedFreeSpace,
           MAX_PROJECTED_FREE_SPACE_BONUS,
         )
-
         const distanceToCandidate = distance(point, candidate)
 
         const score =
@@ -871,7 +825,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
         groupConnections,
         matchingCopperPours,
       })
-
       if (!pointOwner) continue
 
       const sourceObstacle = isSingleLayerConnectionPoint(point)
@@ -881,7 +834,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
             connectionNetIds,
           })
         : undefined
-
       const candidateCount = isSingleLayerConnectionPoint(point)
         ? this.getCandidatePositions(point, sourceObstacle).length
         : 0
@@ -901,10 +853,8 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
       const aArea =
         (a.sourceObstacle?.width ?? 0) * (a.sourceObstacle?.height ?? 0)
-
       const bArea =
         (b.sourceObstacle?.width ?? 0) * (b.sourceObstacle?.height ?? 0)
-
       if (aArea !== bArea) {
         return aArea - bArea
       }
@@ -917,17 +867,13 @@ export class EscapeViaLocationSolver extends BaseSolver {
     const copperPours = this.ogSrj.obstacles.filter(
       (obstacle) => obstacle.isCopperPour,
     )
-
     const originalConnections = this.ogSrj.connections
-
     const newConnections = originalConnections.map((connection) =>
       structuredClone(connection),
     )
-
     const clonedConnectionByName = new Map(
       newConnections.map((connection) => [connection.name, connection]),
     )
-
     const newObstacles = structuredClone(this.ogSrj.obstacles)
     const mergedConnections = mergeConnections([...originalConnections])
 
@@ -935,12 +881,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
       const mergedRootConnectionNames = new Set(
         mergedConnection.__rootConnectionNames ?? [mergedConnection.name],
       )
-
       const groupConnections = originalConnections.filter((connection) => {
         const rootConnectionNames = connection.__rootConnectionNames ?? [
           connection.name,
         ]
-
         return rootConnectionNames.some((name) =>
           mergedRootConnectionNames.has(name),
         )
@@ -951,7 +895,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
       }
 
       const connectionNetIds = new Set<string>()
-
       for (const groupConnection of groupConnections) {
         for (const netId of this.getConnectionNetIds(groupConnection)) {
           connectionNetIds.add(netId)
@@ -961,14 +904,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
       const matchingCopperPours = copperPours.filter((obstacle) =>
         this.obstacleMatchesConnectionNet(obstacle, connectionNetIds),
       )
-
       if (matchingCopperPours.length === 0) {
         continue
       }
 
       const groupedEscapePointIds = new Map<string, string[]>()
       const representativeConnectionNameByPourKey = new Map<string, string>()
-
       const pointPlacementPlans = this.buildPointPlacementPlans({
         mergedConnection,
         groupConnections,
@@ -991,7 +932,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
         const clonedConnection = clonedConnectionByName.get(
           pointOwner.connection.name,
         )
-
         if (!clonedConnection) continue
 
         const alreadyExists = clonedConnection.pointsToConnect.some(
@@ -1000,7 +940,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
             existing.layer === escapeViaCandidate.sourceLayer &&
             pointMatches(existing, escapeViaCandidate),
         )
-
         if (alreadyExists) continue
 
         clonedConnection.pointsToConnect.push({
@@ -1028,7 +967,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
         const pointIds = groupedEscapePointIds.get(
           escapeViaCandidate.targetPourKey,
         )
-
         if (pointIds) {
           pointIds.push(escapeViaCandidate.pointId)
         } else {
@@ -1054,13 +992,11 @@ export class EscapeViaLocationSolver extends BaseSolver {
 
         const representativeConnectionName =
           representativeConnectionNameByPourKey.get(targetPourKey)
-
         if (!representativeConnectionName) continue
 
         const representativeConnection = clonedConnectionByName.get(
           representativeConnectionName,
         )
-
         if (!representativeConnection) continue
 
         representativeConnection.externallyConnectedPointIds = [

@@ -21,14 +21,12 @@ export const updateConnMapWithOffboardObstacleConnections = ({
   const offBoardObstacles = obstacles.filter(
     (obstacle) => obstacle.offBoardConnectsTo?.length,
   )
-
   if (offBoardObstacles.length === 0) return
 
   const offBoardConnMap = new ConnectivityMap({})
   offBoardConnMap.addConnections(
     offBoardObstacles.map((obstacle, index) => {
       const obstacleId = obstacle.obstacleId ?? `__obs${index}`
-
       return [obstacleId, ...(obstacle.offBoardConnectsTo ?? [])]
     }),
   )
@@ -39,7 +37,6 @@ export const updateConnMapWithOffboardObstacleConnections = ({
 
   for (const connectionResult of connectionsWithResults) {
     if (!connectionResult.path) continue
-
     const rootConnectionName =
       connectionResult.connection.rootConnectionName ??
       connectionResult.connection.name
@@ -48,14 +45,12 @@ export const updateConnMapWithOffboardObstacleConnections = ({
 
     for (const candidate of connectionResult.path) {
       const node = nodeMap.get(candidate.currentNodeId)
-
       if (node?._offBoardConnectionId) {
         offBoardNetIds.add(node._offBoardConnectionId)
       }
 
       if (candidate.throughNodeId) {
         const throughNode = nodeMap.get(candidate.throughNodeId)
-
         if (throughNode?._offBoardConnectionId) {
           offBoardNetIds.add(throughNode._offBoardConnectionId)
         }
@@ -64,7 +59,6 @@ export const updateConnMapWithOffboardObstacleConnections = ({
 
     for (const offBoardNetId of offBoardNetIds) {
       const connectedIds = offBoardConnMap.getIdsConnectedToNet(offBoardNetId)
-
       if (!connectedIds?.length) continue
       connMap.addConnections([[rootConnectionName, ...connectedIds]])
     }

@@ -41,9 +41,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
     )
-
     const connectionPointMap = new Map<string, ConnectionPoint>()
-
     for (const connectionPoint of allConnectionPoints) {
       if (connectionPoint.pointId) {
         connectionPointMap.set(connectionPoint.pointId, connectionPoint)
@@ -53,11 +51,9 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const allConnectionPointIds = allConnectionPoints
       .map((connectionPoint) => connectionPoint.pointId)
       .filter((id): id is string => !!id)
-
     const connectionPointDsu = new DSU(allConnectionPointIds)
 
     const onBoardConnections: SimpleRouteConnection[] = []
-
     for (const currentConnection of ogSrj.connections) {
       if (currentConnection.isOffBoard) {
         if (
@@ -99,7 +95,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     const sourcePointEquivalenceGroup = this.connectionPointDsu
       .getGroup(sourcePoint.pointId)
       .map((id) => this.connectionPointMap.get(id)!)
-
     const targetPointEquivalenceGroup = this.connectionPointDsu
       .getGroup(targetPoint.pointId)
       .map((id) => this.connectionPointMap.get(id)!)
@@ -114,7 +109,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           Math.pow(currentSourceCandidate.x - currentTargetCandidate.x, 2) +
             Math.pow(currentSourceCandidate.y - currentTargetCandidate.y, 2),
         )
-
         if (distance < minimumDistance) {
           minimumDistance = distance
           bestSourcePoint = currentSourceCandidate
@@ -122,17 +116,14 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         }
       }
     }
-
     return { pointsToConnect: [bestSourcePoint, bestTargetPoint] }
   }
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
       this.solved = true
-
       return
     }
-
     const currentConnection = this.unprocessedConnections.pop()!
 
     // This logic is copied from the parent class
@@ -144,17 +135,14 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
 
     if (currentConnection.pointsToConnect.length === 2) {
       const [startPoint, endPoint] = currentConnection.pointsToConnect
-
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
         return
       }
-
       const optimizedConnection =
         this._findBestConnectionPointsFromDisjointSets(
           currentConnection.pointsToConnect[0],
           currentConnection.pointsToConnect[1],
         )
-
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
@@ -162,7 +150,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
       })
-
       return
     }
 
@@ -172,7 +159,6 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
     )
 
     let mstEdgeIndex = 0
-
     for (const mstEdge of minimumSpanningTreeEdges) {
       if (arePointsConnected(mstEdge.from, mstEdge.to)) {
         continue

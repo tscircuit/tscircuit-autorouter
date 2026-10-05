@@ -54,7 +54,7 @@ jobs:
           STEPS_JSON: ${{ toJson(steps) }}
         run: |
           echo '### Anti-slop adoption check (advisory)' >> "$GITHUB_STEP_SUMMARY"
-          echo 'All 24 pinned rules use upstream error severity; this job remains advisory.' >> "$GITHUB_STEP_SUMMARY"
+          echo '23 retained rules use upstream error severity; blank-line mandates are disabled; this job remains advisory.' >> "$GITHUB_STEP_SUMMARY"
           echo 'An advisory green check can contain a failed lint step. Inspect the outcomes and diagnostic artifact.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Setup or integration failures remain visible below and in the logs.' >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"

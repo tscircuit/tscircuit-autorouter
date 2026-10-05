@@ -25,14 +25,11 @@ export const UnravelSectionDebugger = ({
   const [solver, setSolver] = useState<UnravelSectionSolver>(() =>
     createSolver(),
   )
-
   const [forcedUpdates, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [speedLevel, setSpeedLevel] = useState(0)
-
   const [selectedCandidate, setSelectedCandidate] =
     useState<UnravelCandidate | null>(null)
-
   const [gScoreHistory, setGScoreHistory] = useState<
     { iteration: number; g: number }[]
   >([])
@@ -58,10 +55,8 @@ export const UnravelSectionDebugger = ({
           if (solver.solved || solver.failed) {
             break
           }
-
           solver.step()
           const lastCandidate = solver.lastProcessedCandidate
-
           if (lastCandidate !== null) {
             setGScoreHistory((prev) => [
               ...prev,
@@ -72,7 +67,6 @@ export const UnravelSectionDebugger = ({
             ])
           }
         }
-
         setForceUpdate((prev) => prev + 1)
       }, animationSpeed)
     }
@@ -89,7 +83,6 @@ export const UnravelSectionDebugger = ({
     if (!solver.solved && !solver.failed) {
       solver.step()
       const lastCandidate = solver.lastProcessedCandidate
-
       if (lastCandidate !== null) {
         setGScoreHistory((prev) => [
           ...prev,
@@ -99,7 +92,6 @@ export const UnravelSectionDebugger = ({
           },
         ])
       }
-
       setForceUpdate((prev) => prev + 1)
     }
   }
@@ -115,7 +107,6 @@ export const UnravelSectionDebugger = ({
   // Increase animation speed
   const increaseSpeed = () => {
     setSpeedLevel((prev) => Math.min(prev + 1, speedLevels.length - 1))
-
     if (!isAnimating) {
       setIsAnimating(true)
     }
@@ -129,11 +120,9 @@ export const UnravelSectionDebugger = ({
   const visualization = useMemo(() => {
     try {
       const visualization = solver?.visualize() || { points: [], lines: [] }
-
       return visualization
     } catch (error) {
       console.error("Visualization error:", error)
-
       return { points: [], lines: [] }
     }
   }, [forcedUpdates, solver, solver?.selectedCandidateIndex])
@@ -292,12 +281,10 @@ export const UnravelSectionDebugger = ({
               <tbody className="bg-white divide-y divide-gray-200">
                 {candidates.map((candidate, index) => {
                   const isCurrent = selectedCandidate === candidate
-
                   const isBest =
                     solver.bestCandidate &&
                     solver.bestCandidate.candidateHash ===
                       candidate.candidateHash
-
                   const isSelected =
                     selectedCandidate?.candidateHash === candidate.candidateHash
 

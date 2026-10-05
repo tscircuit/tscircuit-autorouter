@@ -14,7 +14,6 @@ export function getCanonicalCoordinates(values: number[]): number[] {
 
   for (const value of sortedValues) {
     const previousValue = coordinates[coordinates.length - 1]
-
     if (
       previousValue === undefined ||
       Math.abs(value - previousValue) > TOPOLOGY_MERGING_EPSILON
@@ -48,7 +47,6 @@ export function compactTopologyMergingRegions(
       compactedRegions,
       "horizontal",
     )
-
     const verticallyCompacted = compactRegionsInDirection(
       horizontallyCompacted,
       "vertical",
@@ -75,30 +73,24 @@ export function getLayerTopologiesForCoveredNodes({
     string,
     TopologyMergingLayerTopology
   >()
-
   for (let z = 0; z < layerCount; z++) {
     const nodesOnLayer = coveringNodes
       .filter(({ node }) => node.availableZ.includes(z))
       .sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))
-
     if (nodesOnLayer.length === 0) continue
 
     const activeGroupIndexes = new Set(
       nodesOnLayer.map(({ groupIndex }) => groupIndex),
     )
-
     const targetObstacleNodes = nodesOnLayer.filter(
       ({ node }) => node._containsObstacle && node._containsTarget,
     )
-
     const globalTargetObstacleNodes = targetObstacleNodes.filter(
       ({ groupIndex }) => !nodeGroups[groupIndex]!.isComponent,
     )
-
     const targetGroupIndexes = new Set(
       targetObstacleNodes.map(({ groupIndex }) => groupIndex),
     )
-
     const topologyMode: TopologyMergingMode =
       targetObstacleNodes.length > 0
         ? globalTargetObstacleNodes.length > 0 || targetGroupIndexes.size === 1
@@ -107,7 +99,6 @@ export function getLayerTopologiesForCoveredNodes({
         : activeGroupIndexes.size === 1
           ? "passthrough"
           : "merged"
-
     const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
       topologyMode,
       nodesOnLayer,
@@ -120,9 +111,7 @@ export function getLayerTopologiesForCoveredNodes({
         mode: topologyMode,
         sourceKeys,
       })
-
       const existingTopology = layerTopologyBySignature.get(topologySignature)
-
       if (existingTopology) {
         existingTopology.availableZ.push(z)
       } else {
@@ -147,13 +136,11 @@ export function restoreAuthoritativeTargetRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
-
   for (const region of regions) {
     for (const sourceKey of region.sourceKeys) {
       const topologyModes =
         topologyModesBySourceKey.get(sourceKey) ??
         new Set<TopologyMergingMode>()
-
       topologyModes.add(region.topologyMode)
       topologyModesBySourceKey.set(sourceKey, topologyModes)
     }
@@ -167,7 +154,6 @@ export function restoreAuthoritativeTargetRegions({
           : [],
     ),
   )
-
   if (restorableSourceKeys.size === 0) return regions
 
   const retainedRegions = regions.filter(
@@ -175,16 +161,13 @@ export function restoreAuthoritativeTargetRegions({
       region.topologyMode !== "target-passthrough" ||
       !restorableSourceKeys.has(region.sourceKeys[0]!),
   )
-
   const restoredRegions = [...restorableSourceKeys].map((sourceKey) => {
     const preparedNode = preparedNodeBySourceKey.get(sourceKey)
-
     if (!preparedNode) {
       throw new Error(
         `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
       )
     }
-
     return {
       bounds: { ...preparedNode.bounds },
       availableZ: [...preparedNode.node.availableZ],
@@ -234,7 +217,6 @@ function compactRegionsInDirection(
       direction === "horizontal"
         ? getHorizontalMergeBucketKey(region)
         : getVerticalMergeBucketKey(region)
-
     const bucket = regionsByMergeBucket.get(bucketKey) ?? []
     bucket.push(region)
     regionsByMergeBucket.set(bucketKey, bucket)
@@ -254,12 +236,10 @@ function mergeRegionRun(
       ? a.bounds.minX - b.bounds.minX
       : a.bounds.minY - b.bounds.minY,
   )
-
   const mergedRegions: TopologyMergingRegion[] = []
 
   for (const region of sortedRegions) {
     const previousRegion = mergedRegions[mergedRegions.length - 1]
-
     const regionsTouch =
       previousRegion !== undefined &&
       (direction === "horizontal"
@@ -304,17 +284,13 @@ function getSourceKeyGroupsForTopologyMode({
       globalTargetObstacleNodes.length > 0
         ? globalTargetObstacleNodes
         : targetObstacleNodes
-
     return authoritativeNodes.map(({ sourceKey }) => [sourceKey])
   }
-
   if (topologyMode === "target-merged") {
     return [targetObstacleNodes.map(({ sourceKey }) => sourceKey).sort()]
   }
-
   if (topologyMode === "passthrough") {
     return nodesOnLayer.map(({ sourceKey }) => [sourceKey])
   }
-
   return [nodesOnLayer.map(({ sourceKey }) => sourceKey).sort()]
 }

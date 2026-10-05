@@ -78,14 +78,12 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
         "FixedTopologyHighDensityIntraNodeSolver requires at least 2 layers."
       this.failed = true
       this.solved = false
-
       return
     }
 
     const nonTopLayerPortPoint = this.nodeWithPortPoints.portPoints.find(
       (pp) => pp.z !== 0,
     )
-
     if (nonTopLayerPortPoint) {
       this.error =
         "FixedTopologyHighDensityIntraNodeSolver only supports top-layer (z=0) port points; found bottom-layer input."
@@ -103,7 +101,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       const availableZ = [...new Set(this.nodeWithPortPoints.availableZ)].sort(
         (a, b) => a - b,
       )
-
       return availableZ[availableZ.length - 1]!
     }
 
@@ -117,7 +114,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     for (const vias of Object.values(viaTile.viasByNet)) {
       if (vias.length > 0) return vias[0].diameter
     }
-
     return 0.3
   }
 
@@ -127,10 +123,8 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       string,
       { points: PortPoint[]; rootConnectionName?: string }
     >()
-
     for (const pp of this.nodeWithPortPoints.portPoints) {
       const existing = connectionMap.get(pp.connectionName)
-
       if (existing) {
         existing.points.push(pp)
       } else {
@@ -143,7 +137,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
     this.rootConnectionNameByConnectionId.clear()
     const inputConnections: HgXYConnection[] = []
-
     for (const [connectionName, data] of connectionMap.entries()) {
       if (data.points.length < 2) continue
       this.rootConnectionNameByConnectionId.set(
@@ -159,7 +152,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
         },
       })
     }
-
     if (inputConnections.length === 0) return null
 
     return new FixedViaHypergraphSolver({ inputConnections })
@@ -168,16 +160,12 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
   _step() {
     let activeSubSolver = this
       .activeSubSolver as FixedViaHypergraphSolver | null
-
     if (!activeSubSolver) {
       activeSubSolver = this._initializeGraph()
-
       if (!activeSubSolver) {
         this.solved = true
-
         return
       }
-
       this.activeSubSolver = activeSubSolver
       this.lastActiveSubSolver = activeSubSolver
     }
@@ -211,7 +199,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     connectionName: string,
   ) {
     const posKey = `${position.x.toFixed(4)},${position.y.toFixed(4)}`
-
     if (!viasByPosition.has(posKey)) {
       viasByPosition.set(posKey, {
         center: { x: position.x, y: position.y },
@@ -219,7 +206,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
         connectedTo: new Set(),
       })
     }
-
     viasByPosition.get(posKey)!.connectedTo.add(connectionName)
   }
 
@@ -253,7 +239,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     point: { x: number; y: number; z: number },
   ) {
     const lastPoint = routePoints[routePoints.length - 1]
-
     if (
       lastPoint &&
       Math.abs(lastPoint.x - point.x) <= 1e-6 &&
@@ -262,28 +247,22 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     ) {
       return
     }
-
     routePoints.push(point)
   }
 
   private _parseViaRegionNetName(regionId: string): string | null {
     const marker = ":v:"
     const markerIndex = regionId.lastIndexOf(marker)
-
     if (markerIndex !== -1) return regionId.slice(markerIndex + marker.length)
     const lastColon = regionId.lastIndexOf(":")
-
     if (lastColon === -1) return regionId
-
     return regionId.slice(lastColon + 1)
   }
 
   private _parseViaRegionTilePrefix(regionId: string): string | null {
     const marker = ":v:"
     const markerIndex = regionId.lastIndexOf(marker)
-
     if (markerIndex <= 0) return null
-
     return regionId.slice(0, markerIndex)
   }
 
@@ -292,38 +271,31 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     viaRegion: JRegion,
   ): ViaData[] {
     const netName = this._parseViaRegionNetName(viaRegion.regionId)
-
     if (!netName) return []
     const viasForNet = viaTile.viasByNet[netName]
-
     if (!viasForNet || viasForNet.length === 0) return []
 
     const tilePrefix = this._parseViaRegionTilePrefix(viaRegion.regionId)
-
     if (!tilePrefix) return viasForNet
 
     const tileScopedVias = viasForNet.filter((via) =>
       via.viaId.startsWith(`${tilePrefix}:`),
     )
-
     return tileScopedVias.length > 0 ? tileScopedVias : viasForNet
   }
 
   private _findNearestVia(vias: ViaData[], point: { x: number; y: number }) {
     let best: ViaData | null = null
     let bestDistance = Infinity
-
     for (const via of vias) {
       const dx = via.position.x - point.x
       const dy = via.position.y - point.y
       const distance = dx * dx + dy * dy
-
       if (distance < bestDistance) {
         bestDistance = distance
         best = via
       }
     }
-
     return best
   }
 
@@ -338,7 +310,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     }
 
     const viaIdSet = new Set(viasForRegion.map((via) => via.viaId))
-
     const bottomSegments = viaTile.routeSegments.filter(
       (routeSegment) =>
         routeSegment.layer === "bottom" &&
@@ -351,7 +322,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       string,
       Array<{ to: string; points: Array<{ x: number; y: number }> }>
     >()
-
     const addEdge = (
       from: string,
       to: string,
@@ -372,7 +342,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
     const queue = [entryVia.viaId]
     const visited = new Set<string>([entryVia.viaId])
-
     const prev = new Map<
       string,
       { from: string; points: Array<{ x: number; y: number }> }
@@ -380,9 +349,7 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
     while (queue.length > 0) {
       const viaId = queue.shift()!
-
       if (viaId === exitVia.viaId) break
-
       for (const edge of adjacency.get(viaId) ?? []) {
         if (visited.has(edge.to)) continue
         visited.add(edge.to)
@@ -395,23 +362,18 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
     const edgeChain: Array<Array<{ x: number; y: number }>> = []
     let cursor = exitVia.viaId
-
     while (cursor !== entryVia.viaId) {
       const step = prev.get(cursor)
-
       if (!step) return null
       edgeChain.push(step.points)
       cursor = step.from
     }
-
     edgeChain.reverse()
 
     const pathPoints: Array<{ x: number; y: number }> = []
-
     for (const points of edgeChain) {
       for (const point of points) {
         const lastPoint = pathPoints[pathPoints.length - 1]
-
         if (
           !lastPoint ||
           Math.abs(lastPoint.x - point.x) > 1e-6 ||
@@ -459,11 +421,9 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     this.solvedRoutes = []
     const viaTile = viaGraphSolver.viaTile
     const bottomLayerZ = this._getBottomLayerZ()
-
     const fallbackViaDiameter = viaTile
       ? this._getViaTileDiameter(viaTile)
       : 0.3
-
     const viasByPosition: Map<
       string,
       {
@@ -475,7 +435,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
 
     for (const solvedRoute of viaGraphSolver.solvedRoutes) {
       const connectionName = solvedRoute.connection.connectionId
-
       const rootConnectionName =
         this.rootConnectionNameByConnectionId.get(connectionName)
 
@@ -495,17 +454,14 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
       for (let i = 1; i < path.length; i++) {
         const previousCandidate = path[i - 1]
         const currentCandidate = path[i]
-
         const previousPoint = {
           x: previousCandidate.port.d.x,
           y: previousCandidate.port.d.y,
         }
-
         const currentPoint = {
           x: currentCandidate.port.d.x,
           y: currentCandidate.port.d.y,
         }
-
         const traversedRegion = currentCandidate.lastRegion as
           | JRegion
           | undefined
@@ -523,7 +479,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
           viaTile,
           traversedRegion,
         )
-
         if (viasForRegion.length === 0) {
           this._appendRoutePoint(routePoints, {
             x: currentPoint.x,
@@ -551,7 +506,6 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
           entryVia,
           exitVia,
         )
-
         if (!bottomPoints || bottomPoints.length === 0) {
           this._appendRoutePoint(routePoints, {
             x: currentPoint.x,
@@ -655,11 +609,9 @@ export class FixedTopologyHighDensityIntraNodeSolver extends BaseSolver {
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()
     }
-
     if (this.lastActiveSubSolver) {
       return this.lastActiveSubSolver.visualize()
     }
-
     return super.visualize()
   }
 }

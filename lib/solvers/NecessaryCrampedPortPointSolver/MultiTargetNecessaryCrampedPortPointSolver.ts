@@ -16,7 +16,6 @@ import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
-
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
@@ -76,7 +75,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           }
         }
       }
-
       return false
     })
     this.unprocessedTargets = [...this.targetNode]
@@ -89,17 +87,13 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     for (const sharedEdgeSegment of this.input.sharedEdgeSegments) {
       for (const segmentPortPoint of sharedEdgeSegment.portPoints) {
         const cmNodeIds = segmentPortPoint.nodeIds
-
         for (const id of cmNodeIds) {
           const cmNode = this.nodeMap.get(id)
-
           if (!cmNode) {
             throw new Error(`Could not find capacity mesh node for id ${id}`)
           }
-
           const existingSegmentPortPoints =
             this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
-
           this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
             ...existingSegmentPortPoints,
             segmentPortPoint,
@@ -112,15 +106,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   override _step(): void {
     if (this.activeSubSolver) {
       this.activeSubSolver._step()
-
       if (!this.activeSubSolver.solved) {
         return
       }
-
       if (this.activeSubSolver.failed) {
         this.failed = true
         this.error = this.activeSubSolver.error
-
         return
       }
 
@@ -130,7 +121,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       if (!this.currentTarget) {
         this.failed = true
         this.error = "Missing current capacity mesh node while finishing BFS"
-
         return
       }
 
@@ -151,21 +141,17 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
                 this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
               mapOfCapacityMeshNodeIdToRef: this.nodeMap,
             })
-
           return
         }
 
         this.currentTarget = undefined
-
         return
       }
 
       let crampedCandidates = this.candidatesAtDepth.filter((candidate) => {
         const port = candidate.port
-
         const capacityMeshNodes = port.nodeIds.map((nodeId) => {
           const cmNode = this.nodeMap.get(nodeId)
-
           if (!cmNode) {
             this.failed = true
             this.error = `Could not find capacity mesh node for id ${nodeId}`
@@ -173,10 +159,8 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
               `Could not find capacity mesh node for id ${nodeId}`,
             )
           }
-
           return cmNode
         })
-
         return (
           capacityMeshNodes.every((cmNode) => !cmNode._containsObstacle) &&
           port.cramped
@@ -194,33 +178,26 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
       this.candidatesAtDepth = [...crampedCandidates].sort((a, b) => {
         const costDifference = costFunction(a) - costFunction(b)
-
         if (costDifference !== 0) {
           return costDifference
         }
-
         return (
           this.getCandidateExitCapacity(b) - this.getCandidateExitCapacity(a)
         )
       })
-
       if (this.candidatesAtDepth.length === 0) {
         this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
       } else {
         const firstCandidateByBranchPath = new Map<string, ExploredPortPoint>()
-
         for (const candidate of this.candidatesAtDepth) {
           if (!candidate.parent) {
             throw new Error(
               `Missing parent for cramped escape candidate ${candidate.port.segmentPortPointId}`,
             )
           }
-
           const branchPathId = `${candidate.parent.port.segmentPortPointId}->${candidate.port.segmentPortPointId}`
-
           if (!firstCandidateByBranchPath.has(branchPathId)) {
             firstCandidateByBranchPath.set(branchPathId, candidate)
-
             if (
               firstCandidateByBranchPath.size ===
               MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP
@@ -229,9 +206,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
             }
           }
         }
-
         const diverseCandidates = [...firstCandidateByBranchPath.values()]
-
         for (const candidate of diverseCandidates) {
           this.keepCandidatePath(candidate)
         }
@@ -239,19 +214,15 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
       this.isRunningCrampedPass = false
       this.currentTarget = undefined
-
       return
     }
 
     if (!this.currentTarget) {
       this.currentTarget = this.unprocessedTargets.shift()
-
       if (!this.currentTarget) {
         this.solved = true
-
         return
       }
-
       this.isRunningCrampedPass = false
       this.candidatesAtDepth = []
       this.activeSubSolver = new SingleTargetNecessaryCrampedPortPointSolver({
@@ -262,7 +233,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
         mapOfCapacityMeshNodeIdToRef: this.nodeMap,
       })
-
       return
     }
   }
@@ -291,7 +261,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         return []
       }),
     }))
-
     return this.filteredOutput
   }
 
@@ -301,27 +270,21 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         `Missing parent for cramped escape candidate ${candidate.port.segmentPortPointId}`,
       )
     }
-
     const previousNodeIds = new Set(candidate.parent.port.nodeIds)
-
     const exitNodes = candidate.port.nodeIds
       .filter((nodeId) => !previousNodeIds.has(nodeId))
       .map((nodeId) => {
         const node = this.nodeMap.get(nodeId)
-
         if (!node) {
           throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
         }
-
         return node
       })
-
     if (exitNodes.length === 0) {
       throw new Error(
         `Could not find exit node for cramped escape candidate ${candidate.port.segmentPortPointId}`,
       )
     }
-
     return Math.max(
       0,
       ...exitNodes.map(
@@ -333,7 +296,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private keepCandidatePath(candidate: ExploredPortPoint): void {
     this.crampedPortPointsToKeep.add(candidate.port)
     let parent = candidate.parent
-
     while (parent) {
       this.crampedPortPointsToKeep.add(parent.port)
       parent = parent.parent

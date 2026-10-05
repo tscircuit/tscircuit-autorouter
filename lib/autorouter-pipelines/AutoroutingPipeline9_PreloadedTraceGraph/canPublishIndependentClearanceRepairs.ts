@@ -10,23 +10,19 @@ export const canPublishIndependentClearanceRepairs = (
   remainingErrors: Pipeline9DrcError[],
 ): boolean => {
   if (remainingErrors.length >= initialErrors.length) return false
-
   const identity = (error: Pipeline9DrcError): string | undefined => {
     if (error.type === "pcb_via_trace_clearance_error") {
       return JSON.stringify([error.type, error.pcb_trace_id, error.pcb_via_id])
     }
-
     if (error.type === "pcb_pad_trace_clearance_error") {
       return JSON.stringify([error.type, error.pcb_trace_id, error.pcb_pad_id])
     }
-
     if (
       error.type === "pcb_via_clearance_error" &&
       Array.isArray(error.pcb_via_ids)
     ) {
       return JSON.stringify([error.type, [...error.pcb_via_ids].sort()])
     }
-
     if (
       error.type === "pcb_trace_error" &&
       typeof error.pcb_trace_error_id === "string" &&
@@ -34,25 +30,18 @@ export const canPublishIndependentClearanceRepairs = (
     ) {
       return JSON.stringify([error.type, error.pcb_trace_error_id])
     }
-
     // Connectivity, boundary and unknown errors require a complete repair.
     return undefined
   }
-
   const unmatched = [...initialErrors]
-
   for (const error of remainingErrors) {
     const key = identity(error)
-
     if (key === undefined) return false
     const index = unmatched.findIndex((previous) => identity(previous) === key)
-
     if (index < 0) return false
     const previous = unmatched.splice(index, 1)[0]!
-
     // Overlap severity is proven by the changed-segment geometry guard.
     if (error.type === "pcb_trace_error") continue
-
     if (
       typeof error.actual_clearance !== "number" ||
       !Number.isFinite(error.actual_clearance) ||
@@ -65,6 +54,5 @@ export const canPublishIndependentClearanceRepairs = (
       return false
     }
   }
-
   return true
 }

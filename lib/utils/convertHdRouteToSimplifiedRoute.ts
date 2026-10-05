@@ -19,11 +19,8 @@ type Point = {
   toNextSegmentType?: "through_obstacle"
   toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
 }
-
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
-
 const SAME_POINT_TOLERANCE = 1e-12
-
 const SAME_NET_OBSTACLE_TOLERANCE = 1e-6
 
 export interface ConvertHdRouteToSimplifiedRouteOptions {
@@ -103,11 +100,9 @@ const findNearestTerminalViaPoint = ({
 
   for (const point of connectionPoints) {
     if (!isSingleLayerConnectionPoint(point) || !point.terminalVia) continue
-
     if (point.layer !== endpointLayer) continue
 
     const endpointDistance = distance(point, endpoint)
-
     if (endpointDistance > tolerance) continue
 
     if (
@@ -143,7 +138,6 @@ const attachTerminalViasToSimplifiedRoute = ({
   ) {
     return route
   }
-
   if (
     !connectionPoints.some(
       (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
@@ -164,14 +158,12 @@ const attachTerminalViasToSimplifiedRoute = ({
   const endPoint = hdRoute.route[hdRoute.route.length - 1]!
   const startLayer = mapZToLayerName(startPoint.z, layerCount)
   const endLayer = mapZToLayerName(endPoint.z, layerCount)
-
   const startTerminalViaPoint = findNearestTerminalViaPoint({
     endpoint: startPoint,
     endpointLayer: startLayer,
     connectionPoints,
     tolerance,
   })
-
   const endTerminalViaPoint = findNearestTerminalViaPoint({
     endpoint: endPoint,
     endpointLayer: endLayer,
@@ -183,10 +175,8 @@ const attachTerminalViasToSimplifiedRoute = ({
   const appendSegments: SimplifiedPcbTraces[number]["route"] = []
   const firstLinearRouteSegment = linearRoute[0]
   const lastLinearRouteSegment = linearRoute[linearRoute.length - 1]
-
   const startTraceThickness =
     startPoint.traceThickness ?? hdRoute.traceThickness
-
   const endTraceThickness = endPoint.traceThickness ?? hdRoute.traceThickness
 
   if (startTerminalViaPoint?.terminalVia) {
@@ -272,7 +262,6 @@ export const convertHdRouteToSimplifiedRoute = (
   opts: ConvertHdRouteToSimplifiedRouteOptions = {},
 ): SimplifiedPcbTraces[number]["route"] => {
   const result: SimplifiedPcbTraces[number]["route"] = []
-
   if (hdRoute.route.length === 0) return result
 
   let currentLayerPoints: Point[] = []
@@ -288,7 +277,6 @@ export const convertHdRouteToSimplifiedRoute = (
       const previousPoint = currentLayerPoints[currentLayerPoints.length - 1]
       // Add all wire segments for the current layer
       const layerName = mapZToLayerName(currentZ, layerCount)
-
       for (const layerPoint of currentLayerPoints) {
         result.push({
           route_type: "wire",
@@ -300,7 +288,6 @@ export const convertHdRouteToSimplifiedRoute = (
       }
 
       const nextLayerName = mapZToLayerName(point.z, layerCount)
-
       if (
         previousPoint &&
         isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
@@ -371,7 +358,6 @@ export const convertHdRouteToSimplifiedRoute = (
 
   // Add the final layer's wire segments
   const layerName = mapZToLayerName(currentZ, layerCount)
-
   for (const layerPoint of currentLayerPoints) {
     result.push({
       route_type: "wire",
@@ -388,7 +374,6 @@ export const convertHdRouteToSimplifiedRoute = (
       hdRoute.route[0]?.z ?? 0,
       layerCount,
     )
-
     for (const jumper of hdRoute.jumpers) {
       result.push({
         route_type: "jumper",

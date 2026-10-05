@@ -34,7 +34,6 @@ export class RbushIndex<T> implements ISpatialIndex<T> {
       maxY,
       data: item,
     }))
-
     this.tree.load(nodes)
   }
 

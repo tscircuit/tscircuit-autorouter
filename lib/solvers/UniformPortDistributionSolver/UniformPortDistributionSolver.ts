@@ -52,7 +52,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
-
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -70,25 +69,20 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
-
     for (const node of input.nodeWithPortPoints) {
       for (const portPoint of node.portPoints) {
         if (!portPoint.portPointId) continue
-
         const ownerNodeIds = determineOwnerPair({
           portPointId: portPoint.portPointId,
           currentNodeId: node.capacityMeshNodeId,
           inputNodes: input.inputNodesWithPortPoints,
         })
-
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-
         const alreadyPresent = existing.some(
           (point) =>
             point.portPointId && point.portPointId === portPoint.portPointId,
         )
-
         if (!alreadyPresent) {
           existing.push({
             ...portPoint,
@@ -96,7 +90,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
             ownerPairKey,
           })
         }
-
         this.mapOfOwnerPairToPortPoints.set(ownerPairKey, existing)
         uniqueOwnerPairs.set(ownerPairKey, ownerNodeIds)
       }
@@ -113,7 +106,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.ownerPairsToProcess.sort((a, b) => {
       const edgeA = this.mapOfOwnerPairToSharedEdge.get(a)!
       const edgeB = this.mapOfOwnerPairToSharedEdge.get(b)!
-
       return edgeA.center.x - edgeB.center.x || edgeA.center.y - edgeB.center.y
     })
   }
@@ -122,35 +114,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (this.ownerPairsToProcess.length === 0) {
       this.rebuildNodes()
       this.solved = true
-
       return
     }
 
     this.currentOwnerPairBeingProcessed = this.ownerPairsToProcess.shift()!
     const ownerPairKey = this.currentOwnerPairBeingProcessed
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
-
     if (!sharedEdge) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
       sharedEdge,
       obstacles: this.input.obstacles,
     })
-
     if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
     const portCountByLayer = new Map<number, number>()
-
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
         portPoint.z,
         (portCountByLayer.get(portPoint.z) ?? 0) + 1,
       )
     }
-
     const family: PortPointWithOwnerPair[] = []
-
     for (const portPoint of familyRaw) {
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
@@ -161,7 +146,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ) {
         continue
       }
-
       if (
         !shouldIgnoreSharedEdge({
           sharedEdge,
@@ -189,7 +173,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   rebuildNodes(): void {
     const redistributedPositions = new Map<string, { x: number; y: number }>()
-
     for (const points of this.mapOfOwnerPairToPortPoints.values()) {
       for (const p of points) {
         if (p.portPointId) {
@@ -208,10 +191,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
         redistributedPositions.has(portPoint.portPointId)
       ) {
         const newPos = redistributedPositions.get(portPoint.portPointId)!
-
         return { ...portPoint, x: newPos.x, y: newPos.y }
       }
-
       return portPoint
     }
 

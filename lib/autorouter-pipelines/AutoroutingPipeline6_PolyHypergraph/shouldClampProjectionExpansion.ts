@@ -34,29 +34,22 @@ export const shouldClampProjectionExpansion = ({
   if (requiredRoutingCorridorWidth <= 0) return false
 
   const minDimension = Math.min(projectedRect.width, projectedRect.height)
-
   const conservativeMinDimension = Math.min(
     conservativeProjectedRect.width,
     conservativeProjectedRect.height,
   )
-
   const maxDimension = Math.max(projectedRect.width, projectedRect.height)
-
   const conservativeMaxDimension = Math.max(
     conservativeProjectedRect.width,
     conservativeProjectedRect.height,
   )
-
   const nextTraceLaneWidth = requiredRoutingCorridorWidth + (traceWidth ?? 0)
-
   const expandedLanesAcross = Math.floor(
     minDimension / requiredRoutingCorridorWidth,
   )
-
   const conservativeLanesAcross = Math.floor(
     conservativeMinDimension / requiredRoutingCorridorWidth,
   )
-
   const connectionCount = new Set(
     node.portPoints.map((portPoint) => portPoint.connectionName),
   ).size

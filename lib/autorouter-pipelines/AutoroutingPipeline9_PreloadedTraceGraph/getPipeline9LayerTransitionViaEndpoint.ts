@@ -26,24 +26,20 @@ export const getPipeline9LayerTransitionViaEndpoint = ({
       Math.abs(via.x - start.x) <= POSITION_EPSILON &&
       Math.abs(via.y - start.y) <= POSITION_EPSILON,
   )
-
   const hasViaAtEnd = hdRoute.vias.some(
     (via) =>
       Math.abs(via.x - end.x) <= POSITION_EPSILON &&
       Math.abs(via.y - end.y) <= POSITION_EPSILON,
   )
-
   if (!hasViaAtStart && !hasViaAtEnd) {
     throw new Error(
       `Pipeline9 route "${hdRoute.connectionName}" changes layers from z=${start.z} to z=${end.z} without an explicit via`,
     )
   }
-
   if (hasViaAtStart === hasViaAtEnd) {
     throw new Error(
       `Pipeline9 route "${hdRoute.connectionName}" has an ambiguous layer transition between (${start.x}, ${start.y}) and (${end.x}, ${end.y})`,
     )
   }
-
   return hasViaAtStart ? "start" : "end"
 }

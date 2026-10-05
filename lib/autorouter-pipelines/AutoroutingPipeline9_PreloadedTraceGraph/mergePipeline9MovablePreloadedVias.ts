@@ -23,7 +23,6 @@ export const mergePipeline9MovablePreloadedVias = ({
     [...routes, ...otherHdRoutes],
     connMap,
   )
-
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: routes,
     otherHdRoutes,
@@ -33,14 +32,11 @@ export const mergePipeline9MovablePreloadedVias = ({
     layerCount,
     connMap,
   })
-
   solver.solve()
-
   if (solver.failed) {
     throw new Error(
       `Pipeline9 could not merge movable preloaded vias: ${solver.error ?? "unknown error"}`,
     )
   }
-
   return solver.getMergedViaHdRoutes() ?? routes
 }

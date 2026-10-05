@@ -68,7 +68,6 @@ const getOvalPoints = (
     const angle = (2 * Math.PI * index) / segmentCount
     const localX = rx * Math.cos(angle)
     const localY = ry * Math.sin(angle)
-
     return {
       x: obstacle.center.x + localX * cos - localY * sin,
       y: obstacle.center.y + localX * sin + localY * cos,
@@ -115,12 +114,10 @@ export const getConnectedObstacleRegionsFromSrj = (
       getObstacleLayerMask(obstacle as any, srj.layerCount),
       srj.layerCount,
     )
-
     if (availableZ.length === 0) return []
 
     let polygon: Array<{ x: number; y: number }>
     const obstacleType = (obstacle as AnyObstacle).type
-
     if (obstacleType === "rect") {
       polygon = getRectPoints(obstacle, clearance)
     } else if (obstacleType === "oval") {
@@ -163,7 +160,6 @@ const getPairConnection = (
     connection.pointsToConnect.length === 2
       ? connection.name
       : `${connection.name}::${index}`
-
   return {
     ...connection,
     name,
@@ -179,14 +175,11 @@ export const getPolyGraphConnectionsFromSrj = (
 ): PolyHyperGraphConnection[] =>
   srj.connections.flatMap((connection) => {
     const points = connection.pointsToConnect ?? []
-
     if (points.length < 2) return []
 
     const start = points[0]!
-
     return points.slice(1).map((end, index) => {
       const pairConnection = getPairConnection(connection, start, end, index)
-
       return {
         connectionId: pairConnection.name,
         mutuallyConnectedNetworkId:

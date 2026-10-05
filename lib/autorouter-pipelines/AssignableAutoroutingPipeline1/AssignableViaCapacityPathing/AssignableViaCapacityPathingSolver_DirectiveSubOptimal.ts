@@ -25,9 +25,7 @@ const seededRandomDecision = (seeds: number[], chance: number) => {
     (acc, seed) => acc + ((seed * 16807) % 2147483647),
     0,
   )
-
   const random = seededRandom(seed)
-
   return random() < chance
 }
 
@@ -131,7 +129,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       MAX_ITERATIONS = 1e6,
       hyperParameters = {},
     } = inputParams
-
     super()
     this.hyperParameters = hyperParameters
     this.MAX_ITERATIONS = MAX_ITERATIONS
@@ -153,7 +150,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         const startNode = nodesWithTargets.find(
           (n) => distance(n.center, startPtC) < n.width / 2,
         )!
-
         const endNode = nodesWithTargets.find(
           (n) => distance(n.center, endPtC) < n.width / 2,
         )!
@@ -203,10 +199,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         const closestViaToStart = availableVias.reduce((closest, via) => {
           const distToClosest = this._dist(closest, connectionPair.start)
           const distToVia = this._dist(via, connectionPair.start)
-
           return distToVia < distToClosest ? via : closest
         })
-
         this.closestViaForConnectionStartMap.set(
           connectionPair,
           closestViaToStart,
@@ -216,10 +210,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         const closestViaToEnd = availableVias.reduce((closest, via) => {
           const distToClosest = this._dist(closest, connectionPair.end)
           const distToVia = this._dist(via, connectionPair.end)
-
           return distToVia < distToClosest ? via : closest
         })
-
         this.closestViaForConnectionEndMap.set(connectionPair, closestViaToEnd)
       }
     }
@@ -228,17 +220,13 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
   _step() {
     if (!this.activeConnectionPair) {
       this.activeConnectionPair = this.unprocessedConnectionPairs.shift()!
-
       if (!this.activeConnectionPair) {
         this.solved = true
-
         return
       }
-
       // Compute closest via for all remaining connections to avoid stealing vias
       this.computeClosestViaForAllConnections()
       this.lastStepOperation = "dequeueConnectionPair"
-
       return
     }
 
@@ -249,13 +237,11 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       this.ogUnprocessedSubpaths = this.unprocessedSubpaths.slice()
       this.solvedSubpaths = []
       this.lastStepOperation = "breakConnectionPairIntoSubpaths"
-
       return
     }
 
     if (!this.activeSubpath) {
       this.activeSubpath = this.unprocessedSubpaths!.shift()!
-
       if (!this.activeSubpath) {
         // Save the connection pair before nulling it
         const completedConnectionPair = this.activeConnectionPair
@@ -272,12 +258,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         )
 
         this.lastStepOperation = "finishedSolvingConnectionPair"
-
         return
       }
 
       this.lastStepOperation = "dequeueSubpath"
-
       return
     }
 
@@ -289,7 +273,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         this.activeSubpath = null
         this.clearCandidateNodes()
         this.lastStepOperation = "finishedSolvingSubpath"
-
         return
       }
     }
@@ -313,7 +296,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       subpath.solved = true
       // mark single node as used
       this.usedNodeMap.set(start.capacityMeshNodeId, true)
-
       return
     }
 
@@ -323,7 +305,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       this.visitedNodes.size === 0
     ) {
       const h0 = this._dist(start, end)
-
       const startCandidate: Candidate = {
         prevCandidate: null,
         node: start,
@@ -331,7 +312,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         h: h0,
         f: this.GREEDY_MULTIPLIER * h0,
       }
-
       this.queuedCandidateNodes.push(startCandidate)
     }
 
@@ -340,10 +320,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // Dequeue the next viable candidate (skip already visited)
     let current: Candidate | undefined
-
     while (this.queuedCandidateNodes.length && !current) {
       const cand = this.queuedCandidateNodes.shift()!
-
       if (!this.visitedNodes.has(cand.node.capacityMeshNodeId)) {
         current = cand
       }
@@ -354,7 +332,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (!current) {
       this.failed = true
       this.error = "No viable candidates left"
-
       return
     }
 
@@ -366,25 +343,20 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       // Backtrack and collect the path, marking nodes as used
       const path: CapacityMeshNode[] = []
       let walk: Candidate | null = current
-
       while (walk) {
         path.unshift(walk.node)
         this.usedNodeMap.set(walk.node.capacityMeshNodeId, true)
         walk = walk.prevCandidate
       }
-
       subpath.path = path
       subpath.solved = true
-
       return
     }
 
     // Expand neighbors (single-step expansion per _step tick)
     const neighbors = this.getNeighbors(current.node)
-
     for (const n of neighbors) {
       const id = n.capacityMeshNodeId
-
       if (this.visitedNodes.has(id)) continue
 
       // Compute costs
@@ -395,12 +367,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       const existingIndex = this.queuedCandidateNodes.findIndex(
         (c) => c.node.capacityMeshNodeId === id,
       )
-
       if (existingIndex >= 0) {
         if (this.queuedCandidateNodes[existingIndex].g <= g) {
           continue // worse than an existing queued path
         }
-
         // Replace with a better path
         this.queuedCandidateNodes.splice(existingIndex, 1)
       }
@@ -419,24 +389,20 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     const neighbors = new Set<CapacityMeshNode>()
 
     const edges = this.nodeEdgeMap.get(node.capacityMeshNodeId) ?? []
-
     for (const e of edges) {
       const [a, b] = e.nodeIds
       const otherId = a === node.capacityMeshNodeId ? b : a
       const nn = this.nodeMap.get(otherId)
-
       if (nn) neighbors.add(nn)
     }
 
     // Filter out hard obstacles (non-traversable) AND nodes that don't have the designated layer
     const designatedLayer = this.activeSubpath?.layer
-
     return Array.from(neighbors).filter((n) => {
       const isGoalNode =
         n.capacityMeshNodeId === this.activeSubpath?.end.capacityMeshNodeId
 
       if (isGoalNode) return true
-
       // Must not be obstacle
       if (n._containsObstacle) return false
 
@@ -469,7 +435,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     // Base movement cost: Euclidean step
     const step = this._dist(prevCandidate.node, node)
     const g = prevCandidate.g + step
-
     return g
   }
 
@@ -493,13 +458,11 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     for (let i = 0; i < subpaths.length; i++) {
       const subpath = subpaths[i]
-
       if (!subpath.path) {
         // Fallback: if path wasn't stored, just use start and end
         if (i === 0) {
           fullPath.push(subpath.start)
         }
-
         if (i === subpaths.length - 1) {
           fullPath.push(subpath.end)
         }
@@ -527,7 +490,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       [this.hyperParameters.DIRECTIVE_SEED ?? 0, this.solvedRoutes.length],
       this.hyperParameters.FORCE_VIA_TRAVEL_CHANCE ?? 0,
     )
-
     if (!shouldForceTravel) {
       // Find common layer between start and end, default to first available layer
       return [
@@ -555,7 +517,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       solved: false,
       layer: startLayer,
     })
-
     if (startLayer === endLayer) {
       subpaths.push({
         start: closestVia,
@@ -577,7 +538,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         layer: endLayer,
       })
     }
-
     return subpaths
   }
 
@@ -616,12 +576,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       const fallbackCandidates = this.viaNodes
         .filter((v) => !v._completelyInsideObstacle && !v._containsObstacle)
         .filter((v) => !this.usedNodeMap.has(v.capacityMeshNodeId))
-
       if (fallbackCandidates.length === 0) return node
       fallbackCandidates.sort(
         (a, b) => this._dist(a, node) - this._dist(b, node),
       )
-
       return fallbackCandidates[0]
     }
 
@@ -629,18 +587,15 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // Apply MAX_CLOSEST_VIA_SKIP if configured
     const maxSkip = this.hyperParameters.MAX_CLOSEST_VIA_SKIP ?? 0
-
     if (maxSkip > 0 && candidates.length > 1) {
       // Generate seeded random number K between 0 and MAX_CLOSEST_VIA_SKIP
       const seed =
         (this.hyperParameters.DIRECTIVE_SEED ?? 0) + this.solvedRoutes.length
-
       const random = seededRandom(seed)
       const k = Math.floor(random() * (maxSkip + 1))
 
       // Skip the first k vias, but ensure we don't go out of bounds
       const skipIndex = Math.min(k, candidates.length - 1)
-
       return candidates[skipIndex]
     }
 
@@ -724,20 +679,17 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
     // Apply MAX_FURTHEST_VIA_SKIP if configured
     const maxSkip = this.hyperParameters.MAX_FURTHEST_VIA_SKIP ?? 0
-
     if (maxSkip > 0 && viable.length > 1) {
       // Generate seeded random number K between 0 and MAX_FURTHEST_VIA_SKIP
       const seed =
         (this.hyperParameters.DIRECTIVE_SEED ?? 0) +
         this.solvedRoutes.length +
         1000
-
       const random = seededRandom(seed)
       const k = Math.floor(random() * (maxSkip + 1))
 
       // Skip the first k vias, but ensure we don't go out of bounds
       const skipIndex = Math.min(k, viable.length - 1)
-
       return viable[skipIndex]
     }
 
@@ -746,10 +698,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
 
   getCapacityPaths(): CapacityPath[] {
     const capacityPaths: CapacityPath[] = []
-
     for (const solvedRoute of this.solvedRoutes) {
       const path = solvedRoute.path
-
       if (path && path.length > 0) {
         capacityPaths.push({
           capacityPathId: solvedRoute.connection.name,
@@ -758,7 +708,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
         })
       }
     }
-
     return capacityPaths
   }
 
@@ -797,7 +746,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       const isInCandidates = this.queuedCandidateNodes.some(
         (c) => c.node.capacityMeshNodeId === node.capacityMeshNodeId,
       )
-
       const candidate = this.queuedCandidateNodes.find(
         (c) => c.node.capacityMeshNodeId === node.capacityMeshNodeId,
       )
@@ -842,7 +790,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       const [id1, id2] = edge.nodeIds
       const node1 = this.nodeMap.get(id1)
       const node2 = this.nodeMap.get(id2)
-
       if (
         node1?.center &&
         node2?.center &&
@@ -865,7 +812,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       for (let j = 0; j < path.length - 1; j++) {
         const node1 = path[j]
         const node2 = path[j + 1]
-
         if (
           node1?.center &&
           node2?.center &&
@@ -893,7 +839,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       if (path.length > 0) {
         const startNode = path[0]
         const endNode = path[path.length - 1]
-
         if (startNode?.center && isValidPoint(startNode.center)) {
           graphics.points!.push({
             x: startNode.center.x,
@@ -901,7 +846,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
             label: `START: ${solvedRoute.connection.name}`,
           })
         }
-
         if (endNode?.center && isValidPoint(endNode.center)) {
           graphics.points!.push({
             x: endNode.center.x,
@@ -916,12 +860,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (this.solvedSubpaths) {
       for (let i = 0; i < this.solvedSubpaths.length; i++) {
         const subpath = this.solvedSubpaths[i]
-
         if (subpath.path && subpath.path.length > 1) {
           for (let j = 0; j < subpath.path.length - 1; j++) {
             const node1 = subpath.path[j]
             const node2 = subpath.path[j + 1]
-
             if (
               node1?.center &&
               node2?.center &&
@@ -943,7 +885,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (this.activeSubpath) {
       const start = this.activeSubpath.start?.center
       const end = this.activeSubpath.end?.center
-
       if (start && end && isValidPoint(start) && isValidPoint(end)) {
         graphics.lines!.push({
           points: [start, end],
@@ -967,7 +908,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     const topCandidates = this.queuedCandidateNodes
       .slice(0, 10)
       .sort((a, b) => a.f - b.f)
-
     for (let i = 0; i < topCandidates.length; i++) {
       const candidate = topCandidates[i]
       const opacity = 0.6 * (1 - i / 10)
@@ -975,12 +915,10 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
       // Backtrace the path
       const path: CapacityMeshNode[] = []
       let current: Candidate | null = candidate
-
       while (current) {
         path.push(current.node)
         current = current.prevCandidate
       }
-
       path.reverse()
 
       if (path.length > 1) {
@@ -1002,7 +940,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (this.activeConnectionPair) {
       const start = this.activeConnectionPair.start?.center
       const end = this.activeConnectionPair.end?.center
-
       if (start && end && isValidPoint(start) && isValidPoint(end)) {
         graphics.lines!.push({
           points: [start, end],
@@ -1015,10 +952,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     // 8. Visualize directive vias (if using directive strategy)
     if (this.ogUnprocessedSubpaths && this.ogUnprocessedSubpaths.length === 3) {
       const [, mid] = this.ogUnprocessedSubpaths
-
       if (mid.start?.center && isValidPoint(mid.start.center)) {
         const radius = Math.max(mid.start.width || 0, mid.start.height || 0)
-
         if (isValidNumber(radius) && radius > 0) {
           graphics.circles!.push({
             center: mid.start.center,
@@ -1032,10 +967,8 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
           })
         }
       }
-
       if (mid.end?.center && isValidPoint(mid.end.center)) {
         const radius = Math.max(mid.end.width || 0, mid.end.height || 0)
-
         if (isValidNumber(radius) && radius > 0) {
           graphics.circles!.push({
             center: mid.end.center,
@@ -1055,7 +988,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (this.queuedCandidateNodes.length > 0) {
       for (const candidate of this.queuedCandidateNodes) {
         const node = candidate.node
-
         if (node?.center && isValidPoint(node.center)) {
           graphics.circles!.push({
             center: node.center,
@@ -1071,7 +1003,6 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     if (this.visitedNodes.size > 0) {
       for (const nodeId of this.visitedNodes) {
         const node = this.nodeMap.get(nodeId)
-
         if (node?.center && isValidPoint(node.center)) {
           graphics.circles!.push({
             center: node.center,

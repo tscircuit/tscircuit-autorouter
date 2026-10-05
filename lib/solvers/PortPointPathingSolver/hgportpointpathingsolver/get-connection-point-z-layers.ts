@@ -12,7 +12,6 @@ export function getConnectionPointZLayers({
   layerCount,
 }: GetConnectionPointZLayersParams): number[] {
   const layerNames = getConnectionPointLayers(point)
-
   const zLayers = layerNames.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
   )

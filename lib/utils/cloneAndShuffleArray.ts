@@ -1,20 +1,16 @@
 export function seededRandom(seed: number) {
   // Use a simple hash to initialize both state variables
   let s = seed
-
   for (let i = 0; i < 10; i++) {
     s = (s * 16807) % 2147483647
   }
-
   let state0 = s
 
   // Use a different hash for the second state
   s = (seed * 69069 + 1) % 2147483647
-
   for (let i = 0; i < 10; i++) {
     s = (s * 48271) % 2147483647
   }
-
   let state1 = s
 
   // Return the function that generates random numbers
@@ -32,7 +28,6 @@ export function seededRandom(seed: number) {
 
     // Generate a number between 0 and 1
     const result = (state0 + state1) / 4294967296
-
     return result - Math.floor(result)
   }
 }
@@ -84,13 +79,11 @@ const PRESHUFFLED_CASES = {
 
 export function cloneAndShuffleArray<T>(arr: T[], seed: number): T[] {
   if (seed === 0) return arr
-
   if (arr.length === 0) return arr
 
   if (arr.length <= 4) {
     const preshuffledOptions =
       PRESHUFFLED_CASES[arr.length as keyof typeof PRESHUFFLED_CASES]
-
     const preshuffledCase = preshuffledOptions[seed % preshuffledOptions.length]
 
     return preshuffledCase.map((orderIndex) => arr[orderIndex])
@@ -103,14 +96,10 @@ export function cloneAndShuffleArray<T>(arr: T[], seed: number): T[] {
   //   return [arr[1], arr[0]]
   // }
   const shuffled = arr.slice() // Copy the array
-
   for (let i = 0; i < shuffled.length; i++) {
     const i1 = Math.floor(random() * shuffled.length)
-
     const i2 = Math.floor(random() * (i + 1))
-    // oxlint-disable-next-line anti-slop/require-readable-spacing -- Biome keeps this leading ASI guard attached to the preceding statement.
     ;[shuffled[i1], shuffled[i2]] = [shuffled[i2], shuffled[i1]]
   }
-
   return shuffled
 }

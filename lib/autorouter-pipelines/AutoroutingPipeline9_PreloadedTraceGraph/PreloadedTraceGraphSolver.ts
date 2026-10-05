@@ -11,9 +11,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 type Point = { x: number; y: number }
-
 type RoutePoint = SimplifiedPcbTrace["route"][number]
-
 type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
 
 type PreloadedTracePrimitive = {
@@ -36,7 +34,6 @@ const getLayersBetween = (
 ): number[] => {
   const fromZ = mapLayerNameToZ(fromLayer, layerCount)
   const toZ = mapLayerNameToZ(toLayer, layerCount)
-
   return Array.from(
     { length: Math.abs(toZ - fromZ) + 1 },
     (_, index) => Math.min(fromZ, toZ) + index,
@@ -58,7 +55,6 @@ const getPreloadedTracePrimitives = (
         `Preloaded trace "${trace.pcb_trace_id}" is missing a connection name`,
       )
     }
-
     const fixedNetId =
       connMap.getNetConnectedToId(trace.connection_name) ??
       trace.connection_name
@@ -96,7 +92,6 @@ const getPreloadedTracePrimitives = (
         })
       } else if (routePoint.route_type === "jumper") {
         const z = mapLayerNameToZ(routePoint.layer, srj.layerCount)
-
         for (const [padIndex, padCenter] of [
           routePoint.start,
           routePoint.end,
@@ -122,7 +117,6 @@ const getPreloadedTracePrimitives = (
     ) {
       const start = trace.route[pointIndex]!
       const end = trace.route[pointIndex + 1]!
-
       if (
         !isWireRoutePoint(start) ||
         !isWireRoutePoint(end) ||
@@ -130,7 +124,6 @@ const getPreloadedTracePrimitives = (
       ) {
         continue
       }
-
       primitives.push({
         traceId: trace.pcb_trace_id,
         fixedNetId,
@@ -195,7 +188,6 @@ const preloadPort = (
   const dx = primitive.end.x - primitive.start.x
   const dy = primitive.end.y - primitive.start.y
   const lengthSquared = dx * dx + dy * dy
-
   const projection =
     lengthSquared === 0
       ? 0
@@ -208,7 +200,6 @@ const preloadPort = (
               lengthSquared,
           ),
         )
-
   const assignment: PreloadedTracePortAssignment = {
     traceId: primitive.traceId,
     fixedNetId: primitive.fixedNetId,
@@ -221,9 +212,7 @@ const preloadPort = (
     },
     z,
   }
-
   const existingAssignments = portPoint._preloadedTracePortAssignments ?? []
-
   if (
     !existingAssignments.some(
       (existing) =>
@@ -283,7 +272,6 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
           const portPoint = getClosestPortPoint(segment, primitive, z)
-
           if (portPoint) preloadPort(portPoint, primitive, z)
         }
       }
@@ -292,11 +280,9 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     const portPoints = this.sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
     )
-
     const preloadedPortPoints = portPoints.filter(
       (portPoint) => (portPoint._preloadedFixedNetIds?.length ?? 0) > 0,
     )
-
     this.stats = {
       preloadedTraceCount: this.srj.traces?.length ?? 0,
       // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Existing exported solver statistic; preserve its consumer-facing name.
@@ -320,7 +306,6 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
     if (!this.solved) {
       throw new Error("PreloadedTraceGraphSolver has not solved yet")
     }
-
     return this.sharedEdgeSegments
   }
 }

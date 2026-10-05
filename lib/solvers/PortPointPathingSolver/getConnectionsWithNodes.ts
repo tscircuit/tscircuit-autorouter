@@ -36,13 +36,11 @@ export function getConnectionsWithNodes(
         const dist = Math.sqrt(
           (node.center.x - point.x) ** 2 + (node.center.y - point.y) ** 2,
         )
-
         if (dist < minDistance) {
           minDistance = dist
           closestNode = node
         }
       }
-
       nodesForConnection.push(closestNode)
     }
 

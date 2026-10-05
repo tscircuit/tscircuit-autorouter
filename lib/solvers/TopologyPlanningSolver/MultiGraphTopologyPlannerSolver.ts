@@ -100,17 +100,14 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
       )?.meshNodes ?? []
-
     const globalMeshNodes = getGlobalMeshNodesForTopologyMerging({
       meshNodes: rawGlobalMeshNodes,
       components: this.normalizedInput.components,
     })
-
     const componentMeshNodes =
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
       )?.componentMeshNodes ?? []
-
     const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
 
     return {
@@ -123,7 +120,6 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
 
   override finalVisualize(): GraphicsObject | null {
     const output = this.getOutput()
-
     const componentObstacleRects = output.componentNoConnectionSrjs.flatMap(
       (componentSrj, componentIndex) => {
         const component =
@@ -152,9 +148,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
               (candidate) =>
                 node.capacityMeshNodeId.includes(candidate.componentId),
             )
-
             const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
-
             return {
               ...rect,
               fill: node._containsObstacle

@@ -75,7 +75,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         if (this.inputPaths.length === 0) {
           this.animationState = "done"
           this.solved = true
-
           return
         }
 
@@ -87,7 +86,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         const wasFragmented = this.currentFragments.some(
           (f) => f.isFragmentedPath,
         )
-
         if (wasFragmented) {
           // Move to showing fragments
           this.animationState = "showing_fragment"
@@ -96,7 +94,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           this.fragmentedPaths.push(...this.currentFragments)
           // Stay in showing_original_path to get next path
         }
-
         break
       }
 
@@ -124,7 +121,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           this.currentFragmentIndex = 0
           this.animationState = "showing_original_path"
         }
-
         break
       }
 
@@ -142,12 +138,10 @@ export class OffboardPathFragmentSolver extends BaseSolver {
     const originalConnection = this.originalConnections.find(
       (c) => c.name === originalPath.connectionName,
     )
-
     if (!originalConnection) return
 
     for (let fragIdx = 0; fragIdx < fragments.length; fragIdx++) {
       const fragment = fragments[fragIdx]
-
       if (!fragment.isFragmentedPath) continue
 
       // Find which points from original connection are in this fragment's nodes
@@ -155,20 +149,17 @@ export class OffboardPathFragmentSolver extends BaseSolver {
         (point) => {
           for (const nodeId of fragment.nodeIds) {
             const node = this.nodeMap.get(nodeId)
-
             if (!node) continue
 
             if (isPointInRect(point, node)) {
               return true
             }
           }
-
           return false
         },
       )
 
       const isFirstFragment = fragIdx === 0
-
       const offboardNodeId = isFirstFragment
         ? fragment.nodeIds[fragment.nodeIds.length - 1]
         : fragment.nodeIds[0]
@@ -177,7 +168,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
 
       if (fragmentPoints.length > 0 && offboardNode) {
         const realPoint = fragmentPoints[0]
-
         const syntheticPoint = {
           x: offboardNode.center.x,
           y: offboardNode.center.y,
@@ -200,21 +190,18 @@ export class OffboardPathFragmentSolver extends BaseSolver {
 
   private splitPath(path: CapacityPath): CapacityPath[] {
     const { nodeIds } = path
-
     if (nodeIds.length < 2) {
       return [path]
     }
 
     // Find offboard edges
     const offboardIndices: number[] = []
-
     for (let i = 0; i < nodeIds.length - 1; i++) {
       const edge = this.capacityEdges.find(
         (e) =>
           (e.nodeIds[0] === nodeIds[i] && e.nodeIds[1] === nodeIds[i + 1]) ||
           (e.nodeIds[0] === nodeIds[i + 1] && e.nodeIds[1] === nodeIds[i]),
       )
-
       if (edge && edge.isOffboardEdge) {
         offboardIndices.push(i)
       }
@@ -230,7 +217,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
 
     for (const offboardIdx of offboardIndices) {
       const fragNodes = nodeIds.slice(startIdx, offboardIdx + 1)
-
       if (fragNodes.length >= 1) {
         const fragId = this.nextFragmentId++
         fragments.push({
@@ -242,13 +228,11 @@ export class OffboardPathFragmentSolver extends BaseSolver {
           mstPairConnectionName: path.connectionName,
         })
       }
-
       startIdx = offboardIdx + 1
     }
 
     if (startIdx < nodeIds.length) {
       const fragNodes = nodeIds.slice(startIdx)
-
       if (fragNodes.length >= 1) {
         const fragId = this.nextFragmentId++
         fragments.push({
@@ -325,10 +309,8 @@ export class OffboardPathFragmentSolver extends BaseSolver {
     ) {
       // The last added fragment gets highlighted
       const lastIdx = this.fragmentedPaths.length - 1
-
       if (lastIdx >= 0) {
         const lastPath = this.fragmentedPaths[lastIdx]
-
         if (lastPath.isFragmentedPath) {
           // Draw a highlight around the last fragment
           this.drawPath({
@@ -348,7 +330,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
       if (edge.isOffboardEdge) {
         const node1 = this.nodeMap.get(edge.nodeIds[0])
         const node2 = this.nodeMap.get(edge.nodeIds[1])
-
         if (node1 && node2) {
           lines.push({
             points: [node1.center, node2.center],
@@ -361,7 +342,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
     }
 
     let title = "Offboard Path Fragment Solver"
-
     if (this.animationState === "showing_original_path") {
       title += " - Analyzing path..."
     } else if (this.animationState === "showing_fragment") {
@@ -392,7 +372,6 @@ export class OffboardPathFragmentSolver extends BaseSolver {
     for (let i = 0; i < path.nodeIds.length; i++) {
       const nodeId = path.nodeIds[i]
       const node = this.nodeMap.get(nodeId)
-
       if (!node) continue
 
       pathPoints.push(node.center)

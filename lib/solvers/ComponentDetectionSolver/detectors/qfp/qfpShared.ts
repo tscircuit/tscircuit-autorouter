@@ -2,20 +2,15 @@ import type { Obstacle } from "lib/types"
 import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
 
 const MIN_QFP_PADS_PER_SIDE = 3
-
 const MAX_QFP_PAD_COUNT = 32
-
 const MAX_QFP_THERMAL_PAD_COUNT = 4
-
 const MAX_QFP_CENTER_NEAREST_SIDE_RATIO = 0.25
-
 const MIN_QFP_PAD_ASPECT_RATIO = 1.5
 
 function getNearestSideCounts(memberObstacles: Obstacle[]) {
   const bounds = getBoundsForObstacles(memberObstacles)
   const width = bounds.maxX - bounds.minX
   const height = bounds.maxY - bounds.minY
-
   const counts = {
     top: 0,
     right: 0,
@@ -29,7 +24,6 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
 
   for (const obstacle of memberObstacles) {
     const isHorizontalPad = obstacle.width > obstacle.height
-
     const distances = [
       {
         side: "top" as const,
@@ -58,7 +52,6 @@ function getNearestSideCounts(memberObstacles: Obstacle[]) {
     ]
       .filter((candidate) => candidate.orientationMatches)
       .sort((a, b) => a.distance - b.distance)
-
     const nearest = distances[0]!
 
     counts[nearest.side] += 1
@@ -90,7 +83,6 @@ function areCentralThermalPadObstacles({
   thermalPadObstacles: Obstacle[]
 }) {
   if (thermalPadObstacles.length === 0) return true
-
   if (thermalPadObstacles.length > MAX_QFP_THERMAL_PAD_COUNT) return false
 
   const perimeterBounds = getBoundsForObstacles(perimeterPadObstacles)
@@ -100,7 +92,6 @@ function areCentralThermalPadObstacles({
   const centralMaxX = perimeterBounds.maxX - width * 0.2
   const centralMinY = perimeterBounds.minY + height * 0.2
   const centralMaxY = perimeterBounds.maxY - height * 0.2
-
   const perimeterPadThickness = Math.min(
     ...perimeterPadObstacles.map((obstacle) =>
       Math.min(obstacle.width, obstacle.height),
@@ -122,7 +113,6 @@ function areCentralThermalPadObstacles({
 
 function hasQfpPerimeterPadRing(perimeterPadObstacles: Obstacle[]) {
   if (perimeterPadObstacles.length < MIN_QFP_PADS_PER_SIDE * 4) return false
-
   if (perimeterPadObstacles.length > MAX_QFP_PAD_COUNT) return false
 
   const { counts, maxNearestSideRatio } = getNearestSideCounts(
@@ -140,7 +130,6 @@ function hasQfpPerimeterPadRing(perimeterPadObstacles: Obstacle[]) {
 
 function splitQfpMemberObstacles(memberObstacles: Obstacle[]) {
   const perimeterPadObstacles = getQfpPerimeterPadObstacles(memberObstacles)
-
   const thermalPadObstacles = memberObstacles.filter(
     (obstacle) => !isQfpPerimeterPadObstacle(obstacle),
   )
@@ -153,7 +142,6 @@ export function isQfpThermalPadLikeComponent(memberObstacles: Obstacle[]) {
     splitQfpMemberObstacles(memberObstacles)
 
   if (thermalPadObstacles.length === 0) return false
-
   if (!hasQfpPerimeterPadRing(perimeterPadObstacles)) return false
 
   return areCentralThermalPadObstacles({
@@ -167,7 +155,6 @@ export function isQfpLikeComponent(memberObstacles: Obstacle[]) {
     splitQfpMemberObstacles(memberObstacles)
 
   if (thermalPadObstacles.length > 0) return false
-
   if (
     !areCentralThermalPadObstacles({
       perimeterPadObstacles,

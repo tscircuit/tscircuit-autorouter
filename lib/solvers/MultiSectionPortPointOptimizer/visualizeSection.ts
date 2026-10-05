@@ -70,7 +70,6 @@ export function visualizeSection(
       const commonLayer = pointA.z
 
       let strokeDash: string
-
       if (sameLayer) {
         strokeDash = commonLayer === 0 ? "5 5" : "10 5"
       } else {

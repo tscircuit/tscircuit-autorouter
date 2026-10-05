@@ -22,10 +22,10 @@ if (
   ) ||
   !Number.isInteger(report.number_of_files) ||
   report.number_of_files < 1 ||
-  report.number_of_rules !== 24
+  report.number_of_rules !== 23
 ) {
   throw new Error(
-    "Expected complete Oxlint JSON for 24 rules with error diagnostics",
+    "Expected complete Oxlint JSON for 23 rules with error diagnostics",
   )
 }
 

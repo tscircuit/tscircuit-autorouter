@@ -25,7 +25,6 @@ export const getIssuesInSection = (
 
   const points: Map<SegmentPointId, { x: number; y: number; z: number }> =
     new Map(section.originalPointMap)
-
   for (const [segmentPointId, modPoint] of pointModifications.entries()) {
     const ogPoint = points.get(segmentPointId)!
     points.set(segmentPointId, {
@@ -37,7 +36,6 @@ export const getIssuesInSection = (
 
   for (const nodeId of section.allNodeIds) {
     const node = nodeMap.get(nodeId)
-
     if (!node) continue
 
     const nodeSegmentPairs = section.segmentPairsInNode.get(nodeId)!
@@ -46,7 +44,6 @@ export const getIssuesInSection = (
     for (const pair of nodeSegmentPairs) {
       const A = points.get(pair[0])!
       const B = points.get(pair[1])!
-
       if (A.z !== B.z) {
         issues.push({
           type: "transition_via",
@@ -82,7 +79,6 @@ export const getIssuesInSection = (
 
         const areCrossing = doSegmentsIntersect(A, B, C, D)
         const isSameLayer = A.z === B.z && C.z === D.z && A.z === C.z
-
         if (areCrossing) {
           if (isSameLayer) {
             const issue = {

@@ -51,7 +51,6 @@ export const areAllPortPointsOnNodeBoundary = (
   node: NodeWithPortPoints,
 ): boolean => {
   const bounds = getNodeBounds(node)
-
   return node.portPoints.every(
     (portPoint) =>
       classifyPointInBounds({ point: portPoint, bounds }) === "on-boundary",
@@ -70,9 +69,7 @@ const interpolateRoutePoint = (
   t: number,
 ): RoutePoint => {
   if (t <= POINT_EPSILON) return start
-
   if (t >= 1 - POINT_EPSILON) return end
-
   return {
     x: start.x + (end.x - start.x) * t,
     y: start.y + (end.y - start.y) * t,
@@ -97,7 +94,6 @@ const clipRouteSegmentToBounds = (
 
   let entryT = 0
   let exitT = 1
-
   const constraints: Array<[number, number]> = [
     [-dx, start.x - bounds.minX],
     [dx, bounds.maxX - start.x],
@@ -112,13 +108,11 @@ const clipRouteSegmentToBounds = (
     }
 
     const boundaryT = distanceToBoundary / direction
-
     if (direction < 0) {
       entryT = Math.max(entryT, boundaryT)
     } else {
       exitT = Math.min(exitT, boundaryT)
     }
-
     if (entryT > exitT + POINT_EPSILON) return null
   }
 
@@ -146,7 +140,6 @@ const getFixedRouteSlice = (
       route.route[segmentIndex + 1]!,
       bounds,
     )
-
     if (!clippedSegment) continue
 
     start ??= {
@@ -175,7 +168,6 @@ const createFallbackPortPair = (
   const portPointIdPrefix = `pipeline9_fallback:${sourceRoute.connectionName}`
   const startPortPointId = `${portPointIdPrefix}:start`
   const endPortPointId = `${portPointIdPrefix}:end`
-
   return [
     {
       ...section.start.point,
@@ -212,7 +204,6 @@ const fixedRouteSliceTouchesTargetLayer = (
   targetLayers: ReadonlySet<number>,
 ): boolean => {
   if (targetLayers.size === 0) return true
-
   const routePointsInsideNode = [
     slice.start.point,
     ...slice.sourceRoute.route.slice(
@@ -221,7 +212,6 @@ const fixedRouteSliceTouchesTargetLayer = (
     ),
     slice.end.point,
   ]
-
   return routePointsInsideNode.some((routePoint) =>
     targetLayers.has(routePoint.z),
   )
@@ -246,7 +236,6 @@ export const createRegionalFallbackProblem = (
     string,
     FixedRouteSection
   >()
-
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
@@ -270,7 +259,6 @@ export const createRegionalFallbackProblem = (
         a.sourceRoute.preloadedTraceIndex - b.sourceRoute.preloadedTraceIndex ||
         a.sourceRoute.preloadedRouteIndex - b.sourceRoute.preloadedRouteIndex,
     )
-
   const movableFixedRoutes = new Set(slices.map((slice) => slice.sourceRoute))
 
   const fixedObstacleRoutes = localSlices.flatMap((slice) =>
@@ -283,7 +271,6 @@ export const createRegionalFallbackProblem = (
     const slice = slices[sliceIndex]!
     const previousSlice = slices[sliceIndex - 1]
     const currentSection = sections.at(-1)
-
     if (
       previousSlice &&
       currentSection &&
@@ -293,7 +280,6 @@ export const createRegionalFallbackProblem = (
       currentSection.end = slice.end
       continue
     }
-
     sections.push({
       sourceRoutes: [slice.sourceRoute],
       start: slice.start,
@@ -308,13 +294,11 @@ export const createRegionalFallbackProblem = (
     // meaningful fallback port pair.
     if (pointsAreEqual(section.start.point, section.end.point)) continue
     const connectionName = section.sourceRoutes[0]!.connectionName
-
     if (fixedRouteSectionsByConnectionName.has(connectionName)) {
       throw new Error(
         `Pipeline9 regional fallback found duplicate fixed route section identity "${connectionName}"`,
       )
     }
-
     fixedRouteSectionsByConnectionName.set(connectionName, section)
     fallbackPortPairs.push(createFallbackPortPair(section))
   }
@@ -343,7 +327,6 @@ const orientReplacementPoints = (
   const points = replacement.route
   const first = points[0]
   const last = points.at(-1)
-
   if (!first || !last) {
     throw new Error(
       `Pipeline9 regional fallback produced an empty replacement for "${section.sourceRoutes[0]!.connectionName}"`,
@@ -355,7 +338,6 @@ const orientReplacementPoints = (
       first.x - section.start.point.x,
       first.y - section.start.point.y,
     ) + Math.hypot(last.x - section.end.point.x, last.y - section.end.point.y)
-
   const reverseDistance =
     Math.hypot(last.x - section.start.point.x, last.y - section.start.point.y) +
     Math.hypot(first.x - section.end.point.x, first.y - section.end.point.y)
@@ -367,11 +349,9 @@ const getViasFromRoutePoints = (
   points: RoutePoint[],
 ): Array<{ x: number; y: number }> => {
   const vias: Array<{ x: number; y: number }> = []
-
   for (let pointIndex = 0; pointIndex < points.length - 1; pointIndex++) {
     const start = points[pointIndex]!
     const end = points[pointIndex + 1]!
-
     if (
       start.z !== end.z &&
       Math.abs(start.x - end.x) <= POINT_EPSILON &&
@@ -380,7 +360,6 @@ const getViasFromRoutePoints = (
       vias.push({ x: end.x, y: end.y })
     }
   }
-
   return vias
 }
 
@@ -428,40 +407,32 @@ export const spliceFixedRouteSectionWithMutationMask = ({
     segmentIndex: number,
   ): boolean => {
     const mask = sourceMutationMasks.get(sourceRoute.connectionName)
-
     if (mask && mask.length !== sourceRoute.route.length - 1) {
       throw new Error(
         `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${mask.length} segments, expected ${sourceRoute.route.length - 1}`,
       )
     }
-
     return mask?.[segmentIndex] ?? false
   }
 
   const appendPoint = (point: RoutePoint, mutated: boolean): void => {
     const previousPoint = route.at(-1)
-
     if (!previousPoint) {
       route.push(point)
-
       return
     }
-
     if (pointsAreEqual(previousPoint, point)) return
-
     if (
       previousPoint.z !== point.z &&
       (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||
         Math.abs(previousPoint.y - point.y) > POINT_EPSILON)
     ) {
       const impliedTransitionPoint = { ...point, z: previousPoint.z }
-
       if (!pointsAreEqual(previousPoint, impliedTransitionPoint)) {
         route.push(impliedTransitionPoint)
         mutatedSegments.push(mutated)
       }
     }
-
     if (!pointsAreEqual(route.at(-1)!, point)) {
       route.push(point)
       mutatedSegments.push(mutated)
@@ -469,7 +440,6 @@ export const spliceFixedRouteSectionWithMutationMask = ({
   }
 
   appendPoint(firstSourceRoute.route[0]!, false)
-
   for (
     let pointIndex = 1;
     pointIndex <= section.start.segmentIndex;
@@ -480,22 +450,17 @@ export const spliceFixedRouteSectionWithMutationMask = ({
       getSourceSegmentMutation(firstSourceRoute, pointIndex - 1),
     )
   }
-
   appendPoint(
     section.start.point,
     getSourceSegmentMutation(firstSourceRoute, section.start.segmentIndex),
   )
   const segmentCountBeforeReplacement = mutatedSegments.length
-
   for (const replacementPoint of replacementPoints.slice(1, -1)) {
     appendPoint(replacementPoint, replacementIsMutated)
   }
-
   appendPoint(section.end.point, replacementIsMutated)
-
   const replacementProducedSegment =
     mutatedSegments.length > segmentCountBeforeReplacement
-
   for (
     let pointIndex = section.end.segmentIndex + 1;
     pointIndex < lastSourceRoute.route.length;

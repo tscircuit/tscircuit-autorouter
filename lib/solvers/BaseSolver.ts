@@ -32,10 +32,8 @@ export class BaseSolver {
   /** DO NOT OVERRIDE! Override _step() instead */
   step() {
     if (this.solved) return
-
     if (this.failed) return
     this.iterations++
-
     try {
       this._step()
     } catch (e) {
@@ -44,16 +42,13 @@ export class BaseSolver {
       this.failed = true
       throw e
     }
-
     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
       this.tryFinalAcceptance()
     }
-
     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
       this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
       this.failed = true
     }
-
     if ("computeProgress" in this) {
       // @ts-ignore
       this.progress = this.computeProgress() as number
@@ -68,11 +63,9 @@ export class BaseSolver {
 
   solve() {
     const startTime = Date.now()
-
     while (!this.solved && !this.failed) {
       this.step()
     }
-
     const endTime = Date.now()
     this.timeToSolve = endTime - startTime
   }

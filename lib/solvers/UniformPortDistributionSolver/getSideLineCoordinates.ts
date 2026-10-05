@@ -15,7 +15,6 @@ export const getSideLineCoordinates = ({
       y2: bounds.maxY,
     }
   }
-
   if (side === "bottom") {
     return {
       x1: bounds.minX,
@@ -24,7 +23,6 @@ export const getSideLineCoordinates = ({
       y2: bounds.minY,
     }
   }
-
   if (side === "left") {
     return {
       x1: bounds.minX,
@@ -33,6 +31,5 @@ export const getSideLineCoordinates = ({
       y2: bounds.maxY,
     }
   }
-
   return { x1: bounds.maxX, y1: bounds.minY, x2: bounds.maxX, y2: bounds.maxY }
 }

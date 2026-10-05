@@ -35,11 +35,9 @@ const SegmentOptimizerDebugger = ({
   const [isAnimating, setIsAnimating] = useState(false)
   const [fastAnimation, setFastAnimation] = useState(false)
   const [iterationCount, setIterationCount] = useState(0)
-
   const [iterationHistory, setIterationHistory] = useState<
     Array<{ iteration: number; probability: number; cost: number }>
   >([])
-
   const [selectedNodeIds, setSelectedNodeIds] = useState(new Set())
 
   // Initialize the point solver and optimizer
@@ -55,7 +53,6 @@ const SegmentOptimizerDebugger = ({
       colorMap,
       nodes,
     })
-
     pointSolver.solve()
 
     // Create the optimizer based on the point solver results
@@ -66,7 +63,6 @@ const SegmentOptimizerDebugger = ({
     })
 
     const initialProbabilityOfFailure = optimizer.probabilityOfFailure
-
     const initialNodeCosts = [...optimizer.currentNodeCosts.values()]
       .sort()
       .filter((k) => k > 0)
@@ -87,7 +83,6 @@ const SegmentOptimizerDebugger = ({
     if (isAnimating) {
       intervalId = setInterval(() => {
         const timeElapsed = Date.now() - startTime
-
         for (
           let i = 0;
           i <
@@ -101,7 +96,6 @@ const SegmentOptimizerDebugger = ({
             clearInterval(intervalId)
             break
           }
-
           optimizer.step()
         }
 
@@ -160,11 +154,9 @@ const SegmentOptimizerDebugger = ({
   // Node highlighting functionality
   const highlightVisualization = useMemo(() => {
     if (selectedNodeIds.size === 0) return { rects: [] }
-
     return {
       rects: Array.from(selectedNodeIds).map((nodeId) => {
         const node = optimizer.nodeMap.get(nodeId as string)!
-
         return {
           center: node.center,
           width: node.width,
@@ -180,13 +172,11 @@ const SegmentOptimizerDebugger = ({
   const toggleNodeSelection = (nodeId: string) => {
     setSelectedNodeIds((prev) => {
       const next = new Set(prev)
-
       if (next.has(nodeId)) {
         next.delete(nodeId)
       } else {
         next.add(nodeId)
       }
-
       return next
     })
   }

@@ -65,9 +65,7 @@ export class CachedPortfolioSingleIntraNodeSolver
         return
       }
     }
-
     super._step()
-
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       // Save to cache only if it wasn't a cache hit initially
       this.saveToCacheSync()
@@ -85,16 +83,12 @@ export class CachedPortfolioSingleIntraNodeSolver
     // 1. Normalize NodeWithPortPoints
     const node = this.nodeWithPortPoints
     const center = node.center
-
     const normalizedPortPoints = [...node.portPoints]
       .sort((a, b) => {
         if (a.connectionName !== b.connectionName)
           return a.connectionName.localeCompare(b.connectionName)
-
         if (a.x !== b.x) return a.x - b.x
-
         if (a.y !== b.y) return a.y - b.y
-
         return (a.z ?? 0) - (b.z ?? 0)
       })
       .map((pp) => {
@@ -128,7 +122,6 @@ export class CachedPortfolioSingleIntraNodeSolver
       const relevantConnMap = this.connMap?.getIdsConnectedToNet(
         portPoint.connectionName,
       )
-
       if (relevantConnMap) {
         normalizedRelevantConnMap.push(relevantConnMap)
       }
@@ -177,14 +170,12 @@ export class CachedPortfolioSingleIntraNodeSolver
       this.solved = false
       this.failed = true
     }
-
     this.cacheHit = true // Mark that we used a cached result
     this.progress = 1 // Mark as complete
   }
 
   attemptToUseCacheSync(): boolean {
     this.hasAttemptedToUseCache = true
-
     if (!this.cacheProvider?.isSyncCache) {
       // console.log("Cache provider is not synchronous, skipping sync cache check.")
       return false
@@ -195,14 +186,12 @@ export class CachedPortfolioSingleIntraNodeSolver
         this.computeCacheKeyAndTransform()
       } catch (error) {
         console.error("Error computing cache key:", error)
-
         return false // Cannot use cache if key generation fails
       }
     }
 
     if (!this.cacheKey) {
       console.error("Failed to compute cache key.")
-
       return false
     }
 
@@ -216,7 +205,6 @@ export class CachedPortfolioSingleIntraNodeSolver
         this.applyCachedSolution(
           cachedSolution as CachedSolvedPortfolioSingleIntraNode,
         )
-
         return true // Cache hit and applied
       } else {
         // console.log(`Cache miss for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
@@ -234,18 +222,14 @@ export class CachedPortfolioSingleIntraNodeSolver
       console.error(
         "Cannot save to cache without cache key. Trying to compute.",
       )
-
       try {
         this.computeCacheKeyAndTransform()
-
         if (!this.cacheKey) {
           console.error("Still failed to compute cache key. Cannot save.")
-
           return
         }
       } catch (error) {
         console.error("Error computing cache key during save:", error)
-
         return
       }
     }

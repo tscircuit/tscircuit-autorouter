@@ -55,7 +55,6 @@ interface CacheToUnravelSectionTransform {
   reverseSegmentIdMap: Map<NormalizedId, SegmentId>
   reverseSegmentPointIdMap: Map<NormalizedId, SegmentPointId>
 }
-
 type CachedSolvedUnravelSection =
   | {
       success: true
@@ -98,9 +97,7 @@ export class CachedUnravelSectionSolver
     if (!this.hasAttemptedToUseCache && this.cacheProvider) {
       if (this.attemptToUseCacheSync()) return
     }
-
     super._step()
-
     if ((this.solved || this.failed) && this.cacheProvider) {
       this.saveToCacheSync()
     }
@@ -112,7 +109,6 @@ export class CachedUnravelSectionSolver
   } {
     // 1. Calculate Transformation Matrix (currently just translation)
     const rootNode = this.nodeMap.get(this.rootNodeId)!
-
     const realToCacheTransform = translate(
       -rootNode.center.x,
       -rootNode.center.y,
@@ -145,11 +141,9 @@ export class CachedUnravelSectionSolver
         if (n1.center.x !== n2.center.x) {
           return n1.center.x - n2.center.x
         }
-
         return n1.center.y - n2.center.y
       },
     )
-
     for (const nodeId of sortedNodeIds) {
       const normId = `node_${nodeCounter++}`
       nodeIdMap.set(nodeId, normId)
@@ -163,19 +157,16 @@ export class CachedUnravelSectionSolver
           if (a.x !== b.x) {
             return a.x - b.x
           }
-
           return a.y - b.y
         })
         .map(([id]) => id),
     ].sort()
-
     for (const spId of sortedSegmentPointIds) {
       const normSpId = `sp_${spCounter++}`
       segmentPointIdMap.set(spId, normSpId)
       reverseSegmentPointIdMap.set(normSpId, spId)
 
       const segmentId = this.unravelSection.segmentPointMap.get(spId)!.segmentId
-
       if (!segmentIdMap.has(segmentId)) {
         const normSegId = `seg_${segmentCounter++}`
         segmentIdMap.set(segmentId, normSegId)
@@ -193,7 +184,6 @@ export class CachedUnravelSectionSolver
         center: { x: string; y: string } // Coordinates are approximated strings
       }
     > = {}
-
     for (const [nodeId, normNodeId] of nodeIdMap.entries()) {
       const node = this.nodeMap.get(nodeId)!
       const transformedCenter = applyToPoint(realToCacheTransform, node.center)
@@ -220,15 +210,12 @@ export class CachedUnravelSectionSolver
         // Add other relevant properties if needed
       }
     > = {}
-
     for (const [spId, normSpId] of segmentPointIdMap.entries()) {
       const sp = this.unravelSection.segmentPointMap.get(spId)!
-
       const transformedPoint = applyToPoint(realToCacheTransform, {
         x: sp.x,
         y: sp.y,
       })
-
       normalizedSegmentPoints[normSpId] = {
         x: approximateCoordinate(transformedPoint.x),
         y: approximateCoordinate(transformedPoint.y),
@@ -272,13 +259,10 @@ export class CachedUnravelSectionSolver
   applyCachedSolution(cachedSolution: CachedSolvedUnravelSection): void {
     if (cachedSolution.success === false) {
       this.failed = true
-
       return
     }
-
     if (!this.cacheToSolveSpaceTransform) {
       console.error("Cache transform not available to apply cached solution.")
-
       return
     }
 
@@ -299,7 +283,6 @@ export class CachedUnravelSectionSolver
       normDelta, // normDelta.dx and normDelta.dy are strings here
     ] of cachedSolution.bestCandidatePointModificationsDelta) {
       const originalSpId = reverseSegmentPointIdMap.get(normSpId)
-
       if (!originalSpId) {
         console.warn(
           `Could not find original ID for normalized SP ID: ${normSpId} when applying cache.`,
@@ -309,7 +292,6 @@ export class CachedUnravelSectionSolver
 
       const originalSegmentPoint =
         this.unravelSection.segmentPointMap.get(originalSpId)
-
       if (!originalSegmentPoint) {
         console.warn(
           `Could not find original segment point for ID: ${originalSpId} when applying cache.`,
@@ -322,7 +304,6 @@ export class CachedUnravelSectionSolver
 
       if (normDelta.dx !== undefined) {
         const dxNum = parseFloat(normDelta.dx)
-
         if (!Number.isNaN(dxNum)) {
           // Apply delta to the original coordinate (no translation offset needed here as delta is relative)
           modifiedPoint.x = originalSegmentPoint.x + dxNum
@@ -330,10 +311,8 @@ export class CachedUnravelSectionSolver
           console.warn(`Failed to parse cached dx coordinate: ${normDelta.dx}`)
         }
       }
-
       if (normDelta.dy !== undefined) {
         const dyNum = parseFloat(normDelta.dy)
-
         if (!Number.isNaN(dyNum)) {
           // Apply delta to the original coordinate
           modifiedPoint.y = originalSegmentPoint.y + dyNum
@@ -341,7 +320,6 @@ export class CachedUnravelSectionSolver
           console.warn(`Failed to parse cached dy coordinate: ${normDelta.dy}`)
         }
       }
-
       if (normDelta.dz !== undefined) {
         // Z delta is applied directly
         modifiedPoint.z = originalSegmentPoint.z + normDelta.dz
@@ -379,12 +357,10 @@ export class CachedUnravelSectionSolver
 
   attemptToUseCacheSync(): boolean {
     this.hasAttemptedToUseCache = true
-
     if (!this.cacheProvider?.isSyncCache) {
       console.log(
         "Cache provider is not synchronous, skipping sync cache check.",
       )
-
       return false
     }
 
@@ -394,7 +370,6 @@ export class CachedUnravelSectionSolver
 
     if (!this.cacheKey) {
       console.error("Failed to compute cache key.")
-
       return false
     }
 
@@ -405,7 +380,6 @@ export class CachedUnravelSectionSolver
 
       if (cachedSolution) {
         this.applyCachedSolution(cachedSolution as CachedSolvedUnravelSection)
-
         return true
       } else {
         // console.log(`Cache miss for UnravelSectionSolver: ${this.cacheKey}`)
@@ -422,12 +396,9 @@ export class CachedUnravelSectionSolver
       this.cacheProvider?.setCachedSolutionSync(this.cacheKey!, {
         success: false,
       })
-
       return
     }
-
     if (!this.bestCandidate) return
-
     const {
       // realToCacheTransform, // Not needed to calculate deltas
       segmentPointIdMap,
@@ -443,7 +414,6 @@ export class CachedUnravelSectionSolver
       modifiedPoint, // This contains the absolute modified coordinates {x?, y?, z?}
     ] of this.bestCandidate.pointModifications.entries()) {
       const normSpId = segmentPointIdMap.get(originalSpId)
-
       if (!normSpId) {
         console.warn(
           `Could not find normalized ID for original SP ID: ${originalSpId} when saving to cache.`,
@@ -453,7 +423,6 @@ export class CachedUnravelSectionSolver
 
       const originalSegmentPoint =
         this.unravelSection.segmentPointMap.get(originalSpId)
-
       if (!originalSegmentPoint) {
         console.warn(
           `Could not find original segment point for ID: ${originalSpId} when saving cache.`,
@@ -464,31 +433,25 @@ export class CachedUnravelSectionSolver
       // Calculate delta and approximate
       const normDelta: { dx?: string; dy?: string; dz?: number } = {}
       let hasDelta = false
-
       if (modifiedPoint.x !== undefined) {
         const dx = modifiedPoint.x - originalSegmentPoint.x
         // Only store delta if it's non-zero (within approximation tolerance)
         const approxDx = approximateDeltaCoordinate(dx)
-
         if (parseFloat(approxDx) !== 0) {
           normDelta.dx = approxDx
           hasDelta = true
         }
       }
-
       if (modifiedPoint.y !== undefined) {
         const dy = modifiedPoint.y - originalSegmentPoint.y
         const approxDy = approximateDeltaCoordinate(dy)
-
         if (parseFloat(approxDy) !== 0) {
           normDelta.dy = approxDy
           hasDelta = true
         }
       }
-
       if (modifiedPoint.z !== undefined) {
         const dz = modifiedPoint.z - originalSegmentPoint.z
-
         // Z doesn't need approximation, store if non-zero
         if (dz !== 0) {
           normDelta.dz = dz

@@ -11,9 +11,7 @@
 
 // Grid size constants (empirically measured with margin=0.5)
 const BASE_WIDTH = 2.45
-
 const ADDITIONAL_WIDTH_PER_COL = 2.95
-
 const HEIGHT_PER_ROW = 1.42
 
 /**
@@ -30,7 +28,6 @@ export function estimate0603GridDimensions(
   const width = BASE_WIDTH + (cols - 1) * ADDITIONAL_WIDTH_PER_COL
   // height = rows * heightPerRow
   const height = rows * HEIGHT_PER_ROW
-
   return { width, height }
 }
 

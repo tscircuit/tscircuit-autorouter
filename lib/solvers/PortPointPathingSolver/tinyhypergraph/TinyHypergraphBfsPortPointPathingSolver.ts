@@ -85,13 +85,11 @@ const getSerializedNetIdOrThrow = (
   connection: SerializedConnection,
 ): string => {
   const netId = connection.mutuallyConnectedNetworkId
-
   if (!netId) {
     throw new Error(
       `TinyHypergraphBfsPortPointPathingSolver requires a net ID for "${connection.connectionId}"`,
     )
   }
-
   return netId
 }
 
@@ -132,13 +130,11 @@ const normalizeParams = (
 ): NormalizedData => {
   if (isSerializedParams(params)) {
     const regionMap = new Map<string, NormalizedRegion>()
-
     for (const region of params.graph.regions) {
       regionMap.set(region.regionId, { ...region, ports: [] })
     }
 
     const ports = params.graph.ports.map((port) => ({ ...port }))
-
     for (const port of ports) {
       regionMap.get(port.region1Id)?.ports.push(port)
       regionMap.get(port.region2Id)?.ports.push(port)
@@ -164,7 +160,6 @@ const normalizeParams = (
   )
 
   const portMap = new Map<string, SerializedPort>()
-
   for (const region of regions) {
     for (const port of region.ports) {
       portMap.set(port.portId, port)
@@ -205,11 +200,9 @@ const createRuntimeParams = (
   }
 
   const graphPorts: any[] = []
-
   for (const port of normalized.ports) {
     const region1 = regionMap.get(port.region1Id)
     const region2 = regionMap.get(port.region2Id)
-
     if (!region1 || !region2) continue
 
     const runtimePort = {
@@ -221,7 +214,6 @@ const createRuntimeParams = (
         regions: [region1, region2],
       },
     }
-
     graphPorts.push(runtimePort)
     region1.ports.push(runtimePort)
     region2.ports.push(runtimePort)
@@ -286,11 +278,9 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
   override _step() {
     this.displayedRouteBfs = null
     const activeTinySolver = this.getActiveTinySolver()
-
     if (activeTinySolver) {
       const { activeRouteBfs, isNewConnectionStart } =
         this.getOrCreateActiveRouteBfs(activeTinySolver)
-
       if (activeRouteBfs && isNewConnectionStart) {
         this.runRouteBfsToCompletion(activeRouteBfs)
         this.displayedRouteBfs = activeRouteBfs
@@ -304,7 +294,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
           bfsApproved: activeRouteBfs.approved,
           bfsLastExpandedPortCount: activeRouteBfs.lastExpandedPortIds.length,
         }
-
         return
       }
     } else {
@@ -335,9 +324,7 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private findTinySolver(candidate: any): any | null {
     if (!candidate) return null
-
     if (this.isTinySolver(candidate)) return candidate
-
     return (
       this.findTinySolver(candidate.activeSubSolver) ??
       this.findTinySolver(candidate.sectionSolver) ??
@@ -349,7 +336,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private getActiveTinySolver(): any | null {
     const pipelineSolver = this.getPipelineSolver()
-
     return (
       this.findTinySolver(this.wrappedSolver.activeSubSolver) ??
       this.findTinySolver(pipelineSolver?.activeSubSolver) ??
@@ -365,13 +351,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     routeNetId: number,
   ) {
     const reservedNetIds = solver.problemSetup?.portEndpointNetIds?.[portId]
-
     if (!reservedNetIds) return false
-
     for (const netId of reservedNetIds) {
       if (netId !== routeNetId) return true
     }
-
     return false
   }
 
@@ -381,7 +364,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     routeNetId: number,
   ) {
     const reservedNetId = solver.problem.regionNetId[regionId]
-
     return reservedNetId !== -1 && reservedNetId !== routeNetId
   }
 
@@ -400,15 +382,12 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
           isNewConnectionStart: false,
         }
       }
-
       return { activeRouteBfs: null, isNewConnectionStart: false }
     }
 
     const nextRouteId = solver.state.unroutedRoutes[0]
-
     if (nextRouteId === undefined) {
       this.activeRouteBfs = null
-
       return { activeRouteBfs: null, isNewConnectionStart: false }
     }
 
@@ -427,31 +406,23 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const routeNetId = solver.problem.routeNet[nextRouteId]
     const routeMetadata = solver.problem.routeMetadata?.[nextRouteId]
     const connectionNetId = this.getRouteNetId(routeMetadata, nextRouteId)
-
     const blockedPortIds = this.getBlockedPortIdsForRoute(
       solver,
       connectionNetId,
     )
-
     if (blockedPortIds.has(startingPortId)) {
       this.failed = true
       this.error = `BFS failed for route ${nextRouteId}: start port ${startingPortId} is blocked by a solved route`
-
       return { activeRouteBfs: null, isNewConnectionStart: false }
     }
-
     const startingIncidentRegions =
       solver.topology.incidentPortRegion[startingPortId] ?? []
-
     const goalPortId = solver.problem.routeEndPort[nextRouteId]
-
     if (blockedPortIds.has(goalPortId)) {
       this.failed = true
       this.error = `BFS failed for route ${nextRouteId}: goal port ${goalPortId} is blocked by a solved route`
-
       return { activeRouteBfs: null, isNewConnectionStart: false }
     }
-
     const goalRegionIds = new Set<number>(
       (solver.topology.incidentPortRegion[goalPortId] ?? []).filter(
         (regionId: number) =>
@@ -466,7 +437,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const startingStates = startingIncidentRegions
       .filter((regionId: number) => {
         const reservedNetId = solver.problem.regionNetId[regionId]
-
         return reservedNetId === -1 || reservedNetId === routeNetId
       })
       .map(
@@ -480,7 +450,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     if (startingStates.length === 0) {
       this.failed = true
       this.error = `BFS failed for route ${nextRouteId}: start port ${startingPortId} has no available region`
-
       return { activeRouteBfs: null, isNewConnectionStart: false }
     }
 
@@ -530,12 +499,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private advanceRouteBfs(activeRouteBfs: ActiveTinyRouteBfs) {
     const current = activeRouteBfs.queue.shift()
-
     if (!current) {
       this.failed = true
       this.error = `BFS failed for ${activeRouteBfs.routeLabel}: ran out of candidate ports before reaching the goal side`
       this.logBfsFailure(activeRouteBfs, "empty_queue")
-
       return
     }
 
@@ -554,13 +521,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
     const { solver } = activeRouteBfs
     const routeNetId = solver.problem.routeNet[activeRouteBfs.routeId]
-
     const neighbors =
       solver.topology.regionIncidentPorts[current.nextRegionId] ?? []
-
     for (const neighborPortId of neighbors) {
       const assignedNetId = solver.state.portAssignment[neighborPortId]
-
       if (
         this.isPortReservedForDifferentNetForRoute(
           solver,
@@ -570,9 +534,7 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       ) {
         continue
       }
-
       if (neighborPortId === current.portId) continue
-
       if (activeRouteBfs.blockedPortIds.has(neighborPortId)) continue
 
       if (neighborPortId === activeRouteBfs.goalPortId) {
@@ -591,12 +553,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       ) {
         continue
       }
-
       if (solver.problem.portSectionMask[neighborPortId] === 0) continue
 
       const incidentRegions =
         solver.topology.incidentPortRegion[neighborPortId] ?? []
-
       const nextRegionId =
         incidentRegions[0] === current.nextRegionId
           ? incidentRegions[1]
@@ -614,7 +574,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       }
 
       const stateKey = `${neighborPortId}:${nextRegionId}`
-
       if (activeRouteBfs.seen.has(stateKey)) continue
       activeRouteBfs.seen.add(stateKey)
       activeRouteBfs.queue.push({
@@ -655,24 +614,20 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
   private reconstructPortPath(state: TinyRouteBfsState): number[] {
     const portIds: number[] = []
     let cursor: TinyRouteBfsState | null = state
-
     while (cursor) {
       portIds.unshift(cursor.portId)
       cursor = cursor.prev
     }
-
     return portIds
   }
 
   private getRegionCenter(solver: any, regionId: number) {
     const regionMetadata = solver.topology.regionMetadata?.[regionId]
-
     const originalRegion = regionMetadata?.capacityMeshNodeId
       ? this.originalRegionById.get(regionMetadata.capacityMeshNodeId)
       : null
 
     if (originalRegion?.d?.center) return originalRegion.d.center
-
     if (regionMetadata?.center) return regionMetadata.center
 
     if (regionMetadata?.bounds) {
@@ -687,14 +642,12 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private getPortPoint(solver: any, portId: number) {
     const portMetadata = solver.topology.portMetadata?.[portId]
-
     if (
       typeof portMetadata?.x === "number" &&
       typeof portMetadata?.y === "number"
     ) {
       return { x: portMetadata.x, y: portMetadata.y }
     }
-
     return null
   }
 
@@ -704,13 +657,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     opts: { fill: string; stroke: string; label: string },
   ) {
     const regionMetadata = solver.topology.regionMetadata?.[regionId]
-
     const originalRegion = regionMetadata?.capacityMeshNodeId
       ? this.originalRegionById.get(regionMetadata.capacityMeshNodeId)
       : null
-
     const center = this.getRegionCenter(solver, regionId)
-
     if (!center) return null
 
     return {
@@ -764,7 +714,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       portId++
     ) {
       const assignedNetId = solver.state.portAssignment[portId]
-
       if (
         !this.isPortReservedForDifferentNetForRoute(solver, portId, routeNet) &&
         (assignedNetId === -1 || assignedNetId === routeNet) &&
@@ -787,15 +736,12 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       const [portIdText, regionIdText] = key.split(":")
       const portId = Number(portIdText)
       const regionId = Number(regionIdText)
-
       if (Number.isFinite(portId)) reachablePortIds.add(portId)
-
       if (Number.isFinite(regionId)) reachableRegionIds.add(regionId)
     }
 
     if (activeRouteBfs.approved) {
       reachablePortIds.add(activeRouteBfs.goalPortId)
-
       for (const regionId of solver.topology.incidentPortRegion[
         activeRouteBfs.goalPortId
       ] ?? []) {
@@ -816,13 +762,11 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private getRouteNetId(routeMetadata: any, routeId: number): string {
     const netId = routeMetadata?.mutuallyConnectedNetworkId
-
     if (!netId) {
       throw new Error(
         `TinyHypergraphBfsPortPointPathingSolver route ${routeId} is missing a net ID`,
       )
     }
-
     return netId
   }
 
@@ -834,11 +778,9 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       for (const [routeId, fromPortId, toPortId] of segments ?? []) {
         const routeMetadata = solver.problem.routeMetadata?.[routeId]
         const segmentNetId = this.getRouteNetId(routeMetadata, routeId)
-
         if (segmentNetId === connectionNetId) {
           continue
         }
-
         blockedPortIds.add(fromPortId)
         blockedPortIds.add(toPortId)
       }
@@ -849,12 +791,10 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private getPortLabel(solver: any, portId: number, reachable: boolean) {
     const incidentRegions = solver.topology.incidentPortRegion?.[portId] ?? []
-
     const uniqueIncidentRegions = [
       ...new Set(
         incidentRegions.map((regionId: number) => {
           const metadata = solver.topology.regionMetadata?.[regionId]
-
           return metadata?.capacityMeshNodeId ?? regionId
         }),
       ),
@@ -879,17 +819,14 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const dx = end.x - start.x
     const dy = end.y - start.y
     const length = Math.hypot(dx, dy)
-
     if (length < 1e-9) return []
 
     const dashLength = 0.18
     const gapLength = 0.12
-
     const segmentCount = Math.max(
       1,
       Math.floor(length / (dashLength + gapLength)),
     )
-
     const lines: NonNullable<GraphicsObject["lines"]> = []
 
     for (let i = 0; i < segmentCount; i++) {
@@ -911,13 +848,11 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
   private visualizeActiveRouteBfs(): GraphicsObject {
     const activeRouteBfs = this.displayedRouteBfs
-
     if (!activeRouteBfs) {
       return { points: [], lines: [], rects: [], circles: [] }
     }
 
     const { solver } = activeRouteBfs
-
     const {
       candidateRegionIds,
       candidatePortIds,
@@ -935,19 +870,16 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
     for (const regionId of candidateRegionIds) {
       const reachable = reachableRegionIds.has(regionId)
-
       const rect = this.getRegionRect(solver, regionId, {
         fill: reachable ? "rgba(0, 102, 255, 0.14)" : "rgba(255, 59, 48, 0.12)",
         stroke: reachable ? "#0066ff" : "#ff3b30",
         label: `${reachable ? "reachable" : "unreachable"} region ${regionId}`,
       })
-
       if (rect) rects.push(rect)
     }
 
     for (const portId of candidatePortIds) {
       const point = this.getPortPoint(solver, portId)
-
       if (!point) continue
       const reachable = reachablePortIds.has(portId)
       points.push({
@@ -959,7 +891,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
 
     for (const portId of blockedPortIds) {
       const point = this.getPortPoint(solver, portId)
-
       if (!point) continue
       const reachable = reachablePortIds.has(portId)
       points.push({
@@ -970,12 +901,9 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     }
 
     const routeMetadata = solver.problem.routeMetadata?.[activeRouteBfs.routeId]
-
     const startTarget =
       routeMetadata?.simpleRouteConnection?.pointsToConnect?.[0]
-
     const endTarget = routeMetadata?.simpleRouteConnection?.pointsToConnect?.[1]
-
     if (startTarget && endTarget) {
       lines.push(
         ...this.createDottedLine(
@@ -1017,14 +945,12 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
       for (const [routeId, fromPortId, toPortId] of segments ?? []) {
         const fromPoint = this.getPortPoint(solver, fromPortId)
         const toPoint = this.getPortPoint(solver, toPortId)
-
         if (fromPoint && toPoint) {
           lines.push({
             points: [fromPoint, toPoint],
             strokeColor: "#ff2d96",
           })
         }
-
         if (fromPoint && !seenPoints.has(fromPortId)) {
           seenPoints.add(fromPortId)
           points.push({
@@ -1033,7 +959,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
             label: `solved port ${fromPortId}`,
           })
         }
-
         if (toPoint && !seenPoints.has(toPortId)) {
           seenPoints.add(toPortId)
           points.push({
@@ -1059,7 +984,6 @@ export class TinyHypergraphBfsPortPointPathingSolver extends BaseSolver {
     const solvedNode = this.getOutput().nodesWithPortPoints.find(
       (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
     )
-
     const originalRegion = this.originalRegionById.get(node.capacityMeshNodeId)
 
     if (!solvedNode || !originalRegion) {

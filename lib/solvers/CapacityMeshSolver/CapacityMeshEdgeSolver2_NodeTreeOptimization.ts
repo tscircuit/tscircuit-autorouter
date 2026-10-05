@@ -30,12 +30,10 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
     if (this.currentNodeIndex >= this.nodes.length) {
       this.handleTargetNodes()
       this.solved = true
-
       return
     }
 
     const A = this.nodes[this.currentNodeIndex]
-
     const maybeAdjNodes = this.nodeTree.getNodesInArea(
       A.center.x,
       A.center.y,
@@ -45,14 +43,11 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
 
     for (const B of maybeAdjNodes) {
       const areBordering = areNodesBordering(A, B)
-
       if (!areBordering) continue
-
       const strawNodesWithSameParent =
         A._strawNode &&
         B._strawNode &&
         A._strawParentCapacityMeshNodeId === B._strawParentCapacityMeshNodeId
-
       if (
         A.capacityMeshNodeId !== B.capacityMeshNodeId && // Don't connect a node to itself
         !strawNodesWithSameParent &&

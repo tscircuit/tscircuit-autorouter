@@ -20,7 +20,6 @@ import {
 } from "./gapFillVisualization"
 
 const EDGE_EPSILON: number = 1e-3
-
 const EDGE_SEARCH_MARGIN: number = 1e-3
 
 export class DetectEdgesNotConnectedToMesh extends BaseSolver {
@@ -44,7 +43,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       this.inputProblem.meshNodes.length,
       1,
     )
-
     this.meshIndex = new Flatbush(meshNodeCount)
 
     for (const meshNode of this.inputProblem.meshNodes) {
@@ -81,7 +79,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       this.lastCandidateMeshNodes = []
       this.lastMatchedMeshNode = null
       this.solved = true
-
       return
     }
 
@@ -90,7 +87,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
 
     const edgeIsVertical: boolean =
       Math.abs(currentEdge.start.x - currentEdge.end.x) <= EDGE_EPSILON
-
     const searchBounds: Bounds = edgeIsVertical
       ? {
           minX: currentEdge.start.x - EDGE_SEARCH_MARGIN,
@@ -104,7 +100,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           minY: currentEdge.start.y - EDGE_SEARCH_MARGIN,
           maxY: currentEdge.start.y + EDGE_SEARCH_MARGIN,
         }
-
     this.lastSearchBounds = searchBounds
 
     const candidateNodeIds: number[] = this.meshIndex.search(
@@ -113,7 +108,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       searchBounds.maxX,
       searchBounds.maxY,
     )
-
     this.lastCandidateMeshNodes = candidateNodeIds.map(
       (candidateNodeId: number): CapacityMeshNode =>
         this.inputProblem.meshNodes[candidateNodeId]!,
@@ -124,7 +118,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
     for (const candidateNodeId of candidateNodeIds) {
       const meshNode: CapacityMeshNode =
         this.inputProblem.meshNodes[candidateNodeId]!
-
       const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode)
 
       if (edgeIsVertical) {
@@ -205,7 +198,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
 
   override visualize(): GraphicsObject {
     const disconnectedEdges: EdgeSegmentWithObstacle[] = this.disconnectedEdges
-
     const allEdges: EdgeSegmentWithObstacle[] =
       this.allEdges.length > 0
         ? this.allEdges
@@ -213,11 +205,9 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
             ...disconnectedEdges,
             ...(this.currentEdge ? [this.currentEdge] : []),
           ]
-
     const currentEdgeColor = this.currentEdge
       ? getGapFillEdgeColor(this.currentEdge, 0.88)
       : "rgba(40,40,40,0.4)"
-
     const meshRects: Rect[] = this.inputProblem.meshNodes.map(
       (meshNode: CapacityMeshNode): Rect => ({
         ...createRectFromCapacityNode(meshNode, { rectMargin: 0.01 }),
@@ -229,7 +219,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           : "rgba(120,120,120,0.24)",
       }),
     )
-
     const searchBandRects: Rect[] =
       this.lastSearchBounds && this.currentEdge
         ? [
@@ -246,7 +235,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
             },
           ]
         : []
-
     const candidateMeshRects: Rect[] = this.lastCandidateMeshNodes.map(
       (meshNode: CapacityMeshNode): Rect => ({
         ...createRectFromCapacityNode(meshNode, { rectMargin: 0.018 }),
@@ -267,7 +255,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
         ].join("\n"),
       }),
     )
-
     const obstacleRects: Rect[] =
       this.inputProblem.unmarkedComponentObstacles.map(
         (obstacle): Rect => ({
@@ -279,7 +266,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
           label: obstacle.obstacleId ?? obstacle.componentId ?? "obstacle",
         }),
       )
-
     const disconnectedLines: Line[] = disconnectedEdges.map(
       (edge: EdgeSegmentWithObstacle): Line => ({
         points: [edge.start, edge.end],
@@ -293,7 +279,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
         ].join(" "),
       }),
     )
-
     const currentEdgeLines: Line[] = []
     const currentEdgePoints: Point[] = []
 
@@ -301,7 +286,6 @@ export class DetectEdgesNotConnectedToMesh extends BaseSolver {
       const currentEdgeMidpoint: Point = getGapFillEdgeMidpoint(
         this.currentEdge,
       )
-
       currentEdgeLines.push(
         {
           points: [this.currentEdge.start, this.currentEdge.end],

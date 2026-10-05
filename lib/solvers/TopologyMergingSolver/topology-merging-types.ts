@@ -2,7 +2,6 @@ import type { Bounds } from "@tscircuit/math-utils"
 import type { CapacityMeshNode } from "lib/types"
 
 export const TOPOLOGY_MERGING_EPSILON = 1e-5
-
 export const TOPOLOGY_PROVENANCE_EPSILON = TOPOLOGY_MERGING_EPSILON * 4
 
 export interface TopologyMergingNodeGroup {

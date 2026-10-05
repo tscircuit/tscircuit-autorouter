@@ -33,12 +33,10 @@ function getMinClearance(params: {
 
   // Project a segment centered on pos in the direction of dir with length keepoutRadius
   const halfLength = keepoutRadius / 4
-
   const segmentStart = {
     x: pos.x - dir.x * halfLength,
     y: pos.y - dir.y * halfLength,
   }
-
   const segmentEnd = {
     x: pos.x + dir.x * halfLength,
     y: pos.y + dir.y * halfLength,
@@ -51,10 +49,8 @@ function getMinClearance(params: {
       seg.start,
       seg.end,
     )
-
     minClearance = Math.min(minClearance, dist)
   }
-
   return minClearance
 }
 
@@ -80,13 +76,9 @@ function segmentsIntersect(
   }
 
   const eps = 0.0001
-
   if (Math.abs(d1) < eps && onSegment(b1, b2, a1)) return true
-
   if (Math.abs(d2) < eps && onSegment(b1, b2, a2)) return true
-
   if (Math.abs(d3) < eps && onSegment(a1, a2, b1)) return true
-
   if (Math.abs(d4) < eps && onSegment(a1, a2, b2)) return true
 
   return false
@@ -118,7 +110,6 @@ function isPathClear(
       return false
     }
   }
-
   return true
 }
 
@@ -149,7 +140,6 @@ export function computeDrawPositionFromCollisions(
     collidingSegments,
     keepoutRadius,
   } = input
-
   if (collidingSegments.length === 0) return null
 
   const epsilon = 0.0001
@@ -158,7 +148,6 @@ export function computeDrawPositionFromCollisions(
   const tdx = cursorPosition.x - lastCursorPosition.x
   const tdy = cursorPosition.y - lastCursorPosition.y
   const tLen = Math.sqrt(tdx * tdx + tdy * tdy)
-
   const traceDir =
     tLen > epsilon ? { x: tdx / tLen, y: tdy / tLen } : { x: 1, y: 0 }
 
@@ -172,7 +161,6 @@ export function computeDrawPositionFromCollisions(
     dir: traceDir,
     keepoutRadius,
   })
-
   if (cursorClearance >= keepoutRadius) {
     return null // No adjustment needed
   }
@@ -190,7 +178,6 @@ export function computeDrawPositionFromCollisions(
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
     }
-
     const clearancePlus = getMinClearance({
       pos: posPlus,
       segments: collidingSegments,
@@ -203,7 +190,6 @@ export function computeDrawPositionFromCollisions(
       x: cursorPosition.x - barrierDir.x * d,
       y: cursorPosition.y - barrierDir.y * d,
     }
-
     const clearanceMinus = getMinClearance({
       pos: posMinus,
       segments: collidingSegments,
@@ -216,7 +202,6 @@ export function computeDrawPositionFromCollisions(
     const validPlus =
       clearancePlus >= keepoutRadius &&
       isPathClear(cursorPosition, posPlus, collidingSegments)
-
     const validMinus =
       clearanceMinus >= keepoutRadius &&
       isPathClear(cursorPosition, posMinus, collidingSegments)
@@ -224,9 +209,7 @@ export function computeDrawPositionFromCollisions(
     if (validPlus && validMinus) {
       return clearancePlus >= clearanceMinus ? posPlus : posMinus
     }
-
     if (validPlus) return posPlus
-
     if (validMinus) return posMinus
   }
 
@@ -247,22 +230,18 @@ export function computeDrawPositionFromCollisions(
     pathClear: boolean
     index: number
   }> = []
-
   for (let i = -searchSteps; i <= searchSteps; i++) {
     const d = (i / searchSteps) * searchRange
-
     const testPos = {
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
     }
-
     const clearance = getMinClearance({
       pos: testPos,
       segments: collidingSegments,
       dir: traceDir,
       keepoutRadius,
     })
-
     const pathClear = isPathClear(cursorPosition, testPos, collidingSegments)
     samples.push({
       pos: testPos,
@@ -278,14 +257,12 @@ export function computeDrawPositionFromCollisions(
 
   // Find center index in all samples array
   const centerIdx = samples.findIndex((s) => s.index === 0)
-
   const actualCenterIdx =
     centerIdx >= 0 ? centerIdx : Math.floor(samples.length / 2)
 
   // Search ALL samples to find local maxima in both directions
   // This ensures we find gaps even if path to them crosses segments
   let posMax: (typeof samples)[0] | null = null
-
   for (let i = actualCenterIdx + 1; i < samples.length - 1; i++) {
     const prev = samples[i - 1]!
     const curr = samples[i]!
@@ -298,7 +275,6 @@ export function computeDrawPositionFromCollisions(
   }
 
   let negMax: (typeof samples)[0] | null = null
-
   for (let i = actualCenterIdx - 1; i > 0; i--) {
     const prev = samples[i - 1]!
     const curr = samples[i]!
@@ -316,7 +292,6 @@ export function computeDrawPositionFromCollisions(
 
   if (reachableSamples.length > 0) {
     const reachableCenterIdx = reachableSamples.findIndex((s) => s.index === 0)
-
     const actualReachableCenterIdx =
       reachableCenterIdx >= 0
         ? reachableCenterIdx
@@ -330,7 +305,6 @@ export function computeDrawPositionFromCollisions(
       const prev = reachableSamples[i - 1]!
       const curr = reachableSamples[i]!
       const next = reachableSamples[i + 1]!
-
       if (
         curr.clearance >= prev.clearance &&
         curr.clearance >= next.clearance
@@ -344,7 +318,6 @@ export function computeDrawPositionFromCollisions(
       const prev = reachableSamples[i - 1]!
       const curr = reachableSamples[i]!
       const next = reachableSamples[i + 1]!
-
       if (
         curr.clearance >= prev.clearance &&
         curr.clearance >= next.clearance
@@ -369,33 +342,26 @@ export function computeDrawPositionFromCollisions(
 
   // Remove duplicates (same position might be found multiple times)
   const seen = new Set<string>()
-
   const candidates = allMaxima.filter((c) => {
     const key = `${c.pos.x.toFixed(6)},${c.pos.y.toFixed(6)}`
-
     if (seen.has(key)) return false
     seen.add(key)
-
     return true
   })
 
   if (candidates.length === 0) {
     // No local maxima found - fall back to sample with best clearance
     let bestSample = samples[0]
-
     if (!bestSample) return null
-
     for (const s of samples) {
       if (s.clearance > bestSample.clearance) {
         bestSample = s
       }
     }
-
     const movedDist = Math.sqrt(
       (bestSample.pos.x - cursorPosition.x) ** 2 +
         (bestSample.pos.y - cursorPosition.y) ** 2,
     )
-
     return movedDist > epsilon ? bestSample.pos : null
   }
 
@@ -407,11 +373,9 @@ export function computeDrawPositionFromCollisions(
   const cursorTrapped = cursorClearance < keepoutRadius * 0.15
 
   let bestMax: (typeof candidates)[0]
-
   if (cursorTrapped) {
     // Trapped - pick best clearance regardless of reachability
     bestMax = candidates[0]!
-
     for (const c of candidates) {
       if (c.clearance > bestMax.clearance) {
         bestMax = c
@@ -420,12 +384,10 @@ export function computeDrawPositionFromCollisions(
   } else {
     // In a gap - prefer reachable candidates
     const reachableCandidates = candidates.filter((c) => c.pathClear)
-
     const candidatesToChooseFrom =
       reachableCandidates.length > 0 ? reachableCandidates : candidates
 
     bestMax = candidatesToChooseFrom[0]!
-
     for (const c of candidatesToChooseFrom) {
       if (c.clearance > bestMax.clearance) {
         bestMax = c
@@ -437,10 +399,8 @@ export function computeDrawPositionFromCollisions(
     (bestMax.pos.x - cursorPosition.x) ** 2 +
       (bestMax.pos.y - cursorPosition.y) ** 2,
   )
-
   return movedDist > epsilon ? bestMax.pos : null
 }
-
 /**
  * Converts an obstacle (rectangular) to its 4 edge segments
  */
@@ -508,12 +468,10 @@ export function routeToOutlineSegments(
   traceWidth: number = 0.1,
 ): Segment[] {
   const segments: Segment[] = []
-
   for (let i = 0; i < route.length - 1; i++) {
     segments.push(
       ...traceSegmentToOutlineSegments(route[i]!, route[i + 1]!, traceWidth),
     )
   }
-
   return segments
 }

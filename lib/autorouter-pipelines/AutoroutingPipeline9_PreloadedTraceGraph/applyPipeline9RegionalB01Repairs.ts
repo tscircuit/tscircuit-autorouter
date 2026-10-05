@@ -58,13 +58,9 @@ type FixedRouteCopperSpatialIndex = {
 }
 
 const REGION_SIZES = [3, 4, 5, 6, 8]
-
 const FIXED_ROUTE_INDEX_CELL_SIZE = 4
-
 const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
-
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
-
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
 
 export { getPipeline9FixedRouteObstacles }
@@ -75,11 +71,9 @@ export const getPipeline9RegionalRepairSearchBudget = (
   if (!Number.isInteger(routeCount) || routeCount < 0) {
     throw new Error("Pipeline9 regional repair route count must be nonnegative")
   }
-
   const scaledBudget = Math.floor(
     REGIONAL_REPAIR_SEARCH_VOLUME / Math.max(1, routeCount),
   )
-
   return Math.max(
     MIN_REGIONAL_REPAIR_SEARCH_BUDGET,
     Math.min(MAX_REGIONAL_REPAIR_SEARCH_BUDGET, scaledBudget),
@@ -88,7 +82,6 @@ export const getPipeline9RegionalRepairSearchBudget = (
 
 const getErrorCenter = (error: Pipeline9DrcError) => {
   const center = error.center
-
   return center &&
     typeof center === "object" &&
     "x" in center &&
@@ -108,17 +101,14 @@ const getRepairCenter = (error: Pipeline9DrcError, srj: SimpleRouteJson) => {
             /(pcb_(?:smtpad|plated_hole|hole|keepout)_\d+)$/,
           )?.[1]
         : undefined
-
   if (obstacleId) {
     const obstacle = srj.obstacles.find(
       (candidate) =>
         candidate.obstacleId === obstacleId ||
         candidate.connectedTo[0] === obstacleId,
     )
-
     if (obstacle) return obstacle.center
   }
-
   return getErrorCenter(error)
 }
 
@@ -131,7 +121,6 @@ export const getPipeline9RegionalRepairTraceIds = ({
 }): string[] => {
   const primaryTraceId =
     typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
-
   const viaIds = [
     ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
     ...(Array.isArray(error.pcb_via_ids)
@@ -140,16 +129,13 @@ export const getPipeline9RegionalRepairTraceIds = ({
         )
       : []),
   ]
-
   const pairPrefix = primaryTraceId ? `overlap_${primaryTraceId}_` : undefined
-
   const encodedOtherTraceId =
     pairPrefix &&
     typeof error.pcb_trace_error_id === "string" &&
     error.pcb_trace_error_id.startsWith(pairPrefix)
       ? error.pcb_trace_error_id.slice(pairPrefix.length)
       : undefined
-
   const encodedIdentityIsVia =
     encodedOtherTraceId !== undefined && viaIds.includes(encodedOtherTraceId)
 
@@ -179,7 +165,6 @@ const isMovableTracePairError = (
   ) {
     return false
   }
-
   return (
     getPipeline9RegionalRepairTraceIds({ error, routeIndexByTraceId })
       .length === 2
@@ -199,21 +184,18 @@ export const asRegionalRoutes = (
   connMap: ConnectivityMap,
 ): PreloadedHighDensityRoute[] => {
   const counts = new Map<string, number>()
-
   for (const route of routes) {
     counts.set(
       route.connectionName,
       (counts.get(route.connectionName) ?? 0) + 1,
     )
   }
-
   return routes.map((route, routeIndex) => {
     // Separate pieces of one connection still need distinct splice identities.
     const connectionName =
       counts.get(route.connectionName)! > 1
         ? `${route.connectionName}_regional_${routeIndex}`
         : route.connectionName
-
     if (connectionName !== route.connectionName) {
       connMap.addConnections([
         [
@@ -223,7 +205,6 @@ export const asRegionalRoutes = (
         ],
       ])
     }
-
     return {
       ...route,
       connectionName,
@@ -271,7 +252,6 @@ const routeCopperOverlapsBounds = (
   opts: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
 ): boolean => {
   const geometry = getPipeline9RouteCopperGeometry(route, opts)
-
   return (
     geometry.wireSegments.some((segment) =>
       boundsOverlap(wireSegmentBounds(segment), bounds),
@@ -285,13 +265,11 @@ const createFixedRouteCopperSpatialIndex = (
   srj: SimpleRouteJson,
 ): FixedRouteCopperSpatialIndex => {
   const routeIndexesByCell = new Map<string, Set<number>>()
-
   const addBounds = (routeIndex: number, bounds: Bounds): void => {
     const minCellX = Math.floor(bounds.minX / FIXED_ROUTE_INDEX_CELL_SIZE)
     const maxCellX = Math.floor(bounds.maxX / FIXED_ROUTE_INDEX_CELL_SIZE)
     const minCellY = Math.floor(bounds.minY / FIXED_ROUTE_INDEX_CELL_SIZE)
     const maxCellY = Math.floor(bounds.maxY / FIXED_ROUTE_INDEX_CELL_SIZE)
-
     for (let cellX = minCellX; cellX <= maxCellX; cellX++) {
       for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
         const cellKey = `${cellX}:${cellY}`
@@ -304,7 +282,6 @@ const createFixedRouteCopperSpatialIndex = (
 
   for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
     const geometry = getPipeline9RouteCopperGeometry(routes[routeIndex]!, srj)
-
     for (const wireSegment of geometry.wireSegments) {
       for (const rect of getPipeline9AxisAlignedWireApproximations(
         wireSegment,
@@ -314,7 +291,6 @@ const createFixedRouteCopperSpatialIndex = (
         addBounds(routeIndex, rectBounds(rect))
       }
     }
-
     for (const viaSpan of geometry.viaSpans) {
       addBounds(routeIndex, viaSpanBounds(viaSpan))
     }
@@ -327,7 +303,6 @@ const createFixedRouteCopperSpatialIndex = (
       const maxCellX = Math.floor(bounds.maxX / FIXED_ROUTE_INDEX_CELL_SIZE)
       const minCellY = Math.floor(bounds.minY / FIXED_ROUTE_INDEX_CELL_SIZE)
       const maxCellY = Math.floor(bounds.maxY / FIXED_ROUTE_INDEX_CELL_SIZE)
-
       for (let cellX = minCellX; cellX <= maxCellX; cellX++) {
         for (let cellY = minCellY; cellY <= maxCellY; cellY++) {
           for (const routeIndex of routeIndexesByCell.get(
@@ -337,7 +312,6 @@ const createFixedRouteCopperSpatialIndex = (
           }
         }
       }
-
       return [...routeIndexes]
         .sort((left, right) => left - right)
         .map((routeIndex) => routes[routeIndex]!)
@@ -366,7 +340,6 @@ const candidateConflictsWithFixedRoutes = ({
       if (arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, connMap)) {
         continue
       }
-
       if (
         doPipeline9RoutesHaveCopperConflict({
           left: candidateRoute,
@@ -381,7 +354,6 @@ const candidateConflictsWithFixedRoutes = ({
       }
     }
   }
-
   return false
 }
 
@@ -419,9 +391,7 @@ const getRegionalCandidate = ({
   | undefined => {
   const regionalRoutes = asRegionalRoutes(routes, connMap)
   const movableRoute = regionalRoutes[routeIndex]
-
   if (!movableRoute) return undefined
-
   const node = {
     capacityMeshNodeId: `pipeline9_joint_drc_${routeIndex}_${regionSize}`,
     center,
@@ -431,19 +401,15 @@ const getRegionalCandidate = ({
     portPoints: [],
     portPointsInPairs: [],
   }
-
   const movableProblem = createRegionalFallbackProblem(node, [movableRoute])
-
   const movableSection = movableProblem.fixedRouteSectionsByConnectionName.get(
     movableRoute.connectionName,
   )
-
   if (!movableSection) return undefined
 
   const fixedRoutes = regionalRoutes.filter(
     (_, candidateRouteIndex) => candidateRouteIndex !== routeIndex,
   )
-
   const solver = new Pipeline9HighDensitySolver({
     nodePortPoints: [movableProblem.nodeWithPortPoints],
     fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes].map((route) => ({
@@ -469,15 +435,11 @@ const getRegionalCandidate = ({
     enableRegionalFallback: false,
     maxB01Rips: 120,
   })
-
   solver.solve()
-
   if (!solver.solved || solver.failed) return undefined
-
   const replacement = solver.routes.find(
     (route) => route.connectionName === movableRoute.connectionName,
   )
-
   if (!replacement) return undefined
 
   return {
@@ -519,7 +481,6 @@ const getRegularRegionalCandidate = ({
   effort: number
 }): HighDensityRoute[] | undefined => {
   const regionalRoutes = asRegionalRoutes(routes, connMap)
-
   const node = {
     capacityMeshNodeId: "pipeline9_joint_drc_regular_fallback",
     center,
@@ -529,26 +490,20 @@ const getRegularRegionalCandidate = ({
     portPoints: [],
     portPointsInPairs: [],
   }
-
   const problem = createRegionalFallbackProblem(node, regionalRoutes)
-
   if (problem.fixedRouteSectionsByConnectionName.size === 0) return undefined
-
   // A-series solvers require perimeter terminals. A fixed route contained by
   // this DRC window creates interior splice anchors, so leave that candidate
   // to the later repair stages instead of passing an invalid node to A01/A03.
   if (!areAllPortPointsOnNodeBoundary(problem.nodeWithPortPoints)) {
     return undefined
   }
-
   const regionalSourceRoutes = [
     ...problem.fixedRouteSectionsByConnectionName.values(),
   ].flatMap((section) => section.sourceRoutes)
-
   const maxRegionalCopperRadius = regionalSourceRoutes.reduce(
     (maxRadius, route) => {
       const geometry = getPipeline9RouteCopperGeometry(route, srj)
-
       return Math.max(
         maxRadius,
         route.viaDiameter / 2,
@@ -558,23 +513,19 @@ const getRegularRegionalCandidate = ({
     },
     Math.max(traceWidth / 2, viaDiameter / 2),
   )
-
   const candidateBounds: Bounds = {
     minX: center.x - regionSize / 2 - obstacleMargin - maxRegionalCopperRadius,
     maxX: center.x + regionSize / 2 + obstacleMargin + maxRegionalCopperRadius,
     minY: center.y - regionSize / 2 - obstacleMargin - maxRegionalCopperRadius,
     maxY: center.y + regionSize / 2 + obstacleMargin + maxRegionalCopperRadius,
   }
-
   const localFixedObstacleRoutes =
     fixedRouteCopperSpatialIndex.getRoutesOverlappingBounds(candidateBounds)
-
   const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
     fixedObstacleRoutes: localFixedObstacleRoutes,
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
-
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
     colorMap,
@@ -587,39 +538,30 @@ const getRegularRegionalCandidate = ({
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
-
   solver.solve()
-
   if (!solver.solved || solver.failed) return undefined
   const solverOutput = solver.getOutput()
-
   const replacementByConnectionName = new Map(
     solverOutput.map((route) => [route.connectionName, route]),
   )
-
   const replacedRouteByOriginalIndex = new Map<number, HighDensityRoute>()
   const removedOriginalIndexes = new Set<number>()
-
   for (const [
     connectionName,
     section,
   ] of problem.fixedRouteSectionsByConnectionName) {
     const replacement = replacementByConnectionName.get(connectionName)
-
     if (!replacement) return undefined
     replacedRouteByOriginalIndex.set(
       section.sourceRoutes[0]!.preloadedTraceIndex,
       spliceFixedRouteSection(section, replacement),
     )
-
     for (const sourceRoute of section.sourceRoutes.slice(1)) {
       removedOriginalIndexes.add(sourceRoute.preloadedTraceIndex)
     }
   }
-
   const candidateRoutes = regionalRoutes.flatMap((route, routeIndex) => {
     if (removedOriginalIndexes.has(routeIndex)) return []
-
     return [
       {
         ...(replacedRouteByOriginalIndex.get(routeIndex) ?? route),
@@ -627,7 +569,6 @@ const getRegularRegionalCandidate = ({
       },
     ]
   })
-
   if (
     candidateConflictsWithFixedRoutes({
       candidateRoutes,
@@ -640,7 +581,6 @@ const getRegularRegionalCandidate = ({
   ) {
     return undefined
   }
-
   return candidateRoutes
 }
 
@@ -687,42 +627,34 @@ export const applyPipeline9RegionalB01Repairs = ({
   effort: number
 }): RegionalB01RepairResult => {
   let currentRoutes = routes
-
   let currentErrors =
     initialErrors ?? getPipeline9DrcErrors(drcEvaluator, currentRoutes)
-
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
   let candidateSearchCount = 0
   let candidateSearchBudgetExhausted = false
-
   const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
     routes.length,
   )
-
   const isPreloadRepairError = (error: Pipeline9DrcError): boolean => {
     return isPipeline9DrcErrorOwnedByPreloadRepair({
       error,
       preloadRepairTraceIds,
     })
   }
-
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-
   const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
     routes: currentRoutes,
     newConnections,
     syntheticConnectionNames,
   })
-
   const hasMovableTracePair =
     allowTracePairRepair &&
     currentErrors.some((error) =>
       isMovableTracePairError(error, initialRouteIndexByTraceId),
     )
-
   if (preloadEligibleDrcIssueCount === 0 && !hasMovableTracePair) {
     return {
       routes: currentRoutes,
@@ -738,7 +670,6 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairAttempted: false,
     }
   }
-
   const fixedRouteCopperSpatialIndex = createFixedRouteCopperSpatialIndex(
     fixedObstacleRoutes,
     srj,
@@ -747,13 +678,11 @@ export const applyPipeline9RegionalB01Repairs = ({
   for (let pass = 0; pass < 2; pass++) {
     if (candidateSearchBudgetExhausted) break
     let acceptedOnPass = false
-
     const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
       newConnections,
       syntheticConnectionNames,
     })
-
     const repairableErrors = currentErrors.filter(
       (error) =>
         (error.type === "pcb_trace_error" ||
@@ -762,34 +691,26 @@ export const applyPipeline9RegionalB01Repairs = ({
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )
-
     for (const error of repairableErrors) {
       if (candidateSearchBudgetExhausted) break
       const center = getRepairCenter(error, srj)
-
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
         routeIndexByTraceId,
       })
-
       if (!center) continue
       let bestRoutes = currentRoutes
       let bestErrors = currentErrors
-
       for (const traceId of traceIds.slice(0, 2)) {
         if (candidateSearchBudgetExhausted) break
         const routeIndex = routeIndexByTraceId.get(traceId)
-
         if (routeIndex === undefined) continue
-
         for (const regionSize of REGION_SIZES) {
           if (candidateSearchCount >= candidateSearchBudget) {
             candidateSearchBudgetExhausted = true
             break
           }
-
           candidateSearchCount++
-
           const candidate = getRegionalCandidate({
             routes: currentRoutes,
             fixedObstacleRoutes,
@@ -804,28 +725,21 @@ export const applyPipeline9RegionalB01Repairs = ({
             obstacleMargin,
             effort,
           })
-
           if (!candidate) continue
           attemptedCandidateCount++
-
           if (candidate.usedFallback) fallbackCandidateCount++
-
           const candidateErrors = getPipeline9DrcErrors(
             drcEvaluator,
             candidate.routes,
           )
-
           if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
             bestRoutes = candidate.routes
             bestErrors = candidateErrors
           }
-
           if (bestErrors.length === 0) break
         }
-
         if (bestErrors.length === 0) break
       }
-
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
         if (candidateSearchCount >= candidateSearchBudget) {
           candidateSearchBudgetExhausted = true
@@ -833,7 +747,6 @@ export const applyPipeline9RegionalB01Repairs = ({
           candidateSearchCount++
         }
       }
-
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
         const fallbackRoutes = getRegularRegionalCandidate({
           routes: currentRoutes,
@@ -848,33 +761,27 @@ export const applyPipeline9RegionalB01Repairs = ({
           obstacleMargin,
           effort,
         })
-
         if (fallbackRoutes) {
           attemptedCandidateCount++
           fallbackCandidateCount++
-
           const fallbackErrors = getPipeline9DrcErrors(
             drcEvaluator,
             fallbackRoutes,
           )
-
           if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
             bestRoutes = fallbackRoutes
             bestErrors = fallbackErrors
           }
         }
       }
-
       if (bestRoutes !== currentRoutes) {
         currentRoutes = bestRoutes
         currentErrors = bestErrors
         acceptedCandidateCount++
         acceptedOnPass = true
       }
-
       if (candidateSearchBudgetExhausted) break
     }
-
     if (!acceptedOnPass || currentErrors.length === 0) break
   }
 
@@ -888,10 +795,8 @@ export const applyPipeline9RegionalB01Repairs = ({
       1,
       connMap,
     )
-
     if (refinedRoutes !== currentRoutes) {
       const refinedErrors = getPipeline9DrcErrors(drcEvaluator, refinedRoutes)
-
       if (
         getViaIssueCount(refinedErrors) <= getViaIssueCount(currentErrors) &&
         isPipeline9DrcCandidateBetter(refinedErrors, currentErrors)
@@ -907,10 +812,8 @@ export const applyPipeline9RegionalB01Repairs = ({
       error.type === "pcb_trace_error" ||
       error.type === "pcb_pad_trace_clearance_error",
   )
-
   const safeTraceLayerRepairSkippedForBudget =
     hasSafeLayerRepairableError && candidateSearchBudgetExhausted
-
   if (hasSafeLayerRepairableError && !candidateSearchBudgetExhausted) {
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
@@ -925,18 +828,14 @@ export const applyPipeline9RegionalB01Repairs = ({
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: false,
     })
-
     safeTraceLayerSolver.solve()
-
     if (safeTraceLayerSolver.failed) {
       throw new Error(
         `Pipeline9 post-regional safe trace-layer repair failed: ${safeTraceLayerSolver.error ?? "unknown error"}`,
       )
     }
-
     const safeLayerRoutes = safeTraceLayerSolver.getOutput()
     const safeLayerErrors = getPipeline9DrcErrors(drcEvaluator, safeLayerRoutes)
-
     if (isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) {
       currentRoutes = safeLayerRoutes
       currentErrors = safeLayerErrors

@@ -37,17 +37,14 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
   computeH(candidate: any) {
     const { minGaps } = candidate
     let collisionScore = 0
-
     for (const gap of minGaps) {
       if (gap < 0) {
         collisionScore += this.obstacleMargin
       }
-
       if (gap < this.obstacleMargin) {
         collisionScore += this.obstacleMargin - gap
       }
     }
-
     return collisionScore * 0.011 // 100 iterations @ hdpolyline09_optimized
   }
 
@@ -55,27 +52,21 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     if (this.phase === "setup") {
       this.setupInitialPolyLines()
       this.phase = "solving"
-
       return
     }
 
     const currentCandidate = this.candidates.shift()
-
     if (!currentCandidate) {
       this.tryFinalAcceptance()
-
       if (this.solved) return
       this.failed = true
-
       return
     }
-
     this.lastCandidate = currentCandidate
 
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
       this._setSolvedRoutes()
-
       return
     }
 
@@ -85,15 +76,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // First run we just do a single step to get the force applied for h
     // computation
     const stepsToRun = currentCandidate.magForceApplied === undefined ? 1 : 10
-
     for (let step = 0; step < stepsToRun; step++) {
       const result = this.applyForcesToPolyLines(currentCandidate.polyLines)
       magForceApplied += result.magForceApplied
       lastStepMoved = result.lastStepMoved
-
       if (!result.lastStepMoved) break
     }
-
     currentCandidate.magForceApplied = magForceApplied
 
     currentCandidate.minGaps = this.computeMinGapBtwPolyLines(
@@ -103,7 +91,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     if (this.checkIfSolved(currentCandidate)) {
       this.solved = true
       this._setSolvedRoutes()
-
       return
     }
 
@@ -183,15 +170,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       const dx = ep.x - cp.x
       const dy = ep.y - cp.y
       const dSq = dx * dx + dy * dy
-
       if (dSq <= EPSILON) return
       const dist = Math.sqrt(dSq)
-
       const mag =
         SEGMENT_FORCE_MULTIPLIER *
         FORCE_MAGNITUDE *
         Math.exp(-FORCE_DECAY_RATE * dist)
-
       const fx = (dx / dist) * mag
       const fy = (dy / dist) * mag
 
@@ -205,7 +189,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Points move only after all forces have been accumulated.
     const geometry = polyLines.map((polyLine): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-
       const segments = points.slice(0, -1).map(
         (point, index): ForceSegment => ({
           p1: point,
@@ -215,13 +198,11 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           p2Idx: index + 1,
         }),
       )
-
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2
           ? []
           : [{ point, layers: [point.z1, point.z2], index }],
       )
-
       return { segments, vias }
     })
 
@@ -255,7 +236,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                 seg2.p1,
                 seg2.p2,
               )
-
               const dx = via1.point.x - closestPointOnSeg.x
               const dy = via1.point.y - closestPointOnSeg.y
               const dSq = dx * dx + dy * dy
@@ -284,7 +264,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_j_on_i = (dx / dist) * forceMag // Direction is still based on center-to-point vector
                 const fy_j_on_i = (dy / dist) * forceMag
 
@@ -298,7 +277,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
             }
           }
         }
-
         for (const via2 of vias2) {
           for (const seg1 of segments1) {
             if (via2.layers.includes(seg1.layer)) {
@@ -307,7 +285,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                 seg1.p1,
                 seg1.p2,
               )
-
               const dx = via2.point.x - closestPointOnSeg.x
               const dy = via2.point.y - closestPointOnSeg.y
               const dSq = dx * dx + dy * dy
@@ -336,7 +313,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_i_on_j = (dx / dist) * forceMag // Direction is still based on center-to-point vector
                 const fy_i_on_j = (dy / dist) * forceMag
 
@@ -357,7 +333,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
             const commonLayers = via1.layers.filter((z) =>
               via2.layers.includes(z),
             )
-
             if (commonLayers.length > 0) {
               const dx = via1.point.x - via2.point.x
               const dy = via1.point.y - via2.point.y
@@ -384,7 +359,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                   forceMultiplier *
                   FORCE_MAGNITUDE *
                   Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
                 const fx_j_on_i = (dx / dist) * forceMag // Force applied by via2 (j) onto via1 (i)
                 const fy_j_on_i = (dy / dist) * forceMag
 
@@ -434,7 +408,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
               forceMultiplier *
               FORCE_MAGNITUDE *
               Math.exp(-FORCE_DECAY_RATE * effectiveDistance)
-
             const fx_2_on_1 = (dx / dist) * forceMag // Force applied by via2 onto via1
             const fy_2_on_1 = (dy / dist) * forceMag
 
@@ -449,7 +422,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
     // 3. Apply forces directly to the input polyLines
     let pointsMoved = false
-
     for (let i = 0; i < numPolyLines; i++) {
       for (let k = 0; k < polyLines[i].mPoints.length; k++) {
         const mPoint = polyLines[i].mPoints[k]
@@ -541,9 +513,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         const forceMag = Math.sqrt(
           currentForceX * currentForceX + currentForceY * currentForceY,
         )
-
         magForceApplied += forceMag
-
         // Update position if moved significantly from original position
         // Use the calculated (and potentially clamped/boundary-forced) newX, newY
         if (

@@ -38,9 +38,7 @@ export const filterObstaclesOutsideBoard = (
   const obstacles = srj.obstacles.filter(
     (obstacle) => !shouldIgnoreObstacleForBoardAutorouting(obstacle, srj),
   )
-
   const obstaclesWereFiltered = obstacles.length !== srj.obstacles.length
-
   const bounds =
     obstaclesWereFiltered && srj.outline && srj.outline.length >= 3
       ? getBoardBounds({

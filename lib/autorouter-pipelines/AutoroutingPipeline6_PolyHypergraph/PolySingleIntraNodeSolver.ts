@@ -39,7 +39,6 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
   ) {
     super()
     const { nodeWithPortPoints } = params
-
     if (!nodeWithPortPoints.projectedRect) {
       throw new Error("Poly node is missing projectedRect")
     }
@@ -49,7 +48,6 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
         portPoint,
         nodeWithPortPoints.projectedRect!,
       )
-
       return {
         original: portPoint,
         projected: {
@@ -103,7 +101,6 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
   visualize(): GraphicsObject {
     const node = this.params.nodeWithPortPoints
     const projectedRect = node.projectedRect
-
     const polygonViz: GraphicsObject = {
       polygons: [
         {

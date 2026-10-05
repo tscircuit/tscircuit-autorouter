@@ -22,9 +22,7 @@ export const convertPreloadedTraceToHdRoutes = (
 ): PreloadedHighDensityRoute[] => {
   const rootConnectionName =
     connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
-
   const routes: PreloadedHighDensityRoute[] = []
-
   const addRoute = (
     route: HighDensityRoute["route"],
     traceThickness: number,
@@ -52,7 +50,6 @@ export const convertPreloadedTraceToHdRoutes = (
 
   for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
     const point = trace.route[pointIndex]!
-
     if (point.route_type === "via") {
       addRoute(
         [
@@ -79,7 +76,6 @@ export const convertPreloadedTraceToHdRoutes = (
     if (point.route_type === "through_obstacle") {
       const fromZ = mapLayerNameToZ(point.from_layer, layerCount)
       const toZ = mapLayerNameToZ(point.to_layer, layerCount)
-
       for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
         addRoute(
           [
@@ -94,12 +90,10 @@ export const convertPreloadedTraceToHdRoutes = (
           true,
         )
       }
-
       continue
     }
 
     const nextPoint = trace.route[pointIndex + 1]
-
     if (
       point.route_type !== "wire" ||
       nextPoint?.route_type !== "wire" ||

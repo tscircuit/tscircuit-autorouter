@@ -29,7 +29,7 @@ test("the CI bash pipeline retains diagnostic and setup failure exit codes while
     )
     expect(lint.status).toBe(1)
     const report = JSON.parse(readFileSync(artifact, "utf8"))
-    expect(report.number_of_rules).toBe(24)
+    expect(report.number_of_rules).toBe(23)
     expect(
       report.diagnostics.some(
         (diagnostic: { code: string }): boolean =>

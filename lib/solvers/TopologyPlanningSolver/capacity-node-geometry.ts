@@ -48,7 +48,6 @@ export function isNodeInsideOrOverlappingObstacle({
   obstacle: Obstacle
 }): boolean {
   const nodeBounds = getCapacityMeshNodeBounds(node)
-
   const obstacleBounds = getBoundFromCenteredRect({
     center: obstacle.center,
     width: obstacle.width,
@@ -70,11 +69,9 @@ export function isNodeCenterInsideObstacle({
     width: obstacle.width,
     height: obstacle.height,
   })
-
   const centerInsideX =
     node.center.x >= obstacleBounds.minX - GEOMETRY_EPSILON &&
     node.center.x <= obstacleBounds.maxX + GEOMETRY_EPSILON
-
   const centerInsideY =
     node.center.y >= obstacleBounds.minY - GEOMETRY_EPSILON &&
     node.center.y <= obstacleBounds.maxY + GEOMETRY_EPSILON
