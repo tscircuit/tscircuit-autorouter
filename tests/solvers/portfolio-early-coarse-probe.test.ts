@@ -355,8 +355,7 @@ test("early coarse adds one physical candidate while retaining native work and c
     expect(regular.activeSubSolver).toBeInstanceOf(
       GrowShrinkHighDensityIntraNodeSolver,
     )
-    const grow =
-      regular.activeSubSolver as GrowShrinkHighDensityIntraNodeSolver
+    const grow = regular.activeSubSolver as GrowShrinkHighDensityIntraNodeSolver
     grow.step()
     const inner = grow.activeSubSolver ?? grow.winningSolver
     if (!inner) throw new Error("Expected the actual native regular portfolio")

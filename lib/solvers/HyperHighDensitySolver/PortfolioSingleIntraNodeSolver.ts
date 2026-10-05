@@ -441,7 +441,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private addEarlyCoarsePortfolioCandidate(): void {
     if (
       !this.enableEarlyCoarsePortfolioProbe ||
-      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
+      Object.getPrototypeOf(this) !==
+        PortfolioSingleIntraNodeSolver.prototype ||
       this.constructorParams.cacheProvider !== undefined ||
       this.initializeSolvers !== nativeInitializeSolvers ||
       this.getCombinationDefs !== nativeGetCombinationDefs ||
@@ -538,11 +539,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     for (let left = 0; left < routes.length; left++) {
       for (let right = left + 1; right < routes.length; right++) {
         if (
-          arePipeline9RoutesOnSameNet(
-            routes[left]!,
-            routes[right]!,
-            connMap,
-          )
+          arePipeline9RoutesOnSameNet(routes[left]!, routes[right]!, connMap)
         ) {
           continue
         }
@@ -868,7 +865,8 @@ const nativeGetHyperParameterDefs =
   PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs
 const nativeGetCombinations =
   HyperParameterSupervisorSolver.prototype.getHyperParameterCombinations
-const nativeGenerateSolver = PortfolioSingleIntraNodeSolver.prototype.generateSolver
+const nativeGenerateSolver =
+  PortfolioSingleIntraNodeSolver.prototype.generateSolver
 const nativeComputeG = PortfolioSingleIntraNodeSolver.prototype.computeG
 const nativeComputeH = PortfolioSingleIntraNodeSolver.prototype.computeH
 const nativeComputeF = HyperParameterSupervisorSolver.prototype.computeF
