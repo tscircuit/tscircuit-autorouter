@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
-  const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
+test("Pipeline9 preserves SRJ18 sample 10's reference-clean exact output", async () => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
