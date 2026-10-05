@@ -31,7 +31,6 @@ export type BenchmarkSnapshotWithImage = BenchmarkSnapshot & {
 export type WorkerTaskMessage = {
   taskId: number
   task: BenchmarkTask
-  measureMemory?: boolean
 }
 
 export type BenchmarkStageTiming = {

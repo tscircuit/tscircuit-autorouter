@@ -25,40 +25,32 @@ for await (const line of rl) {
     continue
   }
 
-  let peakRssBytes = message.measureMemory
-    ? process.resourceUsage().maxRSS * 1024
-    : undefined
+  let peakRssBytes = process.resourceUsage().maxRSS * 1024
   try {
     const result = await runTask(message.task, {
       onProgress: (progress) => {
-        if (message.measureMemory) {
-          peakRssBytes = process.resourceUsage().maxRSS * 1024
-        }
+        peakRssBytes = process.resourceUsage().maxRSS * 1024
         const payload = {
           taskId: message.taskId,
           progress: {
             ...progress,
-            ...(peakRssBytes === undefined ? {} : { peakRssBytes }),
+            peakRssBytes,
           },
         }
         process.stdout.write(`${JSON.stringify(payload)}\n`)
       },
     })
-    if (message.measureMemory) {
-      peakRssBytes = process.resourceUsage().maxRSS * 1024
-    }
+    peakRssBytes = process.resourceUsage().maxRSS * 1024
     const payload: WorkerResultMessage = {
       taskId: message.taskId,
       result: {
         ...result,
-        ...(peakRssBytes === undefined ? {} : { peakRssBytes }),
+        peakRssBytes,
       },
     }
     process.stdout.write(`${JSON.stringify(payload)}\n`)
   } catch (error) {
-    if (message.measureMemory) {
-      peakRssBytes = process.resourceUsage().maxRSS * 1024
-    }
+    peakRssBytes = process.resourceUsage().maxRSS * 1024
     const payload: WorkerResultMessage = {
       taskId: message.taskId,
       result: {
@@ -66,7 +58,7 @@ for await (const line of rl) {
         scenarioName: message.task.scenarioName,
         sampleNumber: message.task.sampleNumber,
         elapsedTimeMs: 0,
-        ...(peakRssBytes === undefined ? {} : { peakRssBytes }),
+        peakRssBytes,
         didSolve: false,
         didTimeout: false,
         relaxedDrcPassed: false,

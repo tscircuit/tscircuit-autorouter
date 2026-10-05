@@ -34,7 +34,6 @@ import {
 type BenchmarkOptions = {
   solverName?: string
   networkedColdHot: boolean
-  measureMemory: boolean
   scenarioLimit?: number
   sampleNumbers?: number[]
   concurrency: number
@@ -70,7 +69,6 @@ type BenchmarkSnapshotWriter = {
 }
 
 type RunBenchmarkTasksOptions = {
-  measureMemory?: boolean
   onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
 }
 
@@ -731,7 +729,6 @@ export const parseArgs = (
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
-    measureMemory: false,
     networkedColdHot: false,
   }
 
@@ -744,10 +741,6 @@ export const parseArgs = (
     }
     if (arg === "--networked-cold-hot") {
       options.networkedColdHot = true
-      continue
-    }
-    if (arg === "--measure-memory") {
-      options.measureMemory = true
       continue
     }
     if (arg === "--scenario-limit") {
@@ -880,9 +873,6 @@ const loadSolverNames = async (
 }
 
 const formatTable = (rows: SolverRunSummary[]) => {
-  const includeMemory = rows.some(
-    (row) => typeof row.p90PeakRssBytes === "number",
-  )
   const includeNetworkCache = rows.some((row) => row.networkCache)
   const headers = [
     "Solver",
@@ -895,7 +885,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P80 Time",
     "P90 Time",
     "P95 Time",
-    ...(includeMemory ? ["Memory P50", "Memory P80", "Memory P90"] : []),
+    "Memory P50",
+    "Memory P80",
+    "Memory P90",
     "Avg Via",
     ...(includeNetworkCache
       ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
@@ -913,13 +905,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p80TimeMs ?? null),
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
-    ...(includeMemory
-      ? [
-          formatMemory(row.p50PeakRssBytes),
-          formatMemory(row.p80PeakRssBytes),
-          formatMemory(row.p90PeakRssBytes),
-        ]
-      : []),
+    formatMemory(row.p50PeakRssBytes),
+    formatMemory(row.p80PeakRssBytes),
+    formatMemory(row.p90PeakRssBytes),
     formatAverage(row.avgVia),
     ...(includeNetworkCache
       ? [
@@ -1389,7 +1377,6 @@ const runBenchmarkTasks = async (
   const queue = tasks.map((task, index) => ({
     taskId: index + 1,
     task,
-    measureMemory: options.measureMemory,
   }))
   const results = new Array<WorkerResult>(queue.length)
   let completedTaskCount = 0
@@ -1510,7 +1497,7 @@ const runBenchmarkTasks = async (
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
         )
       }
-      if (restartWorker || (options.measureMemory && queue.length > 0)) {
+      if (queue.length > 0) {
         await replaceWorker(slot)
       }
     }
@@ -1725,7 +1712,6 @@ const main = async () => {
   const {
     solverName,
     networkedColdHot,
-    measureMemory,
     scenarioLimit,
     sampleNumbers,
     concurrency,
@@ -1843,7 +1829,7 @@ const main = async () => {
   const tasks = taskGroups.flat()
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}${measureMemory ? ", isolated memory measurement" : ""})`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
@@ -1862,7 +1848,6 @@ const main = async () => {
       }
       results.push(
         ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
-          measureMemory,
           onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
         })),
       )
@@ -1915,9 +1900,7 @@ const main = async () => {
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
-    ...(measureMemory
-      ? { memoryMeasurementMode: "isolated_process_per_sample" as const }
-      : {}),
+    memoryMeasurementMode: "isolated_process_per_sample",
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,

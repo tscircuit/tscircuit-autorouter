@@ -11,7 +11,6 @@ DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver9_PreloadedTraceGraph"
 PIPELINE_ID=""
 NETWORKED_COLD_HOT=false
-MEASURE_MEMORY=false
 
 resolve_pipeline_solver_name() {
   case "$1" in
@@ -80,8 +79,8 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--measure-memory] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--measure-memory] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
@@ -94,12 +93,12 @@ Options:
   --sample N           Run one 1-based sample number from the dataset order
   --sample-numbers L   Run comma-separated 1-based sample numbers
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, or 29/srj29
-  --measure-memory     Measure per-sample peak RSS in a fresh process. Normal timing runs reuse workers.
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
 
 Defaults:
   Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver9_PreloadedTraceGraph.
+  Every sample runs in a fresh process so its peak memory can be reported.
   Use "all" to benchmark every available solver.
 
 Examples:
@@ -118,7 +117,7 @@ Examples:
   ./benchmark.sh --pipeline 6
   ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline 9
-  ./benchmark.sh --pipeline 9 --dataset 24 --sample 21 --measure-memory
+  ./benchmark.sh --pipeline 9 --dataset 24 --sample 21
   ./benchmark.sh --pipeline 9net --dataset 18
   ./benchmark.sh --pipeline 10 --dataset 29
   ./benchmark.sh --pipeline krt
@@ -205,10 +204,6 @@ while [ "$#" -gt 0 ]; do
       DATASET="${2:-}"
       shift 2
       ;;
-    --measure-memory)
-      MEASURE_MEMORY=true
-      shift
-      ;;
     --include-assignable)
       INCLUDE_ASSIGNABLE=true
       shift
@@ -281,10 +276,6 @@ fi
 
 if [ -n "$DATASET" ]; then
   CMD+=("--dataset" "$DATASET")
-fi
-
-if [ "$MEASURE_MEMORY" = true ]; then
-  CMD+=("--measure-memory")
 fi
 
 if [ "$INCLUDE_ASSIGNABLE" != true ]; then

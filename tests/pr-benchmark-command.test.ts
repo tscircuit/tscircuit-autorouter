@@ -33,7 +33,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   })
   expect(
     parsePrBenchmarkCommand(
-      "/benchmark-long --same-machine --dataset 24 --sample-numbers 21 --measure-memory",
+      "/benchmark-long --same-machine --dataset 24 --sample-numbers 21",
     ),
   ).toEqual({
     kind: "benchmark-long",
@@ -44,7 +44,6 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
       "24",
       "--sample-numbers",
       "21",
-      "--measure-memory",
     ],
     datasetName: "24",
     profileSolvers: false,
