@@ -219,7 +219,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       ...opts.A,
       z: opts.A.z ?? 0,
       g: 0,
-      h: 0,
       f: 0,
       parent: null,
     }
@@ -228,7 +227,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       ...initialNodePosition,
       z: opts.A.z ?? 0,
       g: 0,
-      h: 0,
       f: 0,
       parent: initialParent,
     }
@@ -688,8 +686,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   setNodeCosts(node: Node) {
     node.g = this.computeG(node)
-    node.h = this.computeH(node)
-    node.f = this.computeF(node.g, node.h)
+    node.f = this.computeF(node.g, this.computeH(node))
   }
 
   getNodeKey(node: Node) {
@@ -714,7 +711,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           y: clamp(node.y + y * this.cellStep, minY, maxY),
           z: node.z,
           g: node.g,
-          h: node.h,
           f: node.f,
           parent: node,
         }
@@ -779,7 +775,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         y: node.y,
         z: newZ,
         g: node.g,
-        h: node.h,
         f: node.f,
         parent: node,
       }

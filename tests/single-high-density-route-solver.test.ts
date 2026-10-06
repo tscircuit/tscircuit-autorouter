@@ -186,7 +186,7 @@ test("Future-cost solver rejects vias that violate future via-to-trace clearance
   expect(neighbors.some((neighbor) => neighbor.z !== currentNode.z)).toBe(false)
 })
 
-test("Future-cost solver computes combined node costs identically", () => {
+test("Future-cost solver derives heuristic without storing it", () => {
   const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
     ...baseOpts,
     obstacleRoutes: [],
@@ -200,10 +200,10 @@ test("Future-cost solver computes combined node costs identically", () => {
       },
     ],
   })
-  const parent = { x: 3, y: 4, z: 0, g: 2.5, h: 0, f: 0, parent: null }
+  const parent = { x: 3, y: 4, z: 0, g: 2.5, f: 0, parent: null }
   for (const node of [
-    { x: 3.5, y: 4.5, z: 0, g: 0, h: 0, f: 0, parent },
-    { x: 3.5, y: 4.5, z: 1, g: 0, h: 0, f: 0, parent },
+    { x: 3.5, y: 4.5, z: 0, g: 0, f: 0, parent },
+    { x: 3.5, y: 4.5, z: 1, g: 0, f: 0, parent },
   ]) {
     const expectedG = solver.computeG(node as any)
     const expectedH = solver.computeH(node as any)
@@ -211,8 +211,8 @@ test("Future-cost solver computes combined node costs identically", () => {
     solver.setNodeCosts(node as any)
 
     expect(node.g).toBe(expectedG)
-    expect(node.h).toBe(expectedH)
     expect(node.f).toBe(solver.computeF(expectedG, expectedH))
+    expect("h" in node).toBe(false)
   }
 })
 

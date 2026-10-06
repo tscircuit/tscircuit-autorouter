@@ -10,7 +10,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 type Point = { x: number; y: number; z: number }
 
 function createNode(point: Point, parent: Node | null = null): Node {
-  return { ...point, g: 0, h: 0, f: 0, parent }
+  return { ...point, g: 0, f: 0, parent }
 }
 
 function adjacentFloat(value: number, direction: -1 | 1): number {

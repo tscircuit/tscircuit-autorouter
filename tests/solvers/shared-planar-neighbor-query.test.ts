@@ -110,14 +110,12 @@ test("shared planar broadphase preserves per-neighbor decisions and query bounds
               y,
               z,
               g: 2,
-              h: 3,
               f: 5,
               parent: {
                 x,
                 y,
                 z: (z + 1) % 4,
                 g: 1,
-                h: 2,
                 f: 3,
                 parent: null,
               },
@@ -173,7 +171,6 @@ test("shared planar broadphase preserves per-neighbor decisions and query bounds
     y: 0,
     z: 0,
     g: 0,
-    h: 0,
     f: 0,
     parent: null,
   })
