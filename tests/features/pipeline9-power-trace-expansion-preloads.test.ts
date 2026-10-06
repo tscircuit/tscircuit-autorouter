@@ -107,7 +107,9 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   solver.powerTraceExpansionSolver = expansionSolver
   solver.srjWithPointPairs = srj
   const [finalParams] = solver.pipelineDef.at(-1)!.getConstructorParams(solver)
-  solver.finalCopperRepairSolver = new Pipeline9FinalCopperRepairSolver(finalParams)
+  solver.finalCopperRepairSolver = new Pipeline9FinalCopperRepairSolver(
+    finalParams,
+  )
   solver.finalCopperRepairSolver.solve()
   solver.solved = true
 

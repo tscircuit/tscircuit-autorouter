@@ -4,11 +4,13 @@ import { createFinalCopperRepairFixture } from "tests/fixtures/pipeline9-final-c
 
 test("final copper repair preserves length-matched differential pair geometry", (): void => {
   const { srj, trace } = createFinalCopperRepairFixture()
-  srj.differentialPairs = [{
-    connectionNames: ["signal", "signal_n"],
-    lengthTolerance: 0.05,
-    maxUncoupledLength: 0.5,
-  }]
+  srj.differentialPairs = [
+    {
+      connectionNames: ["signal", "signal_n"],
+      lengthTolerance: 0.05,
+      maxUncoupledLength: 0.5,
+    },
+  ]
   const solver = new Pipeline9FinalCopperRepairSolver({
     originalSrj: srj,
     srjWithPointPairs: srj,

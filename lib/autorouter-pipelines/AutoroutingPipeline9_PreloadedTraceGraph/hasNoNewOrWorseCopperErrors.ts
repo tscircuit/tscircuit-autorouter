@@ -48,21 +48,26 @@ const getTraceGap = (a: HighDensityRoute, b: HighDensityRoute): number => {
     const fromA = a.route[i - 1]!
     const toA = a.route[i]!
     if (fromA.z !== toA.z || fromA.toNextSegmentType) continue
-    const radiusA = Math.max(
-      fromA.traceThickness ?? a.traceThickness,
-      toA.traceThickness ?? a.traceThickness,
-    ) / 2
+    const radiusA =
+      Math.max(
+        fromA.traceThickness ?? a.traceThickness,
+        toA.traceThickness ?? a.traceThickness,
+      ) / 2
     for (let j = 1; j < b.route.length; j++) {
       const fromB = b.route[j - 1]!
       const toB = b.route[j]!
-      if (fromB.z !== toB.z || fromB.z !== fromA.z || fromB.toNextSegmentType) continue
-      const radiusB = Math.max(
-        fromB.traceThickness ?? b.traceThickness,
-        toB.traceThickness ?? b.traceThickness,
-      ) / 2
+      if (fromB.z !== toB.z || fromB.z !== fromA.z || fromB.toNextSegmentType)
+        continue
+      const radiusB =
+        Math.max(
+          fromB.traceThickness ?? b.traceThickness,
+          toB.traceThickness ?? b.traceThickness,
+        ) / 2
       gap = Math.min(
         gap,
-        minimumDistanceBetweenSegments(fromA, toA, fromB, toB) - radiusA - radiusB,
+        minimumDistanceBetweenSegments(fromA, toA, fromB, toB) -
+          radiusA -
+          radiusB,
       )
     }
   }
@@ -76,7 +81,11 @@ export const hasNoWorseTraceGapGeometry = (
   errors: Pipeline9DrcError[],
 ): boolean => {
   for (const error of errors) {
-    if (error.type !== "pcb_trace_error" || !String(error.message).includes("gap:")) continue
+    if (
+      error.type !== "pcb_trace_error" ||
+      !String(error.message).includes("gap:")
+    )
+      continue
     const indices = getDrcErrorTraceIds(error).map((id) =>
       initial.findIndex((route) => route.connectionName === id),
     )
@@ -85,7 +94,12 @@ export const hasNoWorseTraceGapGeometry = (
     if (initial[a] === candidate[a] && initial[b] === candidate[b]) continue
     const oldGap = getTraceGap(initial[a]!, initial[b]!)
     const newGap = getTraceGap(candidate[a]!, candidate[b]!)
-    if (!Number.isFinite(oldGap) || !Number.isFinite(newGap) || newGap + 1e-9 < oldGap) return false
+    if (
+      !Number.isFinite(oldGap) ||
+      !Number.isFinite(newGap) ||
+      newGap + 1e-9 < oldGap
+    )
+      return false
   }
   return true
 }

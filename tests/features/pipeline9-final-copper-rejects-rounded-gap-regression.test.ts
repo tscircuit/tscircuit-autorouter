@@ -8,12 +8,18 @@ test("rounded DRC messages cannot hide a smaller physical trace gap", (): void =
     traceThickness: 0.1,
     viaDiameter: 0.3,
     vias: [],
-    route: [{ x: -1, y, z: 0 }, { x: 1, y, z: 0 }],
+    route: [
+      { x: -1, y, z: 0 },
+      { x: 1, y, z: 0 },
+    ],
   }))
-  const candidate = [routes[0]!, {
-    ...routes[1]!,
-    route: routes[1]!.route.map((point) => ({ ...point, y: 0.1936 })),
-  }]
+  const candidate = [
+    routes[0]!,
+    {
+      ...routes[1]!,
+      route: routes[1]!.route.map((point) => ({ ...point, y: 0.1936 })),
+    },
+  ]
   const error = {
     type: "pcb_trace_error",
     pcb_trace_id: "trace_0",

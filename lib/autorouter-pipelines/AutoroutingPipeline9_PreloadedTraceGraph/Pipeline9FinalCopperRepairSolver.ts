@@ -29,7 +29,9 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
   private initialRoutes: HighDensityRoute[] = []
   private currentRoutes: HighDensityRoute[] = []
   private proposedRoutes?: HighDensityRoute[]
-  private readonly connMap?: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
+  private readonly connMap?: ReturnType<
+    typeof getConnectivityMapFromSimpleRouteJson
+  >
   private queue: number[] = []
   private searched = 0
   private accepted = 0
@@ -50,7 +52,10 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
     const srj = params.originalSrj
     const connMap = getConnectivityMapFromSimpleRouteJson({
       ...srj,
-      connections: [...srj.connections, ...params.srjWithPointPairs.connections],
+      connections: [
+        ...srj.connections,
+        ...params.srjWithPointPairs.connections,
+      ],
       traces: this.output,
     })
     this.connMap = connMap
@@ -74,9 +79,10 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
       const trace = params.traces[i]!
       if (
         affected.has(trace.pcb_trace_id) &&
-        !trace.route.some((point) =>
-          point.route_type === "through_obstacle" ||
-          point.route_type === "jumper",
+        !trace.route.some(
+          (point) =>
+            point.route_type === "through_obstacle" ||
+            point.route_type === "jumper",
         ) &&
         !protectedNames.some((name) =>
           connMap.areIdsConnected(trace.pcb_trace_id, name),
@@ -85,7 +91,10 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
         this.queue.push(i)
       }
     }
-    this.queue = this.queue.slice(0, Math.min(64, Math.ceil(params.effort * 32)))
+    this.queue = this.queue.slice(
+      0,
+      Math.min(64, Math.ceil(params.effort * 32)),
+    )
     if (this.queue.length === 0) this.solved = true
     this.MAX_ITERATIONS = this.queue.length + 3
     this.updateStats()
@@ -121,11 +130,15 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
       if (changed === original) return trace
       const route = trace.route.map((point) => {
         if (point.route_type === "wire") {
-          const index = original.route.findIndex((old) =>
-            Math.abs(old.x - point.x) < 1e-8 &&
-            Math.abs(old.y - point.y) < 1e-8 &&
-            old.z ===
-              mapLayerNameToZ(point.layer, this.params.originalSrj.layerCount),
+          const index = original.route.findIndex(
+            (old) =>
+              Math.abs(old.x - point.x) < 1e-8 &&
+              Math.abs(old.y - point.y) < 1e-8 &&
+              old.z ===
+                mapLayerNameToZ(
+                  point.layer,
+                  this.params.originalSrj.layerCount,
+                ),
           )
           if (index < 0) {
             throw new Error(`Missing wire vertex in ${trace.pcb_trace_id}`)
@@ -134,8 +147,10 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
           return { ...point, x: moved.x, y: moved.y }
         }
         if (point.route_type === "via") {
-          const index = original.vias.findIndex((old) =>
-            Math.abs(old.x - point.x) < 1e-8 && Math.abs(old.y - point.y) < 1e-8,
+          const index = original.vias.findIndex(
+            (old) =>
+              Math.abs(old.x - point.x) < 1e-8 &&
+              Math.abs(old.y - point.y) < 1e-8,
           )
           if (index < 0) throw new Error(`Missing via in ${trace.pcb_trace_id}`)
           return { ...point, ...changed.vias[index]! }
@@ -156,15 +171,16 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
     if (!this.proposedRoutes) {
       const srj = this.params.originalSrj
       const connMap = this.connMap
-      if (!connMap) throw new Error("Final copper repair is missing connectivity")
+      if (!connMap)
+        throw new Error("Final copper repair is missing connectivity")
       this.proposedRoutes = applyBroadRepulsionForces(
         {
-        ...srj,
-        traces: undefined,
-        minTraceToPadEdgeClearance: Math.max(
-          0.1,
-          srj.minTraceToPadEdgeClearance ?? 0.1,
-        ),
+          ...srj,
+          traces: undefined,
+          minTraceToPadEdgeClearance: Math.max(
+            0.1,
+            srj.minTraceToPadEdgeClearance ?? 0.1,
+          ),
         },
         this.initialRoutes,
         Math.min(1, this.params.effort),
@@ -187,14 +203,16 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
       proposed.vias.length !== original.vias.length ||
       proposed.route.some((point, i) => {
         const old = original.route[i]!
-        const locked = i === 0 || i === original.route.length - 1 || old.pcb_port_id
+        const locked =
+          i === 0 || i === original.route.length - 1 || old.pcb_port_id
         return (
           point.z !== old.z ||
           point.traceThickness !== old.traceThickness ||
           (locked && (point.x !== old.x || point.y !== old.y))
         )
       })
-    ) return
+    )
+      return
     const candidate = this.currentRoutes.map((route, i) =>
       i === index ? proposed : route,
     )
@@ -231,9 +249,10 @@ export class Pipeline9FinalCopperRepairSolver extends BaseSolver {
   }
 
   getRoutedTraces(): SimplifiedPcbTrace[] {
-    return this.getOutput().filter((trace) =>
-      !this.originalTraceIds.has(trace.pcb_trace_id) ||
-      trace.__replaces_pcb_trace_id !== undefined,
+    return this.getOutput().filter(
+      (trace) =>
+        !this.originalTraceIds.has(trace.pcb_trace_id) ||
+        trace.__replaces_pcb_trace_id !== undefined,
     )
   }
 }
