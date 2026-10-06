@@ -2,6 +2,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import { createCopperPourTraceEvaluator } from "./createCopperPourTraceEvaluator"
+import { checkSrjCoordinateTerminals } from "./checkSrjCoordinateTerminals"
 import {
   getDrcErrors,
   type GetDrcErrorsOptions,
@@ -96,10 +97,19 @@ export const evaluateRelaxedDrc = ({
     drcOptions?.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance ?? 0.1,
     connectivityMaps?.source,
   )(jointTraces)
+  const pointTerminals = drcOptions?.includeTraceContinuity === false
+    ? { anchoredEndpointErrorIds: new Set<string>(), errors: [] }
+    : checkSrjCoordinateTerminals(inputSrj, jointTraces)
+  const isUnresolved = (error: GetDrcErrorsResult["errors"][number]): boolean => {
+    if (!("pcb_trace_error_id" in error)) return true
+    const id = error.pcb_trace_error_id
+    // Only the checker's generic endpoint error is replaced by native contact.
+    return !pointTerminals.anchoredEndpointErrorIds.has(id)
+  }
   return {
     circuitJson,
-    errors: [...result.errors, ...pourErrors],
-    errorsWithCenters: [...result.errorsWithCenters, ...pourErrors],
-    locationAwareErrors: [...result.locationAwareErrors, ...pourErrors],
+    errors: [...result.errors.filter(isUnresolved), ...pourErrors, ...pointTerminals.errors],
+    errorsWithCenters: [...result.errorsWithCenters.filter(isUnresolved), ...pourErrors, ...pointTerminals.errors],
+    locationAwareErrors: [...result.locationAwareErrors.filter(isUnresolved), ...pourErrors, ...pointTerminals.errors],
   }
 }

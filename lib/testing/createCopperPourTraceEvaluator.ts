@@ -12,7 +12,7 @@ type CopperPourTraceEvaluator = (traces: readonly SimplifiedPcbTrace[]) => Coppe
 export const createCopperPourTraceEvaluator = (
   srj: SimpleRouteJson,
   traceClearance: number,
-  connMap?: ConnectivityMap,
+  _connMap?: ConnectivityMap,
 ): CopperPourTraceEvaluator => {
   const pours = srj.obstacles.flatMap((obstacle, index) =>
     obstacle.isCopperPour ? [{ obstacle, id: obstacle.obstacleId ?? `copper_pour_${index}` }] : [],
@@ -20,7 +20,14 @@ export const createCopperPourTraceEvaluator = (
   if (pours.length === 0) return () => []
   if (!Number.isFinite(traceClearance) || traceClearance < 0)
     throw new Error("Copper-pour trace clearance must be finite and non-negative")
-  const connectivity = connMap ?? getConnectivityMapFromSimpleRouteJson(srj)
+  // Repair planning can merge its connectivity map and rewrite output metadata.
+  // Only the native source declarations can grant ownership of reserved copper.
+  const connectivity = getConnectivityMapFromSimpleRouteJson(srj)
+  for (const connection of srj.connections) {
+    if (connection.source_trace_id) {
+      connectivity.addConnections([[connection.name, connection.source_trace_id]])
+    }
+  }
   const reservations = pours.map(({ obstacle, id }) => {
     const rotation = obstacle.ccwRotationDegrees ?? 0
     if (![obstacle.center.x, obstacle.center.y, obstacle.width, obstacle.height, rotation].every(Number.isFinite) || obstacle.width <= 0 || obstacle.height <= 0)
@@ -34,9 +41,7 @@ export const createCopperPourTraceEvaluator = (
   return (traces): CopperPourTraceError[] => {
     const errors: CopperPourTraceError[] = []
     for (const trace of traces) {
-      const traceNets = [trace.connection_name, trace.pcb_trace_id, ...(trace.connectsTo ?? [])]
-        .filter((name): name is string => typeof name === "string")
-        .map(name => connectivity.getNetConnectedToId(name) ?? name)
+      const traceNet = connectivity.getNetConnectedToId(trace.connection_name)
       for (let pointIndex = 0; pointIndex + 1 < trace.route.length; pointIndex++) {
         const start = trace.route[pointIndex]!
         const end = trace.route[pointIndex + 1]!
@@ -48,7 +53,7 @@ export const createCopperPourTraceEvaluator = (
           throw new Error(`Invalid wire geometry in pcb_trace "${trace.pcb_trace_id}"`)
         for (const reservation of reservations) {
           const { obstacle, id, cosine, sine, nets } = reservation
-          if (!obstacle.layers.includes(start.layer) || traceNets.some(net => nets.has(net))) continue
+          if (!obstacle.layers.includes(start.layer) || (traceNet !== undefined && nets.has(traceNet))) continue
           const localStart = {
             x: cosine * (start.x - obstacle.center.x) + sine * (start.y - obstacle.center.y),
             y: -sine * (start.x - obstacle.center.x) + cosine * (start.y - obstacle.center.y),
