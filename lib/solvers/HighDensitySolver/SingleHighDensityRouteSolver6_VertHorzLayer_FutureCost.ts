@@ -227,7 +227,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
 
     node.g = baseG + futureConnectionPenalty
-    node.f = this.computeF(node.g, baseH + futureConnectionPenalty)
+    node.h = baseH + futureConnectionPenalty
+    node.f = this.computeF(node.g, node.h)
   }
 }
 

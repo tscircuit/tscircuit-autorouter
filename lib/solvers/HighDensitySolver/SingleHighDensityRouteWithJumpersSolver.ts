@@ -92,7 +92,6 @@ type HComponents = {
  * Extended node type that tracks jumper usage
  */
 type JumperNode = Node & {
-  h: number
   /** If this node was reached via a jumper, this contains jumper info */
   jumperEntry?: { x: number; y: number }
   /** Track if this movement is the exit of a jumper */
