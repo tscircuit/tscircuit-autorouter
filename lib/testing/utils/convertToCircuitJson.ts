@@ -431,23 +431,46 @@ function createSourceTraces(
         connection.name,
     )
     if (hdRoute) {
-      const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
-        if ("route_type" in segment && segment.route_type === "jumper") {
-          return segment.start
+      const getPointFromSegment = (
+        segment: (typeof hdRoute.route)[0],
+        isEnd: boolean,
+      ): { x: number; y: number; layers: string[] } => {
+        if ("route_type" in segment) {
+          if (segment.route_type === "jumper") {
+            return { ...(isEnd ? segment.end : segment.start), layers: [segment.layer] }
+          }
+          if (segment.route_type === "through_obstacle") {
+            return {
+              ...(isEnd ? segment.end : segment.start),
+              layers: [isEnd ? segment.to_layer : segment.from_layer],
+            }
+          }
+          return {
+            x: segment.x, y: segment.y,
+            layers: segment.route_type === "wire" ? [segment.layer] : getViaDrillLayers(
+              segment, sourceSrj.layerCount, sourceSrj.allowBlindAndBuriedVias ?? false,
+            ),
+          }
         }
-        if ("x" in segment && "y" in segment) {
-          return { x: segment.x, y: segment.y }
-        }
-        return { x: 0, y: 0 }
+        return { x: segment.x, y: segment.y, layers: [mapZToLayerName(segment.z, sourceSrj.layerCount)] }
       }
 
       const endpoints = [
-        getPointFromSegment(hdRoute.route[0]),
-        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
+        getPointFromSegment(hdRoute.route[0], false),
+        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1], true),
       ]
+      const declaredOwnership = new Set<string>([
+        ...getSrjDeclaredConnectionReferences(connection),
+        ...("connectsTo" in hdRoute ? hdRoute.connectsTo ?? [] : []),
+      ])
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
+          // A plane beneath a terminal reserves wire copper on its own layer;
+          // covering its XY position does not connect the terminal to that net.
+          if (obstacle.isCopperPour) continue
+          if (!obstacle.layers.some(layer => endpoint.layers.includes(layer))) continue
+          if (!obstacle.connectedTo.some(id => declaredOwnership.has(id))) continue
           if (pointToBoxDistance(endpoint, obstacle) <= 0) {
             obstaclesContainingEndpoints.push(obstacle)
           }
@@ -680,6 +703,9 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
+    // Pour reservations have no manufactured pad or barrel identity. Their
+    // foreign-wire clearance is evaluated separately on the original geometry.
+    if (obstacle.isCopperPour) continue
     if (obstacle.isNonPlatedHole) {
       const common = {
         type: "pcb_hole" as const,
@@ -850,6 +876,20 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       addedSmtPadIds,
     )
     if (id === undefined) continue
+
+    if (obstacle.shape === "circle") {
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        layer: layers[0],
+        shape: "circle",
+        radius: width / 2,
+        x,
+        y,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      })
+      continue
+    }
 
     if (
       typeof rotationDegrees === "number" &&

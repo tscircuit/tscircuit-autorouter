@@ -10,6 +10,7 @@ import {
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { createCopperPourTraceEvaluator } from "lib/testing/createCopperPourTraceEvaluator"
 import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
@@ -151,6 +152,12 @@ export const addAutoroutingViaTraceIds = ({
       ...(Array.isArray(error.pcb_via_ids)
         ? error.pcb_via_ids.filter(
             (viaId): viaId is string => typeof viaId === "string",
+          )
+        : []),
+      ...(Array.isArray(error.pcb_pad_ids)
+        ? error.pcb_pad_ids.filter(
+            (padId): padId is string =>
+              typeof padId === "string" && traceIdByViaId.has(padId),
           )
         : []),
     ]
@@ -773,10 +780,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const viaPadClearance =
+      params.originalSrj.minViaEdgeToPadEdgeClearance ?? traceClearance
     const viaHoleClearance =
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
+    const evaluateCopperPourTraces = createCopperPourTraceEvaluator(
+      params.originalSrj,
+      traceClearance,
+      params.connMap,
+    )
     const baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
@@ -1094,6 +1108,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connMap: params.connMap,
         traceClearance,
         viaClearance,
+        viaToPadClearance: viaPadClearance,
         includeTraceViaOwnerMetadata: true,
         spatialCellSize:
           Math.max(
@@ -1102,9 +1117,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ) + Math.max(traceClearance, viaClearance),
       },
     )
-    const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
+    const indexedBaselineDrc = autoroutingDrcEngine.evaluate(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
+    const baselinePourErrors = evaluateCopperPourTraces(params.originalSrj.traces ?? [])
+    const autoroutingBaselineDrcResult = {
+      errors: [...indexedBaselineDrc.errors, ...baselinePourErrors],
+      errorsWithCenters: [...indexedBaselineDrc.errorsWithCenters, ...baselinePourErrors],
+    }
     const autoroutingBaselineViaCircuitJson = getAutoroutingViaElements(
       params.originalSrj.traces ?? [],
     )
@@ -1406,9 +1426,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       // Ranking is private and must not populate the exact evaluator's cache
       // with results that have not undergone its reference-zero validation.
-      return autoroutingDrcEngine.evaluate(
+      const indexedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
+      const pourErrors = evaluateCopperPourTraces(candidateDrcInput.evaluatedTraces)
+      return {
+        errors: [...indexedDrc.errors, ...pourErrors],
+        errorsWithCenters: [...indexedDrc.errorsWithCenters, ...pourErrors],
+      }
     }
 
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
@@ -1425,9 +1450,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = autoroutingDrcEngine.evaluate(
+      const indexedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
+      const pourErrors = evaluateCopperPourTraces(candidateDrcInput.evaluatedTraces)
+      const evaluatedDrc = {
+        errors: [...indexedDrc.errors, ...pourErrors],
+        errorsWithCenters: [...indexedDrc.errorsWithCenters, ...pourErrors],
+      }
       const viaCircuitJson = getAutoroutingViaElements(
         candidateDrcInput.evaluatedTraces,
       )

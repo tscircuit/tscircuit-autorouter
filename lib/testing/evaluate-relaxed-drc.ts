@@ -1,6 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
+import { createCopperPourTraceEvaluator } from "./createCopperPourTraceEvaluator"
 import {
   getDrcErrors,
   type GetDrcErrorsOptions,
@@ -84,12 +85,21 @@ export const evaluateRelaxedDrc = ({
     )
   }
 
+  const result = getDrcErrors(circuitJson, {
+    ...RELAXED_DRC_OPTIONS,
+    holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+    viaPadClearance: inputSrj.minViaEdgeToPadEdgeClearance,
+    ...drcOptions,
+  })
+  const pourErrors = createCopperPourTraceEvaluator(
+    inputSrj,
+    drcOptions?.traceClearance ?? RELAXED_DRC_OPTIONS.traceClearance ?? 0.1,
+    connectivityMaps?.source,
+  )(jointTraces)
   return {
     circuitJson,
-    ...getDrcErrors(circuitJson, {
-      ...RELAXED_DRC_OPTIONS,
-      holeClearance: inputSrj.minTraceToHoleEdgeClearance,
-      ...drcOptions,
-    }),
+    errors: [...result.errors, ...pourErrors],
+    errorsWithCenters: [...result.errorsWithCenters, ...pourErrors],
+    locationAwareErrors: [...result.locationAwareErrors, ...pourErrors],
   }
 }
