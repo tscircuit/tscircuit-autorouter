@@ -813,17 +813,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
-            hdRoutes: lockHdRouteTerminals(
-              canonicalizePipeline9HdRoutes(
+            hdRoutes: lockHdRouteTerminals({
+              hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
-              cms.netToPointPairsSolver?.newConnections ?? [],
-              new Map(
-                (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                  (route) => [route.connectionName, route],
-                ),
-              ),
-            ),
+              connections: cms.netToPointPairsSolver?.newConnections ?? [],
+            }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
             maxIterations: 16,
