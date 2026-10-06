@@ -1,21 +1,23 @@
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
+type ConnectionName = string
+type PcbPortId = string
+
 /**
  * Restores stitched route endpoints to their authoritative PCB port positions
  * and marks them as fixed. Earlier geometric cleanup can slide an endpoint
  * within a pad's axis-aligned obstacle bounds, which is unsafe for a rotated
  * pad.
  */
-export const lockHdRouteTerminals = (
-  hdRoutes: ReadonlyArray<HighDensityRoute>,
-  connections: ReadonlyArray<SimpleRouteConnection>,
-  terminalIdentityByConnectionName: ReadonlyMap<
-    string,
-    Pick<HighDensityRoute, "startPcbPortId" | "endPcbPortId">
-  > = new Map(hdRoutes.map((route) => [route.connectionName, route])),
-): HighDensityRoute[] => {
-  const connectionByName = new Map(
+export const lockHdRouteTerminals = ({
+  hdRoutes,
+  connections,
+}: {
+  hdRoutes: ReadonlyArray<HighDensityRoute>
+  connections: ReadonlyArray<SimpleRouteConnection>
+}): HighDensityRoute[] => {
+  const connectionByName = new Map<ConnectionName, SimpleRouteConnection>(
     connections.map((connection) => [connection.name, connection]),
   )
 
@@ -38,10 +40,8 @@ export const lockHdRouteTerminals = (
       )
     }
 
-    const terminalIdentity =
-      terminalIdentityByConnectionName.get(hdRoute.connectionName) ?? hdRoute
     const terminalByPcbPortId = new Map<
-      string,
+      PcbPortId,
       (typeof connection.pointsToConnect)[number]
     >()
     for (const terminal of connection.pointsToConnect) {
@@ -56,8 +56,8 @@ export const lockHdRouteTerminals = (
     if (terminalByPcbPortId.size === 0) return hdRoute
 
     const routeEndpointPcbPortIds = [
-      terminalIdentity.startPcbPortId,
-      terminalIdentity.endPcbPortId,
+      hdRoute.startPcbPortId,
+      hdRoute.endPcbPortId,
     ].filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
     if (routeEndpointPcbPortIds.length === 0) return hdRoute
 
@@ -73,11 +73,11 @@ export const lockHdRouteTerminals = (
       )
     }
 
-    const startTerminal = terminalIdentity.startPcbPortId
-      ? terminalByPcbPortId.get(terminalIdentity.startPcbPortId)
+    const startTerminal = hdRoute.startPcbPortId
+      ? terminalByPcbPortId.get(hdRoute.startPcbPortId)
       : undefined
-    const endTerminal = terminalIdentity.endPcbPortId
-      ? terminalByPcbPortId.get(terminalIdentity.endPcbPortId)
+    const endTerminal = hdRoute.endPcbPortId
+      ? terminalByPcbPortId.get(hdRoute.endPcbPortId)
       : undefined
 
     const route = hdRoute.route.map((point, pointIndex) => {

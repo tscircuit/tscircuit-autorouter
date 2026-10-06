@@ -29,6 +29,8 @@ export type UnsolvedRoute3 = {
   end: Point3
 }
 
+type ConnectionName = string
+
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "MultipleHighDensityRouteStitchSolver3"
@@ -419,6 +421,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const unsolvedRoute = this.unsolvedRoutes.pop()
 
     if (!unsolvedRoute) {
+      const connectionNamesWithCompleteTerminalRoutes =
+        new Set<ConnectionName>()
+      for (const route of this.mergedHdRoutes) {
+        if (route.startPcbPortId && route.endPcbPortId) {
+          connectionNamesWithCompleteTerminalRoutes.add(route.connectionName)
+        }
+      }
+      this.mergedHdRoutes = this.mergedHdRoutes.filter(
+        (route) =>
+          !connectionNamesWithCompleteTerminalRoutes.has(
+            route.connectionName,
+          ) || Boolean(route.startPcbPortId && route.endPcbPortId),
+      )
       this.solved = true
       return
     }

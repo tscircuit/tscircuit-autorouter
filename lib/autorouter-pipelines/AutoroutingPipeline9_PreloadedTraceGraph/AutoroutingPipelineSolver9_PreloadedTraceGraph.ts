@@ -69,9 +69,9 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
+import { getTerminalLayerIndicesByPcbPortId } from "../../utils/getTerminalLayerIndicesByPcbPortId"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
-import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -747,9 +747,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             netByConnectionName,
             enableCrossingViaReduction: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
-              cms.srj.connections,
-              cms.srj.obstacles,
-              cms.srj.layerCount,
+              {
+                connections: cms.srj.connections,
+                obstacles: cms.srj.obstacles,
+                layerCount: cms.srj.layerCount,
+              },
             ),
             iterations: 2,
           },
@@ -813,17 +815,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
-            hdRoutes: lockHdRouteTerminals(
-              canonicalizePipeline9HdRoutes(
+            hdRoutes: lockHdRouteTerminals({
+              hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
-              cms.netToPointPairsSolver?.newConnections ?? [],
-              new Map(
-                (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                  (route) => [route.connectionName, route],
-                ),
-              ),
-            ),
+              connections: cms.netToPointPairsSolver?.newConnections ?? [],
+            }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
             maxIterations: 16,
@@ -911,11 +908,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               ),
               enableCrossingViaReduction: true,
               terminalLayerIndicesByPcbPortId:
-                getTerminalLayerIndicesByPcbPortId(
-                  cms.srj.connections,
-                  cms.srj.obstacles,
-                  cms.srj.layerCount,
-                ),
+                getTerminalLayerIndicesByPcbPortId({
+                  connections: cms.srj.connections,
+                  obstacles: cms.srj.obstacles,
+                  layerCount: cms.srj.layerCount,
+                }),
             },
             getCost: (
               routes: HighDensityRoute[],

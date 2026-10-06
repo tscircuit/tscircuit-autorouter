@@ -67,6 +67,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getTerminalLayerIndicesByPcbPortId } from "../../utils/getTerminalLayerIndicesByPcbPortId"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
@@ -630,6 +631,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
+          terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId({
+            connections: cms.srj.connections,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+          }),
           iterations: 2,
         },
       ],
@@ -652,15 +658,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockHdRouteTerminals(
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-            cms.netToPointPairsSolver?.newConnections ?? [],
-            new Map(
-              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                (route) => [route.connectionName, route],
-              ),
-            ),
-          ),
+          hdRoutes: lockHdRouteTerminals({
+            hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          }),
           connMap: cms.connMap,
           effort: Math.min(1, cms.effort),
           maxIterations: 16,

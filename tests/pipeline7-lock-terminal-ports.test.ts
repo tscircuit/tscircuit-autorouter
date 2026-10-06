@@ -43,14 +43,10 @@ test("Pipeline7 locks direct and reversed PCB terminal endpoints", () => {
     makeRoute("direct", 0.03, 1.96, "pcb_port_a", "pcb_port_b"),
     makeRoute("reversed", 11.97, 10.04, "pcb_port_d", "pcb_port_c"),
   ]
-  const routesAfterSimplification = identityRoutes.map(
-    ({ startPcbPortId: _start, endPcbPortId: _end, ...route }) => route,
-  )
-  const [direct, reversed] = lockHdRouteTerminals(
-    routesAfterSimplification,
+  const [direct, reversed] = lockHdRouteTerminals({
+    hdRoutes: identityRoutes,
     connections,
-    new Map(identityRoutes.map((route) => [route.connectionName, route])),
-  )
+  })
 
   expect(direct?.route).toEqual([
     { x: 0, y: 0, z: 0, pcb_port_id: "pcb_port_a" },
@@ -61,25 +57,25 @@ test("Pipeline7 locks direct and reversed PCB terminal endpoints", () => {
     { x: 10, y: 0, z: 0, pcb_port_id: "pcb_port_c" },
   ])
 
-  const [identitySwapped] = lockHdRouteTerminals(
-    [makeRoute("direct", 0.03, 1.96, "pcb_port_b", "pcb_port_a")],
+  const [identitySwapped] = lockHdRouteTerminals({
+    hdRoutes: [makeRoute("direct", 0.03, 1.96, "pcb_port_b", "pcb_port_a")],
     connections,
-  )
+  })
   expect(identitySwapped!.route).toEqual([
     { x: 2, y: 0, z: 0, pcb_port_id: "pcb_port_b" },
     { x: 0, y: 0, z: 0, pcb_port_id: "pcb_port_a" },
   ])
 
   expect(() =>
-    lockHdRouteTerminals(
-      [makeRoute("direct", 0.03, 1.96, "unknown", "pcb_port_b")],
+    lockHdRouteTerminals({
+      hdRoutes: [makeRoute("direct", 0.03, 1.96, "unknown", "pcb_port_b")],
       connections,
-    ),
+    }),
   ).toThrow("route endpoint IDs do not match connection terminal IDs")
   expect(() =>
-    lockHdRouteTerminals(
-      [makeRoute("missing", 0.03, 1.96, "pcb_port_a", "pcb_port_b")],
+    lockHdRouteTerminals({
+      hdRoutes: [makeRoute("missing", 0.03, 1.96, "pcb_port_a", "pcb_port_b")],
       connections,
-    ),
+    }),
   ).toThrow('connection "missing" was not found')
 })

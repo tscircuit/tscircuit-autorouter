@@ -1,6 +1,9 @@
-import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import type { Obstacle, SimpleRouteConnection } from "lib/types"
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+
+type PcbPortId = string
+type PointCenterKey = string
 
 /**
  * Returns the physical copper-layer indices on which each PCB-port terminal
@@ -8,21 +11,25 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
  * metadata is the primary source; an exactly centered multilayer obstacle
  * connected to that specific PCB port may add layers for a plated hole.
  */
-export const getTerminalLayerIndicesByPcbPortId = (
-  connections: ReadonlyArray<SimpleRouteConnection>,
-  obstacles: ReadonlyArray<Obstacle>,
-  layerCount: number,
-): ReadonlyMap<string, ReadonlySet<number>> => {
+export const getTerminalLayerIndicesByPcbPortId = ({
+  connections,
+  obstacles,
+  layerCount,
+}: {
+  connections: ReadonlyArray<SimpleRouteConnection>
+  obstacles: ReadonlyArray<Obstacle>
+  layerCount: number
+}): ReadonlyMap<PcbPortId, ReadonlySet<number>> => {
   const getCenterKey = (point: { x: number; y: number }) =>
     `${point.x}:${point.y}`
-  const obstaclesByCenter = new Map<string, Obstacle[]>()
+  const obstaclesByCenter = new Map<PointCenterKey, Obstacle[]>()
   for (const obstacle of obstacles) {
     const centerKey = getCenterKey(obstacle.center)
     const centeredObstacles = obstaclesByCenter.get(centerKey) ?? []
     centeredObstacles.push(obstacle)
     obstaclesByCenter.set(centerKey, centeredObstacles)
   }
-  const terminalLayerIndicesByPcbPortId = new Map<string, Set<number>>()
+  const terminalLayerIndicesByPcbPortId = new Map<PcbPortId, Set<number>>()
   for (const connection of connections) {
     for (const point of connection.pointsToConnect) {
       if (!point.pcb_port_id) continue
