@@ -848,6 +848,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             originalSrj: cms.originalSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            targetTraceClearance: 0.1,
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
             mutatedPreloadedTraceIds: new Set(

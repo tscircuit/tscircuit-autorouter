@@ -74,6 +74,7 @@ type Pipeline9JointDrcRepairSolverParams = {
   layerCount: number
   defaultViaDiameter: number
   defaultViaHoleDiameter: number
+  targetTraceClearance?: number
   effort: number
   colorMap: Record<string, string>
 }
@@ -791,10 +792,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance =
-      params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
+    // A routing target may request more margin than the board's minimum rule.
+    // Keep the input rules intact and never search below the declared clearance.
+    const traceClearance = Math.max(
+      params.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      params.targetTraceClearance ?? 0,
+    )
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
