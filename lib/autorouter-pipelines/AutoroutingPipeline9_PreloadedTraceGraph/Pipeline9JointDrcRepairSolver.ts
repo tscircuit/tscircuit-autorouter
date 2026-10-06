@@ -53,6 +53,8 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
+import { Pipeline9GridDrcRepairSolver } from "./Pipeline9GridDrcRepairSolver"
+
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
@@ -676,6 +678,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof Pipeline9BoundedRegionalRepairSolver
   >[0]
   private boundedRegionalRepairStartedAt?: number
+  private gridRepairStartedAt?: number
+  gridRepairSolver?: Pipeline9GridDrcRepairSolver
   readonly pipelineDef = [
     {
       solverName: "exactRepairSolver",
@@ -714,6 +718,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return this.boundedRegionalRepairSolver
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
+    },
+    {
+      solverName: "gridRepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
+          throw new Error("Pipeline9 grid repair stage is missing its validated input")
+        }
+        this.gridRepairStartedAt = performance.now()
+        this.gridRepairSolver = new Pipeline9GridDrcRepairSolver({
+          srj: this.params.originalSrj,
+          routes: this.combinedOutput,
+          fixedRoutes: this.fixedPreloadedObstacleRoutes,
+          immutableConnectionNames: this.syntheticConnectionNames,
+          connMap: this.params.connMap,
+          drcEvaluator: this.cachedReferenceDrcEvaluator,
+          effort: this.params.effort,
+        })
+        return this.gridRepairSolver
+      },
+      onSolved: (): void => this.finishGridRepair(),
     },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
@@ -1844,6 +1868,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
+    }
+  }
+
+  private finishGridRepair(): void {
+    if (!this.gridRepairSolver?.solved || this.gridRepairStartedAt === undefined) {
+      throw new Error("Pipeline9 grid repair stage must solve before completion")
+    }
+    this.combinedOutput = this.gridRepairSolver.getOutput()
+    this.stats = {
+      ...this.stats,
+      ...this.gridRepairSolver.stats,
+      gridRepairTimeMs: performance.now() - this.gridRepairStartedAt,
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
     }
     this.solved = true
   }
