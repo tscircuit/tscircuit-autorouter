@@ -652,15 +652,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockHdRouteTerminals(
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-            cms.netToPointPairsSolver?.newConnections ?? [],
-            new Map(
-              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                (route) => [route.connectionName, route],
-              ),
-            ),
-          ),
+          hdRoutes: lockHdRouteTerminals({
+            hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          }),
           connMap: cms.connMap,
           effort: Math.min(1, cms.effort),
           maxIterations: 16,

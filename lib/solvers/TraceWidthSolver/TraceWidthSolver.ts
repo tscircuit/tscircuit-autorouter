@@ -794,6 +794,8 @@ export class TraceWidthSolver extends BaseSolver {
     return {
       connectionName: route.connectionName,
       rootConnectionName: route.rootConnectionName,
+      startPcbPortId: route.startPcbPortId,
+      endPcbPortId: route.endPcbPortId,
       traceThickness: traceWidth,
       viaDiameter: route.viaDiameter,
       route: this.createTerminalTaperedRoute(route, traceWidth),
