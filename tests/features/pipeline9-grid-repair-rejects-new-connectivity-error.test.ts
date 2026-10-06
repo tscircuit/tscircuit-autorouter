@@ -7,15 +7,29 @@ test("a lower DRC count cannot publish a new missing connection", () => {
   const fixture = createBoundedRegionalRepairFixture()
   let validations = 0
   const solver = new Pipeline9GridDrcRepairSolver({
-    srj: fixture.originalSrj, routes: fixture.routes, fixedRoutes: [],
+    srj: fixture.originalSrj,
+    routes: fixture.routes,
+    fixedRoutes: [],
     immutableConnectionNames: fixture.syntheticConnectionNames,
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
     drcEvaluator: () => {
       validations++
       return validations === 1
-        ? [0, 1, 2].map((index) => ({ type: "pcb_trace_error", pcb_trace_id: "signal_0", message: `Collision ${index}` }))
-        : [{ type: "pcb_trace_error", pcb_trace_id: "signal_0", pcb_trace_error_id: "missing_connection_signal_0_end", message: "Missing connection" }]
-    }, effort: 1,
+        ? [0, 1, 2].map((index) => ({
+            type: "pcb_trace_error",
+            pcb_trace_id: "signal_0",
+            message: `Collision ${index}`,
+          }))
+        : [
+            {
+              type: "pcb_trace_error",
+              pcb_trace_id: "signal_0",
+              pcb_trace_error_id: "missing_connection_signal_0_end",
+              message: "Missing connection",
+            },
+          ]
+    },
+    effort: 1,
   })
   solver.solve()
   expect(validations).toBe(2)

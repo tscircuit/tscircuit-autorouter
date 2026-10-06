@@ -7,13 +7,22 @@ test("grid repair rejects a geometrically legal detour when reference DRC does n
   const fixture = createBoundedRegionalRepairFixture()
   let validations = 0
   const solver = new Pipeline9GridDrcRepairSolver({
-    srj: fixture.originalSrj, routes: fixture.routes, fixedRoutes: [],
+    srj: fixture.originalSrj,
+    routes: fixture.routes,
+    fixedRoutes: [],
     immutableConnectionNames: fixture.syntheticConnectionNames,
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
     drcEvaluator: () => {
       validations++
-      return [{ type: "pcb_trace_error", pcb_trace_id: "signal_0", message: "Persistent violation" }]
-    }, effort: 1,
+      return [
+        {
+          type: "pcb_trace_error",
+          pcb_trace_id: "signal_0",
+          message: "Persistent violation",
+        },
+      ]
+    },
+    effort: 1,
   })
   solver.solve()
   expect(validations).toBe(2)

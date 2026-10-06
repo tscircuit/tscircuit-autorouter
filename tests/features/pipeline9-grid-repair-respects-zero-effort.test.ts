@@ -6,10 +6,13 @@ import { createBoundedRegionalRepairFixture } from "tests/fixtures/pipeline9-bou
 test("zero effort spends no path-search budget", () => {
   const fixture = createBoundedRegionalRepairFixture()
   const solver = new Pipeline9GridDrcRepairSolver({
-    srj: fixture.originalSrj, routes: fixture.routes, fixedRoutes: [],
+    srj: fixture.originalSrj,
+    routes: fixture.routes,
+    fixedRoutes: [],
     immutableConnectionNames: fixture.syntheticConnectionNames,
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
-    drcEvaluator: fixture.drcEvaluator, effort: 0,
+    drcEvaluator: fixture.drcEvaluator,
+    effort: 0,
   })
   solver.solve()
   expect(solver.getOutput()).toBe(fixture.routes)

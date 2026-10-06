@@ -13,16 +13,23 @@ test("grid repair preserves explicit via transitions and PCB port endpoints", ()
   route.vias.push({ x: 4, y: 0 })
   const original = structuredClone(route)
   const solver = new Pipeline9GridDrcRepairSolver({
-    srj: fixture.originalSrj, routes: fixture.routes, fixedRoutes: [],
+    srj: fixture.originalSrj,
+    routes: fixture.routes,
+    fixedRoutes: [],
     immutableConnectionNames: fixture.syntheticConnectionNames,
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
-    drcEvaluator: fixture.drcEvaluator, effort: 1,
+    drcEvaluator: fixture.drcEvaluator,
+    effort: 1,
   })
   solver.solve()
   const result = solver.getOutput()[0]!
   expect(solver.stats.gridRepairAcceptedCount).toBe(1)
   expect(result.vias).toEqual(original.vias)
-  expect(result.route.filter((point) => point.pcb_port_id)).toEqual(original.route.filter((point) => point.pcb_port_id))
-  expect(result.route.filter((point) => point.z === 1)).toEqual(original.route.filter((point) => point.z === 1))
+  expect(result.route.filter((point) => point.pcb_port_id)).toEqual(
+    original.route.filter((point) => point.pcb_port_id),
+  )
+  expect(result.route.filter((point) => point.z === 1)).toEqual(
+    original.route.filter((point) => point.z === 1),
+  )
   expect(result.viaDiameter).toBe(original.viaDiameter)
 })

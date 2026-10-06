@@ -5,12 +5,21 @@ import { createBoundedRegionalRepairFixture } from "tests/fixtures/pipeline9-bou
 
 test("planar grid repair leaves differential pairs to coupled solvers", () => {
   const fixture = createBoundedRegionalRepairFixture()
-  fixture.originalSrj.differentialPairs = [{ connectionNames: ["signal", "signal_n"], lengthTolerance: 0.05, maxUncoupledLength: 0.5 }]
+  fixture.originalSrj.differentialPairs = [
+    {
+      connectionNames: ["signal", "signal_n"],
+      lengthTolerance: 0.05,
+      maxUncoupledLength: 0.5,
+    },
+  ]
   const solver = new Pipeline9GridDrcRepairSolver({
-    srj: fixture.originalSrj, routes: fixture.routes, fixedRoutes: [],
+    srj: fixture.originalSrj,
+    routes: fixture.routes,
+    fixedRoutes: [],
     immutableConnectionNames: fixture.syntheticConnectionNames,
     connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
-    drcEvaluator: fixture.drcEvaluator, effort: 1,
+    drcEvaluator: fixture.drcEvaluator,
+    effort: 1,
   })
   solver.solve()
   expect(solver.getOutput()).toBe(fixture.routes)

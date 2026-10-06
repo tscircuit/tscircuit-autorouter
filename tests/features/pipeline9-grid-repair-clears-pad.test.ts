@@ -5,7 +5,10 @@ import { createBoundedRegionalRepairFixture } from "tests/fixtures/pipeline9-bou
 
 test("grid repair clears foreign pad copper without changing terminals or manufacturing dimensions", () => {
   const fixture = createBoundedRegionalRepairFixture()
-  const original = structuredClone({ routes: fixture.routes, originalSrj: fixture.originalSrj })
+  const original = structuredClone({
+    routes: fixture.routes,
+    originalSrj: fixture.originalSrj,
+  })
   const solver = new Pipeline9GridDrcRepairSolver({
     srj: fixture.originalSrj,
     routes: fixture.routes,

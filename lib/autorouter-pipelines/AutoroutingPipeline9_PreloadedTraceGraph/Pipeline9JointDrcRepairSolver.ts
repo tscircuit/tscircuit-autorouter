@@ -723,7 +723,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       solverName: "gridRepairSolver",
       createSolver: (): BaseSolver => {
         if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
-          throw new Error("Pipeline9 grid repair stage is missing its validated input")
+          throw new Error(
+            "Pipeline9 grid repair stage is missing its validated input",
+          )
         }
         this.gridRepairStartedAt = performance.now()
         this.gridRepairSolver = new Pipeline9GridDrcRepairSolver({
@@ -1872,8 +1874,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   private finishGridRepair(): void {
-    if (!this.gridRepairSolver?.solved || this.gridRepairStartedAt === undefined) {
-      throw new Error("Pipeline9 grid repair stage must solve before completion")
+    if (
+      !this.gridRepairSolver?.solved ||
+      this.gridRepairStartedAt === undefined
+    ) {
+      throw new Error(
+        "Pipeline9 grid repair stage must solve before completion",
+      )
     }
     this.combinedOutput = this.gridRepairSolver.getOutput()
     this.stats = {
