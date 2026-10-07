@@ -6,10 +6,7 @@ type IntegerSegmentIndex = number
 
 export class SegmentedIntegerSet implements Iterable<number> {
   private readonly integerCount: number
-  private readonly segmentsByIndex = new Map<
-    IntegerSegmentIndex,
-    Uint8Array
-  >()
+  private readonly segmentsByIndex = new Map<IntegerSegmentIndex, Uint8Array>()
   private readonly integersInInsertionOrder: number[] = []
 
   constructor(integerCount: number) {
@@ -30,7 +27,7 @@ export class SegmentedIntegerSet implements Iterable<number> {
   }
 
   has(integer: number): boolean {
-    if ((integer >>> 0) !== integer || integer >= this.integerCount) return false
+    if (integer >>> 0 !== integer || integer >= this.integerCount) return false
     const segmentIndex = Math.floor(
       integer / integersPerSegment,
     ) as IntegerSegmentIndex
@@ -43,7 +40,7 @@ export class SegmentedIntegerSet implements Iterable<number> {
   }
 
   add(integer: number): this {
-    if ((integer >>> 0) !== integer || integer >= this.integerCount) {
+    if (integer >>> 0 !== integer || integer >= this.integerCount) {
       throw new RangeError(
         `SegmentedIntegerSet integer must be from 0 to ${this.integerCount - 1}, received ${integer}`,
       )
