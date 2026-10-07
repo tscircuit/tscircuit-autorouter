@@ -408,9 +408,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
         this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
-        this.failedSubSolvers.push(this.activeSubSolver)
+        const failedSubSolver = this.activeSubSolver
         this.activeSubSolver = null
-        this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
+        this.error = failedSubSolver.error
+        if (this.captureSearchDebug) {
+          this.failedSubSolvers.push(failedSubSolver)
+        }
         this.failed = true
       }
       return
