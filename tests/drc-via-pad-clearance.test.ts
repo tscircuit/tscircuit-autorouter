@@ -43,44 +43,41 @@ test("getDrcErrors checks via-to-pad copper clearance and retains its location",
   expect(result.locationAwareErrors[0].center.y).toBeCloseTo(0)
 
   // Disabling trace-only clearance diagnostics must still check via copper.
-  expect(getDrcErrors(circuitJson, {
-    includeTypedTraceClearance: false,
-  }).errors).toHaveLength(1)
-  expect(getDrcErrors(circuitJson, {
-    viaPadClearance: 0.04,
-  }).errors).toEqual([])
+  expect(
+    getDrcErrors(circuitJson, {
+      includeTypedTraceClearance: false,
+    }).errors,
+  ).toHaveLength(1)
+  expect(
+    getDrcErrors(circuitJson, {
+      viaPadClearance: 0.04,
+    }).errors,
+  ).toEqual([])
 
   const pad = circuitJson[0]
   const via = circuitJson[1]
   if (pad.type !== "pcb_smtpad" || via.type !== "pcb_via") {
     throw new Error("Expected pad and via fixture elements")
   }
-  expect(getDrcErrors([
-    pad,
-    { ...via, x: 0.6 },
-  ]).errors).toHaveLength(1)
-  expect(getDrcErrors([
-    pad,
-    { ...via, x: 1 },
-  ]).errors).toEqual([])
-  expect(getDrcErrors([
-    pad,
-    { ...via, layers: ["bottom"] },
-  ]).errors).toEqual([])
-  expect(getDrcErrors([
-    pad,
-    { ...via, pcb_trace_id: "same_net_trace" },
-    {
-      type: "pcb_trace",
-      pcb_trace_id: "same_net_trace",
-      source_trace_id: "same_net_source_trace",
-      route: [],
-    },
-    {
-      type: "source_trace",
-      source_trace_id: "same_net_source_trace",
-      connected_source_port_ids: ["port"],
-      connected_source_net_ids: [],
-    },
-  ]).errors).toEqual([])
+  expect(getDrcErrors([pad, { ...via, x: 0.6 }]).errors).toHaveLength(1)
+  expect(getDrcErrors([pad, { ...via, x: 1 }]).errors).toEqual([])
+  expect(getDrcErrors([pad, { ...via, layers: ["bottom"] }]).errors).toEqual([])
+  expect(
+  getDrcErrors([
+      pad,
+      { ...via, pcb_trace_id: "same_net_trace" },
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "same_net_trace",
+        source_trace_id: "same_net_source_trace",
+        route: [],
+      },
+      {
+        type: "source_trace",
+        source_trace_id: "same_net_source_trace",
+        connected_source_port_ids: ["port"],
+        connected_source_net_ids: [],
+      },
+    ]).errors,
+  ).toEqual([])
 })
