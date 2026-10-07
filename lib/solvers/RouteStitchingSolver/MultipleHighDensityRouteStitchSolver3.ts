@@ -1,7 +1,7 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import type { RootConnectionName, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
@@ -15,7 +15,7 @@ import {
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
-  snapIslandEndpointToNearestTerminal,
+  snapIslandEndpointsToDistinctTerminals,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
@@ -30,6 +30,56 @@ export type UnsolvedRoute3 = {
 }
 
 type ConnectionName = string
+type PcbPortId = string
+
+const getRootConnectionNames = (
+  connection: SimpleRouteConnection,
+): RootConnectionName[] => {
+  const rootConnectionNames = new Set(connection.__rootConnectionNames ?? [])
+  if (connection.rootConnectionName) {
+    rootConnectionNames.add(connection.rootConnectionName)
+  }
+  if (rootConnectionNames.size === 0) rootConnectionNames.add(connection.name)
+  return [...rootConnectionNames]
+}
+
+const getValidPcbPortIdsByConnectionName = (
+  connections: SimpleRouteConnection[],
+): Map<ConnectionName, ReadonlySet<PcbPortId>> => {
+  const pcbPortIdsByRootConnectionName = new Map<
+    RootConnectionName,
+    Set<PcbPortId>
+  >()
+
+  for (const connection of connections) {
+    for (const rootConnectionName of getRootConnectionNames(connection)) {
+      const pcbPortIds =
+        pcbPortIdsByRootConnectionName.get(rootConnectionName) ?? new Set()
+      for (const point of connection.pointsToConnect) {
+        if (point.pcb_port_id) pcbPortIds.add(point.pcb_port_id)
+      }
+      pcbPortIdsByRootConnectionName.set(rootConnectionName, pcbPortIds)
+    }
+  }
+
+  const validPcbPortIdsByConnectionName = new Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >()
+  for (const connection of connections) {
+    const validPcbPortIds = new Set<PcbPortId>()
+    for (const rootConnectionName of getRootConnectionNames(connection)) {
+      for (const pcbPortId of pcbPortIdsByRootConnectionName.get(
+        rootConnectionName,
+      ) ?? []) {
+        validPcbPortIds.add(pcbPortId)
+      }
+    }
+    validPcbPortIdsByConnectionName.set(connection.name, validPcbPortIds)
+  }
+
+  return validPcbPortIdsByConnectionName
+}
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -46,6 +96,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+  private validPcbPortIdsByConnectionName: Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -62,7 +116,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
-      preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preserveTerminalPcbPortIds: false,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -154,6 +208,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.validPcbPortIdsByConnectionName = getValidPcbPortIdsByConnectionName(
+      params.connections,
+    )
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -271,14 +328,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
-        })
+        ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
+          start,
+          end,
+          globalStart,
+          globalEnd,
+        }))
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -448,6 +503,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      validPcbPortIds: this.validPcbPortIdsByConnectionName.get(
+        unsolvedRoute.connectionName,
+      ),
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",

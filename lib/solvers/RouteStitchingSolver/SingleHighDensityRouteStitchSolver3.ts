@@ -19,6 +19,11 @@ const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
+type TerminalRouteEndpoint = {
+  route: HighDensityIntraNodeRoute
+  routePoint: RoutePoint
+  orientation: "start-to-end" | "end-to-start"
+}
 export type StitchClearanceMode = "require_clear" | "prefer_clear"
 export {
   MAX_STITCH_GAP_DISTANCE_3,
@@ -42,6 +47,50 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   }
 
   return reversed
+}
+
+const getTerminalRouteEndpoint = (params: {
+  hdRoutes: HighDensityIntraNodeRoute[]
+  startPcbPortId?: string
+  endPcbPortId?: string
+}): TerminalRouteEndpoint | undefined => {
+  if (params.startPcbPortId !== undefined) {
+    for (const route of params.hdRoutes) {
+      if (route.startPcbPortId === params.startPcbPortId) {
+        return {
+          route,
+          routePoint: route.route[0],
+          orientation: "start-to-end",
+        }
+      }
+      if (route.endPcbPortId === params.startPcbPortId) {
+        return {
+          route,
+          routePoint: route.route[route.route.length - 1],
+          orientation: "start-to-end",
+        }
+      }
+    }
+  }
+
+  if (params.endPcbPortId !== undefined) {
+    for (const route of params.hdRoutes) {
+      if (route.startPcbPortId === params.endPcbPortId) {
+        return {
+          route,
+          routePoint: route.route[0],
+          orientation: "end-to-start",
+        }
+      }
+      if (route.endPcbPortId === params.endPcbPortId) {
+        return {
+          route,
+          routePoint: route.route[route.route.length - 1],
+          orientation: "end-to-start",
+        }
+      }
+    }
+  }
 }
 
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -77,6 +126,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    validPcbPortIds?: ReadonlySet<string>
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -156,6 +206,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         : []
       ).filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined),
     )
+    const validPcbPortIds = opts.validPcbPortIds ?? expectedPcbPortIds
     if (
       opts.preserveTerminalPcbPortIds &&
       opts.start.pcb_port_id &&
@@ -170,9 +221,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       .flatMap((route) => [route.startPcbPortId, route.endPcbPortId])
       .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
 
-    if (expectedPcbPortIds.size > 0) {
+    if (validPcbPortIds.size > 0) {
       for (const taggedPcbPortId of taggedPcbPortIds) {
-        if (!expectedPcbPortIds.has(taggedPcbPortId)) {
+        if (!validPcbPortIds.has(taggedPcbPortId)) {
           throw new Error(
             `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}"`,
           )
@@ -224,6 +275,25 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
+    const terminalRouteEndpoint =
+      opts.preserveTerminalPcbPortIds &&
+      opts.start.pcb_port_id !== undefined &&
+      opts.end.pcb_port_id !== undefined &&
+      opts.start.pcb_port_id !== opts.end.pcb_port_id &&
+      opts.start.z !== opts.end.z &&
+      Math.hypot(opts.start.x - opts.end.x, opts.start.y - opts.end.y) <=
+        GEOMETRIC_TOLERANCE
+      ? getTerminalRouteEndpoint({
+          hdRoutes: canonicalHdRoutes,
+          startPcbPortId: opts.start.pcb_port_id,
+          endPcbPortId: opts.end.pcb_port_id,
+        })
+      : undefined
+    if (terminalRouteEndpoint) {
+      firstRoute = terminalRouteEndpoint.route
+      orientation = terminalRouteEndpoint.orientation
+    }
+
     if (orientation === "start-to-end") {
       this.start = opts.start
       this.end = opts.end
@@ -237,16 +307,19 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
     const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
+      terminalRouteEndpoint?.routePoint ??
+      (distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
         ? firstRouteFirstPoint
-        : firstRouteLastPoint
+        : firstRouteLastPoint)
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
     if (
+      terminalRouteEndpoint !== undefined &&
+      opts.preserveTerminalPcbPortIds &&
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id

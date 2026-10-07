@@ -254,6 +254,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+// A port contributes at most two directed hops to each of two search frontiers.
+const MAX_BIDIRECTIONAL_HOPS_PER_PORT = 4
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -306,15 +308,25 @@ const getTinyHyperGraphPipelineInput = (
   const maxPartialRipRouteCount =
     TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
     Number.POSITIVE_INFINITY
+  const solveGraphOptions = getTinyHyperGraphSolveGraphOptions(
+    effort,
+    minViaPadDiameter,
+  )
+  const maxIterations = solveGraphOptions.MAX_ITERATIONS ?? 1_000_000
+  const estimatedBidirectionalHopCount =
+    serializedHyperGraph.ports.length * MAX_BIDIRECTIONAL_HOPS_PER_PORT
   const enablePartialRipForGraph =
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
+  const enableWholeRouteOutsideInForGraph =
+    eligibilityCount > maxPartialRipRouteCount &&
+    estimatedBidirectionalHopCount >= maxIterations
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
-      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...solveGraphOptions,
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -323,7 +335,9 @@ const getTinyHyperGraphPipelineInput = (
           }
         : {
             PARTIAL_RIP_ENABLED: false,
-            OUTSIDE_IN_ROUTING: false,
+            OUTSIDE_IN_ROUTING: enableWholeRouteOutsideInForGraph,
+            WHOLE_ROUTE_OUTSIDE_IN_ROUTING:
+              enableWholeRouteOutsideInForGraph,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(

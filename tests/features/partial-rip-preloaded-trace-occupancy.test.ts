@@ -107,6 +107,7 @@ test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
   ).toBeGreaterThanOrEqual(100)
   expect(defaultTinySolver.PARTIAL_RIP_ENABLED).toBeFalse()
   expect(defaultTinySolver.OUTSIDE_IN_ROUTING).toBeFalse()
+  expect(defaultTinySolver.WHOLE_ROUTE_OUTSIDE_IN_ROUTING).toBeFalse()
   expect(pipeline9TinySolver.PARTIAL_RIP_ENABLED).toBeTrue()
   expect(pipeline9TinySolver.OUTSIDE_IN_ROUTING).toBeTrue()
 })
