@@ -1,4 +1,3 @@
-const maximumIntegerCount = 0x8000_0000
 const integersPerSegment = 4096
 const segmentByteLength = integersPerSegment / 8
 
@@ -11,12 +10,12 @@ export class SegmentedIntegerSet implements Iterable<number> {
 
   constructor(integerCount: number) {
     if (
-      !Number.isSafeInteger(integerCount) ||
-      integerCount < 0 ||
-      integerCount > maximumIntegerCount
+      !Number.isFinite(integerCount) ||
+      !Number.isInteger(integerCount) ||
+      integerCount < 0
     ) {
       throw new RangeError(
-        `SegmentedIntegerSet integerCount must be an integer from 0 to ${maximumIntegerCount}, received ${integerCount}`,
+        `SegmentedIntegerSet integerCount must be a finite non-negative integer, received ${integerCount}`,
       )
     }
     this.integerCount = integerCount
@@ -27,7 +26,13 @@ export class SegmentedIntegerSet implements Iterable<number> {
   }
 
   has(integer: number): boolean {
-    if (integer >>> 0 !== integer || integer >= this.integerCount) return false
+    if (
+      !Number.isInteger(integer) ||
+      integer < 0 ||
+      integer >= this.integerCount
+    ) {
+      return false
+    }
     const segmentIndex = Math.floor(
       integer / integersPerSegment,
     ) as IntegerSegmentIndex
@@ -40,7 +45,11 @@ export class SegmentedIntegerSet implements Iterable<number> {
   }
 
   add(integer: number): this {
-    if (integer >>> 0 !== integer || integer >= this.integerCount) {
+    if (
+      !Number.isInteger(integer) ||
+      integer < 0 ||
+      integer >= this.integerCount
+    ) {
       throw new RangeError(
         `SegmentedIntegerSet integer must be from 0 to ${this.integerCount - 1}, received ${integer}`,
       )

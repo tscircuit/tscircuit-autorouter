@@ -22,6 +22,11 @@ test("SegmentedIntegerSet preserves set behavior within its declared range", () 
   expect(() => integers.add(5000)).toThrow(RangeError)
   expect(() => new SegmentedIntegerSet(1.5)).toThrow(RangeError)
 
+  const enormousRangeIntegers = new SegmentedIntegerSet(3.2e245)
+  enormousRangeIntegers.add(1.6e245)
+  expect(enormousRangeIntegers.has(1.6e245)).toBe(true)
+  expect([...enormousRangeIntegers]).toEqual([1.6e245])
+
   integers.clear()
 
   expect(integers.size).toBe(0)
