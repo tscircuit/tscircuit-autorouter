@@ -55,7 +55,7 @@ import {
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
+import { CapacityMeshEdgeSolver3_Flatbush } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver3_Flatbush"
 import { CapacityNodeTargetMerger } from "../../solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
 import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
@@ -437,7 +437,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "edgeSolver",
-      CapacityMeshEdgeSolver2_NodeTreeOptimization,
+      CapacityMeshEdgeSolver3_Flatbush,
       (cms) => [cms.capacityNodes!],
       {
         onSolved: (cms) => {
