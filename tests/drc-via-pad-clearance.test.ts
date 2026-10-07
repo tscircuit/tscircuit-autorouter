@@ -63,7 +63,7 @@ test("getDrcErrors checks via-to-pad copper clearance and retains its location",
   expect(getDrcErrors([pad, { ...via, x: 1 }]).errors).toEqual([])
   expect(getDrcErrors([pad, { ...via, layers: ["bottom"] }]).errors).toEqual([])
   expect(
-  getDrcErrors([
+    getDrcErrors([
       pad,
       { ...via, pcb_trace_id: "same_net_trace" },
       {

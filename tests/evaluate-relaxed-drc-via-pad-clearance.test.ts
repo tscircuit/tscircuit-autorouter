@@ -24,7 +24,9 @@ test("relaxed DRC reports via-to-pad violations using the declared SRJ clearance
     connections: [
       {
         name: "pad_net",
-        pointsToConnect: [{ x: 0, y: 0, layer: "top", pcb_port_id: "pad_port" }],
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "pad_port" },
+        ],
       },
       {
         name: "route_net",
@@ -42,7 +44,13 @@ test("relaxed DRC reports via-to-pad violations using the declared SRJ clearance
     route: [
       { route_type: "wire", x: 0.9, y: -2, width: 0.1, layer: "bottom" },
       { route_type: "wire", x: 0.9, y: 0, width: 0.1, layer: "bottom" },
-      { route_type: "via", x: 0.9, y: 0, from_layer: "bottom", to_layer: "top" },
+      {
+        route_type: "via",
+        x: 0.9,
+        y: 0,
+        from_layer: "bottom",
+        to_layer: "top",
+      },
       { route_type: "wire", x: 0.9, y: 0, width: 0.1, layer: "top" },
       { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "top" },
     ],
