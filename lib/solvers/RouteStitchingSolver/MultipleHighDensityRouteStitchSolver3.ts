@@ -15,7 +15,7 @@ import {
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
-  snapIslandEndpointToNearestTerminal,
+  snapIslandEndpointToTerminal,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
@@ -30,6 +30,77 @@ export type UnsolvedRoute3 = {
 }
 
 type ConnectionName = string
+type PcbPortId = NonNullable<
+  SimpleRouteConnection["pointsToConnect"][number]["pcb_port_id"]
+>
+type TerminalPcbPortIdContext = {
+  connectionTerminalPcbPortIdsByConnectionName: Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >
+  siblingTerminalPcbPortIdsByConnectionName: Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >
+}
+
+const getTerminalPcbPortIdContext = (
+  connections: SimpleRouteConnection[],
+): TerminalPcbPortIdContext => {
+  const terminalPcbPortIdsByRootConnectionName = new Map<
+    ConnectionName,
+    Set<PcbPortId>
+  >()
+  const connectionTerminalPcbPortIdsByConnectionName = new Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >()
+  for (const connection of connections) {
+    const rootConnectionName =
+      connection.__rootConnectionNames?.[0] ?? connection.name
+    const rootPcbPortIds =
+      terminalPcbPortIdsByRootConnectionName.get(rootConnectionName) ??
+      new Set<PcbPortId>()
+    for (const point of connection.pointsToConnect) {
+      if (point.pcb_port_id) rootPcbPortIds.add(point.pcb_port_id)
+    }
+    connectionTerminalPcbPortIdsByConnectionName.set(
+      connection.name,
+      new Set(
+        connection.pointsToConnect.flatMap((point) =>
+          point.pcb_port_id ? [point.pcb_port_id] : [],
+        ),
+      ),
+    )
+    terminalPcbPortIdsByRootConnectionName.set(
+      rootConnectionName,
+      rootPcbPortIds,
+    )
+  }
+
+  const siblingTerminalPcbPortIdsByConnectionName = new Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >()
+  for (const connection of connections) {
+    const rootConnectionName =
+      connection.__rootConnectionNames?.[0] ?? connection.name
+    const siblingPcbPortIds = new Set(
+      terminalPcbPortIdsByRootConnectionName.get(rootConnectionName),
+    )
+    for (const point of connection.pointsToConnect) {
+      if (point.pcb_port_id) siblingPcbPortIds.delete(point.pcb_port_id)
+    }
+    siblingTerminalPcbPortIdsByConnectionName.set(
+      connection.name,
+      siblingPcbPortIds,
+    )
+  }
+  return {
+    connectionTerminalPcbPortIdsByConnectionName,
+    siblingTerminalPcbPortIdsByConnectionName,
+  }
+}
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -46,6 +117,43 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+  private readonly connectionTerminalPcbPortIdsByConnectionName: Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >
+  private readonly siblingTerminalPcbPortIdsByConnectionName: Map<
+    ConnectionName,
+    ReadonlySet<PcbPortId>
+  >
+
+  /** A same-net sibling terminal is an internal junction for this MST pair. */
+  private removeSiblingTerminalPcbPortIds(params: {
+    connectionName: ConnectionName
+    hdRoutes: HighDensityIntraNodeRoute[]
+  }): HighDensityIntraNodeRoute[] {
+    const siblingPcbPortIds =
+      this.siblingTerminalPcbPortIdsByConnectionName.get(params.connectionName)
+    if (!siblingPcbPortIds?.size) return params.hdRoutes
+
+    return params.hdRoutes.map((route) => {
+      const removeStartPcbPortId =
+        route.startPcbPortId !== undefined &&
+        siblingPcbPortIds.has(route.startPcbPortId)
+      const removeEndPcbPortId =
+        route.endPcbPortId !== undefined &&
+        siblingPcbPortIds.has(route.endPcbPortId)
+      if (!removeStartPcbPortId && !removeEndPcbPortId) return route
+
+      const { startPcbPortId, endPcbPortId, ...routeWithoutTerminalIds } = route
+      return {
+        ...routeWithoutTerminalIds,
+        ...(!removeStartPcbPortId && startPcbPortId
+          ? { startPcbPortId }
+          : {}),
+        ...(!removeEndPcbPortId && endPcbPortId ? { endPcbPortId } : {}),
+      }
+    })
+  }
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -55,7 +163,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   }) {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
-      hdRoutes: params.hdRoutes,
+      hdRoutes: this.removeSiblingTerminalPcbPortIds(params),
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
@@ -63,6 +171,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      connectionTerminalPcbPortIds:
+        this.connectionTerminalPcbPortIdsByConnectionName.get(
+          params.connectionName,
+        ),
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -147,6 +259,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     preferSameLayerTerminalEndpoints?: boolean
   }) {
     super()
+    const terminalPcbPortIdContext = getTerminalPcbPortIdContext(
+      params.connections,
+    )
+    this.connectionTerminalPcbPortIdsByConnectionName =
+      terminalPcbPortIdContext.connectionTerminalPcbPortIdsByConnectionName
+    this.siblingTerminalPcbPortIdsByConnectionName =
+      terminalPcbPortIdContext.siblingTerminalPcbPortIdsByConnectionName
     this.endpointIndex = new EndpointClusterIndex(
       params.preferSameLayerTerminalEndpoints,
     )
@@ -271,13 +390,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
+        start = snapIslandEndpointToTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminal: globalStart,
         })
-        end = snapIslandEndpointToNearestTerminal({
+        end = snapIslandEndpointToTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminal: globalEnd,
         })
       } else {
         start = {
@@ -440,7 +559,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     this.activeSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: unsolvedRoute.connectionName,
-      hdRoutes: unsolvedRoute.hdRoutes,
+      hdRoutes: this.removeSiblingTerminalPcbPortIds(unsolvedRoute),
       start: unsolvedRoute.start,
       end: unsolvedRoute.end,
       colorMap: this.colorMap,
@@ -448,6 +567,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      connectionTerminalPcbPortIds:
+        this.connectionTerminalPcbPortIdsByConnectionName.get(
+          unsolvedRoute.connectionName,
+        ),
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",

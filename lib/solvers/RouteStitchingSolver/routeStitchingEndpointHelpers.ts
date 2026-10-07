@@ -180,28 +180,13 @@ export const selectIslandEndpoints = (params: {
  * Pulls an island endpoint onto an actual terminal only when the endpoint is
  * already close enough to be considered the same stitch target.
  */
-export const snapIslandEndpointToNearestTerminal = (params: {
+export const snapIslandEndpointToTerminal = (params: {
   islandEndpoint: Point3
-  terminals: Point3[]
-}) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
-  let closestTerminal = sortedTerminals[0]
-  let closestDistance = distance(params.islandEndpoint, closestTerminal)
-
-  for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = distance(params.islandEndpoint, terminal)
-    if (
-      terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(terminal, closestTerminal) < 0)
-    ) {
-      closestTerminal = terminal
-      closestDistance = terminalDistance
-    }
-  }
-
-  return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-    ? closestTerminal
+  terminal: Point3
+}): Point3 => {
+  return distance(params.islandEndpoint, params.terminal) <=
+    MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    ? params.terminal
     : params.islandEndpoint
 }
 

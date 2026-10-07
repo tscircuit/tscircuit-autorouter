@@ -680,25 +680,35 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "highDensityStitchSolver",
       MultipleHighDensityRouteStitchSolver3,
-      (cms) => [
-        {
-          connections: [
-            ...cms.srjWithPointPairs!.connections,
-            ...cms
-              .getChangedPreloadedTraceSections()
-              .map((section) => section.connection),
-          ] as SimpleRouteConnection[],
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
-          colorMap: cms.colorMap,
-          layerCount: cms.srj.layerCount,
-          defaultViaDiameter: cms.viaDiameter,
-          preserveTerminalPcbPortIds: true,
-          preferSameLayerTerminalEndpoints: true,
-        },
-      ],
+      (cms) => {
+        const pointPairConnections = cms.srjWithPointPairs!.connections
+        const pointPairConnectionNames = new Set(
+          pointPairConnections.map((connection) => connection.name),
+        )
+        const rootConnections = cms.originalSrj.connections.filter(
+          (connection) => !pointPairConnectionNames.has(connection.name),
+        )
+        return [
+          {
+            connections: [
+              ...pointPairConnections,
+              ...rootConnections,
+              ...cms
+                .getChangedPreloadedTraceSections()
+                .map((section) => section.connection),
+            ] as SimpleRouteConnection[],
+            hdRoutes:
+              cms.highDensityRepairSolver?.getOutput() ??
+              cms.highDensityForceImproveSolver?.getOutput() ??
+              cms.highDensityRouteSolver!.routes,
+            colorMap: cms.colorMap,
+            layerCount: cms.srj.layerCount,
+            defaultViaDiameter: cms.viaDiameter,
+            preserveTerminalPcbPortIds: true,
+            preferSameLayerTerminalEndpoints: true,
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "traceSimplificationSolver",
