@@ -1,4 +1,6 @@
-import { CapacityMeshNode } from "../types"
+import type { CapacityMeshNode } from "../types"
+
+export const CAPACITY_NODE_BORDERING_EPSILON = 0.001
 
 export function areNodesBordering(
   node1: CapacityMeshNode,
@@ -14,17 +16,17 @@ export function areNodesBordering(
   const n2Top = node2.center.y - node2.height / 2
   const n2Bottom = node2.center.y + node2.height / 2
 
-  const epsilon = 0.001
-
   const shareVerticalBorder =
-    (Math.abs(n1Right - n2Left) < epsilon ||
-      Math.abs(n1Left - n2Right) < epsilon) &&
-    Math.min(n1Bottom, n2Bottom) - Math.max(n1Top, n2Top) >= epsilon
+    (Math.abs(n1Right - n2Left) < CAPACITY_NODE_BORDERING_EPSILON ||
+      Math.abs(n1Left - n2Right) < CAPACITY_NODE_BORDERING_EPSILON) &&
+    Math.min(n1Bottom, n2Bottom) - Math.max(n1Top, n2Top) >=
+      CAPACITY_NODE_BORDERING_EPSILON
 
   const shareHorizontalBorder =
-    (Math.abs(n1Bottom - n2Top) < epsilon ||
-      Math.abs(n1Top - n2Bottom) < epsilon) &&
-    Math.min(n1Right, n2Right) - Math.max(n1Left, n2Left) >= epsilon
+    (Math.abs(n1Bottom - n2Top) < CAPACITY_NODE_BORDERING_EPSILON ||
+      Math.abs(n1Top - n2Bottom) < CAPACITY_NODE_BORDERING_EPSILON) &&
+    Math.min(n1Right, n2Right) - Math.max(n1Left, n2Left) >=
+      CAPACITY_NODE_BORDERING_EPSILON
 
   return shareVerticalBorder || shareHorizontalBorder
 }
