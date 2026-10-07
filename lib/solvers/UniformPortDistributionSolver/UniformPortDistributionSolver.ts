@@ -1,9 +1,10 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { GraphicsObject } from "graphics-debug"
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
+import type { Obstacle } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
   OwnerPair,
@@ -18,8 +19,15 @@ import {
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
-import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
-import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
+import {
+  type InputNodeById,
+  indexInputNodesById,
+  shouldIgnorePortPoint,
+} from "./shouldIgnorePortPoint"
+import {
+  SHARED_EDGE_EPSILON,
+  shouldIgnoreSharedEdge,
+} from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
@@ -52,9 +60,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly obstacleIndex: ObstacleSpatialHashIndex
+  private readonly inputNodeById: InputNodeById
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.obstacleIndex = new ObstacleSpatialHashIndex(
+      "flatbush",
+      input.obstacles,
+    )
+    this.inputNodeById = indexInputNodesById(input.inputNodesWithPortPoints)
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -130,9 +145,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (!sharedEdge) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    const edgeObstacles = this.obstacleIndex.search({
+      minX: Math.min(sharedEdge.x1, sharedEdge.x2) - SHARED_EDGE_EPSILON,
+      minY: Math.min(sharedEdge.y1, sharedEdge.y2) - SHARED_EDGE_EPSILON,
+      maxX: Math.max(sharedEdge.x1, sharedEdge.x2) + SHARED_EDGE_EPSILON,
+      maxY: Math.max(sharedEdge.y1, sharedEdge.y2) + SHARED_EDGE_EPSILON,
+    })
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
       sharedEdge,
-      obstacles: this.input.obstacles,
+      obstacles: edgeObstacles,
     })
     if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
     const portCountByLayer = new Map<number, number>()
@@ -143,6 +164,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
     const family: PortPointWithOwnerPair[] = []
+    const blockedByLayer = new Map<number, boolean>()
     for (const portPoint of familyRaw) {
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
@@ -153,17 +175,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ) {
         continue
       }
+      const obstacleLayer = this.input.useLayerAwareGeometry
+        ? portPoint.z
+        : undefined
+      let blockedOnPortLayer = blockedOnAnotherLayer
+      if (obstacleLayer !== undefined) {
+        blockedOnPortLayer = blockedByLayer.get(obstacleLayer) ?? false
+        if (!blockedByLayer.has(obstacleLayer)) {
+          blockedOnPortLayer = shouldIgnoreSharedEdge({
+            sharedEdge,
+            obstacles: edgeObstacles,
+            z: obstacleLayer,
+            layerCount: this.input.layerCount,
+          })
+          blockedByLayer.set(obstacleLayer, blockedOnPortLayer)
+        }
+      }
       if (
-        !shouldIgnoreSharedEdge({
-          sharedEdge,
-          obstacles: this.input.obstacles,
-          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
-          layerCount: this.input.layerCount,
-        }) &&
+        !blockedOnPortLayer &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
+          inputNodeById: this.inputNodeById,
         })
       ) {
         family.push(portPoint)
