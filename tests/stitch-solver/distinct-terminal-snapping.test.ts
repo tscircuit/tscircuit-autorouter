@@ -55,8 +55,27 @@ test("PMP22650 nearby multilayer terminals retain their identities", () => {
         ],
         vias: [],
       },
+      {
+        connectionName,
+        rootConnectionName: "source_net_altium_pcb_3",
+        startPcbPortId: "pcb_port_altium_7314",
+        traceThickness: 0.1,
+        viaDiameter: 0.3,
+        route: [
+          { x: 197.984, y: 122.552, z: 7 },
+          { x: 198.067, y: 121.999, z: 7 },
+          { x: 198.067, y: 121.999, z: 0 },
+          { x: 197.984, y: 122.552, z: 0 },
+        ],
+        vias: [{ x: 198.067, y: 121.999 }],
+      },
     ],
     preserveTerminalPcbPortIds: true,
+    validPcbPortIds: new Set([
+      "pcb_port_altium_8622",
+      "pcb_port_altium_7312",
+      "pcb_port_altium_7314",
+    ]),
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "prefer_clear",
   })
