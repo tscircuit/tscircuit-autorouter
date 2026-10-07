@@ -3,7 +3,7 @@ import type { ConnectionPoint } from "lib/types"
 import { getConnectionPointZLayers } from "./get-connection-point-z-layers"
 import type { RegionHg } from "./types"
 
-const CONNECTION_POINT_REGION_TOLERANCE = 1e-3
+export const CONNECTION_POINT_REGION_TOLERANCE = 1e-3
 
 /** Checks whether a connection endpoint lies inside a region on at least one shared layer. */
 export function checkIfConnectionPointIsInRegion(params: {
