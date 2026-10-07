@@ -1,7 +1,11 @@
+import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { areNodesBordering } from "lib/utils/areNodesBordering"
+import {
+  areNodesBordering,
+  CAPACITY_NODE_BORDERING_EPSILON,
+} from "lib/utils/areNodesBordering"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
@@ -9,6 +13,8 @@ const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
+  private readonly nodeIndex?: Flatbush
+  private readonly indexedNodeIndexes: number[]
 
   constructor(
     private readonly nodes: CapacityMeshNode[],
@@ -18,6 +24,32 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
   ) {
     super()
     this.outputNodes = []
+    this.indexedNodeIndexes = []
+    for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+      const node = nodes[nodeIndex]!
+      if (
+        Number.isFinite(node.center.x) &&
+        Number.isFinite(node.center.y) &&
+        Number.isFinite(node.width) &&
+        Number.isFinite(node.height)
+      ) {
+        this.indexedNodeIndexes.push(nodeIndex)
+      }
+    }
+
+    if (this.indexedNodeIndexes.length === 0) return
+
+    this.nodeIndex = new Flatbush(this.indexedNodeIndexes.length)
+    for (const nodeIndex of this.indexedNodeIndexes) {
+      const node = nodes[nodeIndex]!
+      this.nodeIndex.add(
+        node.center.x - node.width / 2,
+        node.center.y - node.height / 2,
+        node.center.x + node.width / 2,
+        node.center.y + node.height / 2,
+      )
+    }
+    this.nodeIndex.finish()
   }
 
   override getSolverName(): string {
@@ -81,11 +113,21 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     }
 
     if (node._containsTarget) return false
+    if (!Number.isFinite(node.center.x) || !Number.isFinite(node.center.y)) {
+      return true
+    }
 
     // Rect decomposition can produce low-area slices that still connect larger
     // regions. Removing such a slice changes reachability, so retain bridges.
+    const candidateNodeIndexes = this.nodeIndex!.search(
+      node.center.x - node.width / 2 - CAPACITY_NODE_BORDERING_EPSILON,
+      node.center.y - node.height / 2 - CAPACITY_NODE_BORDERING_EPSILON,
+      node.center.x + node.width / 2 + CAPACITY_NODE_BORDERING_EPSILON,
+      node.center.y + node.height / 2 + CAPACITY_NODE_BORDERING_EPSILON,
+    )
     let borderingNodeCount = 0
-    for (const candidate of this.nodes) {
+    for (const indexedNodeIndex of candidateNodeIndexes) {
+      const candidate = this.nodes[this.indexedNodeIndexes[indexedNodeIndex]!]!
       if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue
       if (!node.availableZ.some((z) => candidate.availableZ.includes(z))) {
         continue
