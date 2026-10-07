@@ -327,7 +327,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
-
         ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
           start,
           end,

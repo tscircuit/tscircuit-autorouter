@@ -283,12 +283,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       opts.start.z !== opts.end.z &&
       Math.hypot(opts.start.x - opts.end.x, opts.start.y - opts.end.y) <=
         GEOMETRIC_TOLERANCE
-      ? getTerminalRouteEndpoint({
-          hdRoutes: canonicalHdRoutes,
-          startPcbPortId: opts.start.pcb_port_id,
-          endPcbPortId: opts.end.pcb_port_id,
-        })
-      : undefined
+        ? getTerminalRouteEndpoint({
+            hdRoutes: canonicalHdRoutes,
+            startPcbPortId: opts.start.pcb_port_id,
+            endPcbPortId: opts.end.pcb_port_id,
+          })
+        : undefined
     if (terminalRouteEndpoint) {
       firstRoute = terminalRouteEndpoint.route
       orientation = terminalRouteEndpoint.orientation

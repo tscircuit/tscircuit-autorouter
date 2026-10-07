@@ -336,8 +336,7 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: enableWholeRouteOutsideInForGraph,
-            WHOLE_ROUTE_OUTSIDE_IN_ROUTING:
-              enableWholeRouteOutsideInForGraph,
+            WHOLE_ROUTE_OUTSIDE_IN_ROUTING: enableWholeRouteOutsideInForGraph,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
