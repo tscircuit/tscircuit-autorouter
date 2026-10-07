@@ -1,11 +1,30 @@
-import { PortPoint } from "lib/types/high-density-types"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { OwnerPair } from "./types"
+import type { PortPoint } from "lib/types/high-density-types"
+import type { CapacityMeshNodeId } from "lib/types"
+import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type { OwnerPair } from "./types"
+
+export type InputNodeById = ReadonlyMap<
+  CapacityMeshNodeId,
+  InputNodeWithPortPoints
+>
 
 interface ShouldIgnorePortPointParams {
   portPoint: PortPoint
   ownerNodeIds: OwnerPair
-  inputNodes: InputNodeWithPortPoints[]
+  inputNodeById: InputNodeById
+}
+
+/** Index the first matching node, preserving legacy Array.find precedence. */
+export const indexInputNodesById = (
+  inputNodes: InputNodeWithPortPoints[],
+): InputNodeById => {
+  const inputNodeById = new Map<CapacityMeshNodeId, InputNodeWithPortPoints>()
+  for (const inputNode of inputNodes) {
+    if (!inputNodeById.has(inputNode.capacityMeshNodeId)) {
+      inputNodeById.set(inputNode.capacityMeshNodeId, inputNode)
+    }
+  }
+  return inputNodeById
 }
 
 /**
@@ -15,20 +34,18 @@ interface ShouldIgnorePortPointParams {
 export const shouldIgnorePortPoint = ({
   portPoint,
   ownerNodeIds,
-  inputNodes,
+  inputNodeById,
 }: ShouldIgnorePortPointParams): boolean => {
   for (const ownerNodeId of ownerNodeIds) {
-    const inputNode = inputNodes.find(
-      (n) => n.capacityMeshNodeId === ownerNodeId,
-    )
+    const inputNode = inputNodeById.get(ownerNodeId)
     if (inputNode?._containsTarget) return true
     const inputPortPoint = inputNode?.portPoints.find(
-      (p) => p.portPointId === portPoint.portPointId,
+      (point) => point.portPointId === portPoint.portPointId,
     )
     if (
-      inputPortPoint?.connectionNodeIds?.some(
-        (id) =>
-          inputNodes.find((n) => n.capacityMeshNodeId === id)?._containsTarget,
+      inputPortPoint?.connectionNodeIds.some(
+        (connectionNodeId) =>
+          inputNodeById.get(connectionNodeId)?._containsTarget,
       )
     ) {
       return true
