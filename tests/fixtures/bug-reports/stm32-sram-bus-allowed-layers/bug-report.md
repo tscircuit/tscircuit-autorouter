@@ -14,11 +14,15 @@ bun test --timeout 9999999 tests/bugs/stm32-sram-bus-allowed-layers.test.ts
 ```
 
 On main commit `9336cd949fb478669628d74620bfc4135c9ff087`, Pipeline9 reports
-success, but the test fails with **24 nonzero lateral wire segments** on
+success, but emits **24 nonzero lateral wire segments** on
 `inner1`/`inner2`. Changing allowedLayers to all four layers produces the same
 output. The restriction is present in SRJ after point pairing, but never
 reaches the path planner's traversal rules. This is a P1 silent constraint
 violation: signal copper occupies the intended dedicated plane layers.
+
+The repro test asserts that forbidden copper is present so CI passes while
+the bug is reproducible. The stacked fix retains an expected-failure test
+for the desired zero-violation behavior and separately tests explicit rejection.
 
 The checked-in SVG is generated from this exact input and the solver's newly
 routed traces using `getBugReportSnapshotSvg`. Existing copper is included,
