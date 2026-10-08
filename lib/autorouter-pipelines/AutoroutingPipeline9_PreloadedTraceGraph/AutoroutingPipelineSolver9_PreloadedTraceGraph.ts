@@ -1,3 +1,4 @@
+import { assertBusAllowedLayers } from "./assertBusAllowedLayers"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -1135,6 +1136,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      assertBusAllowedLayers({
+        buses: this.originalSrj.buses ?? [],
+        connMap: this.connMap,
+        traces: [
+          ...this.getPowerTraceExpansionFixedTraces().filter(
+            (trace) => trace.__replaces_pcb_trace_id !== undefined,
+          ),
+          ...this.powerTraceExpansionSolver!.getOutput(),
+        ],
+      })
       this.solved = true
       return
     }
