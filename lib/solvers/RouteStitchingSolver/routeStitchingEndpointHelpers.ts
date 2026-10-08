@@ -180,10 +180,20 @@ export const selectIslandEndpoints = (params: {
  * Pulls an island endpoint onto an actual terminal only when the endpoint is
  * already close enough to be considered the same stitch target.
  */
-export const snapIslandEndpointToNearestTerminal = (params: {
+const snapIslandEndpointToTerminal = (params: {
+  islandEndpoint: Point3
+  terminal: Point3
+}): Point3 => {
+  return distance(params.islandEndpoint, params.terminal) <=
+    MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    ? params.terminal
+    : params.islandEndpoint
+}
+
+const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
-}) => {
+}): Point3 => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
@@ -203,6 +213,48 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
+}
+
+/**
+ * Preserves the established nearest-terminal snapping, but prevents two
+ * distinct connection endpoints from collapsing onto one terminal.
+ */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: Point3 & { pcb_port_id?: string }
+  end: Point3 & { pcb_port_id?: string }
+  globalStart: Point3 & { pcb_port_id?: string }
+  globalEnd: Point3 & { pcb_port_id?: string }
+}): {
+  start: Point3 & { pcb_port_id?: string }
+  end: Point3 & { pcb_port_id?: string }
+} => {
+  const terminals = [params.globalStart, params.globalEnd]
+  const start = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals,
+  })
+  const end = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals,
+  })
+  const terminalsNeedIdentityDisambiguation =
+    start === end &&
+    params.globalStart.pcb_port_id !== undefined &&
+    params.globalEnd.pcb_port_id !== undefined &&
+    params.globalStart.pcb_port_id !== params.globalEnd.pcb_port_id &&
+    params.globalStart.z !== params.globalEnd.z
+  if (!terminalsNeedIdentityDisambiguation) return { start, end }
+
+  return {
+    start: snapIslandEndpointToTerminal({
+      islandEndpoint: params.start,
+      terminal: params.globalStart,
+    }),
+    end: snapIslandEndpointToTerminal({
+      islandEndpoint: params.end,
+      terminal: params.globalEnd,
+    }),
+  }
 }
 
 /**

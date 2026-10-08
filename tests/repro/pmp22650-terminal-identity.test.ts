@@ -69,42 +69,40 @@ const hdRoutes: HighDensityIntraNodeRoute[] = [
   },
 ]
 
-const createSolver = ({
-  hdRoutes,
-  preserveTerminalPcbPortIds,
-}: {
-  hdRoutes: HighDensityIntraNodeRoute[]
-  preserveTerminalPcbPortIds: boolean
-}) =>
+const createSolver = () =>
   new SingleHighDensityRouteStitchSolver3({
     connectionName,
     start,
     end,
     hdRoutes,
-    preserveTerminalPcbPortIds,
+    preserveTerminalPcbPortIds: true,
+    validPcbPortIds: new Set([
+      "pcb_port_altium_8622",
+      "pcb_port_altium_7312",
+      "pcb_port_altium_7314",
+    ]),
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "prefer_clear",
   })
 
-test("PMP22650 sibling terminal identity prevents route stitching", () => {
-  expect(() =>
-    createSolver({ hdRoutes, preserveTerminalPcbPortIds: true }),
-  ).toThrow('found unknown PCB terminal "pcb_port_altium_7314"')
+test("PMP22650 sibling terminal identity is preserved while stitching", () => {
+  const solver = createSolver()
+  solver.solve()
 
-  const visualizationHdRoutes = hdRoutes.map((route) => ({
-    ...route,
-    startPcbPortId: undefined,
-    endPcbPortId: undefined,
-  }))
-  const reproSolver = createSolver({
-    hdRoutes: visualizationHdRoutes,
-    preserveTerminalPcbPortIds: false,
-  })
-  const reproSvg = getSvgFromGraphicsObject(reproSolver.visualize(), {
+  expect(solver.failed).toBe(false)
+  expect(
+    new Set([
+      solver.mergedHdRoute.startPcbPortId,
+      solver.mergedHdRoute.endPcbPortId,
+    ]),
+  ).toEqual(new Set(["pcb_port_altium_8622", "pcb_port_altium_7312"]))
+  expect(solver.mergedHdRoute.route.length).toBeGreaterThan(2)
+
+  const routedSvg = getSvgFromGraphicsObject(solver.visualize(), {
     backgroundColor: "#0d1117",
     svgWidth: 800,
     svgHeight: 500,
   })
 
-  expect(reproSvg).toMatchSvgSnapshot(import.meta.path)
+  expect(routedSvg).toMatchSvgSnapshot(import.meta.path)
 })
