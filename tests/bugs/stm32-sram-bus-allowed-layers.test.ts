@@ -4,7 +4,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import input from "../fixtures/bug-reports/stm32-sram-bus-allowed-layers/input.json"
 
-test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
+test.failing("keeps the STM32 SRAM control bus on its allowed copper layers", async () => {
   const srj = structuredClone(input) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -45,5 +45,5 @@ test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
       return [{ connection: trace.connection_name, layer: point.layer }]
     })
   })
-  expect(forbiddenSegments.length).toBeGreaterThan(0)
+  expect(forbiddenSegments).toEqual([])
 })

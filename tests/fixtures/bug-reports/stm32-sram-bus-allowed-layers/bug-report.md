@@ -31,3 +31,12 @@ does not check allowedLayers; the test checks that constraint separately.
 
 Local reproduction: 3.85 seconds for the test body (timing varies by machine).
 This report concerns layer enforcement only, not SRAM timing or length matching.
+
+## Minimal guard
+
+The stacked fix checks routed bus copper before reporting success and throws
+if a wire occupies a forbidden layer. Valid restricted routes remain accepted.
+It does not implement constrained routing. The desired-routing regression remains
+`test.failing`; a separate test checks the exact rejection and accepts absent
+restrictions or an explicit list containing every board layer. The snapshot
+above remains the original failing routing, not a fabricated corrected board.
