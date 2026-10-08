@@ -5,6 +5,9 @@ import { stackSvgsHorizontally } from "stack-svgs"
 import type { SimpleRouteJson } from "../../lib/types"
 import { convertSrjToGraphicsObject } from "../../lib/utils/convertSrjToGraphicsObject"
 
+const formatMillimeters = (value: number | undefined) =>
+  value === undefined ? "not emitted" : `${Number(value.toFixed(6))} mm`
+
 const createRoutingMetadataSvg = ({
   allowBlindAndBuriedVias,
   allowViaInPad,
@@ -24,22 +27,9 @@ const createRoutingMetadataSvg = ({
       "allowViaInPad",
       allowViaInPad === undefined ? "not emitted" : String(allowViaInPad),
     ],
-    [
-      "minTraceWidth",
-      minTraceWidth === undefined ? "not emitted" : `${minTraceWidth} mm`,
-    ],
-    [
-      "minViaPadDiameter",
-      minViaPadDiameter === undefined
-        ? "not emitted"
-        : `${minViaPadDiameter} mm`,
-    ],
-    [
-      "minViaHoleDiameter",
-      minViaHoleDiameter === undefined
-        ? "not emitted"
-        : `${minViaHoleDiameter} mm`,
-    ],
+    ["minTraceWidth", formatMillimeters(minTraceWidth)],
+    ["minViaPadDiameter", formatMillimeters(minViaPadDiameter)],
+    ["minViaHoleDiameter", formatMillimeters(minViaHoleDiameter)],
   ]
 
   const rows = values
