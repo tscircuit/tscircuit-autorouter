@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-1.5,-0.7 -0.775001,0.166451906949" data-type="line" data-label="ground-a z0" points="133.33333333333331,478.66666666666663 268.66648,316.92897736952" fill="none" stroke="rgba(37, 99, 235, 0.42)" stroke-linejoin="round" stroke-width="27.999999999999996"/></g><g><polyline data-points="-0.775001,0.166451906949 -1.5,0.7" data-type="line" data-label="ground-a z1" points="268.66648,316.92897736952 133.33333333333331,217.33333333333334" fill="none" stroke="rgba(220, 38, 38, 0.42)" stroke-linejoin="round" stroke-width="27.999999999999996"/></g><g><polyline data-points="-1.7,0 -0.775001,0.166451906949" data-type="line" data-label="ground-b z0" points="96,348 268.66648,316.92897736952" fill="none" stroke="rgba(37, 99, 235, 0.42)" stroke-linejoin="round" stroke-width="27.999999999999996"/></g><g><polyline data-points="-0.775001,0.166451906949 -1.7,0.9" data-type="line" data-label="ground-b z1" points="268.66648,316.92897736952 96,180" fill="none" stroke="rgba(220, 38, 38, 0.42)" stroke-linejoin="round" stroke-width="27.999999999999996"/></g><g><rect data-type="rect" data-label="board bounds" data-x="-0.5" data-y="0" x="40" y="161.33333333333337" width="560" height="373.33333333333326" fill="rgba(255, 255, 255, 0)" stroke="#0f172a" stroke-width="0.005357142857142857"/></g><g><rect data-type="rect" data-label="" data-x="0" data-y="0" x="324.66666666666663" y="273.3333333333333" width="177.33333333333337" height="149.33333333333337" fill="rgba(148, 163, 184, 0.58)" stroke="#64748b" stroke-width="0.005357142857142857"/></g><circle data-type="circle" data-label="" data-x="-0.775001" data-y="0.166451906949" cx="268.66648" cy="316.92897736952" r="55.99999999999999" fill="rgba(17, 24, 39, 0.5)" stroke="rgba(248, 250, 252, 0.5)" stroke-width="0.005357142857142857"/><circle data-type="circle" data-label="" data-x="-0.775001" data-y="0.166451906949" cx="268.66648" cy="316.92897736952" r="55.99999999999999" fill="rgba(17, 24, 39, 0.5)" stroke="rgba(248, 250, 252, 0.5)" stroke-width="0.005357142857142857"/><circle data-type="circle" data-label="" data-x="-0.3875005" data-y="0.0832259534745" cx="340.9999066666667" cy="332.46448868476" r="41.06666666666666" fill="rgba(147, 51, 234, 0.38)" stroke="#7e22ce" stroke-width="0.005357142857142857"/><text data-type="text" data-label="Copper gap: 0.000001 mm / 0.10 mm required" data-x="-0.6" data-y="1.25" x="301.3333333333333" y="114.66666666666669" fill="black" font-size="18.666666666666668" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Copper gap: 0.000001 mm / 0.10 mm required</text><text data-type="text" data-label="C12 VCAP_2 pad" data-x="0" data-y="0.65" x="413.3333333333333" y="226.66666666666669" fill="black" font-size="18.666666666666668" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">C12 VCAP_2 pad</text><text data-type="text" data-label="Shared GND via: 0.60 mm copper diameter" data-x="-1" data-y="-0.95" x="226.66666666666666" y="525.3333333333333" fill="black" font-size="14.933333333333334" font-family="sans-serif" text-anchor="middle" dominant-baseline="central">Shared GND via: 0.60 mm copper diameter</text><g><circle data-type="point" data-label="ground-a" data-x="-1.5" data-y="-0.7" cx="133.33333333333331" cy="478.66666666666663" r="3" fill="#111827"/></g><g><circle data-type="point" data-label="ground-a" data-x="-1.5" data-y="0.7" cx="133.33333333333331" cy="217.33333333333334" r="3" fill="#111827"/></g><g><circle data-type="point" data-label="ground-b" data-x="-1.7" data-y="0" cx="96" cy="348" r="3" fill="#111827"/></g><g><circle data-type="point" data-label="ground-b" data-x="-1.7" data-y="0.9" cx="96" cy="180" r="3" fill="#111827"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":186.66666666666666,"c":0,"e":413.3333333333333,"b":0,"d":-186.66666666666666,"f":348};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
