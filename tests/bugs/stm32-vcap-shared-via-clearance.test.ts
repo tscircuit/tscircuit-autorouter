@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver"
-import type { HighDensityRoute, SimpleRouteJson } from "high-density-repair03/lib"
+import type {
+  HighDensityRoute,
+  SimpleRouteJson,
+} from "high-density-repair03/lib"
 
 test("snapshots shared ground via repair beside the STM32 VCAP pad", async (): Promise<void> => {
   // C12 geometry translated to the origin from the STM32 LCD support phase.
