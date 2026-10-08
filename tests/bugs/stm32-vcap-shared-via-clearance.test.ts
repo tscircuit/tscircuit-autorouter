@@ -1,123 +1,57 @@
 import { expect, test } from "bun:test"
-import { pointToBoxDistance } from "@tscircuit/math-utils"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver"
-import type {
-  HighDensityRoute,
-  SimpleRouteJson,
-} from "high-density-repair03/lib"
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import bugReport from "../../fixtures/bug-reports/stm32-lcd-vcap.json" with {
+  type: "json",
+}
 
-test("snapshots shared ground via repair beside the STM32 VCAP pad", async (): Promise<void> => {
-  // C12 geometry translated to the origin from the STM32 LCD support phase.
-  const via = { x: -0.775001, y: 0.166451906949 }
-  const srj: SimpleRouteJson = {
-    bounds: { minX: -2, maxX: 1, minY: -1, maxY: 1 },
-    layerCount: 2,
-    minTraceWidth: 0.15,
-    minViaDiameter: 0.6,
-    minViaEdgeToPadEdgeClearance: 0.1,
-    obstacles: [
-      {
-        type: "rect",
-        center: { x: 0, y: 0 },
-        width: 0.95,
-        height: 0.8,
-        layers: ["top"],
-        connectedTo: ["pcb_smtpad_154", "VCAP_2"],
-      },
-    ],
-    connections: [
-      {
-        name: "ground-a",
-        rootConnectionName: "GND",
-        pointsToConnect: [
-          { x: -1.5, y: -0.7, layer: "top" },
-          { x: -1.5, y: 0.7, layer: "bottom" },
-        ],
-      },
-      {
-        name: "ground-b",
-        rootConnectionName: "GND",
-        pointsToConnect: [
-          { x: -1.7, y: 0, layer: "top" },
-          { x: -1.7, y: 0.9, layer: "bottom" },
-        ],
-      },
-    ],
-  }
-  const routes: HighDensityRoute[] = [
-    {
-      connectionName: "ground-a",
-      rootConnectionName: "GND",
-      traceThickness: 0.15,
-      viaDiameter: 0.6,
-      vias: [via],
-      route: [
-        { x: -1.5, y: -0.7, z: 0 },
-        { ...via, z: 0 },
-        { ...via, z: 1 },
-        { x: -1.5, y: 0.7, z: 1 },
-      ],
-    },
-    {
-      connectionName: "ground-b",
-      rootConnectionName: "GND",
-      traceThickness: 0.15,
-      viaDiameter: 0.6,
-      vias: [via],
-      route: [
-        { x: -1.7, y: 0, z: 0 },
-        { ...via, z: 0 },
-        { ...via, z: 1 },
-        { x: -1.7, y: 0.9, z: 1 },
-      ],
-    },
-  ]
-  const solver = new VisualizedGlobalDrcForceImproveSolver({
-    srj,
-    hdRoutes: structuredClone(routes),
-    enablePostSolveClearanceRelaxation: false,
+test("snapshots the full STM32 LCD board with the shared VCAP ground via", async (): Promise<void> => {
+  // Captured after LCD_LANES (phase 0): all pads and 16 routed bus lanes.
+  const supportInput = structuredClone(
+    bugReport.supportPhaseInput,
+  ) as SimpleRouteJson
+  const supportSolver = new AutoroutingPipelineSolver7_MultiGraph(supportInput, {
+    cacheProvider: null,
   })
-  solver.solve()
-  const output = solver.getOutput()
-  const copperGap =
-    pointToBoxDistance(output[0]!.vias[0]!, srj.obstacles[0]!) - 0.3
+  supportSolver.solve()
+  expect(supportSolver.failed).toBe(false)
+  expect(supportSolver.solved).toBe(true)
+  expect(supportInput.traces).toHaveLength(16)
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.initialDrcIssueCount).toBeGreaterThan(0)
-  expect(output[0]!.vias[0]).toEqual(output[1]!.vias[0])
-  for (const [index, route] of output.entries()) {
-    expect(route.route[0]).toEqual(routes[index]!.route[0])
-    expect(route.route.at(-1)).toEqual(routes[index]!.route.at(-1))
+  // CONTROL_POWER_DEBUG (phase 1) output becomes MCU_DATA_FANOUT (phase 2) copper.
+  const fanoutInput: SimpleRouteJson = {
+    ...supportInput,
+    connections: bugReport.dataFanoutConnections as SimpleRouteConnection[],
+    traces: combinePreloadedAndRoutedTraces(
+      supportInput.traces!,
+      supportSolver.getOutputSimplifiedPcbTraces(),
+    ),
   }
-  const graphics = solver.visualize()
-  graphics.texts = [
-    {
-      x: -0.6,
-      y: 1.25,
-      text: `Copper gap: ${copperGap.toFixed(6)} mm / 0.10 mm required`,
-      fontSize: 0.1,
-      anchorSide: "center",
-    },
-    {
-      x: 0,
-      y: 0.65,
-      text: "C12 VCAP_2 pad",
-      fontSize: 0.1,
-      anchorSide: "center",
-    },
-    {
-      x: -1,
-      y: -0.95,
-      text: "Shared GND via: 0.60 mm copper diameter",
-      fontSize: 0.08,
-      anchorSide: "center",
-    },
-  ]
+  const fanoutSolver = new AutoroutingPipelineSolver7_MultiGraph(fanoutInput, {
+    cacheProvider: null,
+  })
+  fanoutSolver.solve()
+  expect(fanoutSolver.failed).toBe(false)
+  expect(fanoutSolver.solved).toBe(true)
+  const fanoutTraces = fanoutSolver.getOutputSimplifiedPcbTraces()
+  expect(fanoutTraces).toHaveLength(16)
+
   await expect(
-    getSvgFromGraphicsObject(graphics, {
-      backgroundColor: "white",
+    getBugReportSnapshotSvg({
+      inputSrj: {
+        ...fanoutInput,
+        connections: [...supportInput.connections, ...fanoutInput.connections],
+      },
+      srjWithPointPairs: {
+        ...fanoutSolver.srjWithPointPairs!,
+        connections: [
+          ...supportSolver.srjWithPointPairs!.connections,
+          ...fanoutSolver.srjWithPointPairs!.connections,
+        ],
+      },
+      routedTraces: fanoutTraces,
     }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path)
 })
