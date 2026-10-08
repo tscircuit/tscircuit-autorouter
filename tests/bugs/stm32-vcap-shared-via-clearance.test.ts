@@ -12,9 +12,12 @@ test("snapshots the full STM32 LCD board with the shared VCAP ground via", async
   const supportInput = structuredClone(
     bugReport.supportPhaseInput,
   ) as SimpleRouteJson
-  const supportSolver = new AutoroutingPipelineSolver7_MultiGraph(supportInput, {
-    cacheProvider: null,
-  })
+  const supportSolver = new AutoroutingPipelineSolver7_MultiGraph(
+    supportInput,
+    {
+      cacheProvider: null,
+    },
+  )
   supportSolver.solve()
   expect(supportSolver.failed).toBe(false)
   expect(supportSolver.solved).toBe(true)
