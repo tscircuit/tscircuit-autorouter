@@ -34,12 +34,10 @@ test("Pipeline9 releases unused pre-high-density state", (): void => {
     ],
   })
 
-  solver.solveUntilPhase("highDensityRouteSolver")
-  expect(solver.portPointPathingSolver?.solved).toBeTrue()
-
+  solver.solveUntilPhase("portPointPathingSolver")
   solver.step()
 
-  expect(solver.highDensityRouteSolver).toBeDefined()
+  expect(solver.portPointPathingSolver).toBeDefined()
   expect(solver.preprocessSimpleRouteJsonSolver).toBeUndefined()
   expect(solver.escapeViaLocationSolver).toBeUndefined()
   expect(solver.componentDetectionSolver).toBeUndefined()
@@ -52,12 +50,18 @@ test("Pipeline9 releases unused pre-high-density state", (): void => {
   expect(solver.availableSegmentPointSolver).toBeUndefined()
   expect(solver.necessaryCrampedPortPointSolver).toBeUndefined()
   expect(solver.preloadedTraceGraphSolver).toBeUndefined()
-  expect(solver.portPointPathingSolver).toBeUndefined()
-  expect(solver.uniformPortDistributionSolver).toBeUndefined()
   expect(solver.capacityNodes).toBeNull()
   expect(solver.capacityEdges).toBeNull()
   expect(
     solver.sharedEdgeSegmentsWithNecessaryCrampedPortPoints,
   ).toBeUndefined()
   expect(solver.srjWithEscapeViaLocations).toBeUndefined()
+
+  solver.solveUntilPhase("highDensityRouteSolver")
+  expect(solver.portPointPathingSolver?.solved).toBeTrue()
+  solver.step()
+
+  expect(solver.highDensityRouteSolver).toBeDefined()
+  expect(solver.portPointPathingSolver).toBeUndefined()
+  expect(solver.uniformPortDistributionSolver).toBeUndefined()
 })

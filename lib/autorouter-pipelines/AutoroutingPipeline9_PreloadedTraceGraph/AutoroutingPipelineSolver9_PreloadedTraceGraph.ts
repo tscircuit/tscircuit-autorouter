@@ -570,6 +570,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
       {
+        onCreated: (cms) => {
+          cms.releaseUnusedCapacityMeshState()
+        },
         onSolved: (cms) => {
           cms.changedPreloadedTraceSections =
             cms.portPointPathingSolver!.getOutput()
@@ -656,7 +659,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
       {
         onCreated: (cms) => {
-          cms.releaseUnusedPreHighDensityState()
+          cms.releaseUnusedPortPointState()
         },
       },
     ),
@@ -1485,7 +1488,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return this.changedPreloadedTraceSections
   }
 
-  private releaseUnusedPreHighDensityState(): void {
+  private releaseUnusedCapacityMeshState(): void {
     this.preprocessSimpleRouteJsonSolver = undefined
     this.escapeViaLocationSolver = undefined
     this.componentDetectionSolver = undefined
@@ -1498,12 +1501,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.availableSegmentPointSolver = undefined
     this.necessaryCrampedPortPointSolver = undefined
     this.preloadedTraceGraphSolver = undefined
-    this.portPointPathingSolver = undefined
-    this.uniformPortDistributionSolver = undefined
     this.capacityNodes = null
     this.capacityEdges = null
     this.sharedEdgeSegmentsWithNecessaryCrampedPortPoints = undefined
     this.srjWithEscapeViaLocations = undefined
+    this.collectReleasedSolverState()
+  }
+
+  private releaseUnusedPortPointState(): void {
+    this.portPointPathingSolver = undefined
+    this.uniformPortDistributionSolver = undefined
+    this.collectReleasedSolverState()
+  }
+
+  private collectReleasedSolverState(): void {
+    if (typeof Bun !== "undefined") {
+      Bun.gc(true)
+      return
+    }
+
+    const runtime = globalThis as typeof globalThis & { gc?: () => void }
+    runtime.gc?.()
   }
 
   private getPreloadedFixedRouteStateAfterHighDensity(): Pipeline9PreloadedFixedRouteState {
