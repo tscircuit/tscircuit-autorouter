@@ -4,6 +4,8 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import input from "../fixtures/bug-reports/stm32-sram-bus-allowed-layers/input.json"
 
+const MIN_LATERAL_SEGMENT_LENGTH = 1e-6
+
 test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
   const srj = structuredClone(input) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
@@ -22,14 +24,15 @@ test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 
-  const bus = srj.buses!.find((bus) => bus.busId === "CONTROL")!
+  expect(srj.layerCount).toBe(4)
+  expect(srj.buses).toHaveLength(1)
+  expect(traces.length).toBeGreaterThan(0)
+  const bus = srj.buses![0]!
   expect(bus.allowedLayers).toEqual(["top", "bottom"])
   expect(bus.connectionNames).toHaveLength(5)
   const forbiddenSegments = traces.flatMap((trace) => {
     const belongsToBus = bus.connectionNames.some(
-      (name) =>
-        trace.connection_name === name ||
-        trace.connection_name.startsWith(`${name}_`),
+      (name) => solver.connMap.areIdsConnected(name, trace.connection_name),
     )
     if (!belongsToBus) return []
     return trace.route.flatMap((point, index) => {
@@ -40,10 +43,14 @@ test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
         (next.route_type !== "wire" && next.route_type !== "via")
       )
         return []
-      if (Math.hypot(next.x - point.x, next.y - point.y) < 1e-6) return []
+      if (
+        Math.hypot(next.x - point.x, next.y - point.y) <
+        MIN_LATERAL_SEGMENT_LENGTH
+      )
+        return []
       if (bus.allowedLayers!.includes(point.layer)) return []
       return [{ connection: trace.connection_name, layer: point.layer }]
     })
   })
-  expect(forbiddenSegments.length).toBeGreaterThan(0)
+  expect(forbiddenSegments).toHaveLength(24)
 })
