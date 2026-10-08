@@ -1,3 +1,4 @@
+import { assertBusAllowedLayers } from "./assertBusAllowedLayers"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -1135,12 +1136,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      this.assertBusAllowedLayers([
-        ...this.getPowerTraceExpansionFixedTraces().filter(
-          (trace) => trace.__replaces_pcb_trace_id !== undefined,
-        ),
-        ...this.powerTraceExpansionSolver!.getOutput(),
-      ])
+      assertBusAllowedLayers({
+        buses: this.originalSrj.buses ?? [],
+        connMap: this.connMap,
+        traces: [
+          ...this.getPowerTraceExpansionFixedTraces().filter(
+            (trace) => trace.__replaces_pcb_trace_id !== undefined,
+          ),
+          ...this.powerTraceExpansionSolver!.getOutput(),
+        ],
+      })
       this.solved = true
       return
     }
@@ -1616,36 +1621,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.powerTraceExpansionSolver
         .inputSrj as Pipeline7PowerTraceExpansionInput
     ).fixedTraces
-  }
-
-  private assertBusAllowedLayers(traces: SimplifiedPcbTraces): void {
-    for (const bus of this.originalSrj.buses ?? []) {
-      const allowedLayers = bus.allowedLayers
-      if (!allowedLayers) continue
-      const netIds = new Set(
-        bus.connectionNames.map((name) =>
-          this.connMap.getNetConnectedToId(name),
-        ),
-      )
-      netIds.delete(undefined)
-      for (const trace of traces) {
-        if (
-          !bus.connectionNames.includes(trace.connection_name) &&
-          !netIds.has(this.connMap.getNetConnectedToId(trace.connection_name))
-        )
-          continue
-        for (const point of trace.route) {
-          if (
-            point.route_type !== "wire" ||
-            allowedLayers.includes(point.layer)
-          )
-            continue
-          throw new Error(
-            `Pipeline9 bus "${bus.busId}" routed on forbidden layer "${point.layer}"`,
-          )
-        }
-      }
-    }
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
