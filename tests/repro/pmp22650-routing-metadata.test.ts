@@ -51,11 +51,11 @@ test("PMP22650 exposes its manufacturing routing constraints", () => {
   ) as unknown as SimpleRouteJson
 
   expect(simpleRouteJson.connections).toHaveLength(409)
-  expect(simpleRouteJson.allowBlindAndBuriedVias).toBe(false)
-  expect(simpleRouteJson.allowViaInPad).toBeUndefined()
-  expect(simpleRouteJson.minTraceWidth).toBe(0.1)
-  expect(simpleRouteJson.minViaPadDiameter).toBeUndefined()
-  expect(simpleRouteJson.minViaHoleDiameter).toBeUndefined()
+  expect(simpleRouteJson.allowBlindAndBuriedVias).toBe(true)
+  expect(simpleRouteJson.allowViaInPad).toBe(true)
+  expect(simpleRouteJson.minTraceWidth).toBeCloseTo(0.1524)
+  expect(simpleRouteJson.minViaPadDiameter).toBe(0.2032)
+  expect(simpleRouteJson.minViaHoleDiameter).toBe(0.1016)
 
   const boardSvg = getSvgFromGraphicsObject(
     convertSrjToGraphicsObject(simpleRouteJson),
