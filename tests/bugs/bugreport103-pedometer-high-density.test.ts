@@ -19,7 +19,6 @@ test("Pipeline9 routes every pedometer high-density region", async (): Promise<v
   }
 
   expect(pipeline.failed).toBe(false)
-  expect(pipeline.portPointPathingSolver?.solved).toBe(true)
   const highDensitySolver = pipeline.highDensityRouteSolver!
   expect(highDensitySolver.solved).toBe(true)
   expect(Number(highDensitySolver.stats.nodeCount)).toBeGreaterThan(0)

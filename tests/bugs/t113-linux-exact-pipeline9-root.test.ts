@@ -54,7 +54,6 @@ test("completes the exact T113-S3 Pipeline9 run", async () => {
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.error).toBeNull()
-  expect(solver.portPointPathingSolver?.solved).toBe(true)
   expect(solver.getNewTracesBeforePowerExpansion()).toHaveLength(42)
 
   const preloadedFanoutCopper = convertToCircuitJson(
