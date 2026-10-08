@@ -31,8 +31,8 @@ test("reproduces STM32 SRAM control copper on forbidden layers", async () => {
   expect(bus.allowedLayers).toEqual(["top", "bottom"])
   expect(bus.connectionNames).toHaveLength(5)
   const forbiddenSegments = traces.flatMap((trace) => {
-    const belongsToBus = bus.connectionNames.some(
-      (name) => solver.connMap.areIdsConnected(name, trace.connection_name),
+    const belongsToBus = bus.connectionNames.some((name) =>
+      solver.connMap.areIdsConnected(name, trace.connection_name),
     )
     if (!belongsToBus) return []
     return trace.route.flatMap((point, index) => {
