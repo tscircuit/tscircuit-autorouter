@@ -3,6 +3,7 @@ import { ViaPossibilitiesSolver2 } from "lib/solvers/ViaPossibilitiesSolver/ViaP
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 import { MHPoint, PolyLine, Candidate } from "./types1"
 import { PolyLine2 } from "./types2"
+import { markForceOwned } from "./forceWorkspace"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "./MultiHeadPolyLineIntraNodeSolver2_Optimized"
 
 const hashPolyLines = (polyLines: PolyLine2[]) => {
@@ -62,7 +63,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     }
 
     // 2. Convert the completedPaths from ViaPossibilitiesSolver2 into PolyLine[]
-    const polyLines: PolyLine[] = []
+    const polyLines: PolyLine[] = markForceOwned([])
     let totalViaCount = 0
 
     for (const [
@@ -80,7 +81,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       const endPoint = pathPoints[pathPoints.length - 1]
       const middlePointsRaw = pathPoints.slice(1, -1)
 
-      const mPoints: MHPoint[] = []
+      const mPoints: MHPoint[] = markForceOwned([])
       let currentViaCount = 0
 
       // Convert Point3[] to MHPoint[] and identify vias
@@ -101,12 +102,14 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         const z1 = lastZ
         const z2 = isViaStart ? nextRawPoint.z : currentRawPoint.z
 
-        mPoints.push({
-          x: currentRawPoint.x,
-          y: currentRawPoint.y,
-          z1: z1,
-          z2: z2,
-        })
+        mPoints.push(
+          markForceOwned({
+            x: currentRawPoint.x,
+            y: currentRawPoint.y,
+            z1: z1,
+            z2: z2,
+          }),
+        )
 
         if (z1 !== z2) {
           currentViaCount++
@@ -172,12 +175,12 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         // This should also be the same as p2.z1 (layer *before* p2's potential via)
         const segmentZ = p1.z2
 
-        const newMPoint: MHPoint = {
+        const newMPoint: MHPoint = markForceOwned({
           x: midX,
           y: midY,
           z1: segmentZ, // New point is on the same layer
           z2: segmentZ,
-        }
+        })
 
         // Insert the new midpoint into the mPoints array
         // longestSegmentIndex is the index of the point *before* the segment,
@@ -188,21 +191,23 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       }
 
       // Create the final PolyLine object with potentially adjusted mPoints
-      polyLines.push({
-        connectionName,
-        start: {
-          // Use original start/end points from ViaSolver
-          ...startPoint,
-          z1: startPoint.z,
-          z2: startPoint.z, // Start point is not a via itself
-        },
-        end: {
-          ...endPoint,
-          z1: endPoint.z, // End point uses its own Z as z1
-          z2: endPoint.z, // End point is not a via itself
-        },
-        mPoints,
-      })
+      polyLines.push(
+        markForceOwned({
+          connectionName,
+          start: markForceOwned({
+            // Use original start/end points from ViaSolver
+            ...startPoint,
+            z1: startPoint.z,
+            z2: startPoint.z, // Start point is not a via itself
+          }),
+          end: markForceOwned({
+            ...endPoint,
+            z1: endPoint.z, // End point uses its own Z as z1
+            z2: endPoint.z, // End point is not a via itself
+          }),
+          mPoints,
+        }),
+      )
     }
 
     if (polyLines.length === 0) {
@@ -219,14 +224,14 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     const minGaps = this.computeMinGapBtwPolyLines(polyLines)
     const h = this.computeH({ minGaps, forces: [] }) // Initial forces are zero
 
-    const initialCandidate = {
+    const initialCandidate = markForceOwned({
       polyLines,
       g: 0,
       h: h,
       f: 0 + h, // f = g + h
       viaCount: totalViaCount,
       minGaps,
-    }
+    })
     initialCandidate.g = this.computeG(polyLines, initialCandidate)
     initialCandidate.f = initialCandidate.g + initialCandidate.h
 
@@ -266,3 +271,5 @@ const nativeComputeMinGapBtwPolyLines =
   MultiHeadPolyLineIntraNodeSolver.prototype.computeMinGapBtwPolyLines
 const nativeComputeH = MultiHeadPolyLineIntraNodeSolver2.prototype.computeH
 const nativeComputeG = MultiHeadPolyLineIntraNodeSolver2.prototype.computeG
+
+markForceOwned(MultiHeadPolyLineIntraNodeSolver3.prototype)
