@@ -700,6 +700,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
+    let unexposedNeighbor: Node | undefined
+    let nodeKeyArguments: [Node | undefined] | undefined
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
 
@@ -709,19 +711,44 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
-          z: node.z,
-          g: node.g,
-          h: node.h,
-          f: node.f,
-          parent: node,
+        let neighbor: Node
+        if (unexposedNeighbor) {
+          neighbor = unexposedNeighbor
+          neighbor.x = clamp(node.x + x * this.cellStep, minX, maxX)
+          neighbor.y = clamp(node.y + y * this.cellStep, minY, maxY)
+          neighbor.z = node.z
+          neighbor.g = node.g
+          neighbor.h = node.h
+          neighbor.f = node.f
+          neighbor.parent = node
+        } else {
+          neighbor = {
+            x: clamp(node.x + x * this.cellStep, minX, maxX),
+            y: clamp(node.y + y * this.cellStep, minY, maxY),
+            z: node.z,
+            g: node.g,
+            h: node.h,
+            f: node.f,
+            parent: node,
+          }
         }
 
-        const neighborKey = this.getNodeKey(neighbor)
+        // The native key method only reads this record. Custom methods and all
+        // later hooks receive ownership, so their node references stay distinct.
+        const getNodeKey = this.getNodeKey
+        const canReuseNeighbor = getNodeKey === nativeGetNodeKey
+        unexposedNeighbor = undefined
+        let neighborKey: number
+        if (canReuseNeighbor) {
+          neighborKey = callNativeGetNodeKey(this, neighbor)
+        } else {
+          if (!nodeKeyArguments) nodeKeyArguments = [undefined]
+          nodeKeyArguments[0] = neighbor
+          neighborKey = applyNodeKey(getNodeKey, this, nodeKeyArguments)
+        }
 
         if (this.exploredNodes.has(neighborKey)) {
+          if (canReuseNeighbor) unexposedNeighbor = neighbor
           continue
         }
 
@@ -1232,3 +1259,7 @@ function getPointToPrecomputedSegmentDistanceSquared(
   const dy = point.y - projectionY
   return dx * dx + dy * dy
 }
+
+const nativeGetNodeKey = SingleHighDensityRouteSolver.prototype.getNodeKey
+const callNativeGetNodeKey = Function.prototype.call.bind(nativeGetNodeKey)
+const applyNodeKey = Reflect.apply
