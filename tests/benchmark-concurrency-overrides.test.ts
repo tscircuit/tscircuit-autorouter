@@ -11,12 +11,18 @@ import * as os from "node:os"
 import * as path from "node:path"
 import { parseArgs } from "../scripts/benchmark/index"
 import {
+  BENCHMARK_MEMORY_BUDGET_PER_WORKER_BYTES,
   getBenchmarkConcurrency,
+  getBenchmarkMemoryLimit,
   getBenchmarkRuntimeMetadata,
 } from "../scripts/benchmark/benchmarkRuntime"
 
 test("benchmark entrypoints share automatic concurrency and preserve explicit overrides", (): void => {
   const automaticConcurrency = getBenchmarkConcurrency()
+  expect(getBenchmarkConcurrency(32, 16 * 1024 ** 3)).toBe(2)
+  expect(getBenchmarkConcurrency(4, 64 * 1024 ** 3)).toBe(4)
+  expect(getBenchmarkConcurrency(4, 4 * 1024 ** 3)).toBe(1)
+  expect(getBenchmarkConcurrency(32, 12 * 1024 ** 3 - 1)).toBe(1)
   expect(parseArgs([]).concurrency).toBe(automaticConcurrency)
   expect(parseArgs(["--concurrency", "auto"]).concurrency).toBe(
     automaticConcurrency,
@@ -71,6 +77,10 @@ test("benchmark entrypoints share automatic concurrency and preserve explicit ov
   expect(metadata.bunVersion).toBe(Bun.version)
   expect(metadata.logicalCpuCount).toBe(os.cpus().length)
   expect(metadata.availableParallelism).toBe(os.availableParallelism())
+  expect(metadata.memoryLimitBytes).toBe(getBenchmarkMemoryLimit())
+  expect(metadata.memoryBudgetPerWorkerBytes).toBe(
+    BENCHMARK_MEMORY_BUDGET_PER_WORKER_BYTES,
+  )
   expect(metadata.requestedConcurrency).toBe(12)
   expect(metadata.workerCount).toBe(3)
 })

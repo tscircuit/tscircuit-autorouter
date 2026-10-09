@@ -225,6 +225,8 @@ export type BenchmarkRuntimeMetadata = {
   cpuModel: string
   logicalCpuCount: number
   availableParallelism: number
+  memoryLimitBytes: number
+  memoryBudgetPerWorkerBytes: number
   requestedConcurrency: number
   workerCount: number
 }
