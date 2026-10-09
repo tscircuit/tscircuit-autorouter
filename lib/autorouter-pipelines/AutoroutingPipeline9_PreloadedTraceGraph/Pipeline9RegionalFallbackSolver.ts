@@ -143,6 +143,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
     this.params = params
+    const useMultilayerNegotiatedSearch = params.layerCount > 2
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
@@ -160,6 +161,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacles: params.obstacles,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
+      enableNegotiatedSearch: useMultilayerNegotiatedSearch,
+      gridSearchSegmentWork: useMultilayerNegotiatedSearch ? 500 : 10_000,
+      gridSearchWorkScale: useMultilayerNegotiatedSearch ? 0.25 : 1,
+      rejectOverlappingTerminals: useMultilayerNegotiatedSearch,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
