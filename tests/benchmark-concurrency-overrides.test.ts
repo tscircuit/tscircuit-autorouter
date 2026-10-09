@@ -1,6 +1,12 @@
 import { expect, test } from "bun:test"
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 import { parseArgs } from "../scripts/benchmark/index"
@@ -12,9 +18,13 @@ import {
 test("benchmark entrypoints share automatic concurrency and preserve explicit overrides", (): void => {
   const automaticConcurrency = getBenchmarkConcurrency()
   expect(parseArgs([]).concurrency).toBe(automaticConcurrency)
-  expect(parseArgs(["--concurrency", "auto"]).concurrency).toBe(automaticConcurrency)
+  expect(parseArgs(["--concurrency", "auto"]).concurrency).toBe(
+    automaticConcurrency,
+  )
   expect(parseArgs(["--concurrency", "12"]).concurrency).toBe(12)
-  const directory = mkdtempSync(path.join(os.tmpdir(), "benchmark-concurrency-"))
+  const directory = mkdtempSync(
+    path.join(os.tmpdir(), "benchmark-concurrency-"),
+  )
   const binDirectory = path.join(directory, "bin")
   const argumentsPath = path.join(directory, "arguments.txt")
   mkdirSync(binDirectory)
@@ -31,7 +41,11 @@ test("benchmark entrypoints share automatic concurrency and preserve explicit ov
   }
   delete env.BENCHMARK_CONCURRENCY
   try {
-    for (const args of [[], ["--concurrency", "auto"], ["--concurrency", "12"]]) {
+    for (const args of [
+      [],
+      ["--concurrency", "auto"],
+      ["--concurrency", "12"],
+    ]) {
       const result = spawnSync("bash", ["benchmark.sh", ...args], {
         cwd: path.resolve(import.meta.dir, ".."),
         env,
