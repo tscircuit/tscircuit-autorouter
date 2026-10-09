@@ -218,10 +218,23 @@ export type BenchmarkBestViaCellsReport = {
   cells: BestViaCountCell[]
 }
 
+export type BenchmarkRuntimeMetadata = {
+  bunVersion: string
+  platform: string
+  architecture: string
+  cpuModel: string
+  logicalCpuCount: number
+  availableParallelism: number
+  requestedConcurrency: number
+  workerCount: number
+}
+
 export type BenchmarkReport = {
   version: 1
   datasetName: string
   memoryMeasurementMode?: "isolated_process_per_sample"
+  /** Optional so historical benchmark reports remain readable. */
+  runtime?: BenchmarkRuntimeMetadata
   scenarioCount: number
   effortLabel: string
   summary: SolverRunSummary[]
