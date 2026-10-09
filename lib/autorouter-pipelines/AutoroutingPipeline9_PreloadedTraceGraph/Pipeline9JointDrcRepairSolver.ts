@@ -1,20 +1,37 @@
+import { getBoundsOfPcbElements } from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement } from "circuit-json"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import {
+  ConnectivityMap,
+  findConnectedNetworks,
+  getFullConnectivityMapFromCircuitJson,
+} from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
   GlobalDrcBranchPortfolioSolver,
+  getNativePadClearance,
+  NativeDrcContactWorkspace,
+  NativeDrcGrid,
+  type NativeDrcPad,
+  type NativeDrcSceneInput,
+  type NativeDrcSourceTrace,
+  type NativeDrcVia,
+  type PreparedNativeDrcEvaluation,
+  type PreparedNativeDrcPad,
+  PreparedNativeDrcScene,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import {
-  combinePreloadedAndRoutedTraces,
-  evaluateRelaxedDrc,
-} from "lib/testing/evaluate-relaxed-drc"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+  type CircuitJsonNativeDrcPreparationContext,
+  convertToCircuitJson,
+  createNativeDrcInputPreparer,
+  createPcbBoardElement,
+} from "lib/testing/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -24,11 +41,14 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
   applyPipeline9ClearancePrecisionRepairs,
+  CLEARANCE_PRECISION_MARGIN,
   type ClearanceMarginDrcEvaluator,
+  type ClearanceMarginMeasurement,
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
@@ -40,7 +60,6 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
-import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
@@ -49,6 +68,7 @@ import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
+  type Pipeline9DrcError,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
@@ -104,7 +124,463 @@ type NormalizedCandidateDrcResult = {
   errorsWithCenters: Array<Record<string, unknown>>
 }
 
+type PreparedReferenceCandidate = {
+  input: PreparedCandidateDrcInput
+  contacts: NativeDrcContactWorkspace
+}
+
 const POINT_EPSILON = 1e-9
+
+const compilePipeline9NativeDrcScene = ({
+  circuitJson,
+  originalSrj,
+  srjWithPointPairs,
+  traceClearance,
+  viaHoleClearance,
+}: {
+  circuitJson: AnyCircuitElement[]
+  originalSrj: SimpleRouteJson
+  srjWithPointPairs: SimpleRouteJson
+  traceClearance: number
+  viaHoleClearance: number
+}): PreparedNativeDrcScene => {
+  const pads: NativeDrcPad[] = []
+  const holes: NativeDrcSceneInput["holes"] = []
+  const ports: NativeDrcSceneInput["ports"] = []
+  const sourceTraces: NativeDrcSourceTrace[] = []
+  const fixedConnectivityGroups: string[][] = []
+  const fixedIdentityOrder: NonNullable<
+    NativeDrcSceneInput["fixedIdentityOrder"]
+  > = []
+  let board: NativeDrcSceneInput["board"]
+  for (const element of circuitJson) {
+    if (element.type === "source_trace") {
+      if (!Array.isArray(element.connected_source_net_ids)) {
+        throw new Error("Pipeline9 native DRC requires exported source links")
+      }
+      sourceTraces.push({
+        id: element.source_trace_id,
+        portIds: element.connected_source_port_ids,
+        netIds: element.connected_source_net_ids,
+      })
+    } else if (element.type === "pcb_port") {
+      fixedIdentityOrder.push({ id: element.pcb_port_id, kind: "port" })
+      ports.push({
+        id: element.pcb_port_id,
+        x: element.x,
+        y: element.y,
+        layers: element.layers,
+        componentId: element.pcb_component_id,
+      })
+      if (element.source_port_id && element.pcb_port_id) {
+        fixedConnectivityGroups.push([
+          element.source_port_id,
+          element.pcb_port_id,
+        ])
+      }
+    } else if (element.type === "pcb_smtpad") {
+      fixedIdentityOrder.push({ id: element.pcb_smtpad_id, kind: "smtpad" })
+      if (element.shape !== "rect" && element.shape !== "rotated_rect") {
+        throw new Error("Pipeline9 native DRC requires exported pad geometry")
+      }
+      pads.push({
+        id: element.pcb_smtpad_id,
+        kind: "smtpad",
+        shape: "rect",
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+        rotation:
+          element.shape === "rotated_rect" ? element.ccw_rotation : undefined,
+        layers: [element.layer],
+        portId: element.pcb_port_id,
+        componentId: element.pcb_component_id,
+        clearanceBounds: getBoundsOfPcbElements([element]),
+      })
+      if (element.pcb_port_id && element.pcb_smtpad_id) {
+        fixedConnectivityGroups.push([
+          element.pcb_smtpad_id,
+          element.pcb_port_id,
+        ])
+      }
+    } else if (element.type === "pcb_plated_hole") {
+      fixedIdentityOrder.push({
+        id: element.pcb_plated_hole_id,
+        kind: "plated_hole",
+      })
+      const common = {
+        id: element.pcb_plated_hole_id,
+        kind: "plated_hole" as const,
+        x: element.x,
+        y: element.y,
+        layers: element.layers,
+        portId: element.pcb_port_id,
+        componentId: element.pcb_component_id,
+        clearanceBounds: getBoundsOfPcbElements([element]),
+      }
+      if (element.shape === "circle") {
+        pads.push({
+          ...common,
+          shape: "circle",
+          width: element.outer_diameter,
+          height: element.outer_diameter,
+          radius: element.outer_diameter / 2,
+        })
+      } else if (
+        element.shape === "circular_hole_with_rect_pad" ||
+        element.shape === "rotated_pill_hole_with_rect_pad"
+      ) {
+        pads.push({
+          ...common,
+          shape: "rect",
+          width: element.rect_pad_width,
+          height: element.rect_pad_height,
+          rotation:
+            element.shape === "rotated_pill_hole_with_rect_pad"
+              ? element.rect_ccw_rotation
+              : undefined,
+        })
+      } else {
+        throw new Error("Pipeline9 native DRC requires exported plated copper")
+      }
+      if (element.pcb_port_id && element.pcb_plated_hole_id) {
+        fixedConnectivityGroups.push([
+          element.pcb_plated_hole_id,
+          element.pcb_port_id,
+        ])
+      }
+    } else if (element.type === "pcb_hole") {
+      fixedIdentityOrder.push({ id: element.pcb_hole_id, kind: "hole" })
+      const common = {
+        id: element.pcb_hole_id,
+        x: element.x,
+        y: element.y,
+        componentId: element.pcb_component_id,
+      }
+      if (element.hole_shape === "circle") {
+        holes.push({
+          ...common,
+          shape: "circle",
+          diameter: element.hole_diameter,
+        })
+      } else if (element.hole_shape === "rect") {
+        holes.push({
+          ...common,
+          shape: "rect",
+          width: element.hole_width,
+          height: element.hole_height,
+        })
+      } else {
+        throw new Error("Pipeline9 native DRC requires exported drill geometry")
+      }
+    } else if (element.type === "pcb_board") {
+      if (element.width === undefined || element.height === undefined) {
+        throw new Error(
+          "Pipeline9 native DRC requires exported board dimensions",
+        )
+      }
+      const halfWidth = element.width / 2
+      const halfHeight = element.height / 2
+      board = {
+        id: element.pcb_board_id,
+        outline:
+          element.outline && element.outline.length > 0
+            ? element.outline.map((point): { x: number; y: number } => ({
+                x: point.x,
+                y: point.y,
+              }))
+            : [
+                {
+                  x: element.center.x - halfWidth,
+                  y: element.center.y - halfHeight,
+                },
+                {
+                  x: element.center.x + halfWidth,
+                  y: element.center.y - halfHeight,
+                },
+                {
+                  x: element.center.x + halfWidth,
+                  y: element.center.y + halfHeight,
+                },
+                {
+                  x: element.center.x - halfWidth,
+                  y: element.center.y + halfHeight,
+                },
+              ],
+        edgeClearance: element.min_board_edge_clearance ?? 0.2,
+        padClearance: element.min_pad_edge_to_pad_edge_clearance ?? 0.1,
+      }
+    }
+  }
+  const viaDimensions = getViaDimensions(srjWithPointPairs)
+  const viaDiameter = originalSrj.minViaDiameter ?? viaDimensions.padDiameter
+  const viaHoleDiameter =
+    srjWithPointPairs.min_via_hole_diameter ??
+    srjWithPointPairs.minViaHoleDiameter ??
+    (originalSrj.minViaDiameter !== undefined
+      ? viaDiameter * 0.5
+      : viaDimensions.holeDiameter)
+  return new PreparedNativeDrcScene({
+    pads,
+    holes,
+    ports,
+    sourceTraces,
+    fixedIdentityOrder,
+    board,
+    connectivity: getFullConnectivityMapFromCircuitJson(circuitJson),
+    createConnectivity: (
+      candidateSourceTraces,
+      traceLinks,
+      viaOwnerLinks,
+    ): ReturnType<NativeDrcSceneInput["createConnectivity"]> => {
+      const netMap = findConnectedNetworks([
+        ...candidateSourceTraces.map((sourceTrace): string[] =>
+          [
+            sourceTrace.id,
+            ...sourceTrace.portIds,
+            ...(sourceTrace.netIds ?? []),
+          ].filter(Boolean),
+        ),
+        ...fixedConnectivityGroups,
+        ...traceLinks.filter(([traceId, sourceId]): boolean =>
+          Boolean(traceId && sourceId),
+        ),
+      ])
+      const logical = new ConnectivityMap(netMap)
+      const clearance = new ConnectivityMap(
+        Object.fromEntries(
+          Object.entries(netMap).map(([netId, ids]): [string, string[]] => [
+            netId,
+            [...ids],
+          ]),
+        ),
+      )
+      clearance.addConnections(viaOwnerLinks)
+      return { logical, clearance }
+    },
+    layerCount: srjWithPointPairs.layerCount,
+    viaDiameter,
+    viaHoleDiameter,
+    allowBlindAndBuriedVias: originalSrj.allowBlindAndBuriedVias === true,
+    traceClearance,
+    viaHoleClearance: Math.max(viaHoleClearance, 0.1),
+    holeClearance: originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
+  })
+}
+
+const getInputOrderedNativePads = (
+  evaluation: PreparedNativeDrcEvaluation,
+): PreparedNativeDrcPad[] => {
+  let smtIndex = 0
+  let platedIndex = evaluation.scene.pads.filter(
+    (pad) => pad.kind === "smtpad",
+  ).length
+  return evaluation.scene.pads.map((pad): PreparedNativeDrcPad => {
+    const preparedPad =
+      evaluation.pads[pad.kind === "smtpad" ? smtIndex++ : platedIndex++]
+    if (
+      !preparedPad ||
+      preparedPad.id !== pad.id ||
+      preparedPad.kind !== pad.kind
+    ) {
+      throw new Error("Pipeline9 native DRC lost prepared pad order")
+    }
+    return preparedPad
+  })
+}
+
+const measurePipeline9NativeClearanceMargin = ({
+  evaluation,
+  originalEvaluation,
+  targets,
+}: {
+  evaluation: PreparedNativeDrcEvaluation
+  originalEvaluation: PreparedNativeDrcEvaluation
+  targets: Pipeline9DrcError[]
+}): ClearanceMarginMeasurement => {
+  const traces = new Map(
+    evaluation.traces.map((trace) => [trace.pcb_trace_id, trace]),
+  )
+  const originalTraces = new Map(
+    originalEvaluation.traces.map((trace) => [trace.pcb_trace_id, trace]),
+  )
+  const obstacles = new Map<string, PreparedNativeDrcPad | NativeDrcVia>([
+    ...getInputOrderedNativePads(evaluation).map(
+      (pad) => [pad.id, pad] as const,
+    ),
+    ...evaluation.vias.map((via) => [via.id, via] as const),
+  ])
+  const originalObstacles = [
+    ...getInputOrderedNativePads(originalEvaluation),
+    ...originalEvaluation.vias,
+  ]
+  const errors: Pipeline9DrcError[] = []
+  for (const target of targets) {
+    const isVia = target.type === "pcb_via_trace_clearance_error"
+    const obstacleId = isVia ? target.pcb_via_id : target.pcb_pad_id
+    if (
+      (!isVia && target.type !== "pcb_pad_trace_clearance_error") ||
+      typeof target.pcb_trace_id !== "string" ||
+      typeof obstacleId !== "string" ||
+      typeof target.minimum_clearance !== "number" ||
+      !Number.isFinite(target.minimum_clearance) ||
+      target.minimum_clearance <= 0
+    ) {
+      throw new Error("Pipeline9 clearance margin requires a valid target pair")
+    }
+    const originalTrace = originalTraces.get(target.pcb_trace_id)
+    const originalObstacle = originalObstacles.find(
+      (obstacle) =>
+        obstacle.id === obstacleId &&
+        (isVia ? obstacle.kind === "via" : obstacle.kind !== "via"),
+    )
+    if (!originalTrace || !originalObstacle) {
+      throw new Error(
+        `Pipeline9 clearance margin has no original target ${obstacleId}/${target.pcb_trace_id}`,
+      )
+    }
+    const trace = traces.get(target.pcb_trace_id)
+    let obstacle = obstacles.get(obstacleId)
+    if (isVia) {
+      if (originalObstacle.kind !== "via") {
+        throw new Error(
+          "Pipeline9 clearance margin requires the original via owner",
+        )
+      }
+      const originalOwner = originalTraces.get(originalObstacle.traceId)
+      if (!originalOwner) {
+        throw new Error(
+          "Pipeline9 clearance margin lost the original via owner",
+        )
+      }
+      const originalTransitions = originalOwner.route.filter(
+        (point) => point.route_type === "via",
+      )
+      const matchingTransitions = originalTransitions
+        .map((point, index) => ({ point, index }))
+        .filter(
+          ({ point }) =>
+            point.x === originalObstacle.x &&
+            point.y === originalObstacle.y &&
+            originalObstacle.layers.includes(point.from_layer) &&
+            originalObstacle.layers.includes(point.to_layer),
+        )
+        .filter(
+          ({ point }, index, all) =>
+            all.findIndex(
+              (entry) =>
+                entry.point.from_layer === point.from_layer &&
+                entry.point.to_layer === point.to_layer,
+            ) === index,
+        )
+      if (matchingTransitions.length === 0) {
+        throw new Error(
+          "Pipeline9 clearance margin lost the original via transition",
+        )
+      }
+      if (matchingTransitions.length !== 1) {
+        return { status: "unsupported-identity" }
+      }
+      const owner = traces.get(originalObstacle.traceId)
+      const transitions = owner?.route.filter(
+        (point) => point.route_type === "via",
+      )
+      if (
+        !transitions ||
+        transitions.length !== originalTransitions.length ||
+        transitions.some(
+          (point, index) =>
+            point.from_layer !== originalTransitions[index]!.from_layer ||
+            point.to_layer !== originalTransitions[index]!.to_layer,
+        )
+      ) {
+        return { status: "unsupported-identity" }
+      }
+      const transition = transitions[matchingTransitions[0]!.index]!
+      obstacle = evaluation.vias
+        .filter(
+          (via) =>
+            via.x === transition.x &&
+            via.y === transition.y &&
+            via.layers.join() === originalObstacle.layers.join(),
+        )
+        .reduce<NativeDrcVia | undefined>(
+          (largest, via) =>
+            !largest || via.diameter > largest.diameter ? via : largest,
+          undefined,
+        )
+    }
+    if (!trace || !obstacle) return { status: "unsupported-identity" }
+    const connectivityGroups: string[][] = []
+    if (trace.source_trace_id && trace.pcb_trace_id) {
+      connectivityGroups.push([trace.pcb_trace_id, trace.source_trace_id])
+    }
+    if (obstacle.kind !== "via" && obstacle.portId && obstacle.id) {
+      connectivityGroups.push([obstacle.id, obstacle.portId])
+    }
+    const pairConnectivity = new ConnectivityMap(
+      findConnectedNetworks(connectivityGroups),
+    )
+    if (pairConnectivity.areIdsConnected(trace.pcb_trace_id, obstacle.id)) {
+      continue
+    }
+    const reportingClearance = target.minimum_clearance + 1
+    const padGrid =
+      obstacle.kind === "via"
+        ? undefined
+        : new NativeDrcGrid(
+            [obstacle],
+            (pad) => pad.clearanceBounds ?? pad.bounds,
+          )
+    let actualClearance: number | undefined
+    let overlaps = false
+    for (const segment of evaluation.clearanceSegments) {
+      if (
+        segment.trace.pcb_trace_id !== trace.pcb_trace_id ||
+        !obstacle.layers.includes(segment.layer)
+      ) {
+        continue
+      }
+      if (
+        padGrid &&
+        padGrid.query(segment.bounds, reportingClearance + segment.width / 2)
+          .length === 0
+      ) {
+        continue
+      }
+      const { gap } = getNativePadClearance(segment, obstacle)
+      if (gap <= 0) {
+        actualClearance = undefined
+        overlaps = true
+        continue
+      }
+      if (overlaps || gap + 0.005 >= reportingClearance) continue
+      if (actualClearance === undefined || gap < actualClearance) {
+        actualClearance = gap
+      }
+    }
+    if (actualClearance === undefined) continue
+    if (!Number.isFinite(actualClearance)) {
+      throw new Error(
+        "Pipeline9 clearance margin requires a finite measurement",
+      )
+    }
+    const minimumClearance =
+      target.minimum_clearance + CLEARANCE_PRECISION_MARGIN
+    if (actualClearance >= minimumClearance) continue
+    errors.push({
+      ...target,
+      ...(obstacle.kind === "via"
+        ? { pcb_via_id: obstacle.id, pcb_via_ids: [obstacle.id] }
+        : {}),
+      actual_clearance: actualClearance,
+      minimum_clearance: minimumClearance,
+      center: { x: obstacle.x, y: obstacle.y },
+    })
+  }
+  return { status: "measured", errors }
+}
 
 const getAutoroutingViaElements = (
   traces: readonly SimplifiedPcbTrace[],
@@ -125,6 +601,20 @@ const getAutoroutingViaElements = (
     }
   }
   return vias
+}
+
+const getPreparedNativeViaElements = (
+  evaluation: PreparedNativeDrcEvaluation,
+): AnyCircuitElement[] => {
+  // Use the admitted physical inventory so rejected layers cannot shift IDs.
+  return evaluation.vias.map(
+    (via): AnyCircuitElement =>
+      ({
+        type: "pcb_via",
+        pcb_via_id: via.id,
+        pcb_trace_id: via.traceId,
+      }) as AnyCircuitElement,
+  )
 }
 
 export const addAutoroutingViaTraceIds = ({
@@ -777,13 +1267,72 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
-    const baselineDrc = evaluateRelaxedDrc({
-      includeBoardClearance: true,
-      inputSrj: params.originalSrj,
+    // Candidate repairs change route geometry, not the declared connectivity.
+    const connectivityMaps = {
+      source: getConnectivityMapFromSimpleRouteJson(
+        params.originalSrj === params.srjWithPointPairs
+          ? params.originalSrj
+          : {
+              ...params.originalSrj,
+              connections: [
+                ...params.srjWithPointPairs.connections,
+                ...params.originalSrj.connections,
+              ],
+            },
+      ),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+    }
+    const baselineTraces = combinePreloadedAndRoutedTraces(
+      params.originalSrj.traces ?? [],
+      [],
+    )
+    let nativePreparationContext:
+      | CircuitJsonNativeDrcPreparationContext
+      | undefined
+    const fixedCircuitJson = convertToCircuitJson(
+      params.srjWithPointPairs,
+      baselineTraces,
+      {
+        minTraceWidth: params.originalSrj.minTraceWidth,
+        minViaDiameter: params.originalSrj.minViaDiameter,
+        originalSrj: params.originalSrj,
+        includeOriginalConnections: true,
+        connectivityMaps,
+        onPreparedNativeDrcContext: (context): void => {
+          nativePreparationContext = context
+        },
+      },
+    )
+    fixedCircuitJson.push(
+      createPcbBoardElement({
+        ...params.originalSrj,
+        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
+      }),
+    )
+    const nativeDrcScene = compilePipeline9NativeDrcScene({
+      circuitJson: fixedCircuitJson,
+      originalSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: [],
-      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
+      traceClearance,
+      viaHoleClearance,
     })
+    if (!nativePreparationContext) {
+      throw new Error("Pipeline9 native DRC requires its source context")
+    }
+    const prepareNativeDrcInput = createNativeDrcInputPreparer({
+      originalSrj: params.originalSrj,
+      srjWithPointPairs: params.srjWithPointPairs,
+      preparedContext: nativePreparationContext,
+    })
+    const baselineNativeInput = prepareNativeDrcInput(baselineTraces)
+    const baselineNativeEvaluation = nativeDrcScene.prepare(
+      baselineNativeInput.traces,
+      { sourceTraces: baselineNativeInput.sourceTraces },
+    )
+    const baselineDrc = {
+      ...nativeDrcScene.evaluatePrepared(baselineNativeEvaluation),
+      circuitJson: getPreparedNativeViaElements(baselineNativeEvaluation),
+    }
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
     )
@@ -799,13 +1348,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
-      includeBoardClearance: true,
-      inputSrj: params.originalSrj,
-      srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance, viaClearance: viaHoleClearance },
-    })
+    const currentTraces = combinePreloadedAndRoutedTraces(
+      params.originalSrj.traces ?? [],
+      preparedCurrentOutput.routedTraces,
+    )
+    const currentNativeInput = prepareNativeDrcInput(currentTraces)
+    const currentNativeEvaluation = nativeDrcScene.prepare(
+      currentNativeInput.traces,
+      { sourceTraces: currentNativeInput.sourceTraces },
+    )
+    const currentDrcResult = {
+      ...nativeDrcScene.evaluatePrepared(currentNativeEvaluation),
+      circuitJson: getPreparedNativeViaElements(currentNativeEvaluation),
+    }
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
@@ -1256,42 +1811,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    // Candidate repairs change route geometry, not the declared connectivity.
-    const connectivityMaps = {
-      source: getConnectivityMapFromSimpleRouteJson(
-        params.originalSrj === params.srjWithPointPairs
-          ? params.originalSrj
-          : {
-              ...params.originalSrj,
-              connections: [
-                ...params.srjWithPointPairs.connections,
-                ...params.originalSrj.connections,
-              ],
-            },
-      ),
-      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
-    }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
+      preparedCandidate?: PreparedReferenceCandidate,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
-      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
-        includeBoardClearance: true,
-        connectivityMaps,
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: {
-          traceClearance,
-          viaClearance: viaHoleClearance,
-          includeTraceContinuity,
-        },
+      const candidateDrcInput =
+        preparedCandidate?.input ?? prepareCandidateDrcInput(evaluatedRoutes)
+      const nativeDrcInput = prepareNativeDrcInput(
+        candidateDrcInput.evaluatedTraces,
+      )
+      const nativeEvaluation = nativeDrcScene.prepare(nativeDrcInput.traces, {
+        sourceTraces: nativeDrcInput.sourceTraces,
+        contacts: preparedCandidate?.contacts,
       })
+      const evaluatedDrc = nativeDrcScene.evaluatePrepared(nativeEvaluation, {
+        includeTraceContinuity,
+      })
+      const viaCircuitJson = getPreparedNativeViaElements(nativeEvaluation)
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )
@@ -1299,14 +1840,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         errors: evaluatedDrc.errors as unknown as Array<
           Record<string, unknown>
         >,
-        circuitJson: evaluatedDrc.circuitJson,
+        circuitJson: viaCircuitJson,
         evaluatedTraceIds,
       })
       const evaluatedErrorsWithCenters = addAutoroutingViaTraceIds({
         errors: evaluatedDrc.errorsWithCenters as unknown as Array<
           Record<string, unknown>
         >,
-        circuitJson: evaluatedDrc.circuitJson,
+        circuitJson: viaCircuitJson,
         evaluatedTraceIds,
       })
       const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
@@ -1325,16 +1866,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
-        circuitJson: evaluatedDrc.circuitJson,
+        circuitJson: viaCircuitJson,
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
-    const cachedReferenceDrcEvaluator: DrcEvaluator = ({
-      routes,
-      hdRoutes,
-    }) => {
+    const cachedReferenceDrcEvaluator: DrcEvaluator &
+      ((
+        input: Parameters<DrcEvaluator>[0],
+        preparedCandidate?: PreparedReferenceCandidate,
+      ) => ReturnType<DrcEvaluator>) = (
+      { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
+      preparedCandidate?: PreparedReferenceCandidate,
+    ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
@@ -1344,11 +1889,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return referenceDrcCandidateCache.result
       }
       this.referenceDrcValidationCount += 1
-      const result = referenceDrcEvaluator({
-        traces: [],
-        routes: evaluatedRoutes,
-        hdRoutes: evaluatedRoutes,
-      })
+      const result = referenceDrcEvaluator(
+        { traces: [], routes: evaluatedRoutes, hdRoutes: evaluatedRoutes },
+        true,
+        preparedCandidate,
+      )
       referenceDrcCandidateCache = { candidateKey, result }
       return result
     }
@@ -1359,39 +1904,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       hdRoutes,
     }): ReturnType<DrcEvaluator> =>
       referenceDrcEvaluator({ traces: [], routes, hdRoutes }, false)
-    const createMarginCircuitJson = (
+    const prepareMarginEvaluation = (
       routes: HighDensityRoute[],
-    ): AnyCircuitElement[] => {
+    ): PreparedNativeDrcEvaluation => {
       const candidateDrcInput = prepareCandidateDrcInput(routes)
-      return convertToCircuitJson(
-        params.srjWithPointPairs,
+      const nativeDrcInput = prepareNativeDrcInput(
         candidateDrcInput.routedTraces,
-        {
-          minTraceWidth: params.originalSrj.minTraceWidth,
-          minViaDiameter: params.originalSrj.minViaDiameter,
-          originalSrj: params.originalSrj,
-          includeOriginalConnections: true,
-          connectivityMaps,
-        },
       )
+      return nativeDrcScene.prepare(nativeDrcInput.traces, {
+        sourceTraces: nativeDrcInput.sourceTraces,
+      })
     }
-    let marginOriginalCircuit:
-      | { routes: HighDensityRoute[]; circuitJson: AnyCircuitElement[] }
+    let marginOriginalEvaluation:
+      | { routes: HighDensityRoute[]; evaluation: PreparedNativeDrcEvaluation }
       | undefined
     this.clearanceMarginDrcEvaluator = (
       routes,
       targets,
       originalRoutes,
     ): ReturnType<ClearanceMarginDrcEvaluator> => {
-      if (marginOriginalCircuit?.routes !== originalRoutes) {
-        marginOriginalCircuit = {
+      if (marginOriginalEvaluation?.routes !== originalRoutes) {
+        marginOriginalEvaluation = {
           routes: originalRoutes,
-          circuitJson: createMarginCircuitJson(originalRoutes),
+          evaluation: prepareMarginEvaluation(originalRoutes),
         }
       }
-      return getPipeline9ClearanceMarginErrors({
-        circuitJson: createMarginCircuitJson(routes),
-        originalCircuitJson: marginOriginalCircuit.circuitJson,
+      return measurePipeline9NativeClearanceMargin({
+        evaluation: prepareMarginEvaluation(routes),
+        originalEvaluation: marginOriginalEvaluation.evaluation,
         targets,
       })
     }
@@ -1468,11 +2008,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
       if (evaluatedNewErrors.length === 0) {
         const validationCountBefore = this.referenceDrcValidationCount
-        const referenceResult = cachedReferenceDrcEvaluator({
-          traces: [],
-          routes: evaluatedRoutes,
-          hdRoutes: evaluatedRoutes,
-        })
+        const referenceResult = cachedReferenceDrcEvaluator(
+          { traces: [], routes: evaluatedRoutes, hdRoutes: evaluatedRoutes },
+          {
+            input: candidateDrcInput,
+            contacts: new NativeDrcContactWorkspace(),
+          },
+        )
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors
