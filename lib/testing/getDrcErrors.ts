@@ -6,10 +6,12 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -33,6 +35,7 @@ type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
+  | PcbPadPadClearanceError
   | PcbViaClearanceError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
@@ -51,6 +54,7 @@ export interface GetDrcErrorsResult {
 export interface GetDrcErrorsOptions {
   holeClearance?: number
   viaClearance?: number
+  viaPadClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
@@ -101,6 +105,10 @@ export const getDrcErrors = (
   const holeTraceErrors = checkHoleTraceClearance(circuitJson, {
     minClearance: options.holeClearance,
   })
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap,
+    minClearance: options.viaPadClearance ?? options.traceClearance,
+  })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
@@ -121,6 +129,7 @@ export const getDrcErrors = (
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,
+    ...viaPadErrors,
     ...viaErrors,
   ]
 

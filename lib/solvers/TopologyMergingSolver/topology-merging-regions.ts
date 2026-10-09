@@ -136,6 +136,7 @@ export function restoreAuthoritativeTargetRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
+  const coveredAreasBySourceKey = new Map<string, Map<number, number>>()
   for (const region of regions) {
     for (const sourceKey of region.sourceKeys) {
       const topologyModes =
@@ -143,14 +144,61 @@ export function restoreAuthoritativeTargetRegions({
         new Set<TopologyMergingMode>()
       topologyModes.add(region.topologyMode)
       topologyModesBySourceKey.set(sourceKey, topologyModes)
+      if (region.topologyMode === "target-passthrough") {
+        const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+        if (!preparedNode) {
+          throw new Error(
+            `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
+          )
+        }
+        const coveredAreas =
+          coveredAreasBySourceKey.get(sourceKey) ?? new Map<number, number>()
+        const sourceBounds = preparedNode.bounds
+        const regionArea =
+          Math.max(0,
+            Math.min(region.bounds.maxX, sourceBounds.maxX) -
+            Math.max(region.bounds.minX, sourceBounds.minX),
+          ) *
+          Math.max(0,
+            Math.min(region.bounds.maxY, sourceBounds.maxY) -
+            Math.max(region.bounds.minY, sourceBounds.minY),
+          )
+        for (const z of region.availableZ) {
+          coveredAreas.set(z, (coveredAreas.get(z) ?? 0) + regionArea)
+        }
+        coveredAreasBySourceKey.set(sourceKey, coveredAreas)
+      }
     }
   }
 
   const restorableSourceKeys = new Set(
     [...topologyModesBySourceKey.entries()]
       .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+        ([sourceKey, topologyModes]): boolean => {
+          if (
+            topologyModes.size !== 1 ||
+            !topologyModes.has("target-passthrough")
+          ) {
+            return false
+          }
+          const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+          if (!preparedNode) {
+            throw new Error(
+              `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
+            )
+          }
+          const width = preparedNode.bounds.maxX - preparedNode.bounds.minX
+          const height = preparedNode.bounds.maxY - preparedNode.bounds.minY
+          const sourceArea = width * height
+          const areaTolerance = TOPOLOGY_MERGING_EPSILON ** 2
+          const coveredAreas = coveredAreasBySourceKey.get(sourceKey)!
+          // A global target can hide part of a component target. Restoring
+          // that component's full rectangle would recreate the overlap that
+          // common refinement removed, including on a hidden source layer.
+          return preparedNode.node.availableZ.every(
+            (z) => (coveredAreas.get(z) ?? 0) >= sourceArea - areaTolerance,
+          )
+        },
       )
       .map(([sourceKey]) => sourceKey),
   )
