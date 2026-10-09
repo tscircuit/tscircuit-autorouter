@@ -129,6 +129,7 @@ type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   getConstructorParams: (
     instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
   ) => ConstructorParameters<T>
+  onCreated?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
   onSolved?: (instance: AutoroutingPipelineSolver9_PreloadedTraceGraph) => void
 }
 
@@ -231,6 +232,9 @@ function definePipelineStep<
     instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
   ) => P,
   opts: {
+    onCreated?: (
+      instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+    ) => void
     onSolved?: (
       instance: AutoroutingPipelineSolver9_PreloadedTraceGraph,
     ) => void
@@ -240,6 +244,7 @@ function definePipelineStep<
     solverName,
     solverClass,
     getConstructorParams,
+    onCreated: opts.onCreated,
     onSolved: opts.onSolved,
   }
 }
@@ -305,6 +310,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  private changedPreloadedTraceSections: ChangedPreloadedTraceSection[] = []
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -563,6 +569,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
+      {
+        onCreated: (cms) => {
+          cms.releaseUnusedCapacityMeshState()
+        },
+        onSolved: (cms) => {
+          cms.changedPreloadedTraceSections =
+            cms.portPointPathingSolver!.getOutput()
+              .changedPreloadedTraceSections
+        },
+      },
     ),
     definePipelineStep(
       "uniformPortDistributionSolver",
@@ -641,6 +657,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
+      {
+        onCreated: (cms) => {
+          cms.releaseUnusedPortPointState()
+        },
+      },
     ),
     definePipelineStep(
       "highDensityForceImproveSolver",
@@ -650,6 +671,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
+            cms.highDensityNodePortPoints ?? [],
           ),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(
@@ -1176,6 +1198,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
       )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
+    pipelineStepDef.onCreated?.(this)
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
@@ -1463,10 +1486,43 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
-    return (
-      this.portPointPathingSolver?.getOutput().changedPreloadedTraceSections ??
-      []
-    )
+    return this.changedPreloadedTraceSections
+  }
+
+  private releaseUnusedCapacityMeshState(): void {
+    this.preprocessSimpleRouteJsonSolver = undefined
+    this.escapeViaLocationSolver = undefined
+    this.componentDetectionSolver = undefined
+    this.componentTopologyGeneratorSolver = undefined
+    this.globalTopologyGeneratorSolver = undefined
+    this.topologyPlanningSolver = undefined
+    this.topologyMergingSolver = undefined
+    this.nodeDimensionSubdivisionSolver = undefined
+    this.edgeSolver = undefined
+    this.availableSegmentPointSolver = undefined
+    this.necessaryCrampedPortPointSolver = undefined
+    this.preloadedTraceGraphSolver = undefined
+    this.capacityNodes = null
+    this.capacityEdges = null
+    this.sharedEdgeSegmentsWithNecessaryCrampedPortPoints = undefined
+    this.srjWithEscapeViaLocations = undefined
+    this.collectReleasedSolverState()
+  }
+
+  private releaseUnusedPortPointState(): void {
+    this.portPointPathingSolver = undefined
+    this.uniformPortDistributionSolver = undefined
+    this.collectReleasedSolverState()
+  }
+
+  private collectReleasedSolverState(): void {
+    if (typeof Bun !== "undefined") {
+      Bun.gc(true)
+      return
+    }
+
+    const runtime = globalThis as typeof globalThis & { gc?: () => void }
+    runtime.gc?.()
   }
 
   private getPreloadedFixedRouteStateAfterHighDensity(): Pipeline9PreloadedFixedRouteState {

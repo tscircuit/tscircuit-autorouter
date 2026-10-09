@@ -1,10 +1,11 @@
 import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 
 export type BucketCoordinate = `${number}x${number}`
+export const CAPACITY_NODE_TREE_CELL_SIZE = 0.4
 
 export class CapacityNodeTree {
   buckets: Map<BucketCoordinate, CapacityMeshNode[]>
-  CELL_SIZE = 0.4
+  CELL_SIZE = CAPACITY_NODE_TREE_CELL_SIZE
 
   constructor(public nodes: CapacityMeshNode[]) {
     this.buckets = new Map()

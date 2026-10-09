@@ -21,6 +21,7 @@ import type {
   TopologyMergingRegion,
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
+import { createTopologyMergingXSweepEvents } from "./topology-merging-x-sweep"
 
 export type {
   TopologyMergingNodeGroup,
@@ -38,6 +39,9 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
+  private readonly enteringNodesByXSlabIndex: PreparedTopologyMergingNode[][]
+  private readonly leavingNodesByXSlabIndex: PreparedTopologyMergingNode[][]
+  private readonly activeNodesInXSlab = new Set<PreparedTopologyMergingNode>()
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -53,6 +57,13 @@ export class TopologyMergingSolver extends BaseSolver {
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
+    const { enteringNodesBySlabIndex, leavingNodesBySlabIndex } =
+      createTopologyMergingXSweepEvents({
+        preparedNodes: this.preparedNodes,
+        xCoordinates: this.xCoordinates,
+      })
+    this.enteringNodesByXSlabIndex = enteringNodesBySlabIndex
+    this.leavingNodesByXSlabIndex = leavingNodesBySlabIndex
     this.stats = {
       inputNodeCount: this.preparedNodes.length,
       xSlabCount: Math.max(0, this.xCoordinates.length - 1),
@@ -169,16 +180,21 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   private processCurrentXSlab(): void {
+    for (const node of this.leavingNodesByXSlabIndex[this.currentXIndex] ??
+      []) {
+      this.activeNodesInXSlab.delete(node)
+    }
+    for (const node of this.enteringNodesByXSlabIndex[this.currentXIndex] ??
+      []) {
+      this.activeNodesInXSlab.add(node)
+    }
+
     const minX = this.xCoordinates[this.currentXIndex]!
     const maxX = this.xCoordinates[this.currentXIndex + 1]!
     if (maxX - minX <= TOPOLOGY_MERGING_EPSILON) return
 
     const x = (minX + maxX) / 2
-    const nodesInXSlab = this.preparedNodes.filter(
-      ({ bounds }) =>
-        x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
-        x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON,
-    )
+    const nodesInXSlab = [...this.activeNodesInXSlab]
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
     )

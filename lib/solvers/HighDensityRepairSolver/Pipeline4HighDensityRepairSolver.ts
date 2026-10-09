@@ -24,6 +24,14 @@ type RepairSampleEntry = {
   sample: DatasetSample
 }
 
+type RepairRoutePointWithTransition = NonNullable<
+  RepairHdRoute["route"]
+>[number] &
+  Pick<
+    HighDensityRoute["route"][number],
+    "toNextSegmentType" | "toNextSegmentCircuitJsonMetadata"
+  >
+
 const DEFAULT_REPAIR_MARGIN = 0.2
 
 const doesRectOverlap = (
@@ -127,11 +135,23 @@ const toRepairRoute = (
   rootConnectionName:
     connMap?.getNetConnectedToId(route.connectionName) ??
     route.rootConnectionName,
-  route: route.route.map((point) => ({
-    x: point.x,
-    y: point.y,
-    z: point.z,
-  })),
+  route: route.route.map(
+    ({
+      x,
+      y,
+      z,
+      toNextSegmentType,
+      toNextSegmentCircuitJsonMetadata,
+    }): RepairRoutePointWithTransition => ({
+      x,
+      y,
+      z,
+      ...(toNextSegmentType ? { toNextSegmentType } : {}),
+      ...(toNextSegmentCircuitJsonMetadata
+        ? { toNextSegmentCircuitJsonMetadata }
+        : {}),
+    }),
+  ),
   // Some HD solvers emit widths below the board rule; do not validate
   // clearance against copper that will be widened downstream.
   traceThickness: Math.max(
@@ -162,10 +182,19 @@ const fromRepairRoute = (
   traceThickness: fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
   route:
-    route.route?.map((point) => ({
+    route.route?.map((point: RepairRoutePointWithTransition) => ({
       x: point.x,
       y: point.y,
       z: point.z ?? 0,
+      ...(point.toNextSegmentType
+        ? { toNextSegmentType: point.toNextSegmentType }
+        : {}),
+      ...(point.toNextSegmentCircuitJsonMetadata
+        ? {
+            toNextSegmentCircuitJsonMetadata:
+              point.toNextSegmentCircuitJsonMetadata,
+          }
+        : {}),
     })) ?? fallbackRoute.route,
   vias:
     route.vias?.map((via) => ({

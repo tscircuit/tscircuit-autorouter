@@ -13,9 +13,46 @@ import {
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
 
+type EndpointKey = string
+type EndpointGroupName = string
+type EndpointBucketKey = string
+
+type EndpointCluster = {
+  key: EndpointKey
+  point: Point3
+}
+
+type EndpointClusterCollection = {
+  clusters: EndpointCluster[]
+  clustersByBucketKey: Map<EndpointBucketKey, EndpointCluster[]>
+}
+
 type EndpointEdge = {
-  nextHash: string
+  nextHash: EndpointKey
   routeIndex: number | null
+}
+
+const getEndpointBucketKey = (
+  point: Point3,
+  bucketSize: number,
+): EndpointBucketKey =>
+  `${point.z}:${Math.floor(point.x / bucketSize)}:${Math.floor(point.y / bucketSize)}`
+
+const getNeighborEndpointBucketKeys = (
+  point: Point3,
+  bucketSize: number,
+): EndpointBucketKey[] => {
+  const bucketX = Math.floor(point.x / bucketSize)
+  const bucketY = Math.floor(point.y / bucketSize)
+  const bucketKeys: EndpointBucketKey[] = []
+
+  for (let xOffset = -1; xOffset <= 1; xOffset++) {
+    for (let yOffset = -1; yOffset <= 1; yOffset++) {
+      bucketKeys.push(`${point.z}:${bucketX + xOffset}:${bucketY + yOffset}`)
+    }
+  }
+
+  return bucketKeys
 }
 
 export type CanStitchBetweenTerminals = (params: {
@@ -31,30 +68,42 @@ export type CanStitchBetweenTerminals = (params: {
  */
 export class EndpointClusterIndex {
   private endpointClusters = new Map<
-    string,
-    Array<{ key: string; point: Point3 }>
+    EndpointGroupName,
+    EndpointClusterCollection
   >()
 
   constructor(private readonly preferSameLayerTerminalEndpoints = false) {}
 
-  getEndpointKey(connectionName: string, point: Point3) {
-    const clusters = this.endpointClusters.get(connectionName) ?? []
+  getEndpointKey(connectionName: string, point: Point3): EndpointKey {
+    const clusterCollection = this.endpointClusters.get(connectionName) ?? {
+      clusters: [],
+      clustersByBucketKey: new Map<
+        EndpointBucketKey,
+        EndpointCluster[]
+      >(),
+    }
 
-    let bestCluster: { key: string; point: Point3 } | undefined
+    let bestCluster: EndpointCluster | undefined
     let bestDistance = Infinity
 
-    for (const cluster of clusters) {
-      if (cluster.point.z !== point.z) continue
-      const clusterDistance = distance(cluster.point, point)
-      if (
-        clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
-        (clusterDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(clusterDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-            (!bestCluster ||
-              comparePoints(cluster.point, bestCluster.point) < 0)))
-      ) {
-        bestCluster = cluster
-        bestDistance = clusterDistance
+    for (const bucketKey of getNeighborEndpointBucketKeys(
+      point,
+      ENDPOINT_MATCH_TOLERANCE,
+    )) {
+      for (const cluster of
+        clusterCollection.clustersByBucketKey.get(bucketKey) ?? []) {
+        const clusterDistance = distance(cluster.point, point)
+        if (
+          clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
+          (clusterDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+            (Math.abs(clusterDistance - bestDistance) <=
+              DISTANCE_TIE_TOLERANCE &&
+              (!bestCluster ||
+                comparePoints(cluster.point, bestCluster.point) < 0)))
+        ) {
+          bestCluster = cluster
+          bestDistance = clusterDistance
+        }
       }
     }
 
@@ -62,24 +111,30 @@ export class EndpointClusterIndex {
       return bestCluster.key
     }
 
-    const key = `${connectionName}:endpoint_${clusters.length}`
-    clusters.push({
+    const key = `${connectionName}:endpoint_${clusterCollection.clusters.length}`
+    const cluster = {
       key,
       point: { x: point.x, y: point.y, z: point.z },
-    })
-    this.endpointClusters.set(connectionName, clusters)
+    }
+    clusterCollection.clusters.push(cluster)
+    const bucketKey = getEndpointBucketKey(point, ENDPOINT_MATCH_TOLERANCE)
+    const bucketClusters =
+      clusterCollection.clustersByBucketKey.get(bucketKey) ?? []
+    bucketClusters.push(cluster)
+    clusterCollection.clustersByBucketKey.set(bucketKey, bucketClusters)
+    this.endpointClusters.set(connectionName, clusterCollection)
     return key
   }
 
-  getClusters(connectionName: string) {
-    return this.endpointClusters.get(connectionName) ?? []
+  getClusters(connectionName: string): EndpointCluster[] {
+    return this.endpointClusters.get(connectionName)?.clusters ?? []
   }
 
   getClosestEndpointKey(
     connectionName: string,
     routes: HighDensityIntraNodeRoute[],
     point: Point3,
-  ) {
+  ): EndpointKey | null {
     const routeEndpoints = routes.flatMap((route) => [
       route.route[0]!,
       route.route[route.route.length - 1]!,
@@ -91,7 +146,7 @@ export class EndpointClusterIndex {
       this.preferSameLayerTerminalEndpoints && sameLayerEndpoints.length > 0
         ? sameLayerEndpoints
         : routeEndpoints
-    let bestHash: string | null = null
+    let bestHash: EndpointKey | null = null
     let bestEndpoint: Point3 | null = null
     let bestDist = Infinity
 
@@ -118,10 +173,10 @@ export class EndpointClusterIndex {
 }
 
 const addAdjacencyEdge = (
-  adjacency: Map<string, EndpointEdge[]>,
-  fromHash: string,
+  adjacency: Map<EndpointKey, EndpointEdge[]>,
+  fromHash: EndpointKey,
   edge: EndpointEdge,
-) => {
+): void => {
   const entries = adjacency.get(fromHash) ?? []
   if (
     entries.some(
@@ -262,153 +317,199 @@ export const snapIslandEndpointsToDistinctTerminals = (params: {
  * chosen terminals. If the subset cannot actually stitch to both terminals,
  * the full route set is returned instead.
  */
-export const selectRoutesAlongEndpointPath = (params: {
+export class RouteEndpointPathIndex {
+  private readonly hdRoutes: HighDensityIntraNodeRoute[]
+  private readonly canonicalHdRoutes: HighDensityIntraNodeRoute[]
+  private readonly adjacency = new Map<EndpointKey, EndpointEdge[]>()
+
+  constructor(
+    private readonly options: {
+      endpointGroupName: EndpointGroupName
+      hdRoutes: HighDensityIntraNodeRoute[]
+      endpointIndex: EndpointClusterIndex
+    },
+  ) {
+    this.hdRoutes = options.hdRoutes
+    this.canonicalHdRoutes = [...options.hdRoutes].sort(compareRoutes)
+
+    for (
+      let routeIndex = 0;
+      routeIndex < this.canonicalHdRoutes.length;
+      routeIndex++
+    ) {
+      const route = this.canonicalHdRoutes[routeIndex]!
+      const routeStartHash = options.endpointIndex.getEndpointKey(
+        options.endpointGroupName,
+        route.route[0]!,
+      )
+      const routeEndHash = options.endpointIndex.getEndpointKey(
+        options.endpointGroupName,
+        route.route[route.route.length - 1]!,
+      )
+
+      addAdjacencyEdge(this.adjacency, routeStartHash, {
+        nextHash: routeEndHash,
+        routeIndex,
+      })
+      addAdjacencyEdge(this.adjacency, routeEndHash, {
+        nextHash: routeStartHash,
+        routeIndex,
+      })
+    }
+
+    const sortedEndpointClusters = [
+      ...options.endpointIndex.getClusters(options.endpointGroupName),
+    ].sort((endpointA, endpointB) =>
+      comparePoints(endpointA.point, endpointB.point),
+    )
+    const nearbyClustersByBucketKey = new Map<
+      EndpointBucketKey,
+      EndpointCluster[]
+    >()
+    for (const endpointA of sortedEndpointClusters) {
+      for (const bucketKey of getNeighborEndpointBucketKeys(
+        endpointA.point,
+        MAX_STITCH_GAP_DISTANCE_3,
+      )) {
+        for (const endpointB of nearbyClustersByBucketKey.get(bucketKey) ?? []) {
+          if (
+            distance(endpointA.point, endpointB.point) >
+            MAX_STITCH_GAP_DISTANCE_3
+          )
+            continue
+
+          addAdjacencyEdge(this.adjacency, endpointA.key, {
+            nextHash: endpointB.key,
+            routeIndex: null,
+          })
+          addAdjacencyEdge(this.adjacency, endpointB.key, {
+            nextHash: endpointA.key,
+            routeIndex: null,
+          })
+        }
+      }
+
+      const bucketKey = getEndpointBucketKey(
+        endpointA.point,
+        MAX_STITCH_GAP_DISTANCE_3,
+      )
+      const nearbyClusters = nearbyClustersByBucketKey.get(bucketKey) ?? []
+      nearbyClusters.push(endpointA)
+      nearbyClustersByBucketKey.set(bucketKey, nearbyClusters)
+    }
+
+    for (const [endpointKey, edges] of this.adjacency.entries()) {
+      this.adjacency.set(
+        endpointKey,
+        [...edges].sort((edgeA, edgeB) => {
+          if (edgeA.routeIndex === null && edgeB.routeIndex !== null) return 1
+          if (edgeA.routeIndex !== null && edgeB.routeIndex === null) return -1
+          if (edgeA.routeIndex !== null && edgeB.routeIndex !== null) {
+            const routeCmp = compareRoutes(
+              this.canonicalHdRoutes[edgeA.routeIndex]!,
+              this.canonicalHdRoutes[edgeB.routeIndex]!,
+            )
+            if (routeCmp !== 0) return routeCmp
+          }
+          return edgeA.nextHash.localeCompare(edgeB.nextHash)
+        }),
+      )
+    }
+  }
+
+  selectRoutes(options: {
+    connectionName: string
+    start: Point3
+    end: Point3
+    canStitchBetweenTerminals: CanStitchBetweenTerminals
+  }): HighDensityIntraNodeRoute[] {
+    if (this.hdRoutes.length <= 2) return this.hdRoutes
+
+    const startHash = this.options.endpointIndex.getClosestEndpointKey(
+      this.options.endpointGroupName,
+      this.canonicalHdRoutes,
+      options.start,
+    )
+    const endHash = this.options.endpointIndex.getClosestEndpointKey(
+      this.options.endpointGroupName,
+      this.canonicalHdRoutes,
+      options.end,
+    )
+
+    if (!startHash || !endHash || startHash === endHash) {
+      return this.canonicalHdRoutes
+    }
+
+    const queue = [startHash]
+    const visitedHashes = new Set<EndpointKey>([startHash])
+    const prevByHash = new Map<
+      EndpointKey,
+      { prevHash: EndpointKey; routeIndex: number | null }
+    >()
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      const currentHash = queue[queueIndex]!
+      if (currentHash === endHash) break
+
+      for (const edge of this.adjacency.get(currentHash) ?? []) {
+        if (visitedHashes.has(edge.nextHash)) continue
+        visitedHashes.add(edge.nextHash)
+        prevByHash.set(edge.nextHash, {
+          prevHash: currentHash,
+          routeIndex: edge.routeIndex,
+        })
+        queue.push(edge.nextHash)
+      }
+    }
+
+    if (!visitedHashes.has(endHash)) return this.canonicalHdRoutes
+
+    const selectedRouteIndexesInReverse: number[] = []
+    let cursorHash = endHash
+    while (cursorHash !== startHash) {
+      const previousEndpoint = prevByHash.get(cursorHash)
+      if (!previousEndpoint) return this.canonicalHdRoutes
+      if (previousEndpoint.routeIndex !== null) {
+        selectedRouteIndexesInReverse.push(previousEndpoint.routeIndex)
+      }
+      cursorHash = previousEndpoint.prevHash
+    }
+
+    if (selectedRouteIndexesInReverse.length === 0) return this.hdRoutes
+
+    const selectedHdRoutes = selectedRouteIndexesInReverse
+      .reverse()
+      .map((routeIndex) => this.canonicalHdRoutes[routeIndex]!)
+
+    if (
+      selectedHdRoutes.length > 0 &&
+      !options.canStitchBetweenTerminals({
+        connectionName: options.connectionName,
+        hdRoutes: selectedHdRoutes,
+        start: options.start,
+        end: options.end,
+      })
+    ) {
+      return this.canonicalHdRoutes
+    }
+
+    return selectedHdRoutes
+  }
+}
+
+export const selectRoutesAlongEndpointPath = (options: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-}) => {
-  if (params.hdRoutes.length <= 2) return params.hdRoutes
-
-  const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
-
-  const startHash = params.endpointIndex.getClosestEndpointKey(
-    params.connectionName,
-    canonicalHdRoutes,
-    params.start,
-  )
-  const endHash = params.endpointIndex.getClosestEndpointKey(
-    params.connectionName,
-    canonicalHdRoutes,
-    params.end,
-  )
-
-  if (!startHash || !endHash || startHash === endHash) {
-    return canonicalHdRoutes
-  }
-
-  const adjacency = new Map<string, EndpointEdge[]>()
-
-  for (let i = 0; i < canonicalHdRoutes.length; i++) {
-    const route = canonicalHdRoutes[i]!
-    const routeStartHash = params.endpointIndex.getEndpointKey(
-      params.connectionName,
-      route.route[0]!,
-    )
-    const routeEndHash = params.endpointIndex.getEndpointKey(
-      params.connectionName,
-      route.route[route.route.length - 1]!,
-    )
-
-    addAdjacencyEdge(adjacency, routeStartHash, {
-      nextHash: routeEndHash,
-      routeIndex: i,
-    })
-    addAdjacencyEdge(adjacency, routeEndHash, {
-      nextHash: routeStartHash,
-      routeIndex: i,
-    })
-  }
-
-  const sortedEndpointClusters = [
-    ...params.endpointIndex.getClusters(params.connectionName),
-  ].sort((a, b) => comparePoints(a.point, b.point))
-  for (let i = 0; i < sortedEndpointClusters.length; i++) {
-    const endpointA = sortedEndpointClusters[i]!
-    for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
-      const endpointB = sortedEndpointClusters[j]!
-      if (endpointA.point.z !== endpointB.point.z) continue
-      if (
-        distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
-      )
-        continue
-
-      addAdjacencyEdge(adjacency, endpointA.key, {
-        nextHash: endpointB.key,
-        routeIndex: null,
-      })
-      addAdjacencyEdge(adjacency, endpointB.key, {
-        nextHash: endpointA.key,
-        routeIndex: null,
-      })
-    }
-  }
-
-  for (const [hash, edges] of adjacency.entries()) {
-    adjacency.set(
-      hash,
-      [...edges].sort((a, b) => {
-        if (a.routeIndex === null && b.routeIndex !== null) return 1
-        if (a.routeIndex !== null && b.routeIndex === null) return -1
-        if (a.routeIndex !== null && b.routeIndex !== null) {
-          const routeCmp = compareRoutes(
-            canonicalHdRoutes[a.routeIndex]!,
-            canonicalHdRoutes[b.routeIndex]!,
-          )
-          if (routeCmp !== 0) return routeCmp
-        }
-        return a.nextHash.localeCompare(b.nextHash)
-      }),
-    )
-  }
-
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
-  const prevByHash = new Map<
-    string,
-    { prevHash: string; routeIndex: number | null }
-  >()
-
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
-    if (currentHash === endHash) break
-
-    for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
-      prevByHash.set(edge.nextHash, {
-        prevHash: currentHash,
-        routeIndex: edge.routeIndex,
-      })
-      queue.push(edge.nextHash)
-    }
-  }
-
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
-
-  const selectedRouteIndexesInReverse: number[] = []
-  let cursorHash = endHash
-  while (cursorHash !== startHash) {
-    const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
-    if (prev.routeIndex !== null) {
-      selectedRouteIndexesInReverse.push(prev.routeIndex)
-    }
-    cursorHash = prev.prevHash
-  }
-
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
-
-  const selectedHdRoutes = selectedRouteIndexesInReverse
-    .reverse()
-    .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
-
-  if (
-    selectedHdRoutes.length > 0 &&
-    !params.canStitchBetweenTerminals({
-      connectionName: params.connectionName,
-      hdRoutes: selectedHdRoutes,
-      start: params.start,
-      end: params.end,
-    })
-  ) {
-    return canonicalHdRoutes
-  }
-
-  return selectedHdRoutes
-}
+}): HighDensityIntraNodeRoute[] =>
+  new RouteEndpointPathIndex({
+    endpointGroupName: options.connectionName,
+    hdRoutes: options.hdRoutes,
+    endpointIndex: options.endpointIndex,
+  }).selectRoutes(options)
 
 export const hasStitchableGapBetweenUnsolvedRoutes = (
   unsolvedRoutes: Array<{ start: Point3; end: Point3 }>,

@@ -1,29 +1,49 @@
-import type { GraphicsObject } from "graphics-debug"
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
+import { CAPACITY_NODE_TREE_CELL_SIZE } from "lib/data-structures/CapacityNodeTree"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type {
-  CapacityMeshEdge,
   CapacityMeshNode,
+  CapacityMeshNodeId,
 } from "../../types/capacity-mesh-types"
-import { BaseSolver } from "../BaseSolver"
-import { distance } from "@tscircuit/math-utils"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
 import { CapacityMeshEdgeSolver } from "./CapacityMeshEdgeSolver"
-import { CapacityNodeTree } from "lib/data-structures/CapacityNodeTree"
+
+const EDGE_SEARCH_MARGIN = 0.001
+
+type IndexedCapacityMeshNode = {
+  node: CapacityMeshNode
+  nodeIndex: number
+}
+type DirectedCapacityMeshEdgeKey = `${CapacityMeshNodeId}-${CapacityMeshNodeId}`
 
 export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEdgeSolver {
   override getSolverName(): string {
     return "CapacityMeshEdgeSolver2_NodeTreeOptimization"
   }
 
-  private nodeTree: CapacityNodeTree
+  private nodeIndex: FlatbushIndex<IndexedCapacityMeshNode> | null
   private currentNodeIndex: number
-  private edgeSet: Set<string>
+  private edgeSet: Set<DirectedCapacityMeshEdgeKey>
 
   constructor(public nodes: CapacityMeshNode[]) {
     super(nodes)
     this.MAX_ITERATIONS = 10e6
-    this.nodeTree = new CapacityNodeTree(this.nodes)
+    this.nodeIndex =
+      this.nodes.length > 0 ? new FlatbushIndex(this.nodes.length) : null
+    for (let nodeIndex = 0; nodeIndex < this.nodes.length; nodeIndex++) {
+      const node = this.nodes[nodeIndex]!
+      const bounds = getBoundFromCenteredRect(node)
+      this.nodeIndex!.insert(
+        { node, nodeIndex },
+        bounds.minX,
+        bounds.minY,
+        bounds.maxX,
+        bounds.maxY,
+      )
+    }
+    this.nodeIndex?.finish()
     this.currentNodeIndex = 0
-    this.edgeSet = new Set<string>()
+    this.edgeSet = new Set<DirectedCapacityMeshEdgeKey>()
   }
 
   _step() {
@@ -34,14 +54,42 @@ export class CapacityMeshEdgeSolver2_NodeTreeOptimization extends CapacityMeshEd
     }
 
     const A = this.nodes[this.currentNodeIndex]
-    const maybeAdjNodes = this.nodeTree.getNodesInArea(
-      A.center.x,
-      A.center.y,
-      A.width * 2,
-      A.height * 2,
-    )
+    const bounds = getBoundFromCenteredRect(A)
+    const previousSearchMinX = A.center.x - A.width
+    const previousSearchMinY = A.center.y - A.height
+    const maybeAdjacentNodes = this.nodeIndex!.search(
+      bounds.minX - EDGE_SEARCH_MARGIN,
+      bounds.minY - EDGE_SEARCH_MARGIN,
+      bounds.maxX + EDGE_SEARCH_MARGIN,
+      bounds.maxY + EDGE_SEARCH_MARGIN,
+    ).sort((a, b) => {
+      const aBounds = getBoundFromCenteredRect(a.node)
+      const bBounds = getBoundFromCenteredRect(b.node)
+      const aFirstBucketX = Math.floor(
+        Math.max(previousSearchMinX, aBounds.minX) /
+          CAPACITY_NODE_TREE_CELL_SIZE,
+      )
+      const bFirstBucketX = Math.floor(
+        Math.max(previousSearchMinX, bBounds.minX) /
+          CAPACITY_NODE_TREE_CELL_SIZE,
+      )
+      const aFirstBucketY = Math.floor(
+        Math.max(previousSearchMinY, aBounds.minY) /
+          CAPACITY_NODE_TREE_CELL_SIZE,
+      )
+      const bFirstBucketY = Math.floor(
+        Math.max(previousSearchMinY, bBounds.minY) /
+          CAPACITY_NODE_TREE_CELL_SIZE,
+      )
 
-    for (const B of maybeAdjNodes) {
+      return (
+        aFirstBucketX - bFirstBucketX ||
+        aFirstBucketY - bFirstBucketY ||
+        a.nodeIndex - b.nodeIndex
+      )
+    })
+
+    for (const { node: B } of maybeAdjacentNodes) {
       const areBordering = areNodesBordering(A, B)
       if (!areBordering) continue
       const strawNodesWithSameParent =
