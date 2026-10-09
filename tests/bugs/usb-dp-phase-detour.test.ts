@@ -5,12 +5,9 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import input from "../fixtures/bug-reports/usb-dp-phase-detour/input.json"
 
-test("routes the full MIDI keyboard with preloaded USB traces", async (): Promise<void> => {
+test("preserves preloaded traces while routing the full MIDI keyboard", async (): Promise<void> => {
   const srj: SimpleRouteJson = structuredClone(input)
-  const usbDpConnectionName = "source_net_69"
-  const originalUsbDp = srj.traces!.find(
-    (trace) => trace.connection_name === usbDpConnectionName,
-  )!
+  const originalTraces = structuredClone(srj.traces!)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     effort: 1,
     cacheProvider: null,
@@ -19,14 +16,13 @@ test("routes the full MIDI keyboard with preloaded USB traces", async (): Promis
 
   expect(solver.solved).toBeTrue()
   const output = solver.getOutputSimpleRouteJson()
-  const usbDp = output.traces!.find(
-    (trace) => trace.connection_name === usbDpConnectionName,
-  )!
-  expect(
-    usbDp.route.filter((point) => point.route_type === "via"),
-  ).toHaveLength(2)
-  expect(usbDp.route[0]).toEqual(originalUsbDp.route[0])
-  expect(usbDp.route.at(-1)).toEqual(originalUsbDp.route.at(-1))
+  for (const originalTrace of originalTraces) {
+    expect(
+      output.traces!.find(
+        (trace) => trace.pcb_trace_id === originalTrace.pcb_trace_id,
+      ),
+    ).toEqual(originalTrace)
+  }
   const drcInput = {
     inputSrj: output,
     srjWithPointPairs: solver.srjWithPointPairs!,
