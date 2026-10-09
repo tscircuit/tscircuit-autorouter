@@ -63,6 +63,7 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
+  enableEarlyCoarsePortfolioProbe: boolean
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -103,6 +104,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
+    enableEarlyCoarsePortfolioProbe = false,
     boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
@@ -124,6 +126,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
+    enableEarlyCoarsePortfolioProbe?: boolean
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -152,6 +155,7 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
+    this.enableEarlyCoarsePortfolioProbe = enableEarlyCoarsePortfolioProbe
     this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
@@ -415,7 +419,10 @@ export class HighDensitySolver extends BaseSolver {
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+      ? new GrowShrinkHighDensityIntraNodeSolver({
+          ...intraNodeSolverParams,
+          enableEarlyCoarsePortfolioProbe: this.enableEarlyCoarsePortfolioProbe,
+        })
       : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }

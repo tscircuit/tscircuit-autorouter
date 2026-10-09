@@ -19,6 +19,7 @@ export const PIPELINE9_NETWORKED_SOLVE_POLICY =
 export type Pipeline9NetworkedHighDensityNodeInput = {
   solvePolicy: typeof PIPELINE9_NETWORKED_SOLVE_POLICY
   enableRegionalFallback: boolean
+  enableEarlyCoarsePortfolioProbe?: boolean
   nodeWithPortPoints: NodeWithPortPoints
   connectivityNetMap: Record<string, string[]>
   colorMap: Record<string, string>
