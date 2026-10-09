@@ -56,8 +56,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     ) {
       this.closestFuturePointCacheIndices.fill(-2)
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
-      this.cachedFutureConnectionPointCount =
-        this.futureConnectionPoints.length
+      this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
     }
     const pointKey = this.getNodeKey(node)
     const cacheSlot = Number.isSafeInteger(pointKey)

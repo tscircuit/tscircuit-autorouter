@@ -72,7 +72,9 @@ test("closest future-point memo preserves exact references, ties, layer penaltie
         solver.viaPenaltyDistance,
       )
       expect(solver.getClosestFutureConnectionPoint(query)).toBe(expected)
-      expect(solver.getClosestFutureConnectionPoint({ ...query })).toBe(expected)
+      expect(solver.getClosestFutureConnectionPoint({ ...query })).toBe(
+        expected,
+      )
     }
 
     solver.VIA_PENALTY_FACTOR = 0
