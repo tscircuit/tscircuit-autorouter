@@ -1,18 +1,22 @@
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 
-// Short collinear runs still provide useful force-improvement control points.
-// Only collapse the long oversampled straight runs emitted by grid routing.
+// Keep legacy callers unchanged unless a region is pathologically large.
 const MIN_COLLINEAR_GRID_SEGMENTS = 64
 const MIN_FORCE_REGION_POINT_COUNT = 4_096
 
 /** Reduce dense grid runs while preserving ordinary force-improvement vertices. */
 export const simplifyPipeline9CollinearRoutePoints = (
   hdRoutes: readonly HighDensityRoute[],
+  nodeWithPortPoints: readonly NodeWithPortPoints[] = [],
 ): HighDensityRoute[] => {
-  // Force updates depend on the control vertices even when the copper is
-  // collinear. Restrict this approximation to pathological grid-heavy regions,
-  // where thousands of points make segment-pair processing impractical.
-  const pointCountByRegion = new Map<string, number>()
+  // Force updates depend on collinear control vertices. Only compact regions
+  // large enough to make segment-pair processing impractical; node geometry
+  // lets those regions retain control points at trace-width intervals.
+  const pointCountByRegion = new Map<CapacityMeshNodeId, number>()
   for (const route of hdRoutes) {
     if (!route.regionId) continue
     pointCountByRegion.set(
@@ -20,7 +24,11 @@ export const simplifyPipeline9CollinearRoutePoints = (
       (pointCountByRegion.get(route.regionId) ?? 0) + route.route.length,
     )
   }
+  const nodeById = new Map<CapacityMeshNodeId, NodeWithPortPoints>(
+    nodeWithPortPoints.map((node) => [node.capacityMeshNodeId, node]),
+  )
   return hdRoutes.map((hdRoute): HighDensityRoute => {
+    const node = hdRoute.regionId ? nodeById.get(hdRoute.regionId) : undefined
     if (
       !hdRoute.regionId ||
       pointCountByRegion.get(hdRoute.regionId)! < MIN_FORCE_REGION_POINT_COUNT
@@ -38,7 +46,12 @@ export const simplifyPipeline9CollinearRoutePoints = (
           start.toNextSegmentType ||
           start.traceThickness !== undefined ||
           Object.keys(middle).some(
-            (key) => key !== "x" && key !== "y" && key !== "z",
+            (key) =>
+              key !== "x" &&
+              key !== "y" &&
+              key !== "z" &&
+              key !== "connectionName" &&
+              key !== "rootConnectionName",
           ) ||
           hdRoute.vias.some(
             (via) => Math.hypot(via.x - middle.x, via.y - middle.y) < 1e-9,
@@ -70,7 +83,22 @@ export const simplifyPipeline9CollinearRoutePoints = (
       if (previous) {
         const start = routeIndices[i - 1]!
         const end = routeIndices[i]!
-        if (end - start < MIN_COLLINEAR_GRID_SEGMENTS) {
+        if (node !== undefined) {
+          let lastRetainedPoint = hdRoute.route[start]!
+          for (let pointIndex = start + 1; pointIndex < end; pointIndex++) {
+            const candidate = hdRoute.route[pointIndex]!
+            if (
+              Math.hypot(
+                candidate.x - lastRetainedPoint.x,
+                candidate.y - lastRetainedPoint.y,
+              ) < hdRoute.traceThickness
+            ) {
+              continue
+            }
+            retainedRoute.push(candidate)
+            lastRetainedPoint = candidate
+          }
+        } else if (end - start < MIN_COLLINEAR_GRID_SEGMENTS) {
           retainedRoute.push(...hdRoute.route.slice(start + 1, end))
         }
       }

@@ -671,6 +671,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
+            cms.highDensityNodePortPoints ?? [],
           ),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(
