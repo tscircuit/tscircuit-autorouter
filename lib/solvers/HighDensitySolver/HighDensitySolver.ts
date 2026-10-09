@@ -59,6 +59,7 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  prioritizeGrowthAfterInitialProbes: boolean
   enableNegotiatedSearch: boolean
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
@@ -99,6 +100,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    prioritizeGrowthAfterInitialProbes = false,
     enableNegotiatedSearch = false,
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
@@ -120,6 +122,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    prioritizeGrowthAfterInitialProbes?: boolean
     enableNegotiatedSearch?: boolean
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
@@ -155,6 +158,7 @@ export class HighDensitySolver extends BaseSolver {
     this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
+    this.prioritizeGrowthAfterInitialProbes = prioritizeGrowthAfterInitialProbes
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
@@ -415,7 +419,11 @@ export class HighDensitySolver extends BaseSolver {
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+      ? new GrowShrinkHighDensityIntraNodeSolver({
+          ...intraNodeSolverParams,
+          prioritizeGrowthAfterInitialProbes:
+            this.prioritizeGrowthAfterInitialProbes,
+        })
       : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }

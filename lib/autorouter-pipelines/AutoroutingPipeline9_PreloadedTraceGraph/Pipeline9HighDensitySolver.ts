@@ -54,6 +54,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  prioritizeGrowthAfterInitialProbes?: boolean
 }
 
 type NodeBounds = {
@@ -324,6 +325,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  prioritizeGrowthAfterInitialProbes?: boolean
 }
 
 /**
@@ -343,6 +345,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  prioritizeGrowthAfterInitialProbes = false,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -358,6 +361,7 @@ export const createPipeline9RegularNodeSolver = ({
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
+    prioritizeGrowthAfterInitialProbes,
     enableNegotiatedSearch: true,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
@@ -391,6 +395,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
+  readonly prioritizeGrowthAfterInitialProbes: boolean
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
@@ -429,6 +434,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
+    this.prioritizeGrowthAfterInitialProbes =
+      params.prioritizeGrowthAfterInitialProbes ?? false
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -497,6 +504,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      prioritizeGrowthAfterInitialProbes:
+        this.prioritizeGrowthAfterInitialProbes,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

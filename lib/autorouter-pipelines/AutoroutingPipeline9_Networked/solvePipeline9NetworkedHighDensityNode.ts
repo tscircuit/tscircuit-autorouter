@@ -45,6 +45,8 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     obstacles: input.obstacles,
     boardGeometry: input.boardGeometry,
     layerCount: input.layerCount,
+    prioritizeGrowthAfterInitialProbes:
+      input.prioritizeGrowthAfterInitialProbes,
   })
   solver.solve()
   return solver.solved

@@ -169,6 +169,8 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     return {
       solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
       enableRegionalFallback: this.enableRegionalFallback,
+      prioritizeGrowthAfterInitialProbes:
+        this.prioritizeGrowthAfterInitialProbes,
       nodeWithPortPoints: node,
       connectivityNetMap: mergePipeline9ProjectedConnectivityNetMaps(
         projectedInput.connectivityNetMap,
