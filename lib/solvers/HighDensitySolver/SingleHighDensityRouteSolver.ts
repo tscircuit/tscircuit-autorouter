@@ -342,11 +342,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         node.y - traceProximity,
         node.x + traceProximity,
         node.y + traceProximity,
-      ) ??
-      []
+      )
     const queryBounds = planarObstacleQuery?.segmentBounds
     if (indexedSegments) {
-      for (const segmentId of nearbySegmentIds) {
+      for (const segmentId of nearbySegmentIds ?? []) {
         const segment = indexedSegments[segmentId]
         if (!segment || segment.connectedToCurrentConnection) continue
         if (!isVia && segment.z !== node.z) continue
