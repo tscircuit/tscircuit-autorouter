@@ -18,6 +18,23 @@ import {
 } from "../scripts/benchmark/benchmarkRuntime"
 
 test("benchmark entrypoints share automatic concurrency and preserve explicit overrides", (): void => {
+  const memoryLimitDescriptor = Object.getOwnPropertyDescriptor(
+    process,
+    "constrainedMemory",
+  )
+  try {
+    Object.defineProperty(process, "constrainedMemory", {
+      configurable: true,
+      value: undefined,
+    })
+    expect(getBenchmarkMemoryLimit()).toBe(os.totalmem())
+  } finally {
+    if (memoryLimitDescriptor) {
+      Object.defineProperty(process, "constrainedMemory", memoryLimitDescriptor)
+    } else {
+      Reflect.deleteProperty(process, "constrainedMemory")
+    }
+  }
   const automaticConcurrency = getBenchmarkConcurrency()
   expect(getBenchmarkConcurrency(32, 16 * 1024 ** 3)).toBe(2)
   expect(getBenchmarkConcurrency(4, 64 * 1024 ** 3)).toBe(4)

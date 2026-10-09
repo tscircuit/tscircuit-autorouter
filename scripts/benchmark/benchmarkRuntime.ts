@@ -7,7 +7,7 @@ export const BENCHMARK_MEMORY_BUDGET_PER_WORKER_BYTES = 6 * 1024 ** 3
 
 export const getBenchmarkMemoryLimit = (): number => {
   const hostMemory = os.totalmem()
-  const constrainedMemory = process.constrainedMemory()
+  const constrainedMemory = process.constrainedMemory?.()
   if (typeof constrainedMemory === "number" && constrainedMemory > 0) {
     return Math.min(hostMemory, constrainedMemory)
   }
