@@ -20,7 +20,16 @@ test("routes the USB shield through both MIDI keyboard phases", async (): Promis
     (trace) => trace.pcb_trace_id === "source_net_16_mst4_0",
   )!
   expect(shield.connectsTo).toEqual(["pcb_port_32", "pcb_port_30"])
-  expect(shield.route.every((point) => point.route_type === "wire")).toBeTrue()
+  const wirePoints = shield.route.filter((point) => point.route_type === "wire")
+  expect(wirePoints).toHaveLength(shield.route.length)
+  let shieldLength = 0
+  for (let index = 1; index < wirePoints.length; index++) {
+    const previous = wirePoints[index - 1]!
+    const point = wirePoints[index]!
+    shieldLength += Math.hypot(point.x - previous.x, point.y - previous.y)
+  }
+  const maximumShieldLength = 10
+  expect(shieldLength).toBeLessThan(maximumShieldLength)
   const phase0Drc = {
     inputSrj: phase0Output,
     srjWithPointPairs: phase0.srjWithPointPairs!,
