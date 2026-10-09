@@ -19,6 +19,11 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import {
+  createStraightRoutePreflightContext,
+  hasNativeDataMethods,
+  type StraightRoutePreflightContext,
+} from "../../solvers/HyperHighDensitySolver/getCertifiedStraightIntraNodeRoutes"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -46,6 +51,9 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
+  minTraceToHoleEdgeClearance?: number
+  minTraceToPadEdgeClearance?: number
+  allowStraightRoutePreflight?: boolean
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -323,6 +331,7 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  straightRoutePreflightContext?: StraightRoutePreflightContext
   layerCount: number
 }
 
@@ -342,6 +351,7 @@ export const createPipeline9RegularNodeSolver = ({
   nodePfById,
   obstacles,
   boardGeometry,
+  straightRoutePreflightContext,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
@@ -363,6 +373,7 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
+    straightRoutePreflightContext,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -385,6 +396,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
+  readonly minTraceToHoleEdgeClearance?: number
+  readonly minTraceToPadEdgeClearance?: number
+  readonly allowStraightRoutePreflight: boolean
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
@@ -420,6 +434,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
+    const holeRule = Object.getOwnPropertyDescriptor(params, "minTraceToHoleEdgeClearance")
+    const padRule = Object.getOwnPropertyDescriptor(params, "minTraceToPadEdgeClearance")
+    const preflightRule = Object.getOwnPropertyDescriptor(params, "allowStraightRoutePreflight")
+    this.minTraceToHoleEdgeClearance = holeRule && "value" in holeRule ? holeRule.value : undefined
+    this.minTraceToPadEdgeClearance = padRule && "value" in padRule ? padRule.value : undefined
+    this.allowStraightRoutePreflight =
+      (!holeRule || "value" in holeRule) &&
+      (!padRule || "value" in padRule) &&
+      (!preflightRule || ("value" in preflightRule && preflightRule.value === true))
     this.effort = params.effort
     this.nodePfById =
       params.nodePfById instanceof Map
@@ -483,7 +506,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
-  protected startRegularSolver(node: NodeWithPortPoints): void {
+  protected startRegularSolver(
+    node: NodeWithPortPoints,
+    straightRoutePreflightContext?: StraightRoutePreflightContext,
+  ): void {
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
@@ -496,6 +522,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
+      straightRoutePreflightContext,
       layerCount: this.layerCount,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
@@ -998,7 +1025,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
-    const fixedObstacles = this.getUpdatedFixedHdRoutes()
+    const fixedRoutes = this.getUpdatedFixedHdRoutes()
+    const fixedObstacles = fixedRoutes
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
       )
@@ -1006,7 +1034,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {
-      this.startRegularSolver(node)
+      const context =
+        Object.getPrototypeOf(this) === Pipeline9HighDensitySolver.prototype &&
+        Object.values(Object.getOwnPropertyDescriptors(this)).every((property) => "value" in property) &&
+        this.allowStraightRoutePreflight &&
+        hasNativeDataMethods(this, nativePreflightDispatch) &&
+        this.obstacleMargin >= PRELOADED_TRACE_CLEARANCE
+          ? createStraightRoutePreflightContext(getNodeBounds(node, 0), {
+              surroundingRoutes: [...fixedRoutes, ...this.routes],
+              minTraceToHoleEdgeClearance: this.minTraceToHoleEdgeClearance,
+              minTraceToPadEdgeClearance: this.minTraceToPadEdgeClearance,
+              allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+            })
+          : undefined
+      this.startRegularSolver(node, context)
       return
     }
 
@@ -1078,3 +1119,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
   }
 }
+
+const nativePreflightDispatch: Array<[string, unknown]> = [
+  ["getUpdatedFixedHdRoutes", Pipeline9HighDensitySolver.prototype.getUpdatedFixedHdRoutes],
+  ["startRegularSolver", (Pipeline9HighDensitySolver.prototype as unknown as {
+    startRegularSolver: unknown
+  }).startRegularSolver],
+]
