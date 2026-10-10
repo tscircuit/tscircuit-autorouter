@@ -17,9 +17,28 @@ import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNeces
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
+/**
+ * A target that reaches fewer (port point, node) hops than this through the
+ * port points the output keeps is in a closed pocket and needs its cramped
+ * escapes. Matches the hop count the tiny-hypergraph static reachability
+ * precheck treats as reachable.
+ */
+const MIN_OPEN_ESCAPE_HOP_COUNT = 16
+
+type PocketHop = {
+  portPoint: SegmentPortPoint | null
+  nodeId: CapacityMeshNodeId
+}
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
+  /**
+   * Shared edge segments the caller keeps whole instead of passing in for
+   * filtering (for example component-local regions). They lead to nodes this
+   * solver is not given, but their port points stay in the routing graph, so
+   * they are ways out of a pocket.
+   */
+  preservedSharedEdgeSegments: readonly SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
 }
@@ -37,6 +56,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
   private filteredOutput?: SharedEdgeSegment[]
+  private targetsWithCrampedEscapes = new Set<CapacityMeshNodeId>()
+  private unprocessedPocketTargets: CapacityMeshNode[] = []
+  private nodeIdsWithPreservedExits = new Set<CapacityMeshNodeId>()
 
   override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
     null
@@ -79,9 +101,17 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     })
     this.unprocessedTargets = [...this.targetNode]
     this.unprocessedTargets.sort((a, b) => a.center.x - b.center.x)
+    this.unprocessedPocketTargets = [...this.unprocessedTargets]
 
     for (const cmNode of this.input.capacityMeshNodes) {
       this.nodeMap.set(cmNode.capacityMeshNodeId, cmNode)
+    }
+
+    for (const preservedSegment of this.input.preservedSharedEdgeSegments) {
+      if (preservedSegment.portPoints.length === 0) continue
+      for (const nodeId of preservedSegment.nodeIds) {
+        this.nodeIdsWithPreservedExits.add(nodeId)
+      }
     }
 
     for (const sharedEdgeSegment of this.input.sharedEdgeSegments) {
@@ -131,16 +161,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         })
 
         if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
-          this.isRunningCrampedPass = true
-          this.activeSubSolver =
-            new SingleTargetNecessaryCrampedPortPointSolver({
-              target: this.currentTarget,
-              depthLimit: 3,
-              shouldIgnoreCrampedPortPoints: false,
-              mapOfCapacityMeshNodeIdToSegmentPortPoints:
-                this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
-              mapOfCapacityMeshNodeIdToRef: this.nodeMap,
-            })
+          this.startCrampedPass(this.currentTarget)
           return
         }
 
@@ -220,7 +241,25 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     if (!this.currentTarget) {
       this.currentTarget = this.unprocessedTargets.shift()
       if (!this.currentTarget) {
-        this.solved = true
+        // Second pass, once every target has its first-pass escapes: a target
+        // still sealed in a pocket by the port points the output keeps would
+        // fail the static reachability precheck, so it keeps its cramped
+        // escapes too.
+        const pocketTarget = this.unprocessedPocketTargets.shift()
+        if (!pocketTarget) {
+          this.solved = true
+          return
+        }
+        if (
+          !this.targetsWithCrampedEscapes.has(
+            pocketTarget.capacityMeshNodeId,
+          ) &&
+          this.isInClosedPocket(pocketTarget)
+        ) {
+          this.currentTarget = pocketTarget
+          this.candidatesAtDepth = []
+          this.startCrampedPass(pocketTarget)
+        }
         return
       }
       this.isRunningCrampedPass = false
@@ -291,6 +330,72 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         (node) => node.width * node.height * node.availableZ.length,
       ),
     )
+  }
+
+  private startCrampedPass(target: CapacityMeshNode): void {
+    this.isRunningCrampedPass = true
+    this.targetsWithCrampedEscapes.add(target.capacityMeshNodeId)
+    this.activeSubSolver = new SingleTargetNecessaryCrampedPortPointSolver({
+      target,
+      depthLimit: 3,
+      shouldIgnoreCrampedPortPoints: false,
+      mapOfCapacityMeshNodeIdToSegmentPortPoints:
+        this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
+      mapOfCapacityMeshNodeIdToRef: this.nodeMap,
+    })
+  }
+
+  /**
+   * The depth-limited search can reach an obstacle-free node that is itself
+   * enclosed: a strip of small free nodes along a fine-pitch pad row whose
+   * only ways out are cramped. Walk from the target the way the static
+   * reachability precheck does, through the port points the output keeps and
+   * obstacle-free nodes; if the walk runs out before MIN_OPEN_ESCAPE_HOP_COUNT
+   * hops, the target is in a closed pocket. A node with a preserved segment
+   * is a way out: the region beyond it stays in the routing graph whole.
+   */
+  private isInClosedPocket(target: CapacityMeshNode): boolean {
+    const queue: PocketHop[] = [
+      { portPoint: null, nodeId: target.capacityMeshNodeId },
+    ]
+    const seenHopIds = new Set<string>()
+
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      const hop = queue[queueIndex]!
+      if (this.nodeIdsWithPreservedExits.has(hop.nodeId)) return false
+      const portPoints =
+        this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(hop.nodeId) ?? []
+      for (const portPoint of portPoints) {
+        if (portPoint === hop.portPoint) continue
+        if (
+          portPoint.cramped &&
+          !this.crampedPortPointsToKeep.has(portPoint) &&
+          !this.isMultilayerEscapePort(portPoint)
+        ) {
+          continue
+        }
+        const nextNodeId = portPoint.nodeIds.find((id) => id !== hop.nodeId)
+        if (!nextNodeId) {
+          throw new Error(
+            `Port point ${portPoint.segmentPortPointId} does not lead out of node ${hop.nodeId}`,
+          )
+        }
+        const nextNode = this.nodeMap.get(nextNodeId)
+        if (!nextNode) {
+          throw new Error(
+            `Could not find capacity mesh node for id ${nextNodeId}`,
+          )
+        }
+        if (nextNode._containsObstacle) continue
+        const hopId = `${portPoint.segmentPortPointId}>${nextNodeId}`
+        if (seenHopIds.has(hopId)) continue
+        seenHopIds.add(hopId)
+        if (seenHopIds.size >= MIN_OPEN_ESCAPE_HOP_COUNT) return false
+        queue.push({ portPoint, nodeId: nextNodeId })
+      }
+    }
+
+    return true
   }
 
   private keepCandidatePath(candidate: ExploredPortPoint): void {

@@ -438,6 +438,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
             }),
+            preservedSharedEdgeSegments: cms
+              .availableSegmentPointSolver!.getOutput()
+              .filter((segment) =>
+                isComponentSharedEdgeSegment(
+                  segment,
+                  componentCapacityMeshNodeIds,
+                ),
+              ),
             simpleRouteJson: cms.srjWithPointPairs!,
           },
         ]
