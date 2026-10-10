@@ -1,3 +1,4 @@
+import { Pipeline9FinalTraceCleanupSolver } from "./Pipeline9FinalTraceCleanupSolver"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -286,6 +287,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   minTraceWidth!: number
   effort: number
   effortCleanupSolver?: Pipeline9EffortCleanupSolver
+  finalTraceCleanupSolver?: Pipeline9FinalTraceCleanupSolver
   maxNodeDimension: number
   maxNodeRatio: number
   minNodeArea: number
@@ -869,6 +871,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const routesBeforeRepair = new Map(
+          cms
+            .globalDrcForceImproveSolver!.getOutput()
+            .map((route) => [route.connectionName, route]),
+        )
+        const powerConnectionNames =
+          cms.opts.powerTraceExpansion?.onlyConnectionNames ??
+          getPowerTraceExpansionConnectionNames(cms.originalSrj)
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
@@ -885,6 +895,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             effort: cms.effort,
+            shortcutRouteIndices: new Set(
+              hdRoutes.flatMap((route, index) => {
+                const beforeRepair = routesBeforeRepair.get(
+                  route.connectionName,
+                )
+                if (
+                  !beforeRepair ||
+                  route.route.length <= beforeRepair.route.length
+                )
+                  return []
+                if (
+                  powerConnectionNames.some(
+                    (name) =>
+                      name === route.rootConnectionName ||
+                      cms.connMap.areIdsConnected(route.connectionName, name),
+                  )
+                )
+                  return [index]
+                return []
+              }),
+            ),
             config: {
               hdRoutes,
               preserveRouteEndpoints: true,
@@ -1065,6 +1096,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "finalTraceCleanupSolver",
+      Pipeline9FinalTraceCleanupSolver,
+      (cms) => [
+        {
+          srj: cms.originalSrj,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          traces: cms.powerTraceExpansionSolver!.getOutput(),
+          fixedTraces: cms.getPowerTraceExpansionFixedTraces(),
+          connectionNames:
+            cms.opts.powerTraceExpansion?.onlyConnectionNames ??
+            getPowerTraceExpansionConnectionNames(cms.originalSrj),
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -1170,6 +1216,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
+      pipelineStepDef.solverName === "finalTraceCleanupSolver" ||
       (pipelineStepDef.solverName === "effortCleanupSolver" && this.effort > 1)
     )
       this.MAX_ITERATIONS = Math.max(
@@ -1626,7 +1673,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.finalTraceCleanupSolver!.getOutput(),
     ]
   }
 
@@ -1641,7 +1688,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.finalTraceCleanupSolver!.getOutput(),
     ]
     return {
       ...this.originalSrj,
