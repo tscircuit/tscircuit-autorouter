@@ -29,6 +29,8 @@ export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
     this.output = [...input.traces]
     this.selectedNames = new Set(input.connectionNames)
     this.MAX_ITERATIONS = 100e6
+    // Cosmetic cleanup requires a DRC-clean input; repair belongs upstream.
+    this.solved = this.selectedNames.size === 0 || !this.isValid(this.output)
   }
 
   override _step(): void {
@@ -53,11 +55,18 @@ export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
     }
     const candidate = [...this.output]
     candidate[this.traceIndex] = next.value
-    if (
+    if (this.isValid(candidate)) {
+      this.output = candidate
+      this.candidates = undefined
+    }
+  }
+
+  private isValid(traces: SimplifiedPcbTraces): boolean {
+    return (
       evaluateRelaxedDrc({
         inputSrj: { ...this.input.srj, traces: this.input.fixedTraces },
         srjWithPointPairs: this.input.srjWithPointPairs,
-        routedTraces: candidate,
+        routedTraces: traces,
         includeBoardClearance: true,
         drcOptions: {
           traceClearance: this.input.srj.minTraceToPadEdgeClearance ?? 0.1,
@@ -65,10 +74,7 @@ export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
             this.input.srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
         },
       }).errors.length === 0
-    ) {
-      this.output = candidate
-      this.candidates = undefined
-    }
+    )
   }
 
   override visualize(): GraphicsObject {
