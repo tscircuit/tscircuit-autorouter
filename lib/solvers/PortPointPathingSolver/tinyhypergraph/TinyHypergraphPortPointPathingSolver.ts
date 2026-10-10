@@ -103,7 +103,7 @@ type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
 
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
-// trace dispersion without materially increasing predicted failure pressure.
+// trace dispersion while bounding the predicted downstream failure pressure.
 const TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT = 30
 const TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT = 99
 const TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM = 4
@@ -119,26 +119,47 @@ const TRACE_DENSITY_PORTFOLIO_STRONG_PF_SQUARED_RATIO = 0.85
 const TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO = 0.85
 const TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO = 0.98
 const TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO = 0.97
+const TRACE_DENSITY_PHYSICAL_VIA_MAX_CONCENTRATION_RATIO = 0.7
 
 export const shouldEvaluateTraceDensityAlternative = (
   summary: DownstreamCandidateSummary,
   routeCount: number,
-) =>
-  summary.nodePfSum > TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM &&
-  summary.nodePfMax > TRACE_DENSITY_PORTFOLIO_MIN_PF_MAX &&
-  summary.squaredNodePortPointCount / Math.max(1, routeCount) >=
+  physicalViaMode = false,
+): boolean => {
+  const hasConcentratedTraces =
+    summary.squaredNodePortPointCount / Math.max(1, routeCount) >=
     TRACE_DENSITY_PORTFOLIO_MIN_CONCENTRATION_PER_ROUTE
+  return (
+    hasConcentratedTraces &&
+    (physicalViaMode ||
+      (summary.nodePfSum > TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM &&
+        summary.nodePfMax > TRACE_DENSITY_PORTFOLIO_MIN_PF_MAX))
+  )
+}
 
 export const shouldSelectTraceDensityAlternative = (
   primary: DownstreamCandidateSummary,
   alternative: DownstreamCandidateSummary,
   routeCount: number,
-) => {
+  physicalViaMode = false,
+): boolean => {
   if (
     alternative.changedPreloadedTraceSectionCount >
     primary.changedPreloadedTraceSectionCount
   ) {
     return false
+  }
+
+  if (physicalViaMode) {
+    // Physical via costs can concentrate otherwise low-risk assignments.
+    // Require a large dispersion gain while keeping peak failure pressure safe.
+    return (
+      alternative.squaredNodePortPointCount <
+        primary.squaredNodePortPointCount *
+          TRACE_DENSITY_PHYSICAL_VIA_MAX_CONCENTRATION_RATIO &&
+      alternative.nodePfMax <=
+        Math.max(primary.nodePfMax, TRACE_DENSITY_PORTFOLIO_MIN_PF_MAX)
+    )
   }
 
   const maxConcentrationRatio =
@@ -328,7 +349,9 @@ const getTinyHyperGraphPipelineInput = (
   partialRipEligibilityCount?: number,
   viaCostOptions: Pick<
     TinyHyperGraphSolverOptions,
-    "CROSS_LAYER_INTERSECTION_COST_FACTOR" | "VIA_COST"
+    | "CROSS_LAYER_INTERSECTION_COST_FACTOR"
+    | "VIA_COST"
+    | "TRACE_DENSITY_COST_FACTOR"
   > = {},
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
@@ -1067,6 +1090,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private primaryCandidateSummary?: DownstreamCandidateSummary
   private alternativeCandidateSummary?: DownstreamCandidateSummary
   private alternativeCandidateEvaluated = false
+  private readonly physicalViaMode: boolean
   private selectedCandidate: "primary" | "alternative" = "primary"
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
@@ -1106,17 +1130,24 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
-    const viaCostOptions: Pick<
-      TinyHyperGraphSolverOptions,
-      "CROSS_LAYER_INTERSECTION_COST_FACTOR" | "VIA_COST"
-    > = shouldUsePhysicalViaCost({
+    this.physicalViaMode = shouldUsePhysicalViaCost({
       connections: connections.map(
         (connection) => connection.simpleRouteConnection,
       ),
       layerCount: params.layerCount,
       hasPreloadedTraceOccupancy,
     })
-      ? { CROSS_LAYER_INTERSECTION_COST_FACTOR: 0, VIA_COST: 0.15 }
+    const viaCostOptions: Pick<
+      TinyHyperGraphSolverOptions,
+      | "CROSS_LAYER_INTERSECTION_COST_FACTOR"
+      | "VIA_COST"
+      | "TRACE_DENSITY_COST_FACTOR"
+    > = this.physicalViaMode
+      ? {
+          CROSS_LAYER_INTERSECTION_COST_FACTOR: 0,
+          VIA_COST: 0.15,
+          TRACE_DENSITY_COST_FACTOR: 1,
+        }
       : {}
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
@@ -1182,7 +1213,24 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
-    if (
+    if (this.physicalViaMode) {
+      const alternativeViaCostOptions = {
+        CROSS_LAYER_INTERSECTION_COST_FACTOR: 0,
+        VIA_COST: 0.3,
+        TRACE_DENSITY_COST_FACTOR: 10,
+      }
+      this.alternativeTinyPipelineInput = {
+        ...tinyPipelineInput,
+        solveGraphOptions: {
+          ...tinyPipelineInput.solveGraphOptions,
+          ...alternativeViaCostOptions,
+        },
+        sectionSolverOptions: {
+          ...tinyPipelineInput.sectionSolverOptions,
+          ...alternativeViaCostOptions,
+        },
+      }
+    } else if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
       connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
     ) {
@@ -1376,22 +1424,33 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  private shouldEvaluateAlternative(summary: DownstreamCandidateSummary) {
+  private shouldEvaluateAlternative(
+    summary: DownstreamCandidateSummary,
+  ): boolean {
     const routeCount =
       this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
     return (
       this.alternativeTinyPipelineInput !== undefined &&
-      shouldEvaluateTraceDensityAlternative(summary, routeCount)
+      shouldEvaluateTraceDensityAlternative(
+        summary,
+        routeCount,
+        this.physicalViaMode,
+      )
     )
   }
 
   private shouldSelectAlternative(
     primary: DownstreamCandidateSummary,
     alternative: DownstreamCandidateSummary,
-  ) {
+  ): boolean {
     const routeCount =
       this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
-    return shouldSelectTraceDensityAlternative(primary, alternative, routeCount)
+    return shouldSelectTraceDensityAlternative(
+      primary,
+      alternative,
+      routeCount,
+      this.physicalViaMode,
+    )
   }
 
   private finishCandidatePortfolio() {

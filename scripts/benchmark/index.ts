@@ -1484,12 +1484,14 @@ const runBenchmarkTasks = async (
           ? 0
           : (solverProgress.solved / solverProgress.completed) * 100
       const suffix = result.error ? ` (${result.error})` : ""
+      const viaSuffix =
+        result.viaCount === undefined ? "" : ` vias=${result.viaCount}`
       const memorySuffix =
         result.peakRssBytes === undefined
           ? ""
           : ` peakRss=${formatMemory(result.peakRssBytes)}`
       console.log(
-        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${memorySuffix}${suffix}`,
+        `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${viaSuffix}${memorySuffix}${suffix}`,
       )
 
       if (restartWorker) {

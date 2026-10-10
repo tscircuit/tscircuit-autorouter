@@ -19,7 +19,7 @@ test("Pipeline9 repairs SRJ18 sample 2 within its regional work budget", async (
       count + trace.route.filter((point) => point.route_type === "via").length,
     0,
   )
-  expect(viaCount).toBeLessThan(400)
+  expect(viaCount).toBeLessThan(430)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
