@@ -1,5 +1,6 @@
 import type { PendingEffect } from "../../solvers/BaseSolver"
-import type { DatasetSample } from "high-density-repair02"
+import type { DatasetSample, HdRoute as RepairHdRoute } from "high-density-repair02"
+import { synchronizeRouteVias } from "high-density-repair02/lib/high-density-repair-solver/functions/synchronizeRouteVias"
 import {
   Pipeline4HighDensityRepairSolver,
   type Pipeline4HighDensityRepairSolverParams,
@@ -31,31 +32,54 @@ type RemoteRepairRequest = {
 
 /**
  * With boundary-diagonal repair disabled, repair02 only moves copper to fix
- * clearance conflicts. Via-free routes on one common net cannot conflict with
- * each other or same-net fixed copper; their connected pads are ignored too.
+ * clearance conflicts. Copper on one common net can only have via-via
+ * conflicts; connected pads are ignored too. Keep the existing via-free case
+ * and also skip groups containing at most one via after synchronization.
  */
-const isTrivialRepairSample = (sample: DatasetSample): boolean => {
+const getTrivialRepairRoutes = (sample: DatasetSample): RepairHdRoute[] | null => {
   const routes = sample.nodeHdRoutes
   const fixedRoutes = sample.fixedHdRoutes
   const obstacles = sample.clearanceObstacles ?? sample.adjacentObstacles
-  if (!routes?.length || !fixedRoutes || !obstacles) return false
-  if (!routes.every((route) =>
+  if (!routes?.length || !fixedRoutes || !obstacles) return null
+  if (!routes.every((route) => route.vias && (route.route?.length ?? 0) > 0)) {
+    return null
+  }
+  const ownedRoutesAreViaFree = routes.every((route) =>
     route.vias?.length === 0 &&
-    (route.route?.length ?? 0) > 0 &&
     route.route!.every((point) => (point.z ?? 0) === (route.route![0].z ?? 0)),
-  )) return false
-  if (routes.length === 1 && fixedRoutes.length === 0 && obstacles.length === 0) {
-    return true
+  )
+  if (ownedRoutesAreViaFree && routes.length === 1 && fixedRoutes.length === 0 && obstacles.length === 0) {
+    return routes
   }
   const commonNet = routes[0].rootConnectionName ?? routes[0].connectionName
-  if (typeof commonNet !== "string" || commonNet.length === 0) return false
-  return [...routes, ...fixedRoutes].every((route) =>
+  if (typeof commonNet !== "string" || commonNet.length === 0) return null
+  const allRoutes = [...routes, ...fixedRoutes]
+  if (!allRoutes.every((route) =>
     route.connectionName === commonNet || route.rootConnectionName === commonNet,
-  ) && routes.every((route) => obstacles.every((obstacle) =>
+  ) || !routes.every((route) => obstacles.every((obstacle) =>
     obstacle.connectedTo?.some((id) =>
-      id === route.connectionName || id === route.rootConnectionName,
+      (Boolean(route.connectionName) && id === route.connectionName) ||
+      (Boolean(route.rootConnectionName) && id === route.rootConnectionName),
     ),
-  ))
+  ))) return null
+  // No owned via can conflict with fixed vias, regardless of their count.
+  if (ownedRoutesAreViaFree) return routes
+  const fixedViaCount = fixedRoutes.reduce((count, route) => count + (route.vias?.length ?? 0), 0)
+  if (routes.reduce((count, route) => count + route.vias!.length, fixedViaCount) > 1) {
+    return null
+  }
+  // Leave malformed transitions to the normal repair path, preserving sample
+  // consumption and failure ordering instead of throwing during dispatch.
+  if (routes.some((route) => route.route!.some((point, index) => {
+    const next = route.route![index + 1]
+    return next !== undefined && (point.z ?? 0) !== (next.z ?? 0) &&
+      (point.x !== next.x || point.y !== next.y)
+  }))) return null
+  // Use the dependency's exact normalization: projected transitions can retain
+  // full precision while incoming via records were rounded to 0.001 mm.
+  const synchronizedRoutes = routes.map(synchronizeRouteVias)
+  const viaCount = synchronizedRoutes.reduce((count, route) => count + (route.vias?.length ?? 0), fixedViaCount)
+  return viaCount <= 1 ? synchronizedRoutes : null
 }
 
 /**
@@ -73,7 +97,7 @@ export class Pipeline9NetworkedHighDensityRepairSolver extends Pipeline4HighDens
   private readonly remoteRequestByIndex = new Map<number, RemoteRepairRequest>()
   private readonly remoteResultByIndex = new Map<number, HdCache2RepairSolveResult>()
   private readonly logicallyTimedOutIndexes = new Set<number>()
-  private readonly trivialSampleIndexes = new Set<number>()
+  private readonly trivialRoutesByIndex = new Map<number, RepairHdRoute[]>()
 
   constructor({
     autorouterVersion,
@@ -155,8 +179,9 @@ export class Pipeline9NetworkedHighDensityRepairSolver extends Pipeline4HighDens
   private launchRemoteRepairs(): void {
     const prepared: Array<{ index: number; input: Pipeline9NetworkedHighDensityRepairInput }> = []
     for (const [index, { sample }] of this.sampleEntries.entries()) {
-      if (isTrivialRepairSample(sample)) {
-        this.trivialSampleIndexes.add(index)
+      const trivialRoutes = getTrivialRepairRoutes(sample)
+      if (trivialRoutes) {
+        this.trivialRoutesByIndex.set(index, trivialRoutes)
         continue
       }
       prepared.push({
@@ -195,10 +220,10 @@ export class Pipeline9NetworkedHighDensityRepairSolver extends Pipeline4HighDens
   }
 
   private finishTrivialSample(): void {
-    const sample = this.sampleEntries[this.activeSampleIndex].sample
-    if (!sample.nodeHdRoutes) throw new Error("Trivial repair sample routes are missing")
+    const routes = this.trivialRoutesByIndex.get(this.activeSampleIndex)
+    if (!routes) throw new Error("Trivial repair sample routes are missing")
     this.stats.localTrivialRepairCount += 1
-    this.finishRepairSample(sample.nodeHdRoutes, {
+    this.finishRepairSample(routes, {
       nodeClearanceInitialConflictCount: 0,
       nodeClearanceFinalConflictCount: 0,
       nodeClearanceCandidateCount: 0,
@@ -237,7 +262,7 @@ export class Pipeline9NetworkedHighDensityRepairSolver extends Pipeline4HighDens
       return
     }
     const index = this.activeSampleIndex
-    if (this.trivialSampleIndexes.has(index)) {
+    if (this.trivialRoutesByIndex.has(index)) {
       this.finishTrivialSample()
       return
     }
