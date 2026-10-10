@@ -1,6 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
+import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -652,7 +653,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
+  exactRepairSolver?: GlobalDrcBranchPortfolioSolver
+  private exactRepairParams?: ConstructorParameters<
+    typeof GlobalDrcBranchPortfolioSolver
+  >[0]
+  clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -678,11 +683,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private boundedRegionalRepairStartedAt?: number
   readonly pipelineDef = [
     {
+      solverName: "clearanceProjectionSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.exactRepairParams) {
+          throw new Error("Pipeline9 clearance projection is missing its input")
+        }
+        this.clearanceProjectionSolver = new Pipeline9ClearanceProjectionSolver(
+          {
+            originalSrj: this.params.originalSrj,
+            routes: this.exactRepairParams.hdRoutes,
+            drcEvaluator: this.cachedReferenceDrcEvaluator!,
+          },
+        )
+        return this.clearanceProjectionSolver
+      },
+      onSolved: (): void => {},
+    },
+    {
       solverName: "exactRepairSolver",
       createSolver: (): BaseSolver => {
-        if (!this.exactRepairSolver) {
-          throw new Error("Pipeline9 exact repair stage is missing its solver")
+        if (!this.exactRepairParams) {
+          throw new Error("Pipeline9 exact repair stage is missing its input")
         }
+        this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+          ...this.exactRepairParams,
+          hdRoutes:
+            this.clearanceProjectionSolver?.getOutput() ??
+            this.exactRepairParams.hdRoutes,
+        })
         return this.exactRepairSolver
       },
       onSolved: (): void => this.finishExactRepair(),
@@ -1504,7 +1532,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     drcEvaluator.inputMode = "routes-only"
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+    this.exactRepairParams = {
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1528,9 +1556,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaInPadMaxIterations: maxRepairIterations,
       broadMaxIterations: maxBroadRepairIterations,
       broadPassMultiplier: 3 * pairwiseRepairBudgetScale,
-    })
-    this.activeSubSolver = this.exactRepairSolver
-    this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
+    }
+    // Resolve hole clearance before detour repair, without moving preloaded copper.
+    if (
+      params.updatedPreloadedTraces.length > 0 ||
+      !params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)
+    ) {
+      this.currentPipelineStepIndex = 1
+    }
+    this.activeSubSolver =
+      this.pipelineDef[this.currentPipelineStepIndex]!.createSolver()
+    this.MAX_ITERATIONS = this.activeSubSolver.MAX_ITERATIONS + 1
   }
 
   override getSolverName(): string {
