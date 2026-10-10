@@ -901,15 +901,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                   route.connectionName,
                 )
                 if (
-                  beforeRepair?.route.length === route.route.length &&
-                  route.route.every((point, pointIndex) => {
-                    const previous = beforeRepair.route[pointIndex]!
-                    return (
-                      point.x === previous.x &&
-                      point.y === previous.y &&
-                      point.z === previous.z
-                    )
-                  })
+                  !beforeRepair ||
+                  route.route.length <= beforeRepair.route.length
                 )
                   return []
                 if (
