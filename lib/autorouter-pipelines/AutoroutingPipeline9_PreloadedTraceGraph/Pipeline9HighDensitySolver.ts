@@ -463,12 +463,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
   }
 
-  protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+  protected finishActiveNode(
+    routes: HighDensityIntraNodeRoute[],
+    restoreTerminalPcbPortIds = true,
+  ): void {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
     this.routes.push(
-      ...(this.preserveTerminalPcbPortIds && this.activeNode
+      ...(restoreTerminalPcbPortIds && this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
         : solvedRoutes),
     )

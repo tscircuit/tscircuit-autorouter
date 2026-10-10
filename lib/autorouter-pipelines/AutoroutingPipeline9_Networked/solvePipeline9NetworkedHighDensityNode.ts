@@ -8,8 +8,17 @@ import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_Preload
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedInput,
+  Pipeline9NetworkedOutput,
 } from "./pipeline9NetworkedTypes"
 import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import { forceImprovePipeline9HighDensityNodeRoutes } from "./forceImprovePipeline9HighDensityNodeRoutes"
+import { PIPELINE9_NETWORKED_REPAIR_POLICY } from "./pipeline9NetworkedRepairTypes"
+import type {
+  Pipeline9NetworkedHighDensityRepairInput,
+  Pipeline9NetworkedHighDensityRepairOutput,
+} from "./pipeline9NetworkedRepairTypes"
+import { solvePipeline9NetworkedHighDensityRepairNode } from "./solvePipeline9NetworkedHighDensityRepairNode"
 
 type Pipeline9OrdinaryNodeResult =
   | {
@@ -62,10 +71,22 @@ const solvePipeline9OrdinaryHighDensityNode = ({
  */
 export function solvePipeline9NetworkedHighDensityNode(
   input: Pipeline9NetworkedHighDensityNodeInput,
-): Pipeline9NetworkedHighDensityNodeOutput {
+): Pipeline9NetworkedHighDensityNodeOutput
+export function solvePipeline9NetworkedHighDensityNode(
+  input: Pipeline9NetworkedHighDensityRepairInput,
+): Pipeline9NetworkedHighDensityRepairOutput
+export function solvePipeline9NetworkedHighDensityNode(
+  input: Pipeline9NetworkedInput,
+): Pipeline9NetworkedOutput
+export function solvePipeline9NetworkedHighDensityNode(
+  input: Pipeline9NetworkedInput,
+): Pipeline9NetworkedOutput {
+  if (input.solvePolicy === PIPELINE9_NETWORKED_REPAIR_POLICY) {
+    return solvePipeline9NetworkedHighDensityRepairNode(input)
+  }
   if (input.solvePolicy !== PIPELINE9_NETWORKED_SOLVE_POLICY) {
     throw new Error(
-      `Unsupported Pipeline9 networked solve policy ${String(input.solvePolicy)}`,
+      `Unsupported Pipeline9 networked solve policy ${String((input as { solvePolicy: unknown }).solvePolicy)}`,
     )
   }
   if (input.effort !== 1) {
@@ -83,7 +104,15 @@ export function solvePipeline9NetworkedHighDensityNode(
     return {
       status: "solved",
       solutionStage: "ordinary",
-      routes: ordinaryResult.routes,
+      routes: input.forceImprove
+        ? forceImprovePipeline9HighDensityNodeRoutes({
+            nodeWithPortPoints: input.nodeWithPortPoints,
+            hdRoutes: ordinaryResult.routes,
+            colorMap: input.colorMap,
+            ...input.forceImprove,
+          })
+        : ordinaryResult.routes,
+      ...(input.forceImprove ? { forceImproved: true as const } : {}),
     }
   }
 
@@ -127,7 +156,15 @@ export function solvePipeline9NetworkedHighDensityNode(
       status: "solved",
       solutionStage: "regional-fallback",
       ordinaryFailure,
-      routes: regionalSolver.getOutput(),
+      routes: input.forceImprove
+        ? forceImprovePipeline9HighDensityNodeRoutes({
+            nodeWithPortPoints: input.nodeWithPortPoints,
+            hdRoutes: regionalSolver.getOutput(),
+            colorMap: input.colorMap,
+            ...input.forceImprove,
+          })
+        : regionalSolver.getOutput(),
+      ...(input.forceImprove ? { forceImproved: true as const } : {}),
     }
   }
 

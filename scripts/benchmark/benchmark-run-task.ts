@@ -29,6 +29,12 @@ type SubSolverInstance = {
   getSolverName?: () => string
 }
 
+type HighDensityBenchmarkSource = {
+  iterations?: number
+  stats?: Record<string, unknown>
+  waitForAllRemoteRequests?: () => Promise<void>
+}
+
 type SolverInstance = PipelineStageTimingSource & {
   solved?: boolean
   failed?: boolean
@@ -52,11 +58,8 @@ type SolverInstance = PipelineStageTimingSource & {
       | TinyHypergraphBenchmarkMetrics
       | undefined
   }
-  highDensityRouteSolver?: {
-    iterations?: number
-    stats?: Record<string, unknown>
-    waitForAllRemoteRequests?: () => Promise<void>
-  }
+  highDensityRouteSolver?: HighDensityBenchmarkSource
+  highDensityRepairSolver?: HighDensityBenchmarkSource
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -308,33 +311,48 @@ const getProgressKey = (solver: SolverInstance): string => {
   return `${phaseName}|${phaseSolverName}`
 }
 
-const getRoutingBenchmarkMetrics = (
+export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
-  const highDensityStats = solver.highDensityRouteSolver?.stats
-  const networkedHighDensity =
-    highDensityStats &&
-    typeof highDensityStats.remoteRequestsStarted === "number"
-      ? {
-          remoteRequestsStarted: highDensityStats.remoteRequestsStarted,
-          remoteRequestsCompleted: Number(
-            highDensityStats.remoteRequestsCompleted ?? 0,
-          ),
-          remoteBatchCacheMisses: Number(
-            highDensityStats.remoteBatchCacheMisses ?? 0,
-          ),
-          remoteSingleRequestsStarted: Number(
-            highDensityStats.remoteSingleRequestsStarted ?? 0,
-          ),
-          remoteCacheHits: Number(highDensityStats.remoteCacheHits ?? 0),
-          remoteSolverResults: Number(
-            highDensityStats.remoteSolverResults ?? 0,
-          ),
-          remoteTransportFallbacks: Number(
-            highDensityStats.remoteTransportFallbacks ?? 0,
-          ),
+  const networkedStats = [
+    solver.highDensityRouteSolver?.stats,
+    solver.highDensityRepairSolver?.stats,
+  ].filter((stats): stats is Record<string, unknown> =>
+    stats !== undefined && typeof stats.remoteRequestsStarted === "number",
+  )
+  let networkedHighDensity: RoutingBenchmarkMetrics["networkedHighDensity"]
+  if (networkedStats.length > 0) {
+    networkedHighDensity = {
+      remoteRequestsStarted: 0,
+      remoteRequestsCompleted: 0,
+      remoteBatchCacheMisses: 0,
+      remoteSingleRequestsStarted: 0,
+      remoteCacheHits: 0,
+      remoteSolverResults: 0,
+      remoteTransportFallbacks: 0,
+    }
+    for (const stats of networkedStats) {
+      for (const key of [
+        "remoteRequestsStarted",
+        "remoteRequestsCompleted",
+        "remoteBatchCacheMisses",
+        "remoteSingleRequestsStarted",
+        "remoteCacheHits",
+        "remoteSolverResults",
+        "remoteTransportFallbacks",
+      ] as const) {
+        networkedHighDensity[key] += Number(stats[key] ?? 0)
+      }
+      const reasonCounts = stats.remoteFallbackReasonCounts as
+        Record<string, number> | undefined
+      if (reasonCounts) {
+        const combined = networkedHighDensity.remoteFallbackReasonCounts ??= {}
+        for (const [reason, count] of Object.entries(reasonCounts)) {
+          combined[reason] = (combined[reason] ?? 0) + count
         }
-      : undefined
+      }
+    }
+  }
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
@@ -364,6 +382,19 @@ const getNetworkedBenchmarkValidationError = (
     return `Pipeline9_Networked hot pass was not fully cached (${stats.remoteCacheHits}/${stats.remoteRequestsStarted} cache hit(s), ${stats.remoteBatchCacheMisses} batch miss(es), ${stats.remoteSingleRequestsStarted} single solve(s), ${stats.remoteSolverResults} solver result(s))`
   }
   return undefined
+}
+
+export const validateNetworkedBenchmark = async (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+): Promise<void> => {
+  if (!task.networkedCachePass) return
+  await Promise.all([
+    solver.highDensityRouteSolver?.waitForAllRemoteRequests?.(),
+    solver.highDensityRepairSolver?.waitForAllRemoteRequests?.(),
+  ])
+  const validationError = getNetworkedBenchmarkValidationError(task, solver)
+  if (validationError) throw new Error(validationError)
 }
 
 export const solveWithProgress = async (
@@ -495,12 +526,7 @@ export const runTask = async (
   const elapsedTimeMs = performance.now() - start
   if (task.networkedCachePass) {
     try {
-      await solver.highDensityRouteSolver?.waitForAllRemoteRequests?.()
-      const networkedBenchmarkValidationError =
-        getNetworkedBenchmarkValidationError(task, solver)
-      if (networkedBenchmarkValidationError) {
-        throw new Error(networkedBenchmarkValidationError)
-      }
+      await validateNetworkedBenchmark(task, solver)
     } catch (error) {
       solver.solved = false
       solveError = getErrorMessage(error)

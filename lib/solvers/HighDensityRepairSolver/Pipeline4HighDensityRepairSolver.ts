@@ -24,6 +24,16 @@ type RepairSampleEntry = {
   sample: DatasetSample
 }
 
+export type Pipeline4HighDensityRepairSolverParams = {
+  nodeWithPortPoints: NodeWithPortPoints[]
+  hdRoutes: HighDensityRoute[]
+  obstacles: Obstacle[]
+  repairMargin?: number
+  minimumTraceWidth?: number
+  colorMap?: Record<string, string>
+  connMap?: ConnectivityMap
+}
+
 const DEFAULT_REPAIR_MARGIN = 0.2
 
 const doesRectOverlap = (
@@ -220,15 +230,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   override activeSubSolver: HighDensityRepairSolver | null = null
   latestVisualization: GraphicsObject = {}
 
-  constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints[]
-    hdRoutes: HighDensityRoute[]
-    obstacles: Obstacle[]
-    repairMargin?: number
-    minimumTraceWidth?: number
-    colorMap?: Record<string, string>
-    connMap?: ConnectivityMap
-  }) {
+  constructor(params: Pipeline4HighDensityRepairSolverParams) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
@@ -436,43 +438,18 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
-          Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
           Number(
             this.activeSubSolver.stats.nodeClearanceInitialConflictCount ?? 0,
           ),
         nodeClearanceFinalConflictCount:
-          Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
           Number(
             this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
           ),
         nodeClearanceCandidateCount:
-          Number(this.stats.nodeClearanceCandidateCount ?? 0) +
           Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
       }
-      for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
-        const routeIndex = sampleEntry.routeIndexes[i]
-        const fallbackRoute = this.originalHdRoutes[routeIndex]
-        const repairedRoute = repairedRoutes[i]
-        this.repairedRoutesByIndex.set(
-          routeIndex,
-          repairedRoute
-            ? fromRepairRoute(repairedRoute, fallbackRoute)
-            : fallbackRoute,
-        )
-      }
-
       this.activeSubSolver = null
-      this.activeSampleIndex += 1
-      this.stats = {
-        ...clearanceStats,
-        sampleCount: this.sampleEntries.length,
-        repairedNodeCount: this.activeSampleIndex,
-        repairedRouteCount: this.repairedRoutesByIndex.size,
-      }
-
-      if (this.activeSampleIndex >= this.sampleEntries.length) {
-        this.solved = true
-      }
+      this.finishRepairSample(repairedRoutes, clearanceStats)
       return
     }
 
@@ -483,6 +460,46 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       margin: this.repairMargin,
     })
     this.latestVisualization = this.activeSubSolver.visualize()
+  }
+
+  protected finishRepairSample(
+    repairedRoutes: RepairHdRoute[],
+    clearanceStats: Record<string, number>,
+  ): void {
+    const sampleEntry = this.sampleEntries[this.activeSampleIndex]
+    if (!sampleEntry) {
+      throw new Error(`High density repair sample ${this.activeSampleIndex} is missing`)
+    }
+    for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
+      const routeIndex = sampleEntry.routeIndexes[i]
+      const originalRoute = this.originalHdRoutes[routeIndex]
+      const repairedRoute = repairedRoutes[i]
+      this.repairedRoutesByIndex.set(
+        routeIndex,
+        repairedRoute
+          ? fromRepairRoute(repairedRoute, originalRoute)
+          : originalRoute,
+      )
+    }
+    this.activeSampleIndex += 1
+    this.stats = {
+      ...this.stats,
+      nodeClearanceInitialConflictCount:
+        Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
+        Number(clearanceStats.nodeClearanceInitialConflictCount ?? 0),
+      nodeClearanceFinalConflictCount:
+        Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
+        Number(clearanceStats.nodeClearanceFinalConflictCount ?? 0),
+      nodeClearanceCandidateCount:
+        Number(this.stats.nodeClearanceCandidateCount ?? 0) +
+        Number(clearanceStats.nodeClearanceCandidateCount ?? 0),
+      sampleCount: this.sampleEntries.length,
+      repairedNodeCount: this.activeSampleIndex,
+      repairedRouteCount: this.repairedRoutesByIndex.size,
+    }
+    if (this.activeSampleIndex >= this.sampleEntries.length) {
+      this.solved = true
+    }
   }
 
   getOutput(): HighDensityRoute[] {

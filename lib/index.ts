@@ -34,6 +34,8 @@ export type {
   Pipeline9NetworkedCacheSource,
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedInput,
+  Pipeline9NetworkedOutput,
   Pipeline9NetworkedSolveBatchCacheMiss,
   Pipeline9NetworkedSolveBatchItem,
   Pipeline9NetworkedSolveBatchRequest,
@@ -43,6 +45,13 @@ export type {
 } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
+export { PIPELINE9_NETWORKED_REPAIR_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedRepairTypes"
+export type {
+  Pipeline9NetworkedHighDensityRepairInput,
+  Pipeline9NetworkedHighDensityRepairOutput,
+  Pipeline9NetworkedRepairClearanceStats,
+} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedRepairTypes"
+export { solvePipeline9NetworkedHighDensityRepairNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityRepairNode"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 export {
   AutoroutingPipelineSolver11_Simplification,

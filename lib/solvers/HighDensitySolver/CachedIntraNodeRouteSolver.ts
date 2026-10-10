@@ -195,7 +195,14 @@ export class CachedIntraNodeRouteSolver
 
   applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
     if (cachedSolution.success) {
-      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      // Geometry cache keys intentionally omit node identity. Ownership must
+      // refer to the current node when routes enter per-region repair groups.
+      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes).map(
+        (route) => ({
+          ...route,
+          regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+        }),
+      )
       this.solved = true
       this.failed = false
     } else {

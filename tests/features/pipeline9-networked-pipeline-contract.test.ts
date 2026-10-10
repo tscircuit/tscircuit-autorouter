@@ -8,6 +8,8 @@ import {
   type AutoroutingPipelineSolver9NetworkedOptions,
 } from "lib/autorouter-pipelines"
 import { Pipeline9NetworkedHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
+import { Pipeline9RemainingForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9RemainingForceImproveSolver"
+import { Pipeline9NetworkedHighDensityRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensityRepairSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 
@@ -19,7 +21,7 @@ const emptySrj: SimpleRouteJson = {
   bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
 }
 
-test("Pipeline9 networked is effort-1-only, async-only, and replaces only the high-density stage", async () => {
+test("Pipeline9 networked is effort-1-only, async-only, and distributes the high-density stages", async () => {
   const server = new ExampleHdCache2Server()
   try {
     expect(
@@ -61,6 +63,14 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
     )
     for (const [stepIndex, step] of networkedSolver.pipelineDef.entries()) {
       if (stepIndex === highDensityStepIndex) continue
+      if (step.solverName === "highDensityForceImproveSolver") {
+        expect(step.solverClass).toBe(Pipeline9RemainingForceImproveSolver)
+        continue
+      }
+      if (step.solverName === "highDensityRepairSolver") {
+        expect(step.solverClass).toBe(Pipeline9NetworkedHighDensityRepairSolver)
+        continue
+      }
       expect(step.solverClass).toBe(
         localSolver.pipelineDef[stepIndex]!.solverClass,
       )

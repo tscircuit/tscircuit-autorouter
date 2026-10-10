@@ -5,8 +5,16 @@ import type {
 } from "../../types/high-density-types"
 import { getConnectionPortPointPairs } from "../../utils/getConnectionPortPointPairs"
 import { getMaximumPipeline9NodeBounds } from "./pipeline9NetworkedInputProjection"
+import {
+  PIPELINE9_NETWORKED_REPAIR_POLICY,
+  type Pipeline9NetworkedHighDensityRepairInput,
+  type Pipeline9NetworkedHighDensityRepairOutput,
+} from "./pipeline9NetworkedRepairTypes"
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
+  Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedInput,
+  Pipeline9NetworkedOutput,
   Pipeline9NetworkedSolveBatchCacheMiss,
   Pipeline9NetworkedSolveBatchItem,
   Pipeline9NetworkedSolveRequest,
@@ -33,16 +41,21 @@ export type HdCache2FallbackReason =
   | "cache_version_mismatch"
   | "version_mismatch"
 
-export type HdCache2SolveResult =
+export type HdCache2SolveResult<
+  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+> =
   | {
       kind: "remote"
-      response: Extract<Pipeline9NetworkedSolveResponse, { ok: true }>
+      response: Extract<Pipeline9NetworkedSolveResponse<TOutput>, { ok: true }>
     }
   | {
       kind: "local-fallback"
       error: string
       reason: HdCache2FallbackReason
     }
+
+export type HdCache2RepairSolveResult =
+  HdCache2SolveResult<Pipeline9NetworkedHighDensityRepairOutput>
 
 export type HdCache2ClientStats = {
   batchRequestsStarted: number
@@ -61,10 +74,10 @@ export type HdCache2ClientOptions = {
   cacheVersion?: string
 }
 
-type PendingSolve = Pipeline9NetworkedSolveBatchItem & {
+type PendingSolve = Pipeline9NetworkedSolveBatchItem<Pipeline9NetworkedInput> & {
   serializedItem: string | null
-  promise: Promise<HdCache2SolveResult>
-  resolve: (result: HdCache2SolveResult) => void
+  promise: Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>
+  resolve: (result: HdCache2SolveResult<Pipeline9NetworkedOutput>) => void
   settled: boolean
   singleSolveStarted: boolean
 }
@@ -115,6 +128,7 @@ const REGIONAL_VIA_POSITION_TOLERANCE_MM = 0.001
 const hasValidRemoteLayerTransitions = (
   route: HighDensityIntraNodeRoute,
   solutionStage: "ordinary" | "regional-fallback",
+  forceImproved = false,
 ): boolean => {
   const viaPositionTolerance =
     solutionStage === "ordinary"
@@ -127,6 +141,15 @@ const hasValidRemoteLayerTransitions = (
     const changesLayer = start.z !== end.z
     if (start.toNextSegmentType === "through_obstacle") {
       if (!changesLayer) return false
+      // The force improver derives a via at every co-located transition,
+      // including the copper already provided by a plated-hole obstacle.
+      if (forceImproved && Math.hypot(start.x - end.x, start.y - end.y) <= viaPositionTolerance) {
+        for (const [viaIndex, via] of route.vias.entries()) {
+          if (Math.hypot(via.x - start.x, via.y - start.y) <= viaPositionTolerance) {
+            usedViaIndexes.add(viaIndex)
+          }
+        }
+      }
       continue
     }
     if (start.toNextSegmentCircuitJsonMetadata !== undefined) return false
@@ -282,11 +305,28 @@ const isValidRemoteRoutes = (
 ): value is HighDensityIntraNodeRoute[] => {
   if (!Array.isArray(value)) return false
 
+  const roundPortPoint = (
+    point: NodeWithPortPoints["portPoints"][number],
+  ): NodeWithPortPoints["portPoints"][number] => ({
+    ...point,
+    x: Math.round(point.x * 1_000) / 1_000,
+    y: Math.round(point.y * 1_000) / 1_000,
+  })
+  const validationNode: NodeWithPortPoints = input.forceImprove
+    ? {
+        ...input.nodeWithPortPoints,
+        portPoints: input.nodeWithPortPoints.portPoints.map(roundPortPoint),
+        portPointsInPairs: input.nodeWithPortPoints.portPointsInPairs?.map(
+          ([start, end]) => [roundPortPoint(start), roundPortPoint(end)],
+        ),
+      }
+    : input.nodeWithPortPoints
+
   const portPointsByConnectionName = new Map<
     string,
     NodeWithPortPoints["portPoints"]
   >()
-  for (const portPoint of input.nodeWithPortPoints.portPoints) {
+  for (const portPoint of validationNode.portPoints) {
     const portPoints =
       portPointsByConnectionName.get(portPoint.connectionName) ?? []
     portPoints.push(portPoint)
@@ -345,6 +385,12 @@ const isValidRemoteRoutes = (
       if (optionalString !== undefined && typeof optionalString !== "string") {
         return false
       }
+    }
+    if (
+      input.forceImprove &&
+      route.regionId !== input.nodeWithPortPoints.capacityMeshNodeId
+    ) {
+      return false
     }
 
     for (const pointValue of route.route) {
@@ -409,6 +455,25 @@ const isValidRemoteRoutes = (
     ) {
       return false
     }
+    if (input.forceImprove?.preserveTerminalPcbPortIds) {
+      for (const [point, pcbPortId] of [
+        [routePoints[0]!, route.startPcbPortId],
+        [routePoints.at(-1)!, route.endPcbPortId],
+      ] as const) {
+        const candidates = portPointsByConnectionName.get(route.connectionName)!
+        const matchesTerminal = candidates.some((portPoint) =>
+          nearlyEqual(point.x as number, portPoint.x) &&
+          nearlyEqual(point.y as number, portPoint.y) &&
+          point.z === portPoint.z &&
+          portPoint.pcb_port_id === pcbPortId,
+        )
+        // Regional endpoints can already be rounded before terminal IDs are
+        // attached, matching the local pipeline's existing exact-match policy.
+        if (!matchesTerminal && (solutionStage === "ordinary" || pcbPortId !== undefined)) {
+          return false
+        }
+      }
+    }
 
     for (const viaValue of route.vias) {
       if (!viaValue || typeof viaValue !== "object") return false
@@ -430,6 +495,7 @@ const isValidRemoteRoutes = (
       !hasValidRemoteLayerTransitions(
         route as unknown as HighDensityIntraNodeRoute,
         solutionStage,
+        input.forceImprove !== undefined,
       )
     ) {
       return false
@@ -473,8 +539,152 @@ const isValidRemoteRoutes = (
   }
   const routes = value as HighDensityIntraNodeRoute[]
   return solutionStage === "ordinary"
-    ? areNodePortPointPairsConnectedByRoutes(routes, input.nodeWithPortPoints)
+    ? areNodePortPointPairsConnectedByRoutes(routes, validationNode)
     : hasRegionalRouteCoverage(routes, input.nodeWithPortPoints)
+}
+
+const isValidRemoteRepairResult = (
+  response: Record<string, unknown>,
+  input: Pipeline9NetworkedHighDensityRepairInput,
+): boolean => {
+  if (response.solutionStage !== "repair") return false
+  if (response.status === "failed") {
+    return typeof response.error === "string" && response.error.length > 0
+  }
+  if (response.status !== "solved" || !Array.isArray(response.repairedRoutes)) {
+    return false
+  }
+  const stats = response.clearanceStats
+  if (!stats || typeof stats !== "object" || Array.isArray(stats)) return false
+  for (const key of [
+    "nodeClearanceInitialConflictCount",
+    "nodeClearanceFinalConflictCount",
+    "nodeClearanceCandidateCount",
+  ]) {
+    const count = (stats as Record<string, unknown>)[key]
+    if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) {
+      return false
+    }
+  }
+
+  const originals = input.sample.nodeHdRoutes
+  const node = input.sample.nodeWithPortPoints
+  if (
+    !Array.isArray(originals) ||
+    !node ||
+    !node.center ||
+    typeof node.center.x !== "number" ||
+    !Number.isFinite(node.center.x) ||
+    typeof node.center.y !== "number" ||
+    !Number.isFinite(node.center.y) ||
+    typeof node.width !== "number" ||
+    !Number.isFinite(node.width) ||
+    node.width <= 0 ||
+    typeof node.height !== "number" ||
+    !Number.isFinite(node.height) ||
+    node.height <= 0 ||
+    !Array.isArray(node.portPoints) ||
+    !Number.isFinite(input.repairMargin) ||
+    input.repairMargin < 0
+  ) {
+    return false
+  }
+  if (response.repairedRoutes.length !== originals.length) return false
+  const layers = new Set<number>(node.portPoints.map((point) => point.z ?? 0))
+  for (const original of originals) {
+    if (!original.route || !original.vias || original.route.length < 2) {
+      return false
+    }
+    for (const point of original.route) layers.add(point.z ?? 0)
+  }
+  const originalPoints = originals.flatMap((route) => [
+    ...route.route!,
+    ...route.vias!,
+  ])
+  const margin = input.repairMargin
+  const minX = Math.min(node.center.x - node.width / 2, ...originalPoints.map((point) => point.x)) - margin
+  const maxX = Math.max(node.center.x + node.width / 2, ...originalPoints.map((point) => point.x)) + margin
+  const minY = Math.min(node.center.y - node.height / 2, ...originalPoints.map((point) => point.y)) - margin
+  const maxY = Math.max(node.center.y + node.height / 2, ...originalPoints.map((point) => point.y)) + margin
+
+  for (const [index, value] of response.repairedRoutes.entries()) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false
+    const route = value as Record<string, unknown>
+    const original = originals[index]!
+    if (
+      route.connectionName !== original.connectionName ||
+      route.rootConnectionName !== original.rootConnectionName ||
+      route.capacityMeshNodeId !== original.capacityMeshNodeId ||
+      route.traceThickness !== original.traceThickness ||
+      route.viaDiameter !== original.viaDiameter ||
+      typeof route.traceThickness !== "number" ||
+      !Number.isFinite(route.traceThickness) ||
+      route.traceThickness <= 0 ||
+      typeof route.viaDiameter !== "number" ||
+      !Number.isFinite(route.viaDiameter) ||
+      route.viaDiameter <= 0 ||
+      JSON.stringify(route.connectedPadSides) !== JSON.stringify(original.connectedPadSides) ||
+      !Array.isArray(route.route) ||
+      route.route.length < 2 ||
+      !Array.isArray(route.vias)
+    ) {
+      return false
+    }
+    const points = route.route as Array<Record<string, unknown>>
+    for (const point of points) {
+      if (!point || typeof point !== "object" || Array.isArray(point)) return false
+      const z = point.z === undefined ? 0 : point.z
+      if (
+        typeof point.x !== "number" ||
+        !Number.isFinite(point.x) ||
+        typeof point.y !== "number" ||
+        !Number.isFinite(point.y) ||
+        point.x < minX || point.x > maxX ||
+        point.y < minY || point.y > maxY ||
+        typeof z !== "number" ||
+        !Number.isInteger(z) ||
+        z < 0 ||
+        !layers.has(z)
+      ) {
+        return false
+      }
+    }
+    for (const [point, originalPoint] of [
+      [points[0]!, original.route![0]!],
+      [points.at(-1)!, original.route!.at(-1)!],
+    ] as const) {
+      if (
+        !nearlyEqual(point.x as number, originalPoint.x) ||
+        !nearlyEqual(point.y as number, originalPoint.y) ||
+        (point.z ?? 0) !== (originalPoint.z ?? 0)
+      ) {
+        return false
+      }
+    }
+    for (const value of route.vias) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false
+      const via = value as Record<string, unknown>
+      if (
+        typeof via.x !== "number" ||
+        !Number.isFinite(via.x) ||
+        typeof via.y !== "number" ||
+        !Number.isFinite(via.y) ||
+        via.x < minX || via.x > maxX ||
+        via.y < minY || via.y > maxY ||
+        (via.diameter !== undefined && via.diameter !== original.viaDiameter)
+      ) {
+        return false
+      }
+    }
+    const routeWithExplicitLayers = {
+      ...route,
+      route: points.map((point) => ({ ...point, z: point.z ?? 0 })),
+    } as unknown as HighDensityIntraNodeRoute
+    if (!hasValidRemoteLayerTransitions(routeWithExplicitLayers, "ordinary")) {
+      return false
+    }
+  }
+  return true
 }
 
 export const getHdCache2SolveUrl = (baseUrl: string): string =>
@@ -524,7 +734,16 @@ export class HdCache2Client {
    */
   solveMany(
     inputs: readonly Pipeline9NetworkedHighDensityNodeInput[],
-  ): Array<Promise<HdCache2SolveResult>> {
+  ): Array<Promise<HdCache2SolveResult>>
+  solveMany(
+    inputs: readonly Pipeline9NetworkedHighDensityRepairInput[],
+  ): Array<Promise<HdCache2RepairSolveResult>>
+  solveMany(
+    inputs: readonly Pipeline9NetworkedInput[],
+  ): Array<Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>>
+  solveMany(
+    inputs: readonly Pipeline9NetworkedInput[],
+  ): Array<Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>> {
     const pendingSolves = inputs.map((input, index) =>
       this.createPendingSolve(String(index), input),
     )
@@ -542,10 +761,10 @@ export class HdCache2Client {
 
   private createPendingSolve(
     requestId: string,
-    input: Pipeline9NetworkedHighDensityNodeInput,
+    input: Pipeline9NetworkedInput,
   ): PendingSolve {
-    let resolve!: (result: HdCache2SolveResult) => void
-    const promise = new Promise<HdCache2SolveResult>((resolvePromise) => {
+    let resolve!: (result: HdCache2SolveResult<Pipeline9NetworkedOutput>) => void
+    const promise = new Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>((resolvePromise) => {
       resolve = resolvePromise
     })
     const pending: PendingSolve = {
@@ -559,6 +778,11 @@ export class HdCache2Client {
     }
     try {
       pending.serializedItem = JSON.stringify({ requestId, input })
+      // A cache miss must send and validate the same sample as the batch lookup,
+      // even if the caller subsequently mutates its route or fixed-copper arrays.
+      if (input.solvePolicy === PIPELINE9_NETWORKED_REPAIR_POLICY) {
+        pending.input = JSON.parse(pending.serializedItem).input
+      }
     } catch (error) {
       this.settleWithFallback(
         pending,
@@ -569,7 +793,10 @@ export class HdCache2Client {
     return pending
   }
 
-  private settle(pending: PendingSolve, result: HdCache2SolveResult): void {
+  private settle(
+    pending: PendingSolve,
+    result: HdCache2SolveResult<Pipeline9NetworkedOutput>,
+  ): void {
     if (pending.settled) return
     pending.settled = true
     pending.resolve(result)
@@ -585,8 +812,8 @@ export class HdCache2Client {
 
   private parseSuccessfulResponse(
     value: unknown,
-    input: Pipeline9NetworkedHighDensityNodeInput,
-  ): Extract<Pipeline9NetworkedSolveResponse, { ok: true }> {
+    input: Pipeline9NetworkedInput,
+  ): Extract<Pipeline9NetworkedSolveResponse<Pipeline9NetworkedOutput>, { ok: true }> {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       throw new HdCache2RequestError(
         "invalid_response",
@@ -620,6 +847,15 @@ export class HdCache2Client {
         "invalid_response",
         "hd-cache2 returned an invalid cache source",
       )
+    }
+    if (input.solvePolicy === PIPELINE9_NETWORKED_REPAIR_POLICY) {
+      if (!isValidRemoteRepairResult(response, input)) {
+        throw new HdCache2RequestError(
+          "invalid_response",
+          "hd-cache2 returned an invalid repair result",
+        )
+      }
+      return response as Extract<Pipeline9NetworkedSolveResponse<Pipeline9NetworkedHighDensityRepairOutput>, { ok: true }>
     }
     if (
       response.solutionStage !== "ordinary" &&
@@ -658,6 +894,17 @@ export class HdCache2Client {
       throw new HdCache2RequestError(
         "invalid_response",
         "hd-cache2 returned an intermediate ordinary failure",
+      )
+    }
+    if (
+      response.status === "solved" &&
+      (input.forceImprove === undefined
+        ? response.forceImproved !== undefined
+        : response.forceImproved !== true)
+    ) {
+      throw new HdCache2RequestError(
+        "invalid_response",
+        "hd-cache2 returned invalid force improvement metadata",
       )
     }
     if (
@@ -721,7 +968,7 @@ export class HdCache2Client {
     ).unref?.()
 
     try {
-      const request: Pipeline9NetworkedSolveRequest = {
+      const request: Pipeline9NetworkedSolveRequest<Pipeline9NetworkedInput> = {
         autorouterVersion: this.autorouterVersion,
         ...(this.cacheVersion === undefined
           ? {}

@@ -106,6 +106,7 @@ export type RoutingBenchmarkMetrics = {
     remoteCacheHits: number
     remoteSolverResults: number
     remoteTransportFallbacks: number
+    remoteFallbackReasonCounts?: Record<string, number>
   }
 }
 

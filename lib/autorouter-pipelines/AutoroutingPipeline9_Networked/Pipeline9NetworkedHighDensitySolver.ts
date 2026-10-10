@@ -34,6 +34,10 @@ export type Pipeline9NetworkedHighDensitySolverParams =
     hdCache2ServerUrl?: string
     hdCache2CacheVersion?: string
     requestTimeoutMs?: number
+    forceImprove?: {
+      totalStepsPerNode: number
+      nodeAssignmentMargin: number
+    }
   }
 
 type RemoteNodeRequest = {
@@ -51,6 +55,8 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   readonly hdCache2ServerUrl: string
   readonly hdCache2CacheVersion?: string
   readonly requestTimeoutMs: number
+  readonly forceImprove?: Pipeline9NetworkedHighDensityNodeInput["forceImprove"]
+  readonly forceImprovedRegionIds = new Set<string>()
 
   private readonly hdCache2Client: HdCache2Client
   private launchedRemoteSolves = false
@@ -70,6 +76,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     hdCache2ServerUrl,
     hdCache2CacheVersion,
     requestTimeoutMs,
+    forceImprove,
     ...pipeline9Params
   }: Pipeline9NetworkedHighDensitySolverParams) {
     super(pipeline9Params)
@@ -88,6 +95,9 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     }
 
     this.autorouterVersion = autorouterVersion
+    this.forceImprove = forceImprove
+      ? { ...forceImprove, preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds }
+      : undefined
     this.hdCache2ServerUrl = hdCache2ServerUrl ?? DEFAULT_HD_CACHE2_SERVER_URL
     this.hdCache2CacheVersion = hdCache2CacheVersion
     this.hdCache2Client = new HdCache2Client(
@@ -184,6 +194,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+      ...(this.forceImprove ? { forceImprove: this.forceImprove } : {}),
     }
   }
 
@@ -362,7 +373,12 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       return
     }
 
-    this.finishActiveNode(result.response.routes)
+    if (result.response.forceImproved) {
+      this.forceImprovedRegionIds.add(node.capacityMeshNodeId)
+    }
+    // Force improvement rounds terminal coordinates. IDs were attached before
+    // that work remotely, just as they are before the original board stage.
+    this.finishActiveNode(result.response.routes, !result.response.forceImproved)
   }
 
   /**

@@ -9,6 +9,8 @@ import {
   DEFAULT_HD_CACHE2_SERVER_URL,
   Pipeline9NetworkedHighDensitySolver,
 } from "./Pipeline9NetworkedHighDensitySolver"
+import { Pipeline9RemainingForceImproveSolver } from "./Pipeline9RemainingForceImproveSolver"
+import { Pipeline9NetworkedHighDensityRepairSolver } from "./Pipeline9NetworkedHighDensityRepairSolver"
 
 export type AutoroutingPipelineSolver9NetworkedOptions = Omit<
   AutoroutingPipelineSolverOptions,
@@ -45,6 +47,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
       opts.hdCache2ServerUrl ?? DEFAULT_HD_CACHE2_SERVER_URL
     this.hdCache2CacheVersion = opts.hdCache2CacheVersion
     this.replaceHighDensityPipelineStep()
+    this.replaceHighDensityPostProcessingSteps()
   }
 
   private replaceHighDensityPipelineStep(): void {
@@ -68,8 +71,58 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
             autorouterVersion: AUTOROUTER_VERSION,
             hdCache2ServerUrl: solver.hdCache2ServerUrl,
             hdCache2CacheVersion: solver.hdCache2CacheVersion,
+            forceImprove: {
+              totalStepsPerNode: 20,
+              nodeAssignmentMargin: solver.srj.defaultObstacleMargin ?? 0.2,
+            },
           },
         ]
+      },
+    } as any
+  }
+
+  private replaceHighDensityPostProcessingSteps(): void {
+    const forceStepIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "highDensityForceImproveSolver",
+    )
+    const repairStepIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "highDensityRepairSolver",
+    )
+    const forceStep = this.pipelineDef[forceStepIndex]
+    const repairStep = this.pipelineDef[repairStepIndex]
+    if (!forceStep || !repairStep) {
+      throw new Error("Pipeline9 high-density post-processing steps are missing")
+    }
+    const getRepairConstructorParams = repairStep.getConstructorParams
+    this.pipelineDef[forceStepIndex] = {
+      ...forceStep,
+      solverClass: Pipeline9RemainingForceImproveSolver as any,
+      getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
+        const highDensitySolver = solver.highDensityRouteSolver
+        if (!(highDensitySolver instanceof Pipeline9NetworkedHighDensitySolver)) {
+          throw new Error("Pipeline9 networked high-density solver is missing")
+        }
+        return [{
+          nodeWithPortPoints: solver.highDensityNodePortPoints!,
+          hdRoutes: highDensitySolver.routes,
+          colorMap: solver.colorMap,
+          totalStepsPerNode: 20,
+          nodeAssignmentMargin: solver.srj.defaultObstacleMargin ?? 0.2,
+          forceImprovedRegionIds: highDensitySolver.forceImprovedRegionIds,
+        }]
+      },
+    } as any
+    this.pipelineDef[repairStepIndex] = {
+      ...repairStep,
+      solverClass: Pipeline9NetworkedHighDensityRepairSolver as any,
+      getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
+        const [params] = getRepairConstructorParams(solver)
+        return [{
+          ...params,
+          autorouterVersion: AUTOROUTER_VERSION,
+          hdCache2ServerUrl: solver.hdCache2ServerUrl,
+          hdCache2CacheVersion: solver.hdCache2CacheVersion,
+        }]
       },
     } as any
   }

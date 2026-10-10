@@ -4,6 +4,10 @@ import type {
   NodeWithPortPoints,
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
+import type {
+  Pipeline9NetworkedHighDensityRepairInput,
+  Pipeline9NetworkedHighDensityRepairOutput,
+} from "./pipeline9NetworkedRepairTypes"
 
 export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
@@ -31,6 +35,11 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null
+  forceImprove?: {
+    totalStepsPerNode: number
+    nodeAssignmentMargin: number
+    preserveTerminalPcbPortIds: boolean
+  }
 }
 
 export type Pipeline9NetworkedHighDensityNodeOutput =
@@ -38,12 +47,14 @@ export type Pipeline9NetworkedHighDensityNodeOutput =
       status: "solved"
       solutionStage: "ordinary"
       routes: HighDensityIntraNodeRoute[]
+      forceImproved?: true
     }
   | {
       status: "solved"
       solutionStage: "regional-fallback"
       ordinaryFailure: string
       routes: HighDensityIntraNodeRoute[]
+      forceImproved?: true
     }
   | {
       status: "failed"
@@ -57,32 +68,48 @@ export type Pipeline9NetworkedHighDensityNodeOutput =
       error: string
     }
 
-export type Pipeline9NetworkedSolveRequest = {
+export type Pipeline9NetworkedInput =
+  | Pipeline9NetworkedHighDensityNodeInput
+  | Pipeline9NetworkedHighDensityRepairInput
+
+export type Pipeline9NetworkedOutput =
+  | Pipeline9NetworkedHighDensityNodeOutput
+  | Pipeline9NetworkedHighDensityRepairOutput
+
+export type Pipeline9NetworkedSolveRequest<
+  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+> = {
   autorouterVersion: string
   /** Optional cache namespace used to isolate benchmark runs. */
   cacheVersion?: string
-  input: Pipeline9NetworkedHighDensityNodeInput
+  input: TInput
 }
 
-export type Pipeline9NetworkedSolveBatchItem = {
+export type Pipeline9NetworkedSolveBatchItem<
+  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+> = {
   requestId: string
-  input: Pipeline9NetworkedHighDensityNodeInput
+  input: TInput
 }
 
-export type Pipeline9NetworkedSolveBatchRequest = {
+export type Pipeline9NetworkedSolveBatchRequest<
+  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+> = {
   autorouterVersion: string
   /** Optional cache namespace used to isolate benchmark runs. */
   cacheVersion?: string
-  items: Pipeline9NetworkedSolveBatchItem[]
+  items: Pipeline9NetworkedSolveBatchItem<TInput>[]
 }
 
-export type Pipeline9NetworkedSolveResponse =
+export type Pipeline9NetworkedSolveResponse<
+  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+> =
   | ({
       ok: true
       autorouterVersion: string
       cacheVersion?: string
       source: Pipeline9NetworkedCacheSource
-    } & Pipeline9NetworkedHighDensityNodeOutput)
+    } & TOutput)
   | {
       ok: false
       autorouterVersion?: string
@@ -100,6 +127,8 @@ export type Pipeline9NetworkedSolveBatchCacheMiss = {
 }
 
 /** One independently consumable NDJSON line returned by POST /solve-batch. */
-export type Pipeline9NetworkedSolveBatchResult =
-  | ({ requestId: string } & Pipeline9NetworkedSolveResponse)
+export type Pipeline9NetworkedSolveBatchResult<
+  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+> =
+  | ({ requestId: string } & Pipeline9NetworkedSolveResponse<TOutput>)
   | Pipeline9NetworkedSolveBatchCacheMiss
