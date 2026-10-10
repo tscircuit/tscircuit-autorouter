@@ -11,11 +11,12 @@ import {
  * Pass newly routed traces: existing copper is included in both the drawing
  * and DRC, respecting explicit replacement metadata. Optional drcOptions use
  * the same overrides as evaluateRelaxedDrc; defaults are benchmark rules.
+ * showDrcErrorMarkers highlights errors with a known board location.
  */
 export const getBugReportSnapshotSvg = (
-  input: EvaluateRelaxedDrcInput,
+  input: EvaluateRelaxedDrcInput & { showDrcErrorMarkers?: boolean },
 ): string => {
-  const { errors } = evaluateRelaxedDrc(input)
+  const { errors, locationAwareErrors } = evaluateRelaxedDrc(input)
   const graphics = convertSrjToGraphicsObject({
     ...input.inputSrj,
     traces: combinePreloadedAndRoutedTraces(
@@ -25,6 +26,19 @@ export const getBugReportSnapshotSvg = (
   })
   // Connection debug dots obscure fine-pitch pads and escape traces.
   graphics.points = []
+  if (input.showDrcErrorMarkers) {
+    graphics.circles = [
+      ...(graphics.circles ?? []),
+      ...locationAwareErrors.map((error) => ({
+        center: error.center,
+        radius: 0.6,
+        fill: "#dc262622",
+        stroke: "#dc2626",
+        strokeWidth: 0.08,
+        label: error.message,
+      })),
+    ]
+  }
   const svg = getSvgFromGraphicsObject(graphics, {
     backgroundColor: "white",
   })
