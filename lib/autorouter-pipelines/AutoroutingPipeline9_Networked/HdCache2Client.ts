@@ -124,6 +124,51 @@ const nearlyEqual = (left: number, right: number): boolean =>
 const REGIONAL_TERMINAL_TOLERANCE_MM = 0.001
 const ORDINARY_VIA_POSITION_TOLERANCE_MM = 1e-6
 const REGIONAL_VIA_POSITION_TOLERANCE_MM = 0.001
+const FORCE_COORDINATE_ROUNDING_TOLERANCE_MM = 0.0005
+
+const forceImprovedCoordinatesMatch = (left: number, right: number): boolean => {
+  const numericTolerance =
+    1e-9 * Math.max(1, Math.abs(left), Math.abs(right))
+  const maximumDifference =
+    FORCE_COORDINATE_ROUNDING_TOLERANCE_MM + numericTolerance
+  return Math.abs(left - right) <= maximumDifference
+}
+
+const forceImprovedPortPointsMatch = (
+  left: { x: number; y: number; z: number },
+  right: { x: number; y: number; z: number },
+): boolean =>
+  left.z === right.z &&
+  forceImprovedCoordinatesMatch(left.x, right.x) &&
+  forceImprovedCoordinatesMatch(left.y, right.y)
+
+const hasForceImprovedRouteCoverage = (
+  routes: HighDensityIntraNodeRoute[],
+  node: NodeWithPortPoints,
+): boolean => {
+  const validationRoutes = [...routes]
+  const portPoints = [
+    ...node.portPoints,
+    ...(node.portPointsInPairs ?? []).flat(),
+  ]
+  // Preserve the ordinary full-segment graph, including interior same-net
+  // joins. Force rounding can move terminals by half a grid step; connect the
+  // original terminal to compatible vertices only in this validation graph.
+  for (const portPoint of portPoints) {
+    for (const route of routes) {
+      if (route.connectionName !== portPoint.connectionName) continue
+      for (const point of route.route) {
+        if (!forceImprovedPortPointsMatch(portPoint, point)) continue
+        validationRoutes.push({
+          ...route,
+          route: [portPoint, point],
+          vias: [],
+        })
+      }
+    }
+  }
+  return areNodePortPointPairsConnectedByRoutes(validationRoutes, node)
+}
 
 const hasValidRemoteLayerTransitions = (
   route: HighDensityIntraNodeRoute,
@@ -131,7 +176,7 @@ const hasValidRemoteLayerTransitions = (
   forceImproved = false,
 ): boolean => {
   const viaPositionTolerance =
-    solutionStage === "ordinary"
+    solutionStage === "ordinary" && !forceImproved
       ? ORDINARY_VIA_POSITION_TOLERANCE_MM
       : REGIONAL_VIA_POSITION_TOLERANCE_MM
   const usedViaIndexes = new Set<number>()
@@ -305,28 +350,11 @@ const isValidRemoteRoutes = (
 ): value is HighDensityIntraNodeRoute[] => {
   if (!Array.isArray(value)) return false
 
-  const roundPortPoint = (
-    point: NodeWithPortPoints["portPoints"][number],
-  ): NodeWithPortPoints["portPoints"][number] => ({
-    ...point,
-    x: Math.round(point.x * 1_000) / 1_000,
-    y: Math.round(point.y * 1_000) / 1_000,
-  })
-  const validationNode: NodeWithPortPoints = input.forceImprove
-    ? {
-        ...input.nodeWithPortPoints,
-        portPoints: input.nodeWithPortPoints.portPoints.map(roundPortPoint),
-        portPointsInPairs: input.nodeWithPortPoints.portPointsInPairs?.map(
-          ([start, end]) => [roundPortPoint(start), roundPortPoint(end)],
-        ),
-      }
-    : input.nodeWithPortPoints
-
   const portPointsByConnectionName = new Map<
     string,
     NodeWithPortPoints["portPoints"]
   >()
-  for (const portPoint of validationNode.portPoints) {
+  for (const portPoint of input.nodeWithPortPoints.portPoints) {
     const portPoints =
       portPointsByConnectionName.get(portPoint.connectionName) ?? []
     portPoints.push(portPoint)
@@ -349,9 +377,13 @@ const isValidRemoteRoutes = (
     (portPointsByConnectionName.get(connectionName) ?? []).some(
       (portPoint) =>
         typeof point.x === "number" &&
-        nearlyEqual(point.x, portPoint.x) &&
+        (input.forceImprove
+          ? forceImprovedCoordinatesMatch(point.x, portPoint.x)
+          : nearlyEqual(point.x, portPoint.x)) &&
         typeof point.y === "number" &&
-        nearlyEqual(point.y, portPoint.y) &&
+        (input.forceImprove
+          ? forceImprovedCoordinatesMatch(point.y, portPoint.y)
+          : nearlyEqual(point.y, portPoint.y)) &&
         point.z === portPoint.z,
     )
 
@@ -462,8 +494,8 @@ const isValidRemoteRoutes = (
       ] as const) {
         const candidates = portPointsByConnectionName.get(route.connectionName)!
         const matchesTerminal = candidates.some((portPoint) =>
-          nearlyEqual(point.x as number, portPoint.x) &&
-          nearlyEqual(point.y as number, portPoint.y) &&
+          forceImprovedCoordinatesMatch(point.x as number, portPoint.x) &&
+          forceImprovedCoordinatesMatch(point.y as number, portPoint.y) &&
           point.z === portPoint.z &&
           portPoint.pcb_port_id === pcbPortId,
         )
@@ -539,7 +571,9 @@ const isValidRemoteRoutes = (
   }
   const routes = value as HighDensityIntraNodeRoute[]
   return solutionStage === "ordinary"
-    ? areNodePortPointPairsConnectedByRoutes(routes, validationNode)
+    ? input.forceImprove
+      ? hasForceImprovedRouteCoverage(routes, input.nodeWithPortPoints)
+      : areNodePortPointPairsConnectedByRoutes(routes, input.nodeWithPortPoints)
     : hasRegionalRouteCoverage(routes, input.nodeWithPortPoints)
 }
 

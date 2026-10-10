@@ -135,7 +135,7 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
     // Concurrent HTTP requests may arrive in any order; each node must still
     // receive its exact frozen sample.
     for (const { sample } of received) {
-      expect(sample).toEqual(remoteSamples.find((expected) =>
+      expect(sample).toEqual(remoteSamples.find((expected: Pipeline9NetworkedHighDensityRepairInput["sample"]) =>
         expected.nodeWithPortPoints!.capacityMeshNodeId === sample.nodeWithPortPoints!.capacityMeshNodeId,
       ))
     }
