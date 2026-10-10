@@ -66,9 +66,7 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     declaredDrc.errors,
     JSON.stringify(declaredDrc.errors, null, 2),
   ).toHaveLength(0)
-  expect(solver.pipelineDef.at(-1)?.solverName).toBe(
-    "finalTraceCleanupSolver",
-  )
+  expect(solver.pipelineDef.at(-1)?.solverName).toBe("finalTraceCleanupSolver")
 
   // Native routing can produce different valid route variants across platforms.
   const snapshotPath =
