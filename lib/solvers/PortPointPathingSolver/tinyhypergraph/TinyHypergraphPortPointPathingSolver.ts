@@ -224,12 +224,36 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
     : {}
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
+const PHYSICAL_VIA_COST_MIN_ORIGINAL_CONNECTION_COUNT = 100
+
+export const shouldUsePhysicalViaCost = ({
+  connections,
+  layerCount,
+  hasPreloadedTraceOccupancy,
+}: {
+  connections: ReadonlyArray<SimpleRouteConnection>
+  layerCount: number
+  hasPreloadedTraceOccupancy: boolean
+}): boolean => {
+  if (layerCount !== 2 || hasPreloadedTraceOccupancy) return false
+
+  // Dense unrouted two-layer boards can trade legal opposite-layer crossings
+  // for fewer physical vias. Keep the existing congestion policy for smaller
+  // boards, fixed copper, and multilayer via spans. Count original connections
+  // so branching a large power net does not make a small board eligible.
+  const originalConnectionNames = new Set(
+    connections.flatMap(
+      (connection) => connection.__rootConnectionNames ?? [connection.name],
+    ),
+  )
+  return (
+    originalConnectionNames.size >=
+    PHYSICAL_VIA_COST_MIN_ORIGINAL_CONNECTION_COUNT
+  )
+}
+
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   DISTANCE_TO_COST: 0.05,
-  // Disjoint-layer crossings need no vias. Keep a physical via cost even in
-  // large regions, where the area-normalized congestion cost becomes small.
-  CROSS_LAYER_INTERSECTION_COST_FACTOR: 0,
-  VIA_COST: 0.15,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -248,8 +272,6 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
-  CROSS_LAYER_INTERSECTION_COST_FACTOR: 0,
-  VIA_COST: 0.15,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
@@ -304,6 +326,10 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  viaCostOptions: Pick<
+    TinyHyperGraphSolverOptions,
+    "CROSS_LAYER_INTERSECTION_COST_FACTOR" | "VIA_COST"
+  > = {},
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -321,6 +347,7 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...viaCostOptions,
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -332,10 +359,10 @@ const getTinyHyperGraphPipelineInput = (
             OUTSIDE_IN_ROUTING: false,
           }),
     },
-    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-      effort,
-      minViaPadDiameter,
-    ),
+    sectionSolverOptions: {
+      ...getTinyHyperGraphSectionSolverOptions(effort, minViaPadDiameter),
+      ...viaCostOptions,
+    },
   }
 }
 
@@ -1079,6 +1106,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
+    const viaCostOptions: Pick<
+      TinyHyperGraphSolverOptions,
+      "CROSS_LAYER_INTERSECTION_COST_FACTOR" | "VIA_COST"
+    > = shouldUsePhysicalViaCost({
+      connections: connections.map(
+        (connection) => connection.simpleRouteConnection,
+      ),
+      layerCount: params.layerCount,
+      hasPreloadedTraceOccupancy,
+    })
+      ? { CROSS_LAYER_INTERSECTION_COST_FACTOR: 0, VIA_COST: 0.15 }
+      : {}
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
@@ -1135,6 +1174,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      viaCostOptions,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
