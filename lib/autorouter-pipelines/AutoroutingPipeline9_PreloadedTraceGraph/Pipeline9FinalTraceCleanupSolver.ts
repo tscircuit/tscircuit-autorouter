@@ -1,3 +1,5 @@
+import { AutoroutingDrcEngine } from "high-density-repair03/lib"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import type { GraphicsObject } from "graphics-debug"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -19,6 +21,7 @@ type FinalCleanupInput = {
 
 /** Cleans expanded power routes at their final width without moving other copper. */
 export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
+  private readonly drcEngine: AutoroutingDrcEngine
   private output: SimplifiedPcbTraces
   private traceIndex = 0
   private candidates?: Generator<SimplifiedPcbTrace>
@@ -26,6 +29,14 @@ export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
 
   constructor(private readonly input: FinalCleanupInput) {
     super()
+    this.drcEngine = new AutoroutingDrcEngine(
+      { ...input.srj, traces: undefined },
+      {
+        connMap: getConnectivityMapFromSimpleRouteJson(input.srjWithPointPairs),
+        traceClearance: input.srj.minTraceToPadEdgeClearance ?? 0.1,
+        viaClearance: input.srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+      },
+    )
     this.output = [...input.traces]
     this.selectedNames = new Set(input.connectionNames)
     this.MAX_ITERATIONS = 100e6
@@ -55,7 +66,17 @@ export class Pipeline9FinalTraceCleanupSolver extends BaseSolver {
     }
     const candidate = [...this.output]
     candidate[this.traceIndex] = next.value
-    if (this.isValid(candidate)) {
+    if (
+      this.drcEngine.evaluate(
+        [...this.input.fixedTraces, ...candidate].map((trace) => ({
+          ...trace,
+          route: trace.route.filter(
+            (point) => point.route_type !== "through_obstacle",
+          ),
+        })),
+      ).errors.length === 0 &&
+      this.isValid(candidate)
+    ) {
       this.output = candidate
       this.candidates = undefined
     }
