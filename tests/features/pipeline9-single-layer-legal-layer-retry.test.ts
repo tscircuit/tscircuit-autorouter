@@ -50,7 +50,9 @@ test("Pipeline9 retries impossible single-layer crossings across legal board lay
   })
   assignedLayerSolver.solve()
   expect(assignedLayerSolver.failed).toBeTrue()
-  expect(assignedLayerSolver.error).toContain("impossible single-layer crossing")
+  expect(assignedLayerSolver.error).toContain(
+    "impossible single-layer crossing",
+  )
 
   const solver = new Pipeline9HighDensitySolver(params)
   solver.solve()
@@ -68,9 +70,7 @@ test("Pipeline9 retries impossible single-layer crossings across legal board lay
     ),
   ).toBeTrue()
   expect(
-    solver.routes.some((route) =>
-      route.route.some((point) => point.z === 1),
-    ),
+    solver.routes.some((route) => route.route.some((point) => point.z === 1)),
   ).toBeTrue()
   expect(solver.routes.flatMap((route) => route.vias).length).toBeGreaterThan(0)
   expect(
