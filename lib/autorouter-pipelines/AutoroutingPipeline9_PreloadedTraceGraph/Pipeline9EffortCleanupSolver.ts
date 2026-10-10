@@ -40,14 +40,14 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (
-      this.params.shortcutRouteIndices?.size &&
-      this.shortcutRouteIndex < this.bestRoutes.length
-    ) {
-      this.stepVertexShortcuts()
-      return
-    }
     if (this.extraPasses === 0) {
+      if (
+        this.params.shortcutRouteIndices?.size &&
+        this.shortcutRouteIndex < this.bestRoutes.length
+      ) {
+        this.stepVertexShortcuts()
+        return
+      }
       this.solved = true
       return
     }

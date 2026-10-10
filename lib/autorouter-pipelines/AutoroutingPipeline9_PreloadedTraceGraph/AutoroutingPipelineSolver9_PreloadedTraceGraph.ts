@@ -871,6 +871,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
         const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const routesBeforeRepair = new Map(
+          cms
+            .globalDrcForceImproveSolver!.getOutput()
+            .map((route) => [route.connectionName, route]),
+        )
         const powerConnectionNames =
           cms.opts.powerTraceExpansion?.onlyConnectionNames ??
           getPowerTraceExpansionConnectionNames(cms.originalSrj)
@@ -892,6 +897,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: cms.effort,
             shortcutRouteIndices: new Set(
               hdRoutes.flatMap((route, index) => {
+                const beforeRepair = routesBeforeRepair.get(
+                  route.connectionName,
+                )
+                if (
+                  beforeRepair?.route.length === route.route.length &&
+                  route.route.every((point, pointIndex) => {
+                    const previous = beforeRepair.route[pointIndex]!
+                    return (
+                      point.x === previous.x &&
+                      point.y === previous.y &&
+                      point.z === previous.z
+                    )
+                  })
+                )
+                  return []
                 if (
                   powerConnectionNames.some(
                     (name) =>
