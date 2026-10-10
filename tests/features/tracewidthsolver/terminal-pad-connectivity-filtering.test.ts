@@ -13,17 +13,20 @@ test("terminal tapers reject distant pads before resolving connectivity", (): vo
     })
     const connectedQuery = spyOn(connMap, "areIdsConnected")
     const obstacles: Obstacle[] = [
-      ...Array.from({ length: 30 }, (_, index): Obstacle => ({
-        type: "rect",
-        center: { x: index + 10, y: 5 },
-        width: 0.4,
-        height: 0.2,
-        layers: ["top"],
-        connectedTo: Array.from(
-          { length: 40 },
-          (_, aliasIndex) => `distant_${index}_${aliasIndex}`,
-        ),
-      })),
+      ...Array.from(
+        { length: 30 },
+        (_, index): Obstacle => ({
+          type: "rect",
+          center: { x: index + 10, y: 5 },
+          width: 0.4,
+          height: 0.2,
+          layers: ["top"],
+          connectedTo: Array.from(
+            { length: 40 },
+            (_, aliasIndex) => `distant_${index}_${aliasIndex}`,
+          ),
+        }),
+      ),
       {
         type: "rect",
         center: { x: 0, y: 0 },
@@ -88,8 +91,8 @@ test("terminal tapers reject distant pads before resolving connectivity", (): vo
     solver.solve()
     const [route] = solver.getHdRoutesWithWidths()
     expect(route!.route.map((point) => point.x)).toEqual([
-      0, 0.25, 0.4, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,
-      2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 3.8, 4,
+      0, 0.25, 0.4, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25,
+      3.5, 3.75, 3.8, 4,
     ])
     expect(
       route!.route
@@ -98,7 +101,9 @@ test("terminal tapers reject distant pads before resolving connectivity", (): vo
     ).toBe(true)
     expect(route!.route.find((point) => point.x === 2)!.traceThickness).toBe(1)
     expect(route!.route.at(-1)!.traceThickness).toBe(0.3)
-    expect(route!.route.every((point) => point.y === 0 && point.z === 0)).toBe(true)
+    expect(route!.route.every((point) => point.y === 0 && point.z === 0)).toBe(
+      true,
+    )
     expect(
       connectedQuery.mock.calls.some(([, id]) => id.startsWith("distant_")),
     ).toBe(false)
