@@ -18,7 +18,9 @@ test("USB-C Ethernet V3V3 rectangular detour above the RJ45 mounting hole", asyn
     differentialPairs: [],
     traces: signalSolver.getOutputSimpleRouteJson().traces,
   }
-  const groundSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(groundInput)
+  const groundSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    groundInput,
+  )
   groundSolver.solve()
   expect(groundSolver.solved).toBe(true)
 
