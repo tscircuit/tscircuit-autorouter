@@ -906,6 +906,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               ),
               enableCrossingViaReduction: true,
+              enableVertexShortcuts: true,
+              useTraceWidthAwareClearance: true,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
                   cms.srj.connections,
