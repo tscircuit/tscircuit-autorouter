@@ -6,7 +6,6 @@ import {
 
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
 import { appendFile, readFile, writeFile } from "node:fs/promises"
-import * as os from "node:os"
 import * as path from "node:path"
 import * as readline from "node:readline"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
@@ -24,6 +23,10 @@ import type {
   WorkerTaskMessage,
 } from "./benchmark-types"
 import { extendPartialBenchmarkStageTiming } from "./benchmark-stage-timing"
+import {
+  getBenchmarkConcurrency,
+  getBenchmarkRuntimeMetadata,
+} from "./benchmarkRuntime"
 import {
   DATASET_OPTIONS_LABEL,
   type DatasetName,
@@ -721,10 +724,7 @@ const parseSampleNumbersArg = (rawValue: string) => {
 export const parseArgs = (
   args: string[] = process.argv.slice(2),
 ): BenchmarkOptions => {
-  const defaultConcurrency =
-    typeof os.availableParallelism === "function"
-      ? os.availableParallelism()
-      : os.cpus().length
+  const defaultConcurrency = getBenchmarkConcurrency()
   const options: BenchmarkOptions = {
     concurrency: defaultConcurrency,
     excludeAssignable: false,
@@ -1827,10 +1827,15 @@ const main = async () => {
         ),
       ]
   const tasks = taskGroups.flat()
+  const runtime = getBenchmarkRuntimeMetadata(
+    concurrency,
+    Math.min(concurrency, Math.max(...taskGroups.map((group) => group.length))),
+  )
 
   console.log(
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
+  console.log(`[benchmark] runtime ${JSON.stringify(runtime)}`)
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
     BENCHMARK_SNAPSHOTS_HTML_PATH,
@@ -1901,6 +1906,7 @@ const main = async () => {
     version: 1,
     datasetName,
     memoryMeasurementMode: "isolated_process_per_sample",
+    runtime,
     scenarioCount: scenarios.length,
     effortLabel,
     summary: rows,
