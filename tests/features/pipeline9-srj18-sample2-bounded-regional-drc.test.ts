@@ -13,10 +13,17 @@ test("Pipeline9 repairs SRJ18 sample 2 within its regional work budget", async (
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const viaCount = routedTraces.reduce(
+    (count, trace) =>
+      count + trace.route.filter((point) => point.route_type === "via").length,
+    0,
+  )
+  expect(viaCount).toBeLessThan(400)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces,
   })
   expect(errors).toEqual([])
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
