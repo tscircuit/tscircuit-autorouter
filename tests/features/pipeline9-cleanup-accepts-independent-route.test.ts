@@ -25,6 +25,7 @@ test("cleanup accepts a valid shortcut while preserving a rejected route", (): v
   }
   const solver = new Pipeline9EffortCleanupSolver({
     effort: 1,
+    shortcutRouteIndices: new Set([0, 1]),
     config: {
       hdRoutes: [detour, unchangedRoute],
       obstacles: [],
@@ -33,8 +34,6 @@ test("cleanup accepts a valid shortcut while preserving a rejected route", (): v
       defaultViaDiameter: 0.3,
       layerCount: 2,
       preserveRouteEndpoints: true,
-      useTraceWidthAwareClearance: true,
-      enableVertexShortcuts: true,
     },
     getCost: (routes) => ({
       vias: routes.reduce((sum, route) => sum + route.vias.length, 0),

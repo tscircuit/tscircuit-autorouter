@@ -10,6 +10,7 @@ type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
+  shortcutRouteIndices?: ReadonlySet<number>
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
 }
@@ -33,14 +34,14 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.extraPasses = Math.max(0, Math.ceil(2 * (params.effort - 1)))
     this.MAX_ITERATIONS = 100e6 * Math.max(1, this.extraPasses)
     if (this.extraPasses === 0) {
-      this.solved = !params.config.enableVertexShortcuts
+      this.solved = !params.shortcutRouteIndices?.size
       return
     }
   }
 
   override _step(): void {
     if (
-      this.params.config.enableVertexShortcuts &&
+      this.params.shortcutRouteIndices?.size &&
       this.shortcutRouteIndex < this.bestRoutes.length
     ) {
       this.stepVertexShortcuts()
@@ -90,6 +91,13 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
 
   private stepVertexShortcuts(): void {
     const routeIndex = this.shortcutRouteIndex
+    if (
+      this.params.shortcutRouteIndices &&
+      !this.params.shortcutRouteIndices.has(routeIndex)
+    ) {
+      this.shortcutRouteIndex++
+      return
+    }
     if (!this.shortcutSolver) {
       this.shortcutSolver = new VertexShortcutPathSolver({
         inputRoute: this.bestRoutes[routeIndex]!,
@@ -101,7 +109,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         colorMap: this.params.config.colorMap,
         outline: this.params.config.outline?.map((point) => ({ ...point })),
         minBoardEdgeClearance: this.params.config.minBoardEdgeClearance,
-        useTraceWidthAwareClearance: this.params.config.useTraceWidthAwareClearance,
+        useTraceWidthAwareClearance: true,
         otherHdRoutes: [
           ...this.bestRoutes.filter((_, index) => index !== routeIndex),
           ...(this.params.config.otherHdRoutes ?? []),
