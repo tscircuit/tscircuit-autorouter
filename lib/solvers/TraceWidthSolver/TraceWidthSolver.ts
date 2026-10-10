@@ -548,8 +548,10 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
+      // Only pads containing this terminal can limit its width. Reject distant
+      // pads before scanning their potentially large connectivity lists.
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
+      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
       if (limit <= COORDINATE_EPSILON) continue
