@@ -53,6 +53,8 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
+import { Pipeline9GridDrcRepairSolver } from "./Pipeline9GridDrcRepairSolver"
+
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
@@ -72,6 +74,7 @@ type Pipeline9JointDrcRepairSolverParams = {
   layerCount: number
   defaultViaDiameter: number
   defaultViaHoleDiameter: number
+  targetTraceClearance?: number
   effort: number
   colorMap: Record<string, string>
 }
@@ -676,6 +679,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof Pipeline9BoundedRegionalRepairSolver
   >[0]
   private boundedRegionalRepairStartedAt?: number
+  private gridRepairStartedAt?: number
+  gridRepairSolver?: Pipeline9GridDrcRepairSolver
   readonly pipelineDef = [
     {
       solverName: "exactRepairSolver",
@@ -714,6 +719,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return this.boundedRegionalRepairSolver
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
+    },
+    {
+      solverName: "gridRepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
+          throw new Error(
+            "Pipeline9 grid repair stage is missing its validated input",
+          )
+        }
+        this.gridRepairStartedAt = performance.now()
+        this.gridRepairSolver = new Pipeline9GridDrcRepairSolver({
+          srj: this.params.originalSrj,
+          routes: this.combinedOutput,
+          fixedRoutes: this.fixedPreloadedObstacleRoutes,
+          immutableConnectionNames: this.syntheticConnectionNames,
+          connMap: this.params.connMap,
+          drcEvaluator: this.cachedReferenceDrcEvaluator,
+          effort: this.params.effort,
+        })
+        return this.gridRepairSolver
+      },
+      onSolved: (): void => this.finishGridRepair(),
     },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
@@ -765,10 +792,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance =
-      params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
+    // A routing target may request more margin than the board's minimum rule.
+    // Keep the input rules intact and never search below the declared clearance.
+    const traceClearance = Math.max(
+      params.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      params.targetTraceClearance ?? 0,
+    )
     // The indexed engine applies one copper gap to both same-net and
     // different-net vias. Keep its search heuristic separate from the declared
     // electrical copper rule, which the reference evaluator and projection use.
@@ -1844,6 +1873,24 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
+    }
+  }
+
+  private finishGridRepair(): void {
+    if (
+      !this.gridRepairSolver?.solved ||
+      this.gridRepairStartedAt === undefined
+    ) {
+      throw new Error(
+        "Pipeline9 grid repair stage must solve before completion",
+      )
+    }
+    this.combinedOutput = this.gridRepairSolver.getOutput()
+    this.stats = {
+      ...this.stats,
+      ...this.gridRepairSolver.stats,
+      gridRepairTimeMs: performance.now() - this.gridRepairStartedAt,
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
     }
     this.solved = true
   }

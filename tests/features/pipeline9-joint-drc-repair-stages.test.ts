@@ -1,5 +1,6 @@
 import { expect, spyOn, test } from "bun:test"
 import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
+import { Pipeline9GridDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9GridDrcRepairSolver"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -37,6 +38,7 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
   const solveSpies = [
     Pipeline9RegionalB01RepairSolver.prototype,
     Pipeline9BoundedRegionalRepairSolver.prototype,
+    Pipeline9GridDrcRepairSolver.prototype,
   ].map((prototype) =>
     spyOn(prototype, "solve").mockImplementation((): never => {
       throw new Error("Joint repair must advance its active child one step")
@@ -66,10 +68,12 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
       "exactRepairSolver",
       "regionalB01RepairSolver",
       "boundedRegionalRepairSolver",
+      "gridRepairSolver",
     ])
     expect(solver.activeSubSolver).toBeNull()
     expect(solver.regionalB01RepairSolver?.solved).toBeTrue()
     expect(solver.boundedRegionalRepairSolver?.solved).toBeTrue()
+    expect(solver.gridRepairSolver?.solved).toBeTrue()
     expect(solver.progress).toBe(1)
     expect(solveSpies.every((spy) => spy.mock.calls.length === 0)).toBeTrue()
     const fixture = createBoundedRegionalRepairFixture()
@@ -101,6 +105,7 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
     expect(failing.activeSubSolver).toBeNull()
     expect(failing.regionalB01RepairSolver).toBeUndefined()
     expect(failing.boundedRegionalRepairSolver).toBeUndefined()
+    expect(failing.gridRepairSolver).toBeUndefined()
   } finally {
     failureStep.mockRestore()
   }
