@@ -33,7 +33,7 @@ resolve_pipeline_solver_name() {
 }
 
 default_concurrency() {
-  getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4
+  bun --eval 'import { getBenchmarkConcurrency } from "./scripts/benchmark/benchmarkRuntime.ts"; console.log(getBenchmarkConcurrency())'
 }
 
 CONCURRENCY_WAS_SET=false

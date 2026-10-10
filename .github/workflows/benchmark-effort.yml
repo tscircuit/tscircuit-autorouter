@@ -31,6 +31,8 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
       - run: bun install --frozen-lockfile
       - run: bun scripts/benchmark/effort-comparison.ts
       - uses: actions/upload-artifact@v4
