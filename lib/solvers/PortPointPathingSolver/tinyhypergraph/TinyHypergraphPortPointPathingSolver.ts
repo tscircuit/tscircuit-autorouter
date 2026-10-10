@@ -272,9 +272,9 @@ const getTinyHyperGraphSolveGraphOptions = (
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    // The pipeline owns its freshly loaded topology during synchronous
-    // blocker searches, so regional adjacency can be shared without callbacks.
-    OWNED_RELAXED_HYPEREDGE_SEARCH: true,
+    // Native route attempts own the loaded topology and plain queued candidates.
+    // Closed regional occurrences remain rejected until the native heap clears.
+    OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
