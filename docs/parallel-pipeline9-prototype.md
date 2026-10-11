@@ -715,3 +715,17 @@ of all sixty-four jobs. Exact source hashes and phase counters are in
 [parallel-path-lookahead-sixty-four-window-proof.json](benchmarks/parallel-path-lookahead-sixty-four-window-proof.json);
 the isolated 8/16/32/64 comparison and replay preload are in
 [parallel-path-window-capacity-census.json](benchmarks/parallel-path-window-capacity-census.json).
+
+The twentieth frozen revision `da7e84745` combines sixty-four pending Native
+lookahead targets, synchronous trace and polygon reference facts on three idle
+workers plus main, and a pinned-default Flatten tolerance gate. Nondefault
+tolerances retain Native execution without worker facts. The fact ledger is
+collected from the actual built pool after disposal, outside measured solve
+time. Selected A01 bulk remains disabled. Build/declarations, TypeScript,
+source and built browser imports without SharedArrayBuffer, and packaged
+sample001/sample015 Native geometry checks pass. The packaged checks show
+three fact worker lanes plus main, zero protocol faults and all leases retired.
+All five Blacksmith groups are dispatched for all sixteen samples; performance
+acceptance remains pending. Frozen hashes, arguments, preflight and workflow IDs
+are in
+[parallel-srj18-da7e84745-dispatch.json](benchmarks/parallel-srj18-da7e84745-dispatch.json).
