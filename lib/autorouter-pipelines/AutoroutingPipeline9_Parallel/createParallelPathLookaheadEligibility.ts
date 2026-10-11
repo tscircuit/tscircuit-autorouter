@@ -8,6 +8,7 @@ import { PathSimplificationGeometryIndex } from "../../../node_modules/@tscircui
 import { SegmentTree } from "../../../node_modules/@tscircuit/trace-simplification-solver/lib/data-structures/SegmentTree"
 import type { HighDensityRoute } from "../../types/high-density-types"
 import { ParallelPathQueryCertifier } from "./ParallelPathQueryCertifier"
+import { ParallelPathInputScopeGraph } from "./ParallelPathInputScopeGraph"
 import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 
 type CompleteDescriptor = {
@@ -27,11 +28,15 @@ export type ParallelPathEligibilityStats = { checks: number; objectChecks: numbe
   awaitCaptures: number; awaitChecks: number; awaitSnapshotObjects: number; awaitSnapshotProperties: number
   awaitMapEntriesCaptured: number; awaitMapEntriesCompared: number; awaitSetValuesCaptured: number; awaitSetValuesCompared: number
   awaitBufferBytesCopied: number; awaitBufferBytesCompared: number; awaitBufferGetterCalls: number
-  awaitCoveredObjectsSkipped: number; awaitTypedIndexDescriptorsSkipped: number; awaitReceiverBrandChecks: number }
+  awaitCoveredObjectsSkipped: number; awaitTypedIndexDescriptorsSkipped: number; awaitReceiverBrandChecks: number
+  scopeCaptures: number; scopeChecks: number; scopeObjects: number; scopeProperties: number; scopeIndexSourceEdgesSkipped: number
+  scopeControlOriginalObjects: number }
 export type ParallelPathLookaheadEligibility = (() => boolean) & {
   stats: ParallelPathEligibilityStats
   /** Capture after intentional owner bookkeeping writes and before awaiting. */
-  captureAwaitState(): (() => boolean) | undefined
+  captureAwaitState(scope?: () => boolean): (() => boolean) | undefined
+  /** Private native-window read set; independently callable eligibility stays full. */
+  captureScope(indexes: readonly number[]): (() => boolean) | undefined
 }
 
 const getDescriptor = Object.getOwnPropertyDescriptor
@@ -54,14 +59,23 @@ const nativeTypeErrorPrototype = TypeError.prototype
 const weakMapGet = WeakMap.prototype.get
 const weakMapSet = WeakMap.prototype.set
 const awaitCheckOwners = new WeakMap<() => boolean, { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility }>()
+type ScopeBinding = { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility;
+  contracts: ParallelPathPrototypeContract[]; covered: WeakSet<object>; indexState: AwaitStateGraph }
+const scopeCheckOwners = new WeakMap<() => boolean, ScopeBinding>()
 const globals = ["Object", "Array", "Math", "JSON", "Number", "String", "Boolean", "BigInt", "Symbol", "Map", "Set",
   "WeakMap", "WeakSet", "Reflect", "Function", "Atomics", "Promise", "Proxy", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
   "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array", "ArrayBuffer", "SharedArrayBuffer", "DataView",
-  "Error", "TypeError", "RangeError", "ReferenceError", "SyntaxError", "URIError", "EvalError", "URL", "Worker"]
+  "Error", "TypeError", "RangeError", "ReferenceError", "SyntaxError", "URIError", "EvalError", "URL", "Worker", "structuredClone"]
 const globalEntries = globals.map((key) => ({ key, descriptor: completeDescriptor(getDescriptor(globalThis, key)) }))
 const sharedBufferDescriptor = globalEntries.find((entry) => entry.key === "SharedArrayBuffer")!.descriptor
 const hasNativeSharedBuffer = sharedBufferDescriptor?.data && typeof sharedBufferDescriptor.value === "function"
+const structuredCloneDescriptor = globalEntries.find((entry) => entry.key === "structuredClone")!.descriptor
+const structuredCloneSource = structuredCloneDescriptor?.data && typeof structuredCloneDescriptor.value === "function"
+  ? apply(functionSource, structuredCloneDescriptor.value, []) as string : undefined
+const hasNativeStructuredClone = structuredCloneDescriptor?.data && typeof structuredCloneDescriptor.value === "function" &&
+  (structuredCloneSource === "function structuredClone() {\n    [native code]\n}" ||
+    structuredCloneSource === "function structuredClone() { [native code] }")
 // Flatbush's actual dependency may not be importable as a root package. Capture
 // its private queue class at module initialization, before caller hooks exist.
 const flatQueuePrototype = getPrototype((new Flatbush(1) as unknown as { _queue: object })._queue)!
@@ -84,6 +98,7 @@ const nativeTargets: object[] = [Object, Object.prototype, Array, Array.prototyp
   SegmentTree, SegmentTree.prototype, Flatbush, Flatbush.prototype, RBush, RBush.prototype,
   flatQueuePrototype, getDescriptor(flatQueuePrototype, "constructor")!.value, typedArrayPrototype, getPrototype(Uint8Array),
   ParallelPathQueryCertifier, ParallelPathQueryCertifier.prototype,
+  ParallelPathInputScopeGraph, ParallelPathInputScopeGraph.prototype,
   getPrototype([][Symbol.iterator]()), getPrototype(getPrototype([][Symbol.iterator]())),
   getPrototype(new Map()[Symbol.iterator]()), getPrototype(new Set()[Symbol.iterator]()), URL, URL.prototype]
 const knownNativeFunctions: Function[] = []
@@ -229,8 +244,12 @@ function capturePlainDataGraph(value: unknown, stats?: ParallelPathEligibilitySt
     const contract = captureParallelPathPrototypeContract(item, stats)
     contracts.push(contract)
     for (let index = 0; index < contract.entries.length; index++) {
-      const descriptor = contract.entries[index]!.descriptor
-      if (!descriptor.data) return undefined
+      const entry = contract.entries[index]!
+      const descriptor = entry.descriptor
+      // Structured clone omits symbols/nonenumerable data. Keep the original
+      // native continuation for graphs that cannot have the same clone input.
+      if (typeof entry.key !== "string" || !descriptor.data ||
+        (!descriptor.enumerable && !(prototype === Array.prototype && entry.key === "length"))) return undefined
       pending.push(descriptor.value)
     }
   }
@@ -285,23 +304,57 @@ function hasNativeAwaitReceiver(target: object, prototype: object | null, stats:
   }
 }
 
-function captureAwaitGraph(roots: unknown[], covered: WeakSet<object>, stats: ParallelPathEligibilityStats): AwaitStateGraph | undefined {
+function isNativeIndexedRouteRecord(contract: ParallelPathPrototypeContract): boolean {
+  const keys = ["minX", "minY", "maxX", "maxY", "route", "routeIndex", "immutable"]
+  if (contract.prototype !== Object.prototype || contract.entries.length !== keys.length) return false
+  for (let index = 0; index < keys.length; index++) {
+    const entry = contract.entries[index]!
+    if (entry.key !== keys[index] || !entry.descriptor.data) return false
+    const value = entry.descriptor.value
+    if (index < 4 && typeof value !== "number") return false
+    if (index === 4 && (value === null || typeof value !== "object")) return false
+    if (index === 5 && !Number.isInteger(value)) return false
+    if (index === 6 && typeof value !== "boolean") return false
+  }
+  return true
+}
+
+function captureAwaitGraph(roots: unknown[], covered: WeakSet<object>, stats: ParallelPathEligibilityStats,
+  scoped?: { index: object; originals: ParallelPathInputScopeGraph }): AwaitStateGraph | undefined {
   const isProxy = getReferenceDrcProxyInspector()
   if (!isProxy) return undefined
   const graph: AwaitStateGraph = { contracts: [], maps: [], sets: [], buffers: [], views: [] }
-  const seen = new WeakSet<object>()
-  const pending = roots.slice()
+  // An index wrapper may also be aliased by a real output/control object. Its
+  // opaque source edge applies only on the index traversal, never that alias.
+  const seen = new WeakSet<object>(), seenIndex = new WeakSet<object>()
+  const pending = roots.map((value) => ({ value, index: value === scoped?.index }))
   while (pending.length > 0) {
-    const item = pending.pop()
+    const next = pending.pop()!
+    const item = next.value
     if (item === null || item === undefined || typeof item === "boolean" || typeof item === "string" ||
       typeof item === "number" || typeof item === "bigint") continue
     if (typeof item === "function") { if (knownNativeFunctions.includes(item)) continue; return undefined }
     if (typeof item !== "object" || isProxy(item)) return undefined
-    if (seen.has(item)) continue
-    seen.add(item)
+    const visited = next.index ? seenIndex : seen
+    if (visited.has(item)) continue
+    visited.add(item)
     // The independently callable returned check runs complete input eligibility
     // first, including these exact identities and every reachable descriptor.
     if (covered.has(item)) { stats.awaitCoveredObjectsSkipped++; continue }
+    const originalContract = scoped?.originals.original(item)
+    if (originalContract) {
+      // Source identities reached through actual outputs/controls retain their
+      // ORIGINAL values. Capturing a fresh baseline here would hide mutation.
+      if (!matchesContract(originalContract, stats)) return undefined
+      graph.contracts.push(originalContract)
+      stats.scopeControlOriginalObjects++
+      stats.awaitSnapshotObjects++
+      stats.awaitSnapshotProperties += originalContract.entries.length
+      for (let index = 0; index < originalContract.entries.length; index++) {
+        pending.push({ value: originalContract.entries[index]!.descriptor.value, index: false })
+      }
+      continue
+    }
     if (stats) stats.prototypeReads++
     const prototype = getPrototype(item)
     if (!nativeStatePrototypes.includes(prototype)) return undefined
@@ -312,26 +365,52 @@ function captureAwaitGraph(roots: unknown[], covered: WeakSet<object>, stats: Pa
       graph.views.push(view)
       stats.awaitSnapshotObjects++
       stats.awaitSnapshotProperties += view.entries.length
-      for (let index = 0; index < view.entries.length; index++) pending.push(view.entries[index]!.descriptor.value)
-      pending.push(view.buffer)
+      for (let index = 0; index < view.entries.length; index++) pending.push({ value: view.entries[index]!.descriptor.value, index: next.index })
+      pending.push({ value: view.buffer, index: next.index })
       continue
     }
     const contract = captureParallelPathPrototypeContract(item, stats)
+    if (scoped && next.index) {
+      // Query dispatch must not call a late own shadow of an original library
+      // method, even when that shadow happens to be another native function.
+      for (let index = 0; index < nativeContracts.length; index++) {
+        const prototypeContract = nativeContracts[index]!
+        if (prototypeContract.target !== prototype) continue
+        for (let entryIndex = 0; entryIndex < prototypeContract.entries.length; entryIndex++) {
+          const entry = prototypeContract.entries[entryIndex]!
+          if (typeof entry.descriptor.value !== "function") continue
+          for (let ownIndex = 0; ownIndex < contract.entries.length; ownIndex++) {
+            if (contract.entries[ownIndex]!.key === entry.key) return undefined
+          }
+        }
+        break
+      }
+    }
     graph.contracts.push(contract)
     stats.awaitSnapshotObjects++
     stats.awaitSnapshotProperties += contract.entries.length
+    const nativeIndexRecord = next.index && isNativeIndexedRouteRecord(contract)
     for (let index = 0; index < contract.entries.length; index++) {
-      const descriptor = contract.entries[index]!.descriptor
+      const entry = contract.entries[index]!
+      const descriptor = entry.descriptor
       if (!descriptor.data) return undefined
-      pending.push(descriptor.value)
+      if (scoped && next.index && ((item === scoped.index && entry.key === "obstacles") ||
+        (nativeIndexRecord && entry.key === "route"))) {
+        // Native selection reads these identities and stored bounds, then only
+        // the selected source geometry. Their owning containers remain shallow
+        // checked; selected inputs and real output aliases are checked deeply.
+        stats.scopeIndexSourceEdgesSkipped++
+        continue
+      }
+      pending.push({ value: descriptor.value, index: next.index })
     }
     if (prototype === Map.prototype) {
       const entries: unknown[] = []
-      apply(mapForEach, item, [(value: unknown, key: unknown): void => { entries.push(key, value); pending.push(key, value); stats.awaitMapEntriesCaptured++ }])
+      apply(mapForEach, item, [(value: unknown, key: unknown): void => { entries.push(key, value); pending.push({ value: key, index: next.index }, { value, index: next.index }); stats.awaitMapEntriesCaptured++ }])
       graph.maps.push({ target: item as Map<unknown, unknown>, entries })
     } else if (prototype === Set.prototype) {
       const values: unknown[] = []
-      apply(setForEach, item, [(value: unknown): void => { values.push(value); pending.push(value); stats.awaitSetValuesCaptured++ }])
+      apply(setForEach, item, [(value: unknown): void => { values.push(value); pending.push({ value, index: next.index }); stats.awaitSetValuesCaptured++ }])
       graph.sets.push({ target: item as Set<unknown>, values })
     } else if (prototype === nativeArrayBufferPrototype) {
       stats.awaitBufferGetterCalls++
@@ -349,7 +428,7 @@ function captureAwaitGraph(roots: unknown[], covered: WeakSet<object>, stats: Pa
       stats.awaitBufferGetterCalls++
       const buffer = prototype === DataView.prototype ? apply(readOwnDescriptor(DataView.prototype, "buffer", stats)!.get!, item, []) :
         apply(descriptor!.get!, item, [])
-      pending.push(buffer)
+      pending.push({ value: buffer, index: next.index })
     }
   }
   return graph
@@ -452,9 +531,11 @@ export function createParallelPathLookaheadEligibility(
     awaitCaptures: 0, awaitChecks: 0, awaitSnapshotObjects: 0, awaitSnapshotProperties: 0, awaitMapEntriesCaptured: 0,
     awaitMapEntriesCompared: 0, awaitSetValuesCaptured: 0, awaitSetValuesCompared: 0, awaitBufferBytesCopied: 0,
     awaitBufferBytesCompared: 0, awaitBufferGetterCalls: 0, awaitCoveredObjectsSkipped: 0, awaitTypedIndexDescriptorsSkipped: 0,
-    awaitReceiverBrandChecks: 0 }
+    awaitReceiverBrandChecks: 0, scopeCaptures: 0, scopeChecks: 0, scopeObjects: 0, scopeProperties: 0,
+    scopeIndexSourceEdgesSkipped: 0, scopeControlOriginalObjects: 0 }
   const isProxy = getReferenceDrcProxyInspector()
-  if (!hasNativeSharedBuffer || !isProxy || isProxy(solver) || !hasNativeObservationContract(stats) || !matchesContract(ownerContract, stats) ||
+  if (!hasNativeSharedBuffer || !hasNativeStructuredClone || !isProxy || isProxy(structuredCloneDescriptor!.value) ||
+    isProxy(solver) || !hasNativeObservationContract(stats) || !matchesContract(ownerContract, stats) ||
     (stats.prototypeReads++, getPrototype(solver)) !== ownerContract.target) return undefined
   const snapshots: DescriptorEntry[] = []
   const geometry: Record<string, unknown> = {}
@@ -489,10 +570,19 @@ export function createParallelPathLookaheadEligibility(
   const connectionContracts = capturePlainDataGraph(connValues, stats)
   if (!geometryContracts || !connectionContracts) return undefined
   const connectionRootContract = captureParallelPathPrototypeContract(connMap, stats)
+  const indexDescriptor = readOwnDescriptor(solver, "geometryIndex", stats)
+  if (!indexDescriptor?.data || typeof indexDescriptor.value !== "object" || indexDescriptor.value === null ||
+    isProxy(indexDescriptor.value) || getPrototype(indexDescriptor.value) !== PathSimplificationGeometryIndex.prototype) return undefined
+  const nativeIndex = indexDescriptor.value as PathSimplificationGeometryIndex
+  const indexRootContract = captureParallelPathPrototypeContract(nativeIndex, stats)
+  const inputScopeGraph = new ParallelPathInputScopeGraph([...geometryContracts, ...connectionContracts, connectionRootContract])
   const coveredControlObjects = new WeakSet<object>()
   coveredControlObjects.add(connMap)
   for (let index = 0; index < geometryContracts.length; index++) coveredControlObjects.add(geometryContracts[index]!.target)
   for (let index = 0; index < connectionContracts.length; index++) coveredControlObjects.add(connectionContracts[index]!.target)
+  const initialIndexState = captureAwaitGraph([nativeIndex], coveredControlObjects, stats,
+    { index: nativeIndex, originals: inputScopeGraph })
+  if (!initialIndexState) return undefined
   const routes = geometry.unsimplifiedHdRoutes as HighDensityRoute[]
   const otherRoutes = geometry.otherHdRoutes as HighDensityRoute[]
   if (!Array.isArray(routes) || !Array.isArray(otherRoutes)) return undefined
@@ -501,8 +591,15 @@ export function createParallelPathLookaheadEligibility(
   stats.snapshotObjects = geometryContracts.length + connectionContracts.length + 1
   stats.snapshotProperties = geometryContracts.reduce((count, contract) => count + contract.entries.length, 0) +
     connectionContracts.reduce((count, contract) => count + contract.entries.length, 0) + connectionRootContract.entries.length
-  const eligibility = (): boolean => {
-    stats.checks++
+  const containerContracts: ParallelPathPrototypeContract[] = []
+  for (const value of [routes, otherRoutes, geometry.obstacles]) {
+    const contract = inputScopeGraph.original(value as object)
+    if (!contract) return undefined
+    containerContracts.push(contract)
+  }
+  const essentialScope = inputScopeGraph.collect([geometry.colorMap, geometry.outline, connMap], (): undefined => undefined)
+  if (!essentialScope) return undefined
+  const prerequisites = (): boolean => {
     if (!hasNativeObservationContract(stats) || !matchesContract(ownerContract, stats) || (stats.prototypeReads++, getPrototype(solver)) !== ownerContract.target) return false
     const cap = readOwnDescriptor(solver, "MAX_ITERATIONS", stats)
     const map = readOwnDescriptor(solver, "connMap", stats)
@@ -516,14 +613,105 @@ export function createParallelPathLookaheadEligibility(
       const actual = readOwnDescriptor(solver, entry.key, stats)
       if (!actual || !actual.data || !objectIs(actual.value, entry.descriptor.value)) return false
     }
+    if (!descriptorMatches(readOwnDescriptor(solver, "geometryIndex", stats), indexDescriptor)) return false
+    if (!matchesContract(indexRootContract, stats)) return false
+    const outputDescriptor = readOwnDescriptor(solver, "simplifiedHdRoutes", stats)
+    if (!outputDescriptor?.data || typeof outputDescriptor.value !== "object" || outputDescriptor.value === null ||
+      isProxy(outputDescriptor.value) || getPrototype(outputDescriptor.value) !== Array.prototype) return false
+    const outputLength = readOwnDescriptor(outputDescriptor.value, "length", stats)
+    if (!outputLength?.data || typeof outputLength.value !== "number") return false
+    // The original phase cannot mutate the index before first publication.
+    // After publication, closed native spans and each awaited control snapshot
+    // retain its evolving structure; never accept a caller's pre-launch edit.
+    if (outputLength.value === 0 && !matchesAwaitGraph(initialIndexState, stats)) return false
     if (!matchesContract(connectionRootContract, stats)) return false
+    return true
+  }
+  const scopedPrerequisites = (): boolean => {
+    if (!prerequisites()) return false
+    for (let index = 0; index < containerContracts.length; index++) if (!matchesContract(containerContracts[index]!, stats)) return false
+    for (let index = 0; index < essentialScope.contracts.length; index++) if (!matchesContract(essentialScope.contracts[index]!, stats)) return false
+    return true
+  }
+  const eligibility = (): boolean => {
+    stats.checks++
+    if (!prerequisites()) return false
     for (let index = 0; index < geometryContracts.length; index++) if (!matchesContract(geometryContracts[index]!, stats)) return false
     for (let index = 0; index < connectionContracts.length; index++) if (!matchesContract(connectionContracts[index]!, stats)) return false
     return true
   }
-  const captureAwaitState = (): (() => boolean) | undefined => {
+  const captureScope = (indexes: readonly number[]): (() => boolean) | undefined => {
+    stats.scopeCaptures++
+    if (!scopedPrerequisites() || isProxy(indexes) || getPrototype(indexes) !== Array.prototype) return undefined
+    const indexList = captureParallelPathPrototypeContract(indexes, stats)
+    if (indexList.entries.length !== indexes.length + 1 || indexes.length < 1 || indexes.length > 4) return undefined
+    for (let position = 0; position < indexes.length; position++) {
+      const entry = indexList.entries[position]!
+      if (entry.key !== String(position) || !entry.descriptor.data || !Number.isSafeInteger(entry.descriptor.value) ||
+        (entry.descriptor.value as number) < 0 || (entry.descriptor.value as number) >= routes.length ||
+        (position > 0 && (entry.descriptor.value as number) <= (indexList.entries[position - 1]!.descriptor.value as number))) return undefined
+    }
+    // Selection invokes only original index methods over a fully inspected
+    // structure. Source pointer edges are opaque here; selected rows are then
+    // checked against the ORIGINAL graph before any live geometry read.
+    const indexState = captureAwaitGraph([nativeIndex], coveredControlObjects, stats, { index: nativeIndex, originals: inputScopeGraph })
+    if (!indexState) return undefined
+    const roots: unknown[] = []
+    for (let position = 0; position < indexes.length; position++) {
+      const routeIndex = indexList.entries[position]!.descriptor.value as number
+      const route = routes[routeIndex]!
+      const inputScope = inputScopeGraph.collect([route], (): undefined => undefined)
+      if (!inputScope) return undefined
+      for (let index = 0; index < inputScope.contracts.length; index++) if (!matchesContract(inputScope.contracts[index]!, stats)) return undefined
+      roots.push(route)
+      if (route.route.length <= 1) continue
+      const bounds = route.route.reduce((acc, point) => ({ minX: Math.min(acc.minX, point.x), minY: Math.min(acc.minY, point.y),
+        maxX: Math.max(acc.maxX, point.x), maxY: Math.max(acc.maxY, point.y) }),
+        { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
+      const centerX = (bounds.minX + bounds.maxX) / 2, centerY = (bounds.minY + bounds.maxY) / 2
+      const width = bounds.maxX - bounds.minX, height = bounds.maxY - bounds.minY
+      const obstacleBounds = { minX: centerX - width / 2, minY: centerY - height / 2,
+        maxX: centerX + width / 2, maxY: centerY + height / 2 }
+      let candidateRoutes: HighDensityRoute[], candidateObstacles: unknown[]
+      try {
+        candidateRoutes = nativeIndex.getCandidateRoutes(bounds, 0.1 + 0.15, routeIndex)
+        candidateObstacles = nativeIndex.getCandidateObstacles(obstacleBounds, 0.1 + 0.15 / 2)
+      } catch {
+        // These are extra speculative selection calls, not the native ordered
+        // constructor. Withdraw and let the actual owner execute/throw at the
+        // original target; descriptor, solver and protocol failures stay loud.
+        return undefined
+      }
+      for (let index = 0; index < candidateRoutes.length; index++) roots.push(candidateRoutes[index])
+      for (let index = 0; index < candidateObstacles.length; index++) roots.push(candidateObstacles[index])
+    }
+    const scope = inputScopeGraph.collect(roots, (target): ParallelPathPrototypeContract | undefined => {
+      if (isProxy(target)) return undefined
+      const prototype = getPrototype(target)
+      if (prototype !== Object.prototype && prototype !== Array.prototype && prototype !== null) return undefined
+      return captureParallelPathPrototypeContract(target, stats)
+    })
+    if (!scope) return undefined
+    for (let index = 0; index < scope.contracts.length; index++) if (!matchesContract(scope.contracts[index]!, stats)) return undefined
+    // Complete connection/outline/color contracts are prerequisites on every
+    // call, so their aliases need not be scanned again through owner controls.
+    for (let index = 0; index < essentialScope.contracts.length; index++) scope.covered.add(essentialScope.contracts[index]!.target)
+    stats.scopeObjects += scope.contracts.length
+    for (let index = 0; index < scope.contracts.length; index++) stats.scopeProperties += scope.contracts[index]!.entries.length
+    const check = (): boolean => {
+      stats.scopeChecks++
+      if (!scopedPrerequisites() || !matchesAwaitGraph(indexState, stats)) return false
+      for (let index = 0; index < scope.contracts.length; index++) if (!matchesContract(scope.contracts[index]!, stats)) return false
+      return true
+    }
+    apply(weakMapSet, scopeCheckOwners, [check, { owner: solver, eligibility, contracts: scope.contracts, covered: scope.covered, indexState }])
+    return check
+  }
+  const captureAwaitState = (scopeCheck?: () => boolean): (() => boolean) | undefined => {
     stats.awaitCaptures++
     if (!hasNativeObservationContract(stats) || !matchesContract(ownerContract, stats) || (stats.prototypeReads++, getPrototype(solver)) !== ownerContract.target) return undefined
+    const scope = typeof scopeCheck === "function" ? apply(weakMapGet, scopeCheckOwners, [scopeCheck]) as ScopeBinding | undefined : undefined
+    if (scopeCheck && (!scope || scope.owner !== solver || scope.eligibility !== eligibility)) return undefined
     const ownerState = captureParallelPathPrototypeContract(solver, stats)
     stats.awaitSnapshotObjects++
     stats.awaitSnapshotProperties += ownerState.entries.length
@@ -533,17 +721,18 @@ export function createParallelPathLookaheadEligibility(
       if (!entry.descriptor.data) return undefined
       if (entry.key === "simplifiedHdRoutes" || entry.key === "activeSubSolver" || entry.key === "geometryIndex" || entry.key === "stats" || entry.key === "failedSubSolvers") roots.push(entry.descriptor.value)
     }
-    const graph = captureAwaitGraph(roots, coveredControlObjects, stats)
+    const graph = captureAwaitGraph(roots, scope ? scope.covered : coveredControlObjects, stats,
+      scope ? { index: nativeIndex, originals: inputScopeGraph } : undefined)
     if (!graph) return undefined
     const check = (): boolean => {
       stats.awaitChecks++
       // Input snapshots skipped during control capture are checked completely
       // here, even for callers that have not invoked eligibility separately.
-      if (!eligibility() || !matchesContract(ownerState, stats)) return false
+      if (!(scopeCheck ? scopeCheck() : eligibility()) || !matchesContract(ownerState, stats)) return false
       return matchesAwaitGraph(graph, stats)
     }
     apply(weakMapSet, awaitCheckOwners, [check, { owner: solver, eligibility }])
     return check
   }
-  return Object.assign(eligibility, { stats, captureAwaitState })
+  return Object.assign(eligibility, { stats, captureAwaitState, captureScope })
 }
