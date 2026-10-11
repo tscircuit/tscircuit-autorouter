@@ -20,6 +20,8 @@ export {
 } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AutoroutingPipelineSolver6_PolyHypergraph"
 export { AutoroutingPipelineSolver7_MultiGraph } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
+export { AutoroutingPipelineSolver9_Parallel, type AutoroutingPipelineSolver9ParallelOptions } from "./autorouter-pipelines/AutoroutingPipeline9_Parallel/AutoroutingPipelineSolver9_Parallel"
+export { Pipeline9LocalWorkerPool, type Pipeline9LocalWorkerPoolOptions } from "./autorouter-pipelines/AutoroutingPipeline9_Parallel/Pipeline9LocalWorkerPool"
 export {
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
   AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver,
