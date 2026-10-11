@@ -97,7 +97,8 @@ function canIndexOverlapBounds({
       nativeArraySort ||
     Object.getOwnPropertyDescriptor(Array.prototype, Symbol.iterator)?.value !==
       nativeArrayIterator ||
-    Object.getOwnPropertyDescriptor(Map.prototype, "get")?.value !== nativeMapGet ||
+    Object.getOwnPropertyDescriptor(Map.prototype, "get")?.value !==
+      nativeMapGet ||
     Object.getOwnPropertyDescriptor(Map.prototype, "values")?.value !==
       nativeMapValues ||
     !isPlainArray(nodes) ||
@@ -300,12 +301,13 @@ export function validateTopologyMergingOutput({
     canIndexOverlapBounds({ nodes, preparedNodeBySourceKey, provenance })
       ? nodes.map(getCapacityMeshNodeBounds)
       : undefined
-  const overlapIndex = nodeBounds?.every((bounds) =>
-    Number.isFinite(bounds.minX) &&
-    Number.isFinite(bounds.minY) &&
-    Number.isFinite(bounds.maxX) &&
-    Number.isFinite(bounds.maxY) &&
-    isValidCapacityBounds(bounds),
+  const overlapIndex = nodeBounds?.every(
+    (bounds) =>
+      Number.isFinite(bounds.minX) &&
+      Number.isFinite(bounds.minY) &&
+      Number.isFinite(bounds.maxX) &&
+      Number.isFinite(bounds.maxY) &&
+      isValidCapacityBounds(bounds),
   )
     ? new Flatbush(nodes.length)
     : undefined

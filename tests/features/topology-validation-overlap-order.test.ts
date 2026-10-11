@@ -79,71 +79,47 @@ test("topology indexing preserves error order and geometry hooks", () => {
       ),
     ])
   compare(competingPairs, overlapError)
-  compare(
-    () => {
-      const params = competingPairs()
-      params.nodes[2]!.width = -1
-      return params
-    },
-    'Error: TopologyMergingSolver: output node "C" has invalid bounds',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.nodes[2]!.center.x = NaN
-      return params
-    },
-    'Error: TopologyMergingSolver: output node "C" has invalid bounds',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.nodes[2]!.center.y = Infinity
-      return params
-    },
-    'Error: TopologyMergingSolver: output node "C" has invalid bounds',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.nodes[2]!.availableZ = []
-      return params
-    },
-    'Error: TopologyMergingSolver: output node "C" has no available layers',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.nodes[2]!.capacityMeshNodeId = "B"
-      return params
-    },
-    'Error: TopologyMergingSolver: duplicate output node id "B"',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.provenance.sourceKeysByNodeId.delete("C")
-      return params
-    },
-    'Error: TopologyMergingSolver: missing output provenance for node "C"',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.provenance.groupIndexesByNodeId.delete("B")
-      params.provenance.groupIndexesByNodeId.delete("C")
-      return params
-    },
-    'Error: TopologyMergingSolver: missing output provenance for overlapping nodes "A" and "B"',
-  )
-  compare(
-    () => {
-      const params = competingPairs()
-      params.provenance.sourceKeysByNodeId.set("C", ["missing-source"])
-      return params
-    },
-    'Error: TopologyMergingSolver: missing source node for output "C"',
-  )
+  compare(() => {
+    const params = competingPairs()
+    params.nodes[2]!.width = -1
+    return params
+  }, 'Error: TopologyMergingSolver: output node "C" has invalid bounds')
+  compare(() => {
+    const params = competingPairs()
+    params.nodes[2]!.center.x = NaN
+    return params
+  }, 'Error: TopologyMergingSolver: output node "C" has invalid bounds')
+  compare(() => {
+    const params = competingPairs()
+    params.nodes[2]!.center.y = Infinity
+    return params
+  }, 'Error: TopologyMergingSolver: output node "C" has invalid bounds')
+  compare(() => {
+    const params = competingPairs()
+    params.nodes[2]!.availableZ = []
+    return params
+  }, 'Error: TopologyMergingSolver: output node "C" has no available layers')
+  compare(() => {
+    const params = competingPairs()
+    params.nodes[2]!.capacityMeshNodeId = "B"
+    return params
+  }, 'Error: TopologyMergingSolver: duplicate output node id "B"')
+  compare(() => {
+    const params = competingPairs()
+    params.provenance.sourceKeysByNodeId.delete("C")
+    return params
+  }, 'Error: TopologyMergingSolver: missing output provenance for node "C"')
+  compare(() => {
+    const params = competingPairs()
+    params.provenance.groupIndexesByNodeId.delete("B")
+    params.provenance.groupIndexesByNodeId.delete("C")
+    return params
+  }, 'Error: TopologyMergingSolver: missing output provenance for overlapping nodes "A" and "B"')
+  compare(() => {
+    const params = competingPairs()
+    params.provenance.sourceKeysByNodeId.set("C", ["missing-source"])
+    return params
+  }, 'Error: TopologyMergingSolver: missing source node for output "C"')
 
   const epsilon = TOPOLOGY_PROVENANCE_EPSILON
   compare(() => input([node("A", 0), node("B", 2 - epsilon / 2)]))
@@ -202,14 +178,11 @@ test("topology indexing preserves error order and geometry hooks", () => {
     return params
   }
   compare(preservedSameGroup)
-  compare(
-    () => {
-      const params = preservedSameGroup()
-      params.preparedNodeBySourceKey.get("source-A")!.bounds.maxX = 0
-      return params
-    },
-    'Error: TopologyMergingSolver: output node "A" escapes its source geometry or layers',
-  )
+  compare(() => {
+    const params = preservedSameGroup()
+    params.preparedNodeBySourceKey.get("source-A")!.bounds.maxX = 0
+    return params
+  }, 'Error: TopologyMergingSolver: output node "A" escapes its source geometry or layers')
 
   // Preserve original access order when a layer method moves a later node.
   compare(() => {
@@ -281,7 +254,12 @@ test("topology indexing preserves error order and geometry hooks", () => {
   }
   for (let sample = 0; sample < 64; sample++) {
     const nodes = Array.from({ length: 24 }, (_, index) => ({
-      ...node(`node-${index}`, random() % 30, random() % 30, 1 + random() % 4),
+      ...node(
+        `node-${index}`,
+        random() % 30,
+        random() % 30,
+        1 + (random() % 4),
+      ),
       availableZ: [random() % 4],
     }))
     compare(() => input(structuredClone(nodes)))
