@@ -44,6 +44,7 @@ export type ParallelPathLookaheadResult = {
 
 export type ParallelPathCertificateStats = {
   nativeFilterConstructors: number
+  nativeFilterOnlyViews: number
   nativeFilterSegments: number
   nativeFilterVias: number
   lineBucketTests: number

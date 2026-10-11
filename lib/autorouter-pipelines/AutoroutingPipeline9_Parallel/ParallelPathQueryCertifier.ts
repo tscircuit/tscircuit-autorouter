@@ -10,6 +10,8 @@ type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 type Line = { start: ParallelPathQueryPoint; end: ParallelPathQueryPoint; buckets: Bounds }
 type Via = { x: number; y: number; diameter: number }
 type PrimitiveView = { lines: Map<string, Line>; vias: Map<string, Via> }
+export type ParallelPathFilterParams = ConstructorParameters<typeof SingleSimplifiedPathSolver5>[0]
+export type ParallelPathFilteredPrimitives = Pick<SingleSimplifiedPathSolver5, "filteredObstaclePathSegments" | "filteredVias">
 
 const cellSize = 0.4
 const queryMargin = 0.4
@@ -28,7 +30,7 @@ function isOrdinaryPoint(point: ParallelPathQueryPoint): boolean {
     !Object.is(point.x, -0) && !Object.is(point.y, -0)
 }
 
-function getPrimitiveView(child: SingleSimplifiedPathSolver5, stats: ParallelPathCertificateStats): PrimitiveView {
+function getPrimitiveView(child: ParallelPathFilteredPrimitives, stats: ParallelPathCertificateStats): PrimitiveView {
   const lines = new Map<string, Line>()
   const vias = new Map<string, Via>()
   stats.nativeFilterSegments += child.filteredObstaclePathSegments.length
@@ -71,8 +73,13 @@ export class ParallelPathQueryCertifier {
     this.currentIndex = (current as unknown as { geometryIndex: GeometryIndex }).geometryIndex
   }
 
+  protected createFilteredPrimitives(params: ParallelPathFilterParams, stats: ParallelPathCertificateStats): ParallelPathFilteredPrimitives {
+    stats.nativeFilterConstructors++
+    return new SingleSimplifiedPathSolver5(params)
+  }
+
   certify(index: number, committedPrefix: number, footprint: ParallelPathQueryFootprint): ParallelPathQueryCertificate {
-    const stats: ParallelPathCertificateStats = { nativeFilterConstructors: 0, nativeFilterSegments: 0,
+    const stats: ParallelPathCertificateStats = { nativeFilterConstructors: 0, nativeFilterOnlyViews: 0, nativeFilterSegments: 0,
       nativeFilterVias: 0, lineBucketTests: 0, lineDistanceTests: 0, viaDistanceTests: 0 }
     if (!Number.isSafeInteger(index) || !Number.isSafeInteger(committedPrefix) || committedPrefix < 0 ||
       committedPrefix > index || index >= this.original.unsimplifiedHdRoutes.length) {
@@ -122,10 +129,8 @@ export class ParallelPathQueryCertifier {
     let beforeView: PrimitiveView
     let afterView: PrimitiveView
     try {
-      stats.nativeFilterConstructors++
-      beforeView = getPrimitiveView(new SingleSimplifiedPathSolver5({ ...common, otherHdRoutes: beforePeers }), stats)
-      stats.nativeFilterConstructors++
-      afterView = getPrimitiveView(new SingleSimplifiedPathSolver5({ ...common, otherHdRoutes: afterPeers }), stats)
+      beforeView = getPrimitiveView(this.createFilteredPrimitives({ ...common, otherHdRoutes: beforePeers }, stats), stats)
+      afterView = getPrimitiveView(this.createFilteredPrimitives({ ...common, otherHdRoutes: afterPeers }, stats), stats)
     } catch {
       return { certified: false, stats, nativeQueryError: true }
     }

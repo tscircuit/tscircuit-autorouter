@@ -808,3 +808,17 @@ and dataset elapsed acceptance are separate. The narrower indexed-engine replay
 therefore does not represent the complete Joint stage. Exact source/raw hashes,
 limitations and reproducible driver are in
 [parallel-native-joint-stage-cpu-proof.json](benchmarks/parallel-native-joint-stage-cpu-proof.json).
+
+A guarded private certificate optimization prepares just the Native segment and
+via filters consumed by a temporary certificate view. Actual Original routing
+child construction, logical budgets, terminal getters and publication sites
+still run unchanged. Direct base certifiers and custom callbacks retain their
+Original temporary constructors; the optimized class is unexported and its
+instance uses an ECMAScript private field. Six complete phases preserve1,503
+routes,27,198 Native logical steps, every certificate decision and every rerun.
+Temporary constructors fall from2,954 to zero, replaced by2,954 filter-only
+views. This is operation-count evidence; dataset elapsed acceptance is pending.
+The updated frozen22 main-thread CPU profile separates temporary certificate
+construction from actual owner construction. Exact rows, aliases, source/raw
+hashes, fallback checks and attribution are in
+[parallel-path-filter-only-certificate-proof.json](benchmarks/parallel-path-filter-only-certificate-proof.json).

@@ -4,6 +4,9 @@ import { pathLifecycleAll, pathLifecycleAllSettled, pathLifecycleRace, pathLifec
 import { rehydrateNativeSourceAliases } from "./nativeSourceAliasProvenance"
 import { assertParallelPathLookaheadResult } from "./ParallelPathLookaheadExecutor"
 import { ParallelPathQueryCertifier } from "./ParallelPathQueryCertifier"
+import type { ParallelPathFilterParams, ParallelPathFilteredPrimitives } from "./ParallelPathQueryCertifier"
+import { filterNativePathCertificatePrimitives } from "./filterNativePathCertificatePrimitives"
+import type { ParallelPathCertificateStats } from "./parallelPathLookaheadTypes"
 import { getNativeParallelPathLookaheadWindowCapacity, isNativeParallelPathAwaitStateCheck, isOrdinaryParallelPathRoute, type ParallelPathLookaheadEligibility } from "./createParallelPathLookaheadEligibility"
 import { canUseNativePathLookaheadPool } from "./Pipeline9LocalWorkerPool"
 import type { ParallelPathLookaheadJob, ParallelPathLookaheadResult } from "./parallelPathLookaheadTypes"
@@ -58,6 +61,15 @@ function ownNumber(source: object, key: string): number | undefined {
   return descriptor && hasOwn(descriptor, "value") && typeof descriptor.value === "number" ? descriptor.value : undefined
 }
 
+// Only the genuine private coordinator span chooses this class. Public/direct
+// certifiers and custom callbacks retain both original Native constructors.
+class NativeFilterOnlyPathQueryCertifier extends ParallelPathQueryCertifier {
+  protected override createFilteredPrimitives(params: ParallelPathFilterParams, stats: ParallelPathCertificateStats): ParallelPathFilteredPrimitives {
+    stats.nativeFilterOnlyViews++
+    return filterNativePathCertificatePrimitives(params)
+  }
+}
+
 /** Mint the worker callback itself; caller callbacks cannot acquire this brand. */
 export function createNativeParallelPathLookaheadRun(
   owner: MultiSimplifiedPathSolver, eligibility: ParallelPathLookaheadEligibility, pool: ParallelStageWorkerPool,
@@ -75,7 +87,7 @@ export class ParallelPathLookaheadCoordinator {
     speculativeJobs: 0, speculativeNativeSteps: 0, speculativeNativeQueries: 0,
     speculativeObstacleWitnessTests: 0, certifiedRoutes: 0, orderedReruns: 0,
     orderedRerunNativeSteps: 0, cancelledJobs: 0, cancellationSignals: 0,
-    nativeFilterConstructors: 0, nativeFilterSegments: 0, nativeFilterVias: 0,
+    nativeFilterConstructors: 0, nativeFilterOnlyViews: 0, nativeFilterSegments: 0, nativeFilterVias: 0,
     lineBucketTests: 0, lineDistanceTests: 0, viaDistanceTests: 0,
     certificateNativeQueryErrors: 0, eligibilityNativeRoutes: 0, maximumLookahead: 0,
     eligibilityChecks: 0, awaitStateChecks: 0, awaitStateDeclines: 0,
@@ -84,7 +96,7 @@ export class ParallelPathLookaheadCoordinator {
     physicalOwnerNativeStepCalls: 0, certifiedNativeParentStepCalls: 0, finalNativeStepCalls: 0,
   }
   private readonly context: ParallelPathWaveContext
-  private readonly certifier: ParallelPathQueryCertifier
+  readonly #certifier: ParallelPathQueryCertifier
   private readonly pending = new Map<number, PendingRoute>()
   private readonly allCompletions: Promise<void>[] = []
   private nextIndex = 0
@@ -142,7 +154,9 @@ export class ParallelPathLookaheadCoordinator {
     const initial = this.context.params
     const initialIndex = new PathSimplificationGeometryIndex(initial.unsimplifiedHdRoutes,
       initial.otherHdRoutes!, initial.obstacles)
-    this.certifier = new ParallelPathQueryCertifier({ unsimplifiedHdRoutes: initial.unsimplifiedHdRoutes,
+    const Certifier = nativeApply(nativeWeakSetHas, nativeCohortOwners, [this])
+      ? NativeFilterOnlyPathQueryCertifier : ParallelPathQueryCertifier
+    this.#certifier = new Certifier({ unsimplifiedHdRoutes: initial.unsimplifiedHdRoutes,
       useTraceWidthAwareClearance: initial.useTraceWidthAwareClearance!, enableVertexShortcuts: initial.enableVertexShortcuts! }, original, initialIndex)
     this.infrastructureFailure = pathLifecycleFailure((reject): void => { this.rejectInfrastructure = reject })
     void pathLifecycleThen(this.infrastructureFailure, (): void => {}, (): void => {})
@@ -221,7 +235,7 @@ export class ParallelPathLookaheadCoordinator {
         let certified = false
         if (!hadExposedChild && candidate.status === "prepared" && isOrdinaryParallelPathRoute(candidate.route) &&
           this.native.iterations + candidate.nativeSteps <= this.native.MAX_ITERATIONS) {
-          const certificate = this.certifier.certify(index, candidate.committedPrefix, candidate.footprint)
+          const certificate = this.#certifier.certify(index, candidate.committedPrefix, candidate.footprint)
           for (const key of Object.keys(certificate.stats) as Array<keyof typeof certificate.stats>) this.stats[key] += certificate.stats[key]
           if (certificate.nativeQueryError) this.stats.certificateNativeQueryErrors++
           certified = certificate.certified
