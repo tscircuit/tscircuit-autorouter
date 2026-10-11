@@ -1,0 +1,83 @@
+diff --git a/dist/chunk-Y7G4VXR7.js b/dist/chunk-Y7G4VXR7.js
+--- a/dist/chunk-Y7G4VXR7.js
++++ b/dist/chunk-Y7G4VXR7.js
+@@ -1,3 +1,6 @@
++import {
++  distSq
++} from "./chunk-5J3PCV4D.js";
+ import {
+   distance,
+   doSegmentsIntersect,
+@@ -8,6 +11,17 @@
+ } from "./chunk-DRDDWFOS.js";
+ 
+ // src/segment-distance.ts
++function pointToSegmentDistanceSquared(p, v, w) {
++  const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
++  if (l2 === 0) return distSq(p, v);
++  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
++  t = Math.max(0, Math.min(1, t));
++  const projection = {
++    x: v.x + t * (w.x - v.x),
++    y: v.y + t * (w.y - v.y)
++  };
++  return distSq(p, projection);
++}
+ function segmentToSegmentMinDistance(a, b, u, v) {
+   if (a.x === b.x && a.y === b.y) {
+     return pointToSegmentDistance(a, u, v);
+@@ -18,13 +32,14 @@
+   if (doSegmentsIntersect(a, b, u, v)) {
+     return 0;
+   }
+-  const distances = [
+-    pointToSegmentDistance(a, u, v),
+-    pointToSegmentDistance(b, u, v),
+-    pointToSegmentDistance(u, a, b),
+-    pointToSegmentDistance(v, a, b)
+-  ];
+-  return Math.min(...distances);
++  return Math.sqrt(
++    Math.min(
++      pointToSegmentDistanceSquared(a, u, v),
++      pointToSegmentDistanceSquared(b, u, v),
++      pointToSegmentDistanceSquared(u, a, b),
++      pointToSegmentDistanceSquared(v, a, b)
++    )
++  );
+ }
+ function segmentToBoundsMinDistance(a, b, bounds) {
+   const topLeft = { x: bounds.minX, y: bounds.minY };
+@@ -38,10 +53,10 @@
+     return 0;
+   }
+   const distances = [
+-    pointToSegmentDistance(topLeft, a, b),
+-    pointToSegmentDistance(topRight, a, b),
+-    pointToSegmentDistance(bottomLeft, a, b),
+-    pointToSegmentDistance(bottomRight, a, b)
++    pointToSegmentDistanceSquared(topLeft, a, b),
++    pointToSegmentDistanceSquared(topRight, a, b),
++    pointToSegmentDistanceSquared(bottomLeft, a, b),
++    pointToSegmentDistanceSquared(bottomRight, a, b)
+   ];
+   if (a.x >= bounds.minX && a.x <= bounds.maxX && a.y >= bounds.minY && a.y <= bounds.maxY) {
+     return 0;
+@@ -52,14 +67,14 @@
+   if (a.x < bounds.minX || a.x > bounds.maxX || a.y < bounds.minY || a.y > bounds.maxY) {
+     const closestX = clamp(a.x, bounds.minX, bounds.maxX);
+     const closestY = clamp(a.y, bounds.minY, bounds.maxY);
+-    distances.push(distance(a, { x: closestX, y: closestY }));
++    distances.push(distSq(a, { x: closestX, y: closestY }));
+   }
+   if (b.x < bounds.minX || b.x > bounds.maxX || b.y < bounds.minY || b.y > bounds.maxY) {
+     const closestX = clamp(b.x, bounds.minX, bounds.maxX);
+     const closestY = clamp(b.y, bounds.minY, bounds.maxY);
+-    distances.push(distance(b, { x: closestX, y: closestY }));
++    distances.push(distSq(b, { x: closestX, y: closestY }));
+   }
+-  return Math.min(...distances);
++  return Math.sqrt(Math.min(...distances));
+ }
+ function segmentToBoxMinDistance(a, b, box) {
+   const halfWidth = box.width / 2;

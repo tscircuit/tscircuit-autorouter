@@ -1,4 +1,5 @@
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import type { LocalHighDensityClusterStats } from "./startLocalHighDensityCluster"
 
 export type BenchmarkTask = {
   datasetName: string
@@ -6,6 +7,13 @@ export type BenchmarkTask = {
   solverName: string
   solverConstructorName?: string
   networkedCachePass?: "cold" | "hot"
+  networkedServer?: {
+    url: string
+    cacheVersion: string
+    backend?: "local" | "remote"
+    /** Local node deadlines share the sample budget, including server queueing. */
+    requestTimeoutMs?: number
+  }
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
@@ -106,6 +114,7 @@ export type RoutingBenchmarkMetrics = {
     remoteCacheHits: number
     remoteSolverResults: number
     remoteTransportFallbacks: number
+    remoteFallbackReasonCounts?: Record<string, number>
   }
 }
 
@@ -187,6 +196,7 @@ export type SolverRunSummary = {
     solverResults: number
     batchCacheMisses: number
     localFallbacks: number
+    validationRejections?: number
   }
 }
 
@@ -229,6 +239,18 @@ export type BenchmarkRuntimeMetadata = {
   memoryBudgetPerWorkerBytes: number
   requestedConcurrency: number
   workerCount: number
+  localHighDensityCluster?: {
+    serversPerLane: 8
+    laneCount: number
+    effectiveCpuCount: number
+    laneCpuIds: number[][]
+    sampleAssignment: "fixed_round_robin"
+    cacheIsolation: "per_sample"
+    passStats?: Array<{
+      pass: "cold" | "hot"
+      lanes: LocalHighDensityClusterStats[]
+    }>
+  }
 }
 
 export type BenchmarkReport = {

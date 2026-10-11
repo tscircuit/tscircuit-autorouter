@@ -76,13 +76,13 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: ["--pipeline", "9net", "--dataset", "18"],
     datasetName: "18",
     profileSolvers: false,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
-  expect(() =>
+  expect(
     parsePrBenchmarkCommand(
       "/benchmark --pipeline 9net --dataset 18 --same-machine",
     ),
-  ).toThrow("does not support --same-machine")
+  ).toEqual(parsePrBenchmarkCommand("/benchmark --pipeline 9net --dataset 18"))
   expect(() =>
     parsePrBenchmarkCommand(
       "/benchmark --pipeline 9net --dataset 18 --profile-solvers",
@@ -233,7 +233,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(benchmarkWorkflow).toContain("/health")
   expect(benchmarkWorkflow).toContain("HD_CACHE2_CACHE_VERSION")
   expect(benchmarkWorkflow).toContain(
-    "BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: '65000'",
+    "steps.parse.outputs.networked_remote == 'true' && '65000' || '0'",
   )
   expect(benchmarkWorkflow).toContain(
     "benchmark-${repositoryId}-${runId}-${runAttempt}-${randomUUID()}",
@@ -263,7 +263,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(benchmarkWorkflow).toContain("const baseSha = pr.data.base.sha")
   expect(benchmarkWorkflow).toContain("--base-report")
   expect(benchmarkWorkflow).toContain(
-    "BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}",
+    "BENCHMARK_ARGS_JSON: ${{ steps.refs.outputs.benchmark_args_json }}",
   )
   expect(profileWorkflow).toContain("blacksmith-8vcpu-ubuntu-2404-arm")
   expect(profileWorkflow).toContain("Profile current main")
