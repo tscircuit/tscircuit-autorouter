@@ -4,10 +4,9 @@ export type NativeA01HeapColumns = { f: number[]; seq: number[]; id: number[]; n
 type KernelExports = {
   memory: WebAssembly.Memory
   __heap_base: WebAssembly.Global
-  push: (f: number, seq: number, id: number, flags: number, rows: number,
-    meta: number, n: number, valueF: number, valueSeq: number, valueId: number) => void
-  pop: (f: number, seq: number, id: number, flags: number, rows: number,
-    meta: number, n: number) => number
+  configure: (f: number, seq: number, id: number, flags: number, rows: number, meta: number) => void
+  push: (n: number, valueF: number, valueSeq: number, valueId: number) => void
+  pop: (n: number) => number
 }
 const MAX_ROWS = 262_144, PAGE_BYTES = 65_536
 let compiledModule: WebAssembly.Module | undefined
@@ -49,6 +48,7 @@ export class NativeA01HeapArena {
     this.flags = new Uint32Array(memory.buffer, pointers[3]!, capacityRows)
     this.rows = new Uint32Array(memory.buffer, pointers[4]!, capacityRows)
     this.meta = new Uint32Array(memory.buffer, pointers[5]!, 2)
+    this.exports.configure(pointers[0]!, pointers[1]!, pointers[2]!, pointers[3]!, pointers[4]!, pointers[5]!)
     this.diagnostics.memoryBytes = capacityRows * 32 + 8
   }
 
@@ -86,16 +86,14 @@ export class NativeA01HeapArena {
     }
     if (heap.n >= this.capacityRows) throw new Error("A01 heap exceeds its proven arena capacity")
     const n = heap.n++
-    this.exports.push(this.pointers[0]!, this.pointers[1]!, this.pointers[2]!,
-      this.pointers[3]!, this.pointers[4]!, this.pointers[5]!, n, valueF, valueSeq, valueId)
+    this.exports.push(n, valueF, valueSeq, valueId)
   }
 
   pop(): number {
     const heap = this.heap
     if (!heap || heap.n < 1) throw new Error("A01 heap pop requires an active nonempty quantum")
     const n = heap.n--
-    return this.exports.pop(this.pointers[0]!, this.pointers[1]!, this.pointers[2]!,
-      this.pointers[3]!, this.pointers[4]!, this.pointers[5]!, n)
+    return this.exports.pop(n)
   }
 
   /** Run in the caller's finally, before any native observer or history step. */

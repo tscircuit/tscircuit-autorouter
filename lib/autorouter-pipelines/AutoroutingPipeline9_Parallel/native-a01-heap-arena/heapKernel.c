@@ -2,6 +2,16 @@
 // 44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34. MIT; see
 // ../high-density-a01-fork/LICENSE. Numeric columns remain native f64.
 typedef unsigned int u32;
+static double *heap_f, *heap_seq, *heap_id;
+static u32 *heap_flags, *heap_rows, *heap_meta;
+void configure(double *f, double *seq, double *id, u32 *flags, u32 *rows, u32 *meta) {
+  heap_f = f;
+  heap_seq = seq;
+  heap_id = id;
+  heap_flags = flags;
+  heap_rows = rows;
+  heap_meta = meta;
+}
 
 static void write_row(double *f, double *seq, double *id, u32 *flags,
   u32 *rows, u32 *meta, u32 index, double value_f, double value_seq,
@@ -15,8 +25,9 @@ static void write_row(double *f, double *seq, double *id, u32 *flags,
   }
 }
 
-void push(double *f, double *seq, double *id, u32 *flags, u32 *rows,
-  u32 *meta, u32 n, double value_f, double value_seq, double value_id) {
+void push(u32 n, double value_f, double value_seq, double value_id) {
+  double *f = heap_f, *seq = heap_seq, *id = heap_id;
+  u32 *flags = heap_flags, *rows = heap_rows, *meta = heap_meta;
   u32 i = n;
   while (i > 0) {
     u32 p = (i - 1) >> 1;
@@ -28,8 +39,9 @@ void push(double *f, double *seq, double *id, u32 *flags, u32 *rows,
   write_row(f, seq, id, flags, rows, meta, i, value_f, value_seq, value_id);
 }
 
-double pop(double *f, double *seq, double *id, u32 *flags, u32 *rows,
-  u32 *meta, u32 n) {
+double pop(u32 n) {
+  double *f = heap_f, *seq = heap_seq, *id = heap_id;
+  u32 *flags = heap_flags, *rows = heap_rows, *meta = heap_meta;
   double out = id[0];
   --n;
   if (n > 0) {

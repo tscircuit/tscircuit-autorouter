@@ -22,7 +22,7 @@ const flags = [
   "-fno-builtin", "-fno-vectorize", "-fno-slp-vectorize", "-mno-simd128",
   "-mno-relaxed-simd", "-nostdlib", "-Wl,--no-entry",
   "-Wl,--export-memory", "-Wl,--export=__heap_base",
-  "-Wl,--export=push", "-Wl,--export=pop", "-Wl,--strip-all",
+  "-Wl,--export=configure", "-Wl,--export=push", "-Wl,--export=pop", "-Wl,--strip-all",
 ]
 try {
   const result = Bun.spawnSync([compiler, ...flags, "-o", output, source])
