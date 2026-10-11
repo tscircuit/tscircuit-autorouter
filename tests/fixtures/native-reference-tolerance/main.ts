@@ -23,6 +23,7 @@ const sources = {
   index: join(fork, "native/lib/util/create-indexed-pcb-connectivity-map.ts"),
   via: join(fork, "native/lib/util/get-via-and-pour-connections.ts"),
   planner: join(fork, "referenceDrcPrimitiveMissPlanning.ts"),
+  scope: join(fork, "referenceDrcNativeInternScope.ts"),
   trace: join(fork, "prepareReferenceDrcTracePairFacts.ts"),
   polygon: join(fork, "prepareReferenceDrcPolygonFacts.ts"),
 }
@@ -39,6 +40,7 @@ for (const kind of Object.keys(sources) as (keyof typeof sources)[]) {
     else if (spec.endsWith("create-indexed-pcb-connectivity-map")) target = copies.index
     else if (spec.endsWith("get-via-and-pour-connections")) target = copies.via
     else if (spec.endsWith("referenceDrcPrimitiveMissPlanning")) target = copies.planner
+    else if (spec.endsWith("referenceDrcNativeInternScope")) target = copies.scope
     else if (spec.endsWith("prepareReferenceDrcTracePairFacts")) target = copies.trace
     else if (spec.endsWith("prepareReferenceDrcPolygonFacts")) target = copies.polygon
     return `from ${JSON.stringify(target)}`

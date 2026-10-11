@@ -21,9 +21,10 @@ test("prepared private trace misses preserve native consumed caches, errors, gra
     checker: join(base, "native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts"),
     index: join(base, "native/lib/util/create-indexed-pcb-connectivity-map.ts"),
     planner: join(base, "referenceDrcPrimitiveMissPlanning.ts"),
+    scope: join(base, "referenceDrcNativeInternScope.ts"),
     prepare: join(base, "prepareReferenceDrcTracePairFacts.ts"),
   }
-  const copies = { checker: join(work, "checker.ts"), index: join(work, "index.ts"), planner: join(work, "planner.ts"), prepare: join(work, "prepare.ts") }
+  const copies = { scope: join(work, "scope.ts"), checker: join(work, "checker.ts"), index: join(work, "index.ts"), planner: join(work, "planner.ts"), prepare: join(work, "prepare.ts") }
   for (const kind of Object.keys(sources) as (keyof typeof sources)[]) {
     let source = readFileSync(sources[kind], "utf8")
     if (kind === "checker") source = "export let latestPrivateMemo: unknown\n" + source.replaceAll("const primitiveMemo = new ReferenceDrcPrimitiveMemo()", "const primitiveMemo = new ReferenceDrcPrimitiveMemo()\n  latestPrivateMemo = primitiveMemo")
@@ -40,6 +41,7 @@ test("prepared private trace misses preserve native consumed caches, errors, gra
       if (spec.includes("check-traces-are-contiguous/check-traces-are-contiguous")) target = copies.checker
       else if (spec.endsWith("create-indexed-pcb-connectivity-map")) target = copies.index
       else if (spec.endsWith("referenceDrcPrimitiveMissPlanning")) target = copies.planner
+      else if (spec.endsWith("referenceDrcNativeInternScope")) target = copies.scope
       else if (spec.endsWith("prepareReferenceDrcTracePairFacts")) target = copies.prepare
       return `from ${JSON.stringify(target)}`
     })

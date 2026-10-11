@@ -1,5 +1,5 @@
 import { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
-import { canUseExpectedPortsMemo } from "../../../canUseExpectedPortsMemo"
+import { beginReferenceDrcNativeInternScope } from "../../../referenceDrcNativeInternScope"
 import { createExpectedPortsMemo } from "../../../createExpectedPortsMemo"
 import { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
@@ -344,11 +344,13 @@ function checkTracesAreContiguous(
   } = {},
 ): PcbTraceError[] {
   const privatelyOwnedMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo])
-  const useExpectedPortMemo = privatelyOwnedMemo &&
-    pcbConnectivityMap === undefined && connMap === undefined && canUseExpectedPortsMemo(circuitJson)
+  const internScope = privatelyOwnedMemo && pcbConnectivityMap === undefined && connMap === undefined
+    ? beginReferenceDrcNativeInternScope(primitiveMemo, circuitJson) : undefined
+  const useExpectedPortMemo = internScope !== undefined
   // A changed native geometry setting or observer must not consume retained
   // predicate answers either. External supplied memos retain their opt-in path.
   if (privatelyOwnedMemo && !useExpectedPortMemo) primitiveMemo = undefined
+  try {
   let scaledPolygonMemo: ScaledConductorPolygonMemo | undefined
   if (useExpectedPortMemo) {
     scaledPolygonMemo = applyNative(privatePolygonMemoGet, privatelyOwnedPolygonMemos, [primitiveMemo]) as ScaledConductorPolygonMemo | undefined
@@ -493,7 +495,7 @@ function checkTracesAreContiguous(
 
       const physicalNetId = expandedPhysicalNetIds === undefined
         ? undefined
-        : pcbConnectivityMap.connMap.getNetConnectedToId(traceId)
+        : pcbConnectivityMap!.connMap.getNetConnectedToId(traceId)
       if (
         expandedPhysicalNetIds === undefined ||
         typeof physicalNetId !== "string" ||
@@ -502,7 +504,7 @@ function checkTracesAreContiguous(
         if (typeof physicalNetId === "string") {
           expandedPhysicalNetIds!.add(physicalNetId)
         }
-        for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(
+        for (const connectedTrace of pcbConnectivityMap!.getAllTracesConnectedToTrace(
           traceId,
         )) {
           if (!connectedTraceIds.has(connectedTrace.pcb_trace_id)) {
@@ -762,6 +764,9 @@ function checkTracesAreContiguous(
   }
 
   return errors
+  } finally {
+    if (internScope?.kind === "scoped") internScope.finish()
+  }
 }
 
 export { checkTracesAreContiguous }

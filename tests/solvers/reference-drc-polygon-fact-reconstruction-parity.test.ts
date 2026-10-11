@@ -16,8 +16,8 @@ test("already-scaled polygon facts retain native faces, geometry, query state an
   const repo = resolve(import.meta.dir, "../.."), work = mkdtempSync(join(tmpdir(), "reference-polygon-facts-"))
   symlinkSync(join(repo, "node_modules"), join(work, "node_modules"))
   const base = join(repo, "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork")
-  const sources = { checker: join(base, "native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts"), index: join(base, "native/lib/util/create-indexed-pcb-connectivity-map.ts"), via: join(base, "native/lib/util/get-via-and-pour-connections.ts") }
-  const copies = { checker: join(work, "checker.ts"), index: join(work, "index.ts"), via: join(work, "via.ts") }
+  const sources = { scope: join(base, "referenceDrcNativeInternScope.ts"), checker: join(base, "native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts"), index: join(base, "native/lib/util/create-indexed-pcb-connectivity-map.ts"), via: join(base, "native/lib/util/get-via-and-pour-connections.ts") }
+  const copies = { scope: join(work, "scope.ts"), checker: join(work, "checker.ts"), index: join(work, "index.ts"), via: join(work, "via.ts") }
   const counterPath = join(work, "counter.ts")
   const factsPath = join(base, "referenceDrcPolygonFacts.ts")
   // Reflect only owned Native data, including all cyclic polygon/face/edge/index
@@ -43,7 +43,9 @@ export function verifyNativeState(polygons:any[],before:any):void{deepStrictEqua
     }
     source = source.replace(/from\s+"(\.[^"]+)"/g, (_match, spec: string): string => {
       let target = resolve(dirname(sources[kind]), spec)
-      if (spec.endsWith("create-indexed-pcb-connectivity-map")) target = copies.index
+      if (spec.includes("check-traces-are-contiguous/check-traces-are-contiguous")) target = copies.checker
+      else if (spec.endsWith("referenceDrcNativeInternScope")) target = copies.scope
+      else if (spec.endsWith("create-indexed-pcb-connectivity-map")) target = copies.index
       else if (spec.endsWith("get-via-and-pour-connections")) target = copies.via
       return `from ${JSON.stringify(target)}`
     })

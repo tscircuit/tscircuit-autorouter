@@ -19,7 +19,7 @@ test("prepared scaled polygon misses retain original Native graph, memo, constru
   const repo = resolve(import.meta.dir, "../.."), work = mkdtempSync(join(tmpdir(), "reference-prepared-polygons-"))
   symlinkSync(join(repo, "node_modules"), join(work, "node_modules"))
   const base = join(repo, "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork")
-  const sources = { checker: join(base,"native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts"), index: join(base,"native/lib/util/create-indexed-pcb-connectivity-map.ts"), via: join(base,"native/lib/util/get-via-and-pour-connections.ts"), planner: join(base,"referenceDrcPrimitiveMissPlanning.ts"), trace: join(base,"prepareReferenceDrcTracePairFacts.ts"), polygon: join(base,"prepareReferenceDrcPolygonFacts.ts") }
+  const sources = { scope: join(base, "referenceDrcNativeInternScope.ts"), checker: join(base,"native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts"), index: join(base,"native/lib/util/create-indexed-pcb-connectivity-map.ts"), via: join(base,"native/lib/util/get-via-and-pour-connections.ts"), planner: join(base,"referenceDrcPrimitiveMissPlanning.ts"), trace: join(base,"prepareReferenceDrcTracePairFacts.ts"), polygon: join(base,"prepareReferenceDrcPolygonFacts.ts") }
   const copies = Object.fromEntries(Object.keys(sources).map((key) => [key,join(work,`${key}.ts`)])) as Record<keyof typeof sources,string>
   for (const kind of Object.keys(sources) as (keyof typeof sources)[]) {
     let source = readFileSync(sources[kind],"utf8")
@@ -38,6 +38,7 @@ test("prepared scaled polygon misses retain original Native graph, memo, constru
       else if (spec.endsWith("create-indexed-pcb-connectivity-map")) target=copies.index
       else if (spec.endsWith("get-via-and-pour-connections")) target=copies.via
       else if (spec.endsWith("referenceDrcPrimitiveMissPlanning")) target=copies.planner
+      else if (spec.endsWith("referenceDrcNativeInternScope")) target=copies.scope
       else if (spec.endsWith("prepareReferenceDrcTracePairFacts")) target=copies.trace
       else if (spec.endsWith("prepareReferenceDrcPolygonFacts")) target=copies.polygon
       return `from ${JSON.stringify(target)}`
