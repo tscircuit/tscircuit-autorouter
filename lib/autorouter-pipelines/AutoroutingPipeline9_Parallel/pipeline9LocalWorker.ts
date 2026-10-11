@@ -3,7 +3,8 @@ import { getGlobalInMemoryCache } from "../../cache/setupGlobalCaches"
 import { executeParallelStageJob } from "./parallelStageWorkerJobs"
 import { executeMultiHeadHistoryJob } from "./executeMultiHeadHistoryJob"
 import { MultiHeadHistoryWorkerClient } from "./MultiHeadHistoryWorkerClient"
-import { ParallelMultiHeadHighDensityNodeSolver } from "./ParallelMultiHeadHighDensityNodeSolver"
+import { executeParallelHighDensityNodeJob } from "./executeParallelHighDensityNodeJob"
+import { assertParallelHighDensityNodeBatchJob, type ParallelHighDensityNodeBatchJob, type ParallelHighDensityNodeBatchResult } from "./parallelHighDensityNodeBatching"
 import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant } from "./parallelMultiHeadHistoryTypes"
 import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
 import { FirstValidA13WorkerClient } from "./FirstValidA13WorkerClient"
@@ -15,7 +16,6 @@ import type {
   Pipeline9LocalWorkerRequest,
   Pipeline9LocalWorkerResponse,
   Pipeline9ParallelHighDensityContext,
-  Pipeline9ParallelHighDensityNodeResult,
   Pipeline9ParallelHighDensityNodeJob,
 } from "./parallelWorkerTypes"
 
@@ -54,48 +54,28 @@ async function executeWorkerRequest({ taskId, job }: Pipeline9LocalWorkerRequest
       const { context } = getNodeWorkerContext(job)
       result = executeFirstValidA13NodeJob({ ...job, context })
     }
-    else if (job.kind !== "highDensityNode") result = executeParallelStageJob(job)
+    else if (job.kind !== "highDensityNode" && job.kind !== "highDensityNodeBatch") result = executeParallelStageJob(job)
     else {
       const { context, connMap } = getNodeWorkerContext(job)
-      // Execute the complete existing node policy, including regional repair,
-      // rather than introducing a second ordinary/regional implementation.
+      // One client owns the entire request, including every sequential batch
+      // child. Request IDs never restart and late deliveries retain their exact
+      // original promises until the next outer job arrives on this message port.
       historyClient = new MultiHeadHistoryWorkerClient(taskId, (request): void => self.postMessage(request))
       a13Client = new FirstValidA13WorkerClient(taskId, (request): void => self.postMessage(request))
       const ownerHistoryClient = historyClient
       const ownerA13Client = a13Client
-      const solver = new ParallelMultiHeadHighDensityNodeSolver({ ...context, connMap,
-        nodePortPoints: [job.nodeWithPortPoints], fixedHdRoutes: [],
-        nodePfById: { [job.nodeWithPortPoints.capacityMeshNodeId]: job.nodePf } }, historyClient.dispatch,
-        context.highDensityPolicy ?? "ordered", (): void => {
-          ownerHistoryClient.cancelUnusedHistories()
-          ownerA13Client.cancelUnusedCandidate()
-        }, context.firstValidClearance ?? 0.1,
-        job.disableIdleA13Candidate ? undefined : a13Client.dispatch, job.cancellationBuffer,
-        context.requirePhysicalCopper)
-      let algorithmException: { name: string; message: string; stack?: string } | null = null
-      try {
-        await solver.solveAsync()
-      } catch (error: unknown) {
-        // A competing owner may have become unused while executing its last
-        // original chunk. Preserve the exception as data so its frontier can
-        // consume it before a winner, or discard the explicitly cancelled loser.
-        if (!job.cancellationBuffer) throw error
-        algorithmException = error instanceof Error
-          ? { name: error.name, message: error.message, ...(error.stack ? { stack: error.stack } : {}) }
-          : { name: "Error", message: String(error) }
+      if (job.kind === "highDensityNodeBatch") {
+        assertParallelHighDensityNodeBatchJob(job, context)
+        const batch: ParallelHighDensityNodeBatchResult = { kind: "highDensityNodeBatch", results: [] }
+        for (const entry of job.nodes) {
+          const child = await executeParallelHighDensityNodeJob({ kind: "highDensityNode", contextId: job.contextId,
+            ...entry }, context, connMap, ownerHistoryClient, ownerA13Client, true)
+          batch.results.push({ nodeId: entry.nodeWithPortPoints.capacityMeshNodeId, result: child })
+        }
+        result = batch
+      } else {
+        result = await executeParallelHighDensityNodeJob(job, context, connMap, ownerHistoryClient, ownerA13Client)
       }
-      const nodeStats: Record<string, number> = {}
-      for (const [key, value] of Object.entries(solver.stats)) {
-        if (typeof value !== "number") throw new Error(`Pipeline9 node statistic ${key} is not numeric`)
-        nodeStats[key] = value
-      }
-      const policyStats = { nodeIterations: solver.iterations,
-        ...(context.highDensityPolicy === "first-valid" ? { firstValidStats: solver.firstValidStats } : {}) }
-      if (algorithmException) result = { status: "exception", exception: algorithmException, nodeStats, ...policyStats } satisfies Pipeline9ParallelHighDensityNodeResult
-      else if (solver.solved) result = { status: "solved", routes: solver.routes, nodeStats, ...policyStats } satisfies Pipeline9ParallelHighDensityNodeResult
-      else if (solver.failed && solver.error) result = { status: "failed", error: solver.error, nodeStats, ...policyStats } satisfies Pipeline9ParallelHighDensityNodeResult
-      else if (solver.wasCancelled) result = { status: "cancelled", nodeStats, ...policyStats } satisfies Pipeline9ParallelHighDensityNodeResult
-      else throw new Error("Pipeline9 worker finished without a solved or failed result")
     }
     self.postMessage({ taskId, ok: true, result } satisfies Pipeline9LocalWorkerResponse)
   } catch (error) {
@@ -104,8 +84,9 @@ async function executeWorkerRequest({ taskId, job }: Pipeline9LocalWorkerRequest
   }
 }
 
-function getNodeWorkerContext(job: Pipeline9ParallelHighDensityNodeJob | FirstValidA13NodeJob |
-  Omit<Pipeline9ParallelHighDensityNodeJob, "context"> | Omit<FirstValidA13NodeJob, "context">): {
+function getNodeWorkerContext(job: Pipeline9ParallelHighDensityNodeJob | FirstValidA13NodeJob | ParallelHighDensityNodeBatchJob |
+  Omit<Pipeline9ParallelHighDensityNodeJob, "context"> | Omit<FirstValidA13NodeJob, "context"> |
+  Omit<ParallelHighDensityNodeBatchJob, "context">): {
     context: Pipeline9ParallelHighDensityContext; connMap: ConnectivityMap
   } {
   if ("context" in job) {

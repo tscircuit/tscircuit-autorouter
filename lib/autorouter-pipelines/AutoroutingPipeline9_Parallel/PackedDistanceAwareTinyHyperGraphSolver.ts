@@ -5,6 +5,7 @@ import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-
 import type { TinyHyperGraphProblem, TinyHyperGraphSolverOptions, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
 import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
 import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
+import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
 
 /** Keep native route policy while packing its directed-hop candidate frontier. */
 export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHyperGraphSolver {
@@ -15,6 +16,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
   private packedCandidateQueue?: PackedIndexedCandidateHeap
   private readonly activeIncidences: TinyActiveIncidenceIndex
   private activeSearchGeneration = 0
+  private readonly distanceIndex?: TinyTriangularDistanceIndex
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
     options?: TinyHyperGraphSolverOptions) {
@@ -53,6 +55,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     this.activeIncidences = new TinyActiveIncidenceIndex(
       this.regionPorts, this.hopByIncidence, this.nextRegionByIncidence, this.candidateHopCapacity,
     )
+    this.distanceIndex = TinyTriangularDistanceIndex.forTopology(topology)
   }
 
   override _setup(): void {
@@ -112,6 +115,10 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     if (this.isRegionReservedForDifferentNet(currentCandidate.nextRegionId)) return
     const sourceX = topology.portX[currentCandidate.portId]!
     const sourceY = topology.portY[currentCandidate.portId]!
+    const distanceIndex = this.distanceIndex
+    const sourceLocal = distanceIndex?.getSourceLocalIndex(currentCandidate.portId, currentCandidate.nextRegionId) ?? -1
+    const sourceRevision = distanceIndex?.refreshPort(currentCandidate.portId, sourceX, sourceY) ?? 0
+    const sourceWrap = distanceIndex?.wrapGeneration ?? 0
     const start = this.regionPortOffsets[currentCandidate.nextRegionId]!
     const end = this.regionPortOffsets[currentCandidate.nextRegionId + 1]!
     const firstWord = start >>> 5
@@ -151,9 +158,18 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
         let knownSegmentDistance: number | undefined
         let lowerBoundCost = lowerBoundWithoutDistance
         if (this.ADD_SEGMENT_DISTANCE_TO_G) {
-          const dx = sourceX - topology.portX[neighborPortId]!
-          const dy = sourceY - topology.portY[neighborPortId]!
-          knownSegmentDistance = Math.sqrt(dx * dx + dy * dy)
+          const destinationX = topology.portX[neighborPortId]!
+          const destinationY = topology.portY[neighborPortId]!
+          if (distanceIndex && sourceLocal !== -1) {
+            knownSegmentDistance = distanceIndex.getDistance(
+              currentCandidate.nextRegionId, sourceLocal, currentCandidate.portId, sourceRevision,
+              sourceWrap, sourceX, sourceY, position - start, neighborPortId, destinationX, destinationY,
+            )
+          } else {
+            const dx = sourceX - destinationX
+            const dy = sourceY - destinationY
+            knownSegmentDistance = Math.sqrt(dx * dx + dy * dy)
+          }
           lowerBoundCost += knownSegmentDistance * this.DISTANCE_TO_COST
         }
         if (lowerBoundCost >= previousBestCost) continue

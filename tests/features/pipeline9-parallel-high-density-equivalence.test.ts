@@ -34,8 +34,10 @@ test("four local workers preserve serial node order, root names and terminal IDs
       expect(parallel.routes).toEqual(serial.routes)
       expect(parallel.stats.parallelNodeCount).toBe(nodes.length)
       expect(parallel.stats.solvedNodeCount).toBe(serial.stats.solvedNodeCount)
+      expect(parallel.stats.parallelBatchedNodeCount).toBe(8)
+      expect(parallel.stats.parallelNodeBatchCount).toBe(4)
     }
     expect(pool.stats.maxActiveWorkers).toBe(4)
-    expect(pool.stats.tasksCompleted).toBe(16)
+    expect(pool.stats.tasksCompleted).toBe(8)
   } finally { pool.dispose() }
 })

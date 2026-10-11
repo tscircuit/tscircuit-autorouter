@@ -4,6 +4,8 @@ import { Pipeline9LocalWorkerPool } from "./Pipeline9LocalWorkerPool"
 import type { Pipeline9ParallelHighDensityContext, Pipeline9ParallelHighDensityNodeResult } from "./parallelWorkerTypes"
 import type { FirstValidHighDensityStats, ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 import type { FirstValidA13NodeResult, FirstValidNodeFrontierStats } from "./parallelHighDensityFrontierTypes"
+import { isParallelHighDensityBatchEligible, PARALLEL_HIGH_DENSITY_NODE_BATCH_MAX_SIZE,
+  type ParallelHighDensityBatchEntry, type ParallelHighDensityNodeBatchResult } from "./parallelHighDensityNodeBatching"
 
 type SettledNodeResult =
   | { kind: "result"; result: Pipeline9ParallelHighDensityNodeResult }
@@ -13,6 +15,7 @@ export type Pipeline9ParallelHighDensitySolverParams = Pipeline9HighDensitySolve
   highDensityPolicy?: ParallelHighDensityPolicy
   firstValidClearance?: number
   requirePhysicalCopper?: boolean
+  batchTinyNodes?: boolean
 }
 
 /** Dispatch independent nodes together and commit in the serial pipeline order. */
@@ -27,13 +30,15 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
   private readonly firstValidClearance: number
   private readonly requirePhysicalCopper: boolean
   private readonly frontierStats?: FirstValidNodeFrontierStats
+  private readonly batchTinyNodes: boolean
 
-  constructor({ workerPool, highDensityPolicy = "ordered", firstValidClearance = 0.1, requirePhysicalCopper, ...params }: Pipeline9ParallelHighDensitySolverParams) {
+  constructor({ workerPool, highDensityPolicy = "ordered", firstValidClearance = 0.1, requirePhysicalCopper, batchTinyNodes = true, ...params }: Pipeline9ParallelHighDensitySolverParams) {
     super(params)
     this.workerPool = workerPool
     this.highDensityPolicy = highDensityPolicy
     this.firstValidClearance = firstValidClearance
     this.requirePhysicalCopper = requirePhysicalCopper ?? highDensityPolicy === "first-valid"
+    this.batchTinyNodes = batchTinyNodes
     if (highDensityPolicy === "first-valid") {
       this.firstValidStats = { eligiblePortfolioCount: 0, acceptedCandidateCount: 0,
         rejectedCandidateCount: 0, rejectionReasons: {}, winners: [] }
@@ -45,6 +50,9 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
     this.pendingEffects = []
     this.stats.parallelNodeCount = 0
     this.stats.parallelNodesCompleted = 0
+    this.stats.parallelNodeBatchCount = 0
+    this.stats.parallelBatchedNodeCount = 0
+    this.stats.parallelNodeSingletonCount = 0
   }
 
   override getSolverName(): string {
@@ -80,24 +88,61 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
     const nodes = [...this.unsolvedNodePortPoints].sort((a, b) =>
       b.portPoints.length ** 2 * b.width * b.height - a.portPoints.length ** 2 * a.width * a.height)
     this.stats.parallelNodeCount = nodes.length
+    const tinyNodes: NodeWithPortPoints[] = []
     for (const node of nodes) {
       if (this.highDensityPolicy === "first-valid" && this.isCompetitiveNode(node)) {
         this.launchCompetitiveNode(node, contextId, context)
         continue
       }
-      const promise = this.workerPool.run<Pipeline9ParallelHighDensityNodeResult>({
-        kind: "highDensityNode", contextId, context, nodeWithPortPoints: node,
-        nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
-      }).then(
-        (result): void => {
-          this.results.set(node, { kind: "result", result })
-          this.stats.parallelNodesCompleted++
-        },
-        (error: unknown): void => {
-          this.results.set(node, { kind: "exception", error: error instanceof Error ? error : new Error(String(error)) })
-        })
-      this.requests.set(node, promise)
+      if (this.batchTinyNodes && isParallelHighDensityBatchEligible(node, context)) tinyNodes.push(node)
+      else this.launchSingletonNode(node, contextId, context)
     }
+    // Difficult independent jobs retain singleton ownership and start first.
+    // Keep at least four waves of small jobs available for dynamic scheduling.
+    const batchSize = Math.min(PARALLEL_HIGH_DENSITY_NODE_BATCH_MAX_SIZE,
+      Math.max(2, Math.ceil(tinyNodes.length / (this.workerPool.workerCount * 4))))
+    for (let offset = 0; offset < tinyNodes.length; offset += batchSize) {
+      const batch = tinyNodes.slice(offset, offset + batchSize)
+      if (batch.length === 1) this.launchSingletonNode(batch[0]!, contextId, context)
+      else this.launchNodeBatch(batch, contextId, context)
+    }
+  }
+
+  private launchSingletonNode(node: NodeWithPortPoints, contextId: number,
+    context: Pipeline9ParallelHighDensityContext): void {
+    this.stats.parallelNodeSingletonCount++
+    const promise = this.workerPool.run<Pipeline9ParallelHighDensityNodeResult>({
+      kind: "highDensityNode", contextId, context, nodeWithPortPoints: node,
+      nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+    }).then(
+      (result): void => {
+        this.results.set(node, { kind: "result", result })
+        this.stats.parallelNodesCompleted++
+      },
+      (error: unknown): void => {
+        this.results.set(node, { kind: "exception", error: error instanceof Error ? error : new Error(String(error)) })
+      })
+    this.requests.set(node, promise)
+  }
+
+  private launchNodeBatch(nodes: NodeWithPortPoints[], contextId: number,
+    context: Pipeline9ParallelHighDensityContext): void {
+    const entries: ParallelHighDensityBatchEntry[] = nodes.map((node) => ({ nodeWithPortPoints: node,
+      nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null }))
+    this.stats.parallelNodeBatchCount++
+    this.stats.parallelBatchedNodeCount += nodes.length
+    const promise = this.workerPool.run<ParallelHighDensityNodeBatchResult>({
+      kind: "highDensityNodeBatch", contextId, context, nodes: entries,
+    }).then((batch): void => {
+      for (let index = 0; index < nodes.length; index++) {
+        this.results.set(nodes[index]!, { kind: "result", result: batch.results[index]!.result })
+        this.stats.parallelNodesCompleted++
+      }
+    }, (error: unknown): void => {
+      const failure = error instanceof Error ? error : new Error(String(error))
+      for (const node of nodes) this.results.set(node, { kind: "exception", error: failure })
+    })
+    for (const node of nodes) this.requests.set(node, promise)
   }
 
   private isCompetitiveNode(node: NodeWithPortPoints): boolean {
@@ -119,6 +164,7 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
     const stats = this.frontierStats
     if (!stats) throw new Error("Competitive HD frontier is missing its statistics")
     stats.pairedNodeCount++
+    this.stats.parallelNodeSingletonCount++
     const started = performance.now()
     const genericCancellation = new Int32Array(new SharedArrayBuffer(4))
     const a13Cancellation = new Int32Array(new SharedArrayBuffer(4))

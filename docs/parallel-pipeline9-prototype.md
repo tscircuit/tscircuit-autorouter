@@ -394,8 +394,20 @@ improves to 1.731×, but most smaller boards remain below 1.5×. Evidence is in
 Separate diagnostics retain the corrected force-speculation and adaptive
 pathing configurations; they are not merged with this full-dataset result.
 
-The next changes remove closed graph incidences from ordered neighbor scans
-and reuse exact force-projection geometry. Their functional checks preserve
-routes, sweep order, search state and budgets; their speedup remains unmeasured.
+Snapshot `64ca4e9a0` removes closed graph incidences from ordered neighbor scans,
+reuses exact force-projection geometry, and avoids repeated same-net obstacle
+classification during native simplification. Its complete paired evaluation is
+running with the same ordered/indexed configuration and force trials disabled.
+The exact dispatch arguments and immutable run URLs are recorded in
+[parallel-srj18-64ca4e9a0-dispatch.json](benchmarks/parallel-srj18-64ca4e9a0-dispatch.json).
+
+The next snapshot shares a bounded triangular distance cache between native
+parent and completion searches, memoizes scalar high-density cost math while
+retaining native closest-point cache calls, and batches up to 16 simple ordered
+high-density nodes per worker request. The complete sample006 search preserves
+parent/completion states and the 2,000,000/3,683,422 iteration counts. All 583
+sample001 high-density node outputs, statistics and limits match native solves
+with four real workers; batching reduces its dispatch count to 317. These are
+functional and work-count checks, not measured speedups.
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.

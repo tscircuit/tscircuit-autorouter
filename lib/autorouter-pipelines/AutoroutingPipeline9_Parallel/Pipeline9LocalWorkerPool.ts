@@ -7,6 +7,7 @@ import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant, MultiHeadHistoryR
 import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant, FirstValidA13CandidateRequest, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
 import { assertParallelNodeBatchResult } from "./parallelNodeJobBatching"
 import { assertParallelGlobalDrcTrialResult } from "./executeParallelGlobalDrcTrial"
+import { assertParallelHighDensityNodeBatchJob, assertParallelHighDensityNodeBatchResult } from "./parallelHighDensityNodeBatching"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -70,6 +71,15 @@ export class Pipeline9LocalWorkerPool {
   run<T>(job: Pipeline9LocalWorkerJob): Promise<T> {
     if (this.terminalError) return Promise.reject(this.terminalError)
     return new Promise<T>((resolve, reject) => {
+      if (job.kind === "highDensityNodeBatch") {
+        try { assertParallelHighDensityNodeBatchJob(job, job.context) }
+        catch (error: unknown) {
+          const failure = error instanceof Error ? error : new Error(String(error))
+          reject(failure)
+          this.fail(failure)
+          return
+        }
+      }
       this.queue.push({ taskId: ++this.nextTaskId, job,
         resolve: (result: unknown): void => resolve(result as T), reject })
       try { this.dispatch() }
@@ -110,7 +120,9 @@ export class Pipeline9LocalWorkerPool {
           if (response.kind === "requestMultiHeadHistories") this.admitHistoryRequest(slot, response)
           else if (response.kind === "requestFirstValidA13Candidate") this.admitA13Request(slot, response)
           else if (response.kind === "cancelMultiHeadHistories" || response.kind === "cancelFirstValidA13Candidate") {
-            if (!task || task.taskId !== response.taskId || task.job.kind !== "highDensityNode") {
+            if (!task || task.taskId !== response.taskId ||
+                (task.job.kind !== "highDensityNode" && task.job.kind !== "highDensityNodeBatch") ||
+                (task.job.kind === "highDensityNodeBatch" && response.kind !== "cancelMultiHeadHistories")) {
               throw new Error("Multi-head cancellation has no active high-density owner")
             }
             this.cancelOwnerCandidates(response.taskId)
@@ -162,7 +174,14 @@ export class Pipeline9LocalWorkerPool {
           return
         }
       }
-      if (task.job.kind === "highDensityNode") this.cancelOwnerCandidates(task.taskId)
+      if (response.ok && task.job.kind === "highDensityNodeBatch") {
+        try { assertParallelHighDensityNodeBatchResult(task.job, response.result) }
+        catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityNodeBatch") this.cancelOwnerCandidates(task.taskId)
       slot.task = null
       this.stats.tasksCompleted++
       if (response.ok) task.resolve(response.result)
@@ -185,7 +204,8 @@ export class Pipeline9LocalWorkerPool {
   }
 
   private admitHistoryRequest(owner: WorkerSlot, request: MultiHeadHistoryRequest): void {
-    if (!owner.task || owner.task.taskId !== request.taskId || owner.task.job.kind !== "highDensityNode") {
+    if (!owner.task || owner.task.taskId !== request.taskId ||
+        (owner.task.job.kind !== "highDensityNode" && owner.task.job.kind !== "highDensityNodeBatch")) {
       this.fail(new Error("Multi-head history request has no active high-density owner"))
       return
     }
@@ -403,7 +423,7 @@ export class Pipeline9LocalWorkerPool {
       const task = this.queue.shift()!
       slot.task = task
       let job: Pipeline9LocalWorkerRequest["job"] = task.job
-      if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityA13Node") {
+      if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityA13Node" || task.job.kind === "highDensityNodeBatch") {
         if (slot.contextId === task.job.contextId) {
           const { context: _context, ...nodeJob } = task.job
           job = nodeJob
