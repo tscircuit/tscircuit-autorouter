@@ -13,6 +13,7 @@ import { PhysicalEffortCleanupSolver } from "./PhysicalEffortCleanupSolver"
 import { markPhysicalCopperTransitions } from "./markPhysicalCopperTransitions"
 import { ParallelPortPointPathingSolver, type Pipeline9PathingStrategy } from "./ParallelPortPointPathingSolver"
 import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointDrcRepairSolver"
+import { ParallelPipeline9GlobalDrcForceImproveSolver } from "./ParallelPipeline9GlobalDrcForceImproveSolver"
 import { Pipeline9MemoizedGlobalDrcForceImproveSolver } from "./Pipeline9MemoizedGlobalDrcForceImproveSolver"
 import type { ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 import { Pipeline9LayerAwareNetToPointPairsSolver } from "./Pipeline9LayerAwareNetToPointPairsSolver"
@@ -24,6 +25,8 @@ export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolve
   /** Supply a persistent pool to reuse worker imports across boards. */
   workerPool?: Pipeline9LocalWorkerPool
   enableParallelPathSimplification?: boolean
+  /** Retain native DRC trial execution while sharing other worker stages. */
+  enableParallelDrcTrials?: boolean
   highDensityPolicy?: ParallelHighDensityPolicy
   /** Enforce physical terminals and copper transitions with any pathing strategy. */
   physicalRouting?: boolean
@@ -99,7 +102,14 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     const globalDrcIndex = this.pipelineDef.findIndex((step) => step.solverName === "globalDrcForceImproveSolver")
     const globalDrcStep = this.pipelineDef[globalDrcIndex]
     if (!globalDrcStep) throw new Error("Pipeline9 globalDrcForceImproveSolver step is missing")
-    this.pipelineDef[globalDrcIndex] = { ...globalDrcStep, solverClass: Pipeline9MemoizedGlobalDrcForceImproveSolver as any } as any
+    this.pipelineDef[globalDrcIndex] = { ...globalDrcStep,
+      solverClass: (opts.enableParallelDrcTrials === false
+        ? Pipeline9MemoizedGlobalDrcForceImproveSolver : ParallelPipeline9GlobalDrcForceImproveSolver) as any,
+      getConstructorParams: (cms: AutoroutingPipelineSolver9_Parallel): any[] => {
+        const [params] = globalDrcStep.getConstructorParams(cms)
+        return [{ ...params, workerPool: cms.workerPool }]
+      },
+    } as any
     for (const [solverName, solverClass] of [
       ["highDensityForceImproveSolver", ParallelHighDensityForceImproveSolver],
       ["highDensityRepairSolver", ParallelHighDensityRepairSolver],
@@ -115,9 +125,12 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
           const [params] = getStageParams(solver)
           if (alternativeRouting && solverName === "pipeline9JointDrcRepairSolver") {
             const jointParams = params as ConstructorParameters<typeof ParallelPipeline9JointDrcRepairSolver>[0]
-            return [{ ...jointParams, workerPool: solver.workerPool,
+            return [{ ...jointParams, workerPool: solver.workerPool, enableParallelDrcTrials: opts.enableParallelDrcTrials !== false,
               newHdRoutes: markPhysicalCopperTransitions(jointParams.newHdRoutes, jointParams),
             }]
+          }
+          if (solverName === "pipeline9JointDrcRepairSolver") {
+            return [{ ...params, workerPool: solver.workerPool, enableParallelDrcTrials: opts.enableParallelDrcTrials !== false }]
           }
           return [{ ...params, workerPool: solver.workerPool }]
         },
@@ -158,6 +171,15 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     throw error
   }
 
+  override _step(): void {
+    const child = this.activeSubSolver
+    if (child instanceof ParallelPipeline9GlobalDrcForceImproveSolver && !child.solved && !child.failed) {
+      child.startAsyncExecution()
+      return
+    }
+    super._step()
+  }
+
   async stepAsync(): Promise<void> {
     if (this.solved || this.failed) return
     try {
@@ -188,6 +210,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
           !(this.activeSubSolver instanceof ParallelHighDensityForceImproveSolver) &&
           !(this.activeSubSolver instanceof ParallelHighDensityRepairSolver) &&
           !(this.activeSubSolver instanceof ParallelPipeline9JointDrcRepairSolver) &&
+          !(this.activeSubSolver instanceof ParallelPipeline9GlobalDrcForceImproveSolver) &&
           !(this.activeSubSolver instanceof ParallelTraceSimplificationSolver)) {
           this.activeSubSolver.solve()
           this.step()

@@ -16,7 +16,7 @@ class SnapshotJoint extends Pipeline9JointDrcRepairSolver {
     const errors = Array.isArray(evaluation) ? evaluation : evaluation.errorsWithCenters ?? evaluation.errors
     const error = errors[0]
     if (!error) throw new Error("Global DRC snapshot fixture has no initial routing violation")
-    return { kind: "globalDrcForceTrial", contextId: 100_000 + version,
+    return { kind: "globalDrcForceTrial", evaluationMode: "joint", contextId: 100_000 + version,
       context, snapshotId: 200_000 + version, snapshot: { srj: context.engineSrj, hdRoutes: routes },
       trial: { kind: "safe-trace-layer", trialIndex, error,
         changedRouteIndex: 0, targetZ: 1, spanExpansion: "full", directionVariant: trialIndex % 4 } }

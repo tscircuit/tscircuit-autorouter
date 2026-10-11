@@ -6,7 +6,7 @@ import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/Autorout
 import { createParallelGlobalDrcFixture } from "../fixtures/parallel-global-drc-fixture"
 
 class ContextJoint extends Pipeline9JointDrcRepairSolver {
-  makeJob(kind: "force-scale" | "safe-trace-layer"): ParallelGlobalDrcTrialJob {
+  makeJob(kind: "force-scale" | "safe-trace-layer", evaluationMode: "joint" | "native"): ParallelGlobalDrcTrialJob {
     const context = this.getPreparedIndexedDrcContext()
     if (!context) throw new Error("Global force protocol fixture has no evaluation context")
     const snapshot = { srj: context.engineSrj, hdRoutes: this.exactRepairSolver!.params.hdRoutes }
@@ -15,7 +15,9 @@ class ContextJoint extends Pipeline9JointDrcRepairSolver {
       scale: 1, enableTargetedErrorSweep: false, canMoveSharedViaSiteWithoutTradingDrcErrors: false,
       enableTraceViaOwnerTargeting: true } : { ...common, kind, changedRouteIndex: 0,
       targetZ: 1, spanExpansion: 0, directionVariant: 0 }
-    return { kind: "globalDrcForceTrial", contextId: 1, context, snapshotId: 1, snapshot, trial }
+    const commonJob = { kind: "globalDrcForceTrial" as const, contextId: 1, snapshotId: 1, snapshot, trial }
+    return evaluationMode === "joint" ? { ...commonJob, evaluationMode, context }
+      : { ...commonJob, evaluationMode, context: { srj: context.engineSrj, engineOptions: context.engineOptions } }
   }
 }
 
@@ -49,8 +51,9 @@ function createControlledPool(): { pool: Pipeline9LocalWorkerPool; workers: Cont
 
 test("real pool rejects malformed unused force trials globally but preserves typed speculative errors", async (): Promise<void> => {
   const fixture = new ContextJoint(createParallelGlobalDrcFixture(false))
+  for (const evaluationMode of ["joint", "native"] as const) {
   for (const kind of ["force-scale", "safe-trace-layer"] as const) {
-    const job = fixture.makeJob(kind)
+    const job = fixture.makeJob(kind, evaluationMode)
     const valid: ParallelGlobalDrcTrialResult = { kind: "globalDrcForceTrial", trialIndex: 0,
       placements: kind === "force-scale" ? [{ status: "unchanged" }] : [{ status: "unchanged" }, { status: "unchanged" }] }
     const evaluated = { status: "evaluated" as const, routes: [], preparedEvaluation: {
@@ -58,6 +61,10 @@ test("real pool rejects malformed unused force trials globally but preserves typ
       preparedCandidateDrcInput: { evaluatedTraces: [], routedTraces: [],
         movableTraceIds: new Set<string>(), originalTraceIdByEvaluationTraceId: new Map<string, string>(),
         solverTraceIdByEvaluationTraceId: new Map<string, string>() } } }
+    const lastRunStats = { traceCount: 0, segmentCount: 0, viaCount: 0, obstacleCount: 0,
+      broadPhaseCandidateCount: 0, exactCheckCount: 0 }
+    const nativeEvaluated = { status: "evaluated" as const, routes: [], nativeEvaluation: {
+      candidateKey: "[]", evaluatedTraceKey: "[]", lastRunStats, evaluatedDrc: { errors: [], errorsWithCenters: [] } } }
     const malformed: unknown[] = [
       { ...valid, kind: "different" },
       { ...valid, trialIndex: 1 },
@@ -76,6 +83,13 @@ test("real pool rejects malformed unused force trials globally but preserves typ
       delete preparedCandidateDrcInput[field]
       const malformedEvaluated = { ...evaluated, preparedEvaluation: {
         ...evaluated.preparedEvaluation, preparedCandidateDrcInput } }
+      malformed.push({ ...valid, placements: kind === "force-scale" ? [malformedEvaluated]
+        : [{ status: "unchanged" }, malformedEvaluated] })
+    }
+    for (const field of ["candidateKey", "evaluatedTraceKey", "lastRunStats", "evaluatedDrc"]) {
+      const nativeEvaluation: Record<string, unknown> = { ...nativeEvaluated.nativeEvaluation }
+      delete nativeEvaluation[field]
+      const malformedEvaluated = { ...nativeEvaluated, nativeEvaluation }
       malformed.push({ ...valid, placements: kind === "force-scale" ? [malformedEvaluated]
         : [{ status: "unchanged" }, malformedEvaluated] })
     }
@@ -100,9 +114,11 @@ test("real pool rejects malformed unused force trials globally but preserves typ
       const typed: ParallelGlobalDrcTrialResult = { kind: "globalDrcForceTrial", trialIndex: 0,
         placements: kind === "force-scale"
           ? [{ status: "exception", countedBeforeException: true, routes: [], candidateKey: "[]",
-            exception: { name: "TypeError", message: "unused speculative trial" } }]
+            exception: { name: "TypeError", message: "unused speculative trial" },
+            ...(evaluationMode === "native" ? { nativeExceptionEvaluation: { evaluatedTraceKey: "[]", lastRunStats } } : {}) }]
           : [{ status: "exception", countedBeforeException: true, routes: [], candidateKey: "[]",
-            exception: { name: "TypeError", message: "unused speculative trial" } }, { status: "unchanged" }] }
+            exception: { name: "TypeError", message: "unused speculative trial" },
+            ...(evaluationMode === "native" ? { nativeExceptionEvaluation: { evaluatedTraceKey: "[]", lastRunStats } } : {}) }, { status: "unchanged" }] }
       workers[0]!.deliver(typed)
       workers[1]!.deliver(valid)
       expect(await pending[0]).toEqual(typed)
@@ -116,5 +132,6 @@ test("real pool rejects malformed unused force trials globally but preserves typ
     } finally {
       pool.dispose()
     }
+  }
   }
 })

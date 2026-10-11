@@ -1,5 +1,5 @@
 import { HighDensityForceImproveSolver } from "./force-improvement-fork/HighDensityForceImproveSolver"
-import { HighDensityRepairSolver } from "high-density-repair02"
+import { Pipeline9IndexedHighDensityRepairSolver } from "./repair02/Pipeline9IndexedHighDensityRepairSolver"
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
 import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
@@ -31,7 +31,7 @@ function executeForceImproveNode(job: ParallelForceImproveNodeJob): ParallelForc
 }
 
 function executeRepairNode(job: ParallelRepairNodeJob): ParallelRepairNodeResult {
-  const solver = new HighDensityRepairSolver({
+  const solver = new Pipeline9IndexedHighDensityRepairSolver({
     repairBoundaryDiagonals: false,
     sample: job.sample,
     margin: job.margin,

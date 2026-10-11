@@ -12,12 +12,11 @@ import type { Pipeline9PreparedIndexedDrcEvaluation } from "./createPreparedJoin
 import type { HighDensityRoute } from "../../types/high-density-types"
 import type { ParallelGlobalDrcTrial, ParallelGlobalDrcTrialJob, ParallelGlobalDrcTrialPlacement, ParallelGlobalDrcTrialResult, ParallelGlobalDrcTrialSnapshot } from "./parallelGlobalDrcTrialTypes"
 import { assertParallelGlobalDrcTrialResult } from "./executeParallelGlobalDrcTrial"
-
-let nextGlobalDrcContextId = 0
-let nextGlobalDrcSnapshotId = 0
+import { allocateParallelGlobalDrcId } from "./allocateParallelGlobalDrcId"
 
 type Params = ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0] & {
   workerPool: ParallelStageWorkerPool
+  enableParallelDrcTrials?: boolean
 }
 
 export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepairSolver {
@@ -36,11 +35,18 @@ export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepa
   protected override createExactRepairSolver(
     params: ConstructorParameters<typeof GlobalDrcBranchPortfolioSolver>[0],
   ): GlobalDrcBranchPortfolioSolver {
+    // params is assigned by the original constructor before this factory runs.
+    // This explicit scheduling option preserves native DRC consumption while
+    // retaining the regional workers, dense searches and memoized engine.
+    if ((this.params as Params).enableParallelDrcTrials === false) {
+      return super.createExactRepairSolver(params)
+    }
     // The base constructor creates this child before workerPool initializes.
     // These providers resolve pool/context only when the first frontier runs.
     return new ParallelGlobalDrcBranchPortfolioSolver(params, {
       dispatch: (trials: ParallelGlobalDrcTrial[]): Promise<ParallelGlobalDrcTrialResult[]> => this.dispatchGlobalDrcTrials(trials),
       adopt: (placement: Extract<ParallelGlobalDrcTrialPlacement, { status: "evaluated" }>): void => {
+        if (!("preparedEvaluation" in placement)) throw new Error("Joint DRC adopted a standalone evaluator response")
         this.preparedTrialEvaluation = placement.preparedEvaluation
         this.preparedTrialException = undefined
       },
@@ -84,13 +90,13 @@ export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepa
     if (!firstTrial) throw new Error("Parallel global DRC force frontier contains no trials")
     const snapshot: ParallelGlobalDrcTrialSnapshot = { srj: firstTrial.srj,
       hdRoutes: firstTrial.hdRoutes, connectivity: firstTrial.connectivity }
-    const snapshotId = ++nextGlobalDrcSnapshotId
+    const snapshotId = allocateParallelGlobalDrcId()
     const context = this.getPreparedIndexedDrcContext()
     if (!context) throw new Error("Parallel global DRC force frontier is missing its evaluation context")
     const contextKey = JSON.stringify(context)
     if (contextKey !== this.globalDrcContextKey) {
       this.globalDrcContextKey = contextKey
-      this.globalDrcContextId = ++nextGlobalDrcContextId
+      this.globalDrcContextId = allocateParallelGlobalDrcId()
     }
     if (this.globalDrcContextId === undefined) throw new Error("Parallel global DRC context was not assigned")
     const jobs: ParallelGlobalDrcTrialJob[] = trials.map((trial) => {
@@ -103,7 +109,7 @@ export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepa
       void srj
       void hdRoutes
       void connectivity
-      return { kind: "globalDrcForceTrial", contextId: this.globalDrcContextId!,
+      return { kind: "globalDrcForceTrial", evaluationMode: "joint", contextId: this.globalDrcContextId!,
         context, snapshotId, snapshot, trial: descriptor }
     })
     const results = await Promise.all(jobs.map((job) => this.workerPool.run<ParallelGlobalDrcTrialResult>(job)))

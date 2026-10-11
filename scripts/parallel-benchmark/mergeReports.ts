@@ -37,6 +37,7 @@ type SourceOptions = Record<string, unknown> & {
   effort: number
   workerCount: number
   parallelPathSimplification: boolean
+  parallelDrcTrials: boolean
   pathingStrategy: BenchmarkPathingStrategy
   highDensityPolicy: BenchmarkHighDensityPolicy
   physicalRouting: boolean
@@ -77,6 +78,7 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
     pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset",
     highDensityPolicy: (raw as Record<string, unknown>).highDensityPolicy ?? "ordered",
     physicalRouting: (raw as Record<string, unknown>).physicalRouting === undefined ? false : (raw as Record<string, unknown>).physicalRouting,
+    parallelDrcTrials: (raw as Record<string, unknown>).parallelDrcTrials === undefined ? true : (raw as Record<string, unknown>).parallelDrcTrials,
   } as SourceOptions
   if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost" && options.pathingStrategy !== "landmark" && options.pathingStrategy !== "negotiated" && options.pathingStrategy !== "goal-balls") {
     throw new Error(`Invalid pathingStrategy: ${source.sourcePath}`)
@@ -86,6 +88,9 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
   }
   if (typeof options.physicalRouting !== "boolean") {
     throw new Error(`Invalid physicalRouting: ${source.sourcePath}`)
+  }
+  if (typeof options.parallelDrcTrials !== "boolean") {
+    throw new Error(`Invalid parallelDrcTrials: ${source.sourcePath}`)
   }
   for (const key of ["repetitions", "timeoutMs", "effort", "workerCount", "targetSpeedup"] as const) {
     if (typeof options[key] !== "number" || !Number.isFinite(options[key]) || options[key] <= 0) {

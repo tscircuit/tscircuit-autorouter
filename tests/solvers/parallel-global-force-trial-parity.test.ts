@@ -23,11 +23,12 @@ class FixtureCoordinator implements ParallelGlobalDrcTrialCoordinator {
 
   async dispatch(trials: ParallelGlobalDrcTrial[]): Promise<ParallelGlobalDrcTrialResult[]> {
     this.batches.push(trials)
+    expect(trials.length).toBeLessThanOrEqual(4)
     const snapshotId = this.contextId * 1000 + this.batches.length
     const results = trials.map((trial) => {
       const { srj, hdRoutes, connectivity, ...descriptor } = structuredClone(trial)
       return executeParallelGlobalDrcTrial({
-        kind: "globalDrcForceTrial", contextId: this.contextId,
+        kind: "globalDrcForceTrial", evaluationMode: "joint", contextId: this.contextId,
         context: this.context, snapshotId, snapshot: { srj, hdRoutes, connectivity },
         trial: descriptor,
       })
@@ -36,6 +37,7 @@ class FixtureCoordinator implements ParallelGlobalDrcTrialCoordinator {
   }
 
   adopt(placement: Extract<ParallelGlobalDrcTrialPlacement, { status: "evaluated" }>): void {
+    if (!("preparedEvaluation" in placement)) throw new Error("Joint fixture received a native evaluation")
     expect(placement.preparedEvaluation.candidateKey).toBe(JSON.stringify(placement.routes))
     expect(placement.preparedEvaluation.evaluatedDrc.errors).toBeArray()
     this.adopted += 1
@@ -93,49 +95,53 @@ test("asynchronous global force trials retain every native prefix, safe directio
   let safeBatches = 0
   let forceBatches = 0
   let adopted = 0
-  for (const safe of [false, true]) {
-    for (const signalCount of [1, 3]) {
-      for (const maxIterations of [1, 3]) {
-        const fixture = createBoundedRegionalRepairFixture(signalCount)
-        fixture.originalSrj.obstacles = fixture.originalSrj.obstacles.map((obstacle, index) => ({
-          ...obstacle, connectedTo: [...obstacle.connectedTo, `pcb_smtpad_fixture_${index}`],
-        }))
-        const input = structuredClone(fixture.routes)
-        const params: NativeParams = {
-          srj: fixture.originalSrj as SimpleRouteJson, hdRoutes: fixture.routes,
-          connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
-          effort: 1, maxIterations, enableSafeTraceLayerMoves: safe,
-          enableBroadFallback: false, enableLargeBoardBroadFallback: false,
-          enablePostSolveClearanceRelaxation: false,
-        }
-        const coordinator = new FixtureCoordinator(++contextId, createContext(fixture))
-        const original = new GlobalDrcForceImproveSolver(params)
-        const parallel = new ParallelGlobalDrcForceImproveSolver(params, coordinator)
-        expect(parallel.getSolverName()).toBe(original.getSolverName())
-        while (!original.solved && !original.failed) {
-          const iterations = parallel.iterations
-          await parallel.prepareForNextStep()
-          expect(parallel.iterations).toBe(iterations)
-          expect(parallel.solved).toBe(false)
+  let fourCandidateSafeBatches = 0
+  for (const effort of [1, 3]) {
+    for (const safe of [false, true]) {
+      for (const signalCount of [1, 3]) {
+        for (const maxIterations of [1, 3]) {
+          const fixture = createBoundedRegionalRepairFixture(signalCount)
+          fixture.originalSrj.obstacles = fixture.originalSrj.obstacles.map((obstacle, index) => ({
+            ...obstacle, connectedTo: [...obstacle.connectedTo, `pcb_smtpad_fixture_${index}`],
+          }))
+          const input = structuredClone(fixture.routes)
+          const params: NativeParams = {
+            srj: fixture.originalSrj as SimpleRouteJson, hdRoutes: fixture.routes,
+            connMap: getConnectivityMapFromSimpleRouteJson(fixture.originalSrj),
+            effort, maxIterations, enableSafeTraceLayerMoves: safe,
+            enableBroadFallback: false, enableLargeBoardBroadFallback: false,
+            enablePostSolveClearanceRelaxation: false,
+          }
+          const coordinator = new FixtureCoordinator(++contextId, createContext(fixture))
+          const original = new GlobalDrcForceImproveSolver(params)
+          const parallel = new ParallelGlobalDrcForceImproveSolver(params, coordinator)
+          expect(parallel.getSolverName()).toBe(original.getSolverName())
+          while (!original.solved && !original.failed) {
+            const iterations = parallel.iterations
+            await parallel.prepareForNextStep()
+            expect(parallel.iterations).toBe(iterations)
+            expect(parallel.solved).toBe(false)
+            expect(parallel.failed).toBe(false)
+            await parallel.prepareForNextStep()
+            original.step()
+            parallel.step()
+            expect(observableState(parallel)).toEqual(observableState(original))
+          }
+          expect(parallel.solved).toBe(true)
           expect(parallel.failed).toBe(false)
-          await parallel.prepareForNextStep()
-          original.step()
-          parallel.step()
-          expect(observableState(parallel)).toEqual(observableState(original))
-        }
-        expect(parallel.solved).toBe(true)
-        expect(parallel.failed).toBe(false)
-        expect(fixture.routes).toEqual(input)
-        expect(coordinator.discarded).toBe(coordinator.adopted)
-        adopted += coordinator.adopted
-        for (const batch of coordinator.batches) {
-          if (batch[0]!.kind === "safe-trace-layer") {
-            safeBatches += 1
-            expect(batch.length).toBeLessThanOrEqual(3)
-            expect(batch.every((trial) => trial.kind === "safe-trace-layer")).toBe(true)
-          } else {
-            forceBatches += 1
-            expect(batch.map((trial) => trial.kind === "force-scale" ? trial.scale : undefined)).toEqual([1, 1.75, -1])
+          expect(fixture.routes).toEqual(input)
+          expect(coordinator.discarded).toBe(coordinator.adopted)
+          adopted += coordinator.adopted
+          for (const batch of coordinator.batches) {
+            if (batch[0]!.kind === "safe-trace-layer") {
+              safeBatches += 1
+              expect(batch.length).toBeLessThanOrEqual(Math.min(4, effort * 3))
+              if (batch.length === 4) fourCandidateSafeBatches += 1
+              expect(batch.every((trial) => trial.kind === "safe-trace-layer")).toBe(true)
+            } else {
+              forceBatches += 1
+              expect(batch.map((trial) => trial.kind === "force-scale" ? trial.scale : undefined)).toEqual([1.75, -1].slice(0, batch.length))
+            }
           }
         }
       }
@@ -144,4 +150,5 @@ test("asynchronous global force trials retain every native prefix, safe directio
   expect(safeBatches).toBeGreaterThan(0)
   expect(forceBatches).toBeGreaterThan(0)
   expect(adopted).toBeGreaterThan(0)
+  expect(fourCandidateSafeBatches).toBeGreaterThan(0)
 })

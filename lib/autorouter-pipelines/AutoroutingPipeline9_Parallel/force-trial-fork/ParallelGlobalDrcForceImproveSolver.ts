@@ -1541,28 +1541,53 @@ export class ParallelGlobalDrcForceImproveSolver extends BaseSolver {
       this.errorCursor = (errorIndex + 1) % prioritizedErrors.length
       const canMoveSharedViaSiteWithoutTradingDrcErrors = bestIssueCount === 1
 
-      const forceTrials: Array<Extract<ParallelGlobalDrcTrial, { kind: "force-scale" }>> =
-        getForceScalesForEffort(this.effort).map((scale) => ({
-          kind: "force-scale", trialIndex: this.nextTrialIndex++,
-          srj: this.srj, hdRoutes: bestRoutes, error,
-          connectivity: this.getTrialConnectivity(),
-          traceRouteIndexById: bestSnapshot.traceRouteIndexById,
-          scale, enableTargetedErrorSweep: this.enableTargetedErrorSweep,
-          canMoveSharedViaSiteWithoutTradingDrcErrors,
-          enableTraceViaOwnerTargeting: this.enableTraceViaOwnerTargeting,
-        }))
-      const forceResults = this.correlateTrialResults(forceTrials, yield forceTrials)
-      for (const trial of forceTrials) {
+      const forceScales = getForceScalesForEffort(this.effort)
+      let forceTrials: Array<Extract<ParallelGlobalDrcTrial, { kind: "force-scale" }>> | undefined
+      let forceResults: Map<number, ParallelGlobalDrcTrialResult> | undefined
+      let forceFrontierStart = 0
+      for (let scaleIndex = 0; scaleIndex < forceScales.length; scaleIndex++) {
         if (candidateAttemptsThisStep >= maxCandidateAttemptsThisStep) break
-        const placement = forceResults.get(trial.trialIndex)!.placements[0]!
-        if (placement.status === "unchanged") continue
-        if (placement.status === "exception" && !placement.countedBeforeException) {
-          throw reconstructTrialException(placement.exception)
+        let materializedCandidateRoutes: HighDensityRoute[]
+        let candidateSnapshot: DrcSnapshot
+        if (scaleIndex === 0) {
+          // The first native acceptance frequently ends this loop. Retain its
+          // original cache/accounting boundary before starting unused work.
+          const candidateRoutes = cloneRoutes(bestRoutes)
+          const changed = applyDrcErrorForces(this.srj, candidateRoutes, [error],
+            bestSnapshot.traceRouteIndexById, forceScales[scaleIndex]!, this.connMap,
+            true, this.enableTargetedErrorSweep, canMoveSharedViaSiteWithoutTradingDrcErrors,
+            this.enableTraceViaOwnerTargeting)
+          if (!changed) continue
+          materializedCandidateRoutes = materializeRoutes(candidateRoutes)
+          candidateAttemptsThisStep += 1
+          this.candidateAttempts += 1
+          candidateSnapshot = this.getSnapshot(materializedCandidateRoutes)
+        } else {
+          if (!forceTrials || !forceResults || scaleIndex >= forceFrontierStart + forceTrials.length) {
+            forceFrontierStart = scaleIndex
+            const frontierSize = Math.min(4, maxCandidateAttemptsThisStep - candidateAttemptsThisStep)
+            forceTrials = forceScales.slice(scaleIndex, scaleIndex + frontierSize).map((scale) => ({
+              kind: "force-scale", trialIndex: this.nextTrialIndex++,
+              srj: this.srj, hdRoutes: bestRoutes, error,
+              connectivity: this.getTrialConnectivity(),
+              traceRouteIndexById: bestSnapshot.traceRouteIndexById,
+              scale, enableTargetedErrorSweep: this.enableTargetedErrorSweep,
+              canMoveSharedViaSiteWithoutTradingDrcErrors,
+              enableTraceViaOwnerTargeting: this.enableTraceViaOwnerTargeting,
+            }))
+            forceResults = this.correlateTrialResults(forceTrials, yield forceTrials)
+          }
+          const trial = forceTrials[scaleIndex - forceFrontierStart]!
+          const placement = forceResults.get(trial.trialIndex)!.placements[0]!
+          if (placement.status === "unchanged") continue
+          if (placement.status === "exception" && !placement.countedBeforeException) {
+            throw reconstructTrialException(placement.exception)
+          }
+          materializedCandidateRoutes = placement.routes
+          candidateAttemptsThisStep += 1
+          this.candidateAttempts += 1
+          candidateSnapshot = this.getPreparedTrialSnapshot(placement)
         }
-        const materializedCandidateRoutes = placement.routes
-        candidateAttemptsThisStep += 1
-        this.candidateAttempts += 1
-        const candidateSnapshot = this.getPreparedTrialSnapshot(placement)
         const candidateViaIssueCount = this.getViaIssueCount(candidateSnapshot)
 
         if (

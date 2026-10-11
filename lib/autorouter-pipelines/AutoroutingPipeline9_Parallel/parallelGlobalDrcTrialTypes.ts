@@ -2,6 +2,7 @@ import type { DrcError } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "high-density-repair03/lib/types"
 import type { HighDensityRoute } from "high-density-repair03/lib/types/high-density-types"
 import type { Pipeline9PreparedIndexedDrcEvaluation, Pipeline9PreparedJointDrcContext } from "./createPreparedJointDrcEvaluation"
+import type { Pipeline9NativeGlobalDrcContext, Pipeline9NativeGlobalDrcExceptionEvaluation, Pipeline9PreparedNativeGlobalDrcEvaluation } from "./createPreparedNativeGlobalDrcEvaluation"
 
 type TrialInput = {
   trialIndex: number
@@ -41,11 +42,13 @@ export type ParallelGlobalDrcTrialDescriptor =
 export type ParallelGlobalDrcTrialJob = {
   kind: "globalDrcForceTrial"
   contextId: number
-  context?: Pipeline9PreparedJointDrcContext
   snapshotId: number
   snapshot?: ParallelGlobalDrcTrialSnapshot
   trial: ParallelGlobalDrcTrialDescriptor
-}
+} & (
+  | { evaluationMode: "joint"; context?: Pipeline9PreparedJointDrcContext }
+  | { evaluationMode: "native"; context?: Pipeline9NativeGlobalDrcContext }
+)
 
 export type ParallelGlobalDrcTrialPlacement =
   | { status: "unchanged" }
@@ -54,8 +57,14 @@ export type ParallelGlobalDrcTrialPlacement =
       routes: HighDensityRoute[]
       preparedEvaluation: Pipeline9PreparedIndexedDrcEvaluation
     }
+  | {
+      status: "evaluated"
+      routes: HighDensityRoute[]
+      nativeEvaluation: Pipeline9PreparedNativeGlobalDrcEvaluation
+    }
   | { status: "exception"; countedBeforeException: false; exception: { name: string; message: string; stack?: string } }
   | { status: "exception"; countedBeforeException: true; routes: HighDensityRoute[]; candidateKey: string;
+      nativeExceptionEvaluation?: Pipeline9NativeGlobalDrcExceptionEvaluation;
       exception: { name: string; message: string; stack?: string } }
 
 export type ParallelGlobalDrcTrialResult = {

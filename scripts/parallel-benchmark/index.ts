@@ -17,6 +17,7 @@ type Options = {
   effort: number
   workerCount: number
   parallelPathSimplification: boolean
+  parallelDrcTrials: boolean
   pathingStrategy: BenchmarkPathingStrategy
   highDensityPolicy: BenchmarkHighDensityPolicy
   physicalRouting: boolean
@@ -33,6 +34,7 @@ const parseOptions = (): Options => {
     effort: 1,
     workerCount: 4,
     parallelPathSimplification: true,
+    parallelDrcTrials: true,
     pathingStrategy: "indexed",
     highDensityPolicy: "ordered",
     physicalRouting: false,
@@ -56,6 +58,9 @@ const parseOptions = (): Options => {
     } else if (key === "--parallel-path-simplification") {
       if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
       options.parallelPathSimplification = value === "1"
+    } else if (key === "--parallel-drc-trials") {
+      if (value !== "0" && value !== "1") throw new Error("--parallel-drc-trials must be 0 or 1")
+      options.parallelDrcTrials = value === "1"
     } else if (key === "--physical-routing") {
       if (value !== "0" && value !== "1") throw new Error("--physical-routing must be 0 or 1")
       options.physicalRouting = value === "1"
@@ -94,7 +99,7 @@ const runSample = async (
   const scriptPath = path.join(import.meta.dir, "parallelBenchmarkChild.ts")
   console.log(`[start] ${sampleName} repeat=${repeat} ${variant}`)
   return await new Promise<ParallelBenchmarkResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy, options.highDensityPolicy, options.physicalRouting ? "1" : "0"], { stdio: ["ignore", "pipe", "pipe"] })
+    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy, options.highDensityPolicy, options.physicalRouting ? "1" : "0", options.parallelDrcTrials ? "1" : "0"], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
     const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []

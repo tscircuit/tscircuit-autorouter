@@ -8,6 +8,7 @@ import { TinyLandmarkSelectiveReripHyperGraphSolver } from "./TinyLandmarkSelect
 import { TinyNegotiatedHyperGraphSolver } from "./TinyNegotiatedHyperGraphSolver"
 import { TinyGoalBallSelectiveReripHyperGraphSolver } from "./TinyGoalBallSelectiveReripHyperGraphSolver"
 import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
+import { ParallelDuplicateCongestedPortSolver } from "./ParallelDuplicateCongestedPortSolver"
 
 export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated" | "goal-balls"
 export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy; workerPool?: ParallelStageWorkerPool }
@@ -57,6 +58,13 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     this.createdTinyPipeline = pipeline
     if (this.pathingStrategy !== undefined) this.configureTinyPipeline(pipeline, this.pathingStrategy)
     return pipeline
+  }
+
+  protected override createDuplicateCongestedPortSolver(
+    graph: ConstructorParameters<typeof ParallelDuplicateCongestedPortSolver>[0],
+    options: ConstructorParameters<typeof ParallelDuplicateCongestedPortSolver>[1],
+  ): ParallelDuplicateCongestedPortSolver {
+    return new ParallelDuplicateCongestedPortSolver(graph, options)
   }
 
   private configureTinyPipeline(pipeline: TinyPipeline, strategy: Pipeline9PathingStrategy): void {

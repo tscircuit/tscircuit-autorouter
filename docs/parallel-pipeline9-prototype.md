@@ -47,6 +47,11 @@ The benchmark candidate enables it by default; use
 `--parallel-path-simplification 0` to evaluate the routing and repair changes
 without that stage.
 
+`enableParallelDrcTrials` defaults to true. Set it to false, or use
+`--parallel-drc-trials 0` in the benchmark, to run force-trial evaluation on
+the coordinator while retaining the other parallel stages and repair kernels.
+Reports record this scheduling flag and cannot merge mixed settings.
+
 `highDensityPolicy` defaults to `"ordered"`. The opt-in `"first-valid"`
 policy accepts a completed, locally valid high-density candidate before
 earlier candidates finish. It may produce different routes; geometry hashes
@@ -328,7 +333,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Four frozen exploratory snapshots have complete paired results for all 16
+Five frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -339,6 +344,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `489368291` | first-valid / negotiated | 1.113× | 0.761× | All solved; physical coverage and trace-lint regressions fail acceptance |
 | `dc387aa1f` | first-valid / goal-balls | 0.897× | 0.307× | Samples 013–015 failed; sample002 trace lint regressed |
 | `da83da029` | ordered / indexed | 1.345× | 1.439× | All solved, exact geometry, identical connection coverage, DRC and lint |
+| `37746ebc4` | ordered / adaptive-bitset | 1.226× | 1.324× | All solved, exact geometry and original-CAD quality parity; force speculation regressed latency |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -369,11 +375,17 @@ Raw artifacts are available from workflow runs
 [38115785004](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004), and
 [38115786618](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618).
 
-The next evaluation adds ordered simplification dependencies, persistent worker
-geometry indexes, exact connectivity construction, DRC cell-query/topology
-reuse, parallel force-trial frontiers, and a CSR copper index for bounded
-clearance searches. Pathing experiments add exact typed angle-prefix queries
-and completion cost caching. These changes have functional parity checks;
-their speedup remains unmeasured.
+The `37746ebc4` evaluation includes all 32 outcomes under quality policy version
+4, using original CAD pad and hole geometry. It retains exact geometry, coverage,
+DRC and lint parity, but does not meet the speed target. Force-trial speculation
+increased joint-repair latency on several boards. The finer simplification
+schedule and typed-prefix scorer did not produce a dataset-wide improvement.
+Evidence is in [parallel-srj18-37746ebc4.json](benchmarks/parallel-srj18-37746ebc4.json).
+
+The next evaluation preserves native execution of the first ordinary force
+scale, dispatching later scales only after that trial fails to improve the
+board. It also adds exact obstacle broad-phase rejection to node repair,
+two-word angle prefixes, and duplicate-discovery cost reuse. These changes
+have functional parity checks; their speedup remains unmeasured.
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.

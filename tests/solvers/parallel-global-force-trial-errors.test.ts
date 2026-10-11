@@ -34,6 +34,7 @@ class ControlledCoordinator implements ParallelGlobalDrcTrialCoordinator {
   }
 
   adopt(placement: EvaluatedPlacement): void {
+    if (!("preparedEvaluation" in placement)) throw new Error("Joint fixture received a native evaluation")
     expect(placement.preparedEvaluation.candidateKey).toBe(JSON.stringify(placement.routes))
     expect(this.pendingException).toBeUndefined()
     this.adopted += 1
@@ -108,7 +109,7 @@ function exceptionResults(trials: ParallelGlobalDrcTrial[], error: Error, counte
   })
 }
 
-function installNativeHelper(safe: boolean, error?: Error): () => void {
+function installNativeHelper(safe: boolean, error?: Error, skipFirstScale = false): () => void {
   if (safe) {
     const mock = spyOn(helpers, "applySafeTraceLayerMoveForError").mockImplementation((_srj, routes, _error, routeIndex) => {
       if (error) throw error
@@ -117,7 +118,8 @@ function installNativeHelper(safe: boolean, error?: Error): () => void {
     })
     return (): void => mock.mockRestore()
   }
-  const mock = spyOn(helpers, "applyDrcErrorForces").mockImplementation((_srj, routes) => {
+  const mock = spyOn(helpers, "applyDrcErrorForces").mockImplementation((_srj, routes, _errors, _index, scale) => {
+    if (skipFirstScale && scale === 1) return false
     if (error) throw error
     routes[0]!.route[1]!.y += 0.25
     return true
@@ -157,7 +159,7 @@ test("global force defers consumed exceptions, ignores unused scale errors and p
       const params = createParams(safe, originalEvaluator)
       inputKey = JSON.stringify(helpers.materializeRoutes(helpers.cloneRoutes(params.hdRoutes)))
       const original = new GlobalDrcForceImproveSolver(params)
-      const restore = installNativeHelper(safe, counted ? undefined : selectedError)
+      const restore = installNativeHelper(safe, counted ? undefined : selectedError, !safe)
       try {
         expect(stepException(original)).toBe(selectedError)
       } finally {
@@ -170,7 +172,12 @@ test("global force defers consumed exceptions, ignores unused scale errors and p
         throw new Error("Missing adopted exception")
       }
       const parallel = new ParallelGlobalDrcForceImproveSolver({ ...params, drcEvaluator: parallelEvaluator }, coordinator)
-      await parallel.prepareForNextStep()
+      const restoreParallel = installNativeHelper(safe, undefined, !safe)
+      try {
+        await parallel.prepareForNextStep()
+      } finally {
+        restoreParallel()
+      }
       expect(parallel.iterations).toBe(0)
       expect(parallel.failed).toBe(false)
       expect(parallel.error).toBeNull()
@@ -201,28 +208,40 @@ test("global force defers consumed exceptions, ignores unused scale errors and p
   const inputKey = JSON.stringify(helpers.materializeRoutes(helpers.cloneRoutes(winningParams.hdRoutes)))
   const winningEvaluator: DrcEvaluator = ({ routes }) => JSON.stringify(routes) === inputKey ? [initialError] : []
   const unusedError = new SyntaxError("later unused scale")
-  const winningCoordinator = new ControlledCoordinator((trials) => trials.map((trial, index) => ({
-    kind: "globalDrcForceTrial", trialIndex: trial.trialIndex,
-    placements: [index === 0 ? evaluatedPlacement(changedRoutes(trial.hdRoutes)) : exceptionPlacement(trial, unusedError, index === 2)],
-  })))
-  const winner = new ParallelGlobalDrcForceImproveSolver({ ...winningParams, drcEvaluator: winningEvaluator }, winningCoordinator)
   const nativeWinner = new GlobalDrcForceImproveSolver({ ...winningParams, drcEvaluator: winningEvaluator })
-  const restoreWinner = installNativeHelper(false)
+  const restoreWinner = installNativeHelper(false, undefined, true)
   try {
     nativeWinner.step()
   } finally {
     restoreWinner()
   }
-  await winner.prepareForNextStep()
-  winner.step()
-  expect(nativePrefix(winner)).toEqual(nativePrefix(nativeWinner))
-  expect(winner.solved).toBe(true)
-  expect(winningCoordinator.adopted).toBe(1)
-  expect(winningCoordinator.adoptedException).toBeUndefined()
+  for (const counted of [false, true]) {
+    const winningCoordinator = new ControlledCoordinator((trials) => trials.map((trial, index) => ({
+      kind: "globalDrcForceTrial", trialIndex: trial.trialIndex,
+      placements: [index === 0 ? evaluatedPlacement(changedRoutes(trial.hdRoutes)) : exceptionPlacement(trial, unusedError, counted)],
+    })))
+    const winner = new ParallelGlobalDrcForceImproveSolver({ ...winningParams, drcEvaluator: winningEvaluator }, winningCoordinator)
+    const restoreParallelWinner = installNativeHelper(false, undefined, true)
+    try {
+      await winner.prepareForNextStep()
+    } finally {
+      restoreParallelWinner()
+    }
+    winner.step()
+    expect(nativePrefix(winner)).toEqual(nativePrefix(nativeWinner))
+    expect(winner.solved).toBe(true)
+    expect(winningCoordinator.adopted).toBe(1)
+    expect(winningCoordinator.adoptedException).toBeUndefined()
+  }
 
   const cachedCoordinator = new ControlledCoordinator((trials) => exceptionResults(trials, unusedError, true))
   const cachedWinner = new ParallelGlobalDrcForceImproveSolver({ ...winningParams, drcEvaluator: winningEvaluator }, cachedCoordinator)
-  await cachedWinner.prepareForNextStep()
+  const restoreCached = installNativeHelper(false, undefined, true)
+  try {
+    await cachedWinner.prepareForNextStep()
+  } finally {
+    restoreCached()
+  }
   cachedWinner.step()
   expect(nativePrefix(cachedWinner)).toEqual(nativePrefix(nativeWinner))
   expect(cachedCoordinator.adoptedException).toBeInstanceOf(SyntaxError)

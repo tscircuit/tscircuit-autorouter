@@ -10,15 +10,29 @@ import { createPreparedJointDrcEvaluation, type Pipeline9PreparedJointDrcEvaluat
 import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
 import type { ParallelGlobalDrcTrialJob, ParallelGlobalDrcTrialPlacement, ParallelGlobalDrcTrialResult, ParallelGlobalDrcTrialSnapshot } from "./parallelGlobalDrcTrialTypes"
 import type { HighDensityRoute } from "high-density-repair03/lib/types/high-density-types"
+import { createPreparedNativeGlobalDrcEvaluation, type Pipeline9PreparedNativeGlobalDrcEvaluator } from "./createPreparedNativeGlobalDrcEvaluation"
 
 let cachedContextId: number | undefined
-let cachedEvaluator: Pipeline9PreparedJointDrcEvaluator | undefined
+type CachedEvaluator =
+  | { mode: "joint"; evaluator: Pipeline9PreparedJointDrcEvaluator }
+  | { mode: "native"; evaluator: Pipeline9PreparedNativeGlobalDrcEvaluator }
+let cachedEvaluator: CachedEvaluator | undefined
 let cachedSnapshotId: number | undefined
 let cachedSnapshot: ParallelGlobalDrcTrialSnapshot | undefined
 
+function evaluateMaterializedRoutes(
+  routes: HighDensityRoute[],
+  evaluator: CachedEvaluator,
+): Extract<ParallelGlobalDrcTrialPlacement, { status: "evaluated" }> {
+  if (evaluator.mode === "joint") {
+    return { status: "evaluated", routes, preparedEvaluation: evaluator.evaluator.evaluate(routes) }
+  }
+  return { status: "evaluated", routes, nativeEvaluation: evaluator.evaluator.evaluate(routes) }
+}
+
 function evaluatePlacement(
   job: ParallelGlobalDrcTrialJob,
-  evaluator: Pipeline9PreparedJointDrcEvaluator,
+  evaluator: CachedEvaluator,
   snapshot: ParallelGlobalDrcTrialSnapshot,
   adjustViaClearance: boolean,
 ): ParallelGlobalDrcTrialPlacement {
@@ -37,7 +51,7 @@ function evaluatePlacement(
       const routes = materializeRoutes(candidateRoutes)
       materializedRoutes = routes
       countedBeforeException = true
-      return { status: "evaluated", routes, preparedEvaluation: evaluator.evaluate(routes) }
+      return evaluateMaterializedRoutes(routes, evaluator)
     }
     const candidateRoutes = cloneRoutesForIndexes(snapshot.hdRoutes, [trial.changedRouteIndex])
     const changed = applySafeTraceLayerMoveForError(snapshot.srj, candidateRoutes, trial.error,
@@ -47,7 +61,7 @@ function evaluatePlacement(
     const routes = materializeRoutesForIndexes(candidateRoutes, [trial.changedRouteIndex])
     materializedRoutes = routes
     countedBeforeException = true
-    return { status: "evaluated", routes, preparedEvaluation: evaluator.evaluate(routes) }
+    return evaluateMaterializedRoutes(routes, evaluator)
   } catch (error: unknown) {
     const exception = error instanceof Error
       ? { name: error.name, message: error.message, stack: error.stack }
@@ -55,7 +69,8 @@ function evaluatePlacement(
     if (countedBeforeException) {
       if (!materializedRoutes) throw new Error("Parallel global DRC evaluation exception lost its materialized routes")
       return { status: "exception", countedBeforeException: true, routes: materializedRoutes,
-        candidateKey: JSON.stringify(materializedRoutes), exception }
+        candidateKey: JSON.stringify(materializedRoutes), exception,
+        ...(evaluator.mode === "native" ? { nativeExceptionEvaluation: evaluator.evaluator.getExceptionEvaluation() } : {}) }
     }
     return { status: "exception", countedBeforeException: false, exception }
   }
@@ -65,16 +80,20 @@ function evaluatePlacement(
 export function executeParallelGlobalDrcTrial(job: ParallelGlobalDrcTrialJob): ParallelGlobalDrcTrialResult {
   if (!Number.isSafeInteger(job.contextId) || job.contextId < 1 ||
     !Number.isSafeInteger(job.snapshotId) || job.snapshotId < 1 ||
+    (job.evaluationMode !== "joint" && job.evaluationMode !== "native") ||
     !Number.isSafeInteger(job.trial.trialIndex) || job.trial.trialIndex < 0 ||
     (job.trial.kind !== "force-scale" && job.trial.kind !== "safe-trace-layer")) {
     throw new Error("Invalid parallel global DRC trial request")
   }
   if (cachedContextId !== job.contextId) {
     if (!job.context) throw new Error("Parallel global DRC trial is missing its immutable context")
-    cachedEvaluator = createPreparedJointDrcEvaluation(job.context)
+    cachedEvaluator = job.evaluationMode === "joint"
+      ? { mode: "joint", evaluator: createPreparedJointDrcEvaluation(job.context) }
+      : { mode: "native", evaluator: createPreparedNativeGlobalDrcEvaluation(job.context) }
     cachedContextId = job.contextId
   }
   if (!cachedEvaluator) throw new Error("Parallel global DRC trial evaluator was not initialized")
+  if (cachedEvaluator.mode !== job.evaluationMode) throw new Error("Parallel global DRC context changed evaluator mode without a new identifier")
   if (cachedSnapshotId !== job.snapshotId) {
     if (!job.snapshot) throw new Error("Parallel global DRC trial is missing its immutable frontier snapshot")
     cachedSnapshot = job.snapshot
@@ -87,6 +106,16 @@ export function executeParallelGlobalDrcTrial(job: ParallelGlobalDrcTrialJob): P
     placements.push(evaluatePlacement(job, cachedEvaluator, cachedSnapshot, true))
   }
   return { kind: job.kind, trialIndex: job.trial.trialIndex, placements }
+}
+
+function isNativeRunStats(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false
+  const stats = value as Record<string, unknown>
+  const fields = ["traceCount", "segmentCount", "viaCount", "obstacleCount", "broadPhaseCandidateCount", "exactCheckCount"]
+  for (const field of fields) {
+    if (typeof stats[field] !== "number" || !Number.isFinite(stats[field]) || stats[field] < 0) return false
+  }
+  return true
 }
 
 /** Validate all deliveries before resolving pool promises, including unused trials. */
@@ -112,9 +141,25 @@ export function assertParallelGlobalDrcTrialResult(job: ParallelGlobalDrcTrialJo
       if (placement.countedBeforeException && (!Array.isArray(placement.routes) || typeof placement.candidateKey !== "string")) {
         throw new Error("Invalid parallel global DRC evaluation exception candidate")
       }
+      if (placement.countedBeforeException && job.evaluationMode === "native" &&
+        (!placement.nativeExceptionEvaluation || !isNativeRunStats(placement.nativeExceptionEvaluation.lastRunStats) ||
+          (placement.nativeExceptionEvaluation.evaluatedTraceKey !== undefined && typeof placement.nativeExceptionEvaluation.evaluatedTraceKey !== "string"))) {
+        throw new Error("Invalid parallel native DRC evaluation exception input")
+      }
       continue
     }
-    if (placement.status !== "evaluated" || !Array.isArray(placement.routes) ||
+    if (placement.status !== "evaluated" || !Array.isArray(placement.routes)) {
+      throw new Error("Invalid parallel global DRC trial evaluated placement")
+    }
+    if (job.evaluationMode === "native") {
+      if (!("nativeEvaluation" in placement) || typeof placement.nativeEvaluation.candidateKey !== "string" ||
+        typeof placement.nativeEvaluation.evaluatedTraceKey !== "string" || !isNativeRunStats(placement.nativeEvaluation.lastRunStats) ||
+        !Array.isArray(placement.nativeEvaluation.evaluatedDrc?.errors) || !Array.isArray(placement.nativeEvaluation.evaluatedDrc?.errorsWithCenters)) {
+        throw new Error("Invalid parallel native DRC trial evaluated placement")
+      }
+      continue
+    }
+    if (!("preparedEvaluation" in placement) ||
       !placement.preparedEvaluation || typeof placement.preparedEvaluation.candidateKey !== "string" ||
       !Array.isArray(placement.preparedEvaluation.evaluatedDrc?.errors) ||
       !Array.isArray(placement.preparedEvaluation.evaluatedDrc?.errorsWithCenters) ||

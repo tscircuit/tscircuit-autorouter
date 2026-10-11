@@ -1085,7 +1085,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
+    const duplicateCongestedPortSolver = this.createDuplicateCongestedPortSolver(
       serializedGraph,
       {
         duplicatePortProximity: 0.05,
@@ -1419,6 +1419,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
     }
+  }
+
+  protected createDuplicateCongestedPortSolver(
+    graph: ConstructorParameters<typeof DuplicateCongestedPortSolver>[0],
+    options: ConstructorParameters<typeof DuplicateCongestedPortSolver>[1],
+  ): DuplicateCongestedPortSolver {
+    return new DuplicateCongestedPortSolver(graph, options)
   }
 
   protected createTinyPipeline(

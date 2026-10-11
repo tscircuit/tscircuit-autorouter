@@ -30,7 +30,7 @@ type Solver = PipelineStageTimingSource & {
 
 type SolverConstructor = new (
   scenario: SimpleRouteJson,
-  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean; pathingStrategy?: BenchmarkPathingStrategy; highDensityPolicy?: BenchmarkHighDensityPolicy; physicalRouting?: boolean },
+  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean; enableParallelDrcTrials?: boolean; pathingStrategy?: BenchmarkPathingStrategy; highDensityPolicy?: BenchmarkHighDensityPolicy; physicalRouting?: boolean },
 ) => Solver
 
 const emit = (message: ParallelBenchmarkChildMessage): void => {
@@ -38,7 +38,7 @@ const emit = (message: ParallelBenchmarkChildMessage): void => {
 }
 
 const main = async (): Promise<void> => {
-  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument, pathingArgument = "indexed", highDensityPolicyArgument = "ordered", physicalRoutingArgument = "0"] = process.argv.slice(2)
+  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument, pathingArgument = "indexed", highDensityPolicyArgument = "ordered", physicalRoutingArgument = "0", parallelDrcTrialsArgument = "1"] = process.argv.slice(2)
   const sampleNumber = Number(sampleArgument)
   const variant = variantArgument as BenchmarkVariant
   const repeat = Number(repeatArgument)
@@ -55,6 +55,9 @@ const main = async (): Promise<void> => {
   }
   if (physicalRoutingArgument !== "0" && physicalRoutingArgument !== "1") {
     throw new Error("Invalid benchmark child physical routing flag")
+  }
+  if (parallelDrcTrialsArgument !== "0" && parallelDrcTrialsArgument !== "1") {
+    throw new Error("Invalid benchmark child parallel DRC trials flag")
   }
   const { scenarioName, scenario } = await loadScenarioBySampleNumber("srj18", sampleNumber, effort)
   const solverName = variant === "baseline"
@@ -93,6 +96,7 @@ const main = async (): Promise<void> => {
       ...(variant === "parallel" ? {
         workerCount,
         enableParallelPathSimplification: simplificationArgument !== "0",
+        enableParallelDrcTrials: parallelDrcTrialsArgument === "1",
         pathingStrategy: pathingArgument,
         highDensityPolicy: highDensityPolicyArgument,
         physicalRouting: physicalRoutingArgument === "1",
