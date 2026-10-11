@@ -1,0 +1,53 @@
+{
+  "description": "Authentic worker native-state parity and operation counts only; no local wall-time comparison or 2x speed claim.",
+  "revision": "162c6255fa0b126969d3e63828fb2561b39b7bc8",
+  "datasetRevision": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "sourceSha256": "a0b2b4bfda1dbc7c0a64c12042bef96d9746bf7e6523f9bcf78f06e7ae8714ea",
+  "result": {
+    "checkpoints": 10329,
+    "quanta": 10329,
+    "nativeSteps": 1032799,
+    "a01Steps": 957175,
+    "a03Steps": 75624,
+    "actualWorkerKernels": true,
+    "work": {
+      "descriptorCalls": 7154461,
+      "fullIntrinsicChecks": 10330,
+      "a01Pushes": 1064004,
+      "a01Pops": 955970,
+      "a01ArrayWrites": 24691773,
+      "a03HQueries": 79868,
+      "a03HHits": 79236,
+      "a03HypotCalls": 632,
+      "a03ViaQueries": 32114,
+      "a03GeometricHits": 16317,
+      "a03GeometricMisses": 112,
+      "a03CircleVisits": 4811
+    },
+    "lateObserversRejected": true,
+    "storageProxyTraps": 0
+  },
+  "nativeStateProof": {
+    "criticalFixture": "parallel-grid-history-cmn45.json",
+    "nativeA01Iterations": [
+      160000,
+      160000,
+      160000,
+      160000,
+      160000,
+      157175
+    ],
+    "nativeA03Iterations": 75624,
+    "allNativeEnumerablePrivateFields": "deepStrictEqual at all10329 original100-step checkpoints",
+    "outputsAndGridStats": "deepStrictEqual at all checkpoints",
+    "nativeHeapAndArrayIdentity": "retained"
+  },
+  "workComparison": {
+    "nativeA01ArrayWrites": 43327239,
+    "fusedA01ArrayWrites": 24691773,
+    "removedA01ArrayWrites": 18635466,
+    "strictA01DescriptorCalls": 54558975,
+    "newA01AndA03DescriptorCalls": 7154461,
+    "localTimingClaim": false
+  }
+}
