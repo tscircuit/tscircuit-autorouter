@@ -48,18 +48,8 @@ export async function getCompactViaCopperCircuit(
         pcbY={1}
         layer="bottom"
       />
-      <resistor
-        name="R3"
-        resistance="10k"
-        footprint="0603"
-        pcbX={-2.825}
-      />
-      <resistor
-        name="R4"
-        resistance="10k"
-        footprint="0603"
-        pcbX={2.825}
-      />
+      <resistor name="R3" resistance="10k" footprint="0603" pcbX={-2.825} />
+      <resistor name="R4" resistance="10k" footprint="0603" pcbX={2.825} />
       <resistor
         name="R5"
         resistance="10k"
@@ -83,18 +73,8 @@ export async function getCompactViaCopperCircuit(
         thickness={0.2}
         {...compactPath}
       />
-      <trace
-        name="TOP_CROSSING"
-        from="R3.2"
-        to="R4.1"
-        thickness={0.2}
-      />
-      <trace
-        name="BOTTOM_CROSSING"
-        from="R5.1"
-        to="R6.1"
-        thickness={0.2}
-      />
+      <trace name="TOP_CROSSING" from="R3.2" to="R4.1" thickness={0.2} />
+      <trace name="BOTTOM_CROSSING" from="R5.1" to="R6.1" thickness={0.2} />
     </board>,
   )
   circuit.schematicDisabled = true
