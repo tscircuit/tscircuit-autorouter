@@ -73,11 +73,11 @@
         "--parallel-drc-trials",
         "0"
       ],
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T15:35:02Z",
       "databaseId": 38151878295,
       "headSha": "1169e1bb04730bcc73558a7f960bdfd3a2551686",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38151878295"
     },
     {
@@ -98,11 +98,11 @@
         "--parallel-drc-trials",
         "0"
       ],
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T15:35:04Z",
       "databaseId": 38151880568,
       "headSha": "1169e1bb04730bcc73558a7f960bdfd3a2551686",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38151880568"
     },
     {
@@ -123,11 +123,11 @@
         "--parallel-drc-trials",
         "0"
       ],
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T15:35:06Z",
       "databaseId": 38151883053,
       "headSha": "1169e1bb04730bcc73558a7f960bdfd3a2551686",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38151883053"
     },
     {
@@ -148,11 +148,11 @@
         "--parallel-drc-trials",
         "0"
       ],
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T15:35:08Z",
       "databaseId": 38151885758,
       "headSha": "1169e1bb04730bcc73558a7f960bdfd3a2551686",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38151885758"
     },
     {
@@ -173,21 +173,211 @@
         "--parallel-drc-trials",
         "0"
       ],
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T15:35:10Z",
       "databaseId": 38151888373,
       "headSha": "1169e1bb04730bcc73558a7f960bdfd3a2551686",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38151888373"
     }
   ],
   "acceptance": {
-    "arithmeticMeanSpeedup": 2,
-    "aggregateSpeedup": 2,
+    "arithmeticMeanSpeedup": 1.279306290131433,
+    "aggregateSpeedup": 1.4335386619757926,
     "fullSampleCoverage": true,
     "allSolved": true,
     "exactNativeGeometry": true,
-    "originalCadQualityParity": true
+    "originalCadQualityParity": true,
+    "fullCoverage": true,
+    "allCompleted": true,
+    "exactGeometry": true,
+    "qualityPreserved": true,
+    "connectionCoveragePreserved": true,
+    "highDensityPolicy": "ordered",
+    "pathingStrategy": "indexed",
+    "physicalRouting": false,
+    "geometryRequired": true,
+    "coverageAcceptanceMode": "baseline-parity",
+    "geometricMeanSpeedup": 1.2584332780262102,
+    "targetReached": false,
+    "perSample": [
+      {
+        "sampleName": "sample001",
+        "baselineTimeMs": 18873.621652,
+        "parallelTimeMs": 17649.511819,
+        "speedup": 1.0693565830915632,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample002",
+        "baselineTimeMs": 172750.74860300001,
+        "parallelTimeMs": 116510.902538,
+        "speedup": 1.4827002867534858,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample003",
+        "baselineTimeMs": 15390.406013,
+        "parallelTimeMs": 14041.4869,
+        "speedup": 1.0960666860003268,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample004",
+        "baselineTimeMs": 67261.41547800001,
+        "parallelTimeMs": 56663.871246,
+        "speedup": 1.1870247125543527,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample005",
+        "baselineTimeMs": 12750.892429,
+        "parallelTimeMs": 13658.311393,
+        "speedup": 0.933562873338423,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample006",
+        "baselineTimeMs": 175180.622875,
+        "parallelTimeMs": 125776.873024,
+        "speedup": 1.3927888224854585,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample007",
+        "baselineTimeMs": 19141.094669,
+        "parallelTimeMs": 17365.839552999998,
+        "speedup": 1.1022268523547034,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample008",
+        "baselineTimeMs": 76861.404994,
+        "parallelTimeMs": 54898.190690999996,
+        "speedup": 1.4000717332675345,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample009",
+        "baselineTimeMs": 21736.002851,
+        "parallelTimeMs": 21396.910318000002,
+        "speedup": 1.0158477335260288,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample010",
+        "baselineTimeMs": 31380.914818999998,
+        "parallelTimeMs": 27616.447708,
+        "speedup": 1.136312502998331,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample011",
+        "baselineTimeMs": 25120.729912,
+        "parallelTimeMs": 24120.271528,
+        "speedup": 1.0414779071968,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample012",
+        "baselineTimeMs": 93034.806138,
+        "parallelTimeMs": 65453.827812,
+        "speedup": 1.4213806777690614,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample013",
+        "baselineTimeMs": 85171.65421800001,
+        "parallelTimeMs": 60029.362599,
+        "speedup": 1.418833226448732,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample014",
+        "baselineTimeMs": 232447.530515,
+        "parallelTimeMs": 133273.904318,
+        "speedup": 1.7441338700513,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample015",
+        "baselineTimeMs": 190396.384598,
+        "parallelTimeMs": 112765.794693,
+        "speedup": 1.6884232059583841,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample016",
+        "baselineTimeMs": 40986.954345,
+        "parallelTimeMs": 30617.143225,
+        "speedup": 1.3386929683084434,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      }
+    ]
   },
-  "status": "dispatched"
+  "status": "completed"
 }
