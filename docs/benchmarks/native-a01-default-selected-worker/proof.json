@@ -1,0 +1,214 @@
+{
+  "kind": "frozen-default-actual-selected-worker-cpu-attribution",
+  "noTimingComparison": true,
+  "frozenCommit": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sample": "sample015",
+  "nodeId": "cmn_37",
+  "portCount": 22,
+  "nodePf": 1.1916019721434097,
+  "actualWorker": true,
+  "actualFrozenSourceEntry": true,
+  "nativeMethodsInstrumented": false,
+  "helperHistoriesAdmitted": 0,
+  "workerCount": 1,
+  "selectedLogicalQuantum": 100,
+  "productionBulkDisabled": true,
+  "originalWorkerResult": {
+    "status": "solved",
+    "nodeIterations": 7689,
+    "nodeMaximumIterations": 100000000,
+    "nodeStats": {
+      "nodeCount": 1,
+      "solvedNodeCount": 1,
+      "fixedObstacleCount": 0,
+      "fixedObstacleUses": 0,
+      "boardObstacleUses": 0,
+      "fallbackNodeCount": 0,
+      "regularNodeCount": 1,
+      "b01NodeCount": 0,
+      "reroutedFixedRouteCount": 0,
+      "reroutedFixedRouteSectionCount": 0,
+      "promotedFallbackAttemptCount": 0,
+      "promotedFixedRouteCount": 0,
+      "regionalPreloadedViaCandidateRejectionCount": 0,
+      "regionalForceImproveCandidateRejectionCount": 0,
+      "regionalRepairCandidateRejectionCount": 0
+    }
+  },
+  "rawStackSamples": 1634,
+  "humanFunctionTableSamples": 1633,
+  "normalization": "Shares divide by all1634 raw stack samples. One outer-wrapper sample is absent from the JSC human function table. Inclusive groups overlap and must not be added.",
+  "hotspots": [
+    {
+      "name": "bound _step",
+      "selfSamples": 2,
+      "inclusiveSamples": 1293,
+      "inclusiveShare": 0.7913096695226438,
+      "selfShare": 0.0012239902080783353,
+      "sources": [
+        "native builtin"
+      ]
+    },
+    {
+      "name": "setNodeCosts",
+      "selfSamples": 50,
+      "inclusiveSamples": 407,
+      "inclusiveShare": 0.24908200734394126,
+      "selfShare": 0.030599755201958383,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts",
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
+      ]
+    },
+    {
+      "name": "calculateCosts",
+      "selfSamples": 74,
+      "inclusiveSamples": 324,
+      "inclusiveShare": 0.19828641370869032,
+      "selfShare": 0.04528763769889841,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts"
+      ]
+    },
+    {
+      "name": "isNodeTooCloseToObstacle",
+      "selfSamples": 167,
+      "inclusiveSamples": 314,
+      "inclusiveShare": 0.19216646266829865,
+      "selfShare": 0.102203182374541,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts",
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
+      ]
+    },
+    {
+      "name": "getClosestFutureConnectionPoint",
+      "selfSamples": 167,
+      "inclusiveSamples": 275,
+      "inclusiveShare": 0.16829865361077112,
+      "selfShare": 0.102203182374541,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
+      ]
+    },
+    {
+      "name": "getNodeKey",
+      "selfSamples": 125,
+      "inclusiveSamples": 126,
+      "inclusiveShare": 0.07711138310893513,
+      "selfShare": 0.07649938800489596,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts"
+      ]
+    },
+    {
+      "name": "get viaPenaltyDistance",
+      "selfSamples": 89,
+      "inclusiveSamples": 89,
+      "inclusiveShare": 0.05446756425948592,
+      "selfShare": 0.05446756425948592,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts"
+      ]
+    },
+    {
+      "name": "stepOnce",
+      "selfSamples": 15,
+      "inclusiveSamples": 87,
+      "inclusiveShare": 0.05324357405140759,
+      "selfShare": 0.009179926560587515,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/high-density-a01/lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/high-density-a01/lib/HighDensitySolverA03/HighDensitySolverA03.ts"
+      ]
+    },
+    {
+      "name": "computeMoveCostAndRips",
+      "selfSamples": 9,
+      "inclusiveSamples": 45,
+      "inclusiveShare": 0.027539779681762546,
+      "selfShare": 0.0055079559363525096,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/high-density-a01/lib/HighDensitySolverA01/HighDensitySolverA01.ts",
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/high-density-a01/lib/HighDensitySolverA03/HighDensitySolverA03.ts"
+      ]
+    },
+    {
+      "name": "beginWorkerNativeGridKernelQuantum",
+      "selfSamples": 0,
+      "inclusiveSamples": 80,
+      "inclusiveShare": 0.04895960832313342,
+      "selfShare": 0.0,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/workerNativeGridKernelQuantum.ts"
+      ]
+    },
+    {
+      "name": "getOwnPropertyDescriptors",
+      "selfSamples": 66,
+      "inclusiveSamples": 66,
+      "inclusiveShare": 0.04039167686658507,
+      "selfShare": 0.04039167686658507,
+      "sources": [
+        "native builtin"
+      ]
+    },
+    {
+      "name": "matchesNativeGridIntrinsics",
+      "selfSamples": 11,
+      "inclusiveSamples": 55,
+      "inclusiveShare": 0.033659730722154224,
+      "selfShare": 0.006731946144430845,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeGridKernelIntrinsics.ts"
+      ]
+    },
+    {
+      "name": "prepareForNextStep",
+      "selfSamples": 2,
+      "inclusiveSamples": 82,
+      "inclusiveShare": 0.05018359853121175,
+      "selfShare": 0.0012239902080783353,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPortfolioSingleIntraNodeSolver.ts",
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ReplayHighDensityA01Solver.ts"
+      ]
+    },
+    {
+      "name": "getViasInNodePath",
+      "selfSamples": 40,
+      "inclusiveSamples": 40,
+      "inclusiveShare": 0.02447980416156671,
+      "selfShare": 0.02447980416156671,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts"
+      ]
+    }
+  ],
+  "rawProfile": "sample015-cmn37-profile.json.gz",
+  "capturedJob": "../native-a01-selected-worker-bridge/sample015-cmn37-job.json.gz",
+  "uncompressedProfileSha256": "8ce2141b7784eb75577bf4a36fb6e032640d71f9cf3b07452cfd3b0740482a6d",
+  "realJobSha256": "06054a034f9c7ac8e78b547c2e3dd56874c90ccaaa6839daa74d4d5448d229a9",
+  "frozenSourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pipeline9LocalWorker.ts": "1080932b28913ca02df6ad6e70fa3d6c8181e138de13cfa703742532764a86e0",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/executeParallelHighDensityNodeJob.ts": "00a5d0255b3902efdad9809b78ad993433f44618de3d691887d85c129b603fea",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPortfolioSingleIntraNodeSolver.ts": "f46c1baca6a35c702341cdea9b67a18dabcc63df80b077226ea9a3f589fa0c75",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/workerNativeGridKernelQuantum.ts": "eb90de3840f193c3b088ab388b246586408b88240fd2597172dbcb4248e8e38d",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeGridKernelIntrinsics.ts": "f25ba135904b81f7240ab1897d319d5a97f57934f7847a007a5fcec3fcd48065",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelHighDensityGridKernel.ts": "1207b66f03cca5215961b8271fce0d5a44b43bd34a4aa82a09690f888852ab19",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts": "298a6ab570d526f85c174bba45b43056da58e6afcceb7cc7c8f1fb1cf40d5e96",
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts": "040b1e81eca1b038e7e437e88e8bbfc19a3423c4a9c0fff598cfa0cd6e6965d8",
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts": "b27d35044a0fc1a0b9a21dbee730f3922ca5c881f46424e363694c7c0621917a"
+  },
+  "nodeRoutesEqualEarlierFrozenBulk": true,
+  "commands": [
+    "A01_PROFILE_ROOT=/absolute/path/to/autorouter-da7e84745 A01_PROFILE_JOB=docs/benchmarks/native-a01-selected-worker-bridge/sample015-cmn37-job.json.gz A01_PROFILE_OUTPUT=/tmp/a01-default-profile bun scripts/parallel-benchmark/prototypes/native-a01-selected-worker-profile.ts"
+  ],
+  "interpretation": "Functional CPU attribution only. No elapsed-time, throughput or speedup comparison. Frozen all-sample Blacksmith runs are performance evidence. This unmodified worker profile identifies default remaining work on the exact earlier captured job.",
+  "finding": "Generic HD bound _step accounts for79.13% inclusive samples. Costs24.91%, obstacle checks19.22%, closestFuturePoint16.83%, grid keys7.71% and viaPenaltyDistance5.45% are larger remaining targets. A01 stepOnce is5.32%; grid quantum admission4.90%; descriptor maps4.04%. These overlapping attribution shares are not independent gains.",
+  "nextDesignOnly": [
+    "Count closest-point cache misses and full point scans while keeping native cache state and selection ties unchanged.",
+    "Quantify duplicate scalar cost/obstacle queries and indexed candidate counts before adding a private numeric or ordered shortlist kernel.",
+    "No new default activation without private-state/callback/geometry mutation oracles and a fresh full16 four-core Blacksmith comparison."
+  ]
+}
