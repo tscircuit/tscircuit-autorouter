@@ -1,5 +1,5 @@
 import type { GridHistoryCancellation, GridHistoryDelivery, GridHistoryDispatcher,
-  GridHistoryGrant, GridHistoryRequest, GridHistoryResult } from "./parallelGridHistoryTypes"
+  GridHistoryGrant, GridHistoryRequest, GridHistoryResult, GridHistoryReplayWork } from "./parallelGridHistoryTypes"
 
 type GridCandidateDelivery = {
   promise: Promise<GridHistoryResult>
@@ -16,6 +16,8 @@ type GridRequestState = {
 export class GridHistoryWorkerClient {
   private nextRequestId = 0
   private readonly requests = new Map<number, GridRequestState>()
+  readonly replayWork: GridHistoryReplayWork = { logicalIterationsReplayed: 0,
+    equivalentLogicalIterationsReplayed: 0, equivalentCandidatesAdmitted: 0 }
 
   constructor(
     private readonly taskId: number,
@@ -27,7 +29,7 @@ export class GridHistoryWorkerClient {
     this.postMessage({ kind: "cancelGridHistories", taskId: this.taskId })
   }
 
-  readonly dispatch: GridHistoryDispatcher = async (jobs) => {
+  readonly dispatch: GridHistoryDispatcher = Object.assign(async (jobs: Parameters<GridHistoryDispatcher>[0]) => {
     const requestId = ++this.nextRequestId
     const candidates = new Map<number, GridCandidateDelivery>()
     for (const job of jobs) {
@@ -42,7 +44,17 @@ export class GridHistoryWorkerClient {
     })
     this.postMessage({ kind: "requestGridHistories", taskId: this.taskId, requestId, jobs })
     return grant
-  }
+  }, {
+    recordReplayWork: (iterations: number, equivalent: boolean): void => {
+      if (!Number.isSafeInteger(iterations) || iterations < 1) throw new Error("Grid replay work must be a positive native quantum")
+      this.replayWork.logicalIterationsReplayed += iterations
+      if (equivalent) this.replayWork.equivalentLogicalIterationsReplayed += iterations
+    },
+    recordEquivalentCandidates: (count: number): void => {
+      if (!Number.isSafeInteger(count) || count < 0) throw new Error("Grid equivalence count must be a nonnegative integer")
+      this.replayWork.equivalentCandidatesAdmitted += count
+    },
+  })
 
   receive(message: GridHistoryGrant | GridHistoryDelivery): void {
     const request = this.requests.get(message.requestId)

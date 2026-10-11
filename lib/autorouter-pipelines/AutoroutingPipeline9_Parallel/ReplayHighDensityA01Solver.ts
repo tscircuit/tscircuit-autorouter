@@ -2,10 +2,22 @@ import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 import { GridHistoryReplayState } from "./GridHistoryReplayState"
 import type { GridHistoryJob, GridHistoryResult } from "./parallelGridHistoryTypes"
+import { NativeA01HistoryEquivalence } from "./NativeA01HistoryEquivalence"
 
 /** Native identity and setup remain intact; only admitted selected quanta replay. */
 export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
   private readonly replay = new GridHistoryReplayState()
+  private historyEquivalence: NativeA01HistoryEquivalence | null = null
+
+  override _setup(): void {
+    super._setup()
+    if (!this.failed) this.historyEquivalence = NativeA01HistoryEquivalence.capture(this, replayContract)
+  }
+
+  hasEquivalentHistory(other: ReplayHighDensityA01Solver): boolean {
+    return this.historyEquivalence !== null && other.historyEquivalence !== null &&
+      this.historyEquivalence.matches(this, other.historyEquivalence, other)
+  }
 
   createHistoryJob(candidateId: number): GridHistoryJob {
     const [params] = this.getConstructorParams()
@@ -16,9 +28,10 @@ export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
       params: nativeParams, maxIterations: this.MAX_ITERATIONS, ownerIterations: this.iterations }
   }
 
-  setHistoryRequest(job: GridHistoryJob, request: Promise<GridHistoryResult>): void {
+  setHistoryRequest(job: GridHistoryJob, request: Promise<GridHistoryResult>,
+    recordReplayWork?: (iterations: number) => void): void {
     if (job.algorithm !== "a01") throw new Error("A01 replay received a different grid algorithm")
-    this.replay.setHistoryRequest(this, job, request)
+    this.replay.setHistoryRequest(this, job, request, recordReplayWork)
   }
 
   async prepareForNextStep(): Promise<void> {
@@ -37,3 +50,6 @@ export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
     return this.replay.getTerminalOutput(this) ?? super.getOutput()
   }
 }
+
+const replayContract = { prototype: ReplayHighDensityA01Solver.prototype,
+  descriptors: Object.getOwnPropertyDescriptors(ReplayHighDensityA01Solver.prototype) }

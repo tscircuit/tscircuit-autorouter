@@ -49,7 +49,9 @@ export class Pipeline9LocalWorkerPool {
     contextAliasNativeMessages: 0, contextShapeNativeMessages: 0,
     gridHistoryRequestsGranted: 0, gridHistoryRequestsDenied: 0, gridHistoryJobsStarted: 0,
     gridHistoryCancellationSignals: 0, gridHistoryJobsStopped: 0, gridHistoryComputedIterations: 0,
-    gridHistoryPrefixIterationsRecomputed: 0, gridHistoryCheckpointsCompleted: 0 }
+    gridHistoryPrefixIterationsRecomputed: 0, gridHistoryCheckpointsCompleted: 0,
+    gridHistoryLogicalIterationsReplayed: 0, gridHistoryEquivalentLogicalIterationsReplayed: 0,
+    gridHistoryEquivalentCandidatesAdmitted: 0 }
   readonly contextTransport: "structured-clone" | "bun-shared"
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
@@ -180,6 +182,20 @@ export class Pipeline9LocalWorkerPool {
       if (!task || response.taskId !== task.taskId) {
         this.fail(new Error(`Pipeline9 worker returned unexpected task ${response.taskId}`))
         return
+      }
+      if (response.gridHistoryReplayWork !== undefined) {
+        const work = response.gridHistoryReplayWork
+        if ((task.job.kind !== "highDensityNode" && task.job.kind !== "highDensityNodeBatch") ||
+          !work || !Number.isSafeInteger(work.logicalIterationsReplayed) || work.logicalIterationsReplayed < 0 ||
+          !Number.isSafeInteger(work.equivalentLogicalIterationsReplayed) || work.equivalentLogicalIterationsReplayed < 0 ||
+          work.equivalentLogicalIterationsReplayed > work.logicalIterationsReplayed ||
+          !Number.isSafeInteger(work.equivalentCandidatesAdmitted) || work.equivalentCandidatesAdmitted < 0) {
+          this.fail(new Error("Malformed grid history replay work"))
+          return
+        }
+        this.stats.gridHistoryLogicalIterationsReplayed += work.logicalIterationsReplayed
+        this.stats.gridHistoryEquivalentLogicalIterationsReplayed += work.equivalentLogicalIterationsReplayed
+        this.stats.gridHistoryEquivalentCandidatesAdmitted += work.equivalentCandidatesAdmitted
       }
       if (response.ok && task.job.kind === "multiHeadHistory") {
         try { this.recordHistoryWork(response.result) }

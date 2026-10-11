@@ -16,9 +16,10 @@ export class ReplayHighDensityA03Solver extends HighDensitySolverA03 {
       params: nativeParams, maxIterations: this.MAX_ITERATIONS, ownerIterations: this.iterations }
   }
 
-  setHistoryRequest(job: GridHistoryJob, request: Promise<GridHistoryResult>): void {
+  setHistoryRequest(job: GridHistoryJob, request: Promise<GridHistoryResult>,
+    recordReplayWork?: (iterations: number) => void): void {
     if (job.algorithm !== "a03") throw new Error("A03 replay received a different grid algorithm")
-    this.replay.setHistoryRequest(this, job, request)
+    this.replay.setHistoryRequest(this, job, request, recordReplayWork)
   }
 
   async prepareForNextStep(): Promise<void> {

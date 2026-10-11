@@ -100,10 +100,12 @@ async function executeWorkerRequest({ taskId, job, sharedContext }: Pipeline9Loc
         result = await executeParallelHighDensityNodeJob(job, context, connMap, ownerHistoryClient, ownerA13Client, false, ownerGridClient)
       }
     }
-    self.postMessage({ taskId, ok: true, result } satisfies Pipeline9LocalWorkerResponse)
+    self.postMessage({ taskId, ok: true, result,
+      ...(gridClient ? { gridHistoryReplayWork: gridClient.replayWork } : {}) } satisfies Pipeline9LocalWorkerResponse)
   } catch (error) {
     self.postMessage({ taskId, ok: false,
-      error: error instanceof Error ? (error.stack ?? error.message) : String(error) } satisfies Pipeline9LocalWorkerResponse)
+      error: error instanceof Error ? (error.stack ?? error.message) : String(error),
+      ...(gridClient ? { gridHistoryReplayWork: gridClient.replayWork } : {}) } satisfies Pipeline9LocalWorkerResponse)
   }
 }
 

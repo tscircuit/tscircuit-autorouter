@@ -74,9 +74,22 @@ test("four actual workers preserve whole SRJ18 001/005 HD outputs, original per-
         if (job.params.nodeWithPortPoints.capacityMeshNodeId === "cmn_45") capturedHardNodeHistory = true
       }
       historyJobs += pool.stats.gridHistoryJobsStarted
+      expect(pool.stats.gridHistoryEquivalentLogicalIterationsReplayed).toBeLessThanOrEqual(pool.stats.gridHistoryLogicalIterationsReplayed)
+      if (sample === 1) {
+        expect(pool.stats.gridHistoryLogicalIterationsReplayed).toBe(0)
+        expect(pool.stats.gridHistoryEquivalentCandidatesAdmitted).toBe(0)
+      } else {
+        expect(pool.stats.gridHistoryJobsStarted).toBe(5)
+        expect(pool.stats.gridHistoryComputedIterations).toBe(712_799)
+        expect(pool.stats.gridHistoryEquivalentCandidatesAdmitted).toBe(2)
+        expect(pool.stats.gridHistoryEquivalentLogicalIterationsReplayed).toBeGreaterThan(0)
+      }
       console.log(JSON.stringify({ sample, nodes: params.nodePortPoints.length,
         gridHistoryJobs: pool.stats.gridHistoryJobsStarted, gridHistoryIterations: pool.stats.gridHistoryComputedIterations,
         gridHistoryPrefixIterationsRecomputed: pool.stats.gridHistoryPrefixIterationsRecomputed,
+        gridHistoryLogicalIterationsReplayed: pool.stats.gridHistoryLogicalIterationsReplayed,
+        gridHistoryEquivalentLogicalIterationsReplayed: pool.stats.gridHistoryEquivalentLogicalIterationsReplayed,
+        gridHistoryEquivalentCandidatesAdmitted: pool.stats.gridHistoryEquivalentCandidatesAdmitted,
         gridHistoryDenied: pool.stats.gridHistoryRequestsDenied }))
     } finally { pool.dispose() }
   }

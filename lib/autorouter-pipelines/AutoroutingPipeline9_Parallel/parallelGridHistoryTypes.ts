@@ -42,9 +42,18 @@ export type GridHistoryResult = {
   cancelled?: boolean
 }
 
-export type GridHistoryDispatcher = (
+export type GridHistoryReplayWork = {
+  logicalIterationsReplayed: number
+  equivalentLogicalIterationsReplayed: number
+  equivalentCandidatesAdmitted: number
+}
+
+export type GridHistoryDispatcher = ((
   jobs: GridHistoryJob[],
-) => Promise<Map<number, Promise<GridHistoryResult>>>
+) => Promise<Map<number, Promise<GridHistoryResult>>>) & {
+  recordReplayWork?: (iterations: number, equivalent: boolean) => void
+  recordEquivalentCandidates?: (count: number) => void
+}
 
 export type GridHistoryRequest = {
   kind: "requestGridHistories"

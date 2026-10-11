@@ -150,14 +150,35 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     candidates.sort((a, b) => Number(b[1] === selected) - Number(a[1] === selected))
     if (candidates.length === 0) return
     this.lastGridRequestIteration = this.iterations
-    const jobs: GridHistoryJob[] = candidates.slice(0, 3).map(([candidateId, solver]) => solver.createHistoryJob(candidateId))
+    const groups: Array<Array<[number, ReplayGridSolver]>> = []
+    for (const candidate of candidates) {
+      const solver = candidate[1]
+      const equivalent = solver instanceof ReplayHighDensityA01Solver
+        ? groups.find((group) => group[0]![1] instanceof ReplayHighDensityA01Solver &&
+          solver.hasEquivalentHistory(group[0]![1] as ReplayHighDensityA01Solver)) : undefined
+      if (equivalent) equivalent.push(candidate)
+      else groups.push([candidate])
+    }
+    // The three-job bound applies to physical searches. Equivalent local
+    // candidates retain their own caps, parameters and replay checkpoint state.
+    const selectedGroups = groups.slice(0, 3)
+    const jobs: GridHistoryJob[] = selectedGroups.map((group) => group[0]![1].createHistoryJob(group[0]![0]))
     const admitted = await this.gridDispatcher(jobs)
     for (const [id, request] of admitted) {
-      const solver = this.gridCandidates.get(id)
+      const group = selectedGroups.find((entry) => entry[0]![0] === id)
       const job = jobs.find((candidate) => candidate.candidateId === id)
-      if (!solver || !job || this.admittedGridCandidates.has(id)) throw new Error(`Grid grant names unknown or repeated candidate ${id}`)
-      solver.setHistoryRequest(job, request)
-      this.admittedGridCandidates.add(id)
+      if (!group || !job || this.admittedGridCandidates.has(id)) throw new Error(`Grid grant names unknown or repeated candidate ${id}`)
+      for (const [aliasIndex, [candidateId, solver]] of group.entries()) {
+        if (this.admittedGridCandidates.has(candidateId)) throw new Error(`Grid equivalence repeats candidate ${candidateId}`)
+        // Every alias is validated against its own original native prefix by
+        // GridHistoryReplayState. History contains no candidate ID or seed.
+        const candidateJob = aliasIndex === 0 ? job : solver.createHistoryJob(candidateId)
+        solver.setHistoryRequest(candidateJob, request, (iterations): void => {
+          this.gridDispatcher?.recordReplayWork?.(iterations, aliasIndex !== 0)
+        })
+        this.admittedGridCandidates.add(candidateId)
+      }
+      this.gridDispatcher.recordEquivalentCandidates?.(group.length - 1)
     }
   }
 

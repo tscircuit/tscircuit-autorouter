@@ -32,15 +32,18 @@ export class GridHistoryReplayState {
   private job?: GridHistoryJob
   private checkpointIndex = 0
   private observedSnapshot?: GridHistorySnapshot
+  private recordReplayWork?: (iterations: number) => void
   admittedAtIteration?: number
 
-  setHistoryRequest(solver: NativeGridHistorySolver, job: GridHistoryJob, request: Promise<GridHistoryResult>): void {
+  setHistoryRequest(solver: NativeGridHistorySolver, job: GridHistoryJob, request: Promise<GridHistoryResult>,
+    recordReplayWork?: (iterations: number) => void): void {
     if (this.historyRequest || !solver._setupDone || solver.solved || solver.failed ||
       solver.iterations % PARALLEL_GRID_HISTORY_QUANTUM !== 0 || solver.MAX_ITERATIONS !== job.maxIterations ||
       solver.iterations !== job.ownerIterations) {
       throw new Error("Grid history must be assigned at an initialized native supervisor boundary")
     }
     this.job = job
+    this.recordReplayWork = recordReplayWork
     this.admittedAtIteration = solver.iterations
     this.expectedPrefix = snapshotNativeGridHistory(solver)
     this.historyRequest = request.then(
@@ -79,6 +82,8 @@ export class GridHistoryReplayState {
     }
     if (solver.iterations !== checkpoint.iterations) return true
     this.checkpointIndex++
+    if (!this.observedSnapshot) throw new Error("Grid history checkpoint has no prior observation")
+    this.recordReplayWork?.(checkpoint.iterations - this.observedSnapshot.iterations)
     this.observedSnapshot = checkpoint
     solver.MAX_ITERATIONS = checkpoint.maxIterations
     solver.solved = checkpoint.solved
