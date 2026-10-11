@@ -1,0 +1,226 @@
+{
+  "kind": "Already-scaled Native polygon reconstruction: isolated functional and operation proof",
+  "integrationStatus": "Isolated helper only. No polygon worker protocol, Native-site fact consumption, pool dispatch or benchmark activation is introduced by this slice. No local elapsed-time comparison or speed claim.",
+  "candidateBaseRevision": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPolygonFacts.ts": "1f4fcdb2c2d1bc306c5569a2cd0c64eee7c8cc3dd0ce35dd13434cc71514b361",
+    "tests/solvers/reference-drc-polygon-fact-reconstruction-parity.test.ts": "832ff7c7100027204604b22b021c6bba078734ec976010c77536c9444908d1e5",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/get-via-and-pour-connections.ts": "5694a5fe18c4dd8de29f8db4bccc463c09dc13c75be3882966d745f3c3e93322",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/copper-pour-connectivity/create-copper-polygon-contact-tester.ts": "dd049f473ed5a6ebc7e8204201286368a9cd2c44c461e2cc1c29c710485a9434",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "ec867607eb3eddb098414959e47bebd58a42b23ca046c4a48f6ee97a92302080",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance.ts": "78600b22e2035e2c1ba8551131507cc5eeeb527ab5c03c12824a5ad09dd22dd0",
+    "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36",
+    "node_modules/@flatten-js/core/dist/main.cjs": "890375192455d5df40b146d9ae7fbf19adb97437660af97a61a455cd2b369e21"
+  },
+  "pinnedDependencies": {
+    "@flatten-js/core": "1.6.14"
+  },
+  "originalBoundary": [
+    "Original conductors, circle/pour/wire polygons, original intern calls and scaled-polygon memo hits/misses complete before the Flatbush polygon-bounds index finishes.",
+    "The isolated oracle captures the existing already-scaled Native polygon at that boundary. It never regenerates copper from original source objects or applies scaling a second time.",
+    "Every face and edge keeps original iteration order. Segment raw ps/pe coordinates and Arc raw pc/r/startAngle/endAngle/counterClockwise fields are copied without arithmetic. Fresh Native constructors reproduce the ordered face/edge/PlanarSet state used by the original contact predicate.",
+    "Original main polygons, Native constructor boundaries, original contact-query sequence, primitive memo hits/misses/FIFO eviction, graph connections and final error construction remain unchanged in the oracle.",
+    "Each actual original polygon-contact miss first executes the original predicate, then compares its boolean with reconstructed Native geometry. Entire cyclic owned polygon/face/edge/index data is checked before and after original queries and independent reconstructed queries; no getter is called by the state snapshot.",
+    "The helper does not grant admission. Future production preparation requires the complete existing private Native checker guard, genuine native executor brand/capacity admission, an upfront finite/resource-domain preflight, and only original fresh-miss tasks.",
+    "Future protocol validation must validate every row including unused rows. Reconstruction constructor faults are infrastructure/context faults, distinct from per-row Native query exceptions. Typed query exception facts must reproduce the original main predicate at its original ordered miss site; no error object is transferred into the final output.",
+    "All graph/error objects and their source aliases remain main-thread-owned. The worker-facing result is a pure boolean fact, not Native polygon or graph publication."
+  ],
+  "verification": {
+    "commands": [
+      "bun test --timeout 9999999 tests/solvers/reference-drc-polygon-fact-reconstruction-parity.test.ts",
+      "bunx tsc --noEmit"
+    ],
+    "bunAssertions": 559,
+    "originalFreshPredicateDeepStrictEqualAssertions": 15901,
+    "snapshotAndReconstructedQueryOwnedStateDeepStrictEqualAssertions": 83607,
+    "originalQueryOwnedStateDeepStrictEqualAssertions": 15901,
+    "all17SavedWholeNativeErrorsExact": true,
+    "all17OriginalPrivateNativeAdmissionPositive": true,
+    "originalPolygonQueries": 33959,
+    "originalFreshPolygonPredicates": 15901,
+    "perEvaluation": [
+      {
+        "number": 1,
+        "queries": 0,
+        "misses": 0,
+        "polygons": 0,
+        "edges": 0,
+        "snapshotAndRestoredStateChecks": 0,
+        "nativeQueryStateChecks": 0
+      },
+      {
+        "number": 2,
+        "queries": 2680,
+        "misses": 2671,
+        "polygons": 4858,
+        "edges": 18229,
+        "snapshotAndRestoredStateChecks": 7529,
+        "nativeQueryStateChecks": 2671
+      },
+      {
+        "number": 3,
+        "queries": 2429,
+        "misses": 1635,
+        "polygons": 4853,
+        "edges": 18203,
+        "snapshotAndRestoredStateChecks": 6488,
+        "nativeQueryStateChecks": 1635
+      },
+      {
+        "number": 4,
+        "queries": 2318,
+        "misses": 2130,
+        "polygons": 4857,
+        "edges": 18225,
+        "snapshotAndRestoredStateChecks": 6987,
+        "nativeQueryStateChecks": 2130
+      },
+      {
+        "number": 5,
+        "queries": 2302,
+        "misses": 832,
+        "polygons": 4859,
+        "edges": 18233,
+        "snapshotAndRestoredStateChecks": 5691,
+        "nativeQueryStateChecks": 832
+      },
+      {
+        "number": 6,
+        "queries": 2234,
+        "misses": 2173,
+        "polygons": 4695,
+        "edges": 17589,
+        "snapshotAndRestoredStateChecks": 6868,
+        "nativeQueryStateChecks": 2173
+      },
+      {
+        "number": 7,
+        "queries": 2229,
+        "misses": 881,
+        "polygons": 4697,
+        "edges": 17597,
+        "snapshotAndRestoredStateChecks": 5578,
+        "nativeQueryStateChecks": 881
+      },
+      {
+        "number": 8,
+        "queries": 2170,
+        "misses": 340,
+        "polygons": 4695,
+        "edges": 17595,
+        "snapshotAndRestoredStateChecks": 5035,
+        "nativeQueryStateChecks": 340
+      },
+      {
+        "number": 9,
+        "queries": 2166,
+        "misses": 1642,
+        "polygons": 4683,
+        "edges": 17550,
+        "snapshotAndRestoredStateChecks": 6325,
+        "nativeQueryStateChecks": 1642
+      },
+      {
+        "number": 10,
+        "queries": 2153,
+        "misses": 579,
+        "polygons": 4682,
+        "edges": 17546,
+        "snapshotAndRestoredStateChecks": 5261,
+        "nativeQueryStateChecks": 579
+      },
+      {
+        "number": 11,
+        "queries": 2166,
+        "misses": 0,
+        "polygons": 4683,
+        "edges": 17550,
+        "snapshotAndRestoredStateChecks": 4683,
+        "nativeQueryStateChecks": 0
+      },
+      {
+        "number": 12,
+        "queries": 1860,
+        "misses": 1342,
+        "polygons": 3355,
+        "edges": 12355,
+        "snapshotAndRestoredStateChecks": 4697,
+        "nativeQueryStateChecks": 1342
+      },
+      {
+        "number": 13,
+        "queries": 1863,
+        "misses": 40,
+        "polygons": 3384,
+        "edges": 12471,
+        "snapshotAndRestoredStateChecks": 3424,
+        "nativeQueryStateChecks": 40
+      },
+      {
+        "number": 14,
+        "queries": 1860,
+        "misses": 0,
+        "polygons": 3355,
+        "edges": 12355,
+        "snapshotAndRestoredStateChecks": 3355,
+        "nativeQueryStateChecks": 0
+      },
+      {
+        "number": 15,
+        "queries": 1815,
+        "misses": 400,
+        "polygons": 3355,
+        "edges": 12355,
+        "snapshotAndRestoredStateChecks": 3755,
+        "nativeQueryStateChecks": 400
+      },
+      {
+        "number": 16,
+        "queries": 1860,
+        "misses": 0,
+        "polygons": 3355,
+        "edges": 12355,
+        "snapshotAndRestoredStateChecks": 3355,
+        "nativeQueryStateChecks": 0
+      },
+      {
+        "number": 17,
+        "queries": 1854,
+        "misses": 1236,
+        "polygons": 3340,
+        "edges": 12295,
+        "snapshotAndRestoredStateChecks": 4576,
+        "nativeQueryStateChecks": 1236
+      }
+    ],
+    "geometryCases": [
+      "empty polygon and empty face",
+      "holes with reversed circle winding",
+      "multiple disjoint faces",
+      "circle arcs",
+      "signed-zero segment coordinates",
+      "half-circle arc plus segment",
+      "rotated rectangular pour",
+      "thin rectangles",
+      "near-contact circles",
+      "five original tolerance values including adjacent floating-point perturbations"
+    ],
+    "protocolCases": [
+      "getter-bearing owned kind is rejected without getter reads",
+      "Proxy is rejected before reflection traps",
+      "unknown edge kind is fatal",
+      "nonfinite coordinate is rejected at strict plain-graph validation",
+      "invalid pair index is fatal"
+    ],
+    "controlMethod": "The committed single test copies exact Native checker/index/via source modules into a temporary directory and adds read-only instrumentation after the original index.finish and inside only original Native polygon-contact miss callbacks. Full original Native/private admission remains enabled. The original fixed fixture supplies all17 full expected DRC results. This is not a replacement reference checker.",
+    "futureAdmissionObligations": [
+      "Preflight scaled nonfinite or resource-out-of-domain snapshots before activated planning or new memo/FIFO mutations.",
+      "Do not compute fresh facts for already warm polygon-contact hits.",
+      "Deduplicate worker polygon copies by actual source polygon identity, retaining original task order and main memo keys.",
+      "Treat Native reconstruction constructor failures as globally fatal context faults; do not call them selected query exception rows.",
+      "Keep per-row algorithm exceptions deferred to the original miss callback and validate unused rows globally."
+    ],
+    "typecheckExitCode": 0,
+    "independentReview": "review_parallel independently passed559 Bun assertions and all17 full result/state oracles,15901 fresh Native predicates and33959 ordered queries. Isolated source/test clear; future production nonfinite/resource admission and constructor-versus-query exception boundaries remain separate obligations."
+  }
+}
