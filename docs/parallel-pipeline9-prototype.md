@@ -641,3 +641,17 @@ unmet. Complete metadata, counters and worker statistics are in
 [parallel-srj18-24f2c48dd-complete.json](benchmarks/parallel-srj18-24f2c48dd-complete.json).
 The exact SHA, checks, arguments and workflow IDs are in
 [parallel-srj18-24f2c48dd-dispatch.json](benchmarks/parallel-srj18-24f2c48dd-dispatch.json).
+
+The next reviewed revision executes the selected original A01 search inside
+its existing worker-owned 100-call loop, with full native checkpoints and
+callback behavior preserved; see
+[native-a01-bulk-search-selected-owner-proof.json](benchmarks/native-a01-bulk-search-selected-owner-proof.json).
+Its native lookahead queues sixteen targets on the same four workers. Only
+the privately bound original owner, helper, pool and minted worker callback
+can widen the window; custom callbacks retain four pending targets. All six
+phases preserve 1,503 routes and 27,198 logical native steps. Descriptor reads
+fall from 33,899,534 to 14,261,172 while native reruns rise from 98 to 167.
+This is a measured work tradeoff, with elapsed time still to be established
+by the next full-dataset comparison. Exact counters, source hashes and
+mutation/cap cancellation checks are in
+[parallel-path-lookahead-sixteen-window-proof.json](benchmarks/parallel-path-lookahead-sixteen-window-proof.json).

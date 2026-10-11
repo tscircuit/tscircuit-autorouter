@@ -32,7 +32,7 @@ test("four native workers publish exact ordered route geometry and counters unde
       expect(parallel.failed).toBe(false)
       expect(parallel.stats.lookaheadSpeculativeJobs).toBe(24)
       expect(parallel.stats.lookaheadCertifiedRoutes).toBeGreaterThan(0)
-      expect(parallel.stats.lookaheadMaximumLookahead).toBe(4)
+      expect(parallel.stats.lookaheadMaximumLookahead).toBe(16)
       expect(parallel.stats.lookaheadSpeculativeNativeSteps + parallel.stats.lookaheadOrderedRerunNativeSteps).toBeGreaterThanOrEqual(native.iterations - 1)
       expect(pool.stats.maxActiveWorkers).toBe(4)
       expect(pool.stats.tasksCompleted).toBe(24)

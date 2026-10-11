@@ -4,7 +4,7 @@ import { pathLifecycleAll, pathLifecycleAllSettled, pathLifecycleRace, pathLifec
 import { rehydrateNativeSourceAliases } from "./nativeSourceAliasProvenance"
 import { assertParallelPathLookaheadResult } from "./ParallelPathLookaheadExecutor"
 import { ParallelPathQueryCertifier } from "./ParallelPathQueryCertifier"
-import { isNativeParallelPathAwaitStateCheck, isOrdinaryParallelPathRoute, type ParallelPathLookaheadEligibility } from "./createParallelPathLookaheadEligibility"
+import { getNativeParallelPathLookaheadWindowCapacity, isNativeParallelPathAwaitStateCheck, isOrdinaryParallelPathRoute, type ParallelPathLookaheadEligibility } from "./createParallelPathLookaheadEligibility"
 import { canUseNativePathLookaheadPool } from "./Pipeline9LocalWorkerPool"
 import type { ParallelPathLookaheadJob, ParallelPathLookaheadResult } from "./parallelPathLookaheadTypes"
 import type { ParallelPathWaveContext, ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
@@ -40,6 +40,12 @@ const nativeGetDescriptors = Object.getOwnPropertyDescriptors
 const nativeOwnKeys = Reflect.ownKeys
 const nativeGetPrototype = Object.getPrototypeOf
 const nativeObjectIs = Object.is
+const nativeWeakMapGet = WeakMap.prototype.get
+const nativeWeakMapSet = WeakMap.prototype.set
+const nativeWindowCapacities = new WeakMap<ParallelPathLookaheadCoordinator, number>()
+type NativeRunBinding = { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility;
+  pool: ParallelStageWorkerPool }
+const nativeRunBindings = new WeakMap<Params["run"], NativeRunBinding>()
 const structuredCloneDescriptor = nativeGetDescriptors(globalThis).structuredClone
 const nativeStructuredClone = structuredCloneDescriptor && hasOwn(structuredCloneDescriptor, "value") &&
   typeof structuredCloneDescriptor.value === "function" ? structuredCloneDescriptor.value as typeof structuredClone : undefined
@@ -49,7 +55,17 @@ function ownNumber(source: object, key: string): number | undefined {
   return descriptor && hasOwn(descriptor, "value") && typeof descriptor.value === "number" ? descriptor.value : undefined
 }
 
-/** Four bounded speculative routes; the original native instance owns publication. */
+/** Mint the worker callback itself; caller callbacks cannot acquire this brand. */
+export function createNativeParallelPathLookaheadRun(
+  owner: MultiSimplifiedPathSolver, eligibility: ParallelPathLookaheadEligibility, pool: ParallelStageWorkerPool,
+): Params["run"] | undefined {
+  if (getNativeParallelPathLookaheadWindowCapacity(owner, eligibility) === undefined || !canUseNativePathLookaheadPool(pool)) return undefined
+  const run = (job: ParallelPathLookaheadJob): Promise<ParallelPathLookaheadResult> => pool.run<ParallelPathLookaheadResult>(job)
+  nativeApply(nativeWeakMapSet, nativeRunBindings, [run, { owner, eligibility, pool }])
+  return run
+}
+
+/** A bounded worker window; the original native instance owns publication. */
 export class ParallelPathLookaheadCoordinator {
   readonly native: MultiSimplifiedPathSolver
   readonly stats = {
@@ -88,6 +104,23 @@ export class ParallelPathLookaheadCoordinator {
     this.stats.physicalOwnerNativeStepCalls = params.enclosingNativeStep ? 1 : 0
     this.native = params.original
     const original = this.native
+    // Descriptor inspection keeps unsupported caller factories unobserved.
+    // Exact private owner/helper and default-pool identities widen only the
+    // pending work; the same two-to-four physical workers execute every row.
+    const eligibilityField = getOwnDescriptor(params, "nativeEligibility")
+    const poolField = getOwnDescriptor(params, "nativeWorkerPool")
+    const runField = getOwnDescriptor(params, "run")
+    let windowCapacity = params.workerCount
+    if (eligibilityField && hasOwn(eligibilityField, "value") && poolField && hasOwn(poolField, "value") &&
+      runField && hasOwn(runField, "value") && typeof runField.value === "function" &&
+      canUseNativePathLookaheadPool(poolField.value)) {
+      const binding = nativeApply(nativeWeakMapGet, nativeRunBindings, [runField.value]) as NativeRunBinding | undefined
+      if (binding && binding.owner === original && binding.eligibility === eligibilityField.value && binding.pool === poolField.value) {
+        const capacity = getNativeParallelPathLookaheadWindowCapacity(original, eligibilityField.value)
+        if (capacity !== undefined) windowCapacity = capacity
+      }
+    }
+    nativeApply(nativeWeakMapSet, nativeWindowCapacities, [this, windowCapacity])
     // Clone once in the admitted synchronous span. A later worker-context or
     // prefix serializer may run after yielding; it must never traverse live
     // caller input that is outside that job's selected read scope.
@@ -234,7 +267,12 @@ export class ParallelPathLookaheadCoordinator {
   }
 
   private dispatchWindow(prefix: number): void {
-    const end = Math.min(this.native.unsimplifiedHdRoutes.length, prefix + this.params.workerCount)
+    const windowCapacity = nativeApply(nativeWeakMapGet, nativeWindowCapacities, [this]) as number
+    if (typeof windowCapacity !== "number" || windowCapacity < this.params.workerCount ||
+      windowCapacity > 16 || windowCapacity % 1 !== 0) {
+      throw new Error("Native lookahead owner is missing its private window capacity")
+    }
+    const end = Math.min(this.native.unsimplifiedHdRoutes.length, prefix + windowCapacity)
     const updates = nativeStructuredClone!(this.native.simplifiedHdRoutes.map((route, index) => ({ index, route })))
     while (!this.stopped && this.nextIndex < end) {
       const index = this.nextIndex++

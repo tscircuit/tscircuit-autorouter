@@ -7,7 +7,7 @@ import type { ParallelPathWaveContext, ParallelPathWaveResult } from "./parallel
 import { takeParallelPathReadyBatch } from "./takeParallelPathReadyBatch"
 import { canUseNativePathLookaheadPool } from "./Pipeline9LocalWorkerPool"
 import { pathLifecycleResolve, pathLifecycleThen } from "./parallelPathLookaheadPromises"
-import { ParallelPathLookaheadCoordinator, hasNativeParallelPathLookaheadCoordinator } from "./ParallelPathLookaheadCoordinator"
+import { createNativeParallelPathLookaheadRun, ParallelPathLookaheadCoordinator, hasNativeParallelPathLookaheadCoordinator } from "./ParallelPathLookaheadCoordinator"
 import { captureParallelPathPrototypeContract, createParallelPathLookaheadEligibility } from "./createParallelPathLookaheadEligibility"
 import type { ParallelPathLookaheadEligibility } from "./createParallelPathLookaheadEligibility"
 import type { ParallelPathLookaheadResult } from "./parallelPathLookaheadTypes"
@@ -217,9 +217,15 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
     } | undefined
     if (!factories) throw new Error("Native lookahead owner is missing its private factories")
     const workerPool = this.workerPool
+    const run = createNativeParallelPathLookaheadRun(this, eligibility, workerPool)
+    if (!run) {
+      this.nativeOnly = true
+      super._step()
+      return
+    }
     const coordinator = new ParallelPathLookaheadCoordinator({ original: this, contextId: this.contextId,
       workerCount: this.workerCount, enclosingNativeStep: true,
-      run: (job): Promise<ParallelPathLookaheadResult> => workerPool.run<ParallelPathLookaheadResult>(job),
+      run,
       isEligible: (): boolean => canUseNativePathLookaheadPool(workerPool) && eligibility() && hasNativeParallelPathLookaheadCoordinator(),
       captureScope: factories.captureScope,
       captureAwaitState: factories.captureAwaitState,

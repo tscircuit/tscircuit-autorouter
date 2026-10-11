@@ -38,7 +38,7 @@ test("complete native sample001 and sample005 simplification stages retain all p
       expect(parallel.currentPhase).toBe(serial.currentPhase)
       expect(parallel.stats.lookaheadCertifiedRoutes).toBeGreaterThan(0)
       expect(parallel.stats.lookaheadSpeculativeJobs).toBeGreaterThan(config.hdRoutes.length)
-      expect(parallel.stats.lookaheadMaximumLookahead).toBe(4)
+      expect(parallel.stats.lookaheadMaximumLookahead).toBe(16)
       expect(parallel.stats.lookaheadGuardChecks).toBeLessThan(parallel.stats.lookaheadSpeculativeJobs / 2)
       expect(config.hdRoutes).toEqual(before)
     }

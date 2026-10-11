@@ -41,7 +41,7 @@ test("six captured SRJ18 phases preserve all native route geometry, ordered step
       expect(parallel.progress).toBe(native.progress)
       expect(parallel.error).toBe(native.error)
       expect(parallel.stats.lookaheadSpeculativeJobs).toBe(params.unsimplifiedHdRoutes.length)
-      expect(parallel.stats.lookaheadMaximumLookahead).toBe(4)
+      expect(parallel.stats.lookaheadMaximumLookahead).toBe(16)
       expect(context).toEqual(before)
       routes += params.unsimplifiedHdRoutes.length
       certified += parallel.stats.lookaheadCertifiedRoutes

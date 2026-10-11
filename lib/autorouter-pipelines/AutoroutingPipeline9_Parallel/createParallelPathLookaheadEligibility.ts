@@ -62,6 +62,8 @@ const awaitCheckOwners = new WeakMap<() => boolean, { owner: MultiSimplifiedPath
 type ScopeBinding = { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility;
   contracts: ParallelPathPrototypeContract[]; covered: WeakSet<object>; indexState: AwaitStateGraph }
 const scopeCheckOwners = new WeakMap<() => boolean, ScopeBinding>()
+const nativeEligibilityOwners = new WeakMap<ParallelPathLookaheadEligibility, MultiSimplifiedPathSolver>()
+const nativeLookaheadWindowCapacity = 16
 const globals = ["Object", "Array", "Math", "JSON", "Number", "String", "Boolean", "BigInt", "Symbol", "Map", "Set",
   "WeakMap", "WeakSet", "Reflect", "Function", "Atomics", "Promise", "Proxy", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
@@ -521,6 +523,16 @@ export function isOrdinaryParallelPathRoute(route: HighDensityRoute): boolean {
   return true
 }
 
+/** Only the actual helper and owner can widen a native worker window. */
+export function getNativeParallelPathLookaheadWindowCapacity(
+  owner: MultiSimplifiedPathSolver, eligibility: unknown,
+): number | undefined {
+  if (typeof eligibility !== "function") return undefined
+  const boundOwner = apply(weakMapGet, nativeEligibilityOwners, [eligibility]) as MultiSimplifiedPathSolver | undefined
+  if (boundOwner !== owner) return undefined
+  return nativeLookaheadWindowCapacity
+}
+
 /** Exact owned phase snapshots, original native methods, and no observable hooks. */
 export function createParallelPathLookaheadEligibility(
   solver: MultiSimplifiedPathSolver,
@@ -644,7 +656,7 @@ export function createParallelPathLookaheadEligibility(
     stats.scopeCaptures++
     if (!scopedPrerequisites() || isProxy(indexes) || getPrototype(indexes) !== Array.prototype) return undefined
     const indexList = captureParallelPathPrototypeContract(indexes, stats)
-    if (indexList.entries.length !== indexes.length + 1 || indexes.length < 1 || indexes.length > 4) return undefined
+    if (indexList.entries.length !== indexes.length + 1 || indexes.length < 1 || indexes.length > nativeLookaheadWindowCapacity) return undefined
     for (let position = 0; position < indexes.length; position++) {
       const entry = indexList.entries[position]!
       if (entry.key !== String(position) || !entry.descriptor.data || !Number.isSafeInteger(entry.descriptor.value) ||
@@ -734,5 +746,6 @@ export function createParallelPathLookaheadEligibility(
     apply(weakMapSet, awaitCheckOwners, [check, { owner: solver, eligibility }])
     return check
   }
+  apply(weakMapSet, nativeEligibilityOwners, [eligibility, solver])
   return Object.assign(eligibility, { stats, captureAwaitState, captureScope })
 }

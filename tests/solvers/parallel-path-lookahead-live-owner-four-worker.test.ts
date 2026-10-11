@@ -68,7 +68,7 @@ test("real four-worker withdrawal preserves original exposed child, live source/
       expect(escapedActual.solved).toBe(escapedExpected.solved)
       expect(actualReads).toBe(expectedReads)
       expect(parallel.stats.lookaheadCertifiedRoutes).toBe(0)
-      expect(parallel.stats.lookaheadSpeculativeJobs).toBe(4)
+      expect(parallel.stats.lookaheadSpeculativeJobs).toBe(Math.min(16, routes().length))
     } finally {
       Object.defineProperty(globalThis, "Float64Array", floatDescriptor)
       pool.dispose()
