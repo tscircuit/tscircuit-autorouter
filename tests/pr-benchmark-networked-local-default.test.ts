@@ -16,7 +16,12 @@ test("networked PR benchmarks default to paired dataset18 runs without an eight-
   expect(explicit.datasetName).toBe("01")
   expect(explicit.sameMachineCompare).toBe(true)
   expect(explicit.benchmarkArgs).toEqual([
-    "--pipeline", "9net", "--dataset", "01", "--concurrency", "1",
+    "--pipeline",
+    "9net",
+    "--dataset",
+    "01",
+    "--concurrency",
+    "1",
     "--networked-remote",
   ])
   for (const selector of [
@@ -24,21 +29,25 @@ test("networked PR benchmarks default to paired dataset18 runs without an eight-
     "AutoroutingPipelineSolver9_Networked",
     "--pipeline 9NET",
   ]) {
-    expect(parsePrBenchmarkCommand(`/benchmark-long ${selector}`)).toMatchObject({
+    expect(
+      parsePrBenchmarkCommand(`/benchmark-long ${selector}`),
+    ).toMatchObject({
       datasetName: "srj18",
       sameMachineCompare: true,
     })
     expect(() => parsePrBenchmarkCommand(`/profile ${selector}`)).toThrow(
       "only supported by /benchmark",
     )
-    expect(() => parsePrBenchmarkCommand(`/benchmark ${selector} --profile-solvers`)).toThrow(
-      "does not support --profile-solvers",
-    )
+    expect(() =>
+      parsePrBenchmarkCommand(`/benchmark ${selector} --profile-solvers`),
+    ).toThrow("does not support --profile-solvers")
   }
 
-  expect(parsePrBenchmarkCommand("/benchmark-long --pipeline 9")).toMatchObject({
-    benchmarkArgs: ["--concurrency", "8", "--pipeline", "9"],
-    datasetName: "dataset01",
-    sameMachineCompare: false,
-  })
+  expect(parsePrBenchmarkCommand("/benchmark-long --pipeline 9")).toMatchObject(
+    {
+      benchmarkArgs: ["--concurrency", "8", "--pipeline", "9"],
+      datasetName: "dataset01",
+      sameMachineCompare: false,
+    },
+  )
 })

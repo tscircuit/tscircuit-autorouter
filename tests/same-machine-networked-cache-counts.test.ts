@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import type { BenchmarkReport, SolverRunSummary } from "../scripts/benchmark/benchmark-types"
+import type {
+  BenchmarkReport,
+  SolverRunSummary,
+} from "../scripts/benchmark/benchmark-types"
 import { renderSameMachineBenchmarkResults } from "../scripts/benchmark/same-machine-results"
 
 test("paired networked cold and hot comments expose each revision's cache counts", (): void => {
@@ -40,11 +43,38 @@ test("paired networked cold and hot comments expose each revision's cache counts
       drcErrorCount: 0,
     })),
   })
-  const baseCold = { remoteRequests: 10, cacheHits: 0, solverResults: 10, batchCacheMisses: 10, localFallbacks: 0 }
-  const baseHot = { remoteRequests: 10, cacheHits: 10, solverResults: 0, batchCacheMisses: 0, localFallbacks: 0 }
-  const prCold = { remoteRequests: 12, cacheHits: 0, solverResults: 12, batchCacheMisses: 12, localFallbacks: 0 }
-  const prHot = { remoteRequests: 12, cacheHits: 11, solverResults: 0, batchCacheMisses: 1, localFallbacks: 1 }
-  const render = (baseReport: BenchmarkReport, prReport: BenchmarkReport): string =>
+  const baseCold = {
+    remoteRequests: 10,
+    cacheHits: 0,
+    solverResults: 10,
+    batchCacheMisses: 10,
+    localFallbacks: 0,
+  }
+  const baseHot = {
+    remoteRequests: 10,
+    cacheHits: 10,
+    solverResults: 0,
+    batchCacheMisses: 0,
+    localFallbacks: 0,
+  }
+  const prCold = {
+    remoteRequests: 12,
+    cacheHits: 0,
+    solverResults: 12,
+    batchCacheMisses: 12,
+    localFallbacks: 0,
+  }
+  const prHot = {
+    remoteRequests: 12,
+    cacheHits: 11,
+    solverResults: 0,
+    batchCacheMisses: 1,
+    localFallbacks: 1,
+  }
+  const render = (
+    baseReport: BenchmarkReport,
+    prReport: BenchmarkReport,
+  ): string =>
     renderSameMachineBenchmarkResults({
       baseReport,
       prReport,
@@ -53,23 +83,58 @@ test("paired networked cold and hot comments expose each revision's cache counts
       repository: "tscircuit/tscircuit-autorouter",
       runnerName: "blacksmith-local-networked",
     })
-  const baseReport = makeReport([makeSummary(coldName, baseCold), makeSummary(hotName, baseHot)])
-  const prReport = makeReport([makeSummary(coldName, prCold), makeSummary(hotName, prHot)])
+  const baseReport = makeReport([
+    makeSummary(coldName, baseCold),
+    makeSummary(hotName, baseHot),
+  ])
+  const prReport = makeReport([
+    makeSummary(coldName, prCold),
+    makeSummary(hotName, prHot),
+  ])
   const markdown = render(baseReport, prReport)
 
-  expect(markdown).toContain("| Pipeline9_Networked Cold | HD requests | 10 | 12 | +2 |")
-  expect(markdown).toContain("| Pipeline9_Networked Cold | HD cache hits | 0/10 | 0/12 | 0 |")
-  expect(markdown).toContain("| Pipeline9_Networked Cold | HD solver results | 10 | 12 | +2 |")
-  expect(markdown).toContain("| Pipeline9_Networked Cold | HD local fallbacks | 0 | 0 | 0 |")
-  expect(markdown).toContain("| Pipeline9_Networked Hot | HD requests | 10 | 12 | +2 |")
-  expect(markdown).toContain("| Pipeline9_Networked Hot | HD cache hits | 10/10 | 11/12 | +1 |")
-  expect(markdown).toContain("| Pipeline9_Networked Hot | HD solver results | 0 | 0 | 0 |")
-  expect(markdown).toContain("| Pipeline9_Networked Hot | HD local fallbacks | 0 | 1 | +1 |")
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Cold | HD requests | 10 | 12 | +2 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Cold | HD cache hits | 0/10 | 0/12 | 0 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Cold | HD solver results | 10 | 12 | +2 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Cold | HD local fallbacks | 0 | 0 | 0 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Hot | HD requests | 10 | 12 | +2 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Hot | HD cache hits | 10/10 | 11/12 | +1 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Hot | HD solver results | 0 | 0 | 0 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Hot | HD local fallbacks | 0 | 1 | +1 |",
+  )
 
-  const historicalBase = makeReport([makeSummary(coldName), makeSummary(hotName)])
-  expect(render(historicalBase, prReport)).toContain("| Pipeline9_Networked Hot | HD cache hits | n/a | 11/12 | n/a |")
+  const historicalBase = makeReport([
+    makeSummary(coldName),
+    makeSummary(hotName),
+  ])
+  expect(render(historicalBase, prReport)).toContain(
+    "| Pipeline9_Networked Hot | HD cache hits | n/a | 11/12 | n/a |",
+  )
   const otherName = "AutoroutingPipelineSolver7_MultiGraph"
-  expect(render(makeReport([makeSummary(otherName, baseCold)]), makeReport([makeSummary(otherName, prCold)]))).toBe(
-    render(makeReport([makeSummary(otherName)]), makeReport([makeSummary(otherName)])),
+  expect(
+    render(
+      makeReport([makeSummary(otherName, baseCold)]),
+      makeReport([makeSummary(otherName, prCold)]),
+    ),
+  ).toBe(
+    render(
+      makeReport([makeSummary(otherName)]),
+      makeReport([makeSummary(otherName)]),
+    ),
   )
 })

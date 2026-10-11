@@ -47,14 +47,19 @@ const readOptionalTextFile = (path: string): string | undefined => {
 
 const parseCpuAffinity = (status: string): number[] => {
   const cpuList = status.match(/^Cpus_allowed_list:\s*(.*)$/m)?.[1]?.trim()
-  if (!cpuList) throw new Error("Cannot read Linux CPU affinity from /proc/self/status")
+  if (!cpuList)
+    throw new Error("Cannot read Linux CPU affinity from /proc/self/status")
   const cpuIds = new Set<number>()
   for (const part of cpuList.split(",")) {
     const range = part.match(/^(\d+)(?:-(\d+))?$/)
     if (!range) throw new Error(`Invalid Linux CPU affinity range: ${part}`)
     const first = Number(range[1])
     const last = range[2] === undefined ? first : Number(range[2])
-    if (!Number.isSafeInteger(first) || !Number.isSafeInteger(last) || last < first) {
+    if (
+      !Number.isSafeInteger(first) ||
+      !Number.isSafeInteger(last) ||
+      last < first
+    ) {
       throw new Error(`Invalid Linux CPU affinity range: ${part}`)
     }
     for (let cpuId = first; cpuId <= last; cpuId++) cpuIds.add(cpuId)
@@ -77,9 +82,12 @@ const parseCpuCgroupMounts = (mountinfo: string): CpuCgroupMount[] => {
     if (!after) continue
     const fields = before.split(" ")
     const [filesystem, , options] = after.split(" ")
-    const version = filesystem === "cgroup2" ? 2 : filesystem === "cgroup" ? 1 : undefined
-    if (!version || (version === 1 && !options?.split(",").includes("cpu"))) continue
-    if (!fields[3] || !fields[4]) throw new Error("Invalid CPU cgroup mount in /proc/self/mountinfo")
+    const version =
+      filesystem === "cgroup2" ? 2 : filesystem === "cgroup" ? 1 : undefined
+    if (!version || (version === 1 && !options?.split(",").includes("cpu")))
+      continue
+    if (!fields[3] || !fields[4])
+      throw new Error("Invalid CPU cgroup mount in /proc/self/mountinfo")
     mounts.push({
       root: decodeMountPath(fields[3]),
       mountPoint: decodeMountPath(fields[4]),
@@ -95,12 +103,14 @@ const parseCpuCgroupMemberships = (cgroup: string): CpuCgroupMembership[] => {
     if (!line) continue
     const firstColon = line.indexOf(":")
     const secondColon = line.indexOf(":", firstColon + 1)
-    if (firstColon < 0 || secondColon < 0) throw new Error("Invalid /proc/self/cgroup entry")
+    if (firstColon < 0 || secondColon < 0)
+      throw new Error("Invalid /proc/self/cgroup entry")
     const controllers = line.slice(firstColon + 1, secondColon)
     const path = line.slice(secondColon + 1)
     if (!path.startsWith("/")) throw new Error("Invalid /proc/self/cgroup path")
     if (controllers === "") memberships.push({ path, version: 2 })
-    else if (controllers.split(",").includes("cpu")) memberships.push({ path, version: 1 })
+    else if (controllers.split(",").includes("cpu"))
+      memberships.push({ path, version: 1 })
   }
   return memberships
 }
@@ -114,7 +124,9 @@ const getMountedCgroupDirectory = (
   if (membership.path === "/") return mount.mountPoint
   const relativePath = posix.relative(mount.root, membership.path)
   if (relativePath === ".." || relativePath.startsWith("../")) {
-    throw new Error(`Cannot map CPU cgroup ${membership.path} to mount ${mount.mountPoint}`)
+    throw new Error(
+      `Cannot map CPU cgroup ${membership.path} to mount ${mount.mountPoint}`,
+    )
   }
   return posix.join(mount.mountPoint, relativePath)
 }
@@ -134,15 +146,22 @@ const readCpuQuota = (
     }
     if (parts[0] === "max") return null
     const quota = Number(parts[0])
-    if (!Number.isFinite(quota) || quota <= 0) throw new Error(`Invalid cgroup CPU quota in ${directory}/cpu.max`)
+    if (!Number.isFinite(quota) || quota <= 0)
+      throw new Error(`Invalid cgroup CPU quota in ${directory}/cpu.max`)
     return quota / period
   }
   const quotaText = readTextFile(posix.join(directory, "cpu.cfs_quota_us"))
   const periodText = readTextFile(posix.join(directory, "cpu.cfs_period_us"))
   if (quotaText === undefined && periodText === undefined) return null
   const quota = quotaText === undefined ? Number.NaN : Number(quotaText.trim())
-  const period = periodText === undefined ? Number.NaN : Number(periodText.trim())
-  if (!Number.isFinite(quota) || !Number.isFinite(period) || period <= 0 || (quota !== -1 && quota <= 0)) {
+  const period =
+    periodText === undefined ? Number.NaN : Number(periodText.trim())
+  if (
+    !Number.isFinite(quota) ||
+    !Number.isFinite(period) ||
+    period <= 0 ||
+    (quota !== -1 && quota <= 0)
+  ) {
     throw new Error(`Invalid cgroup CPU quota in ${directory}`)
   }
   return quota === -1 ? null : quota / period
@@ -152,32 +171,45 @@ export const readLocalCpuTopology = (
   options: LocalCpuTopologyReadOptions = {},
 ): LocalCpuTopology => {
   if ((options.platform ?? process.platform) !== "linux") {
-    throw new Error("The local eight-server benchmark requires Linux CPU affinity and taskset")
+    throw new Error(
+      "The local eight-server benchmark requires Linux CPU affinity and taskset",
+    )
   }
   const readTextFile = options.readTextFile ?? readOptionalTextFile
   const status = readTextFile("/proc/self/status")
   const cgroup = readTextFile("/proc/self/cgroup")
   const mountinfo = readTextFile("/proc/self/mountinfo")
   if (status === undefined || cgroup === undefined || mountinfo === undefined) {
-    throw new Error("Cannot determine local benchmark CPU limits from Linux /proc")
+    throw new Error(
+      "Cannot determine local benchmark CPU limits from Linux /proc",
+    )
   }
   const mounts = parseCpuCgroupMounts(mountinfo)
   const memberships = parseCpuCgroupMemberships(cgroup)
   let quotaCpuCount: number | null = null
   for (const membership of memberships) {
-    const matchingMounts = mounts.filter((mount): boolean => mount.version === membership.version)
-    if (matchingMounts.length === 0) throw new Error("Cannot locate the process CPU cgroup mount")
+    const matchingMounts = mounts.filter(
+      (mount): boolean => mount.version === membership.version,
+    )
+    if (matchingMounts.length === 0)
+      throw new Error("Cannot locate the process CPU cgroup mount")
     // A subtree mount hides still-effective parent quotas. Its local 'max'
     // cannot certify that sixteen CPUs are available for two sample lanes.
-    const completeMounts = matchingMounts.filter((mount): boolean => mount.root === "/")
+    const completeMounts = matchingMounts.filter(
+      (mount): boolean => mount.root === "/",
+    )
     if (completeMounts.length === 0) {
-      throw new Error("Cannot verify effective CPU capacity: CPU cgroup quota ancestors are hidden by a subtree mount")
+      throw new Error(
+        "Cannot verify effective CPU capacity: CPU cgroup quota ancestors are hidden by a subtree mount",
+      )
     }
     for (const mount of completeMounts) {
       let directory = getMountedCgroupDirectory(mount, membership)
       while (true) {
         const quota = readCpuQuota(directory, mount.version, readTextFile)
-        if (quota !== null) quotaCpuCount = quotaCpuCount === null ? quota : Math.min(quotaCpuCount, quota)
+        if (quota !== null)
+          quotaCpuCount =
+            quotaCpuCount === null ? quota : Math.min(quotaCpuCount, quota)
         if (directory === mount.mountPoint) break
         directory = posix.dirname(directory)
       }
@@ -193,25 +225,44 @@ export const planLocalHighDensityClusterResources = ({
   topology: LocalCpuTopology
   concurrency?: number
 }): LocalHighDensityClusterResourcePlan => {
-  const cpuIds = [...topology.affinityCpuIds].sort((left, right): number => left - right)
-  if (cpuIds.some((cpuId): boolean => !Number.isSafeInteger(cpuId) || cpuId < 0) || new Set(cpuIds).size !== cpuIds.length) {
-    throw new Error("Local benchmark CPU affinity must contain distinct nonnegative integer CPU IDs")
+  const cpuIds = [...topology.affinityCpuIds].sort(
+    (left, right): number => left - right,
+  )
+  if (
+    cpuIds.some(
+      (cpuId): boolean => !Number.isSafeInteger(cpuId) || cpuId < 0,
+    ) ||
+    new Set(cpuIds).size !== cpuIds.length
+  ) {
+    throw new Error(
+      "Local benchmark CPU affinity must contain distinct nonnegative integer CPU IDs",
+    )
   }
-  if (topology.quotaCpuCount !== null && (!Number.isFinite(topology.quotaCpuCount) || topology.quotaCpuCount <= 0)) {
+  if (
+    topology.quotaCpuCount !== null &&
+    (!Number.isFinite(topology.quotaCpuCount) || topology.quotaCpuCount <= 0)
+  ) {
     throw new Error("Local benchmark CPU quota must be positive or unlimited")
   }
   if (concurrency !== undefined && concurrency !== 1 && concurrency !== 2) {
     throw new Error("Local eight-server benchmark --concurrency must be 1 or 2")
   }
-  const effectiveCpuCount = Math.floor(Math.min(cpuIds.length, topology.quotaCpuCount ?? cpuIds.length))
+  const effectiveCpuCount = Math.floor(
+    Math.min(cpuIds.length, topology.quotaCpuCount ?? cpuIds.length),
+  )
   const laneCount = concurrency ?? (effectiveCpuCount >= 16 ? 2 : 1)
   const requiredCpuCount = laneCount * LOCAL_HIGH_DENSITY_SERVER_COUNT
   if (effectiveCpuCount < requiredCpuCount) {
-    throw new Error(`Local eight-server benchmark needs ${requiredCpuCount} effective CPUs for ${laneCount} sample lane(s), but detected ${effectiveCpuCount} (${cpuIds.length} allowed by affinity; cgroup quota ${topology.quotaCpuCount ?? "unlimited"})`)
+    throw new Error(
+      `Local eight-server benchmark needs ${requiredCpuCount} effective CPUs for ${laneCount} sample lane(s), but detected ${effectiveCpuCount} (${cpuIds.length} allowed by affinity; cgroup quota ${topology.quotaCpuCount ?? "unlimited"})`,
+    )
   }
   const lanes: LocalHighDensityClusterLane[] = []
   for (let laneId = 0; laneId < laneCount; laneId++) {
-    const serverCpuIds = cpuIds.slice(laneId * LOCAL_HIGH_DENSITY_SERVER_COUNT, (laneId + 1) * LOCAL_HIGH_DENSITY_SERVER_COUNT)
+    const serverCpuIds = cpuIds.slice(
+      laneId * LOCAL_HIGH_DENSITY_SERVER_COUNT,
+      (laneId + 1) * LOCAL_HIGH_DENSITY_SERVER_COUNT,
+    )
     lanes.push({ laneId, coordinatorCpuIds: [...serverCpuIds], serverCpuIds })
   }
   return { effectiveCpuCount, laneCount, lanes }

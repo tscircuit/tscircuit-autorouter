@@ -4,7 +4,11 @@ import {
   formatTraceLintTable,
 } from "./trace-lint-metrics.js"
 
-import { type ChildProcessWithoutNullStreams, spawn, spawnSync } from "node:child_process"
+import {
+  type ChildProcessWithoutNullStreams,
+  spawn,
+  spawnSync,
+} from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { appendFile, readFile, writeFile } from "node:fs/promises"
 import * as path from "node:path"
@@ -773,9 +777,7 @@ export const parseArgs = (
       const rawConcurrency = args[i + 1]
       options.concurrencyWasSet = rawConcurrency !== "auto"
       options.concurrency =
-        rawConcurrency === "auto"
-          ? defaultConcurrency
-          : Number(rawConcurrency)
+        rawConcurrency === "auto" ? defaultConcurrency : Number(rawConcurrency)
       i += 1
       continue
     }
@@ -1080,10 +1082,17 @@ const formatFailureSummary = (failureSummary: FailureSummary[]) => {
     .join("\n")
 }
 
-const createChildProcess = (cpuIds?: number[]): ChildProcessWithoutNullStreams => {
+const createChildProcess = (
+  cpuIds?: number[],
+): ChildProcessWithoutNullStreams => {
   const command = cpuIds ? "taskset" : process.execPath
   const args = cpuIds
-    ? ["--cpu-list", cpuIds.join(","), process.execPath, "scripts/benchmark/benchmark.child.ts"]
+    ? [
+        "--cpu-list",
+        cpuIds.join(","),
+        process.execPath,
+        "scripts/benchmark/benchmark.child.ts",
+      ]
     : ["scripts/benchmark/benchmark.child.ts"]
   return spawn(command, args, {
     cwd: process.cwd(),
@@ -1366,7 +1375,11 @@ const executeTaskOnWorker = (
 
     const onAbort = (): void => {
       finish(
-        createFailedResult(request.task, getElapsedTimeMs(), "Benchmark execution aborted"),
+        createFailedResult(
+          request.task,
+          getElapsedTimeMs(),
+          "Benchmark execution aborted",
+        ),
         true,
       )
     }
@@ -1483,7 +1496,10 @@ export const runBenchmarkTasks = async (
       .filter(Boolean)
 
     const queuedTaskCount = laneQueues
-      ? laneQueues.reduce((count, laneQueue): number => count + laneQueue.length, 0)
+      ? laneQueues.reduce(
+          (count, laneQueue): number => count + laneQueue.length,
+          0,
+        )
       : queue.length
     console.log(
       `[benchmark] heartbeat ${completedTaskCount}/${tasks.length} complete, ${queuedTaskCount} queued, ${activeWorkers.length} running`,
@@ -1565,7 +1581,9 @@ export const runBenchmarkTasks = async (
         )
       }
       if (options.cpuLanes && (result.didTimeout || restartWorker)) {
-        throw new Error(`Local cluster sample ${result.scenarioName} did not finish safely; refusing to overlap outstanding work with the next sample`)
+        throw new Error(
+          `Local cluster sample ${result.scenarioName} did not finish safely; refusing to overlap outstanding work with the next sample`,
+        )
       }
       if (workerQueue.length > 0) {
         signal.throwIfAborted()
@@ -1581,13 +1599,28 @@ export const runBenchmarkTasks = async (
     executionAbort.abort(error)
     await Promise.allSettled(workerLoops)
     if (options.cpuLanes) {
-      await writeFile("benchmark-interrupted.json", JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
-        completedResults: results.filter(Boolean),
-        activeSamples: workers.flatMap((worker) => worker.currentTask
-          ? [{ laneId: worker.id - 1, task: worker.currentTask.request.task, progress: worker.currentTask.latestProgress }]
-          : []),
-      }, null, 2))
+      await writeFile(
+        "benchmark-interrupted.json",
+        JSON.stringify(
+          {
+            error: error instanceof Error ? error.message : String(error),
+            completedResults: results.filter(Boolean),
+            activeSamples: workers.flatMap((worker) =>
+              worker.currentTask
+                ? [
+                    {
+                      laneId: worker.id - 1,
+                      task: worker.currentTask.request.task,
+                      progress: worker.currentTask.latestProgress,
+                    },
+                  ]
+                : [],
+            ),
+          },
+          null,
+          2,
+        ),
+      )
     }
     throw error
   } finally {
@@ -1708,7 +1741,8 @@ export const validateNetworkedColdPassReadyForHot = (
   }
   const incompleteColdResults = coldResults.filter(
     (result) =>
-      result.didTimeout || !result.routingMetrics?.networkedHighDensity ||
+      result.didTimeout ||
+      !result.routingMetrics?.networkedHighDensity ||
       result.routingMetrics.networkedHighDensity.remoteRequestsCompleted !==
         result.routingMetrics.networkedHighDensity.remoteRequestsStarted,
   )
@@ -1757,7 +1791,8 @@ export const validateNetworkedColdHotResults = (
   )
   const incompleteHotResults = hotResults.filter(
     (result) =>
-      result.didTimeout || !result.routingMetrics?.networkedHighDensity ||
+      result.didTimeout ||
+      !result.routingMetrics?.networkedHighDensity ||
       result.routingMetrics.networkedHighDensity.remoteRequestsCompleted !==
         result.routingMetrics.networkedHighDensity.remoteRequestsStarted,
   )
@@ -1795,11 +1830,17 @@ export const validateNetworkedColdHotResults = (
       `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits`,
     )
   }
-  if (hotMetrics.some((metrics): boolean =>
-    metrics.remoteBatchCacheMisses > 0 || metrics.remoteSingleRequestsStarted > 0 ||
-    metrics.remoteSolverResults > 0,
-  )) {
-    throw new Error("Pipeline9_Networked hot pass computed work instead of using only exact cache hits")
+  if (
+    hotMetrics.some(
+      (metrics): boolean =>
+        metrics.remoteBatchCacheMisses > 0 ||
+        metrics.remoteSingleRequestsStarted > 0 ||
+        metrics.remoteSolverResults > 0,
+    )
+  ) {
+    throw new Error(
+      "Pipeline9_Networked hot pass computed work instead of using only exact cache hits",
+    )
   }
 }
 
@@ -1817,7 +1858,8 @@ const main = async () => {
     datasetName,
   } = options
   let concurrency = options.concurrency
-  const useLocalCluster = solverName === NETWORKED_PIPELINE9_SOLVER_NAME && !networkedRemote
+  const useLocalCluster =
+    solverName === NETWORKED_PIPELINE9_SOLVER_NAME && !networkedRemote
   const resourcePlan = useLocalCluster
     ? planLocalHighDensityClusterResources({
         topology: readLocalCpuTopology(),
@@ -1943,16 +1985,30 @@ const main = async () => {
       serversPerLane: 8,
       laneCount: concurrency,
       effectiveCpuCount: resourcePlan.effectiveCpuCount,
-      laneCpuIds: resourcePlan.lanes.slice(0, concurrency).map((lane) => lane.coordinatorCpuIds),
+      laneCpuIds: resourcePlan.lanes
+        .slice(0, concurrency)
+        .map((lane) => lane.coordinatorCpuIds),
       sampleAssignment: "fixed_round_robin",
       cacheIsolation: "per_sample",
     }
-    const cpuIds = resourcePlan.lanes.slice(0, concurrency).flatMap((lane) => lane.coordinatorCpuIds)
-    const affinity = spawnSync("taskset", [
-      "--all-tasks", "--pid", "--cpu-list", cpuIds.join(","), String(process.pid),
-    ], { encoding: "utf8" })
+    const cpuIds = resourcePlan.lanes
+      .slice(0, concurrency)
+      .flatMap((lane) => lane.coordinatorCpuIds)
+    const affinity = spawnSync(
+      "taskset",
+      [
+        "--all-tasks",
+        "--pid",
+        "--cpu-list",
+        cpuIds.join(","),
+        String(process.pid),
+      ],
+      { encoding: "utf8" },
+    )
     if (affinity.status !== 0) {
-      throw new Error(`Cannot pin the local benchmark controller: ${affinity.error?.message ?? affinity.stderr}`)
+      throw new Error(
+        `Cannot pin the local benchmark controller: ${affinity.error?.message ?? affinity.stderr}`,
+      )
     }
   }
 
@@ -1962,7 +2018,9 @@ const main = async () => {
   console.log(`[benchmark] runtime ${JSON.stringify(runtime)}`)
 
   const networkedCachePropagationDelayMs = networkedColdHot
-    ? useLocalCluster ? 0 : parseNetworkedCachePropagationDelayMs()
+    ? useLocalCluster
+      ? 0
+      : parseNetworkedCachePropagationDelayMs()
     : 0
   const results: WorkerResult[] = []
   const clusters: LocalHighDensityCluster[] = []
@@ -2010,13 +2068,17 @@ const main = async () => {
           const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
           const url = process.env.HD_CACHE2_SERVER_URL
           if (!cacheVersion || !url) {
-            throw new Error("--networked-remote requires HD_CACHE2_CACHE_VERSION and HD_CACHE2_SERVER_URL")
+            throw new Error(
+              "--networked-remote requires HD_CACHE2_CACHE_VERSION and HD_CACHE2_SERVER_URL",
+            )
           }
           task.networkedServer = { url, cacheVersion }
         }
       }
     }
-    snapshotWriter = await createBenchmarkSnapshotWriter(BENCHMARK_SNAPSHOTS_HTML_PATH)
+    snapshotWriter = await createBenchmarkSnapshotWriter(
+      BENCHMARK_SNAPSHOTS_HTML_PATH,
+    )
     for (const [groupIndex, taskGroup] of taskGroups.entries()) {
       runAbort.signal.throwIfAborted()
       for (const cluster of clusters) cluster.assertHealthy()
@@ -2028,7 +2090,9 @@ const main = async () => {
       results.push(
         ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
           onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
-          cpuLanes: resourcePlan?.lanes.slice(0, concurrency).map((lane) => lane.coordinatorCpuIds),
+          cpuLanes: resourcePlan?.lanes
+            .slice(0, concurrency)
+            .map((lane) => lane.coordinatorCpuIds),
           signal: runAbort.signal,
         })),
       )
@@ -2047,11 +2111,18 @@ const main = async () => {
     if (networkedColdHot) validateNetworkedColdHotResults(results)
   } catch (error) {
     if (resourcePlan) {
-      await writeFile("benchmark-failure.json", JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
-        runtime,
-        completedPassResults: results,
-      }, null, 2))
+      await writeFile(
+        "benchmark-failure.json",
+        JSON.stringify(
+          {
+            error: error instanceof Error ? error.message : String(error),
+            runtime,
+            completedPassResults: results,
+          },
+          null,
+          2,
+        ),
+      )
     }
     throw error
   } finally {

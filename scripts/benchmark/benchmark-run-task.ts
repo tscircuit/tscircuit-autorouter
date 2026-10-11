@@ -317,8 +317,9 @@ export const getRoutingBenchmarkMetrics = (
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
-  ].filter((stats): stats is Record<string, unknown> =>
-    stats !== undefined && typeof stats.remoteRequestsStarted === "number",
+  ].filter(
+    (stats): stats is Record<string, unknown> =>
+      stats !== undefined && typeof stats.remoteRequestsStarted === "number",
   )
   let networkedHighDensity: RoutingBenchmarkMetrics["networkedHighDensity"]
   if (networkedStats.length > 0) {
@@ -344,9 +345,11 @@ export const getRoutingBenchmarkMetrics = (
         networkedHighDensity[key] += Number(stats[key] ?? 0)
       }
       const reasonCounts = stats.remoteFallbackReasonCounts as
-        Record<string, number> | undefined
+        | Record<string, number>
+        | undefined
       if (reasonCounts) {
-        const combined = networkedHighDensity.remoteFallbackReasonCounts ??= {}
+        const combined = (networkedHighDensity.remoteFallbackReasonCounts ??=
+          {})
         for (const [reason, count] of Object.entries(reasonCounts)) {
           combined[reason] = (combined[reason] ?? 0) + count
         }
@@ -393,17 +396,30 @@ export const validateNetworkedBenchmark = async (
 ): Promise<void> => {
   if (!task.networkedCachePass) return
   const sources = [
-    { name: "highDensityRouteSolver", source: solver.highDensityRouteSolver, required: true },
-    { name: "highDensityRepairSolver", source: solver.highDensityRepairSolver,
-      required: typeof solver.highDensityRepairSolver?.stats?.remoteRequestsStarted === "number" },
+    {
+      name: "highDensityRouteSolver",
+      source: solver.highDensityRouteSolver,
+      required: true,
+    },
+    {
+      name: "highDensityRepairSolver",
+      source: solver.highDensityRepairSolver,
+      required:
+        typeof solver.highDensityRepairSolver?.stats?.remoteRequestsStarted ===
+        "number",
+    },
   ]
-  const drains = await Promise.allSettled(sources.map(async ({ name, source, required }): Promise<void> => {
-    if (typeof source?.waitForAllRemoteRequests === "function") {
-      await source.waitForAllRemoteRequests()
-    } else if (required) {
-      throw new Error(`Pipeline9_Networked benchmark requires an explicit remote-request drain for ${name}`)
-    }
-  }))
+  const drains = await Promise.allSettled(
+    sources.map(async ({ name, source, required }): Promise<void> => {
+      if (typeof source?.waitForAllRemoteRequests === "function") {
+        await source.waitForAllRemoteRequests()
+      } else if (required) {
+        throw new Error(
+          `Pipeline9_Networked benchmark requires an explicit remote-request drain for ${name}`,
+        )
+      }
+    }),
+  )
   for (const drain of drains) {
     if (drain.status === "rejected") throw drain.reason
   }

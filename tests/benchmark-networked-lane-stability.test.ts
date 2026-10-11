@@ -9,11 +9,18 @@ import { runBenchmarkTasks } from "../scripts/benchmark/index"
 type ChildAssignment = { url: string; cpu: number; pid: number }
 
 test("out-of-order samples keep the same CPU and server lane across cold and hot passes", async (): Promise<void> => {
-  const cpuRanges = readFileSync("/proc/self/status", "utf8").match(/^Cpus_allowed_list:\s*(.*)$/m)![1].split(",")
-  const cpuIds = cpuRanges.flatMap((range): number[] => {
-    const [first, last = first] = range.split("-").map(Number)
-    return Array.from({ length: last - first + 1 }, (_, index): number => first + index)
-  }).slice(0, 2)
+  const cpuRanges = readFileSync("/proc/self/status", "utf8")
+    .match(/^Cpus_allowed_list:\s*(.*)$/m)![1]
+    .split(",")
+  const cpuIds = cpuRanges
+    .flatMap((range): number[] => {
+      const [first, last = first] = range.split("-").map(Number)
+      return Array.from(
+        { length: last - first + 1 },
+        (_, index): number => first + index,
+      )
+    })
+    .slice(0, 2)
   expect(cpuIds).toHaveLength(2)
   const originalCwd = process.cwd()
   const originalHeartbeat = process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS
@@ -48,33 +55,50 @@ for await (const line of input) {
   const childPids = new Set<number>()
   try {
     await mkdir(join(directory, "scripts/benchmark"), { recursive: true })
-    await writeFile(join(directory, "scripts/benchmark/benchmark.child.ts"), childSource)
+    await writeFile(
+      join(directory, "scripts/benchmark/benchmark.child.ts"),
+      childSource,
+    )
     process.chdir(directory)
     process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS = "0"
     for (const pass of ["cold", "hot"] as const) {
       const completed: number[] = []
-      const tasks: BenchmarkTask[] = Array.from({ length: 4 }, (_, index): BenchmarkTask => ({
-        datasetName: "srj18",
-        solverName: `Pipeline9_Networked ${pass === "cold" ? "Cold" : "Hot"}`,
-        networkedCachePass: pass,
-        networkedServer: { url: `http://lane-${index % 2}`, cacheVersion: `run-sample-${index + 1}` },
-        scenarioName: `sample-${index + 1}`,
-        sampleNumber: index + 1,
-        scenario: { layerCount: 2, minTraceWidth: 0.15, obstacles: [], connections: [],
-          bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 } },
-      }))
+      const tasks: BenchmarkTask[] = Array.from(
+        { length: 4 },
+        (_, index): BenchmarkTask => ({
+          datasetName: "srj18",
+          solverName: `Pipeline9_Networked ${pass === "cold" ? "Cold" : "Hot"}`,
+          networkedCachePass: pass,
+          networkedServer: {
+            url: `http://lane-${index % 2}`,
+            cacheVersion: `run-sample-${index + 1}`,
+          },
+          scenarioName: `sample-${index + 1}`,
+          sampleNumber: index + 1,
+          scenario: {
+            layerCount: 2,
+            minTraceWidth: 0.15,
+            obstacles: [],
+            connections: [],
+            bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
+          },
+        }),
+      )
       const results = await runBenchmarkTasks(tasks, 2, undefined, {
         cpuLanes: cpuIds.map((cpu): number[] => [cpu]),
         onBenchmarkSnapshot: async (snapshot): Promise<void> => {
           completed.push(snapshot.sampleNumber)
-          if (snapshot.sampleNumber === 4) await writeFile(`${pass}.release`, "released")
+          if (snapshot.sampleNumber === 4)
+            await writeFile(`${pass}.release`, "released")
         },
       })
       expect(completed).toEqual([2, 4, 1, 3])
       expect(results.map((result) => result.sampleNumber)).toEqual([1, 2, 3, 4])
       for (const [index, result] of results.entries()) {
         expect(result.didSolve).toBe(true)
-        const assignment = JSON.parse(result.benchmarkSnapshot!.label) as ChildAssignment
+        const assignment = JSON.parse(
+          result.benchmarkSnapshot!.label,
+        ) as ChildAssignment
         expect(assignment.url).toBe(`http://lane-${index % 2}`)
         expect(assignment.cpu).toBe(cpuIds[index % 2])
         childPids.add(assignment.pid)
@@ -84,7 +108,8 @@ for await (const line of input) {
     expect(childPids.size).toBe(8)
   } finally {
     process.chdir(originalCwd)
-    if (originalHeartbeat === undefined) delete process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS
+    if (originalHeartbeat === undefined)
+      delete process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS
     else process.env.BENCHMARK_HEARTBEAT_INTERVAL_MS = originalHeartbeat
     await rm(directory, { recursive: true, force: true })
   }
