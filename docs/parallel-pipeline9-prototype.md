@@ -422,7 +422,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Sixteen frozen exploratory snapshots have complete paired results for all 16
+Seventeen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -445,6 +445,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `7bb1b82e2` | ordered / indexed, force trials on coordinator | 1.369× | 1.523× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `9f87cb73b` | ordered / indexed, force trials on coordinator | 1.287× | 1.451× | All solved, exact geometry and original-CAD quality parity; high-density regression, target remains unmet |
 | `afae314d5` | ordered / indexed, force trials on coordinator | 1.239× | 1.391× | All solved, exact geometry and original-CAD quality parity; lookahead guard overhead, target remains unmet |
+| `24f2c48dd` | ordered / indexed, force trials on coordinator | 1.271× | 1.422× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -633,6 +634,10 @@ these reviewed scoped lookahead, A13 upload and native via-layer changes. The
 A01 bulk kernel in this revision remains isolated and inactive. ESM/DTS build,
 TypeScript and source/built browser checks pass. Packaged sample001 and
 sample015 both retain exact original geometry with at most four active workers.
-Five paired groups are dispatched; no speedup is claimed before all outcomes
-are complete. The exact SHA, checks, arguments and workflow IDs are in
+All 32 paired outcomes are complete: every sample solves with exact native
+geometry, original-CAD quality and coverage parity, at most four active workers,
+1.271× arithmetic mean speedup and 1.422× aggregate speedup. The target remains
+unmet. Complete metadata, counters and worker statistics are in
+[parallel-srj18-24f2c48dd-complete.json](benchmarks/parallel-srj18-24f2c48dd-complete.json).
+The exact SHA, checks, arguments and workflow IDs are in
 [parallel-srj18-24f2c48dd-dispatch.json](benchmarks/parallel-srj18-24f2c48dd-dispatch.json).
