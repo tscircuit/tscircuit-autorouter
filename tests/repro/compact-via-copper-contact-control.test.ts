@@ -6,9 +6,7 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { getCompactViaCopperCircuit } from "tests/fixtures/compactViaCopperCircuit"
 
 /** Physical segments in board-world mm (+X right, +Y up); zero-length contacts add no copper. */
-function getPhysicalSegments(
-  trace: SimplifiedPcbTrace,
-): Array<{
+function getPhysicalSegments(trace: SimplifiedPcbTrace): Array<{
   start: { x: number; y: number }
   end: { x: number; y: number }
   width: number
