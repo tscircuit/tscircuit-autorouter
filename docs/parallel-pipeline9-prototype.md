@@ -422,7 +422,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Nineteen frozen exploratory snapshots have complete paired results for all 16
+Twenty frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -448,6 +448,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `24f2c48dd` | ordered / indexed, force trials on coordinator | 1.271× | 1.422× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `05c72d631` | ordered / indexed, selected A01 bulk, sixteen-target lookahead | 0.795× | 0.735× | All solved and exact Native quality; A01 bulk regresses all16 high-density stages; target unmet |
 | `752f8c03f` | ordered / indexed, Native trace fact lanes, selected A01 bulk off | 1.259× | 1.398× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
+| `da7e84745` | ordered / indexed, Native trace and polygon fact lanes, sixty-four-target lookahead | 1.268× | 1.412× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -725,9 +726,15 @@ time. Selected A01 bulk remains disabled. Build/declarations, TypeScript,
 source and built browser imports without SharedArrayBuffer, and packaged
 sample001/sample015 Native geometry checks pass. The packaged checks show
 three fact worker lanes plus main, zero protocol faults and all leases retired.
-All five Blacksmith groups are dispatched for all sixteen samples; performance
-acceptance remains pending. Frozen hashes, arguments, preflight and workflow IDs
-are in
+All five Blacksmith groups completed all32 paired outcomes. Every sample solves
+with exact Native geometry and original-CAD quality/coverage parity; mean
+speedup is1.268× and aggregate speedup1.412×. The target remains unmet.
+The after-disposal private ledger records81,735 fact rows,128 completed
+batches,382 worker reservations and retirements, zero faults, at most three
+fact workers plus main, and at most four ordinary workers. Every original
+outcome, worker statistic, metadata and source report hash is preserved in
+[parallel-srj18-da7e84745-complete.json](benchmarks/parallel-srj18-da7e84745-complete.json).
+Frozen hashes, arguments, preflight and workflow IDs are in
 [parallel-srj18-da7e84745-dispatch.json](benchmarks/parallel-srj18-da7e84745-dispatch.json).
 
 The reviewed fixed-cohort follow-up refills the same sixty-four-target Native
