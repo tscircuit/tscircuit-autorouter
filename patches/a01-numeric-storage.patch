@@ -1,0 +1,294 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index 17dffd6..20191e3 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -27,17 +27,6 @@ function rippedContains(r: RippedNode | null, id: ConnId): boolean {
+   return false
+ }
+ 
+-// --- A* search node (stored in a pool) ---
+-interface SearchNode {
+-  z: number
+-  row: number
+-  col: number
+-  g: number
+-  f: number
+-  parentIdx: number // -1 = root
+-  ripped: RippedNode | null
+-}
+-
+ // --- Connection segment ---
+ interface ConnectionSeg {
+   connId: ConnId
+@@ -225,6 +214,7 @@ export interface HighDensitySolverA01Props {
+ // Static direction offsets for 8-connected neighbor expansion
+ const DIRS_DR = [-1, -1, -1, 0, 0, 1, 1, 1] as const
+ const DIRS_DC = [-1, 0, 1, -1, 1, -1, 0, 1] as const
++const MAX_RETAINED_SEARCH_NODES = 65_536
+ 
+ export class HighDensitySolverA01 extends BaseSolver {
+   override getSolverName(): string {
+@@ -304,7 +294,15 @@ export class HighDensitySolverA01 extends BaseSolver {
+   private activeConnSeg: ConnectionSeg | null = null
+   private activeConnId: ConnId = -1
+   private crossLayerSearch = false
+-  private nodePool!: SearchNode[]
++  private nodeCount = 0
++  private searchIndexArrayConstructor: Int32ArrayConstructor | Float64ArrayConstructor =
++    Float64Array
++  private nodeZ: Int32Array | Float64Array = new Float64Array(0)
++  private nodeRow: Int32Array | Float64Array = new Float64Array(0)
++  private nodeCol: Int32Array | Float64Array = new Float64Array(0)
++  private nodeG = new Float64Array(0)
++  private nodeParent: Int32Array | Float64Array = new Float64Array(0)
++  private nodeRipped: Array<RippedNode | null> = []
+   private heap!: MinHeap
+   private seqCounter = 0
+ 
+@@ -512,6 +510,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+     // Build and shuffle connections
+     this.unsolvedSegs = this.buildConnectionSegs()
++    this.configureSearchIndexStorage()
+ 
+     this.sharedCrossRootPortCells = new Set()
+     const rootByPortFlat = new Map<number, string>()
+@@ -554,7 +553,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     // A* state
+     this.activeConnSeg = null
+     this.activeConnId = -1
+-    this.nodePool = []
++    this.resetSearchNodes()
+     this.heap = new MinHeap()
+     this.seqCounter = 0
+   }
+@@ -583,7 +582,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+       this.viaOccupantsByCell.clear()
+ 
+       // Reset A* state for this connection
+-      this.nodePool = []
++      this.resetSearchNodes()
+       this.heap.clear()
+       this.seqCounter = 0
+       this.searchIterations = 0
+@@ -599,16 +598,15 @@ export class HighDensitySolverA01 extends BaseSolver {
+         next.endCol,
+       )
+       const f = h * this.hyperParameters.greedyMultiplier
+-      this.nodePool.push({
+-        z: next.startZ,
+-        row: next.startRow,
+-        col: next.startCol,
+-        g: 0,
+-        f,
+-        parentIdx: -1,
+-        ripped: null,
+-      })
+-      this.heap.push(f, this.seqCounter++, 0)
++      const startNodeIdx = this.appendSearchNode(
++        next.startZ,
++        next.startRow,
++        next.startCol,
++        0,
++        -1,
++        null,
++      )
++      this.heap.push(f, this.seqCounter++, startNodeIdx)
+       return
+     }
+ 
+@@ -629,7 +627,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+       this.activeConnSeg = null
+       this.activeConnId = -1
+       this.heap.clear()
+-      this.nodePool = []
++      this.resetSearchNodes()
+       this.consecutiveSkips++
+       if (this.consecutiveSkips >= this.unsolvedSegs.length * 3) {
+         this.error = `Convergence failure: ${this.unsolvedSegs.length} connections stuck`
+@@ -647,8 +645,11 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+     // 3. Pop best node (O(log n))
+     const nodeIdx = this.heap.pop()
+-    const node = this.nodePool[nodeIdx]!
+-    const { z, row, col, g, ripped } = node
++    const z = this.nodeZ[nodeIdx]!
++    const row = this.nodeRow[nodeIdx]!
++    const col = this.nodeCol[nodeIdx]!
++    const g = this.nodeG[nodeIdx]!
++    const ripped = this.nodeRipped[nodeIdx]!
+ 
+     // 4. Skip if already visited (stamp check)
+     const cellIdx = (z * this.rows + row) * this.cols + col
+@@ -659,6 +660,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const seg = this.activeConnSeg
+     if (z === seg.endZ && row === seg.endRow && col === seg.endCol) {
+       this.finalizeRoute(nodeIdx)
++      this.resetSearchNodes()
+       this.activeConnSeg = null
+       this.activeConnId = -1
+       return
+@@ -692,16 +694,14 @@ export class HighDensitySolverA01 extends BaseSolver {
+         this.computeH(z, nr, nc, endZ, endRow, endCol) *
+           this.hyperParameters.greedyMultiplier
+ 
+-      const newNodeIdx = this.nodePool.length
+-      this.nodePool.push({
++      const newNodeIdx = this.appendSearchNode(
+         z,
+-        row: nr,
+-        col: nc,
+-        g: g2,
+-        f: f2,
+-        parentIdx: nodeIdx,
+-        ripped: this._moveRipped,
+-      })
++        nr,
++        nc,
++        g2,
++        nodeIdx,
++        this._moveRipped,
++      )
+       this.heap.push(f2, this.seqCounter++, newNodeIdx)
+     }
+ 
+@@ -736,21 +736,104 @@ export class HighDensitySolverA01 extends BaseSolver {
+           this.computeH(nz, row, col, endZ, endRow, endCol) *
+             this.hyperParameters.greedyMultiplier
+ 
+-        const newNodeIdx = this.nodePool.length
+-        this.nodePool.push({
+-          z: nz,
++        const newNodeIdx = this.appendSearchNode(
++          nz,
+           row,
+           col,
+-          g: g2,
+-          f: f2,
+-          parentIdx: nodeIdx,
+-          ripped: this._moveRipped,
+-        })
++          g2,
++          nodeIdx,
++          this._moveRipped,
++        )
+         this.heap.push(f2, this.seqCounter++, newNodeIdx)
+       }
+     }
+   }
+ 
++  private configureSearchIndexStorage(): void {
++    // Every expanded grid cell admits at most eight lateral moves plus one
++    // move to each other layer. This bounds every search node ID and parent.
++    const admissionBound = 1 + this.layers * this.planeSize * (this.layers + 7)
++    const integerGrid =
++      Number.isInteger(this.rows) && this.rows > 0 &&
++      Number.isInteger(this.cols) && this.cols > 0 &&
++      Number.isInteger(this.layers) && this.layers > 0 &&
++      Number.isSafeInteger(admissionBound) && admissionBound <= 0x7fffffff
++    const integerEndpoints = this.unsolvedSegs.every((segment) =>
++      Number.isInteger(segment.startZ) && segment.startZ >= 0 && segment.startZ < this.layers &&
++      Number.isInteger(segment.endZ) && segment.endZ >= 0 && segment.endZ < this.layers &&
++      Number.isInteger(segment.startRow) && segment.startRow >= 0 && segment.startRow < this.rows &&
++      Number.isInteger(segment.endRow) && segment.endRow >= 0 && segment.endRow < this.rows &&
++      Number.isInteger(segment.startCol) && segment.startCol >= 0 && segment.startCol < this.cols &&
++      Number.isInteger(segment.endCol) && segment.endCol >= 0 && segment.endCol < this.cols
++    )
++    // Layer indices and clamped grid coordinates are nonnegative integers;
++    // parent IDs are -1 or already-admitted node IDs. Exceptional constructor
++    // geometry keeps the original Float64 representation and search behavior.
++    this.searchIndexArrayConstructor = integerGrid && integerEndpoints
++      ? Int32Array
++      : Float64Array
++    this.nodeZ = new this.searchIndexArrayConstructor(0)
++    this.nodeRow = new this.searchIndexArrayConstructor(0)
++    this.nodeCol = new this.searchIndexArrayConstructor(0)
++    this.nodeParent = new this.searchIndexArrayConstructor(0)
++  }
++
++  private resetSearchNodes(): void {
++    // Numeric slots have no references. Release every live ripped chain before
++    // recycling node IDs for the next connection, while retaining capacity.
++    if (this.nodeG.length > MAX_RETAINED_SEARCH_NODES) {
++      // Large searches must not retain their peak allocation while portfolio
++      // candidates wait for the rest of the board to finish.
++      this.nodeZ = new this.searchIndexArrayConstructor(0)
++      this.nodeRow = new this.searchIndexArrayConstructor(0)
++      this.nodeCol = new this.searchIndexArrayConstructor(0)
++      this.nodeG = new Float64Array(0)
++      this.nodeParent = new this.searchIndexArrayConstructor(0)
++      this.nodeRipped = []
++    } else {
++      this.nodeRipped.fill(null, 0, this.nodeCount)
++    }
++    this.nodeCount = 0
++  }
++
++  private appendSearchNode(
++    z: number,
++    row: number,
++    col: number,
++    g: number,
++    parentIdx: number,
++    ripped: RippedNode | null,
++  ): number {
++    const index = this.nodeCount
++    if (index === this.nodeG.length) {
++      const capacity = Math.max(256, this.nodeG.length * 2)
++      const zValues = new this.searchIndexArrayConstructor(capacity)
++      const rowValues = new this.searchIndexArrayConstructor(capacity)
++      const colValues = new this.searchIndexArrayConstructor(capacity)
++      const gValues = new Float64Array(capacity)
++      const parentValues = new this.searchIndexArrayConstructor(capacity)
++      zValues.set(this.nodeZ)
++      rowValues.set(this.nodeRow)
++      colValues.set(this.nodeCol)
++      gValues.set(this.nodeG)
++      parentValues.set(this.nodeParent)
++      this.nodeZ = zValues
++      this.nodeRow = rowValues
++      this.nodeCol = colValues
++      this.nodeG = gValues
++      this.nodeParent = parentValues
++      this.nodeRipped.length = capacity
++    }
++    this.nodeZ[index] = z
++    this.nodeRow[index] = row
++    this.nodeCol[index] = col
++    this.nodeG[index] = g
++    this.nodeParent[index] = parentIdx
++    this.nodeRipped[index] = ripped
++    this.nodeCount = index + 1
++    return index
++  }
++
+   // --- Merged cost + rip computation (writes to _moveCost/_moveRipped) ---
+   protected getRipCost(connId: ConnId): number {
+     return (
+@@ -1217,9 +1300,12 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const cells: Array<{ z: number; row: number; col: number }> = []
+     let idx = goalNodeIdx
+     while (idx >= 0) {
+-      const n = this.nodePool[idx]!
+-      cells.push({ z: n.z, row: n.row, col: n.col })
+-      idx = n.parentIdx
++      cells.push({
++        z: this.nodeZ[idx]!,
++        row: this.nodeRow[idx]!,
++        col: this.nodeCol[idx]!,
++      })
++      idx = this.nodeParent[idx]!
+     }
+     cells.reverse()
+ 
+@@ -1251,9 +1337,8 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const connId = this.activeConnId
+ 
+     // Collect ripped traces from goal node's persistent list
+-    const goalNode = this.nodePool[goalNodeIdx]!
+     const rippedIds: ConnId[] = []
+-    for (let cur = goalNode.ripped; cur; cur = cur.prev) {
++    for (let cur = this.nodeRipped[goalNodeIdx]; cur; cur = cur.prev) {
+       rippedIds.push(cur.id)
+     }
+ 
