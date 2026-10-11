@@ -26,7 +26,8 @@ export type ParallelPathEligibilityStats = { checks: number; objectChecks: numbe
   descriptorMetadataFieldReads: number; descriptorOwnFieldChecks: number; prototypeReads: number
   awaitCaptures: number; awaitChecks: number; awaitSnapshotObjects: number; awaitSnapshotProperties: number
   awaitMapEntriesCaptured: number; awaitMapEntriesCompared: number; awaitSetValuesCaptured: number; awaitSetValuesCompared: number
-  awaitBufferBytesCopied: number; awaitBufferBytesCompared: number; awaitBufferGetterCalls: number }
+  awaitBufferBytesCopied: number; awaitBufferBytesCompared: number; awaitBufferGetterCalls: number
+  awaitCoveredObjectsSkipped: number; awaitTypedIndexDescriptorsSkipped: number; awaitReceiverBrandChecks: number }
 export type ParallelPathLookaheadEligibility = (() => boolean) & {
   stats: ParallelPathEligibilityStats
   /** Capture after intentional owner bookkeeping writes and before awaiting. */
@@ -47,6 +48,12 @@ const arrayBufferByteLength = getDescriptor(nativeArrayBufferPrototype, "byteLen
 const arrayBufferDetached = getDescriptor(nativeArrayBufferPrototype, "detached")?.get
 const mapForEach = Map.prototype.forEach
 const setForEach = Set.prototype.forEach
+const mapSize = getDescriptor(Map.prototype, "size")!.get!
+const setSize = getDescriptor(Set.prototype, "size")!.get!
+const nativeTypeErrorPrototype = TypeError.prototype
+const weakMapGet = WeakMap.prototype.get
+const weakMapSet = WeakMap.prototype.set
+const awaitCheckOwners = new WeakMap<() => boolean, { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility }>()
 const globals = ["Object", "Array", "Math", "JSON", "Number", "String", "Boolean", "BigInt", "Symbol", "Map", "Set",
   "WeakMap", "WeakSet", "Reflect", "Function", "Atomics", "Promise", "Proxy", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
@@ -59,6 +66,11 @@ const hasNativeSharedBuffer = sharedBufferDescriptor?.data && typeof sharedBuffe
 // its private queue class at module initialization, before caller hooks exist.
 const flatQueuePrototype = getPrototype((new Flatbush(1) as unknown as { _queue: object })._queue)!
 const typedArrayPrototype = getPrototype(Uint8Array.prototype)!
+const typedArrayBuffer = getDescriptor(typedArrayPrototype, "buffer")!.get!
+const typedArrayByteOffset = getDescriptor(typedArrayPrototype, "byteOffset")!.get!
+const typedArrayByteLength = getDescriptor(typedArrayPrototype, "byteLength")!.get!
+const typedArrayLength = getDescriptor(typedArrayPrototype, "length")!.get!
+const typedArrayPrototypes: object[] = []
 const nativeStatePrototypes = [Object.prototype, Array.prototype, null, Map.prototype, Set.prototype,
   nativeArrayBufferPrototype, DataView.prototype, ConnectivityMap.prototype, PathSimplificationGeometryIndex.prototype,
   SegmentTree.prototype, Flatbush.prototype, RBush.prototype, flatQueuePrototype, SingleSimplifiedPathSolver5.prototype]
@@ -85,6 +97,9 @@ for (let index = 0; index < globalEntries.length; index++) {
       nativeTargets.push(prototypeDescriptor.value)
       if (globalEntries[index]!.key.endsWith("Array") || globalEntries[index]!.key === "DataView") {
         nativeStatePrototypes.push(prototypeDescriptor.value)
+      }
+      if (globalEntries[index]!.key.endsWith("Array") && globalEntries[index]!.key !== "Array") {
+        typedArrayPrototypes.push(prototypeDescriptor.value)
       }
     }
   }
@@ -201,13 +216,58 @@ function capturePlainDataGraph(value: unknown, stats?: ParallelPathEligibilitySt
   return contracts
 }
 
+type AwaitTypedView = { target: object; prototype: object; keys: PropertyKey[]; entries: DescriptorEntry[];
+  buffer: ArrayBuffer; byteOffset: number; byteLength: number; length: number }
 type AwaitStateGraph = { contracts: ParallelPathPrototypeContract[]; maps: { target: Map<unknown, unknown>; entries: unknown[] }[];
-  sets: { target: Set<unknown>; values: unknown[] }[]; buffers: { target: ArrayBuffer; bytes: Uint8Array }[] }
+  sets: { target: Set<unknown>; values: unknown[] }[]; buffers: { target: ArrayBuffer; bytes: Uint8Array }[]; views: AwaitTypedView[] }
 
-function captureAwaitGraph(roots: unknown[], stats: ParallelPathEligibilityStats): AwaitStateGraph | undefined {
+function captureTypedView(target: object, prototype: object, stats: ParallelPathEligibilityStats): AwaitTypedView | undefined {
+  stats.awaitBufferGetterCalls += 4
+  const buffer = apply(typedArrayBuffer, target, []) as ArrayBuffer
+  const byteOffset = apply(typedArrayByteOffset, target, []) as number
+  const byteLength = apply(typedArrayByteLength, target, []) as number
+  const length = apply(typedArrayLength, target, []) as number
+  stats.prototypeReads++
+  if (getPrototype(buffer) !== nativeArrayBufferPrototype) return undefined
+  stats.ownKeyReads++
+  const keys = ownKeys(target)
+  if (keys.length < length) return undefined
+  // Integer-indexed exotic properties cannot be accessors or change their
+  // descriptor flags. Exact native view slots and backing bytes determine all
+  // their values; preserve the complete own-key order and every extra property.
+  for (let index = 0; index < length; index++) if (keys[index] !== String(index)) return undefined
+  const entries: DescriptorEntry[] = []
+  for (let index = length; index < keys.length; index++) {
+    const key = keys[index]!
+    const descriptor = readOwnDescriptor(target, key, stats)!
+    if (!descriptor.data) return undefined
+    entries.push({ key, descriptor })
+  }
+  stats.awaitTypedIndexDescriptorsSkipped += length
+  return { target, prototype, keys, entries, buffer, byteOffset, byteLength, length }
+}
+
+function hasNativeAwaitReceiver(target: object, prototype: object | null, stats: ParallelPathEligibilityStats): boolean {
+  const getter = prototype === Map.prototype ? mapSize : prototype === Set.prototype ? setSize :
+    prototype === nativeArrayBufferPrototype ? arrayBufferByteLength : undefined
+  if (!getter) return true
+  stats.awaitReceiverBrandChecks++
+  if (prototype === nativeArrayBufferPrototype) stats.awaitBufferGetterCalls++
+  // Called only after proxy and complete intrinsic validation. These exact
+  // native getters can fail solely on an incompatible internal-slot receiver;
+  // no routing, geometry, callback or mutable consumer is inside the probe.
+  try { apply(getter, target, []); return true }
+  catch (error: unknown) {
+    stats.prototypeReads++
+    if (getPrototype(error) !== nativeTypeErrorPrototype) throw error
+    return false
+  }
+}
+
+function captureAwaitGraph(roots: unknown[], covered: WeakSet<object>, stats: ParallelPathEligibilityStats): AwaitStateGraph | undefined {
   const isProxy = getReferenceDrcProxyInspector()
   if (!isProxy) return undefined
-  const graph: AwaitStateGraph = { contracts: [], maps: [], sets: [], buffers: [] }
+  const graph: AwaitStateGraph = { contracts: [], maps: [], sets: [], buffers: [], views: [] }
   const seen = new WeakSet<object>()
   const pending = roots.slice()
   while (pending.length > 0) {
@@ -218,9 +278,23 @@ function captureAwaitGraph(roots: unknown[], stats: ParallelPathEligibilityStats
     if (typeof item !== "object" || isProxy(item)) return undefined
     if (seen.has(item)) continue
     seen.add(item)
+    // The independently callable returned check runs complete input eligibility
+    // first, including these exact identities and every reachable descriptor.
+    if (covered.has(item)) { stats.awaitCoveredObjectsSkipped++; continue }
     if (stats) stats.prototypeReads++
     const prototype = getPrototype(item)
     if (!nativeStatePrototypes.includes(prototype)) return undefined
+    if (!hasNativeAwaitReceiver(item, prototype, stats)) return undefined
+    if (typedArrayPrototypes.includes(prototype!) && ArrayBuffer.isView(item)) {
+      const view = captureTypedView(item, prototype!, stats)
+      if (!view) return undefined
+      graph.views.push(view)
+      stats.awaitSnapshotObjects++
+      stats.awaitSnapshotProperties += view.entries.length
+      for (let index = 0; index < view.entries.length; index++) pending.push(view.entries[index]!.descriptor.value)
+      pending.push(view.buffer)
+      continue
+    }
     const contract = captureParallelPathPrototypeContract(item, stats)
     graph.contracts.push(contract)
     stats.awaitSnapshotObjects++
@@ -293,7 +367,41 @@ function matchesAwaitGraph(graph: AwaitStateGraph, stats: ParallelPathEligibilit
       if (bytes[byte] !== row.bytes[byte]) return false
     }
   }
+  for (let index = 0; index < graph.views.length; index++) {
+    const row = graph.views[index]!
+    stats.objectChecks++
+    stats.prototypeReads++
+    if (getPrototype(row.target) !== row.prototype) return false
+    stats.awaitBufferGetterCalls++
+    if (apply(typedArrayBuffer, row.target, []) !== row.buffer) return false
+    stats.awaitBufferGetterCalls++
+    if (apply(typedArrayByteOffset, row.target, []) !== row.byteOffset) return false
+    stats.awaitBufferGetterCalls++
+    if (apply(typedArrayByteLength, row.target, []) !== row.byteLength) return false
+    stats.awaitBufferGetterCalls++
+    if (apply(typedArrayLength, row.target, []) !== row.length) return false
+    stats.ownKeyReads++
+    const keys = ownKeys(row.target)
+    if (keys.length !== row.keys.length) return false
+    for (let key = 0; key < keys.length; key++) if (keys[key] !== row.keys[key]) return false
+    stats.awaitTypedIndexDescriptorsSkipped += row.length
+    for (let property = 0; property < row.entries.length; property++) {
+      const entry = row.entries[property]!
+      if (!descriptorMatches(readOwnDescriptor(row.target, entry.key, stats), entry.descriptor)) return false
+    }
+  }
   return true
+}
+
+/** Only a factory-minted complete checker for this exact owner can replace its
+ * redundant eligibility call. Captured WeakMap operations never inspect a
+ * supplied callback/proxy or accept a public capability flag. */
+export function isNativeParallelPathAwaitStateCheck(
+  check: unknown, owner: MultiSimplifiedPathSolver, eligibility: unknown,
+): boolean {
+  if (typeof check !== "function") return false
+  const binding = apply(weakMapGet, awaitCheckOwners, [check]) as { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility } | undefined
+  return binding !== undefined && binding.owner === owner && binding.eligibility === eligibility
 }
 
 export function isOrdinaryParallelPathRoute(route: HighDensityRoute): boolean {
@@ -322,7 +430,8 @@ export function createParallelPathLookaheadEligibility(
     descriptorMetadataFieldReads: 0, descriptorOwnFieldChecks: 0, prototypeReads: 0, snapshotObjects: 0, snapshotProperties: 0,
     awaitCaptures: 0, awaitChecks: 0, awaitSnapshotObjects: 0, awaitSnapshotProperties: 0, awaitMapEntriesCaptured: 0,
     awaitMapEntriesCompared: 0, awaitSetValuesCaptured: 0, awaitSetValuesCompared: 0, awaitBufferBytesCopied: 0,
-    awaitBufferBytesCompared: 0, awaitBufferGetterCalls: 0 }
+    awaitBufferBytesCompared: 0, awaitBufferGetterCalls: 0, awaitCoveredObjectsSkipped: 0, awaitTypedIndexDescriptorsSkipped: 0,
+    awaitReceiverBrandChecks: 0 }
   const isProxy = getReferenceDrcProxyInspector()
   if (!hasNativeSharedBuffer || !isProxy || isProxy(solver) || !hasNativeObservationContract(stats) || !matchesContract(ownerContract, stats) ||
     (stats.prototypeReads++, getPrototype(solver)) !== ownerContract.target) return undefined
@@ -359,6 +468,10 @@ export function createParallelPathLookaheadEligibility(
   const connectionContracts = capturePlainDataGraph(connValues, stats)
   if (!geometryContracts || !connectionContracts) return undefined
   const connectionRootContract = captureParallelPathPrototypeContract(connMap, stats)
+  const coveredControlObjects = new WeakSet<object>()
+  coveredControlObjects.add(connMap)
+  for (let index = 0; index < geometryContracts.length; index++) coveredControlObjects.add(geometryContracts[index]!.target)
+  for (let index = 0; index < connectionContracts.length; index++) coveredControlObjects.add(connectionContracts[index]!.target)
   const routes = geometry.unsimplifiedHdRoutes as HighDensityRoute[]
   const otherRoutes = geometry.otherHdRoutes as HighDensityRoute[]
   if (!Array.isArray(routes) || !Array.isArray(otherRoutes)) return undefined
@@ -399,15 +512,17 @@ export function createParallelPathLookaheadEligibility(
       if (!entry.descriptor.data) return undefined
       if (entry.key === "simplifiedHdRoutes" || entry.key === "activeSubSolver" || entry.key === "geometryIndex" || entry.key === "stats" || entry.key === "failedSubSolvers") roots.push(entry.descriptor.value)
     }
-    const graph = captureAwaitGraph(roots, stats)
+    const graph = captureAwaitGraph(roots, coveredControlObjects, stats)
     if (!graph) return undefined
-    return (): boolean => {
+    const check = (): boolean => {
       stats.awaitChecks++
-      // Safe when called independently too; the owner driver can avoid a second
-      // full check only through a private immediately checked synchronous span.
-      if (!hasNativeObservationContract(stats) || !matchesContract(ownerState, stats)) return false
+      // Input snapshots skipped during control capture are checked completely
+      // here, even for callers that have not invoked eligibility separately.
+      if (!eligibility() || !matchesContract(ownerState, stats)) return false
       return matchesAwaitGraph(graph, stats)
     }
+    apply(weakMapSet, awaitCheckOwners, [check, { owner: solver, eligibility }])
+    return check
   }
   return Object.assign(eligibility, { stats, captureAwaitState })
 }
