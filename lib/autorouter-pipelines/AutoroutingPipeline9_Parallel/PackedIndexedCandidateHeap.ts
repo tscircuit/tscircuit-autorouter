@@ -49,6 +49,10 @@ export class PackedIndexedCandidateHeap {
     return result
   }
 
+  get searchGeneration(): number {
+    return this.generation
+  }
+
   clear(): void {
     this.length = 0
     // Retain arena records, but a different generation makes every hop unseen.

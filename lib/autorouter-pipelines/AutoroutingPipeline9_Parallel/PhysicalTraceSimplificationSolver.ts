@@ -4,6 +4,7 @@ import type { Obstacle } from "../../types"
 import { getPhysicalCopperObstacleZLayers, markPhysicalCopperTransitions } from "./markPhysicalCopperTransitions"
 import { useOptimizedViaRemovalSpatialIndex } from "./useOptimizedViaRemovalSpatialIndex"
 import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
+import { markNativeThroughObstacleSegments } from "./markNativeThroughObstacleSegments"
 
 export type PhysicalSimplificationParams = ConstructorParameters<typeof TraceSimplificationSolver>[0] & {
   requirePhysicalCopperTransitions?: boolean
@@ -54,7 +55,9 @@ export class PhysicalTraceSimplificationSolver extends TraceSimplificationSolver
     const config = (this as unknown as { simplificationConfig: PhysicalSimplificationParams & {
       originalPhysicalCopperObstacles?: readonly Obstacle[]
     } }).simplificationConfig
-    if (!config.requirePhysicalCopperTransitions) return super.markThroughObstacleSegments(routes)
+    if (!config.requirePhysicalCopperTransitions) {
+      return markNativeThroughObstacleSegments({ routes, obstacles: config.obstacles, connMap: config.connMap })
+    }
     return markPhysicalCopperTransitions(routes, { ...config,
       obstacles: config.originalPhysicalCopperObstacles ?? config.obstacles })
   }

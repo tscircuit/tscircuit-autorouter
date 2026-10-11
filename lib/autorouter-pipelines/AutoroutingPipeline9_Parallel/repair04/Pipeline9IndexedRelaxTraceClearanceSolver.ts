@@ -39,12 +39,19 @@ type Segment = {
   a: Vertex
   b: Vertex
   initialBounds: Bounds
+  boundsCache?: SegmentBoundsCache
   minZ: number
   maxZ: number
   radius: number
   net: string
   routeIndex: number
   via: boolean
+}
+type SegmentBoundsCache = Bounds & {
+  aX: number
+  aY: number
+  bX: number
+  bY: number
 }
 type Contact = { s: number; t: number; x: number; y: number; distance: number }
 type ViaPadConstraint = {
@@ -53,7 +60,16 @@ type ViaPadConstraint = {
   sine: number
   shape: ObstacleDistanceGeometry
   clearance: number
+  distanceCache?: ViaPadDistanceCache
 }
+type ViaPadDistanceCache = {
+  localX: number
+  localY: number
+  distance: number
+} & (
+  | { type: "rect"; minX: number; maxX: number; minY: number; maxY: number }
+  | { type: "oval"; aX: number; aY: number; bX: number; bY: number; radius: number }
+)
 type SegmentPair = {
   a: Segment
   b: Segment
@@ -685,11 +701,65 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
   private getViaPadDistance(point: Point, pad: ViaPadConstraint): number {
     const dx = point.x - pad.center.x,
       dy = point.y - pad.center.y
-    const local = {
-      x: dx * pad.cosine + dy * pad.sine,
-      y: -dx * pad.sine + dy * pad.cosine,
+    const localX = dx * pad.cosine + dy * pad.sine
+    const localY = -dx * pad.sine + dy * pad.cosine
+    const shape = pad.shape
+    const cache = pad.distanceCache
+    // Both physical guards often ask about the same proposed position. Compare
+    // the complete local geometry, including signed zero, before reusing math.
+    if (shape.type === "rect") {
+      const bounds = shape.bounds
+      if (
+        cache?.type === "rect" &&
+        Object.is(cache.localX, localX) && Object.is(cache.localY, localY) &&
+        Object.is(cache.minX, bounds.minX) && Object.is(cache.maxX, bounds.maxX) &&
+        Object.is(cache.minY, bounds.minY) && Object.is(cache.maxY, bounds.maxY)
+      ) return cache.distance
+      const local = { x: localX, y: localY }
+      const distance = getLocalObstacleDistance(local, local, shape)
+      if (cache?.type === "rect") {
+        cache.localX = localX
+        cache.localY = localY
+        cache.distance = distance
+        cache.minX = bounds.minX
+        cache.maxX = bounds.maxX
+        cache.minY = bounds.minY
+        cache.maxY = bounds.maxY
+      } else {
+        pad.distanceCache = {
+          type: "rect", localX, localY, distance,
+          minX: bounds.minX, maxX: bounds.maxX,
+          minY: bounds.minY, maxY: bounds.maxY,
+        }
+      }
+      return distance
     }
-    return getLocalObstacleDistance(local, local, pad.shape)
+    if (
+      cache?.type === "oval" &&
+      Object.is(cache.localX, localX) && Object.is(cache.localY, localY) &&
+      Object.is(cache.aX, shape.a.x) && Object.is(cache.aY, shape.a.y) &&
+      Object.is(cache.bX, shape.b.x) && Object.is(cache.bY, shape.b.y) &&
+      Object.is(cache.radius, shape.radius)
+    ) return cache.distance
+    const local = { x: localX, y: localY }
+    const distance = getLocalObstacleDistance(local, local, shape)
+    if (cache?.type === "oval") {
+      cache.localX = localX
+      cache.localY = localY
+      cache.distance = distance
+      cache.aX = shape.a.x
+      cache.aY = shape.a.y
+      cache.bX = shape.b.x
+      cache.bY = shape.b.y
+      cache.radius = shape.radius
+    } else {
+      pad.distanceCache = {
+        type: "oval", localX, localY, distance,
+        aX: shape.a.x, aY: shape.a.y,
+        bX: shape.b.x, bY: shape.b.y, radius: shape.radius,
+      }
+    }
+    return distance
   }
 
   private constrainViaDisplacement(
@@ -888,6 +958,34 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
       : position
   }
 
+  private getSegmentBounds(segment: Segment): Bounds {
+    const aX = segment.a.x, aY = segment.a.y
+    const bX = segment.b.x, bY = segment.b.y
+    let cache = segment.boundsCache
+    if (
+      cache && Object.is(cache.aX, aX) && Object.is(cache.aY, aY) &&
+      Object.is(cache.bX, bX) && Object.is(cache.bY, bY)
+    ) return cache
+    // One endpoint can invalidate many pairs without moving the other segment.
+    // Keep its exact bounds separately from the immutable preparation index.
+    if (!cache) {
+      cache = {
+        aX, aY, bX, bY,
+        minX: 0, maxX: 0, minY: 0, maxY: 0,
+      }
+      segment.boundsCache = cache
+    }
+    cache.aX = aX
+    cache.aY = aY
+    cache.bX = bX
+    cache.bY = bY
+    cache.minX = Math.min(aX, bX)
+    cache.maxX = Math.max(aX, bX)
+    cache.minY = Math.min(aY, bY)
+    cache.maxY = Math.max(aY, bY)
+    return cache
+  }
+
   private projectPair(pair: SegmentPair): void {
     const { a, b, revisions } = pair
     if (
@@ -898,15 +996,17 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
     ) {
       pair.separated = false
       if (this.canRejectSeparatedPairs) {
+        const aBounds = this.getSegmentBounds(a)
+        const bBounds = this.getSegmentBounds(b)
         const gapX = Math.max(
           0,
-          Math.min(a.a.x, a.b.x) - Math.max(b.a.x, b.b.x),
-          Math.min(b.a.x, b.b.x) - Math.max(a.a.x, a.b.x),
+          aBounds.minX - bBounds.maxX,
+          bBounds.minX - aBounds.maxX,
         )
         const gapY = Math.max(
           0,
-          Math.min(a.a.y, a.b.y) - Math.max(b.a.y, b.b.y),
-          Math.min(b.a.y, b.b.y) - Math.max(a.a.y, a.b.y),
+          aBounds.minY - bBounds.maxY,
+          bBounds.minY - aBounds.maxY,
         )
         // Every point on either segment lies within its current AABB. A lower
         // bound separated by the rounding margin needs no clearance displacement.

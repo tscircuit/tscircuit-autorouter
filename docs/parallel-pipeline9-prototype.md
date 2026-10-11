@@ -28,6 +28,7 @@ async function routeBoard(srj: SimpleRouteJson): Promise<SimpleRouteJson> {
     cacheProvider: null,
     workerCount: 4,
     enableParallelPathSimplification: true,
+    enableParallelDrcTrials: false,
   })
   try {
     await solver.solveAsync()
@@ -103,6 +104,7 @@ async function routeBoards(inputs: SimpleRouteJson[]): Promise<SimpleRouteJson[]
         cacheProvider: null,
         workerPool: pool,
         enableParallelPathSimplification: true,
+        enableParallelDrcTrials: false,
       })
       await solver.solveAsync()
       if (!solver.solved || solver.failed) {
@@ -167,7 +169,7 @@ gh workflow run benchmark.yml \
   -f solver_name=parallel-prototype \
   -f ref=YOUR_BRANCH \
   -f same_machine_compare=false \
-  -f benchmark_args_json='["--repetitions","3","--timeout-ms","1200000","--parallel-path-simplification","1"]'
+  -f benchmark_args_json='["--repetitions","3","--timeout-ms","1200000","--parallel-path-simplification","1","--parallel-drc-trials","0"]'
 ```
 
 For a baseline profile run, use
@@ -333,7 +335,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Five frozen exploratory snapshots have complete paired results for all 16
+Six frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -345,6 +347,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `dc387aa1f` | first-valid / goal-balls | 0.897× | 0.307× | Samples 013–015 failed; sample002 trace lint regressed |
 | `da83da029` | ordered / indexed | 1.345× | 1.439× | All solved, exact geometry, identical connection coverage, DRC and lint |
 | `37746ebc4` | ordered / adaptive-bitset | 1.226× | 1.324× | All solved, exact geometry and original-CAD quality parity; force speculation regressed latency |
+| `414e04749` | ordered / indexed, force trials on coordinator | 1.367× | 1.485× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -382,10 +385,17 @@ increased joint-repair latency on several boards. The finer simplification
 schedule and typed-prefix scorer did not produce a dataset-wide improvement.
 Evidence is in [parallel-srj18-37746ebc4.json](benchmarks/parallel-srj18-37746ebc4.json).
 
-The next evaluation preserves native execution of the first ordinary force
-scale, dispatching later scales only after that trial fails to improve the
-board. It also adds exact obstacle broad-phase rejection to node repair,
-two-word angle prefixes, and duplicate-discovery cost reuse. These changes
-have functional parity checks; their speedup remains unmeasured.
+The `414e04749` evaluation includes all 32 outcomes with parallel force trials
+disabled, indexed pathing, the repair obstacle filter, and duplicate-discovery
+cost reuse. Its average is 1.367× and aggregate is 1.485×. All original-CAD
+coverage, DRC, lint, trace and via comparisons match the baseline. Sample002
+improves to 1.731×, but most smaller boards remain below 1.5×. Evidence is in
+[parallel-srj18-414e04749.json](benchmarks/parallel-srj18-414e04749.json).
+Separate diagnostics retain the corrected force-speculation and adaptive
+pathing configurations; they are not merged with this full-dataset result.
+
+The next changes remove closed graph incidences from ordered neighbor scans
+and reuse exact force-projection geometry. Their functional checks preserve
+routes, sweep order, search state and budgets; their speedup remains unmeasured.
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.

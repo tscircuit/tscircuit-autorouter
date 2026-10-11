@@ -4,6 +4,7 @@
 import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
 import type { TinyHyperGraphProblem, TinyHyperGraphSolverOptions, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
 import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
+import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
 
 /** Keep native route policy while packing its directed-hop candidate frontier. */
 export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHyperGraphSolver {
@@ -12,6 +13,8 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
   private readonly nextRegionByIncidence: Int32Array
   private readonly hopByIncidence: Float64Array
   private packedCandidateQueue?: PackedIndexedCandidateHeap
+  private readonly activeIncidences: TinyActiveIncidenceIndex
+  private activeSearchGeneration = 0
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
     options?: TinyHyperGraphSolverOptions) {
@@ -47,6 +50,9 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
         position++
       }
     }
+    this.activeIncidences = new TinyActiveIncidenceIndex(
+      this.regionPorts, this.hopByIncidence, this.nextRegionByIncidence, this.candidateHopCapacity,
+    )
   }
 
   override _setup(): void {
@@ -59,6 +65,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
       incidentPortRegion: this.topology.incidentPortRegion,
     })
     this.packedCandidateQueue = queue
+    this.activeSearchGeneration = 0
     this.state.candidateQueue = queue
   }
 
@@ -89,6 +96,10 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
         0, 0, 0, undefined)
       state.goalPortId = this.getRouteEndPortId(state.currentRouteId!)
     }
+    if (this.activeSearchGeneration !== queue.searchGeneration) {
+      this.activeIncidences.beginSearch()
+      this.activeSearchGeneration = queue.searchGeneration
+    }
     const currentCandidate = queue.dequeue()
     if (!currentCandidate) {
       this.onOutOfCandidates()
@@ -96,58 +107,68 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     }
     const currentCandidateHopId = currentCandidate.hopId ??
       this.getHopId(currentCandidate.portId, currentCandidate.nextRegionId)
+    this.activeIncidences.closeHop(currentCandidateHopId, state.goalPortId)
     if (currentCandidate.g > this.getCandidateBestCost(currentCandidateHopId)) return
     if (this.isRegionReservedForDifferentNet(currentCandidate.nextRegionId)) return
     const sourceX = topology.portX[currentCandidate.portId]!
     const sourceY = topology.portY[currentCandidate.portId]!
     const start = this.regionPortOffsets[currentCandidate.nextRegionId]!
     const end = this.regionPortOffsets[currentCandidate.nextRegionId + 1]!
-    for (let position = start; position < end; position++) {
-      const neighborPortId = this.regionPorts[position]!
-      // The goal check precedes ordinary section-mask/hop checks in the native
-      // policy. Its final segment is scored by DistanceAware.onPathFound.
-      if (neighborPortId === state.goalPortId) {
+    const firstWord = start >>> 5
+    const finalWord = (end - 1) >>> 5
+    for (let word = firstWord; word <= finalWord && start < end; word++) {
+      let active = this.activeIncidences.getWord(word)
+      if (word === firstWord) active &= 0xffffffff << (start & 31)
+      if (word === finalWord && (end & 31) !== 0) active &= (1 << (end & 31)) - 1
+      while (active !== 0) {
+        const bit = active & -active
+        active ^= bit
+        const position = word * 32 + 31 - Math.clz32(bit)
+        const neighborPortId = this.regionPorts[position]!
+        // The goal check precedes ordinary section-mask/hop checks in the native
+        // policy. Its final segment is scored by DistanceAware.onPathFound.
+        if (neighborPortId === state.goalPortId) {
+          const assignedNetId = state.portAssignment[neighborPortId]
+          if (this.isPortReservedForDifferentNet(neighborPortId)) continue
+          if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) continue
+          this.onPathFound(currentCandidate)
+          return
+        }
+        if (neighborPortId === currentCandidate.portId) continue
+        if (problem.portSectionMask[neighborPortId] === 0) continue
+        const nextRegionId = this.nextRegionByIncidence[position]!
+        if (nextRegionId === -1) continue
+        const candidateHopId = this.hopByIncidence[position]!
         const assignedNetId = state.portAssignment[neighborPortId]
         if (this.isPortReservedForDifferentNet(neighborPortId)) continue
         if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) continue
-        this.onPathFound(currentCandidate)
-        return
+        if (this.isRegionReservedForDifferentNet(nextRegionId)) continue
+        const previousBestCost = this.getCandidateBestCost(candidateHopId)
+        if (currentCandidate.g >= previousBestCost) continue
+        const lowerBoundWithoutDistance = currentCandidate.g +
+          state.regionCongestionCost[currentCandidate.nextRegionId]! +
+          (problem.portPenalty?.[neighborPortId] ?? 0)
+        let knownSegmentDistance: number | undefined
+        let lowerBoundCost = lowerBoundWithoutDistance
+        if (this.ADD_SEGMENT_DISTANCE_TO_G) {
+          const dx = sourceX - topology.portX[neighborPortId]!
+          const dy = sourceY - topology.portY[neighborPortId]!
+          knownSegmentDistance = Math.sqrt(dx * dx + dy * dy)
+          lowerBoundCost += knownSegmentDistance * this.DISTANCE_TO_COST
+        }
+        if (lowerBoundCost >= previousBestCost) continue
+        const g = this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)
+        if (!Number.isFinite(g) || g >= previousBestCost) continue
+        const h = this.computeH(neighborPortId)
+        if (neighborPortId === state.goalPortId) {
+          this.onPathFound({ hopId: candidateHopId, prevRegionId: currentCandidate.nextRegionId,
+            nextRegionId, portId: neighborPortId, g, h, f: g + h, prevCandidate: currentCandidate })
+          return
+        }
+        this.setCandidateBestCost(candidateHopId, g)
+        queue.queueValues(candidateHopId, currentCandidate.nextRegionId, nextRegionId,
+          neighborPortId, g, h, g + h, currentCandidate)
       }
-      if (neighborPortId === currentCandidate.portId) continue
-      if (problem.portSectionMask[neighborPortId] === 0) continue
-      const nextRegionId = this.nextRegionByIncidence[position]!
-      if (nextRegionId === -1) continue
-      const candidateHopId = this.hopByIncidence[position]!
-      if (queue.isClosedHopId(candidateHopId)) continue
-      const assignedNetId = state.portAssignment[neighborPortId]
-      if (this.isPortReservedForDifferentNet(neighborPortId)) continue
-      if (assignedNetId !== -1 && assignedNetId !== state.currentRouteNetId) continue
-      if (this.isRegionReservedForDifferentNet(nextRegionId)) continue
-      const previousBestCost = this.getCandidateBestCost(candidateHopId)
-      if (currentCandidate.g >= previousBestCost) continue
-      const lowerBoundWithoutDistance = currentCandidate.g +
-        state.regionCongestionCost[currentCandidate.nextRegionId]! +
-        (problem.portPenalty?.[neighborPortId] ?? 0)
-      let knownSegmentDistance: number | undefined
-      let lowerBoundCost = lowerBoundWithoutDistance
-      if (this.ADD_SEGMENT_DISTANCE_TO_G) {
-        const dx = sourceX - topology.portX[neighborPortId]!
-        const dy = sourceY - topology.portY[neighborPortId]!
-        knownSegmentDistance = Math.sqrt(dx * dx + dy * dy)
-        lowerBoundCost += knownSegmentDistance * this.DISTANCE_TO_COST
-      }
-      if (lowerBoundCost >= previousBestCost) continue
-      const g = this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)
-      if (!Number.isFinite(g) || g >= previousBestCost) continue
-      const h = this.computeH(neighborPortId)
-      if (neighborPortId === state.goalPortId) {
-        this.onPathFound({ hopId: candidateHopId, prevRegionId: currentCandidate.nextRegionId,
-          nextRegionId, portId: neighborPortId, g, h, f: g + h, prevCandidate: currentCandidate })
-        return
-      }
-      this.setCandidateBestCost(candidateHopId, g)
-      queue.queueValues(candidateHopId, currentCandidate.nextRegionId, nextRegionId,
-        neighborPortId, g, h, g + h, currentCandidate)
     }
   }
 }
