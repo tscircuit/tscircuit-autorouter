@@ -1,0 +1,85 @@
+import {createHash} from "node:crypto"
+import {cp,mkdir,symlink} from "node:fs/promises"
+import {resolve} from "node:path"
+import {deepStrictEqual} from "node:assert"
+
+const source=process.env.GENERIC_HD_CENSUS_ROOT,jobPath=process.env.GENERIC_HD_CENSUS_JOB
+const referencePath=process.env.GENERIC_HD_CENSUS_REFERENCE
+if(!source||!jobPath||!referencePath) throw new Error("Frozen source, captured ordinary job and unmodified result are required")
+const directory=resolve(process.env.GENERIC_HD_CENSUS_OUTPUT??"/tmp/native-generic-hd-work-census")
+const copied=`${directory}/source`
+await mkdir(copied,{recursive:true})
+await cp(`${source}/lib`,`${copied}/lib`,{recursive:true})
+await cp(`${source}/types`,`${copied}/types`,{recursive:true})
+await cp(`${source}/tsconfig.json`,`${copied}/tsconfig.json`)
+await cp(`${source}/package.json`,`${copied}/package.json`)
+await symlink(`${source}/node_modules`,`${copied}/node_modules`)
+await cp(new URL("./native-generic-hd-work-census/counters.ts",import.meta.url),`${copied}/lib/genericHdWorkCounters.ts`)
+const patches:Record<string,[string,string][]>={
+  "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts":[
+    ['      this.closestFuturePointCacheIndices.fill(-2)','      record(this,"closestInvalidations")\n      this.closestFuturePointCacheIndices.fill(-2)'],
+    ['    // Rounded grid keys can alias coordinates or layers outside the grid.','    closestRequest(this,node,pointKey,viaPenaltyDistance)\n    // Rounded grid keys can alias coordinates or layers outside the grid.'],
+    ['      return cachedPointIndex === -1','      record(this,"closestHits")\n      return cachedPointIndex === -1'],
+    ['    let minDist = Infinity','    closestMiss(this)\n    let minDist = Infinity'],
+    ['    // A fixed workspace avoids retaining every explored coordinate in large','    record(this,"closestPointScans",pointIndex)\n    // A fixed workspace avoids retaining every explored coordinate in large'],
+    ['  override setNodeCosts(node: Node) {','  override setNodeCosts(node: Node) {\n    record(this,"nativeCostCalls")'],
+  ],
+  "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts":[
+    ['  get viaPenaltyDistance() {','  get viaPenaltyDistance() {\n    record(this,"viaDistanceGetterCalls")'],
+    ['    margin ??= this.obstacleMargin','    record(this,isVia?"viaObstacleCalls":"planarObstacleCalls")\n    margin ??= this.obstacleMargin'],
+    ['        return false\n      }\n    }\n    const indexedSegments =','        record(this,"planarFreeCacheHits")\n        return false\n      }\n    }\n    const indexedSegments ='],
+    ['    const queryBounds = planarObstacleQuery?.segmentBounds\n    if (indexedSegments)', '    record(this,"segmentCandidates",nearbySegmentIds.length)\n    const queryBounds = planarObstacleQuery?.segmentBounds\n    if (indexedSegments)'],
+    ['        const segment = indexedSegments[segmentId]','        record(this,"segmentVisits")\n        const segment = indexedSegments[segmentId]'],
+    ['        if (\n          Math.sqrt(\n            getPointToPrecomputedSegmentDistanceSquared(','        record(this,"segmentDistanceChecks")\n        if (\n          Math.sqrt(\n            getPointToPrecomputedSegmentDistanceSquared('],
+    ['      for (const viaId of nearbyViaIds) {','      record(this,"viaCandidates",nearbyViaIds.length)\n      for (const viaId of nearbyViaIds) {'],
+    ['  getNodeKey(node: Node) {','  getNodeKey(node: Node) {\n    record(this,"nodeKeyCalls")'],
+  ],
+  "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts":[
+    ['  private calculateCosts(node: Node, knownPointKey?: number): void {','  private calculateCosts(node: Node, knownPointKey?: number): void {\n    record(this.solver,"memoCostCalls")'],
+    ['    if (valid & GOAL_VALID) {','    if (valid & GOAL_VALID) {\n      record(solver,"memoGoalHits")'],
+    ['    if (valid & penaltyValidity) {','    if (valid & penaltyValidity) {\n      record(solver,"memoPenaltyHits")'],
+  ],
+}
+const sourceHashes:Record<string,string>={}
+for(const [path,replacements] of Object.entries(patches)) {
+  const original=await Bun.file(`${source}/${path}`).text()
+  sourceHashes[path]=createHash("sha256").update(original).digest("hex")
+  let text=original
+  for(const [before,after] of replacements) {
+    if(text.indexOf(before)<0||text.indexOf(before)!==text.lastIndexOf(before)) throw new Error(`Census insertion is not unique: ${path}: ${before}`)
+    text=text.replace(before,after)
+  }
+  await Bun.write(`${copied}/${path}`,'import {record,closestRequest,closestMiss} from "lib/genericHdWorkCounters"\n'+text)
+}
+const raw=new Uint8Array(await Bun.file(jobPath).arrayBuffer()),bytes=jobPath.endsWith(".gz")?Bun.gunzipSync(raw):raw
+const job=JSON.parse(new TextDecoder().decode(bytes))
+const workerSource=await Bun.file(new URL("./native-generic-hd-work-census/worker.ts",import.meta.url)).text()
+async function runWorker(root:string,name:string,instrumented:boolean):Promise<{response:unknown;census:unknown}> {
+  let entry=workerSource.replace('process.env.GENERIC_HD_CENSUS_COPY',JSON.stringify(root))
+  if(!instrumented) entry=entry.replace('const counters=await import(`${sourceRoot}/lib/genericHdWorkCounters.ts`)','const counters={snapshot:():null=>null}')
+  await Bun.write(`${directory}/${name}.ts`,entry)
+  const worker=new Worker(`${directory}/${name}.ts`)
+  return await new Promise<{response:unknown;census:unknown}>((resolveResult,reject):void=>{
+    worker.onerror=(event:ErrorEvent):void=>reject(new Error(event.message))
+    worker.onmessage=(event:MessageEvent):void=>{
+      const message=event.data
+      if(message.error) {reject(new Error(message.error));return}
+      if(message.kind==="requestMultiHeadHistories"||message.kind==="requestGridHistories"||message.kind==="requestFirstValidA13Candidate") {
+        const kind=message.kind==="requestMultiHeadHistories"?"multiHeadHistoryGrant":message.kind==="requestGridHistories"?"gridHistoryGrant":"firstValidA13CandidateGrant"
+        worker.postMessage({kind,taskId:message.taskId,requestId:message.requestId,admittedCandidateIds:[],admitted:false})
+        return
+      }
+      if(typeof message.kind==="string"&&message.kind.startsWith("cancel")) return
+      resolveResult(message)
+    }
+    worker.postMessage({taskId:1,idleWorkerAvailability:new SharedArrayBuffer(4),job})
+  }).finally(():void=>worker.terminate())
+}
+const result=await runWorker(copied,"worker",true)
+const native=await runWorker(source,"reference-worker",false)
+deepStrictEqual(result.response,native.response,"Instrumentation must preserve the complete actual native worker result")
+deepStrictEqual(JSON.parse(JSON.stringify(native.response)),await Bun.file(referencePath).json(),"Fresh original worker must also match the saved frozen profile result")
+const proof={noTimingComparison:true,actualWorker:true,nativeMethodWrappers:false,fullOriginalResultEqual:true,
+  jobSha256:createHash("sha256").update(bytes).digest("hex"),frozenSourceRoot:source,sourceHashes,census:result.census}
+await Bun.write(`${directory}/proof.json`,JSON.stringify(proof,null,2))
+console.log(JSON.stringify(proof,null,2))
