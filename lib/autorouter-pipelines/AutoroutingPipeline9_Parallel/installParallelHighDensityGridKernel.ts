@@ -2,14 +2,16 @@ import type { Node } from "../../data-structures/SingleRouteCandidatePriorityQue
 import type { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "../../solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { PackedHighDensityCandidateHeap } from "./PackedHighDensityCandidateHeap"
-import { createHighDensityRouteCostMemo } from "./HighDensityRouteCostMemo"
+import { DeferredHighDensityRouteCostMemo } from "./DeferredHighDensityRouteCostMemo"
 
 const installedRoutes = new WeakSet<SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>()
 const installedNodes = new WeakSet<IntraNodeRouteSolver>()
+const nativeCosts = SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setNodeCosts
 
 /** Install before the first search step; constructor geometry remains native. */
 export function installParallelHighDensityRouteGridKernel(
   solver: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
+  costMemoActivationCalls?: number,
 ): void {
   if (installedRoutes.has(solver)) return
   if (solver.iterations !== 0) {
@@ -20,12 +22,13 @@ export function installParallelHighDensityRouteGridKernel(
     throw new Error("Parallel HD grid kernel expected one native initial candidate")
   }
   solver.candidates = new PackedHighDensityCandidateHeap([initial])
-  const costMemo = createHighDensityRouteCostMemo(solver)
+  const costMemo = new DeferredHighDensityRouteCostMemo(solver, costMemoActivationCalls)
   const neighbors: Node[] = []
   const candidate: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent: null }
   solver.getNeighbors = (node: Node): Node[] => {
+    let completedNativeCostCalls = 0
     try {
-      costMemo?.beginNeighborBatch()
+      const activeCostMemo = costMemo.beginNeighborBatch()
       neighbors.length = 0
       let sharedPlanarObstacleQuery: ReturnType<typeof solver.getPlanarNeighborObstacleQuery>
       let queriedPlanarNeighbors = false
@@ -64,8 +67,12 @@ export function installParallelHighDensityRouteGridKernel(
             solver.exploredNodes.add(neighborKey)
             continue
           }
-          if (costMemo) costMemo.setNodeCosts(candidate, neighborKey)
-          else solver.setNodeCosts(candidate)
+          if (activeCostMemo) activeCostMemo.setNodeCosts(candidate, neighborKey)
+          else {
+            const costs = solver.setNodeCosts
+            costs.call(solver, candidate)
+            if (costs === nativeCosts) completedNativeCostCalls++
+          }
           neighbors.push({
             x: candidate.x, y: candidate.y, z: candidate.z,
             g: candidate.g, h: candidate.h, f: candidate.f, parent: candidate.parent,
@@ -87,8 +94,12 @@ export function installParallelHighDensityRouteGridKernel(
           !solver.isNodeTooCloseToObstacle(candidate, solver.viaDiameter / 2 + solver.obstacleMargin / 2, true) &&
           !solver.isNodeTooCloseToEdge(candidate, true)
         ) {
-          if (costMemo) costMemo.setNodeCosts(candidate, neighborKey)
-          else solver.setNodeCosts(candidate)
+          if (activeCostMemo) activeCostMemo.setNodeCosts(candidate, neighborKey)
+          else {
+            const costs = solver.setNodeCosts
+            costs.call(solver, candidate)
+            if (costs === nativeCosts) completedNativeCostCalls++
+          }
           neighbors.push({
             x: candidate.x, y: candidate.y, z: candidate.z,
             g: candidate.g, h: candidate.h, f: candidate.f, parent: candidate.parent,
@@ -97,7 +108,7 @@ export function installParallelHighDensityRouteGridKernel(
       }
       return neighbors
     } finally {
-      costMemo?.endNeighborBatch()
+      costMemo.endNeighborBatch(completedNativeCostCalls)
     }
   }
   installedRoutes.add(solver)

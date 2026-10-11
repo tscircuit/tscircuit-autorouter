@@ -12,7 +12,7 @@ test("worker grid kernel preserves all sample001 and003 original HD routes and a
   const originalFactory = PortfolioSingleIntraNodeSolver.prototype.generateSolver
   const originalStep = SingleHighDensityRouteSolver.prototype._step
   let usePacked = false
-  let counts = { searches: 0, expansions: 0, proposed: 0, accepted: 0, pops: 0 }
+  let counts = { searches: 0, expansions: 0, proposed: 0, accepted: 0, pops: 0, maximumIterationBudget: 0 }
   const seen = new WeakSet<SingleHighDensityRouteSolver>()
   PortfolioSingleIntraNodeSolver.prototype.generateSolver = function (parameters) {
     const solver = originalFactory.call(this, parameters)
@@ -23,6 +23,7 @@ test("worker grid kernel preserves all sample001 and003 original HD routes and a
     if (!seen.has(this)) {
       seen.add(this)
       counts.searches++
+      counts.maximumIterationBudget += this.MAX_ITERATIONS
       const neighbors = this.getNeighbors.bind(this)
       this.getNeighbors = (node) => {
         const result = neighbors(node)
@@ -46,7 +47,7 @@ test("worker grid kernel preserves all sample001 and003 original HD routes and a
       const params = (definition.getConstructorParams(pipeline) as [Pipeline9HighDensitySolverParams])[0]
       const results = [false, true].map((packed) => {
         usePacked = packed
-        counts = { searches: 0, expansions: 0, proposed: 0, accepted: 0, pops: 0 }
+        counts = { searches: 0, expansions: 0, proposed: 0, accepted: 0, pops: 0, maximumIterationBudget: 0 }
         getGlobalInMemoryCache().clearCache()
         const solver = new Pipeline9HighDensitySolver({ ...params, nodePortPoints: structuredClone(params.nodePortPoints) })
         solver.solve()

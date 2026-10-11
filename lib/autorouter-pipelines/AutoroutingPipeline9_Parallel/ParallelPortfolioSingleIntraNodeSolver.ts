@@ -9,6 +9,12 @@ import { CompletedFirstValidA13Solver } from "./CompletedFirstValidA13Solver"
 import type { FirstValidA13CandidateDispatcher, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
 import { installParallelIntraNodeGridKernel } from "./installParallelHighDensityGridKernel"
+import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
+import { ReplayHighDensityA01Solver } from "./ReplayHighDensityA01Solver"
+import { ReplayHighDensityA03Solver } from "./ReplayHighDensityA03Solver"
+import type { GridHistoryDispatcher, GridHistoryJob } from "./parallelGridHistoryTypes"
+
+type ReplayGridSolver = ReplayHighDensityA01Solver | ReplayHighDensityA03Solver
 
 type CompletedCompetitiveCandidate =
   | { kind: "multi-head"; candidateId: number; history: MultiHeadHistoryResult }
@@ -34,6 +40,10 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
   private readonly physicalCopperObstacles?: ParallelHighDensityPolicyOptions["physicalCopperObstacles"]
   private readonly a13Dispatcher?: FirstValidA13CandidateDispatcher
   private a13Admitted = false
+  private readonly gridDispatcher?: GridHistoryDispatcher
+  private readonly gridCandidates = new Map<number, ReplayGridSolver>()
+  private readonly admittedGridCandidates = new Set<number>()
+  private lastGridRequestIteration = -Infinity
 
   constructor(
     params: ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
@@ -50,6 +60,7 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     this.requirePhysicalCopper = options.requirePhysicalCopper ?? options.policy === "first-valid"
     this.physicalCopperObstacles = options.physicalCopperObstacles
     this.a13Dispatcher = options.a13Dispatcher
+    this.gridDispatcher = options.gridHistoryDispatcher
     this.policyStats = options.stats ?? { eligiblePortfolioCount: 0, acceptedCandidateCount: 0,
       rejectedCandidateCount: 0, rejectionReasons: {}, winners: [] }
     if (this.policy === "first-valid") {
@@ -70,6 +81,15 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     }
     if (!hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
       const solver = super.generateSolver(hyperParameters)
+      const nativeGrid: unknown = solver
+      if (this.gridDispatcher && this.policy === "ordered" &&
+        (nativeGrid instanceof HighDensitySolverA01 || nativeGrid instanceof HighDensitySolverA03)) {
+        const replay = nativeGrid instanceof HighDensitySolverA01
+          ? new ReplayHighDensityA01Solver(nativeGrid.getConstructorParams()[0])
+          : new ReplayHighDensityA03Solver(nativeGrid.getConstructorParams()[0])
+        this.gridCandidates.set(this.gridCandidates.size, replay)
+        return replay as unknown as IntraNodeRouteSolver
+      }
       return solver instanceof CachedIntraNodeRouteSolver ? installParallelIntraNodeGridKernel(solver) : solver
     }
     const solver = new ReplayMultiHeadPolyLineSolver({
@@ -103,6 +123,42 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
       await this.requestHistories(selected instanceof ReplayMultiHeadPolyLineSolver ? selected : undefined)
     }
     if (selected instanceof ReplayMultiHeadPolyLineSolver) await selected.prepareForNextStep()
+    if (selected instanceof ReplayHighDensityA01Solver || selected instanceof ReplayHighDensityA03Solver) {
+      // Almost every simple-board grid candidate ends or loses after its first
+      // 100 steps. Lend workers only once the original selected candidate has
+      // consumed ten quanta; retry a denied grant every sixteen supervisor steps.
+      if (selected.iterations >= 1_000 && this.iterations - this.lastGridRequestIteration >= 16) {
+        await this.requestGridHistories(selected)
+      }
+      await selected.prepareForNextStep()
+    }
+  }
+
+  protected override getSolvedSegmentCount(solver: unknown): number | null {
+    if (solver instanceof ReplayHighDensityA01Solver || solver instanceof ReplayHighDensityA03Solver) {
+      const replayCount = solver.getReplaySolvedSegmentCount()
+      if (replayCount !== null) return replayCount
+    }
+    return super.getSolvedSegmentCount(solver)
+  }
+
+  private async requestGridHistories(selected: ReplayGridSolver): Promise<void> {
+    if (!this.gridDispatcher) throw new Error("Grid replay has no idle-worker dispatcher")
+    const candidates = [...this.gridCandidates].filter(([id, solver]) =>
+      !this.admittedGridCandidates.has(id) && !solver.solved && !solver.failed && solver._setupDone &&
+      solver.iterations % this.MIN_SUBSTEPS === 0)
+    candidates.sort((a, b) => Number(b[1] === selected) - Number(a[1] === selected))
+    if (candidates.length === 0) return
+    this.lastGridRequestIteration = this.iterations
+    const jobs: GridHistoryJob[] = candidates.slice(0, 3).map(([candidateId, solver]) => solver.createHistoryJob(candidateId))
+    const admitted = await this.gridDispatcher(jobs)
+    for (const [id, request] of admitted) {
+      const solver = this.gridCandidates.get(id)
+      const job = jobs.find((candidate) => candidate.candidateId === id)
+      if (!solver || !job || this.admittedGridCandidates.has(id)) throw new Error(`Grid grant names unknown or repeated candidate ${id}`)
+      solver.setHistoryRequest(job, request)
+      this.admittedGridCandidates.add(id)
+    }
   }
 
   private async requestHistories(selected?: ReplayMultiHeadPolyLineSolver): Promise<void> {

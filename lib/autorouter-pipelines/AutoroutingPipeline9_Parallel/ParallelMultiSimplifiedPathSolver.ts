@@ -4,6 +4,7 @@ import { getParallelPathBatches } from "./getParallelPathBatches"
 import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
 import { getParallelPathDependencies, type ParallelPathDependencies } from "./getParallelPathDependencies"
 import type { ParallelPathWaveContext, ParallelPathWaveResult } from "./parallelStageWorkerTypes"
+import { takeParallelPathReadyBatch } from "./takeParallelPathReadyBatch"
 
 type Params = ConstructorParameters<typeof MultiSimplifiedPathSolver>[0] & {
   workerPool: ParallelStageWorkerPool
@@ -90,23 +91,32 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
         while (!failed && activeJobs < this.workerCount && ready.length > 0) {
           // Heavy ready routes start first. Completion order never chooses geometry.
           ready.sort((left, right) => this.unsimplifiedHdRoutes[right]!.route.length - this.unsimplifiedHdRoutes[left]!.route.length || left - right)
-          const routeIndex = ready.shift()!
+          const routeIndexes = takeParallelPathReadyBatch(ready, this.unsimplifiedHdRoutes,
+            this.workerCount - activeJobs)
           activeJobs++
           const updates = [...routesByIndex].sort(([left], [right]) => left - right).map(([index, route]) => ({ index, route }))
           void this.workerPool.run<ParallelPathWaveResult>({ kind: "simplifyPathWave", contextId: this.contextId,
-            context, indexes: [routeIndex], updates }).then((result): void => {
+            context, indexes: routeIndexes, updates }).then((result): void => {
             if (failed) return
-            if (result.kind !== "simplifyPathWave" || result.contextId !== this.contextId || result.results.length !== 1 ||
-              result.results[0]!.index !== routeIndex || !Number.isSafeInteger(result.results[0]!.nativeSteps) || result.results[0]!.nativeSteps < 1) {
-              throw new Error(`Invalid path simplification result for route ${routeIndex}`)
+            if (result.kind !== "simplifyPathWave" || result.contextId !== this.contextId || result.results.length !== routeIndexes.length) {
+              throw new Error(`Invalid path simplification result for routes ${routeIndexes.join(",")}`)
             }
-            const output = result.results[0]!
-            routesByIndex.set(routeIndex, output.route)
-            stepsByIndex[routeIndex] = output.nativeSteps
+            for (const [position, routeIndex] of routeIndexes.entries()) {
+              const output = result.results[position]!
+              if (!output || output.index !== routeIndex || !output.route ||
+                !Number.isSafeInteger(output.nativeSteps) || output.nativeSteps < 1) {
+                throw new Error(`Invalid path simplification result for route ${routeIndex}`)
+              }
+            }
             activeJobs--
-            for (const successor of this.dependencies.successors[routeIndex]!) {
-              remaining[successor]!--
-              if (remaining[successor] === 0) ready.push(successor)
+            // Publish the complete successful batch before releasing successors.
+            for (const output of result.results) {
+              routesByIndex.set(output.index, output.route)
+              stepsByIndex[output.index] = output.nativeSteps
+              for (const successor of this.dependencies.successors[output.index]!) {
+                remaining[successor]!--
+                if (remaining[successor] === 0) ready.push(successor)
+              }
             }
             if (routesByIndex.size === this.unsimplifiedHdRoutes.length) resolve()
             else dispatch()

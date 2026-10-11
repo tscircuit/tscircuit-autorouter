@@ -1,5 +1,6 @@
 import type { FirstValidA13CandidateDispatcher } from "./firstValidA13CandidateTypes"
 import type { Obstacle } from "../../types"
+import type { GridHistoryDispatcher } from "./parallelGridHistoryTypes"
 
 export type ParallelHighDensityPolicy = "ordered" | "first-valid"
 
@@ -33,6 +34,7 @@ export type ParallelHighDensityPolicyOptions = {
   onAcceptedCandidate?: () => void
   clearance?: number
   a13Dispatcher?: FirstValidA13CandidateDispatcher
+  gridHistoryDispatcher?: GridHistoryDispatcher
   requirePhysicalCopper?: boolean
   physicalCopperObstacles?: readonly Obstacle[]
 }

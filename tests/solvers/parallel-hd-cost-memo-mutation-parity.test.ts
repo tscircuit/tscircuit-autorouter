@@ -43,7 +43,7 @@ test("HD cost memo preserves native selectors, public mutations, collisions and 
   }
   const native = new GridSolver(structuredClone(opts))
   const packed = new GridSolver(structuredClone(opts))
-  installParallelHighDensityRouteGridKernel(packed)
+  installParallelHighDensityRouteGridKernel(packed, 0)
   let randomState = 0xa4907153
   const random = (): number => {
     randomState ^= randomState << 13
@@ -77,7 +77,7 @@ test("HD cost memo preserves native selectors, public mutations, collisions and 
   }
   const poisonNative = new GridSolver(structuredClone(poisonOpts))
   const poisonPacked = new GridSolver(structuredClone(poisonOpts))
-  installParallelHighDensityRouteGridKernel(poisonPacked)
+  installParallelHighDensityRouteGridKernel(poisonPacked, 0)
   const poisonQuery = { ...query, x: 1, y: 0 }
   const poisonCollision = { ...poisonQuery, x: 1 + poisonNative.cellStep * 512 }
   compareCosts(poisonNative, poisonPacked, poisonQuery)
@@ -169,7 +169,7 @@ test("HD cost memo preserves native selectors, public mutations, collisions and 
   expect(getterCalls[1]).toBe(getterCalls[0])
   const stepNative = new GridSolver(structuredClone(opts))
   const stepPacked = new GridSolver(structuredClone(opts))
-  installParallelHighDensityRouteGridKernel(stepPacked)
+  installParallelHighDensityRouteGridKernel(stepPacked, 0)
   stepNative.MAX_ITERATIONS = stepPacked.MAX_ITERATIONS = 90
   while (!stepNative.solved && !stepNative.failed) {
     if (stepNative.iterations % 5 === 0) {

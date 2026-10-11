@@ -75,7 +75,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     { iterations: number; maxIterations: number }
   >()
 
-  private getSolvedSegmentCount(solver: unknown): number | null {
+  protected getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
     if (!(solvedConnectionsMap instanceof Map)) return null
 

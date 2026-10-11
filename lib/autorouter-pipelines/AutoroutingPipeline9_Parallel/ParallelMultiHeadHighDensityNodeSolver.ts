@@ -9,6 +9,7 @@ import type { MultiHeadHistoryDispatcher } from "./parallelMultiHeadHistoryTypes
 import type { FirstValidHighDensityStats, ParallelHighDensityPolicy, ParallelHighDensityPolicyOptions } from "./parallelHighDensityPolicyTypes"
 import type { FirstValidA13CandidateDispatcher } from "./firstValidA13CandidateTypes"
 import { scalePhysicalCopperObstacles } from "./scalePhysicalCopperObstacles"
+import type { GridHistoryDispatcher } from "./parallelGridHistoryTypes"
 
 class ParallelGrowShrinkIntraNodeSolver extends GrowShrinkHighDensityIntraNodeSolver {
   constructor(
@@ -25,6 +26,7 @@ class ParallelGrowShrinkIntraNodeSolver extends GrowShrinkHighDensityIntraNodeSo
       params,
       this.dispatcher,
       this.scaleFactor === 1 ? this.policyOptions : { policy: "ordered",
+        gridHistoryDispatcher: this.policyOptions.gridHistoryDispatcher,
         requirePhysicalCopper,
         ...(requirePhysicalCopper ? { physicalCopperObstacles: scalePhysicalCopperObstacles(
           params.obstacles ?? [], this.nodeWithPortPoints.center, this.scaleFactor,
@@ -63,6 +65,7 @@ export class ParallelMultiHeadHighDensityNodeSolver extends Pipeline9HighDensity
   private readonly a13Dispatcher?: FirstValidA13CandidateDispatcher
   private readonly cancellation?: Int32Array
   private readonly requirePhysicalCopper: boolean
+  private readonly gridHistoryDispatcher?: GridHistoryDispatcher
   wasCancelled = false
   readonly firstValidStats: FirstValidHighDensityStats = { eligiblePortfolioCount: 0,
     acceptedCandidateCount: 0, rejectedCandidateCount: 0, rejectionReasons: {}, winners: [] }
@@ -76,6 +79,7 @@ export class ParallelMultiHeadHighDensityNodeSolver extends Pipeline9HighDensity
     a13Dispatcher?: FirstValidA13CandidateDispatcher,
     cancellationBuffer?: SharedArrayBuffer,
     requirePhysicalCopper?: boolean,
+    gridHistoryDispatcher?: GridHistoryDispatcher,
   ) {
     super(params)
     this.dispatcher = dispatcher
@@ -85,6 +89,7 @@ export class ParallelMultiHeadHighDensityNodeSolver extends Pipeline9HighDensity
     this.a13Dispatcher = a13Dispatcher
     this.cancellation = cancellationBuffer ? new Int32Array(cancellationBuffer) : undefined
     this.requirePhysicalCopper = requirePhysicalCopper ?? highDensityPolicy === "first-valid"
+    this.gridHistoryDispatcher = gridHistoryDispatcher
   }
 
   protected override createRegularNodeSolver(node: NodeWithPortPoints): HighDensitySolver {
@@ -97,6 +102,7 @@ export class ParallelMultiHeadHighDensityNodeSolver extends Pipeline9HighDensity
     }, createParallelHighDensityClass(this.dispatcher, { policy: this.highDensityPolicy,
       stats: this.firstValidStats, onAcceptedCandidate: this.cancelUnusedHistories,
       clearance: this.firstValidClearance, a13Dispatcher: this.a13Dispatcher,
+      gridHistoryDispatcher: this.gridHistoryDispatcher,
       requirePhysicalCopper: this.requirePhysicalCopper }))
   }
 

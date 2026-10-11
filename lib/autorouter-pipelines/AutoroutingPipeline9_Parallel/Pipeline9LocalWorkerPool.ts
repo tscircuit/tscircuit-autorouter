@@ -9,6 +9,8 @@ import { assertParallelNodeBatchResult } from "./parallelNodeJobBatching"
 import { assertParallelGlobalDrcTrialResult } from "./executeParallelGlobalDrcTrial"
 import { assertParallelHighDensityNodeBatchJob, assertParallelHighDensityNodeBatchResult } from "./parallelHighDensityNodeBatching"
 import { Pipeline9SharedContextCodec, type Pipeline9SharedContextFamily, type Pipeline9SharedContextReference } from "./Pipeline9SharedContextCodec"
+import type { GridHistoryDelivery, GridHistoryGrant, GridHistoryRequest, GridHistoryResult } from "./parallelGridHistoryTypes"
+import { assertGridHistoryJob, assertGridHistoryResult } from "./executeGridHistoryJob"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -44,7 +46,10 @@ export class Pipeline9LocalWorkerPool {
     a13CancellationSignals: 0, a13CandidatesStopped: 0, a13RoutingIterationsCompleted: 0,
     a13NodeJobsCompleted: 0, a13NodeJobsStopped: 0, a13NodeRoutingIterationsCompleted: 0,
     contextSerializationCalls: 0, contextSerializedBytes: 0, sharedContextMessages: 0,
-    contextAliasNativeMessages: 0, contextShapeNativeMessages: 0 }
+    contextAliasNativeMessages: 0, contextShapeNativeMessages: 0,
+    gridHistoryRequestsGranted: 0, gridHistoryRequestsDenied: 0, gridHistoryJobsStarted: 0,
+    gridHistoryCancellationSignals: 0, gridHistoryJobsStopped: 0, gridHistoryComputedIterations: 0,
+    gridHistoryPrefixIterationsRecomputed: 0, gridHistoryCheckpointsCompleted: 0 }
   readonly contextTransport: "structured-clone" | "bun-shared"
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
@@ -55,7 +60,7 @@ export class Pipeline9LocalWorkerPool {
   private terminalError: Error | null = null
   private sharedContextCodec?: Pipeline9SharedContextCodec
   private contextTransportInitialization?: Promise<void>
-  private readonly candidateCancellationByOwner = new Map<number, Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate">>()
+  private readonly candidateCancellationByOwner = new Map<number, Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate" | "gridHistory">>()
 
   constructor(options: Pipeline9LocalWorkerPoolOptions = {}) {
     this.workerCount = options.workerCount ?? 4
@@ -87,6 +92,15 @@ export class Pipeline9LocalWorkerPool {
     return new Promise<T>((resolve, reject) => {
       if (job.kind === "highDensityNodeBatch") {
         try { assertParallelHighDensityNodeBatchJob(job, job.context) }
+        catch (error: unknown) {
+          const failure = error instanceof Error ? error : new Error(String(error))
+          reject(failure)
+          this.fail(failure)
+          return
+        }
+      }
+      if (job.kind === "gridHistory") {
+        try { assertGridHistoryJob(job) }
         catch (error: unknown) {
           const failure = error instanceof Error ? error : new Error(String(error))
           reject(failure)
@@ -148,11 +162,12 @@ export class Pipeline9LocalWorkerPool {
       if ("kind" in response) {
         try {
           if (response.kind === "requestMultiHeadHistories") this.admitHistoryRequest(slot, response)
+          else if (response.kind === "requestGridHistories") this.admitGridHistoryRequest(slot, response)
           else if (response.kind === "requestFirstValidA13Candidate") this.admitA13Request(slot, response)
-          else if (response.kind === "cancelMultiHeadHistories" || response.kind === "cancelFirstValidA13Candidate") {
+          else if (response.kind === "cancelMultiHeadHistories" || response.kind === "cancelFirstValidA13Candidate" || response.kind === "cancelGridHistories") {
             if (!task || task.taskId !== response.taskId ||
                 (task.job.kind !== "highDensityNode" && task.job.kind !== "highDensityNodeBatch") ||
-                (task.job.kind === "highDensityNodeBatch" && response.kind !== "cancelMultiHeadHistories")) {
+                (task.job.kind === "highDensityNodeBatch" && response.kind === "cancelFirstValidA13Candidate")) {
               throw new Error("Multi-head cancellation has no active high-density owner")
             }
             this.cancelOwnerCandidates(response.taskId)
@@ -169,6 +184,19 @@ export class Pipeline9LocalWorkerPool {
       if (response.ok && task.job.kind === "multiHeadHistory") {
         try { this.recordHistoryWork(response.result) }
         catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (response.ok && task.job.kind === "gridHistory") {
+        try {
+          const history = response.result as GridHistoryResult
+          assertGridHistoryResult(task.job, history)
+          this.stats.gridHistoryComputedIterations += history.computedIterations
+          this.stats.gridHistoryPrefixIterationsRecomputed += Math.min(task.job.ownerIterations, history.computedIterations)
+          this.stats.gridHistoryCheckpointsCompleted += history.checkpoints.length
+          if (history.cancelled) this.stats.gridHistoryJobsStopped++
+        } catch (error: unknown) {
           this.fail(error instanceof Error ? error : new Error(String(error)))
           return
         }
@@ -306,11 +334,11 @@ export class Pipeline9LocalWorkerPool {
     )
   }
 
-  private registerCandidateCancellation(ownerTaskId: number, kind: "multiHeadHistory" | "firstValidA13Candidate"): Int32Array {
+  private registerCandidateCancellation(ownerTaskId: number, kind: "multiHeadHistory" | "firstValidA13Candidate" | "gridHistory"): Int32Array {
     const cancellation = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
     let cancellations = this.candidateCancellationByOwner.get(ownerTaskId)
     if (!cancellations) {
-      cancellations = new Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate">()
+      cancellations = new Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate" | "gridHistory">()
       this.candidateCancellationByOwner.set(ownerTaskId, cancellations)
     }
     cancellations.set(cancellation, kind)
@@ -421,6 +449,7 @@ export class Pipeline9LocalWorkerPool {
     for (const [cancellation, kind] of cancellations) {
       if (Atomics.exchange(cancellation, 0, 1) !== 0) continue
       if (kind === "multiHeadHistory") this.stats.historyCancellationSignals++
+      else if (kind === "gridHistory") this.stats.gridHistoryCancellationSignals++
       else this.stats.a13CancellationSignals++
     }
     this.candidateCancellationByOwner.delete(ownerTaskId)
@@ -440,6 +469,55 @@ export class Pipeline9LocalWorkerPool {
     try {
       owner.worker.postMessage(delivery)
     } catch (error: unknown) {
+      this.fail(error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  private admitGridHistoryRequest(owner: WorkerSlot, request: GridHistoryRequest): void {
+    if (!owner.task || owner.task.taskId !== request.taskId ||
+      (owner.task.job.kind !== "highDensityNode" && owner.task.job.kind !== "highDensityNodeBatch") ||
+      (owner.task.job.context.highDensityPolicy ?? "ordered") !== "ordered") {
+      throw new Error("Grid history request has no active ordered high-density owner")
+    }
+    if (!Number.isSafeInteger(request.requestId) || request.requestId < 1 || !Array.isArray(request.jobs) ||
+      request.jobs.length < 1 || request.jobs.length > 3 ||
+      new Set(request.jobs.map((job) => job.candidateId)).size !== request.jobs.length) {
+      throw new Error("Grid history request has invalid candidates")
+    }
+    for (const job of request.jobs) assertGridHistoryJob(job)
+    // Ordinary node/stage work retains priority and no owner can queue its
+    // dependent history behind four occupied workers. Only current idle slots
+    // are lent, so denial leaves the same native candidate running locally.
+    const capacity = this.queue.length === 0
+      ? this.workerCount - this.workers.filter((slot) => slot.task !== null).length : 0
+    const jobs = request.jobs.slice(0, capacity)
+    owner.worker.postMessage({ kind: "gridHistoryGrant", taskId: request.taskId,
+      requestId: request.requestId, admittedCandidateIds: jobs.map((job) => job.candidateId) } satisfies GridHistoryGrant)
+    if (jobs.length === 0) this.stats.gridHistoryRequestsDenied++
+    else this.stats.gridHistoryRequestsGranted++
+    for (const job of jobs) {
+      const cancellation = this.registerCandidateCancellation(request.taskId, "gridHistory")
+      this.stats.gridHistoryJobsStarted++
+      void this.run<GridHistoryResult>({ ...job, cancellationBuffer: cancellation.buffer as SharedArrayBuffer }).then(
+        (result): void => {
+          this.removeCandidateCancellation(request.taskId, cancellation)
+          this.deliverGridHistory(owner, { kind: "gridHistoryDelivery", taskId: request.taskId,
+            requestId: request.requestId, candidateId: job.candidateId, ok: true, result })
+        },
+        (error: unknown): void => {
+          this.removeCandidateCancellation(request.taskId, cancellation)
+          this.deliverGridHistory(owner, { kind: "gridHistoryDelivery", taskId: request.taskId,
+            requestId: request.requestId, candidateId: job.candidateId, ok: false,
+            error: error instanceof Error ? error.message : String(error) })
+        },
+      )
+    }
+  }
+
+  private deliverGridHistory(owner: WorkerSlot, delivery: GridHistoryDelivery): void {
+    if (this.terminalError || owner.task?.taskId !== delivery.taskId) return
+    try { owner.worker.postMessage(delivery) }
+    catch (error: unknown) {
       this.fail(error instanceof Error ? error : new Error(String(error)))
     }
   }

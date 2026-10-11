@@ -8,6 +8,7 @@ import type { FirstValidA13CandidateCancellation, FirstValidA13CandidateJob, Fir
 import type { FirstValidA13NodeJob } from "./parallelHighDensityFrontierTypes"
 import type { ParallelHighDensityNodeBatchJob } from "./parallelHighDensityNodeBatching"
 import type { Pipeline9SharedContextReference } from "./Pipeline9SharedContextCodec"
+import type { GridHistoryCancellation, GridHistoryJob, GridHistoryRequest } from "./parallelGridHistoryTypes"
 
 export type Pipeline9ParallelHighDensityContext = {
   connectivityNetMap: Record<string, string[]>
@@ -52,6 +53,7 @@ export type Pipeline9LocalWorkerJob =
   | ParallelHighDensityNodeBatchJob
   | ParallelStageWorkerJob
   | MultiHeadHistoryJob
+  | GridHistoryJob
   | FirstValidA13CandidateJob
   | FirstValidA13NodeJob
   | { kind: "warmup" }
@@ -66,6 +68,8 @@ export type Pipeline9LocalWorkerRequest = {
 export type Pipeline9LocalWorkerResponse =
   | MultiHeadHistoryRequest
   | MultiHeadHistoryCancellation
+  | GridHistoryRequest
+  | GridHistoryCancellation
   | FirstValidA13CandidateRequest
   | FirstValidA13CandidateCancellation
   | { taskId: number; ok: true; result: unknown }
