@@ -57,7 +57,6 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
-const REFERENCE_DRC_CANDIDATE_CACHE_SIZE = 16
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
@@ -1150,17 +1149,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    // Preloaded conversion can call the supplied connectivity map on each
-    // miss. Preserve one-entry behavior for those inputs.
-    const referenceDrcCandidateCacheSize =
-      (params.originalSrj.traces?.length ?? 0) === 0 &&
-      this.inputUpdatedPreloadedTraces.length === 0
-        ? REFERENCE_DRC_CANDIDATE_CACHE_SIZE
-        : 1
-    const referenceDrcCandidateCache = new Map<
-      string,
-      ReturnType<DrcEvaluator>
-    >()
+    let referenceDrcCandidateCache:
+      | {
+          candidateKey: string
+          result: ReturnType<DrcEvaluator>
+        }
+      | undefined
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1374,23 +1368,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      const cachedResult = referenceDrcCandidateCache.get(candidateKey)
-      if (cachedResult !== undefined) return cachedResult
+      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
+        return referenceDrcCandidateCache.result
+      }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
         traces: [],
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCandidateCache.size >= referenceDrcCandidateCacheSize) {
-        const oldestCandidateKey = referenceDrcCandidateCache
-          .keys()
-          .next().value
-        if (oldestCandidateKey !== undefined) {
-          referenceDrcCandidateCache.delete(oldestCandidateKey)
-        }
-      }
-      referenceDrcCandidateCache.set(candidateKey, result)
+      referenceDrcCandidateCache = { candidateKey, result }
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
