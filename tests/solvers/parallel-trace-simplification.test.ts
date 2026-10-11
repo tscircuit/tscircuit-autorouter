@@ -62,6 +62,24 @@ test("parallel independent path components preserve serial crossing-via and widt
       expect(parallel.simplifiedHdRoutes).toEqual(serial.simplifiedHdRoutes)
       expect(parallel.simplifiedHdRoutes.reduce((total, route) => total + route.vias.length, 0)).toBe(4)
       expect(parallel.simplificationPipelineLoops).toBe(serial.simplificationPipelineLoops)
+      expect(parallel.stats).toEqual({
+        pathSimplificationPhaseCount: 2,
+        parallelPathBatchCountMax: 4,
+        interactionComponentCountMax: 4,
+        componentJobs: 8,
+      })
+      const oneBatch = new ParallelTraceSimplificationSolver({ ...config, workerPool, workerCount: 1 })
+      await oneBatch.solveAsync()
+      expect(oneBatch.simplifiedHdRoutes).toEqual(serial.simplifiedHdRoutes)
+      expect(oneBatch.simplificationPipelineLoops).toBe(serial.simplificationPipelineLoops)
+      expect(oneBatch.MAX_ITERATIONS).toBe(serial.MAX_ITERATIONS)
+      expect(oneBatch.MAX_SIMPLIFICATION_PIPELINE_LOOPS).toBe(serial.MAX_SIMPLIFICATION_PIPELINE_LOOPS)
+      expect(oneBatch.stats).toEqual({
+        pathSimplificationPhaseCount: 2,
+        parallelPathBatchCountMax: 1,
+        interactionComponentCountMax: 4,
+        componentJobs: 0,
+      })
     }
     expect(workerPool.stats.maxActiveWorkers).toBe(4)
   } finally {

@@ -17,6 +17,13 @@ export class ParallelTraceSimplificationSolver extends TraceSimplificationSolver
     this.workerPool = workerPool
     this.workerCount = workerCount
     this.pendingEffects = []
+    this.stats = {
+      ...this.stats,
+      pathSimplificationPhaseCount: 0,
+      parallelPathBatchCountMax: 0,
+      interactionComponentCountMax: 0,
+      componentJobs: 0,
+    }
   }
 
   override getSolverName(): string {
@@ -24,9 +31,14 @@ export class ParallelTraceSimplificationSolver extends TraceSimplificationSolver
   }
 
   override _step(): void {
+    if (this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS) {
+      super._step()
+      this.pendingEffects = this.activeSubSolver?.pendingEffects ?? []
+      return
+    }
     const active = this.activeSubSolver
     if (active instanceof MultiSimplifiedPathSolver && !(active instanceof ParallelMultiSimplifiedPathSolver)) {
-      this.activeSubSolver = new ParallelMultiSimplifiedPathSolver({
+      const pathSolver = new ParallelMultiSimplifiedPathSolver({
         unsimplifiedHdRoutes: active.unsimplifiedHdRoutes,
         otherHdRoutes: active.otherHdRoutes,
         obstacles: active.obstacles,
@@ -40,6 +52,18 @@ export class ParallelTraceSimplificationSolver extends TraceSimplificationSolver
         workerPool: this.workerPool,
         workerCount: this.workerCount,
       })
+      this.activeSubSolver = pathSolver
+      this.stats.pathSimplificationPhaseCount++
+      this.stats.parallelPathBatchCountMax = Math.max(this.stats.parallelPathBatchCountMax, pathSolver.batches.length)
+      this.stats.interactionComponentCountMax = Math.max(this.stats.interactionComponentCountMax, pathSolver.stats.interactionComponentCount)
+      if (pathSolver.batches.length > 1) this.stats.componentJobs += pathSolver.batches.length
+    }
+    const subSolver = this.activeSubSolver
+    if (subSolver && (!(subSolver instanceof ParallelMultiSimplifiedPathSolver) || subSolver.batches.length <= 1)) {
+      // These children have no asynchronous work. Use their own solve loops
+      // and iteration budgets, then let the original parent validate and
+      // harvest the finished phase exactly as it does during stepped solving.
+      subSolver.solve()
     }
     super._step()
     this.pendingEffects = this.activeSubSolver?.pendingEffects ?? []

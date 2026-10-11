@@ -71,40 +71,60 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     return "AutoroutingPipelineSolver9_Parallel"
   }
 
+  private failAsyncExecution(error: unknown): never {
+    this.failed = true
+    const detail = error instanceof Error ? error.message : String(error)
+    this.error = `${this.getSolverName()} error: ${detail}`
+    throw error
+  }
+
   async stepAsync(): Promise<void> {
     if (this.solved || this.failed) return
-    this.step()
-    const effects = getPendingEffectsFromSolverTree(this)
-    if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
-    if (effects.length > 0 && !this.solved && !this.failed) this.step()
+    try {
+      this.step()
+      const effects = getPendingEffectsFromSolverTree(this)
+      if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
+      if (effects.length > 0 && !this.solved && !this.failed) this.step()
+    } catch (error: unknown) {
+      this.failAsyncExecution(error)
+    }
   }
 
   async solveAsync(): Promise<void> {
     const startTime = performance.now()
-    while (!this.solved && !this.failed) {
-      // Serial stages retain their own step budget and progress updates; the
-      // coordinator only needs to commit the stage once it finishes.
-      if (this.activeSubSolver &&
-        !(this.activeSubSolver instanceof Pipeline9ParallelHighDensitySolver) &&
-        !(this.activeSubSolver instanceof ParallelHighDensityForceImproveSolver) &&
-        !(this.activeSubSolver instanceof ParallelHighDensityRepairSolver) &&
-        !(this.activeSubSolver instanceof ParallelTraceSimplificationSolver)) {
-        this.activeSubSolver.solve()
+    try {
+      while (!this.solved && !this.failed) {
+        // Serial stages retain their own step budget and progress updates; the
+        // coordinator only needs to commit the stage once it finishes.
+        if (this.activeSubSolver &&
+          !(this.activeSubSolver instanceof Pipeline9ParallelHighDensitySolver) &&
+          !(this.activeSubSolver instanceof ParallelHighDensityForceImproveSolver) &&
+          !(this.activeSubSolver instanceof ParallelHighDensityRepairSolver) &&
+          !(this.activeSubSolver instanceof ParallelTraceSimplificationSolver)) {
+          this.activeSubSolver.solve()
+          this.step()
+          continue
+        }
         this.step()
-        continue
+        const effects = getPendingEffectsFromSolverTree(this)
+        if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
       }
-      this.step()
-      const effects = getPendingEffectsFromSolverTree(this)
-      if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
+    } catch (error: unknown) {
+      this.failAsyncExecution(error)
+    } finally {
+      this.timeToSolve = performance.now() - startTime
     }
-    this.timeToSolve = performance.now() - startTime
   }
 
   async solveUntilPhaseAsync(phase: string): Promise<void> {
-    while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
-      this.step()
-      const effects = getPendingEffectsFromSolverTree(this)
-      if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
+    try {
+      while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
+        this.step()
+        const effects = getPendingEffectsFromSolverTree(this)
+        if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
+      }
+    } catch (error: unknown) {
+      this.failAsyncExecution(error)
     }
   }
 
