@@ -1,0 +1,791 @@
+{
+  "description": "Source-level rejection of the existing f32 WASM engine as an exact native A01 replacement. Original native functional replay is reproduced; no WASM runtime parity or speedup is claimed.",
+  "sourceRevision": "44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
+  "nativeComparison": {
+    "mode": "functional-native-vs-Rust-source-arithmetic",
+    "wasmRuntimeComparisonPerformed": false,
+    "packageVersion": "0.0.36",
+    "scenario": "captured cmn_45 from actual sample005",
+    "seeds": [
+      {
+        "shuffleSeed": 0,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 0,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 13,
+          "col": 0,
+          "g": 0,
+          "f": 1.05,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 0.7699999809265137,
+        "sourceDerivedRustAlignedGreedyF": 1.0499999523162842,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": false,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 12,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.3000000000000003,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 12,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.1914213562373095,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 13,
+            "col": 1,
+            "g": 0.1,
+            "f": 1.0000000000000002,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 14,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.3000000000000003,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 14,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.1914213562373095,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 160000,
+          "solved": false,
+          "failed": true,
+          "error": "HighDensitySolverA01 ran out of iterations",
+          "outputRouteCount": 2,
+          "outputSha256": "e6497c5681d26f98fafc8177b0eaf368cf72062c03dc427fb35243d83c3f7b4e",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      },
+      {
+        "shuffleSeed": 1,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 1,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 25,
+          "col": 0,
+          "g": 0,
+          "f": 3.75,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 2.75,
+        "sourceDerivedRustAlignedGreedyF": 3.75,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": true,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 24,
+            "col": 0,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 24,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 3.59142135623731,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 25,
+            "col": 1,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 160000,
+          "solved": false,
+          "failed": true,
+          "error": "HighDensitySolverA01 ran out of iterations",
+          "outputRouteCount": 3,
+          "outputSha256": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      },
+      {
+        "shuffleSeed": 2,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 2,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 13,
+          "col": 0,
+          "g": 0,
+          "f": 1.05,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 0.7699999809265137,
+        "sourceDerivedRustAlignedGreedyF": 1.0499999523162842,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": false,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 12,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.3000000000000003,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 12,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.1914213562373095,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 13,
+            "col": 1,
+            "g": 0.1,
+            "f": 1.0000000000000002,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 14,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.3000000000000003,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 14,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.1914213562373095,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 160000,
+          "solved": false,
+          "failed": true,
+          "error": "HighDensitySolverA01 ran out of iterations",
+          "outputRouteCount": 2,
+          "outputSha256": "dacb104907975d94dfb37d604639cca679193b0383b11c70e2f139849cde5e81",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      },
+      {
+        "shuffleSeed": 3,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 3,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 25,
+          "col": 0,
+          "g": 0,
+          "f": 3.75,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 2.75,
+        "sourceDerivedRustAlignedGreedyF": 3.75,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": true,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 24,
+            "col": 0,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 24,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 3.59142135623731,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 25,
+            "col": 1,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 160000,
+          "solved": false,
+          "failed": true,
+          "error": "HighDensitySolverA01 ran out of iterations",
+          "outputRouteCount": 3,
+          "outputSha256": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      },
+      {
+        "shuffleSeed": 4,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 4,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 25,
+          "col": 0,
+          "g": 0,
+          "f": 3.75,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 2.75,
+        "sourceDerivedRustAlignedGreedyF": 3.75,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": true,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 24,
+            "col": 0,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 24,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 3.59142135623731,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 25,
+            "col": 1,
+            "g": 0.1,
+            "f": 3.7000000000000006,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 160000,
+          "solved": false,
+          "failed": true,
+          "error": "HighDensitySolverA01 ran out of iterations",
+          "outputRouteCount": 3,
+          "outputSha256": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      },
+      {
+        "shuffleSeed": 5,
+        "setup": {
+          "rows": 26,
+          "cols": 8,
+          "layers": 2,
+          "MAX_ITERATIONS": 2000000,
+          "baseSearchBudgetIters": 50000,
+          "hyperParameters": {
+            "shuffleSeed": 5,
+            "ripCost": 10,
+            "ripTracePenalty": 0.5,
+            "ripViaPenalty": 0.75,
+            "viaBaseCost": 0.1,
+            "greedyMultiplier": 1.5
+          },
+          "fixedPortOccupiedCellCount": 7,
+          "diagonalOccupancyEntryCount": 700,
+          "rootNetNames": [
+            "source_trace_2",
+            "source_trace_2",
+            "source_trace_3",
+            "source_trace_0"
+          ],
+          "orderedSegments": [
+            {
+              "connId": 1,
+              "connectionName": "source_trace_2__source_net_2_mst18",
+              "startZ": 0,
+              "startRow": 22,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 25,
+              "endCol": 5
+            },
+            {
+              "connId": 3,
+              "connectionName": "source_trace_0__source_net_0_mst1",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 7,
+              "endCol": 7
+            },
+            {
+              "connId": 2,
+              "connectionName": "source_trace_3__source_net_3_mst4",
+              "startZ": 0,
+              "startRow": 13,
+              "startCol": 0,
+              "endZ": 0,
+              "endRow": 13,
+              "endCol": 7
+            },
+            {
+              "connId": 0,
+              "connectionName": "source_trace_2__source_net_2_mst16",
+              "startZ": 0,
+              "startRow": 25,
+              "startCol": 5,
+              "endZ": 0,
+              "endRow": 22,
+              "endCol": 7
+            }
+          ]
+        },
+        "firstNativeSearchNode": {
+          "z": 0,
+          "row": 22,
+          "col": 0,
+          "g": 0,
+          "f": 1.2000000000000002,
+          "parentIdx": -1,
+          "ripped": null
+        },
+        "sourceDerivedRustDefaultF": 0.8800000548362732,
+        "sourceDerivedRustAlignedGreedyF": 1.2000000476837158,
+        "defaultPriorityMatches": false,
+        "alignedGreedyPriorityMatches": false,
+        "firstNativeExpansion": [
+          {
+            "z": 0,
+            "row": 21,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.4500000000000002,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 21,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.3414213562373096,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          },
+          {
+            "z": 0,
+            "row": 22,
+            "col": 1,
+            "g": 0.1,
+            "f": 1.1500000000000001,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 23,
+            "col": 0,
+            "g": 0.1,
+            "f": 1.1500000000000001,
+            "sourceDerivedRustStepG": 0.10000000149011612
+          },
+          {
+            "z": 0,
+            "row": 23,
+            "col": 1,
+            "g": 0.14142135623730953,
+            "f": 1.0414213562373096,
+            "sourceDerivedRustStepG": 0.1414213627576828
+          }
+        ],
+        "finalNative": {
+          "MAX_ITERATIONS": 160000,
+          "iterations": 157175,
+          "solved": false,
+          "failed": true,
+          "error": "Convergence failure: exceeded MAX_RIPS 200",
+          "outputRouteCount": 1,
+          "outputSha256": "b63dc499b32e93105f805f1e2c04f7b41391a85c01cace6138ed28e2ccdd19ad",
+          "gridStats": {
+            "cells": 208,
+            "layers": 2,
+            "states": 416
+          }
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Installed wasm/pkg lacks executable JS and WASM artifacts.",
+    "Rust f32 values, default greedy policy, budgets, occupancy semantics, and output fields differ from pinned native A01.",
+    "Offline build lacks cached dependencies; no complete WASM execution was performed."
+  ]
+}
