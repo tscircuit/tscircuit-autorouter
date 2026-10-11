@@ -129,7 +129,7 @@ creates and disposes a fresh owned pool for every prototype invocation.
 | High-density routing | Capacity-mesh node | Original node result order, route ownership, and parent statistics |
 | High-density force improvement | Node's assigned routes | Original sample order and route indexes |
 | High-density repair | Node repair sample | Original fixed-neighbor snapshots and route metadata |
-| Optional path simplification | Up to four certified speculative routes, or ready routes in the ordered geometry dependency graph | Original interacting predecessors, later original copper, route indexes, via operations, validation, and simplification loop budgets |
+| Optional path simplification | Ready routes in the ordered geometry dependency graph | Original interacting predecessors, later original copper, route indexes, via operations, validation, and simplification loop budgets |
 | Joint DRC force trials | Candidates sharing one immutable force frontier | Original trial order, candidate caches, error accounting, acceptance, and iteration budgets |
 | Opt-in negotiated pathing | Up to four route searches against immutable occupancy | Stable commits, live conflict checks, rescheduling, and shared original expansion budgets |
 | Opt-in landmark preparation | Relaxed-graph distance table | Original graph reservations and routing quality checks |
@@ -158,15 +158,6 @@ intersection counts in a strict floating-point WebAssembly kernel. JavaScript
 still performs the original live search checks, four-row memo accesses, scratch
 updates, and cost arithmetic in their original visitor order. Direct stepping,
 observable hooks, and unsupported cache shapes retain the original scoring path.
-
-Certified simplification lookahead retains at most four speculative results.
-Each worker records its native boolean query trajectory against the original
-future copper and the completed prefix. Before ordered publication, a
-certificate checks whether changed predecessor geometry could change any query.
-Rejected certificates rerun the route in its native ordered context. Physical
-speculation and reruns are counted separately from the original logical phase
-budget. Source mutations across awaits decline speculation and resume native
-execution against the live source.
 
 Reference DRC retains the complete native checks and rebuilds the full physical
 connectivity graph on every call. Exact snapshots reuse only successful pure
