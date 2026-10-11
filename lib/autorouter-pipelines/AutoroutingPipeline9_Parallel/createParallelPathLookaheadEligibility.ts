@@ -125,12 +125,15 @@ const ownNativeHooks = ["step", "_step", "solve", "getSolverName", "tryFinalAcce
 // changing another intrinsic. Complete private metadata has every field own.
 function completeDescriptor(descriptor: PropertyDescriptor | undefined, stats?: ParallelPathEligibilityStats): CompleteDescriptor | undefined {
   if (descriptor === undefined) return undefined
-  if (stats) { stats.descriptorReads++; stats.descriptorOwnFieldChecks += 4; stats.descriptorMetadataFieldReads += 4 }
+  if (stats) { stats.descriptorReads++; stats.descriptorOwnFieldChecks++; stats.descriptorMetadataFieldReads += 4 }
   const data = apply(hasOwn, descriptor, ["value"])
+  // Captured native reflection returns a complete data or accessor descriptor.
+  // Read only the four own fields guaranteed for that kind, never optional
+  // metadata inherited from Object.prototype.
   return { data, value: data ? descriptor.value : undefined,
-    get: apply(hasOwn, descriptor, ["get"]) ? descriptor.get : undefined,
-    set: apply(hasOwn, descriptor, ["set"]) ? descriptor.set : undefined,
-    writable: apply(hasOwn, descriptor, ["writable"]) ? descriptor.writable : undefined,
+    get: data ? undefined : descriptor.get,
+    set: data ? undefined : descriptor.set,
+    writable: data ? descriptor.writable : undefined,
     enumerable: descriptor.enumerable, configurable: descriptor.configurable }
 }
 
@@ -146,6 +149,24 @@ function descriptorMatches(actual: CompleteDescriptor | undefined, expected: Com
   return actual.data === expected.data && objectIs(actual.value, expected.value) && actual.get === expected.get &&
     actual.set === expected.set && actual.writable === expected.writable && actual.enumerable === expected.enumerable &&
     actual.configurable === expected.configurable
+}
+
+function nativeDescriptorMatches(actual: PropertyDescriptor | undefined, expected: CompleteDescriptor, stats?: ParallelPathEligibilityStats): boolean {
+  if (actual === undefined) return false
+  if (stats) { stats.descriptorReads++; stats.descriptorOwnFieldChecks++; stats.descriptorMetadataFieldReads += 2 }
+  const data = apply(hasOwn, actual, ["value"])
+  const enumerable = actual.enumerable
+  const configurable = actual.configurable
+  if (data !== expected.data || enumerable !== expected.enumerable || configurable !== expected.configurable) return false
+  if (stats) stats.descriptorMetadataFieldReads += 2
+  if (data) {
+    const value = actual.value
+    const writable = actual.writable
+    return objectIs(value, expected.value) && writable === expected.writable
+  }
+  const get = actual.get
+  const set = actual.set
+  return get === expected.get && set === expected.set
 }
 
 export function captureParallelPathPrototypeContract(target: object, stats?: ParallelPathEligibilityStats): ParallelPathPrototypeContract {
@@ -171,7 +192,7 @@ function matchesContract(contract: ParallelPathPrototypeContract, stats?: Parall
   for (let index = 0; index < keys.length; index++) if (keys[index] !== contract.entries[index]!.key) return false
   for (let index = 0; index < contract.entries.length; index++) {
     const entry = contract.entries[index]!
-    if (!descriptorMatches(completeDescriptor(descriptors[entry.key as keyof typeof descriptors], stats), entry.descriptor)) return false
+    if (!nativeDescriptorMatches(descriptors[entry.key as keyof typeof descriptors], entry.descriptor, stats)) return false
   }
   return true
 }

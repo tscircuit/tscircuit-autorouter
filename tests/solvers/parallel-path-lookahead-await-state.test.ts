@@ -57,7 +57,7 @@ test("await snapshots preserve actual native control, child state, index bytes a
   ok(firstGuard.stats.descriptorBuiltinCalls > beforeCheck.descriptorBuiltinCalls)
   ok(firstGuard.stats.descriptorMetadataFieldReads > beforeCheck.descriptorMetadataFieldReads)
   strictEqual(firstGuard.stats.descriptorMetadataFieldReads, firstGuard.stats.descriptorReads * 4)
-  strictEqual(firstGuard.stats.descriptorOwnFieldChecks, firstGuard.stats.descriptorReads * 4)
+  strictEqual(firstGuard.stats.descriptorOwnFieldChecks, firstGuard.stats.descriptorReads)
   // Original inputs can be reached through private index aliases or no control
   // root at all: a standalone await checker must run complete input eligibility.
   const input = owner.unsimplifiedHdRoutes[0]!
