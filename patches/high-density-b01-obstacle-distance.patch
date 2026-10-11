@@ -1,5 +1,5 @@
 diff --git a/lib/HighDensitySolverB01/HighDensitySolverB01.ts b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
-index 3d40333..335b72b 100644
+index 3d40333..20a6ebc 100644
 --- a/lib/HighDensitySolverB01/HighDensitySolverB01.ts
 +++ b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
 @@ -63,6 +63,7 @@ interface ConnectionSeg {
@@ -10,7 +10,86 @@ index 3d40333..335b72b 100644
  }
  
  interface ConnectionAlias {
-@@ -307,6 +308,7 @@ type ObstacleTracePrimitive = {
+@@ -104,12 +105,23 @@ class TypedMinHeap {
+     this.f[i] = f
+     this.seq[i] = seq
+     this.id[i] = id
++    // Read back the typed values before comparing or moving them.
++    const savedF = this.f[i]!
++    const savedSeq = this.seq[i]!
++    const savedId = this.id[i]!
+     while (i > 0) {
+       const p = (i - 1) >> 1
+-      if (this.less(p, i)) break
+-      this.swap(i, p)
++      const parentF = this.f[p]!
++      const parentSeq = this.seq[p]!
++      if (parentF !== savedF ? parentF < savedF : parentSeq < savedSeq) break
++      this.f[i] = parentF
++      this.seq[i] = parentSeq
++      this.id[i] = this.id[p]!
+       i = p
+     }
++    this.f[i] = savedF
++    this.seq[i] = savedSeq
++    this.id[i] = savedId
+   }
+ 
+   pop(): number {
+@@ -150,17 +162,27 @@ class TypedMinHeap {
+     this.id = ni
+   }
+ 
+-  private siftDown(i: number) {
++  private siftDown(i: number): void {
++    const savedF = this.f[i]!
++    const savedSeq = this.seq[i]!
++    const savedId = this.id[i]!
+     while (true) {
+       const l = i * 2 + 1
+       const r = l + 1
+-      if (l >= this.n) return
++      if (l >= this.n) break
+       let m = l
+       if (r < this.n && !this.less(l, r)) m = r
+-      if (this.less(i, m)) return
+-      this.swap(i, m)
++      const childF = this.f[m]!
++      const childSeq = this.seq[m]!
++      if (savedF !== childF ? savedF < childF : savedSeq < childSeq) break
++      this.f[i] = childF
++      this.seq[i] = childSeq
++      this.id[i] = this.id[m]!
+       i = m
+     }
++    this.f[i] = savedF
++    this.seq[i] = savedSeq
++    this.id[i] = savedId
+   }
+ 
+   private less(i: number, j: number) {
+@@ -169,20 +191,6 @@ class TypedMinHeap {
+     if (fi !== fj) return fi < fj
+     return this.seq[i]! < this.seq[j]!
+   }
+-
+-  private swap(i: number, j: number) {
+-    const tf = this.f[i]!
+-    this.f[i] = this.f[j]!
+-    this.f[j] = tf
+-
+-    const ts = this.seq[i]!
+-    this.seq[i] = this.seq[j]!
+-    this.seq[j] = ts
+-
+-    const ti = this.id[i]!
+-    this.id[i] = this.id[j]!
+-    this.id[j] = ti
+-  }
+ }
+ 
+ class TypedNodePool {
+@@ -307,6 +315,7 @@ type ObstacleTracePrimitive = {
    segmentStart: Point2d
    segmentEnd: Point2d
    traceRadius: number
@@ -18,7 +97,7 @@ index 3d40333..335b72b 100644
  }
  
  type ObstacleViaPrimitive = {
-@@ -437,23 +439,38 @@ function getOrientation(params: {
+@@ -437,23 +446,38 @@ function getOrientation(params: {
    )
  }
  
@@ -73,7 +152,7 @@ index 3d40333..335b72b 100644
    return (
      params.point.x >= Math.min(params.segmentStart.x, params.segmentEnd.x) &&
      params.point.x <= Math.max(params.segmentStart.x, params.segmentEnd.x) &&
-@@ -462,12 +479,15 @@ function isPointOnSegment(params: {
+@@ -462,32 +486,68 @@ function isPointOnSegment(params: {
    )
  }
  
@@ -83,6 +162,26 @@ index 3d40333..335b72b 100644
 -  secondStart: Point2d
 -  secondEnd: Point2d
 -}): boolean {
+-  const firstStartSide = getOrientation({
+-    first: params.firstStart,
+-    second: params.firstEnd,
+-    third: params.secondStart,
+-  })
+-  const firstEndSide = getOrientation({
+-    first: params.firstStart,
+-    second: params.firstEnd,
+-    third: params.secondEnd,
+-  })
+-  const secondStartSide = getOrientation({
+-    first: params.secondStart,
+-    second: params.secondEnd,
+-    third: params.firstStart,
+-  })
+-  const secondEndSide = getOrientation({
+-    first: params.secondStart,
+-    second: params.secondEnd,
+-    third: params.firstEnd,
+-  })
 +function doSegmentsIntersect(
 +  params: {
 +    firstStart: Point2d
@@ -92,10 +191,63 @@ index 3d40333..335b72b 100644
 +  },
 +  reuseOrientations = false,
 +): boolean {
-   const firstStartSide = getOrientation({
-     first: params.firstStart,
-     second: params.firstEnd,
-@@ -496,58 +516,117 @@ function doSegmentsIntersect(params: {
++  let firstStartSide: number
++  let firstEndSide: number
++  let secondStartSide: number
++  let secondEndSide: number
++  if (reuseOrientations) {
++    // Eligibility is established for plain numeric points when they enter
++    // the solver. Read live coordinates once for this exact intersection.
++    const firstStartX = params.firstStart.x
++    const firstStartY = params.firstStart.y
++    const firstEndX = params.firstEnd.x
++    const firstEndY = params.firstEnd.y
++    const secondStartX = params.secondStart.x
++    const secondStartY = params.secondStart.y
++    const secondEndX = params.secondEnd.x
++    const secondEndY = params.secondEnd.y
++    const firstDx = firstEndX - firstStartX
++    const firstDy = firstEndY - firstStartY
++    const secondDx = secondEndX - secondStartX
++    const secondDy = secondEndY - secondStartY
++    firstStartSide =
++      firstDx * (secondStartY - firstStartY) -
++      firstDy * (secondStartX - firstStartX)
++    firstEndSide =
++      firstDx * (secondEndY - firstStartY) -
++      firstDy * (secondEndX - firstStartX)
++    secondStartSide =
++      secondDx * (firstStartY - secondStartY) -
++      secondDy * (firstStartX - secondStartX)
++    secondEndSide =
++      secondDx * (firstEndY - secondStartY) -
++      secondDy * (firstEndX - secondStartX)
++  } else {
++    firstStartSide = getOrientation({
++      first: params.firstStart,
++      second: params.firstEnd,
++      third: params.secondStart,
++    })
++    firstEndSide = getOrientation({
++      first: params.firstStart,
++      second: params.firstEnd,
++      third: params.secondEnd,
++    })
++    secondStartSide = getOrientation({
++      first: params.secondStart,
++      second: params.secondEnd,
++      third: params.firstStart,
++    })
++    secondEndSide = getOrientation({
++      first: params.secondStart,
++      second: params.secondEnd,
++      third: params.firstEnd,
++    })
++  }
+ 
+   if (
+     firstStartSide * firstEndSide < 0 &&
+@@ -496,58 +556,117 @@ function doSegmentsIntersect(params: {
      return true
    }
    return (
@@ -261,7 +413,7 @@ index 3d40333..335b72b 100644
  }
  
  function doesSegmentIntersectRect(params: {
-@@ -576,12 +655,15 @@ function doesSegmentIntersectRect(params: {
+@@ -576,12 +695,15 @@ function doesSegmentIntersectRect(params: {
    for (let cornerIndex = 0; cornerIndex < corners.length; cornerIndex++) {
      const nextCornerIndex = (cornerIndex + 1) % corners.length
      if (
@@ -283,7 +435,7 @@ index 3d40333..335b72b 100644
      ) {
        return true
      }
-@@ -1264,6 +1346,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -1264,6 +1386,9 @@ export class HighDensitySolverB01 extends BaseSolver {
        segmentStart: params.segmentStart,
        segmentEnd: params.segmentEnd,
        traceRadius: params.obstacleTraceThickness / 2,
@@ -293,7 +445,7 @@ index 3d40333..335b72b 100644
      })
      const gridSegmentStart = this.transformBoundsPointToGrid(
        params.segmentStart,
-@@ -1539,13 +1624,17 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -1539,13 +1664,17 @@ export class HighDensitySolverB01 extends BaseSolver {
          this.traceThickness / 2 +
          this.obstacleClearanceMargin
        if (
@@ -318,7 +470,7 @@ index 3d40333..335b72b 100644
        ) {
          return true
        }
-@@ -2229,16 +2318,15 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -2229,16 +2358,15 @@ export class HighDensitySolverB01 extends BaseSolver {
      let ripCount = currentRipCount
      const toFlatIdx = toZ * this.planeSize + toCellId
  
@@ -342,7 +494,7 @@ index 3d40333..335b72b 100644
        (isVia
          ? this.isViaMoveBlockedByObstacleGeometry({
              activeConn,
-@@ -2256,10 +2344,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -2256,10 +2384,9 @@ export class HighDensitySolverB01 extends BaseSolver {
        this._moveRipCount = ripCount
        return
      }
@@ -356,7 +508,7 @@ index 3d40333..335b72b 100644
  
      if (isVia) {
        cost += this.hyperParameters.viaBaseCost
-@@ -2564,6 +2651,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -2564,6 +2691,9 @@ export class HighDensitySolverB01 extends BaseSolver {
            endZ: e.z,
            endCellId: e.cellId,
            endPoint,
@@ -366,7 +518,7 @@ index 3d40333..335b72b 100644
            connectionAliases: [
              {
                connectionName: name,
-@@ -2948,6 +3038,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+@@ -2948,6 +3078,9 @@ export class HighDensitySolverB01 extends BaseSolver {
            endZ,
            endCellId: last - endZ * this.planeSize,
            endPoint: route.endPoint,
