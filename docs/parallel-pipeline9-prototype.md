@@ -779,3 +779,13 @@ from1,131,409 to1,058,359. These are operation counts; elapsed-time acceptance
 remains pending. Shared metadata getters, aliasing and post-await point changes
 pass independent review. Exact controls and hashes are in
 [parallel-path-lookahead-within-capture-dedup-proof.json](benchmarks/parallel-path-lookahead-within-capture-dedup-proof.json).
+
+The twenty-second candidate `1169e1bb0` combines the reviewed fixed64 cohorts,
+within-capture dedup and Native reference validation without unused path records.
+Dormant Generic and indexed-memo experiments remain unactivated. Immutable
+build/declarations, TypeScript, source/built browser imports and packaged
+sample001/sample015 Native geometry and after-disposal fact-budget checks pass.
+All five Blacksmith groups cover the full sixteen samples against the same
+baseline and four-core budget; elapsed-time acceptance is pending.
+The immutable workflow branch, hashes, preflight and arguments are in
+[parallel-srj18-1169e1bb0-dispatch.json](benchmarks/parallel-srj18-1169e1bb0-dispatch.json).
