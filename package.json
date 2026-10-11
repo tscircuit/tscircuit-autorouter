@@ -120,6 +120,7 @@
     "@tscircuit/trace-simplification-solver@github:tscircuit/trace-simplification-solver#88556c5": "patches/trace-simplification-geometry.patch",
     "high-density-repair03@https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/e16df6c48efed49406cf45df49fd933d3141973d": "patches/high-density-repair03-geometry-hotpaths.patch",
     "tiny-hypergraph@github:tscircuit/tiny-hypergraph#474f522": "patches/tiny-hypergraph-outside-in-join-allocation.patch",
-    "@tscircuit/checks@0.0.233": "patches/checks-reference-drc-geometry.patch"
+    "@tscircuit/checks@0.0.233": "patches/checks-reference-drc-geometry.patch",
+    "@tscircuit/high-density-b01@github:tscircuit/high-density-b01#e651cab": "patches/high-density-b01-obstacle-distance.patch"
   }
 }

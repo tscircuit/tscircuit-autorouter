@@ -50,5 +50,7 @@ test("Pipeline9 baseline filter keeps candidate aliases separate across evaluati
   ).toEqual(candidateErrors)
 
   expect(filter({ errors: candidateErrors })).toEqual(candidateErrors)
-  expect(filter({ errors: [inheritedTraceError, inheritedViaError] })).toEqual([])
+  expect(filter({ errors: [inheritedTraceError, inheritedViaError] })).toEqual(
+    [],
+  )
 })

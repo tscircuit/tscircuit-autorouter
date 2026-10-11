@@ -216,7 +216,10 @@ test("trace simplification preserves exact distances and same-net obstacle decis
   })
 
   const markedRoute = solver.simplifiedHdRoutes[0]!
-  expect(markedRoute.vias).toEqual([{ x: 8, y: 0 }, { x: 10, y: 0 }])
+  expect(markedRoute.vias).toEqual([
+    { x: 8, y: 0 },
+    { x: 10, y: 0 },
+  ])
   expect(
     markedRoute.route
       .filter((point) => point.toNextSegmentType === "through_obstacle")

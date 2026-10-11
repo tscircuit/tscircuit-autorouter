@@ -69,9 +69,9 @@ test("cached force references preserve finite segment/via forces, fixed endpoint
       expect(result).toEqual(reference.applyForcesToPolyLines(expected))
       if (result.lastStepMoved) movingPasses++
       expect(lines).toEqual(expected)
-      expect(lines.map((line) => ({ start: line.start, end: line.end }))).toEqual(
-        fixedEndpoints,
-      )
+      expect(
+        lines.map((line) => ({ start: line.start, end: line.end })),
+      ).toEqual(fixedEndpoints)
       // Observe each applied displacement, including clamped points and vias.
       expect(
         lines.map((line, i) =>

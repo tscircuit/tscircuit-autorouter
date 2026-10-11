@@ -1,5 +1,5 @@
 diff --git a/lib/drc/AutoroutingDrcEngine.ts b/lib/drc/AutoroutingDrcEngine.ts
-index 38d6fe1..918b88c 100644
+index 38d6fe1..205244e 100644
 --- a/lib/drc/AutoroutingDrcEngine.ts
 +++ b/lib/drc/AutoroutingDrcEngine.ts
 @@ -32,6 +32,13 @@ type Bounds = {
@@ -79,15 +79,45 @@ index 38d6fe1..918b88c 100644
  
      const itemId = this.rowItems.length
      if (itemId >= this.visitedGenerations.length) {
-@@ -217,6 +266,7 @@ class SpatialHash<T> {
+@@ -217,10 +266,37 @@ class SpatialHash<T> {
      this.itemIds.set(item, itemId)
      // Set iteration canonicalizes primitive negative zero to positive zero.
      this.rowItems.push(item === 0 ? (0 as T) : item)
 +    this.rowBounds.push(itemBounds)
++    return itemId
++  }
++
++  private registerFreshItem(item: T, bounds: Bounds): number {
++    const itemId = this.rowItems.length
++    if (itemId >= this.visitedGenerations.length) {
++      const generations = new Uint32Array(
++        this.visitedGenerations.length === 0
++          ? 16
++          : this.visitedGenerations.length * 2,
++      )
++      generations.set(this.visitedGenerations)
++      this.visitedGenerations = generations
++    }
++    this.rowItems.push(item)
++    this.rowBounds.push(bounds)
      return itemId
    }
  
-@@ -230,17 +280,22 @@ class SpatialHash<T> {
+   insert(item: T, bounds: Bounds): void {
++    this.insertInternal(item, bounds, false)
++  }
++
++  // Only newly collected segment records use this path: each is inserted
++  // once into its sole layer, and its expanded bounds are private to this build.
++  insertFresh(item: T, bounds: Bounds): void {
++    this.insertInternal(item, bounds, true)
++  }
++
++  private insertInternal(item: T, bounds: Bounds, fresh: boolean): void {
+     const minCellX = Math.floor(bounds.minX / this.cellSize)
+     const maxCellX = Math.floor(bounds.maxX / this.cellSize)
+     const minCellY = Math.floor(bounds.minY / this.cellSize)
+@@ -230,17 +306,26 @@ class SpatialHash<T> {
      for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
        let column = this.cells.get(cellX)
        if (!column && minCellY <= maxCellY) {
@@ -112,12 +142,16 @@ index 38d6fe1..918b88c 100644
 +          cell.itemIds.length = 0
 +          this.activeCells.push(cell)
          }
-+        if (itemId === undefined) itemId = this.registerItem(item, bounds)
++        if (itemId === undefined) {
++          itemId = fresh
++            ? this.registerFreshItem(item, bounds)
++            : this.registerItem(item, bounds)
++        }
 +        cell.itemIds.push(itemId)
        }
      }
    }
-@@ -269,11 +324,23 @@ class SpatialHash<T> {
+@@ -269,11 +354,23 @@ class SpatialHash<T> {
          continue
        }
        for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
@@ -144,7 +178,7 @@ index 38d6fe1..918b88c 100644
            results.push(this.rowItems[itemId]!)
          }
        }
-@@ -438,6 +505,12 @@ export class AutoroutingDrcEngine {
+@@ -438,6 +535,12 @@ export class AutoroutingDrcEngine {
      SpatialHash<StaticObstacle>
    >()
  
@@ -157,7 +191,7 @@ index 38d6fe1..918b88c 100644
    lastRunStats: AutoroutingDrcEngineRunStats = {
      traceCount: 0,
      segmentCount: 0,
-@@ -714,7 +787,8 @@ export class AutoroutingDrcEngine {
+@@ -714,22 +817,26 @@ export class AutoroutingDrcEngine {
      segments: TraceSegment[],
      vias: Via[],
    ): Map<string, SpatialHash<DynamicCollidable>> {
@@ -167,7 +201,27 @@ index 38d6fe1..918b88c 100644
      const addToLayer = (
        layer: string,
        item: DynamicCollidable,
-@@ -737,6 +811,9 @@ export class AutoroutingDrcEngine {
+       bounds: Bounds,
++      fresh = false,
+     ) => {
+       let index = indexes.get(layer)
+       if (!index) {
+         index = new SpatialHash<DynamicCollidable>(this.cellSize)
+         indexes.set(layer, index)
+       }
+-      index.insert(item, expandBounds(bounds, this.traceClearance))
++      const expandedBounds = expandBounds(bounds, this.traceClearance)
++      if (fresh) index.insertFresh(item, expandedBounds)
++      else index.insert(item, expandedBounds)
+     }
+ 
+     for (const segment of segments) {
+-      addToLayer(segment.layer, segment, getSegmentBounds(segment))
++      addToLayer(segment.layer, segment, getSegmentBounds(segment), true)
+     }
+     for (const via of vias) {
+       for (const layer of via.layers) {
+@@ -737,6 +844,9 @@ export class AutoroutingDrcEngine {
        }
      }
  
@@ -177,7 +231,7 @@ index 38d6fe1..918b88c 100644
      return indexes
    }
  
-@@ -942,12 +1019,20 @@ export class AutoroutingDrcEngine {
+@@ -942,12 +1052,20 @@ export class AutoroutingDrcEngine {
    }
  
    private checkViaPairs(vias: Via[]): AutoroutingDrcError[] {

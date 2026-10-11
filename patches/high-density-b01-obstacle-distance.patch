@@ -1,0 +1,159 @@
+diff --git a/lib/HighDensitySolverB01/HighDensitySolverB01.ts b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+index 3d40333..0835858 100644
+--- a/lib/HighDensitySolverB01/HighDensitySolverB01.ts
++++ b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+@@ -519,35 +519,76 @@ function doSegmentsIntersect(params: {
+   )
+ }
+ 
+-function getSquaredDistanceBetweenSegments(params: {
++function getSquaredDistanceFromPointToPreparedSegment(
++  point: Point2d,
++  start: Point2d,
++  segmentDx: number,
++  segmentDy: number,
++  segmentLengthSquared: number,
++): number {
++  if (segmentLengthSquared === 0) {
++    return (point.x - start.x) ** 2 + (point.y - start.y) ** 2
++  }
++  const projection = clamp(
++    ((point.x - start.x) * segmentDx +
++      (point.y - start.y) * segmentDy) /
++      segmentLengthSquared,
++    0,
++    1,
++  )
++  const closestX = start.x + projection * segmentDx
++  const closestY = start.y + projection * segmentDy
++  return (point.x - closestX) ** 2 + (point.y - closestY) ** 2
++}
++
++function isSegmentDistancePointSafe(point: Point2d): boolean {
++  return Number.isFinite(point.x) && Number.isFinite(point.y) &&
++    Math.abs(point.x) <= 1e9 && Math.abs(point.y) <= 1e9
++}
++
++function areSegmentsCloserThan(params: {
+   firstStart: Point2d
+   firstEnd: Point2d
+   secondStart: Point2d
+   secondEnd: Point2d
+-}): number {
+-  if (doSegmentsIntersect(params)) return 0
++}, requiredDistance: number): boolean {
++  // Keep the established orientation calculation before any bounds gate:
++  // floating-point cancellation can make disjoint segments intersect here.
++  const requiredDistanceSquared = requiredDistance * requiredDistance
++  if (doSegmentsIntersect(params)) return 0 < requiredDistanceSquared
++  const firstDx = params.firstEnd.x - params.firstStart.x
++  const firstDy = params.firstEnd.y - params.firstStart.y
++  const firstLengthSquared = firstDx ** 2 + firstDy ** 2
++  const secondDx = params.secondEnd.x - params.secondStart.x
++  const secondDy = params.secondEnd.y - params.secondStart.y
++  const secondLengthSquared = secondDx ** 2 + secondDy ** 2
++  if (
++    Number.isFinite(requiredDistance) &&
++    requiredDistance >= 0 && requiredDistance <= 1e9 &&
++    isSegmentDistancePointSafe(params.firstStart) &&
++    isSegmentDistancePointSafe(params.firstEnd) &&
++    isSegmentDistancePointSafe(params.secondStart) &&
++    isSegmentDistancePointSafe(params.secondEnd) &&
++    (firstLengthSquared > 0 ||
++      (params.firstStart.x === params.firstEnd.x && params.firstStart.y === params.firstEnd.y)) &&
++    (secondLengthSquared > 0 ||
++      (params.secondStart.x === params.secondEnd.x && params.secondStart.y === params.secondEnd.y))
++  ) {
++    // The padding also covers endpoint-projection rounding at this scale.
++    const padding = requiredDistance + 2e-6
++    if (
++      Math.max(params.firstStart.x, params.firstEnd.x) + padding < Math.min(params.secondStart.x, params.secondEnd.x) ||
++      Math.max(params.secondStart.x, params.secondEnd.x) + padding < Math.min(params.firstStart.x, params.firstEnd.x) ||
++      Math.max(params.firstStart.y, params.firstEnd.y) + padding < Math.min(params.secondStart.y, params.secondEnd.y) ||
++      Math.max(params.secondStart.y, params.secondEnd.y) + padding < Math.min(params.firstStart.y, params.firstEnd.y)
++    ) return false
++  }
+   return Math.min(
+-    getSquaredDistanceFromPointToSegment({
+-      point: params.firstStart,
+-      segmentStart: params.secondStart,
+-      segmentEnd: params.secondEnd,
+-    }),
+-    getSquaredDistanceFromPointToSegment({
+-      point: params.firstEnd,
+-      segmentStart: params.secondStart,
+-      segmentEnd: params.secondEnd,
+-    }),
+-    getSquaredDistanceFromPointToSegment({
+-      point: params.secondStart,
+-      segmentStart: params.firstStart,
+-      segmentEnd: params.firstEnd,
+-    }),
+-    getSquaredDistanceFromPointToSegment({
+-      point: params.secondEnd,
+-      segmentStart: params.firstStart,
+-      segmentEnd: params.firstEnd,
+-    }),
+-  )
++    getSquaredDistanceFromPointToPreparedSegment(params.firstStart, params.secondStart, secondDx, secondDy, secondLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.firstEnd, params.secondStart, secondDx, secondDy, secondLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.secondStart, params.firstStart, firstDx, firstDy, firstLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.secondEnd, params.firstStart, firstDx, firstDy, firstLengthSquared),
++  ) < requiredDistanceSquared
+ }
+ 
+ function doesSegmentIntersectRect(params: {
+@@ -1539,13 +1580,12 @@ export class HighDensitySolverB01 extends BaseSolver {
+         this.traceThickness / 2 +
+         this.obstacleClearanceMargin
+       if (
+-        getSquaredDistanceBetweenSegments({
++        areSegmentsCloserThan({
+           firstStart: segmentStart,
+           firstEnd: segmentEnd,
+           secondStart: obstacleTrace.segmentStart,
+           secondEnd: obstacleTrace.segmentEnd,
+-        }) <
+-        requiredDistance * requiredDistance
++        }, requiredDistance)
+       ) {
+         return true
+       }
+@@ -2229,16 +2269,15 @@ export class HighDensitySolverB01 extends BaseSolver {
+     let ripCount = currentRipCount
+     const toFlatIdx = toZ * this.planeSize + toCellId
+ 
+-    const obstacleRootIds = isVia
++    const fromObstacleRootIds = isVia
++      ? undefined
++      : this.obstacleTraceRootIdsFlat[toZ * this.planeSize + fromCellId]
++    const toObstacleRootIds = isVia
+       ? this.obstacleViaRootIdsByCell[toCellId]
+-      : [
+-          ...(this.obstacleTraceRootIdsFlat[
+-            toZ * this.planeSize + fromCellId
+-          ] ?? []),
+-          ...(this.obstacleTraceRootIdsFlat[toFlatIdx] ?? []),
+-        ]
++      : this.obstacleTraceRootIdsFlat[toFlatIdx]
+     const isBlockedByObstacle =
+-      this.isBlockedByObstacleRoots(obstacleRootIds, activeConn) &&
++      (this.isBlockedByObstacleRoots(fromObstacleRootIds, activeConn) ||
++        this.isBlockedByObstacleRoots(toObstacleRootIds, activeConn)) &&
+       (isVia
+         ? this.isViaMoveBlockedByObstacleGeometry({
+             activeConn,
+@@ -2256,10 +2295,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+       this._moveRipCount = ripCount
+       return
+     }
+-    const usesSameRootObstacle = this.hasSameRootObstacle(
+-      obstacleRootIds,
+-      activeConn,
+-    )
++    const usesSameRootObstacle =
++      this.hasSameRootObstacle(fromObstacleRootIds, activeConn) ||
++      this.hasSameRootObstacle(toObstacleRootIds, activeConn)
+ 
+     if (isVia) {
+       cost += this.hyperParameters.viaBaseCost
