@@ -66,9 +66,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  private readonly deduplicateA01InitialOrders: boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
+  private readonly initialA01Orders = new Set<string>()
+  private initialA01PointIds = new WeakMap<object, number>()
+  private nextInitialA01PointId = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
     BaseSolver,
@@ -126,6 +130,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchSegmentWork?: number
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
+      /** The caller owns immutable, plain inputs/config for this attempt. */
+      deduplicateA01InitialOrders?: boolean
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -137,6 +143,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
+    this.deduplicateA01InitialOrders = opts.deduplicateA01InitialOrders ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -375,6 +382,42 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
   }
 
+  private getInitialA01Order(solver: unknown): string | null {
+    if (
+      !this.deduplicateA01InitialOrders ||
+      !(solver instanceof HighDensitySolverA01) ||
+      Object.getPrototypeOf(solver) !== HighDensitySolverA01.prototype ||
+      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
+      Object.hasOwn(this, "generateSolver") ||
+      Object.getOwnPropertyDescriptor(
+        PortfolioSingleIntraNodeSolver.prototype,
+        "generateSolver",
+      )?.value !== nativeGenerateSolver ||
+      solver.initialPenaltyFn !== undefined ||
+      solver.failed ||
+      solver.solved
+    ) {
+      return null
+    }
+    // A01 only uses the seed to shuffle this queue. Owned endpoint identities
+    // distinguish separate segments of one connection and raw-coordinate aliases.
+    // Capture the initial order before search mutates the queue.
+    return JSON.stringify(
+      solver.unsolvedConnections.map((segment) => {
+        for (const point of [segment.startPoint, segment.endPoint]) {
+          if (!this.initialA01PointIds.has(point)) {
+            this.initialA01PointIds.set(point, this.nextInitialA01PointId++)
+          }
+        }
+        return [
+          segment.connId,
+          this.initialA01PointIds.get(segment.startPoint),
+          this.initialA01PointIds.get(segment.endPoint),
+        ]
+      }),
+    )
+  }
+
   private refreshDynamicIterationLimit() {
     this.totalCandidateWork = 0
     this.dynamicExpansionWorkBudget = 1
@@ -416,9 +459,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override initializeSolvers() {
+    this.initialA01Orders.clear()
+    this.initialA01PointIds = new WeakMap()
+    this.nextInitialA01PointId = 0
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
+      const order = this.getInitialA01Order(solver)
+      if (order !== null) this.initialA01Orders.add(order)
     }
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
@@ -427,6 +475,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
     this.initializeCandidateBudget(solver)
+    const order = this.getInitialA01Order(solver)
+    if (order !== null) {
+      if (this.initialA01Orders.has(order)) return
+      this.initialA01Orders.add(order)
+    }
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,
@@ -710,3 +763,5 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 }
+
+const nativeGenerateSolver = PortfolioSingleIntraNodeSolver.prototype.generateSolver

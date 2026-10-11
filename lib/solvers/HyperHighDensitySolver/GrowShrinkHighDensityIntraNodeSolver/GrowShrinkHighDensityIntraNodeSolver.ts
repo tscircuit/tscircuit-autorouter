@@ -212,6 +212,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      // Scaling creates the plain, owned endpoint data used by this attempt.
+      deduplicateA01InitialOrders: true,
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
