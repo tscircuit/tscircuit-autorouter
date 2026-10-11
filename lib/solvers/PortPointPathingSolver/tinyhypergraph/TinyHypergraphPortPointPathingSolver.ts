@@ -457,6 +457,7 @@ const buildSerializedTinyGraph = (
   const regionNetIdByRegionId = getRegionNetIdByRegionId({
     params,
     getNetIndex,
+    useRegionSpatialIndex: true,
   })
 
   const regions: SerializedHyperGraph["regions"] = params.graph.regions.map(
