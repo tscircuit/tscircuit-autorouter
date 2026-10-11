@@ -23,6 +23,8 @@ export type ParallelBenchmarkResult = {
   stageTiming?: BenchmarkStageTimingBreakdown
   phaseName?: string
   workerStats?: Record<string, unknown>
+  workerPoolStats?: Record<string, unknown>
+  stageStats?: Record<string, Record<string, unknown>>
 }
 
 export type ParallelBenchmarkChildMessage =

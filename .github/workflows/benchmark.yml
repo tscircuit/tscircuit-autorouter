@@ -1557,10 +1557,25 @@ jobs:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
         run: |
           mkdir -p parallel-benchmark-results
-          bun pm ls --all > parallel-benchmark-results/installed-dependencies.txt
           node <<'NODE'
           const fs = require('node:fs')
+          const path = require('node:path')
           const { spawnSync } = require('node:child_process')
+          const moduleRoot = path.join(process.cwd(), 'node_modules')
+          const installedPackages = []
+          for (const name of fs.readdirSync(moduleRoot).sort()) {
+            if (name.startsWith('.')) continue
+            const names = name.startsWith('@')
+              ? fs.readdirSync(path.join(moduleRoot, name)).sort().map((child) => `${name}/${child}`)
+              : [name]
+            for (const packageName of names) {
+              const metadataPath = path.join(moduleRoot, packageName, 'package.json')
+              if (!fs.existsSync(metadataPath)) continue
+              const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
+              installedPackages.push({ directory: packageName, name: metadata.name, version: metadata.version })
+            }
+          }
+          fs.writeFileSync('parallel-benchmark-results/installed-dependencies.json', JSON.stringify(installedPackages, null, 2))
           const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
           if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
             throw new Error('benchmark_args_json must be a JSON array of strings')

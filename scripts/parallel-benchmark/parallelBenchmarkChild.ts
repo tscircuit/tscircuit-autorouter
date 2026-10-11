@@ -22,11 +22,12 @@ type Solver = PipelineStageTimingSource & {
   getOutputSimplifiedPcbTraces: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson: () => SimpleRouteJson
   highDensityRouteSolver?: { stats?: Record<string, unknown> }
+  workerPool?: { workerCount: number; stats: Record<string, unknown> }
 }
 
 type SolverConstructor = new (
   scenario: SimpleRouteJson,
-  options: { effort: number; cacheProvider: null; workerCount: number },
+  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean },
 ) => Solver
 
 const emit = (message: ParallelBenchmarkChildMessage): void => {
@@ -34,7 +35,7 @@ const emit = (message: ParallelBenchmarkChildMessage): void => {
 }
 
 const main = async (): Promise<void> => {
-  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir] = process.argv.slice(2)
+  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument] = process.argv.slice(2)
   const sampleNumber = Number(sampleArgument)
   const variant = variantArgument as BenchmarkVariant
   const repeat = Number(repeatArgument)
@@ -73,7 +74,14 @@ const main = async (): Promise<void> => {
     })
   }
   try {
-    solver = new SolverClass(input, { effort, cacheProvider: null, workerCount })
+    solver = new SolverClass(input, {
+      effort,
+      cacheProvider: null,
+      ...(variant === "parallel" ? {
+        workerCount,
+        enableParallelPathSimplification: simplificationArgument !== "0",
+      } : {}),
+    })
     progress()
     if (solver.solveAsync) {
       const timer = setInterval(progress, 1000)
@@ -108,6 +116,14 @@ const main = async (): Promise<void> => {
     stageTiming: solver ? extractBenchmarkStageTiming(solver, solved ? "complete" : "partial") : undefined,
     phaseName: solver?.pipelineDef[solver.currentPipelineStepIndex]?.solverName,
     workerStats: solver?.highDensityRouteSolver?.stats,
+    workerPoolStats: solver?.workerPool ? {
+      workerCount: solver.workerPool.workerCount,
+      ...solver.workerPool.stats,
+    } : undefined,
+    stageStats: solver ? Object.fromEntries(solver.pipelineDef.flatMap(({ solverName }) => {
+      const stage = (solver as unknown as Record<string, { stats?: Record<string, unknown> }>)[solverName]
+      return stage?.stats ? [[solverName, stage.stats]] : []
+    })) : undefined,
   }
   emit({
     kind: "progress",

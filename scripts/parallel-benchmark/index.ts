@@ -14,6 +14,7 @@ type Options = {
   timeoutMs: number
   effort: number
   workerCount: number
+  parallelPathSimplification: boolean
   targetSpeedup: number
   variants: BenchmarkVariant[]
   sampleNumbers: number[]
@@ -26,6 +27,7 @@ const parseOptions = (): Options => {
     timeoutMs: 180000,
     effort: 1,
     workerCount: 4,
+    parallelPathSimplification: true,
     targetSpeedup: 2,
     variants: ["baseline", "parallel"],
     sampleNumbers: Array.from({ length: 16 }, (_, index) => index + 1),
@@ -43,6 +45,9 @@ const parseOptions = (): Options => {
       options.sampleNumbers = [...new Set(value.split(",").map(Number))]
     } else if (key === "--out-dir") {
       options.outDir = value
+    } else if (key === "--parallel-path-simplification") {
+      if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
+      options.parallelPathSimplification = value === "1"
     } else {
       const numeric = Number(value)
       if (!Number.isFinite(numeric) || numeric <= 0) throw new Error(`Invalid ${key}: ${value}`)
@@ -72,14 +77,15 @@ const runSample = async (
   const scriptPath = path.join(import.meta.dir, "parallelBenchmarkChild.ts")
   console.log(`[start] ${sampleName} repeat=${repeat} ${variant}`)
   return await new Promise<ParallelBenchmarkResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir], { stdio: ["ignore", "pipe", "pipe"] })
+    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0"], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
     const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []
     let timedOut = false
+    let validatingQuality = false
     let stderr = ""
     const start = performance.now()
-    const timer = setTimeout(() => {
+    let timer = setTimeout(() => {
       timedOut = true
       child.kill("SIGKILL")
     }, options.timeoutMs)
@@ -94,6 +100,14 @@ const runSample = async (
       else {
         latestProgress = message
         progressUpdates.push(message)
+        if (message.phaseName === "quality-validation" && !validatingQuality) {
+          validatingQuality = true
+          clearTimeout(timer)
+          timer = setTimeout(() => {
+            timedOut = true
+            child.kill("SIGKILL")
+          }, Math.max(options.timeoutMs, 180000))
+        }
         console.log(`[progress] ${sampleName} ${variant} ${(message.elapsedTimeMs / 1000).toFixed(1)}s ${message.phaseName ?? "complete"}`)
       }
     })
@@ -113,8 +127,8 @@ const runSample = async (
         repeat,
         variant,
         status: timedOut ? "timeout" : "crashed",
-        elapsedTimeMs: performance.now() - start,
-        error: timedOut ? `Exceeded ${options.timeoutMs}ms sample timeout` : `Child exited code=${code}, signal=${signal}: ${stderr}`,
+        elapsedTimeMs: validatingQuality && latestProgress ? latestProgress.elapsedTimeMs : performance.now() - start,
+        error: timedOut ? `Exceeded ${validatingQuality ? "quality validation" : "routing"} timeout` : `Child exited code=${code}, signal=${signal}: ${stderr}`,
         stageTiming: latestProgress?.stageTiming,
         phaseName: latestProgress?.phaseName,
       }
@@ -153,6 +167,7 @@ const main = async (): Promise<void> => {
     cpuModel: os.cpus()[0]?.model,
     availableParallelism: os.availableParallelism(),
     timing: "Construction, solve, owned pool startup and dispose; module import, input clone, output hashing, DRC and lint excluded",
+    qualityValidationTimeoutMs: Math.max(options.timeoutMs, 180000),
     startedAt: new Date().toISOString(),
   }
   await mkdir(options.outDir, { recursive: true })
