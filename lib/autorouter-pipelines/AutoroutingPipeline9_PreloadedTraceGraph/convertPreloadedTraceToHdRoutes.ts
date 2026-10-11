@@ -70,7 +70,6 @@ export const convertPreloadedTraceToHdRoutes = (
         pointIndex,
         pointIndex,
       )
-      continue
     }
 
     if (point.route_type === "through_obstacle") {
@@ -94,11 +93,20 @@ export const convertPreloadedTraceToHdRoutes = (
     }
 
     const nextPoint = trace.route[pointIndex + 1]
-    if (
-      point.route_type !== "wire" ||
-      nextPoint?.route_type !== "wire" ||
-      point.layer !== nextPoint.layer
-    ) {
+    let layer: string
+    let width: number
+    if (point.route_type === "wire" && nextPoint?.route_type === "wire" && point.layer === nextPoint.layer) {
+      layer = point.layer
+      width = Math.max(point.width, nextPoint.width)
+    } else if (point.route_type === "wire" && nextPoint?.route_type === "via" && point.layer === nextPoint.from_layer) {
+      if (point.x === nextPoint.x && point.y === nextPoint.y) continue
+      layer = point.layer
+      width = point.width
+    } else if (point.route_type === "via" && nextPoint?.route_type === "wire" && point.to_layer === nextPoint.layer) {
+      if (point.x === nextPoint.x && point.y === nextPoint.y) continue
+      layer = nextPoint.layer
+      width = nextPoint.width
+    } else {
       continue
     }
 
@@ -107,15 +115,15 @@ export const convertPreloadedTraceToHdRoutes = (
         {
           x: point.x,
           y: point.y,
-          z: mapLayerNameToZ(point.layer, layerCount),
+          z: mapLayerNameToZ(layer, layerCount),
         },
         {
           x: nextPoint.x,
           y: nextPoint.y,
-          z: mapLayerNameToZ(nextPoint.layer, layerCount),
+          z: mapLayerNameToZ(layer, layerCount),
         },
       ],
-      Math.max(point.width, nextPoint.width),
+      width,
       defaultViaDiameter,
       [],
       pointIndex,

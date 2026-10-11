@@ -135,11 +135,18 @@ export const getObstaclesFromSrjTraces = (
       const routePoint = trace.route[pointIndex]!
       const nextRoutePoint = trace.route[pointIndex + 1]!
 
-      if (
-        !isWireRoutePoint(routePoint) ||
-        !isWireRoutePoint(nextRoutePoint) ||
-        routePoint.layer !== nextRoutePoint.layer
-      ) {
+      let layer: string
+      let width: number
+      if (isWireRoutePoint(routePoint) && isWireRoutePoint(nextRoutePoint) && routePoint.layer === nextRoutePoint.layer) {
+        layer = routePoint.layer
+        width = routePoint.width
+      } else if (isWireRoutePoint(routePoint) && isViaRoutePoint(nextRoutePoint) && routePoint.layer === nextRoutePoint.from_layer) {
+        layer = routePoint.layer
+        width = routePoint.width
+      } else if (isViaRoutePoint(routePoint) && isWireRoutePoint(nextRoutePoint) && routePoint.to_layer === nextRoutePoint.layer) {
+        layer = nextRoutePoint.layer
+        width = nextRoutePoint.width
+      } else {
         continue
       }
 
@@ -147,8 +154,8 @@ export const getObstaclesFromSrjTraces = (
         obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_wire`,
         start: routePoint,
         end: nextRoutePoint,
-        width: routePoint.width,
-        layer: routePoint.layer,
+        width,
+        layer,
         connectedTo,
       })
 
