@@ -1149,6 +1149,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
+    // Scope exact wire geometry to this repair evaluator.
+    const traceContinuityCacheKey = {}
     let referenceDrcCandidateCache:
       | {
           candidateKey: string
@@ -1318,6 +1320,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           traceClearance,
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
+          traceContinuityCacheKey,
         },
       })
       const evaluatedTraceIds = new Set(

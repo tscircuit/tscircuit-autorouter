@@ -54,6 +54,8 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /** Private ownership key for repeated exact continuity geometry. */
+  traceContinuityCacheKey?: object
 }
 
 const createDrcConnectivityMap = (
@@ -117,7 +119,9 @@ export const getDrcErrors = (
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
-      : checkTracesAreContiguous(circuitJson)),
+      : checkTracesAreContiguous(circuitJson, {
+          wirePolygonCacheKey: options.traceContinuityCacheKey,
+        })),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,
