@@ -81,7 +81,8 @@ test("parallel B01 commits serial candidate order, null attempts, fallback and f
         expect(parallel.getResult()).toMatchObject({ candidateSearchCount: 16, candidateSearchBudget: 16,
           candidateSearchBudgetExhausted: true, safeTraceLayerRepairSkippedForBudget: true, attemptedCandidateCount: 0 })
       } else {
-        expect(completed[0]).toBe(8)
+        expect(scheduled.slice(0, 4)).toEqual([3, 4, 5, 6])
+        expect(completed[0]).toBe(6)
         expect(parallel.getResult()).toMatchObject({ candidateSearchCount: 2, attemptedCandidateCount: 1,
           acceptedCandidateCount: 1, fallbackCandidateCount: 1, remainingDrcIssueCount: 0 })
         expect(parallel.getResult().routes[0]!.regionId).toBe("candidate4")

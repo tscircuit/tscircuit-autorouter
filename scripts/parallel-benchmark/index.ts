@@ -7,7 +7,7 @@ import path from "node:path"
 import { createInterface } from "node:readline"
 import { loadScenarios } from "../benchmark/scenarios"
 import { summarizeParallelBenchmark } from "./parallelBenchmarkSummary"
-import type { BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
+import type { BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
 
 type Options = {
   repetitions: number
@@ -15,6 +15,7 @@ type Options = {
   effort: number
   workerCount: number
   parallelPathSimplification: boolean
+  pathingStrategy: BenchmarkPathingStrategy
   targetSpeedup: number
   variants: BenchmarkVariant[]
   sampleNumbers: number[]
@@ -28,6 +29,7 @@ const parseOptions = (): Options => {
     effort: 1,
     workerCount: 4,
     parallelPathSimplification: true,
+    pathingStrategy: "indexed",
     targetSpeedup: 2,
     variants: ["baseline", "parallel"],
     sampleNumbers: Array.from({ length: 16 }, (_, index) => index + 1),
@@ -48,6 +50,9 @@ const parseOptions = (): Options => {
     } else if (key === "--parallel-path-simplification") {
       if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
       options.parallelPathSimplification = value === "1"
+    } else if (key === "--pathing-strategy") {
+      if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, or cached-cost")
+      options.pathingStrategy = value
     } else {
       const numeric = Number(value)
       if (!Number.isFinite(numeric) || numeric <= 0) throw new Error(`Invalid ${key}: ${value}`)
@@ -77,7 +82,7 @@ const runSample = async (
   const scriptPath = path.join(import.meta.dir, "parallelBenchmarkChild.ts")
   console.log(`[start] ${sampleName} repeat=${repeat} ${variant}`)
   return await new Promise<ParallelBenchmarkResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0"], { stdio: ["ignore", "pipe", "pipe"] })
+    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
     const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []

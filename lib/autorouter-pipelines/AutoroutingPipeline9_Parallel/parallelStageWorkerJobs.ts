@@ -1,9 +1,30 @@
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
 import { getPipeline9RegionalB01CandidateOutput, preparePipeline9RegionalB01Candidate } from "../AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
-import type { ParallelRegionalB01CandidateResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
+import type { ParallelRegionalB01CandidateResult, ParallelRegionalFallbackResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+
+function executeRegionalFallback(
+  job: Extract<ParallelStageWorkerJob, { kind: "regionalFallbackSolve" }>,
+): ParallelRegionalFallbackResult {
+  try {
+    const solver = new Pipeline9RegionalFallbackSolver({
+      ...job.params, connMap: restoreWorkerConnectivityMap(job),
+    })
+    const childStepBudget = Math.floor(solver.MAX_ITERATIONS) + 1
+    if (!Number.isSafeInteger(childStepBudget) || childStepBudget < 1) {
+      throw new Error("Regional B01 child has an invalid iteration limit")
+    }
+    solver.solve()
+    return { kind: job.kind, status: "prepared", childStepBudget,
+      solved: solver.solved, failed: solver.failed,
+      routes: solver.solved && !solver.failed ? solver.getOutput() : undefined }
+  } catch (error: unknown) {
+    return { kind: job.kind, status: "error", error: error instanceof Error ? error.message : String(error) }
+  }
+}
 
 function executeRegionalB01Candidate(
   job: Extract<ParallelStageWorkerJob, { kind: "regionalB01Candidate" }>,
@@ -11,7 +32,7 @@ function executeRegionalB01Candidate(
   try {
     const problem = preparePipeline9RegionalB01Candidate({
       ...job.params,
-      connMap: new ConnectivityMap(job.connectivityNetMap),
+      connMap: restoreWorkerConnectivityMap(job),
     })
     if (!problem) return { kind: job.kind, status: "skipped", usedFallback: false, childStepBudget: 0 }
     const childStepBudget = Math.floor(problem.solver.MAX_ITERATIONS) + 1
@@ -33,6 +54,8 @@ export function executeParallelStageJob(
   job: ParallelStageWorkerJob,
 ): ParallelStageWorkerResult {
   switch (job.kind) {
+    case "regionalFallbackSolve":
+      return executeRegionalFallback(job)
     case "regionalB01Candidate":
       return executeRegionalB01Candidate(job)
     case "forceImproveNode": {
@@ -67,7 +90,7 @@ export function executeParallelStageJob(
     case "simplifyPathComponent": {
       const solver = new MultiSimplifiedPathSolver({
         ...job.params,
-        connMap: new ConnectivityMap(job.connectivityNetMap),
+        connMap: restoreWorkerConnectivityMap(job),
       })
       solver.solve()
       if (solver.failed || !solver.solved) {

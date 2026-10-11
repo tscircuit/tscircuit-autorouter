@@ -1,4 +1,4 @@
-import { countNewIntersectionsWithValues } from "tiny-hypergraph/lib/countNewIntersections"
+import { setNewIntersectionCounts, type MutableIntersectionCount } from "tiny-hypergraph/lib/countNewIntersections"
 import type { DynamicAnglePairArrays } from "tiny-hypergraph/lib/types"
 
 type EndpointPrefix = { before: number; through: number }
@@ -25,6 +25,12 @@ const popcount32 = (value: number): number => {
  */
 export class TinyBitsetIntersectionIndex {
   private readonly snapshots = new WeakMap<DynamicAnglePairArrays, RegionBitsetSnapshot>()
+  private readonly countScratch: MutableIntersectionCount = {
+    netId: 0, lesserAngle: 0, greaterAngle: 0, layerMask: 0,
+    entryExitLayerChanges: 0, sameLayerIntersectionCount: 0, crossingLayerIntersectionCount: 0,
+  }
+
+  constructor(private readonly minimumBitsetSegmentCount = 8) {}
 
   count(
     pairs: DynamicAnglePairArrays,
@@ -33,13 +39,26 @@ export class TinyBitsetIntersectionIndex {
     greaterAngle: number,
     layerMask: number,
   ): [number, number] {
-    if (!(lesserAngle < greaterAngle) || pairs.netIds.length === 0) return [0, 0]
-    // One bit per segment. Larger snapshots retain the original linear policy.
-    if (pairs.netIds.length > 32) {
-      const [sameLayer, crossLayer] = countNewIntersectionsWithValues(
-        pairs, newNet, lesserAngle, greaterAngle, layerMask, 0,
-      )
-      return [sameLayer, crossLayer]
+    const scratch = this.countScratch
+    scratch.netId = newNet
+    scratch.lesserAngle = lesserAngle
+    scratch.greaterAngle = greaterAngle
+    scratch.layerMask = layerMask
+    this.setCounts(pairs, scratch)
+    return [scratch.sameLayerIntersectionCount, scratch.crossingLayerIntersectionCount]
+  }
+
+  setCounts(pairs: DynamicAnglePairArrays, result: MutableIntersectionCount): void {
+    const { netId: newNet, lesserAngle, greaterAngle, layerMask } = result
+    if (!(lesserAngle < greaterAngle) || pairs.netIds.length === 0) {
+      result.sameLayerIntersectionCount = 0
+      result.crossingLayerIntersectionCount = 0
+      return
+    }
+    // Short arrays retain the native loop; one bit represents each larger segment.
+    if (pairs.netIds.length < this.minimumBitsetSegmentCount || pairs.netIds.length > 32) {
+      setNewIntersectionCounts(pairs, result)
+      return
     }
     let snapshot = this.snapshots.get(pairs)
     if (!snapshot) {
@@ -59,10 +78,8 @@ export class TinyBitsetIntersectionIndex {
       }
       snapshot.segmentMaskByLayerMask.set(layerMask, layerOverlap)
     }
-    return [
-      popcount32(crossings & layerOverlap),
-      popcount32(crossings & ~layerOverlap),
-    ]
+    result.sameLayerIntersectionCount = popcount32(crossings & layerOverlap)
+    result.crossingLayerIntersectionCount = popcount32(crossings & ~layerOverlap)
   }
 
   private createSnapshot(pairs: DynamicAnglePairArrays): RegionBitsetSnapshot {

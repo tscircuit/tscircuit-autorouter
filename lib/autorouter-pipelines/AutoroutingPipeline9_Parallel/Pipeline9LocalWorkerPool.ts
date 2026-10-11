@@ -3,6 +3,7 @@ import type {
   Pipeline9LocalWorkerRequest,
   Pipeline9LocalWorkerResponse,
 } from "./parallelWorkerTypes"
+import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -25,7 +26,8 @@ export type Pipeline9LocalWorkerPoolOptions = {
 /** A reusable local CPU pool. Each worker receives board context only once. */
 export class Pipeline9LocalWorkerPool {
   readonly workerCount: number
-  readonly stats = { tasksStarted: 0, tasksCompleted: 0, maxActiveWorkers: 0 }
+  readonly stats = { tasksStarted: 0, tasksCompleted: 0, maxActiveWorkers: 0,
+    historyRequestsGranted: 0, historyRequestsDenied: 0, historyJobsStarted: 0 }
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
   private readonly workers: WorkerSlot[] = []
@@ -76,6 +78,11 @@ export class Pipeline9LocalWorkerPool {
     worker.onmessage = (event: MessageEvent<Pipeline9LocalWorkerResponse>): void => {
       const response = event.data
       const task = slot.task
+      if ("kind" in response) {
+        try { this.admitHistoryRequest(slot, response) }
+        catch (error: unknown) { this.fail(error instanceof Error ? error : new Error(String(error))) }
+        return
+      }
       if (!task || response.taskId !== task.taskId) {
         this.fail(new Error(`Pipeline9 worker returned unexpected task ${response.taskId}`))
         return
@@ -99,6 +106,49 @@ export class Pipeline9LocalWorkerPool {
     }
     this.workers.push(slot)
     return slot
+  }
+
+  private admitHistoryRequest(owner: WorkerSlot, request: MultiHeadHistoryRequest): void {
+    if (!owner.task || owner.task.taskId !== request.taskId || owner.task.job.kind !== "highDensityNode") {
+      this.fail(new Error("Multi-head history request has no active high-density owner"))
+      return
+    }
+    if (request.jobs.length > 2 || request.jobs.some((job) => job.kind !== "multiHeadHistory") ||
+        new Set(request.jobs.map((job) => job.candidateId)).size !== request.jobs.length) {
+      this.fail(new Error("Multi-head history request has invalid candidates"))
+      return
+    }
+    // Never queue dependent work behind owners that may themselves be waiting.
+    // Independent ordinary work has priority; only unused thread slots are lent.
+    const capacity = this.queue.length === 0
+      ? this.workerCount - this.workers.filter((slot) => slot.task !== null).length
+      : 0
+    const jobs = request.jobs.slice(0, capacity)
+    const grant: MultiHeadHistoryGrant = { kind: "multiHeadHistoryGrant",
+      taskId: request.taskId, requestId: request.requestId,
+      admittedCandidateIds: jobs.map((job) => job.candidateId) }
+    owner.worker.postMessage(grant)
+    if (jobs.length === 0) this.stats.historyRequestsDenied++
+    else this.stats.historyRequestsGranted++
+    for (const job of jobs) {
+      this.stats.historyJobsStarted++
+      void this.run<MultiHeadHistoryResult>(job).then(
+        (result): void => this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
+          taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId, ok: true, result }),
+        (error: unknown): void => this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
+          taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId,
+          ok: false, error: error instanceof Error ? error.message : String(error) }),
+      )
+    }
+  }
+
+  private deliverHistory(owner: WorkerSlot, delivery: MultiHeadHistoryDelivery): void {
+    if (this.terminalError || owner.task?.taskId !== delivery.taskId) return
+    try {
+      owner.worker.postMessage(delivery)
+    } catch (error: unknown) {
+      this.fail(error instanceof Error ? error : new Error(String(error)))
+    }
   }
 
   private dispatch(): void {

@@ -6,11 +6,12 @@ import { Pipeline9ParallelHighDensitySolver } from "./Pipeline9ParallelHighDensi
 import { ParallelHighDensityForceImproveSolver } from "./ParallelHighDensityForceImproveSolver"
 import { ParallelHighDensityRepairSolver } from "./ParallelHighDensityRepairSolver"
 import { ParallelTraceSimplificationSolver } from "./ParallelTraceSimplificationSolver"
-import { ParallelPortPointPathingSolver } from "./ParallelPortPointPathingSolver"
+import { ParallelPortPointPathingSolver, type Pipeline9PathingStrategy } from "./ParallelPortPointPathingSolver"
 import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointDrcRepairSolver"
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
   workerCount?: number
+  pathingStrategy?: Pipeline9PathingStrategy
   /** Supply a persistent pool to reuse worker imports across boards. */
   workerPool?: Pipeline9LocalWorkerPool
   enableParallelPathSimplification?: boolean
@@ -30,6 +31,9 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     if (!pathingStep) throw new Error("Pipeline9 portPointPathingSolver step is missing")
     this.pipelineDef[pathingIndex] = {
       ...pathingStep, solverClass: ParallelPortPointPathingSolver as any,
+      getConstructorParams: (cms: AutoroutingPipelineSolver9_PreloadedTraceGraph): any[] => [
+        ...pathingStep.getConstructorParams(cms), { strategy: opts.pathingStrategy ?? "indexed" },
+      ],
     } as any
     const stepIndex = this.pipelineDef.findIndex((step) => step.solverName === "highDensityRouteSolver")
     const originalStep = this.pipelineDef[stepIndex]

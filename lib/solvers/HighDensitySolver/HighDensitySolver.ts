@@ -346,6 +346,14 @@ export class HighDensitySolver extends BaseSolver {
     }))
   }
 
+  protected createIntraNodeSolver(
+    params: ConstructorParameters<typeof GrowShrinkHighDensityIntraNodeSolver>[0],
+  ): HighDensityIntraNodeSolver {
+    return this.useGrowShrinkHighDensityIntraNodeSolver
+      ? new GrowShrinkHighDensityIntraNodeSolver(params)
+      : new PortfolioSingleIntraNodeSolver(params)
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -414,9 +422,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
-    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+    this.activeSubSolver = this.createIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }
 

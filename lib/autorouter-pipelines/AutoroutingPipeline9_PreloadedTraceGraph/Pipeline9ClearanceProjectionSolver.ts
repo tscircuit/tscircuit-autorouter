@@ -2,6 +2,7 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   RelaxTraceClearanceSolver,
+  type RelaxTraceClearanceInput,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -36,13 +37,17 @@ type ProjectionContext = {
   originalCanonicalRoutes: HighDensityRoute[]
   canonicalRoutes: HighDensityRoute[]
 }
+type RelaxationSolver = Pick<
+  RelaxTraceClearanceSolver,
+  keyof RelaxTraceClearanceSolver
+>
 
 type ProjectionState =
   | { phase: "initialize" }
   | {
       phase: "relax"
       context: ProjectionContext
-      solver: RelaxTraceClearanceSolver
+      solver: RelaxationSolver
     }
   | {
       phase: "select" | "physical-validation" | "reference-validation"
@@ -59,6 +64,12 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
   constructor(params: Pipeline9ClearanceProjectionParams) {
     super()
     this.params = params
+  }
+
+  protected createRelaxationSolver(
+    input: RelaxTraceClearanceInput,
+  ): RelaxationSolver {
+    return new RelaxTraceClearanceSolver(input)
   }
 
   override _step(): void {
@@ -86,7 +97,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
-      const solver = new RelaxTraceClearanceSolver({
+      const solver = this.createRelaxationSolver({
         srj,
         routes: canonicalRoutes,
         bounds: srj.bounds,

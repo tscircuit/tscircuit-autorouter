@@ -38,6 +38,7 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
       return this.workerPool.run<ParallelStageWorkerResult>({
         kind: "simplifyPathComponent",
         connectivityNetMap: this.connMap.netMap,
+        connectivityIdToNetMap: this.connMap.idToNetMap,
         params: {
           unsimplifiedHdRoutes: indexes.map((index) => this.unsimplifiedHdRoutes[index]),
           otherHdRoutes: [

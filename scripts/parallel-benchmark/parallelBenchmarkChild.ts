@@ -7,7 +7,7 @@ import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../lib/types/srj-types"
 import { extractBenchmarkStageTiming, type PipelineStageTimingSource } from "../benchmark/benchmark-stage-timing"
 import { loadScenarioBySampleNumber } from "../benchmark/scenarios"
-import type { BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
+import type { BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
 
 type Solver = PipelineStageTimingSource & {
   solved: boolean
@@ -27,7 +27,7 @@ type Solver = PipelineStageTimingSource & {
 
 type SolverConstructor = new (
   scenario: SimpleRouteJson,
-  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean },
+  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean; pathingStrategy?: BenchmarkPathingStrategy },
 ) => Solver
 
 const emit = (message: ParallelBenchmarkChildMessage): void => {
@@ -35,7 +35,7 @@ const emit = (message: ParallelBenchmarkChildMessage): void => {
 }
 
 const main = async (): Promise<void> => {
-  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument] = process.argv.slice(2)
+  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument, pathingArgument = "indexed"] = process.argv.slice(2)
   const sampleNumber = Number(sampleArgument)
   const variant = variantArgument as BenchmarkVariant
   const repeat = Number(repeatArgument)
@@ -43,6 +43,9 @@ const main = async (): Promise<void> => {
   const workerCount = Number(workerArgument)
   if (!outDir || (variant !== "baseline" && variant !== "parallel")) {
     throw new Error("Invalid benchmark child arguments")
+  }
+  if (pathingArgument !== "indexed" && pathingArgument !== "adaptive-bitset" && pathingArgument !== "cached-cost") {
+    throw new Error("Invalid benchmark child pathing strategy")
   }
   const { scenarioName, scenario } = await loadScenarioBySampleNumber("srj18", sampleNumber, effort)
   const solverName = variant === "baseline"
@@ -81,6 +84,7 @@ const main = async (): Promise<void> => {
       ...(variant === "parallel" ? {
         workerCount,
         enableParallelPathSimplification: simplificationArgument !== "0",
+        pathingStrategy: pathingArgument,
       } : {}),
     })
     progress()

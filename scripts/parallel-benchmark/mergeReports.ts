@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import stableStringify from "fast-json-stable-stringify"
 import { summarizeParallelBenchmark } from "./parallelBenchmarkSummary"
-import type { ParallelBenchmarkResult, ParallelBenchmarkSummary } from "./parallelBenchmarkTypes"
+import type { BenchmarkPathingStrategy, ParallelBenchmarkResult, ParallelBenchmarkSummary } from "./parallelBenchmarkTypes"
 
 export type ParallelBenchmarkReportSource = {
   sourcePath: string
@@ -37,6 +37,7 @@ type SourceOptions = Record<string, unknown> & {
   effort: number
   workerCount: number
   parallelPathSimplification: boolean
+  pathingStrategy: BenchmarkPathingStrategy
   targetSpeedup: number
   variants: string[]
   sampleNumbers: number[]
@@ -54,7 +55,10 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`Missing benchmark options: ${source.sourcePath}`)
   }
-  const options = raw as SourceOptions
+  const options = { ...raw, pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset" } as SourceOptions
+  if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost") {
+    throw new Error(`Invalid pathingStrategy: ${source.sourcePath}`)
+  }
   for (const key of ["repetitions", "timeoutMs", "effort", "workerCount", "targetSpeedup"] as const) {
     if (typeof options[key] !== "number" || !Number.isFinite(options[key]) || options[key] <= 0) {
       throw new Error(`Invalid ${key}: ${source.sourcePath}`)

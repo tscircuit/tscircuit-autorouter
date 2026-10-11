@@ -36,6 +36,7 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
     const contextId = this.workerPool.createContextId()
     const context: Pipeline9ParallelHighDensityContext = {
       connectivityNetMap: this.connMap.netMap,
+      connectivityIdToNetMap: this.connMap.idToNetMap,
       colorMap: this.colorMap,
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,

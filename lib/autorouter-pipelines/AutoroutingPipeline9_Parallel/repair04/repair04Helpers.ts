@@ -162,3 +162,84 @@ export const getNetRepresentatives = (
   return parents
 }
 
+
+
+/** Strict separation only; retain exact geometry checks near the boundary. */
+export function areExpandedBoundsSeparated(
+  a: Bounds,
+  b: Bounds,
+  reach: number,
+): boolean {
+  return (
+    a.minX - reach - REGION_EPSILON > b.maxX ||
+    a.maxX + reach + REGION_EPSILON < b.minX ||
+    a.minY - reach - REGION_EPSILON > b.maxY ||
+    a.maxY + reach + REGION_EPSILON < b.minY
+  )
+}
+
+// Native Math.hypot can round differently between platforms.
+// Scaling avoids overflow and underflow when squaring the coordinates.
+export const getVectorLength = (x: number, y: number): number => {
+  const scale = Math.max(Math.abs(x), Math.abs(y))
+  if (scale === 0 || scale === Number.POSITIVE_INFINITY) return scale
+  const scaledX = x / scale
+  const scaledY = y / scale
+  return scale * Math.sqrt(scaledX * scaledX + scaledY * scaledY)
+}
+
+export const isPointInBounds = (
+  point: { x: number; y: number },
+  bounds: Bounds,
+  inset = 0,
+): boolean => {
+  return (
+    point.x >= bounds.minX + inset - REGION_EPSILON &&
+    point.x <= bounds.maxX - inset + REGION_EPSILON &&
+    point.y >= bounds.minY + inset - REGION_EPSILON &&
+    point.y <= bounds.maxY - inset + REGION_EPSILON
+  )
+}
+
+export const getSegmentBoundsInterval = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  bounds: Bounds,
+): [number, number] | undefined => {
+  let minT = 0
+  let maxT = 1
+  for (const [origin, delta, min, max] of [
+    [start.x, end.x - start.x, bounds.minX, bounds.maxX],
+    [start.y, end.y - start.y, bounds.minY, bounds.maxY],
+  ]) {
+    if (
+      origin === undefined ||
+      delta === undefined ||
+      min === undefined ||
+      max === undefined
+    ) {
+      throw new Error("Invalid segment clipping axis")
+    }
+    if (Math.abs(delta) <= REGION_EPSILON) {
+      if (origin < min - REGION_EPSILON || origin > max + REGION_EPSILON)
+        return undefined
+      continue
+    }
+    const first = (min - origin) / delta
+    const second = (max - origin) / delta
+    minT = Math.max(minT, Math.min(first, second))
+    maxT = Math.min(maxT, Math.max(first, second))
+    if (maxT < minT - REGION_EPSILON) return undefined
+  }
+  return [Math.max(0, minT), Math.min(1, maxT)]
+}
+
+
+export type RepairRegionInput = {
+  srj: SimpleRouteJson
+  routes: HighDensityRoute[]
+  bounds: Bounds
+  boundaryMargin: number
+  lockedPointIndices: boolean[][]
+}
+

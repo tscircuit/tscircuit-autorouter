@@ -52,6 +52,9 @@ export type Pipeline9RegionalB01CandidateParams = Parameters<
 export type Pipeline9RegionalB01CandidateOutput = ReturnType<
   typeof getPipeline9RegionalB01CandidateOutput
 >
+export type Pipeline9RegularRegionalCandidateParams = Parameters<
+  typeof preparePipeline9RegularRegionalCandidate
+>[0]
 
 /** Routes one regional candidate at a time through explicit child solver stages. */
 export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
@@ -304,6 +307,23 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     return candidates
   }
 
+  protected canPrefetchRegularCandidate(b01CandidateCount: number): boolean {
+    // The current B01 attempt has already been charged. Reserve one more
+    // attempt after the complete frontier before starting speculative fallback.
+    const finalB01Count = this.candidateSearchCount + b01CandidateCount - 1
+    return !this.candidateSearchBudgetExhausted && finalB01Count < this.candidateSearchBudget
+  }
+
+  protected getRegularCandidateParams(): Pipeline9RegularRegionalCandidateParams {
+    const center = this.repairCenter
+    const fixedRouteCopperSpatialIndex = this.fixedRouteCopperSpatialIndex
+    if (!center || !fixedRouteCopperSpatialIndex) {
+      throw new Error("Regional fallback candidate is missing its fixed context")
+    }
+    return { ...this.params, routes: this.currentRoutes,
+      fixedRouteCopperSpatialIndex, center, regionSize: 3 }
+  }
+
   private prepareRegularCandidate(): void {
     if (
       this.bestRoutes !== this.currentRoutes ||
@@ -318,20 +338,11 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       return
     }
     this.candidateSearchCount++
-    const center = this.repairCenter
-    const fixedRouteCopperSpatialIndex = this.fixedRouteCopperSpatialIndex
-    if (!center || !fixedRouteCopperSpatialIndex) {
-      throw new Error(
-        "Regional fallback candidate is missing its fixed context",
-      )
-    }
-    this.regularCandidate = preparePipeline9RegularRegionalCandidate({
-      ...this.params,
-      routes: this.currentRoutes,
-      fixedRouteCopperSpatialIndex,
-      center,
-      regionSize: 3,
-    })
+    this.startRegularCandidate(this.getRegularCandidateParams())
+  }
+
+  protected startRegularCandidate(params: Pipeline9RegularRegionalCandidateParams): void {
+    this.regularCandidate = preparePipeline9RegularRegionalCandidate(params)
     if (!this.regularCandidate) {
       this.phase = "commit-error"
       return
@@ -340,7 +351,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.phase = "route-regional"
   }
 
-  private stepRegularCandidate(): void {
+  protected stepRegularCandidate(): void {
     const candidate = this.regularCandidate
     if (!candidate) throw new Error("Regional fallback has no active candidate")
     candidate.solver.step()
@@ -349,12 +360,16 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.phase = "validate-regional"
   }
 
-  private validateRegularCandidate(): void {
+  protected validateRegularCandidate(): void {
     const problem = this.regularCandidate
     if (!problem)
       throw new Error("Regional fallback has no completed candidate")
     const routes = getPipeline9RegularRegionalCandidateOutput(problem)
     this.regularCandidate = undefined
+    this.acceptRegularCandidateOutput(routes)
+  }
+
+  protected acceptRegularCandidateOutput(routes: HighDensityRoute[] | undefined): void {
     if (routes) {
       this.attemptedCandidateCount++
       this.fallbackCandidateCount++

@@ -2,9 +2,11 @@ import type { HighDensityBoardGeometry } from "../../types/high-density-board-ge
 import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import type { ParallelStageWorkerJob } from "./parallelStageWorkerTypes"
+import type { MultiHeadHistoryJob, MultiHeadHistoryRequest } from "./parallelMultiHeadHistoryTypes"
 
 export type Pipeline9ParallelHighDensityContext = {
   connectivityNetMap: Record<string, string[]>
+  connectivityIdToNetMap: Record<string, string>
   colorMap: Record<string, string>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
@@ -36,6 +38,7 @@ export type Pipeline9ParallelHighDensityNodeResult =
 export type Pipeline9LocalWorkerJob =
   | Pipeline9ParallelHighDensityNodeJob
   | ParallelStageWorkerJob
+  | MultiHeadHistoryJob
   | { kind: "warmup" }
 
 export type Pipeline9LocalWorkerRequest = {
@@ -44,5 +47,6 @@ export type Pipeline9LocalWorkerRequest = {
 }
 
 export type Pipeline9LocalWorkerResponse =
+  | MultiHeadHistoryRequest
   | { taskId: number; ok: true; result: unknown }
   | { taskId: number; ok: false; error: string }

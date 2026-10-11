@@ -343,8 +343,8 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+}: Pipeline9RegularNodeSolverParams, SolverClass: typeof HighDensitySolver = HighDensitySolver): HighDensitySolver =>
+  new SolverClass({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -485,7 +485,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
-    this.activeRegularSolver = createPipeline9RegularNodeSolver({
+    this.activeRegularSolver = this.createRegularNodeSolver(node)
+    this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
+  }
+
+  protected createRegularNodeSolver(node: NodeWithPortPoints): HighDensitySolver {
+    return createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -498,7 +503,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
     })
-    this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
 
   private startRegionalFallback(

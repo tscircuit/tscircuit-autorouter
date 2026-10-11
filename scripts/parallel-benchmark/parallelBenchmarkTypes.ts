@@ -1,6 +1,7 @@
 import type { BenchmarkStageTimingBreakdown } from "../benchmark/benchmark-types"
 
 export type BenchmarkVariant = "baseline" | "parallel"
+export type BenchmarkPathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost"
 export type BenchmarkStatus = "solved" | "failed" | "timeout" | "crashed"
 
 export type ParallelBenchmarkQuality = {

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { TinyBitsetHyperGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyBitsetHyperGraphSolver"
+import type { TinyBitsetScoringOptions } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyBitsetCandidateScorer"
 import { computeRegionCost } from "tiny-hypergraph/lib/computeRegionCost"
 import {
   type Candidate,
@@ -19,10 +20,10 @@ class OriginalScoringSolver extends TinyHyperGraphSolver {
 }
 
 class BitsetScoringSolver extends TinyBitsetHyperGraphSolver {
-  constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, addDistance: boolean) {
+  constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, addDistance: boolean, scoringOptions?: TinyBitsetScoringOptions) {
     super(topology, problem, {
       minViaPadDiameter: 0.37, DISTANCE_TO_COST: 0.17, TRACE_DENSITY_COST_FACTOR: 0.9,
-    })
+    }, scoringOptions)
     this.ADD_SEGMENT_DISTANCE_TO_G = addDistance
   }
 }
@@ -88,13 +89,18 @@ const createRegionSnapshot = (
 }
 
 test("tiny bitset candidate scoring preserves native angles, costs, pruning, and snapshot replacement", (): void => {
+  for (const scoringOptions of [
+    { minimumBitsetSegmentCount: 8, enableRegionCostCache: false },
+    { minimumBitsetSegmentCount: Infinity, enableRegionCostCache: true },
+  ]) {
   for (const includeSecondAngles of [false, true]) {
     for (const addDistance of [false, true]) {
       for (const includePenalty of [false, true]) {
         const topology = createTopology(includeSecondAngles)
         const problem = createProblem(includePenalty)
         const original = new OriginalScoringSolver(topology, problem, addDistance)
-        const bitset = new BitsetScoringSolver(topology, problem, addDistance)
+        const bitset = new BitsetScoringSolver(topology, problem, addDistance, scoringOptions)
+        bitset.bitsetCostCache.collectDiagnostics = true
         original.state.regionCongestionCost.set([0.25, 0.03125, 0.2])
         bitset.state.regionCongestionCost.set(original.state.regionCongestionCost)
         const snapshots = [0, 31, 32, 33].map((size) =>
@@ -128,14 +134,25 @@ test("tiny bitset candidate scoring preserves native angles, costs, pruning, and
             }
           }
         }
+        if (scoringOptions.enableRegionCostCache) {
+          expect(bitset.bitsetCostCache.diagnostics.hits).toBeGreaterThan(0)
+          expect(bitset.bitsetCostCache.diagnostics.misses).toBeGreaterThan(0)
+          expect(bitset.bitsetCostCache.diagnostics.capacityMisses).toBeGreaterThan(0)
+        } else {
+          expect(bitset.bitsetCostCache.diagnostics.hits).toBe(0)
+          expect(bitset.bitsetCostCache.diagnostics.misses).toBe(0)
+        }
       }
     }
+  }
   }
 
   const topology = createTopology(true)
   const problem = createProblem(true)
   const original = new OriginalScoringSolver(topology, problem, false)
-  const bitset = new BitsetScoringSolver(topology, problem, false)
+  const bitset = new BitsetScoringSolver(topology, problem, false, {
+    minimumBitsetSegmentCount: Infinity, enableRegionCostCache: true,
+  })
   const crossing: RegionIntersectionCache = {
     netIds: new Int32Array([2]), lesserAngles: new Int32Array([-20000]),
     greaterAngles: new Int32Array([20000]), layerMasks: new Int32Array([1]),
@@ -162,4 +179,25 @@ test("tiny bitset candidate scoring preserves native angles, costs, pruning, and
   // Preserve the source's positive-mask rule even for signed layer-31 masks.
   expect(original.isKnownSingleLayerRegion(2)).toBe(false)
   expect(bitset.isKnownSingleLayerRegion(2)).toBe(false)
+
+  // Every mutable cost input belongs to the cache tuple, including signed zero.
+  for (const [diameter, density, width, height, layerMask] of [
+    [0.41, 0.9, 2.2, 0.8, 0],
+    [0.41, 1.1, 2.2, 0.8, 0],
+    [0.41, 1.1, 3.3, 0.8, 0],
+    [0.41, 1.1, 3.3, 1.2, 0],
+    [0.41, 1.1, 3.3, 1.2, 3],
+    [0.41, 1.1, -0, 1.2, 3],
+    [0.41, 1.1, 0, 1.2, 3],
+  ]) {
+    original.minViaPadDiameter = diameter
+    bitset.minViaPadDiameter = diameter
+    original.TRACE_DENSITY_COST_FACTOR = density
+    bitset.TRACE_DENSITY_COST_FACTOR = density
+    topology.regionWidth[0] = width
+    topology.regionHeight[0] = height
+    topology.regionAvailableZMask![0] = layerMask
+    expect(bitset.computeG(firstRegionCandidate, 1)).toBe(original.computeG(firstRegionCandidate, 1))
+    expect(bitset.computeG(firstRegionCandidate, 1)).toBe(original.computeG(firstRegionCandidate, 1))
+  }
 })

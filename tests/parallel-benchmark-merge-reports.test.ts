@@ -88,7 +88,27 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect(merged.summary.arithmeticMeanSpeedup).toBeCloseTo(2.5)
   expect(merged.summary.aggregateSpeedup).toBeCloseTo(2.5)
   expect(merged.metadata.installedDependenciesVerified).toBe(true)
+  expect((merged.metadata.options as Record<string, unknown>).pathingStrategy).toBe("adaptive-bitset")
   expect(sources).toEqual(makeMergeSources())
+
+  for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost"]) {
+    const strategySources = makeMergeSources()
+    for (const source of strategySources) {
+      (source.report.metadata.options as Record<string, unknown>).pathingStrategy = pathingStrategy
+    }
+    const strategyReport = mergeParallelBenchmarkReports(strategySources)
+    expect((strategyReport.metadata.options as Record<string, unknown>).pathingStrategy).toBe(pathingStrategy)
+    expect(strategyReport.summary.targetReached).toBe(true)
+  }
+  const equivalentLegacyStrategy = makeMergeSources()
+  Object.assign(equivalentLegacyStrategy[0]!.report.metadata.options as Record<string, unknown>, { pathingStrategy: "adaptive-bitset" })
+  expect(mergeParallelBenchmarkReports(equivalentLegacyStrategy).summary.targetReached).toBe(true)
+  const mismatchedStrategy = makeMergeSources()
+  Object.assign(mismatchedStrategy[0]!.report.metadata.options as Record<string, unknown>, { pathingStrategy: "indexed" })
+  expect(() => mergeParallelBenchmarkReports(mismatchedStrategy)).toThrow("Incompatible benchmark options")
+  const invalidStrategy = makeMergeSources()
+  Object.assign(invalidStrategy[0]!.report.metadata.options as Record<string, unknown>, { pathingStrategy: "unknown" })
+  expect(() => mergeParallelBenchmarkReports(invalidStrategy)).toThrow("Invalid pathingStrategy")
 
   const reorderedSources = makeMergeSources()
   reorderedSources[1]!.report.metadata.runtime = { node: "24.3.0", bun: "1.3.10" }

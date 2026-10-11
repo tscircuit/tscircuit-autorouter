@@ -1,22 +1,38 @@
 import type { Candidate, TinyHyperGraphSolver } from "tiny-hypergraph/lib/core"
+import type { MutableIntersectionCount } from "tiny-hypergraph/lib/countNewIntersections"
 import { TinyBitsetIntersectionIndex } from "./TinyBitsetIntersectionIndex"
+import { TinyBitsetRegionCostCache, type TinyBitsetRegionCost } from "./TinyBitsetRegionCostCache"
 
-type RegionCost = (
-  regionId: number, sameLayer: number, crossLayer: number,
-  entryExitChanges: number, segmentCount: number,
-) => number
+export type TinyBitsetScoringOptions = {
+  minimumBitsetSegmentCount?: number
+  enableRegionCostCache?: boolean
+}
 
 /** Preserve core.computeG's arithmetic order, pruning, and topology angles. */
 export class TinyBitsetCandidateScorer {
-  private readonly index = new TinyBitsetIntersectionIndex()
+  private readonly index: TinyBitsetIntersectionIndex
+  private readonly intersectionScratch: MutableIntersectionCount = {
+    netId: 0, lesserAngle: 0, greaterAngle: 0, layerMask: 0,
+    entryExitLayerChanges: 0, sameLayerIntersectionCount: 0, crossingLayerIntersectionCount: 0,
+  }
+  private readonly useCostCache: boolean
+  private readonly regionCost: TinyBitsetRegionCost
+  readonly costCache: TinyBitsetRegionCostCache
+  readonly diagnostics = { occupancyCallCounts: new Map<number, number>() }
 
   constructor(
     private readonly solver: TinyHyperGraphSolver,
     private readonly firstRegionByPortId: Int32Array,
     private readonly secondRegionByPortId: Int32Array,
     private readonly addSegmentDistance: () => boolean,
-    private readonly regionCost: RegionCost,
-  ) {}
+    regionCost: TinyBitsetRegionCost,
+    options: TinyBitsetScoringOptions = {},
+  ) {
+    this.regionCost = regionCost
+    this.useCostCache = options.enableRegionCostCache === true
+    this.index = new TinyBitsetIntersectionIndex(options.minimumBitsetSegmentCount ?? 8)
+    this.costCache = new TinyBitsetRegionCostCache(solver, regionCost)
+  }
 
   computeG(
     currentCandidate: Candidate,
@@ -43,6 +59,10 @@ export class TinyBitsetCandidateScorer {
     const lowerBoundCost = currentCandidate.g + regionCongestionCost +
       neighborPortPenalty + segmentDistanceCost
     if (lowerBoundCost > maximumCost + 1e-9) return Number.POSITIVE_INFINITY
+    if (this.costCache.collectDiagnostics) {
+      const count = regionCache.netIds.length
+      this.diagnostics.occupancyCallCounts.set(count, (this.diagnostics.occupancyCallCounts.get(count) ?? 0) + 1)
+    }
 
     let sameLayer = 0
     let crossLayer = 0
@@ -61,21 +81,28 @@ export class TinyBitsetCandidateScorer {
         : (topology.portAngleForRegion2?.[neighborPortId] ?? topology.portAngleForRegion1[neighborPortId])
       const lesserAngle = angle1 < angle2 ? angle1 : angle2
       const greaterAngle = angle1 < angle2 ? angle2 : angle1
-      ;[sameLayer, crossLayer] = this.index.count(
-        regionCache, state.currentRouteNetId!, lesserAngle, greaterAngle,
-        (1 << z1) | (1 << z2),
-      )
+      const scratch = this.intersectionScratch
+      scratch.netId = state.currentRouteNetId!
+      scratch.lesserAngle = lesserAngle
+      scratch.greaterAngle = greaterAngle
+      scratch.layerMask = (1 << z1) | (1 << z2)
+      scratch.entryExitLayerChanges = entryExitChanges
+      this.index.setCounts(regionCache, scratch)
+      sameLayer = scratch.sameLayerIntersectionCount
+      crossLayer = scratch.crossingLayerIntersectionCount
     }
     if (sameLayer > 0 && solver.isKnownSingleLayerRegion(regionId)) {
       return Number.POSITIVE_INFINITY
     }
-    const newRegionCost = this.regionCost(
-      regionId,
-      regionCache.existingSameLayerIntersections + sameLayer,
-      regionCache.existingCrossingLayerIntersections + crossLayer,
-      regionCache.existingEntryExitLayerChanges + entryExitChanges,
-      regionCache.existingSegmentCount + 1,
-    ) - regionCache.existingRegionCost
+    const rawRegionCost = this.useCostCache
+      ? this.costCache.get(regionId, regionCache, sameLayer, crossLayer, entryExitChanges)
+      : this.regionCost(
+          regionId, regionCache.existingSameLayerIntersections + sameLayer,
+          regionCache.existingCrossingLayerIntersections + crossLayer,
+          regionCache.existingEntryExitLayerChanges + entryExitChanges,
+          regionCache.existingSegmentCount + 1,
+        )
+    const newRegionCost = rawRegionCost - regionCache.existingRegionCost
     return currentCandidate.g + newRegionCost + regionCongestionCost +
       neighborPortPenalty + segmentDistanceCost
   }

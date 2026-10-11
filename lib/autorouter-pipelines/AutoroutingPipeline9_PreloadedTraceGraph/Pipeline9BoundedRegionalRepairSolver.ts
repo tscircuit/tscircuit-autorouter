@@ -173,6 +173,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     return new NegotiateTraceClearanceSolver(input)
   }
 
+  protected createProjectionSolver(
+    params: ConstructorParameters<typeof Pipeline9ClearanceProjectionSolver>[0],
+  ): Pipeline9ClearanceProjectionSolver {
+    return new Pipeline9ClearanceProjectionSolver(params)
+  }
+
   private updateProgress(): void {
     const allowance = getPipeline9BoundedRepairAllowance(
       this.budget,
@@ -306,7 +312,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.finish()
       return
     }
-    const solver = new Pipeline9ClearanceProjectionSolver({
+    const solver = this.createProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: referenced.currentRoutes,
       drcEvaluator: (input): DrcResult => {
@@ -581,7 +587,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.state = { phase: "select-region", context }
       return
     }
-    const solver = new Pipeline9ClearanceProjectionSolver({
+    const solver = this.createProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: negotiatedRoutes,
       // The outer via guard compares the complete spliced proposal to this input.
@@ -712,7 +718,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
 
   private prepareIndependentProjection(context: RegionalContext): void {
     // Private regional changes cannot leak into independent partial publication.
-    const solver = new Pipeline9ClearanceProjectionSolver({
+    const solver = this.createProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: this.params.routes,
       allowPartialRepair: true,
@@ -736,7 +742,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       }
     >,
   ): void {
-    const solver = new Pipeline9ClearanceProjectionSolver({
+    const solver = this.createProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: state.independentRoutes,
       allowPartialRepair: true,
@@ -765,7 +771,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       }
     >,
   ): void {
-    const solver = new Pipeline9ClearanceProjectionSolver({
+    const solver = this.createProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: state.independentRoutes,
       usePrecisionMargin: true,
@@ -829,7 +835,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       case "candidate-projection": {
         // A clear nominal projection needs no extra slack. Otherwise refine
         // its retained bends with the margin before spending more search.
-        const solver = new Pipeline9ClearanceProjectionSolver({
+        const solver = this.createProjectionSolver({
           originalSrj: this.params.originalSrj,
           routes: state.solver.getOutput(),
           previousRoutes: state.context.currentRoutes,

@@ -99,6 +99,11 @@ interface StoredVia {
 export class HighDensityRouteSpatialIndex {
   private segmentBuckets: Map<BucketCoordinate, StoredSegment[]>
   private viaBuckets: Map<BucketCoordinate, StoredVia[]> // New: Store vias
+  // Reuse the same bucket arrays under numeric column coordinates. Queries
+  // visit many empty cells, so avoid allocating a coordinate string for each
+  // one. The original bucket maps retain insertion and removal order.
+  private segmentColumns = new Map<number, Map<number, StoredSegment[]>>()
+  private viaColumns = new Map<number, Map<number, StoredVia[]>>()
   private CELL_SIZE: number
   private maximumCopperRadius = 0
   // Keep the original string-ID deduplication semantics, including routes that
@@ -159,6 +164,12 @@ export class HighDensityRouteSpatialIndex {
               if (!bucketList) {
                 bucketList = []
                 this.segmentBuckets.set(bucketKey, bucketList)
+                let column = this.segmentColumns.get(ix)
+                if (!column) {
+                  column = new Map()
+                  this.segmentColumns.set(ix, column)
+                }
+                column.set(iy, bucketList)
               }
               bucketList.push(segmentInfo)
             }
@@ -190,6 +201,12 @@ export class HighDensityRouteSpatialIndex {
           if (!bucketList) {
             bucketList = []
             this.viaBuckets.set(bucketKey, bucketList)
+            let column = this.viaColumns.get(ix)
+            if (!column) {
+              column = new Map()
+              this.viaColumns.set(ix, column)
+            }
+            column.set(iy, bucketList)
           }
           bucketList.push(storedVia)
         }
@@ -260,11 +277,12 @@ export class HighDensityRouteSpatialIndex {
     const queryNumber = this.startQuery()
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
+      const segmentColumn = this.segmentColumns.get(ix)
+      const viaColumn = this.viaColumns.get(ix)
+      if (!segmentColumn && !viaColumn) continue
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
-
         // --- Check Segments in Bucket ---
-        const segmentBucketList = this.segmentBuckets.get(bucketKey)
+        const segmentBucketList = segmentColumn?.get(iy)
         if (segmentBucketList) {
           for (const segmentInfo of segmentBucketList) {
             if (segmentInfo.queryMarker.lastQuery === queryNumber) continue
@@ -286,6 +304,16 @@ export class HighDensityRouteSpatialIndex {
             // Required separation distance from query centerline to segment edge
             const requiredSeparation = margin + route.traceThickness / 2
             const requiredSeparationSq = requiredSeparation * requiredSeparation
+            // Buckets are deliberately coarse. Reject an axis-separated
+            // centerline before computing four projections and intersections.
+            // Read current endpoints because callers can edit indexed points.
+            const axisMargin = Math.abs(requiredSeparation) + epsilon
+            if (
+              Math.max(p1.x, p2.x) + axisMargin < bounds.minX ||
+              Math.min(p1.x, p2.x) - axisMargin > bounds.maxX ||
+              Math.max(p1.y, p2.y) + axisMargin < bounds.minY ||
+              Math.min(p1.y, p2.y) - axisMargin > bounds.maxY
+            ) continue
 
             // Use original points for segmentToSegmentDistanceSq if it relies on the Point type
             const distSq = segmentToSegmentDistanceSq(
@@ -299,18 +327,18 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
-              if (!existing || distSq < existing.minDistSq) {
-                conflictingRouteData.set(routeName, {
-                  route,
-                  minDistSq: distSq,
-                })
+              if (!existing) {
+                conflictingRouteData.set(routeName, { route, minDistSq: distSq })
+              } else if (distSq < existing.minDistSq) {
+                existing.route = route
+                existing.minDistSq = distSq
               }
             }
           }
         }
 
         // --- Check Vias in Bucket ---
-        const viaBucketList = this.viaBuckets.get(bucketKey)
+        const viaBucketList = viaColumn?.get(iy)
         if (viaBucketList) {
           for (const viaInfo of viaBucketList) {
             if (viaInfo.queryMarker.lastQuery === queryNumber) continue
@@ -329,11 +357,11 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
-              if (!existing || distSq < existing.minDistSq) {
-                conflictingRouteData.set(routeName, {
-                  route,
-                  minDistSq: distSq,
-                })
+              if (!existing) {
+                conflictingRouteData.set(routeName, { route, minDistSq: distSq })
+              } else if (distSq < existing.minDistSq) {
+                existing.route = route
+                existing.minDistSq = distSq
               }
             }
           }
@@ -372,8 +400,14 @@ export class HighDensityRouteSpatialIndex {
       })
       if (filtered.length === 0) {
         this.segmentBuckets.delete(bucketKey)
+        const [ix, iy] = bucketKey.split("x").map(Number)
+        const column = this.segmentColumns.get(ix!)!
+        column.delete(iy!)
+        if (column.size === 0) this.segmentColumns.delete(ix!)
       } else if (filtered.length !== segments.length) {
         this.segmentBuckets.set(bucketKey, filtered)
+        const [ix, iy] = bucketKey.split("x").map(Number)
+        this.segmentColumns.get(ix!)!.set(iy!, filtered)
       }
     }
     for (const segment of removedSegments) {
@@ -393,8 +427,14 @@ export class HighDensityRouteSpatialIndex {
       })
       if (filtered.length === 0) {
         this.viaBuckets.delete(bucketKey)
+        const [ix, iy] = bucketKey.split("x").map(Number)
+        const column = this.viaColumns.get(ix!)!
+        column.delete(iy!)
+        if (column.size === 0) this.viaColumns.delete(ix!)
       } else if (filtered.length !== vias.length) {
         this.viaBuckets.set(bucketKey, filtered)
+        const [ix, iy] = bucketKey.split("x").map(Number)
+        this.viaColumns.get(ix!)!.set(iy!, filtered)
       }
     }
   }
@@ -449,6 +489,12 @@ export class HighDensityRouteSpatialIndex {
             if (!bucketList) {
               bucketList = []
               this.segmentBuckets.set(bucketKey, bucketList)
+              let column = this.segmentColumns.get(ix)
+              if (!column) {
+                column = new Map()
+                this.segmentColumns.set(ix, column)
+              }
+              column.set(iy, bucketList)
             }
             bucketList.push(segmentInfo)
           }
@@ -479,6 +525,12 @@ export class HighDensityRouteSpatialIndex {
         if (!bucketList) {
           bucketList = []
           this.viaBuckets.set(bucketKey, bucketList)
+          let column = this.viaColumns.get(ix)
+          if (!column) {
+            column = new Map()
+            this.viaColumns.set(ix, column)
+          }
+          column.set(iy, bucketList)
         }
         bucketList.push(storedVia)
       }
@@ -516,11 +568,12 @@ export class HighDensityRouteSpatialIndex {
     const queryNumber = this.startQuery()
 
     for (let ix = minIndexX; ix <= maxIndexX; ix++) {
+      const segmentColumn = this.segmentColumns.get(ix)
+      const viaColumn = this.viaColumns.get(ix)
+      if (!segmentColumn && !viaColumn) continue
       for (let iy = minIndexY; iy <= maxIndexY; iy++) {
-        const bucketKey = `${ix}x${iy}` as BucketCoordinate
-
         // --- Check Segments ---
-        const segmentBucketList = this.segmentBuckets.get(bucketKey)
+        const segmentBucketList = segmentColumn?.get(iy)
         if (segmentBucketList) {
           for (const segmentInfo of segmentBucketList) {
             if (segmentInfo.queryMarker.lastQuery === queryNumber) continue
@@ -535,6 +588,13 @@ export class HighDensityRouteSpatialIndex {
             const route = segmentInfo.parentRoute
             const requiredSeparation = margin + route.traceThickness / 2
             const requiredSeparationSq = requiredSeparation * requiredSeparation
+            const axisMargin = Math.abs(requiredSeparation) + epsilon
+            if (
+              Math.max(p1_seg.x, p2_seg.x) + axisMargin < point.x ||
+              Math.min(p1_seg.x, p2_seg.x) - axisMargin > point.x ||
+              Math.max(p1_seg.y, p2_seg.y) + axisMargin < point.y ||
+              Math.min(p1_seg.y, p2_seg.y) - axisMargin > point.y
+            ) continue
 
             const distSq = pointToSegmentDistanceSq(point, p1_seg, p2_seg)
 
@@ -542,18 +602,18 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
-              if (!existing || distSq < existing.minDistSq) {
-                conflictingRouteData.set(routeName, {
-                  route,
-                  minDistSq: distSq,
-                })
+              if (!existing) {
+                conflictingRouteData.set(routeName, { route, minDistSq: distSq })
+              } else if (distSq < existing.minDistSq) {
+                existing.route = route
+                existing.minDistSq = distSq
               }
             }
           }
         }
 
         // --- Check Vias ---
-        const viaBucketList = this.viaBuckets.get(bucketKey)
+        const viaBucketList = viaColumn?.get(iy)
         if (viaBucketList) {
           for (const viaInfo of viaBucketList) {
             if (viaInfo.queryMarker.lastQuery === queryNumber) continue
@@ -570,11 +630,11 @@ export class HighDensityRouteSpatialIndex {
               // Use < for strict clearance
               const routeName = route.connectionName
               const existing = conflictingRouteData.get(routeName)
-              if (!existing || distSq < existing.minDistSq) {
-                conflictingRouteData.set(routeName, {
-                  route,
-                  minDistSq: distSq,
-                })
+              if (!existing) {
+                conflictingRouteData.set(routeName, { route, minDistSq: distSq })
+              } else if (distSq < existing.minDistSq) {
+                existing.route = route
+                existing.minDistSq = distSq
               }
             }
           }
