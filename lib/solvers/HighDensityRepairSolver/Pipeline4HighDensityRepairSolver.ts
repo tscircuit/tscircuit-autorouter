@@ -82,12 +82,13 @@ const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
   obstacles: Obstacle[],
   connMap?: ConnectivityMap,
+  obstacleConnectivityPredicate = isObstacleConnectedToRoute,
 ) =>
   route.route.length > 0 &&
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route, connMap) &&
+      obstacleConnectivityPredicate(obstacle, route, connMap) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
 
@@ -242,6 +243,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.connMap = params.connMap
 
+    const obstacleConnectivityPredicate = this.createObstacleConnectivityPredicate(params)
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
@@ -249,6 +251,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           params.hdRoutes[i],
           params.obstacles,
           params.connMap,
+          obstacleConnectivityPredicate,
         )
       ) {
         continue
@@ -388,6 +391,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
+  }
+
+  protected createObstacleConnectivityPredicate(
+    _params: ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0],
+  ): typeof isObstacleConnectedToRoute {
+    return isObstacleConnectedToRoute
   }
 
   override getSolverName(): string {

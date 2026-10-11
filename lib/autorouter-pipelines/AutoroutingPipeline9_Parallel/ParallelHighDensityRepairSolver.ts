@@ -3,6 +3,7 @@ import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepai
 import type { HighDensityRoute } from "../../types/high-density-types"
 import type { ParallelIndexedNodeResult, ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 import { getParallelNodeJobDispatches, runParallelNodeJobDispatch, type ParallelWeightedNodeJob } from "./parallelNodeJobBatching"
+import { createNativeRepairConnectivityMemoFactory } from "./createNativeRepairConnectivityMemoFactory"
 
 type Params = ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0] & {
   workerPool: ParallelStageWorkerPool
@@ -39,6 +40,12 @@ export class ParallelHighDensityRepairSolver extends Pipeline4HighDensityRepairS
 
   override getSolverName(): string {
     return "ParallelHighDensityRepairSolver"
+  }
+
+  protected override createObstacleConnectivityPredicate(
+    params: ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0],
+  ): ReturnType<Pipeline4HighDensityRepairSolver["createObstacleConnectivityPredicate"]> {
+    return createRepairConnectivityMemo(this, params) ?? super.createObstacleConnectivityPredicate(params)
   }
 
   override _step(): void {
@@ -111,3 +118,5 @@ export class ParallelHighDensityRepairSolver extends Pipeline4HighDensityRepairS
     await Promise.all(this.pendingEffects!.map((effect) => effect.promise))
   }
 }
+
+const createRepairConnectivityMemo = createNativeRepairConnectivityMemoFactory(ParallelHighDensityRepairSolver.prototype)
