@@ -1,0 +1,24 @@
+{
+  "name": "loralink-v1-escape-via-repro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test loralink-v1.test.tsx --timeout 9999999",
+    "build": "tsci build index.circuit.tsx --pcb-svgs --pcb-png --autorouter-debug --autorouter-dump-srj all",
+    "shorts": "tsci check shorts dist/index/circuit.json"
+  },
+  "devDependencies": {
+    "@tscircuit/check-shorts": "https://jscdn.tscircuit.com/@tscircuit/check-shorts/0.0.26.tgz",
+    "@tscircuit/checks": "0.0.244",
+    "@tscircuit/props": "0.0.698",
+    "@types/bun": "^1.2.23",
+    "@types/react": "^19.0.8",
+    "bun-match-svg": "0.0.14",
+    "react": "19.2.8",
+    "tscircuit": "0.0.2815",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@tscircuit/capacity-autorouter": "file:../../../loralink-autorouter.tgz"
+  }
+}
