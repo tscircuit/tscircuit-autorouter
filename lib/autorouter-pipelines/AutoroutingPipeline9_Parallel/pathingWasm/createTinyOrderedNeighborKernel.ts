@@ -94,6 +94,7 @@ type KernelExports = {
   memory: WebAssembly.Memory
   __heap_base: WebAssembly.Global
   scan: (...args: number[]) => number
+  scan_scored: (...args: number[]) => number
 }
 
 type KernelInput = {
@@ -110,6 +111,11 @@ export type TinyOrderedNeighborBatch = {
   readonly positions: Int32Array
   readonly distances: Float64Array
   readonly count: number
+  readonly geometry?: TinyOrderedGeometryBatch
+}
+export type TinyOrderedGeometryBatch = {
+  same: Int32Array; cross: Int32Array; changes: Int32Array
+  lesser: Int32Array; greater: Int32Array; layers: Int32Array; flags: Uint8Array
 }
 
 /**
@@ -119,7 +125,7 @@ export type TinyOrderedNeighborBatch = {
  * retain all JS visitors. Intrinsics must be built in when this module loads.
  */
 export class TinyOrderedNeighborKernel {
-  readonly diagnostics = { batches: 0, survivors: 0, bytes: 0, disabledReason: "" }
+  readonly diagnostics = { batches: 0, survivors: 0, scoringBatches: 0, scoredCandidates: 0, copiedSegments: 0, bytes: 0, disabledReason: "" }
   private readonly exports: KernelExports
   private readonly pointers: number[]
   private readonly words: Uint32Array
@@ -128,7 +134,11 @@ export class TinyOrderedNeighborKernel {
   private readonly bestGeneration: Uint32Array
   private readonly positions: Int32Array
   private readonly distances: Float64Array
-  private readonly batch: { positions: Int32Array; distances: Float64Array; count: number }
+  private readonly batch: { positions: Int32Array; distances: Float64Array; count: number; geometry?: TinyOrderedGeometryBatch }
+  private readonly geometry: TinyOrderedGeometryBatch
+  private readonly scoringCacheColumns: Int32Array[]
+  private geometryReady = false
+  private previousScoringCache?: TinyHyperGraphSolver["state"]["regionIntersectionCaches"][number]
   private readonly references: ReadonlyArray<readonly [object, string, unknown]>
   private readonly originalBest: Float64Array
   private readonly originalBestGeneration: Uint32Array
@@ -161,8 +171,12 @@ export class TinyOrderedNeighborKernel {
       topology.portCount, topology.portCount, topology.portCount, topology.regionCount,
       topology.portCount, this.originalBest.length, this.originalBestGeneration.length,
       nativeCeil(ports.length / 32), maximumIncidences, maximumIncidences,
+      topology.portCount, topology.portCount, topology.portCount, topology.portCount, topology.portCount,
+      4096, 4096, 4096, 4096,
+      maximumIncidences, maximumIncidences, maximumIncidences, maximumIncidences,
+      maximumIncidences, maximumIncidences, maximumIncidences,
     ]
-    const widths = [4, 4, 4, 8, 8, 1, 4, 4, 4, 8, 8, 4, 4, 4, 8]
+    const widths = [4, 4, 4, 8, 8, 1, 4, 4, 4, 8, 8, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1]
     compiledModule ??= new WebAssembly.Module(neighborKernelBytes)
     this.exports = new WebAssembly.Instance(compiledModule).exports as unknown as KernelExports
     let cursor = Number(this.exports.__heap_base.value)
@@ -196,6 +210,9 @@ export class TinyOrderedNeighborKernel {
     copy(this.bestGeneration, this.originalBestGeneration)
     this.words = new Uint32Array(buffer, this.pointers[12]!, dimensions[12]!)
     this.positions = i32(13); this.distances = f64(14)
+    this.geometry = { same: i32(24), cross: i32(25), changes: i32(26), lesser: i32(27), greater: i32(28), layers: i32(29),
+      flags: new Uint8Array(buffer, this.pointers[30]!, dimensions[30]!) }
+    this.scoringCacheColumns = [i32(20), i32(21), i32(22), i32(23)]
     this.batch = { positions: this.positions, distances: this.distances, count: 0 }
     this.diagnostics.bytes = cursor
     if (provenance.scope) registerTinyScopedChild(provenance.scope, owner)
@@ -287,6 +304,24 @@ export class TinyOrderedNeighborKernel {
     return true
   }
 
+  private prepareGeometry(): boolean {
+    if (this.geometryReady) return true
+    const owner = this.input.owner
+    const ids = owner as unknown as { candidateFirstRegionByPortId: Int32Array; candidateSecondRegionByPortId: Int32Array }
+    const topology = owner.topology
+    if (!(ids.candidateFirstRegionByPortId instanceof Int32Array) || !(ids.candidateSecondRegionByPortId instanceof Int32Array) ||
+      !(topology.portAngleForRegion1 instanceof Int32Array) || !(topology.portZ instanceof Int32Array) ||
+      (topology.portAngleForRegion2 !== undefined && !(topology.portAngleForRegion2 instanceof Int32Array))) return false
+    const vectors = [ids.candidateFirstRegionByPortId, ids.candidateSecondRegionByPortId,
+      topology.portAngleForRegion1, topology.portAngleForRegion2 ?? topology.portAngleForRegion1, topology.portZ]
+    for (let index = 0; index < vectors.length; index++) {
+      if (vectors[index]!.length !== topology.portCount) return false
+      nativeApply(nativeTypedSet, new Int32Array(this.exports.memory.buffer, this.pointers[15 + index]!, topology.portCount), [vectors[index]!])
+    }
+    this.geometryReady = true
+    return true
+  }
+
   scan(candidate: Candidate, searchGeneration: number, state: TinyHyperGraphSolver["state"],
     sourceX: number, sourceY: number): TinyOrderedNeighborBatch | undefined {
     if (isTinyNativeFallbackRun() || this.provenance.excluded || (this.provenance.scope?.paused && !this.provenance.scope.finished)) {
@@ -315,11 +350,45 @@ export class TinyOrderedNeighborKernel {
     if (start < end) for (let word = start >>> 5; word <= (end - 1) >>> 5; word++)
       this.words[word] = getActiveWord(word)
     const p = this.pointers
-    const count = this.exports.scan(p[0]!, p[1]!, p[2]!, p[3]!, p[4]!, p[5]!, p[6]!,
-      p[7]!, p[8]!, p[9]!, p[10]!, p[11]!, p[12]!, p[13]!, p[14]!,
-      start, end, candidate.portId, state.goalPortId, state.currentRouteNetId!,
-      sourceX, sourceY, candidate.g, state.regionCongestionCost[candidate.nextRegionId]!,
-      owner.DISTANCE_TO_COST, state.candidateBestCostGeneration)
+    // The extra occupancy reads are permitted only inside the closed native
+    // scope. Direct steps keep the original CSR scan and JS geometry visitors.
+    let cache: TinyHyperGraphSolver["state"]["regionIntersectionCaches"][number] | undefined
+    if (scope?.open && this.validatedScope === scope) {
+      const current = state.regionIntersectionCaches[candidate.nextRegionId]!
+      const length = current.netIds.length
+      if (length <= 4096 && current.netIds instanceof Int32Array &&
+        current.lesserAngles instanceof Int32Array && current.lesserAngles.length === length &&
+        current.greaterAngles instanceof Int32Array && current.greaterAngles.length === length &&
+        current.layerMasks instanceof Int32Array && current.layerMasks.length === length && this.prepareGeometry()) cache = current
+    }
+    let count: number
+    if (cache) {
+      if (cache !== this.previousScoringCache) {
+        nativeApply(nativeTypedSet, this.scoringCacheColumns[0]!, [cache.netIds])
+        nativeApply(nativeTypedSet, this.scoringCacheColumns[1]!, [cache.lesserAngles])
+        nativeApply(nativeTypedSet, this.scoringCacheColumns[2]!, [cache.greaterAngles])
+        nativeApply(nativeTypedSet, this.scoringCacheColumns[3]!, [cache.layerMasks])
+        this.previousScoringCache = cache
+        this.diagnostics.copiedSegments += cache.netIds.length
+      }
+      count = this.exports.scan_scored(p[0]!, p[1]!, p[2]!, p[3]!, p[4]!, p[5]!, p[6]!,
+        p[7]!, p[8]!, p[9]!, p[10]!, p[11]!, p[12]!, p[13]!, p[14]!,
+        p[15]!, p[16]!, p[17]!, p[18]!, p[19]!, p[20]!, p[21]!, p[22]!, p[23]!,
+        p[24]!, p[25]!, p[26]!, p[27]!, p[28]!, p[29]!, p[30]!,
+        start, end, candidate.portId, state.goalPortId, state.currentRouteNetId!,
+        sourceX, sourceY, candidate.g, state.regionCongestionCost[candidate.nextRegionId]!,
+        owner.DISTANCE_TO_COST, state.candidateBestCostGeneration, candidate.nextRegionId,
+        cache.netIds.length, cache.existingSegmentCount)
+      this.diagnostics.scoringBatches++
+      this.diagnostics.scoredCandidates += count - (count > 0 && this.input.ports[this.positions[count - 1]!] === state.goalPortId ? 1 : 0)
+    } else {
+      count = this.exports.scan(p[0]!, p[1]!, p[2]!, p[3]!, p[4]!, p[5]!, p[6]!,
+        p[7]!, p[8]!, p[9]!, p[10]!, p[11]!, p[12]!, p[13]!, p[14]!,
+        start, end, candidate.portId, state.goalPortId, state.currentRouteNetId!,
+        sourceX, sourceY, candidate.g, state.regionCongestionCost[candidate.nextRegionId]!,
+        owner.DISTANCE_TO_COST, state.candidateBestCostGeneration)
+    }
+    this.batch.geometry = cache ? this.geometry : undefined
     if (!nativeInteger(count) || count < 0 || count > this.positions.length)
       throw new Error("Native Tiny neighbor kernel returned an invalid survivor count")
     this.diagnostics.batches++
@@ -357,9 +426,9 @@ export function createTinyOrderedNeighborKernel(input: KernelInput): TinyOrdered
       maximumIncidences = offsets[region + 1]! - offsets[region]!
   // The checked-in scalar module has a 64KiB heap base; include all alignment
   // padding conservatively. Oversized graphs retain the original packed loop.
-  const mirroredByteBound = 65536 + 15 * 8 + ports.length * 12 + topology.portCount * 33 +
+  const mirroredByteBound = 65536 + 31 * 8 + 4096 * 16 + ports.length * 12 + topology.portCount * 53 +
     topology.regionCount * 4 + state.candidateBestCostByHopId.length * 12 +
-    ((ports.length + 31) >>> 5) * 4 + maximumIncidences * 12
+    ((ports.length + 31) >>> 5) * 4 + maximumIncidences * 37
   if (mirroredByteBound > MAX_BYTES) return undefined
   for (let position = 0; position < ports.length; position++) {
     const port = ports[position]!, region = nextRegions[position]!, hop = hops[position]!

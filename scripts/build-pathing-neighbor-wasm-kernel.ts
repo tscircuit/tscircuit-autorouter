@@ -11,6 +11,7 @@ const directory = fileURLToPath(new URL(
   import.meta.url,
 ))
 const source = join(directory, "neighborKernel.c")
+const regionSource = join(directory, "regionScoringKernel.c")
 const temporary = mkdtempSync(join(tmpdir(), "pathing-neighbor-wasm-build-"))
 const output = join(temporary, "neighborKernel.wasm")
 const compiler = process.env.PATHING_NEIGHBOR_WASM_CLANG ?? "clang"
@@ -22,10 +23,10 @@ const flags = [
   "-fno-builtin", "-fno-vectorize", "-fno-slp-vectorize", "-mno-simd128",
   "-mno-relaxed-simd", "-nostdlib", "-Wl,--no-entry",
   "-Wl,--export-memory", "-Wl,--export=__heap_base",
-  "-Wl,--export=scan", "-Wl,--strip-all",
+  "-Wl,--export=scan", "-Wl,--export=scan_scored", "-Wl,--strip-all",
 ]
 try {
-  const result = Bun.spawnSync([compiler, ...flags, "-o", output, source])
+  const result = Bun.spawnSync([compiler, ...flags, "-o", output, source, regionSource])
   if (result.exitCode !== 0)
     throw new Error(new TextDecoder().decode(result.stderr))
   const bytes = readFileSync(output)
@@ -34,7 +35,7 @@ try {
     throw new Error("Pathing neighbor kernel introduced an unexpected runtime import")
   const version = Bun.spawnSync([compiler, "--version"])
   const provenance = new TextDecoder().decode(version.stdout).split("\n")[0]!
-  const sourceHash = createHash("sha256").update(new Uint8Array(readFileSync(source))).digest("hex")
+  const sourceHash = createHash("sha256").update(new Uint8Array(readFileSync(source))).update(new Uint8Array(readFileSync(regionSource))).digest("hex")
   const wasmHash = createHash("sha256").update(new Uint8Array(bytes)).digest("hex")
   const rows: string[] = []
   for (let index = 0; index < bytes.length; index += 32)

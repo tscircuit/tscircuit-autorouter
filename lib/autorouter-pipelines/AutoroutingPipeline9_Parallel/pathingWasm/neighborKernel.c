@@ -59,3 +59,33 @@ u32 scan(const i32 *ports, const i32 *next_regions, const i32 *hops,
   }
   return count;
 }
+
+typedef unsigned char u8;
+void score_region_intersections(const i32 *, const i32 *, const i32 *, const i32 *, const i32 *,
+  const i32 *, const i32 *, const i32 *, const i32 *, const i32 *, const i32 *,
+  i32 *, i32 *, i32 *, i32 *, i32 *, i32 *, u8 *,
+  u32, u32, i32, i32, i32, i32, double);
+
+u32 scan_scored(const i32 *ports, const i32 *next_regions, const i32 *hops,
+  const double *port_x, const double *port_y, const i8 *section,
+  const i32 *port_reserved, const i32 *assigned, const i32 *region_reserved,
+  const double *penalty, const double *best, const u32 *best_generation,
+  const u32 *words, i32 *positions, double *distances,
+  const i32 *first_region, const i32 *second_region, const i32 *angle1,
+  const i32 *angle2, const i32 *z, const i32 *existing_net,
+  const i32 *existing_lesser, const i32 *existing_greater, const i32 *existing_layers,
+  i32 *same_out, i32 *cross_out, i32 *changes_out, i32 *lesser_out,
+  i32 *greater_out, i32 *layers_out, u8 *flags_out,
+  u32 start, u32 end, i32 current_port, i32 goal, i32 net,
+  double source_x, double source_y, double g, double congestion, double scale,
+  u32 generation, i32 current_region, u32 existing_length, double existing_count) {
+  u32 count = scan(ports, next_regions, hops, port_x, port_y, section,
+    port_reserved, assigned, region_reserved, penalty, best, best_generation,
+    words, positions, distances, start, end, current_port, goal, net,
+    source_x, source_y, g, congestion, scale, generation);
+  score_region_intersections(first_region, second_region, angle1, angle2, z,
+    ports, positions, existing_net, existing_lesser, existing_greater, existing_layers,
+    same_out, cross_out, changes_out, lesser_out, greater_out, layers_out, flags_out,
+    count, existing_length, current_port, current_region, net, goal, existing_count);
+  return count;
+}

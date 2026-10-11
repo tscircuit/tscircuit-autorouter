@@ -82,10 +82,13 @@ test("resumed searches scope only verified children and pause before future stag
   expect(getTinyNativeSynchronousScope(root)).toBeUndefined()
   expect(scope.finished).toBe(true)
   const batches = child.wasmNeighborKernel.diagnostics.batches
+  const scoringBatches = child.wasmNeighborKernel.diagnostics.scoringBatches
   // Direct, externally driven steps after finally return to strict per-batch
   // checks. The ended token does not leave the child permanently trusted.
   while (!child.solved && !child.failed) child.step()
   expect(child.wasmNeighborKernel.diagnostics.batches).toBeGreaterThan(batches)
+  expect(scoringBatches).toBeGreaterThan(0)
+  expect(child.wasmNeighborKernel.diagnostics.scoringBatches).toBe(scoringBatches)
   expect(child.state.candidateBestCostByHopId).toBe(bestAlias)
   expect(child.wasmNeighborKernel.diagnostics.disabledReason).toBe("")
 })

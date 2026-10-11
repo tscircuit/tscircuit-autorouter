@@ -2,13 +2,13 @@
 // 474f5222e799b54348da41d96a0da0694509fab8. MIT license retained by the fork.
 // Copyright (c) 2026 tscircuit. See tiny-hypergraph-fork/LICENSE.
 import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
-import { TinyHyperGraphSolver, type TinyHyperGraphProblem, type TinyHyperGraphSolverOptions, type TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
+import { TinyHyperGraphSolver, type Candidate, type TinyHyperGraphProblem, type TinyHyperGraphSolverOptions, type TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
 import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
 import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
 import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
 import { TinyRegionCostMemo, type TinyRegionCostMethod } from "./TinyRegionCostMemo"
 import { canRejectTinyDistanceByBase } from "./TinyConservativeAxisDistanceBound"
-import { createTinyOrderedNeighborKernel, type TinyOrderedNeighborKernel } from "./pathingWasm/createTinyOrderedNeighborKernel"
+import { createTinyOrderedNeighborKernel, type TinyOrderedNeighborKernel, type TinyOrderedGeometryBatch } from "./pathingWasm/createTinyOrderedNeighborKernel"
 import { registerTinyNativeCostBinding } from "./pathingWasm/TinyNativeSynchronousScope"
 
 const nativeSqrt = Math.sqrt
@@ -126,6 +126,38 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     this.wasmNeighborKernel?.updateBest(hopId, bestCost, this.state.candidateBestCostGeneration)
   }
 
+  /** Consume an already counted row in the original native visitor order. */
+  private computeGFromRegionTuple(currentCandidate: Candidate, neighborPortId: number,
+    maximumCost: number, knownSegmentDistance: number, geometry: TinyOrderedGeometryBatch, row: number): number {
+    const { state } = this
+    const regionId = currentCandidate.nextRegionId
+    const cache = state.regionIntersectionCaches[regionId]!
+    const congestion = state.regionCongestionCost[regionId]!
+    const penalty = this.problem.portPenalty?.[neighborPortId] ?? 0
+    const distanceCost = knownSegmentDistance * this.DISTANCE_TO_COST
+    const lower = currentCandidate.g + congestion + penalty + distanceCost
+    if (lower > maximumCost + 1e-9) return Number.POSITIVE_INFINITY
+    const same = geometry.same[row]!, cross = geometry.cross[row]!, changes = geometry.changes[row]!
+    if (geometry.flags[row]! & 1) {
+      const scratch = (this as unknown as { segmentGeometryScratch: {
+        lesserAngle: number; greaterAngle: number; layerMask: number; entryExitLayerChanges: number;
+        netId: number; sameLayerIntersectionCount: number; crossingLayerIntersectionCount: number
+      } }).segmentGeometryScratch
+      scratch.lesserAngle = geometry.lesser[row]!
+      scratch.greaterAngle = geometry.greater[row]!
+      scratch.layerMask = geometry.layers[row]!
+      scratch.entryExitLayerChanges = changes
+      scratch.netId = state.currentRouteNetId!
+      scratch.sameLayerIntersectionCount = same
+      scratch.crossingLayerIntersectionCount = cross
+    }
+    if (same > 0 && this.isKnownSingleLayerRegion(regionId)) return Number.POSITIVE_INFINITY
+    const newCost = this.computeRegionCostForRegion(regionId,
+      cache.existingSameLayerIntersections + same, cache.existingCrossingLayerIntersections + cross,
+      cache.existingEntryExitLayerChanges + changes, cache.existingSegmentCount + 1) - cache.existingRegionCost
+    return currentCandidate.g + newCost + congestion + penalty + distanceCost
+  }
+
   override _step(): void {
     const { problem, topology, state } = this
     const queue = this.packedCandidateQueue
@@ -194,7 +226,8 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
         const lowerBoundCost = currentCandidate.g + state.regionCongestionCost[currentCandidate.nextRegionId]! +
           (problem.portPenalty?.[neighborPortId] ?? 0) + knownSegmentDistance * this.DISTANCE_TO_COST
         if (lowerBoundCost >= previousBestCost) continue
-        const g = this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)
+        const g = batch.geometry ? this.computeGFromRegionTuple(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance, batch.geometry, row)
+          : this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)
         if (!Number.isFinite(g) || g >= previousBestCost) continue
         const h = this.computeH(neighborPortId)
         if (neighborPortId === state.goalPortId) {

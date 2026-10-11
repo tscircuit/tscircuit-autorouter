@@ -30,6 +30,8 @@ test("synchronous native scope retains observer calls, exceptions, cleanup and p
   expect(snapshot(pristine)).toEqual(snapshot(serial))
   const kernel = core(pristine).wasmNeighborKernel
   expect(kernel.diagnostics.batches).toBeGreaterThan(0)
+  expect(kernel.diagnostics.scoringBatches).toBe(kernel.diagnostics.batches)
+  expect(kernel.diagnostics.scoredCandidates).toBeGreaterThan(0)
   expect(kernel.validatedScope.diagnostics.trustedBatches).toBe(kernel.diagnostics.batches)
   expect(kernel.validatedScope.diagnostics.childChecks).toBe(1)
   expect(kernel.validatedScope.open).toBe(false)
