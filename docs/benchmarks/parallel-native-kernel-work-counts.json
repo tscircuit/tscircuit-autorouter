@@ -1,0 +1,447 @@
+{
+  "description": "Functional native-state parity and operation counts only. These are not wall-time benchmarks or evidence that the 2x target is reached.",
+  "datasetRevision": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "pathingKernelRevision": "32bf59e6b",
+  "pathing": {
+    "sample": 6,
+    "kernelCalls": 5683414,
+    "csrEntries": 578988685,
+    "activeIncidenceVisits": 354790712,
+    "activeWords": 23624562,
+    "computeGCalls": 79581034,
+    "validGoalStops": 1039,
+    "duplicateIncidences": 0,
+    "duplicateRegions": 0,
+    "maxRegionIncidences": 716,
+    "outputHash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860"
+  },
+  "fullPathingStateOracle": {
+    "controlRevision": "f573c8deb",
+    "sourceSha256": "880376ae34af9e749e1a6dd9585b12bdf504c6370e38509a42ea0ecbcfa52b08",
+    "samples": [
+      {
+        "sample": 1,
+        "outputHash": "50e96626294ebbf0a960bd0b5d430ad8546db2a258348d296459647c762a22b6",
+        "coreStateHash": "e8143c0aab06f1c9776df38b9e1ae1c01d30b688c5f155efe56ddf82ecb423ed",
+        "outerIterations": 220456,
+        "outerCap": 4000000,
+        "coreIterations": 220452,
+        "coreCap": 2000000
+      },
+      {
+        "sample": 6,
+        "outputHash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+        "coreStateHash": "ebe4241b0fe0a9876d19d2319cf297db56f61df61671abafcf66f20eeb31f343",
+        "outerIterations": 2000004,
+        "outerCap": 4000000,
+        "coreIterations": 2000000,
+        "coreCap": 2000000
+      },
+      {
+        "sample": 16,
+        "outputHash": "3aa67ddde8c97d295da5fa795697e0e5002f4766555eaafdd16e4d50e541cd87",
+        "coreStateHash": "7a8044bad8fb3db3a226ef5c311f3cc318429b60e0cb41a1363f392ffa7da065",
+        "outerIterations": 459356,
+        "outerCap": 4000000,
+        "coreIterations": 459352,
+        "coreCap": 2000000
+      }
+    ]
+  },
+  "referenceLazyCenters": {
+    "revision": "9ce44f6c4",
+    "counts": {
+      "kind": "functional operation counts, no timings",
+      "total": {
+        "eligibleChecks": 17,
+        "nativeChecks": 0,
+        "gapCalls": 16606051,
+        "centerCalls": 466,
+        "errors": 197
+      },
+      "records": [
+        {
+          "number": 1,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 0,
+          "centerCalls": 0,
+          "errors": 0
+        },
+        {
+          "number": 2,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1265269,
+          "centerCalls": 182,
+          "errors": 62
+        },
+        {
+          "number": 3,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1267087,
+          "centerCalls": 164,
+          "errors": 64
+        },
+        {
+          "number": 4,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1256337,
+          "centerCalls": 58,
+          "errors": 25
+        },
+        {
+          "number": 5,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1256917,
+          "centerCalls": 11,
+          "errors": 8
+        },
+        {
+          "number": 6,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1185736,
+          "centerCalls": 10,
+          "errors": 7
+        },
+        {
+          "number": 7,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1186308,
+          "centerCalls": 8,
+          "errors": 6
+        },
+        {
+          "number": 8,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1182404,
+          "centerCalls": 8,
+          "errors": 6
+        },
+        {
+          "number": 9,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1173953,
+          "centerCalls": 8,
+          "errors": 6
+        },
+        {
+          "number": 10,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1173560,
+          "centerCalls": 8,
+          "errors": 6
+        },
+        {
+          "number": 11,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 1173953,
+          "centerCalls": 8,
+          "errors": 6
+        },
+        {
+          "number": 12,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 747705,
+          "centerCalls": 0,
+          "errors": 0
+        },
+        {
+          "number": 13,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 752461,
+          "centerCalls": 1,
+          "errors": 1
+        },
+        {
+          "number": 14,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 747705,
+          "centerCalls": 0,
+          "errors": 0
+        },
+        {
+          "number": 15,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 747705,
+          "centerCalls": 0,
+          "errors": 0
+        },
+        {
+          "number": 16,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 747705,
+          "centerCalls": 0,
+          "errors": 0
+        },
+        {
+          "number": 17,
+          "eligibleChecks": 1,
+          "nativeChecks": 0,
+          "gapCalls": 741246,
+          "centerCalls": 0,
+          "errors": 0
+        }
+      ]
+    }
+  },
+  "referenceAxis": {
+    "revision": "8006e1cd3",
+    "counts": {
+      "kind": "functional native gap/axis operation census, no timings",
+      "total": {
+        "foreignPairs": 16606051,
+        "eligiblePairs": 16606051,
+        "axisRejects": 16594411,
+        "falseRejects": 0,
+        "overlaps": 276,
+        "possibleErrors": 549,
+        "unsupportedPairs": 0
+      },
+      "rows": [
+        {
+          "number": 1,
+          "foreignPairs": 0,
+          "eligiblePairs": 0,
+          "axisRejects": 0,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 2,
+          "foreignPairs": 1265269,
+          "eligiblePairs": 1265269,
+          "axisRejects": 1264254,
+          "falseRejects": 0,
+          "overlaps": 203,
+          "possibleErrors": 250,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 3,
+          "foreignPairs": 1267087,
+          "eligiblePairs": 1267087,
+          "axisRejects": 1266210,
+          "falseRejects": 0,
+          "overlaps": 24,
+          "possibleErrors": 170,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 4,
+          "foreignPairs": 1256337,
+          "eligiblePairs": 1256337,
+          "axisRejects": 1255526,
+          "falseRejects": 0,
+          "overlaps": 5,
+          "possibleErrors": 58,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 5,
+          "foreignPairs": 1256917,
+          "eligiblePairs": 1256917,
+          "axisRejects": 1256038,
+          "falseRejects": 0,
+          "overlaps": 7,
+          "possibleErrors": 13,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 6,
+          "foreignPairs": 1185736,
+          "eligiblePairs": 1185736,
+          "axisRejects": 1184870,
+          "falseRejects": 0,
+          "overlaps": 7,
+          "possibleErrors": 12,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 7,
+          "foreignPairs": 1186308,
+          "eligiblePairs": 1186308,
+          "axisRejects": 1185555,
+          "falseRejects": 0,
+          "overlaps": 6,
+          "possibleErrors": 9,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 8,
+          "foreignPairs": 1182404,
+          "eligiblePairs": 1182404,
+          "axisRejects": 1181653,
+          "falseRejects": 0,
+          "overlaps": 6,
+          "possibleErrors": 9,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 9,
+          "foreignPairs": 1173953,
+          "eligiblePairs": 1173953,
+          "axisRejects": 1173203,
+          "falseRejects": 0,
+          "overlaps": 6,
+          "possibleErrors": 9,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 10,
+          "foreignPairs": 1173560,
+          "eligiblePairs": 1173560,
+          "axisRejects": 1172822,
+          "falseRejects": 0,
+          "overlaps": 6,
+          "possibleErrors": 9,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 11,
+          "foreignPairs": 1173953,
+          "eligiblePairs": 1173953,
+          "axisRejects": 1173203,
+          "falseRejects": 0,
+          "overlaps": 6,
+          "possibleErrors": 9,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 12,
+          "foreignPairs": 747705,
+          "eligiblePairs": 747705,
+          "axisRejects": 747124,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 13,
+          "foreignPairs": 752461,
+          "eligiblePairs": 752461,
+          "axisRejects": 751877,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 1,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 14,
+          "foreignPairs": 747705,
+          "eligiblePairs": 747705,
+          "axisRejects": 747124,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 15,
+          "foreignPairs": 747705,
+          "eligiblePairs": 747705,
+          "axisRejects": 747164,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 16,
+          "foreignPairs": 747705,
+          "eligiblePairs": 747705,
+          "axisRejects": 747124,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        },
+        {
+          "number": 17,
+          "foreignPairs": 741246,
+          "eligiblePairs": 741246,
+          "axisRejects": 740664,
+          "falseRejects": 0,
+          "overlaps": 0,
+          "possibleErrors": 0,
+          "unsupportedPairs": 0
+        }
+      ]
+    }
+  },
+  "ownerA01StrictGuards": {
+    "revision": "62744dabc",
+    "warning": "Strict per-step guard descriptor counts exposed a material work overhead; a synchronous native quantum scope is under development.",
+    "counts": {
+      "kind": "functional operation count; not a timing benchmark",
+      "iterations": 957175,
+      "fullPrototypeGuardDescriptorCalls": 54558975,
+      "descriptorCallsPerNativeStep": 57,
+      "heapArrayWritesRemoved": 18635466,
+      "nativeHeapArrayWrites": 43327239,
+      "fusedHeapArrayWrites": 24691773,
+      "allFrozenNativeStateAndOutputHashesExact": true,
+      "records": [
+        {
+          "seed": 0,
+          "iterations": 160000,
+          "guardDescriptorCalls": 9120000,
+          "stateHash": "91f6160c22a7d04aa25427e6f8934443a97b4fee412ab72fbacd99f08936b6db",
+          "outputHash": "e6497c5681d26f98fafc8177b0eaf368cf72062c03dc427fb35243d83c3f7b4e"
+        },
+        {
+          "seed": 1,
+          "iterations": 160000,
+          "guardDescriptorCalls": 9120000,
+          "stateHash": "0954cd94058ca9ea65af8497c9249d663042697f45f3ab876c7a495e96008c79",
+          "outputHash": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62"
+        },
+        {
+          "seed": 2,
+          "iterations": 160000,
+          "guardDescriptorCalls": 9120000,
+          "stateHash": "f98f2e6f9f29acb168015ffacec6876a5ce7c23117aac0820235eb435a68a428",
+          "outputHash": "dacb104907975d94dfb37d604639cca679193b0383b11c70e2f139849cde5e81"
+        },
+        {
+          "seed": 3,
+          "iterations": 160000,
+          "guardDescriptorCalls": 9120000,
+          "stateHash": "0954cd94058ca9ea65af8497c9249d663042697f45f3ab876c7a495e96008c79",
+          "outputHash": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62"
+        },
+        {
+          "seed": 4,
+          "iterations": 160000,
+          "guardDescriptorCalls": 9120000,
+          "stateHash": "0954cd94058ca9ea65af8497c9249d663042697f45f3ab876c7a495e96008c79",
+          "outputHash": "5a814752e41799fa7983f85a01f3f8bd5517b9a41586f06a6d2b604a8ec99a62"
+        },
+        {
+          "seed": 5,
+          "iterations": 157175,
+          "guardDescriptorCalls": 8958975,
+          "stateHash": "a7fd47c5112c05a33daead5250e9e03fc12e6e138c76948a9e1d366dc307ea2c",
+          "outputHash": "b63dc499b32e93105f805f1e2c04f7b41391a85c01cace6138ed28e2ccdd19ad"
+        }
+      ]
+    }
+  }
+}
