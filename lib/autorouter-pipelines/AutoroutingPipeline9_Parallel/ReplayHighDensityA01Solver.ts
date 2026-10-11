@@ -3,6 +3,7 @@ import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 import { GridHistoryReplayState } from "./GridHistoryReplayState"
 import type { GridHistoryJob, GridHistoryResult } from "./parallelGridHistoryTypes"
 import { NativeA01HistoryEquivalence } from "./NativeA01HistoryEquivalence"
+import { finishParallelNativeA01Heap, installParallelNativeA01Heap, prepareParallelNativeA01Heap } from "./installParallelNativeA01Heap"
 
 /** Native identity and setup remain intact; only admitted selected quanta replay. */
 export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
@@ -12,6 +13,7 @@ export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
   override _setup(): void {
     super._setup()
     if (!this.failed) this.historyEquivalence = NativeA01HistoryEquivalence.capture(this, replayContract)
+    installParallelNativeA01Heap(this, replayContract)
   }
 
   hasEquivalentHistory(other: ReplayHighDensityA01Solver): boolean {
@@ -43,7 +45,14 @@ export class ReplayHighDensityA01Solver extends HighDensitySolverA01 {
   }
 
   override _step(): void {
-    if (!this.replay.applyStep(this)) super._step()
+    if (!this.replay.applyStep(this)) {
+      prepareParallelNativeA01Heap(this)
+      try {
+        super._step()
+      } finally {
+        finishParallelNativeA01Heap(this)
+      }
+    }
   }
 
   override getOutput(): HighDensityIntraNodeRoute[] {

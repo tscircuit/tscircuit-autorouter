@@ -2,10 +2,25 @@ import { HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 import { GridHistoryReplayState } from "./GridHistoryReplayState"
 import type { GridHistoryJob, GridHistoryResult } from "./parallelGridHistoryTypes"
+import { finishParallelNativeA03Geometry, installParallelNativeA03Geometry,
+  prepareParallelNativeA03Geometry } from "./installParallelNativeA03Geometry"
+
+const immutableGeometryOwners = new WeakSet<HighDensitySolverA03>()
 
 /** Native A03 identity preserves the original budget, fitness and output branch. */
 export class ReplayHighDensityA03Solver extends HighDensitySolverA03 {
   private readonly replay = new GridHistoryReplayState()
+
+  constructor(params: ConstructorParameters<typeof HighDensitySolverA03>[0],
+    options?: { immutableWorkerGeometry?: boolean }) {
+    super(params)
+    if (options?.immutableWorkerGeometry === true) immutableGeometryOwners.add(this)
+  }
+
+  override _setup(): void {
+    super._setup()
+    if (immutableGeometryOwners.has(this)) installParallelNativeA03Geometry(this, replayContract)
+  }
 
   createHistoryJob(candidateId: number): GridHistoryJob {
     const [params] = this.getConstructorParams()
@@ -31,10 +46,20 @@ export class ReplayHighDensityA03Solver extends HighDensitySolverA03 {
   }
 
   override _step(): void {
-    if (!this.replay.applyStep(this)) super._step()
+    if (!this.replay.applyStep(this)) {
+      prepareParallelNativeA03Geometry(this)
+      try {
+        super._step()
+      } finally {
+        finishParallelNativeA03Geometry(this)
+      }
+    }
   }
 
   override getOutput(): HighDensityIntraNodeRoute[] {
     return this.replay.getTerminalOutput(this) ?? super.getOutput()
   }
 }
+
+const replayContract = { prototype: ReplayHighDensityA03Solver.prototype,
+  descriptors: Object.getOwnPropertyDescriptors(ReplayHighDensityA03Solver.prototype) }

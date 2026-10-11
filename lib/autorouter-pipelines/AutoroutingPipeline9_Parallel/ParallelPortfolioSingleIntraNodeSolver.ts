@@ -86,7 +86,7 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
         (nativeGrid instanceof HighDensitySolverA01 || nativeGrid instanceof HighDensitySolverA03)) {
         const replay = nativeGrid instanceof HighDensitySolverA01
           ? new ReplayHighDensityA01Solver(nativeGrid.getConstructorParams()[0])
-          : new ReplayHighDensityA03Solver(nativeGrid.getConstructorParams()[0])
+          : new ReplayHighDensityA03Solver(nativeGrid.getConstructorParams()[0], { immutableWorkerGeometry: true })
         this.gridCandidates.set(this.gridCandidates.size, replay)
         return replay as unknown as IntraNodeRouteSolver
       }
