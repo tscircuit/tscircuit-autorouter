@@ -7,6 +7,8 @@ import { GridHistoryWorkerClient } from "./GridHistoryWorkerClient"
 import { registerWorkerNativeGridKernelDispatcher } from "./workerNativeGridKernelQuantum"
 import { initializeReferenceDrcRuntime } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 import { initializeWorkerNativeGridRuntime } from "./workerNativeGridRuntime"
+import { executeNativeSyncReferenceWorkerRequest } from "./NativeSyncReferenceBatchTransport"
+import type { NativeSyncReferenceRequest } from "./nativeSyncReferenceProtocol"
 import { executeGridHistoryJob } from "./executeGridHistoryJob"
 import type { GridHistoryDelivery, GridHistoryGrant } from "./parallelGridHistoryTypes"
 import { executeParallelHighDensityNodeJob } from "./executeParallelHighDensityNodeJob"
@@ -33,7 +35,14 @@ let historyClient: MultiHeadHistoryWorkerClient | null = null
 let gridClient: GridHistoryWorkerClient | null = null
 let a13Client: FirstValidA13WorkerClient | null = null
 
-self.onmessage = (event: MessageEvent<Pipeline9LocalWorkerRequest | MultiHeadHistoryGrant | MultiHeadHistoryDelivery | GridHistoryGrant | GridHistoryDelivery | FirstValidA13CandidateGrant | FirstValidA13CandidateDelivery>): void => {
+self.onmessage = (event: MessageEvent<Pipeline9LocalWorkerRequest | NativeSyncReferenceRequest | MultiHeadHistoryGrant | MultiHeadHistoryDelivery | GridHistoryGrant | GridHistoryDelivery | FirstValidA13CandidateGrant | FirstValidA13CandidateDelivery>): void => {
+  if ("kind" in event.data && event.data.kind === "nativeSyncReferenceFacts") {
+    historyClient = null
+    gridClient = null
+    a13Client = null
+    void executeNativeSyncReferenceWorkerRequest(event.data)
+    return
+  }
   if ("kind" in event.data) {
     if (event.data.kind === "firstValidA13CandidateGrant" || event.data.kind === "firstValidA13CandidateDelivery") {
       if (!a13Client) throw new Error("Worker received A13 control without an active owner")

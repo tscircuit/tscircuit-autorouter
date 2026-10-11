@@ -1,0 +1,107 @@
+{
+  "kind": "native-reference-sync-facts-transport-functional-proof",
+  "benchmark": false,
+  "native_geometry": "unchanged pinned predicates; main retains native memo, interner, circuit state, error builders and execution/publication order",
+  "physical_core_limit": 4,
+  "reservation": {
+    "worker_lanes": "at most three already-ready idle workers created by the exact default pool factory",
+    "main_lane": "original synchronous native frame computes one pure task group",
+    "upfront_declines": [
+      "missing Node MessagePort/SAB runtime",
+      "custom pool factory or URL",
+      "unready, active, queued, candidate-owned or reserved workers",
+      "unsupported caller-modified transport or ledger descriptors"
+    ],
+    "protocol_after_admission": "every infrastructure, invariant or protocol error fails the pool, retires/terminates all workers, and propagates the original failure",
+    "deadline_ms": 30000,
+    "deadline_role": "infrastructure deadline only; original routing solver effort and caps unchanged",
+    "completion": "dedicated owned transferred MessagePort and one SAB terminal word; no ordinary onmessage acknowledgement or event-loop wait",
+    "cleanup": "all ports closed and no reservation remains before subsequent ordinary dispatch"
+  },
+  "schema": {
+    "version": "reference-continuity-facts/v1:ordinal-snapshot-kind-row-value-visits-exception",
+    "hash": "6431708c6cb7a3a7412f4f5c7fa34a64f7bb93e6d0d2b80e561ad9a553fef304",
+    "validation": [
+      "reservation ID",
+      "lane ordinal/count",
+      "snapshot and task count",
+      "owned port/SAB",
+      "every row including unused rows",
+      "task kind/ordinal correspondence",
+      "boolean facts and consumed visits",
+      "own-data exception metadata",
+      "stale/duplicate results"
+    ],
+    "native_algorithm_exception": "returned as a pure fact and re-executed on main at the original native miss site to preserve native error identity and ordering"
+  },
+  "provenance": {
+    "executor": "module-private WeakSet brand bound to exact default pool, book and transport",
+    "workers": "every actual pool and book slot checked against private pool-created Worker identities; cold-book custom URL injection cannot mint a native executor",
+    "observers": "descriptor-only upfront checks; no callback, Proxy or getter is promoted to native execution",
+    "inactive_pool": "captured Set/array operations and original ledger object/row identities; caller-replaced ledger getters withdraw optional tracking before ordinary native work"
+  },
+  "actual_worker_native_capture_oracle": {
+    "fixture": "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz",
+    "fixture_sha256": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36",
+    "records": 17,
+    "batches": 13,
+    "fresh_native_fact_rows": 12215,
+    "rows_by_record": [
+      0,
+      2166,
+      1922,
+      1923,
+      1509,
+      427,
+      1384,
+      63,
+      8,
+      1231,
+      0,
+      709,
+      168,
+      0,
+      694,
+      0,
+      11
+    ],
+    "workers_reserved": 39,
+    "workers_retired": 39,
+    "protocol_failures": 0,
+    "unchanged": [
+      "all native error arrays",
+      "all post-check circuit JSON",
+      "native cache warmness and ordered consumption"
+    ],
+    "ordinary_dispatch_after_facts": "four additional warmup tasks complete with original task ownership and counters"
+  },
+  "focused_tests": {
+    "files": [
+      "tests/solvers/native-sync-reference-transport.test.ts",
+      "tests/solvers/native-sync-reference-default-pool-provenance.test.ts",
+      "tests/solvers/native-sync-reference-inactive-pool-observers.test.ts",
+      "tests/solvers/native-sync-reference-seventeen-pass-parity.test.ts",
+      "tests/solvers/reference-drc-warm-checker-configuration.test.ts"
+    ],
+    "transport_assertions": 103,
+    "default_pool_assertions": 47,
+    "inactive_observer_assertions": 22,
+    "seventeen_capture_assertions": 77,
+    "warm_checker_assertions": 38,
+    "command_prefix": "bun test --timeout 9999999",
+    "covers": [
+      "active/queued admission",
+      "malformed admitted lane count retirement",
+      "worker death",
+      "bounded infrastructure expiry",
+      "dispose",
+      "global protocol failures including unused rows",
+      "subsequent ordinary dispatch",
+      "custom worker origin rejection",
+      "terminal error propagation",
+      "zero-read transport/ledger getter rejection",
+      "inactive constructor/ordinary bookkeeping observers"
+    ]
+  },
+  "performance_claim": "None. All counts are functional evidence; latency and final 2x acceptance require frozen Blacksmith measurements."
+}

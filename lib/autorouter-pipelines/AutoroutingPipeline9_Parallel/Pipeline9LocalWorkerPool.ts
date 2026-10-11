@@ -12,6 +12,8 @@ import { Pipeline9SharedContextCodec, type Pipeline9SharedContextFamily, type Pi
 import type { GridHistoryDelivery, GridHistoryGrant, GridHistoryRequest, GridHistoryResult } from "./parallelGridHistoryTypes"
 import { assertGridHistoryJob, assertGridHistoryResult } from "./executeGridHistoryJob"
 import { assertParallelPathLookaheadJob, assertParallelPathLookaheadResult } from "./ParallelPathLookaheadExecutor"
+import { NativeSyncReferenceReservationBook, NativeSyncReferenceBatchTransport, initializeNativeSyncReferenceTransport, hasNativeSyncReferenceTransportContract, canMaintainNativeSyncReferenceLedger } from "./NativeSyncReferenceBatchTransport"
+import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -46,7 +48,22 @@ const getOwnPrototype = Object.getPrototypeOf
 const getOwnKeys = Reflect.ownKeys
 const nativeApply = Reflect.apply
 const nativeWeakMapGet = WeakMap.prototype.get
+const nativeWeakMapSet = WeakMap.prototype.set
+const nativeSetAdd = Set.prototype.add
+const nativeSetHas = Set.prototype.has
+const NativeSet = Set
+const nativeMapSize = Object.getOwnPropertyDescriptor(Map.prototype, "size")!.get!
+const nativeArrayIsArray = Array.isArray
+const nativeArrayPrototype = Array.prototype
+const nativeIsSafeInteger = Number.isSafeInteger
 const nativeHasOwn = Object.hasOwn
+type NativeSyncReferencePoolBinding = { book: NativeSyncReferenceReservationBook; transport: NativeSyncReferenceBatchTransport; ledgerEnabled: boolean;
+  workers: Set<Worker>; terminalError?: Error; register: NativeSyncReferenceReservationBook["register"];
+  begin: NativeSyncReferenceReservationBook["beginOrdinary"]; finish: NativeSyncReferenceReservationBook["finishOrdinary"];
+  fail: NativeSyncReferenceReservationBook["fail"]; queue: NativeSyncReferenceReservationBook["setQueuedCount"];
+  slots: WorkerSlot[]; waiting: QueuedTask[]; candidates: Map<number, Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate" | "gridHistory">>;
+  bookSlots: { worker: Worker; state: string }[] }
+const nativeSyncReferencePools = new WeakMap<Pipeline9LocalWorkerPool, NativeSyncReferencePoolBinding>()
 function ownDescriptorValue(descriptor: PropertyDescriptor | undefined, field: keyof PropertyDescriptor): unknown {
   return descriptor && nativeHasOwn(descriptor, field) ? descriptor[field] : undefined
 }
@@ -102,6 +119,14 @@ export class Pipeline9LocalWorkerPool {
     this.workerFactory = options.workerFactory ?? ((url: URL): Worker => new Worker(url, { type: "module" }))
     if (!options.workerFactory && !options.workerUrl && nativeWorkerSource) {
       nativePathPools.set(this, { factory: this.workerFactory, url: this.workerUrl, href: this.workerUrl.href })
+      if (hasNativeSyncReferenceTransportContract()) {
+        const book = new NativeSyncReferenceReservationBook()
+        nativeApply(nativeWeakMapSet, nativeSyncReferencePools, [this, { book, transport: new NativeSyncReferenceBatchTransport(book), workers: new NativeSet<Worker>(), ledgerEnabled: true,
+          register: NativeSyncReferenceReservationBook.prototype.register, begin: NativeSyncReferenceReservationBook.prototype.beginOrdinary,
+          finish: NativeSyncReferenceReservationBook.prototype.finishOrdinary, fail: NativeSyncReferenceReservationBook.prototype.fail,
+          queue: NativeSyncReferenceReservationBook.prototype.setQueuedCount, slots: this.workers, waiting: this.queue,
+          candidates: this.candidateCancellationByOwner, bookSlots: getOwnDescriptor(book, "slots")!.value }])
+      }
     }
     // Custom worker protocols keep their original request shape.
     if (!options.workerFactory && !options.workerUrl && typeof SharedArrayBuffer !== "undefined") {
@@ -174,6 +199,14 @@ export class Pipeline9LocalWorkerPool {
 
   async warmup(): Promise<void> {
     await Promise.all(Array.from({ length: this.workerCount }, () => this.run({ kind: "warmup" })))
+  }
+
+  /** Async runtime loading happens before the native checker’s synchronous frame. */
+  async initializeReferenceTransport(): Promise<void> {
+    if (this.terminalError) throw this.terminalError
+    if (!canUseNativePathLookaheadPool(this)) return
+    await initializeNativeSyncReferenceTransport()
+    if (this.terminalError) throw this.terminalError
   }
 
   /** Imports workers while the coordinator prepares topology on its own core. */
@@ -312,6 +345,11 @@ export class Pipeline9LocalWorkerPool {
       }
       if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityNodeBatch") this.cancelOwnerCandidates(task.taskId)
       slot.task = null
+      const reference = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [this]) as NativeSyncReferencePoolBinding | undefined
+      if (reference && reference.ledgerEnabled && nativeApply(nativeSetHas, reference.workers, [worker])) {
+        if (canMaintainNativeSyncReferenceLedger(reference.book)) nativeApply(reference.finish, reference.book, [worker])
+        else reference.ledgerEnabled = false
+      }
       this.stats.tasksCompleted++
       if (response.ok) task.resolve(response.result)
       else {
@@ -329,6 +367,12 @@ export class Pipeline9LocalWorkerPool {
       this.fail(new Error(`Pipeline9 local worker failed: ${event.message}`))
     }
     this.workers.push(slot)
+    const reference = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [this]) as NativeSyncReferencePoolBinding | undefined
+    if (reference && reference.ledgerEnabled && canUseNativePathLookaheadPool(this) && canMaintainNativeSyncReferenceLedger(reference.book) &&
+      getOwnDescriptor(reference.bookSlots, "length")!.value === this.workers.length - 1) {
+      nativeApply(nativeSetAdd, reference.workers, [worker])
+      nativeApply(reference.register, reference.book, [worker])
+    } else if (reference) reference.ledgerEnabled = false
     return slot
   }
 
@@ -605,6 +649,11 @@ export class Pipeline9LocalWorkerPool {
       }
       const task = this.queue.shift()!
       slot.task = task
+      const reference = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [this]) as NativeSyncReferencePoolBinding | undefined
+      if (reference && reference.ledgerEnabled && nativeApply(nativeSetHas, reference.workers, [slot.worker])) {
+        if (canMaintainNativeSyncReferenceLedger(reference.book)) nativeApply(reference.begin, reference.book, [slot.worker])
+        else reference.ledgerEnabled = false
+      }
       let job: Pipeline9LocalWorkerRequest["job"] = task.job
       if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityA13Node" || task.job.kind === "highDensityNodeBatch") {
         if (slot.contextId === task.job.contextId) {
@@ -689,6 +738,12 @@ export class Pipeline9LocalWorkerPool {
   private fail(error: Error): void {
     if (this.terminalError) return
     this.terminalError = error
+    const reference = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [this]) as NativeSyncReferencePoolBinding | undefined
+    if (reference) {
+      reference.terminalError = error
+      if (reference.ledgerEnabled && canMaintainNativeSyncReferenceLedger(reference.book)) nativeApply(reference.fail, reference.book, [error])
+      else reference.ledgerEnabled = false
+    }
     this.publishIdleWorkerAvailability()
     for (const ownerTaskId of this.candidateCancellationByOwner.keys()) this.cancelOwnerCandidates(ownerTaskId)
     for (const task of this.queue.splice(0)) task.reject(error)
@@ -702,6 +757,7 @@ export class Pipeline9LocalWorkerPool {
 
 const nativePathPoolPrototype = Pipeline9LocalWorkerPool.prototype
 const nativePathPoolDescriptors = getOwnKeys(nativePathPoolPrototype).map((key) => ({ key, descriptor: getOwnDescriptor(nativePathPoolPrototype, key)! }))
+const nativePoolFail = getOwnDescriptor(nativePathPoolPrototype, "fail")!.value as (this: Pipeline9LocalWorkerPool, error: Error) => void
 
 /** Only the owned default worker protocol can supply query certificates. */
 export function canUseNativePathLookaheadPool(pool: object): pool is Pipeline9LocalWorkerPool {
@@ -730,7 +786,52 @@ export function canUseNativePathLookaheadPool(pool: object): pool is Pipeline9Lo
   }
   const factory = getOwnDescriptor(pool, "workerFactory")
   const url = getOwnDescriptor(pool, "workerUrl")
-  return Boolean(factory && nativeHasOwn(factory, "value") && ownDescriptorValue(factory, "value") === contract.factory &&
+  return !!(factory && nativeHasOwn(factory, "value") && ownDescriptorValue(factory, "value") === contract.factory &&
     url && nativeHasOwn(url, "value") && ownDescriptorValue(url, "value") === contract.url &&
     nativeApply(ownDescriptorValue(nativeUrlHrefDescriptor, "get") as (this: URL) => string, contract.url, []) === contract.href)
+}
+
+/** Only workers constructed by this exact default factory enter the private binding. */
+export function getNativeSyncReferencePoolBinding(pool: object): { book: NativeSyncReferenceReservationBook; transport: NativeSyncReferenceBatchTransport } | undefined {
+  const binding = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [pool]) as NativeSyncReferencePoolBinding | undefined
+  if (!binding) return undefined
+  if (binding.terminalError) throw binding.terminalError
+  if (!binding.ledgerEnabled) return undefined
+  if (!canUseNativePathLookaheadPool(pool)) return undefined
+  const workers = getOwnDescriptor(pool, "workers"), queue = getOwnDescriptor(pool, "queue"), candidates = getOwnDescriptor(pool, "candidateCancellationByOwner")
+  if (!workers || !nativeHasOwn(workers, "value") || !queue || !nativeHasOwn(queue, "value") ||
+    !candidates || !nativeHasOwn(candidates, "value")) return undefined
+  const slots = workers.value as WorkerSlot[], waiting = queue.value as QueuedTask[]
+  const inspector = getReferenceDrcProxyInspector()
+  if (!inspector || slots !== binding.slots || waiting !== binding.waiting || candidates.value !== binding.candidates ||
+    !nativeArrayIsArray(slots) || !nativeArrayIsArray(waiting) || inspector(slots) || inspector(waiting) ||
+    getOwnPrototype(slots) !== nativeArrayPrototype || getOwnPrototype(waiting) !== nativeArrayPrototype ||
+    getOwnDescriptor(waiting, "length")?.value !== 0 || nativeApply(nativeMapSize, binding.candidates, []) !== 0) return undefined
+  const length = getOwnDescriptor(slots, "length")?.value as number
+  if (!nativeIsSafeInteger(length) || length < 0 || length > 4) return undefined
+  const bookSlots = getOwnDescriptor(binding.book, "slots")
+  if (!bookSlots || !nativeHasOwn(bookSlots, "value") || bookSlots.value !== binding.bookSlots ||
+    getOwnDescriptor(binding.bookSlots, "length")?.value !== length) return undefined
+  for (let index = 0; index < length; index++) {
+    const row = getOwnDescriptor(slots, `${index}`)
+    if (!row || !nativeHasOwn(row, "value") || typeof row.value !== "object" || row.value === null || inspector(row.value)) return undefined
+    const slot = row.value as WorkerSlot
+    const worker = getOwnDescriptor(slot, "worker"), task = getOwnDescriptor(slot, "task")
+    if (!worker || !nativeHasOwn(worker, "value") || !task || !nativeHasOwn(task, "value") || task.value !== null ||
+      !nativeApply(nativeSetHas, binding.workers, [worker.value])) return undefined
+    const bookRow = getOwnDescriptor(binding.bookSlots, `${index}`)
+    if (!bookRow || !nativeHasOwn(bookRow, "value") || typeof bookRow.value !== "object" || bookRow.value === null || inspector(bookRow.value)) return undefined
+    const bookWorker = getOwnDescriptor(bookRow.value, "worker")
+    if (!bookWorker || !nativeHasOwn(bookWorker, "value") || bookWorker.value !== worker.value ||
+      !nativeApply(nativeSetHas, binding.workers, [bookWorker.value])) return undefined
+  }
+  return { book: binding.book, transport: binding.transport }
+}
+
+/** A fatal synchronous transport outcome retires the ordinary pool as well. */
+export function failNativeSyncReferencePool(pool: object, error: Error): void {
+  const binding = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [pool]) as NativeSyncReferencePoolBinding | undefined
+  if (!binding) throw error
+  if (binding.terminalError) throw binding.terminalError
+  nativeApply(nativePoolFail, pool, [error])
 }
