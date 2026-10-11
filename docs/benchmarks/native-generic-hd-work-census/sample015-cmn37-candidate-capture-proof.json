@@ -1,0 +1,60 @@
+{
+  "kind": "actual-native-generic-candidate-constructor-capture",
+  "noTimingComparison": true,
+  "productionChanges": false,
+  "fullOriginalRawWorkerResponseEqual": true,
+  "frozenSourceSha": "da7e84745f2d024a390783c5dca718d6528429be",
+  "jobSha256": "06054a034f9c7ac8e78b547c2e3dd56874c90ccaaa6839daa74d4d5448d229a9",
+  "sourceHashes": {
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts": "b27d35044a0fc1a0b9a21dbee730f3922ca5c881f46424e363694c7c0621917a",
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts": "040b1e81eca1b038e7e437e88e8bbfc19a3423c4a9c0fff598cfa0cd6e6965d8",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts": "298a6ab570d526f85c174bba45b43056da58e6afcceb7cc7c8f1fb1cf40d5e96",
+    "lib/solvers/HighDensitySolver/IntraNodeSolver.ts": "a03454554f1a8d06e632815c022fda1a1de75b09748a4186aa5f2900f8d5d027",
+    "lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts": "52af94a91ed2358b303e239d54179a14221cc7fac67aaa950c2a54b6ea31f7e4"
+  },
+  "constructorMethodWrappers": false,
+  "capturePoint": "first cached routing _step immediately after the native cache miss; Base.step has already incremented iterations to 1; fresh histories should retain original constructor iteration0",
+  "capturedCandidateCount": 126,
+  "candidateArtifact": "sample015-cmn37-candidates.json.gz",
+  "candidateArtifactSha256": "d3f1201faf100b9a893791451f93fd0d39c3a115fa4447d98eb2bf43f172162f",
+  "selected": [
+    {
+      "id": 26,
+      "capturedIterations": 1,
+      "maxIterations": 36482.8726939094,
+      "seed": 1,
+      "finalIterations": 28797,
+      "finalSolved": false,
+      "finalFailed": true
+    },
+    {
+      "id": 2,
+      "capturedIterations": 1,
+      "maxIterations": 36482.8726939094,
+      "seed": 1,
+      "finalIterations": 26718,
+      "finalSolved": false,
+      "finalFailed": true
+    },
+    {
+      "id": 80,
+      "capturedIterations": 1,
+      "maxIterations": 36482.8726939094,
+      "seed": 2,
+      "finalIterations": 3068,
+      "finalSolved": true,
+      "finalFailed": false
+    },
+    {
+      "id": 0,
+      "capturedIterations": 1,
+      "maxIterations": 36482.8726939094,
+      "seed": 0,
+      "finalIterations": 10874,
+      "finalSolved": false,
+      "finalFailed": true
+    }
+  ],
+  "reproduce": "GENERIC_HD_CENSUS_ROOT=<immutable-da7e-source> GENERIC_HD_CENSUS_JOB=docs/benchmarks/native-a01-selected-worker-bridge/sample015-cmn37-job.json.gz GENERIC_HD_CENSUS_REFERENCE=<saved-original-response-json> GENERIC_HD_CENSUS_OUTPUT=<fresh-directory> GENERIC_HD_CENSUS_CAPTURE_CANDIDATES=1 bun scripts/parallel-benchmark/prototypes/native-generic-hd-work-census.ts",
+  "selection": "From proof.census.genericCandidates select IDs26,2,80,0 in this order; preserve constructor params and canonical connMaps. No elapsed-time measurements are recorded."
+}

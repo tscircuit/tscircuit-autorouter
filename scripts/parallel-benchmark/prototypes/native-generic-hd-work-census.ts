@@ -42,6 +42,15 @@ const patches:Record<string,[string,string][]>={
 }
 const sourceHashes:Record<string,string>={}
 const squaredGroupProbe=process.env.GENERIC_HD_CENSUS_SQUARED_GROUP_PROBE==="1"
+const captureGenericCandidates=process.env.GENERIC_HD_CENSUS_CAPTURE_CANDIDATES==="1"
+if(captureGenericCandidates) {
+  patches["lib/solvers/HighDensitySolver/IntraNodeSolver.ts"]=[
+    ['    super()\n    this.nodeWithPortPoints = nodeWithPortPoints','    super()\n    captureGenericConstructor(this,params)\n    this.nodeWithPortPoints = nodeWithPortPoints'],
+  ]
+  patches["lib/solvers/HighDensitySolver/CachedIntraNodeRouteSolver.ts"]=[
+    ['    const wasSolved = this.solved','    captureGenericPostCacheMiss(this)\n    const wasSolved = this.solved'],
+  ]
+}
 if(squaredGroupProbe) {
   const routeFile="lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
   patches[routeFile]!.push(
@@ -72,7 +81,7 @@ for(const [path,replacements] of Object.entries(patches)) {
     if(text.indexOf(before)<0||text.indexOf(before)!==text.lastIndexOf(before)) throw new Error(`Census insertion is not unique: ${path}: ${before}`)
     text=text.replace(before,after)
   }
-  await Bun.write(`${copied}/${path}`,'import {record,closestRequest,closestMiss} from "lib/genericHdWorkCounters"\n'+text)
+  await Bun.write(`${copied}/${path}`,'import {record,closestRequest,closestMiss,captureGenericConstructor,captureGenericPostCacheMiss} from "lib/genericHdWorkCounters"\n'+text)
 }
 const raw=new Uint8Array(await Bun.file(jobPath).arrayBuffer()),bytes=jobPath.endsWith(".gz")?Bun.gunzipSync(raw):raw
 const job=JSON.parse(new TextDecoder().decode(bytes))
@@ -103,7 +112,7 @@ const native=await runWorker(source,"reference-worker",false)
 deepStrictEqual(result.response,native.response,"Instrumentation must preserve the complete actual native worker result")
 deepStrictEqual(JSON.parse(JSON.stringify(native.response)),await Bun.file(referencePath).json(),"Fresh original worker must also match the saved frozen profile result")
 const proof={noTimingComparison:true,actualWorker:true,nativeMethodWrappers:false,fullOriginalResultEqual:true,
-  squaredGroupProbe,hypotheticalProbeRetainsEveryOriginalSqrtAndGetter:squaredGroupProbe,
+  squaredGroupProbe,captureGenericCandidates,hypotheticalProbeRetainsEveryOriginalSqrtAndGetter:squaredGroupProbe,
   jobSha256:createHash("sha256").update(bytes).digest("hex"),frozenSourceRoot:source,sourceHashes,census:result.census}
 await Bun.write(`${directory}/proof.json`,JSON.stringify(proof,null,2))
 console.log(JSON.stringify(proof,null,2))
