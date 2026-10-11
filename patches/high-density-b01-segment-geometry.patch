@@ -1,0 +1,397 @@
+diff --git a/lib/HighDensitySolverB01/HighDensitySolverB01.ts b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+index 3d40333..d88e564 100644
+--- a/lib/HighDensitySolverB01/HighDensitySolverB01.ts
++++ b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+@@ -63,6 +63,7 @@ interface ConnectionSeg {
+   endCellId: number
+   endPoint: { x: number; y: number; z: number }
+   connectionAliases: ConnectionAlias[]
++  canReuseOrientations: boolean
+ }
+ 
+ interface ConnectionAlias {
+@@ -307,6 +308,7 @@ type ObstacleTracePrimitive = {
+   segmentStart: Point2d
+   segmentEnd: Point2d
+   traceRadius: number
++  canReuseOrientations: boolean
+ }
+ 
+ type ObstacleViaPrimitive = {
+@@ -437,23 +439,38 @@ function getOrientation(params: {
+   )
+ }
+ 
+-function isPointOnSegment(params: {
+-  point: Point2d
+-  segmentStart: Point2d
+-  segmentEnd: Point2d
+-}): boolean {
++function canReusePointOrientation(point: Point2d): boolean {
++  const prototype = Object.getPrototypeOf(point)
++  if (prototype !== Object.prototype && prototype !== null) return false
++  const x = Object.getOwnPropertyDescriptor(point, "x")
++  const y = Object.getOwnPropertyDescriptor(point, "y")
++  return (
++    x !== undefined &&
++    y !== undefined &&
++    "value" in x &&
++    "value" in y &&
++    typeof x.value === "number" &&
++    typeof y.value === "number"
++  )
++}
++
++function isPointOnSegment(
++  params: {
++    point: Point2d
++    segmentStart: Point2d
++    segmentEnd: Point2d
++  },
++  orientation?: number,
++): boolean {
+   const epsilon = 1e-9
+-  if (
+-    Math.abs(
+-      getOrientation({
+-        first: params.segmentStart,
+-        second: params.segmentEnd,
+-        third: params.point,
+-      }),
+-    ) > epsilon
+-  ) {
+-    return false
+-  }
++  const pointOrientation =
++    orientation ??
++    getOrientation({
++      first: params.segmentStart,
++      second: params.segmentEnd,
++      third: params.point,
++    })
++  if (Math.abs(pointOrientation) > epsilon) return false
+   return (
+     params.point.x >= Math.min(params.segmentStart.x, params.segmentEnd.x) &&
+     params.point.x <= Math.max(params.segmentStart.x, params.segmentEnd.x) &&
+@@ -462,32 +479,68 @@ function isPointOnSegment(params: {
+   )
+ }
+ 
+-function doSegmentsIntersect(params: {
+-  firstStart: Point2d
+-  firstEnd: Point2d
+-  secondStart: Point2d
+-  secondEnd: Point2d
+-}): boolean {
+-  const firstStartSide = getOrientation({
+-    first: params.firstStart,
+-    second: params.firstEnd,
+-    third: params.secondStart,
+-  })
+-  const firstEndSide = getOrientation({
+-    first: params.firstStart,
+-    second: params.firstEnd,
+-    third: params.secondEnd,
+-  })
+-  const secondStartSide = getOrientation({
+-    first: params.secondStart,
+-    second: params.secondEnd,
+-    third: params.firstStart,
+-  })
+-  const secondEndSide = getOrientation({
+-    first: params.secondStart,
+-    second: params.secondEnd,
+-    third: params.firstEnd,
+-  })
++function doSegmentsIntersect(
++  params: {
++    firstStart: Point2d
++    firstEnd: Point2d
++    secondStart: Point2d
++    secondEnd: Point2d
++  },
++  reuseOrientations = false,
++): boolean {
++  let firstStartSide: number
++  let firstEndSide: number
++  let secondStartSide: number
++  let secondEndSide: number
++  if (reuseOrientations) {
++    // Eligibility is established for plain numeric points when they enter
++    // the solver. Read live coordinates once for this exact intersection.
++    const firstStartX = params.firstStart.x
++    const firstStartY = params.firstStart.y
++    const firstEndX = params.firstEnd.x
++    const firstEndY = params.firstEnd.y
++    const secondStartX = params.secondStart.x
++    const secondStartY = params.secondStart.y
++    const secondEndX = params.secondEnd.x
++    const secondEndY = params.secondEnd.y
++    const firstDx = firstEndX - firstStartX
++    const firstDy = firstEndY - firstStartY
++    const secondDx = secondEndX - secondStartX
++    const secondDy = secondEndY - secondStartY
++    firstStartSide =
++      firstDx * (secondStartY - firstStartY) -
++      firstDy * (secondStartX - firstStartX)
++    firstEndSide =
++      firstDx * (secondEndY - firstStartY) -
++      firstDy * (secondEndX - firstStartX)
++    secondStartSide =
++      secondDx * (firstStartY - secondStartY) -
++      secondDy * (firstStartX - secondStartX)
++    secondEndSide =
++      secondDx * (firstEndY - secondStartY) -
++      secondDy * (firstEndX - secondStartX)
++  } else {
++    firstStartSide = getOrientation({
++      first: params.firstStart,
++      second: params.firstEnd,
++      third: params.secondStart,
++    })
++    firstEndSide = getOrientation({
++      first: params.firstStart,
++      second: params.firstEnd,
++      third: params.secondEnd,
++    })
++    secondStartSide = getOrientation({
++      first: params.secondStart,
++      second: params.secondEnd,
++      third: params.firstStart,
++    })
++    secondEndSide = getOrientation({
++      first: params.secondStart,
++      second: params.secondEnd,
++      third: params.firstEnd,
++    })
++  }
+ 
+   if (
+     firstStartSide * firstEndSide < 0 &&
+@@ -496,26 +549,38 @@ function doSegmentsIntersect(params: {
+     return true
+   }
+   return (
+-    isPointOnSegment({
+-      point: params.secondStart,
+-      segmentStart: params.firstStart,
+-      segmentEnd: params.firstEnd,
+-    }) ||
+-    isPointOnSegment({
+-      point: params.secondEnd,
+-      segmentStart: params.firstStart,
+-      segmentEnd: params.firstEnd,
+-    }) ||
+-    isPointOnSegment({
+-      point: params.firstStart,
+-      segmentStart: params.secondStart,
+-      segmentEnd: params.secondEnd,
+-    }) ||
+-    isPointOnSegment({
+-      point: params.firstEnd,
+-      segmentStart: params.secondStart,
+-      segmentEnd: params.secondEnd,
+-    })
++    isPointOnSegment(
++      {
++        point: params.secondStart,
++        segmentStart: params.firstStart,
++        segmentEnd: params.firstEnd,
++      },
++      reuseOrientations ? firstStartSide : undefined,
++    ) ||
++    isPointOnSegment(
++      {
++        point: params.secondEnd,
++        segmentStart: params.firstStart,
++        segmentEnd: params.firstEnd,
++      },
++      reuseOrientations ? firstEndSide : undefined,
++    ) ||
++    isPointOnSegment(
++      {
++        point: params.firstStart,
++        segmentStart: params.secondStart,
++        segmentEnd: params.secondEnd,
++      },
++      reuseOrientations ? secondStartSide : undefined,
++    ) ||
++    isPointOnSegment(
++      {
++        point: params.firstEnd,
++        segmentStart: params.secondStart,
++        segmentEnd: params.secondEnd,
++      },
++      reuseOrientations ? secondEndSide : undefined,
++    )
+   )
+ }
+ 
+@@ -550,6 +615,90 @@ function getSquaredDistanceBetweenSegments(params: {
+   )
+ }
+ 
++function getSquaredDistanceFromPointToPreparedSegment(
++  point: Point2d,
++  start: Point2d,
++  segmentDx: number,
++  segmentDy: number,
++  segmentLengthSquared: number,
++): number {
++  if (segmentLengthSquared === 0) {
++    return (point.x - start.x) ** 2 + (point.y - start.y) ** 2
++  }
++  const projection = clamp(
++    ((point.x - start.x) * segmentDx +
++      (point.y - start.y) * segmentDy) /
++      segmentLengthSquared,
++    0,
++    1,
++  )
++  const closestX = start.x + projection * segmentDx
++  const closestY = start.y + projection * segmentDy
++  return (point.x - closestX) ** 2 + (point.y - closestY) ** 2
++}
++
++function isSegmentDistancePointSafe(point: Point2d): boolean {
++  return Number.isFinite(point.x) && Number.isFinite(point.y) &&
++    Math.abs(point.x) <= 1e9 && Math.abs(point.y) <= 1e9
++}
++
++function areSegmentsCloserThan(
++  params: {
++    firstStart: Point2d
++    firstEnd: Point2d
++    secondStart: Point2d
++    secondEnd: Point2d
++  },
++  requiredDistance: number,
++  reuseOrientations = false,
++): boolean {
++  // Custom point prototypes and accessor coordinates retain the original
++  // helper calls and coordinate-read order.
++  if (!reuseOrientations) {
++    return getSquaredDistanceBetweenSegments(params) <
++      requiredDistance * requiredDistance
++  }
++  // Keep the established orientation calculation before any bounds gate:
++  // floating-point cancellation can make disjoint segments intersect here.
++  const requiredDistanceSquared = requiredDistance * requiredDistance
++  if (doSegmentsIntersect(params, reuseOrientations)) {
++    return 0 < requiredDistanceSquared
++  }
++  const firstDx = params.firstEnd.x - params.firstStart.x
++  const firstDy = params.firstEnd.y - params.firstStart.y
++  const firstLengthSquared = firstDx ** 2 + firstDy ** 2
++  const secondDx = params.secondEnd.x - params.secondStart.x
++  const secondDy = params.secondEnd.y - params.secondStart.y
++  const secondLengthSquared = secondDx ** 2 + secondDy ** 2
++  if (
++    Number.isFinite(requiredDistance) &&
++    requiredDistance >= 0 && requiredDistance <= 1e9 &&
++    isSegmentDistancePointSafe(params.firstStart) &&
++    isSegmentDistancePointSafe(params.firstEnd) &&
++    isSegmentDistancePointSafe(params.secondStart) &&
++    isSegmentDistancePointSafe(params.secondEnd) &&
++    (firstLengthSquared > 0 ||
++      (params.firstStart.x === params.firstEnd.x && params.firstStart.y === params.firstEnd.y)) &&
++    (secondLengthSquared > 0 ||
++      (params.secondStart.x === params.secondEnd.x && params.secondStart.y === params.secondEnd.y))
++  ) {
++    // The padding also covers endpoint-projection rounding at this scale.
++    const padding = requiredDistance + 2e-6
++    if (
++      Math.max(params.firstStart.x, params.firstEnd.x) + padding < Math.min(params.secondStart.x, params.secondEnd.x) ||
++      Math.max(params.secondStart.x, params.secondEnd.x) + padding < Math.min(params.firstStart.x, params.firstEnd.x) ||
++      Math.max(params.firstStart.y, params.firstEnd.y) + padding < Math.min(params.secondStart.y, params.secondEnd.y) ||
++      Math.max(params.secondStart.y, params.secondEnd.y) + padding < Math.min(params.firstStart.y, params.firstEnd.y)
++    ) return false
++  }
++  return Math.min(
++    getSquaredDistanceFromPointToPreparedSegment(params.firstStart, params.secondStart, secondDx, secondDy, secondLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.firstEnd, params.secondStart, secondDx, secondDy, secondLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.secondStart, params.firstStart, firstDx, firstDy, firstLengthSquared),
++    getSquaredDistanceFromPointToPreparedSegment(params.secondEnd, params.firstStart, firstDx, firstDy, firstLengthSquared),
++  ) < requiredDistanceSquared
++}
++
+ function doesSegmentIntersectRect(params: {
+   segmentStart: Point2d
+   segmentEnd: Point2d
+@@ -576,12 +725,15 @@ function doesSegmentIntersectRect(params: {
+   for (let cornerIndex = 0; cornerIndex < corners.length; cornerIndex++) {
+     const nextCornerIndex = (cornerIndex + 1) % corners.length
+     if (
+-      doSegmentsIntersect({
+-        firstStart: params.segmentStart,
+-        firstEnd: params.segmentEnd,
+-        secondStart: corners[cornerIndex]!,
+-        secondEnd: corners[nextCornerIndex]!,
+-      })
++      doSegmentsIntersect(
++        {
++          firstStart: params.segmentStart,
++          firstEnd: params.segmentEnd,
++          secondStart: corners[cornerIndex]!,
++          secondEnd: corners[nextCornerIndex]!,
++        },
++        true,
++      )
+     ) {
+       return true
+     }
+@@ -1264,6 +1416,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+       segmentStart: params.segmentStart,
+       segmentEnd: params.segmentEnd,
+       traceRadius: params.obstacleTraceThickness / 2,
++      canReuseOrientations:
++        canReusePointOrientation(params.segmentStart) &&
++        canReusePointOrientation(params.segmentEnd),
+     })
+     const gridSegmentStart = this.transformBoundsPointToGrid(
+       params.segmentStart,
+@@ -1539,13 +1694,17 @@ export class HighDensitySolverB01 extends BaseSolver {
+         this.traceThickness / 2 +
+         this.obstacleClearanceMargin
+       if (
+-        getSquaredDistanceBetweenSegments({
+-          firstStart: segmentStart,
+-          firstEnd: segmentEnd,
+-          secondStart: obstacleTrace.segmentStart,
+-          secondEnd: obstacleTrace.segmentEnd,
+-        }) <
+-        requiredDistance * requiredDistance
++        areSegmentsCloserThan(
++          {
++            firstStart: segmentStart,
++            firstEnd: segmentEnd,
++            secondStart: obstacleTrace.segmentStart,
++            secondEnd: obstacleTrace.segmentEnd,
++          },
++          requiredDistance,
++          (!activeSegment || activeSegment.canReuseOrientations) &&
++            obstacleTrace.canReuseOrientations,
++        )
+       ) {
+         return true
+       }
+@@ -2564,6 +2723,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+           endZ: e.z,
+           endCellId: e.cellId,
+           endPoint,
++          canReuseOrientations:
++            canReusePointOrientation(startPoint) &&
++            canReusePointOrientation(endPoint),
+           connectionAliases: [
+             {
+               connectionName: name,
+@@ -2948,6 +3110,9 @@ export class HighDensitySolverB01 extends BaseSolver {
+           endZ,
+           endCellId: last - endZ * this.planeSize,
+           endPoint: route.endPoint,
++          canReuseOrientations:
++            canReusePointOrientation(route.startPoint) &&
++            canReusePointOrientation(route.endPoint),
+           connectionAliases: route.connectionAliases,
+         })
+       }
