@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyRegionCostMemo.ts",
+    "originalSha256": "2b76b8965f675f4ed2716a10099c42ecf383d88332999ed2debfd415ea0093f4",
+    "copySha256": "3505f6435046d7ccce2b0cd142502907abfd3ad5554363c03826363f97d4ed96"
+  },
+  {
+    "path": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/SelectiveReripTinyHyperGraphSolver.ts",
+    "originalSha256": "9efff4b5133951be39b2e528bd31681b7c90c3a1b6072a5c1781ab0e11a13152",
+    "copySha256": "431b1aa57c52a4576d50673213074300a918633d5c1c1db15d44d2f69cfa188e"
+  },
+  {
+    "path": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/findPackedDistinctOwnerBlockerPath.ts",
+    "originalSha256": "4dd979545a919a1399d0f1ac922df22eb4210fc891ff895261094237bfe4ddf4",
+    "copySha256": "71e8bec9507dc8bed8937d0d95c9807f7dcb19285b3a62297169b0de2fa91c94"
+  }
+]

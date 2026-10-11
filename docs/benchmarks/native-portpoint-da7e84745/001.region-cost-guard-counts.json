@@ -1,0 +1,76 @@
+{
+  "kind": "isolated-source-copy-operation-census",
+  "noTimingComparison": true,
+  "sourceRoot": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745",
+  "revision": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sample": 1,
+  "constructorInputSha256": "948b62f0936fff4325006bd22a6ad8f5f1c3022181604efbed67a2620bddda0f",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/PackedDistanceAwareTinyHyperGraphSolver.ts": "d3ef2d6feccf593ee77e061a0578e2c301a13c2308b430d9e4112e43618adbef",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyRegionCostMemo.ts": "2b76b8965f675f4ed2716a10099c42ecf383d88332999ed2debfd415ea0093f4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyTriangularDistanceIndex.ts": "979846e88e6bf6bda6338eb424411ed2481bf66e96f6af23f96e89d02d59af55",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/createTinyOrderedNeighborKernel.ts": "b332d3e215a39a85fc48a1394a22e9c75ad568fc220d2ee5ef2dca6e1c98b69e",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/TinyNativeSynchronousScope.ts": "a1ebeae3241caba87f6b4c9cf4208dee437d27214d2fdf490727d15525dd588b",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/SelectiveReripTinyHyperGraphSolver.ts": "9efff4b5133951be39b2e528bd31681b7c90c3a1b6072a5c1781ab0e11a13152",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/findPackedDistinctOwnerBlockerPath.ts": "4dd979545a919a1399d0f1ac922df22eb4210fc891ff895261094237bfe4ddf4"
+  },
+  "geometryHash": "50e96626294ebbf0a960bd0b5d430ad8546db2a258348d296459647c762a22b6",
+  "metrics": {
+    "routeCount": 205,
+    "traceDensityCandidateEvaluated": false,
+    "traceDensityCandidateSelected": false,
+    "downstreamNodePfSum": 5.08736996877905,
+    "downstreamNodePfSquaredSum": 0.642042402456049,
+    "downstreamNodePfMax": 0.35378835761357247,
+    "downstreamSquaredNodePortPointCount": 16324,
+    "changedPreloadedTraceSectionCount": 0,
+    "iterations": 220452,
+    "ripCount": 7,
+    "partialRipCount": 6,
+    "partiallyRippedRouteCount": 415,
+    "partiallyRippedSegmentCount": 2680,
+    "retainedPartialRipSegmentCount": 4621,
+    "firstMaxRegionCost": 3.135627851410052,
+    "bestMaxRegionCost": 1.9261052781501817,
+    "firstTotalRegionCost": 23.835998740532233,
+    "bestTotalRegionCost": 11.59159180811326,
+    "firstSegmentCount": 1335,
+    "bestSolvedSegmentCount": 1185,
+    "bestSolvedMaxRegionSegmentCount": 15,
+    "bestSolvedSquaredRegionSegmentCount": 4081,
+    "finalMaxRegionSegmentCount": 15,
+    "finalSquaredRegionSegmentCount": 4081,
+    "finalSegmentCount": 1185,
+    "finalLayerChangeCount": 80,
+    "warmupFullRipAttempts": 1,
+    "complexityAwareSelection": true,
+    "targetReached": false,
+    "outsideInCompletedRouteCount": 415,
+    "outsideInFallbackRouteCount": 0,
+    "outsideInForwardExpansionCount": 33590,
+    "outsideInReverseExpansionCount": 33358
+  },
+  "stackSamples": 0,
+  "phases": {
+    "primary": 0,
+    "completion": 0
+  },
+  "sourceRows": [],
+  "topStacks": [],
+  "regionCostGuards": [
+    {
+      "calls": 3180878,
+      "hits": 2790852,
+      "misses": 390026,
+      "rank": [
+        1087433,
+        1495652,
+        98516,
+        109251
+      ],
+      "objectIs": 29968713,
+      "geometryReads": 9542634,
+      "policyReads": 6361756
+    }
+  ]
+}

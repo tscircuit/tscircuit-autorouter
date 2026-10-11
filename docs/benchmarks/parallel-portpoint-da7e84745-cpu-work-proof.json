@@ -1,0 +1,260 @@
+{
+  "kind": "Frozen Native portpoint CPU attribution and isolated operation census",
+  "revision": "da7e84745f2d024a390783c5dca718d6528429be",
+  "runtime": "Bun 1.3.2",
+  "strategy": "indexed",
+  "effort": 1,
+  "cacheProvider": null,
+  "noTimingComparison": true,
+  "noProductionEdits": true,
+  "profileBoundary": "bun:jsc.profile wraps only the original ParallelPortPointPathingSolver.solve(); Native scenario preparation, runtime initialization, constructor, serialization, output/hash assertions and source-copy censuses occur outside CPU attribution.",
+  "jobCapture": "Committed cyclic Native constructor DTOs use Bun V8 serialization. Replay computes constructor hash from original decompressed bytes before deserialize; successful reserialization may have different bytes without geometry or alias changes.",
+  "sampleInputs": {
+    "001": "948b62f0936fff4325006bd22a6ad8f5f1c3022181604efbed67a2620bddda0f",
+    "006": "eddbc0fed7897338a16d6897fd66af537e0e8de13d9fbb0a676eb2f34765e18a"
+  },
+  "nativeOutputs": {
+    "001": {
+      "geometryHash": "50e96626294ebbf0a960bd0b5d430ad8546db2a258348d296459647c762a22b6",
+      "metrics": {
+        "routeCount": 205,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 5.08736996877905,
+        "downstreamNodePfSquaredSum": 0.642042402456049,
+        "downstreamNodePfMax": 0.35378835761357247,
+        "downstreamSquaredNodePortPointCount": 16324,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 220452,
+        "ripCount": 7,
+        "partialRipCount": 6,
+        "partiallyRippedRouteCount": 415,
+        "partiallyRippedSegmentCount": 2680,
+        "retainedPartialRipSegmentCount": 4621,
+        "firstMaxRegionCost": 3.135627851410052,
+        "bestMaxRegionCost": 1.9261052781501817,
+        "firstTotalRegionCost": 23.835998740532233,
+        "bestTotalRegionCost": 11.59159180811326,
+        "firstSegmentCount": 1335,
+        "bestSolvedSegmentCount": 1185,
+        "bestSolvedMaxRegionSegmentCount": 15,
+        "bestSolvedSquaredRegionSegmentCount": 4081,
+        "finalMaxRegionSegmentCount": 15,
+        "finalSquaredRegionSegmentCount": 4081,
+        "finalSegmentCount": 1185,
+        "finalLayerChangeCount": 80,
+        "warmupFullRipAttempts": 1,
+        "complexityAwareSelection": true,
+        "targetReached": false,
+        "outsideInCompletedRouteCount": 415,
+        "outsideInFallbackRouteCount": 0,
+        "outsideInForwardExpansionCount": 33590,
+        "outsideInReverseExpansionCount": 33358
+      }
+    },
+    "006": {
+      "geometryHash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 32.550661414050566,
+        "downstreamNodePfSquaredSum": 25.661628766934466,
+        "downstreamNodePfMax": 2.4329200193579688,
+        "downstreamSquaredNodePortPointCount": 38424,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 2000000,
+        "bestMaxRegionCost": 19.599999999999866,
+        "bestTotalRegionCost": 162.44490649471732,
+        "finalMaxRegionSegmentCount": 29,
+        "finalSquaredRegionSegmentCount": 9606,
+        "finalSegmentCount": 2766,
+        "finalLayerChangeCount": 247,
+        "outsideInCompletedRouteCount": 0,
+        "outsideInFallbackRouteCount": 0,
+        "outsideInForwardExpansionCount": 0,
+        "outsideInReverseExpansionCount": 0
+      }
+    }
+  },
+  "cpuSourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/PackedDistanceAwareTinyHyperGraphSolver.ts": "d3ef2d6feccf593ee77e061a0578e2c301a13c2308b430d9e4112e43618adbef",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyRegionCostMemo.ts": "2b76b8965f675f4ed2716a10099c42ecf383d88332999ed2debfd415ea0093f4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyTriangularDistanceIndex.ts": "979846e88e6bf6bda6338eb424411ed2481bf66e96f6af23f96e89d02d59af55",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/createTinyOrderedNeighborKernel.ts": "b332d3e215a39a85fc48a1394a22e9c75ad568fc220d2ee5ef2dca6e1c98b69e",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/TinyNativeSynchronousScope.ts": "a1ebeae3241caba87f6b4c9cf4208dee437d27214d2fdf490727d15525dd588b",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/SelectiveReripTinyHyperGraphSolver.ts": "9efff4b5133951be39b2e528bd31681b7c90c3a1b6072a5c1781ab0e11a13152",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/findPackedDistinctOwnerBlockerPath.ts": "4dd979545a919a1399d0f1ac922df22eb4210fc891ff895261094237bfe4ddf4"
+  },
+  "sample006Cpu": {
+    "stackSamples": 9767,
+    "phases": {
+      "primary": 3258,
+      "completion": 6509
+    },
+    "hotspots": [
+      {
+        "file": "findPackedDistinctOwnerBlockerPath.ts",
+        "name": "findPackedDistinctOwnerBlockerPath",
+        "selfSamples": 1307,
+        "inclusiveSamples": 3014,
+        "selfShare": 0.13381795843145286,
+        "inclusiveShare": 0.30859015050680866
+      },
+      {
+        "file": "createTinyOrderedNeighborKernel.ts",
+        "name": "scan",
+        "selfSamples": 424,
+        "inclusiveSamples": 2672,
+        "selfShare": 0.043411487662537114,
+        "inclusiveShare": 0.2735742807412716
+      },
+      {
+        "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+        "name": "computeGFromRegionTuple",
+        "selfSamples": 906,
+        "inclusiveSamples": 1767,
+        "selfShare": 0.09276133920344015,
+        "inclusiveShare": 0.18091532712194122
+      },
+      {
+        "file": "findPackedDistinctOwnerBlockerPath.ts",
+        "name": "checkDisconnected",
+        "selfSamples": 274,
+        "inclusiveSamples": 878,
+        "selfShare": 0.028053650046073512,
+        "inclusiveShare": 0.08989454284836695
+      },
+      {
+        "file": "TinyRegionCostMemo.ts",
+        "name": "get",
+        "selfSamples": 862,
+        "inclusiveSamples": 862,
+        "selfShare": 0.08825637350261083,
+        "inclusiveShare": 0.08825637350261083
+      },
+      {
+        "file": "SelectiveReripTinyHyperGraphSolver.ts",
+        "name": "getRelaxedSearchHops",
+        "selfSamples": 352,
+        "inclusiveSamples": 633,
+        "selfShare": 0.036039725606634584,
+        "inclusiveShare": 0.0648100747414764
+      }
+    ]
+  },
+  "sample006RegionCostGuards": {
+    "memoCalls": 79347532,
+    "tupleHits": 73654905,
+    "misses": 5692627,
+    "objectIsCalls": 722006255,
+    "geometryScalarReads": 238042596,
+    "policyScalarReads": 158695064,
+    "scope": "Parent and sole winning native CongestionAware completion child. Original tuple/MRU updates remain intact."
+  },
+  "sample006BlockerWork": {
+    "searchCount": 7,
+    "builtHops": 37537335,
+    "returnedHops": 72935242,
+    "existingStateCacheHits": 344214,
+    "mathHypotCalls": 37701422,
+    "crossingCalls": 426290,
+    "proposals": 36380480,
+    "dominated": 35147923,
+    "accepted": 1232557,
+    "heapComparisons": 31736072,
+    "subsetUnionCalls": 36270422,
+    "identicalRowSubsetUnion": 32018048
+  },
+  "topologyMemoryCensus": [
+    {
+      "sample": 1,
+      "ports": 12838,
+      "regions": 1693,
+      "triangularPairs": 709246,
+      "f64PlusValidityBytes": 6383214,
+      "maxDegree": 194
+    },
+    {
+      "sample": 6,
+      "ports": 34790,
+      "regions": 14058,
+      "triangularPairs": 3229289,
+      "f64PlusValidityBytes": 29063601,
+      "maxDegree": 716
+    }
+  ],
+  "interpretation": [
+    "Existing Native hopsByState already caches within each invocation; repeated requests do not imply repeated geometry construction.",
+    "The disabled TinyTriangularDistanceIndex computes sqrt and checks coordinate stamps per pair; it is not exact blocker Math.hypot and previously regressed remote timings. No new distance cache was activated.",
+    "Blocker label/proposal/heap work is the larger measured attribution. A private scoped numeric hop-fact and dense state-storage prototype is proposed, preserving original getHops/resource/scratch/goal/cap/winner ordering.",
+    "Memo Object.is counts do not imply all Memo CPU can be saved. Its entire 8.83% self attribution is an opportunity ceiling, not a speed prediction.",
+    "CPU percentages are sampling attribution only. No local elapsed-time comparison, expected speed claim or dataset acceptance claim is made."
+  ],
+  "commands": [
+    "PATHING_SOURCE_ROOT=<frozen-da7e84745-worktree> PATHING_REVISION=da7e84745f2d024a390783c5dca718d6528429be PATHING_INPUT=docs/benchmarks/native-portpoint-da7e84745/006.input.v8.gz PATHING_PROFILE_OUTPUT=/tmp/native-portpoint-profile bun scripts/parallel-benchmark/prototypes/tiny-portpoint-native-work/profileNativePortpoint.ts 6",
+    "PATHING_SOURCE_ROOT=<frozen-da7e84745-worktree> PATHING_OPERATION_ONLY=1 PATHING_INPUT=docs/benchmarks/native-portpoint-da7e84745/001.input.v8.gz PATHING_CENSUS_TRANSFORMS=/tmp/guard-transform.jsonl bun --preload ./scripts/parallel-benchmark/prototypes/tiny-portpoint-native-work/regionCostGuardCensusPreload.ts scripts/parallel-benchmark/prototypes/tiny-portpoint-native-work/profileNativePortpoint.ts 1",
+    "PATHING_SOURCE_ROOT=<frozen-da7e84745-worktree> PATHING_OPERATION_ONLY=1 PATHING_INPUT=docs/benchmarks/native-portpoint-da7e84745/006.input.v8.gz PATHING_CENSUS_TRANSFORMS=/tmp/blocker-transform.jsonl bun --preload ./scripts/parallel-benchmark/prototypes/tiny-portpoint-native-work/blockerWorkCensusPreload.ts scripts/parallel-benchmark/prototypes/tiny-portpoint-native-work/profileNativePortpoint.ts 6"
+  ],
+  "validation": {
+    "unmodifiedFixtureReplay": [
+      "001 original native geometry/counters",
+      "006 original native geometry/counters, parent2M and winning completion3,683,422 iterations"
+    ],
+    "sourceCopyReplay": [
+      "001 guard counts match",
+      "006 blocker counts match"
+    ],
+    "typescript": "Owned diagnostic files compile. Global tsc is temporarily blocked only by another owner workerNativeA01PrivateProducer.ts expected-argument-count error."
+  },
+  "artifacts": {
+    "docs/benchmarks/native-portpoint-da7e84745/001.input.v8.gz": {
+      "sha256": "17eb36b9a5926288fa985186e4db424766e1307401d440e48e7cb4771ff1570a",
+      "bytes": 417786
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/001.profile-summary.json": {
+      "sha256": "1f958d59dc8337043160a5930fbe016bbb3cbc33e7fdc7d1a6971f33e91cc6f1",
+      "bytes": 44024
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/001.profile.json.gz": {
+      "sha256": "94b68fbbedf67bdfacb52a3dea61c18032182cc1323fbffb7bea0588a2a38cf2",
+      "bytes": 28547
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/001.region-cost-guard-counts.json": {
+      "sha256": "f3e804c9252b973914384b6fc88084bd9a495d1d39242713896640eb86f8ad18",
+      "bytes": 3399
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/001.source-attribution.json": {
+      "sha256": "dde3a4a7d9a91a490d01685d88e5aad69d9f4782be90716dc146a206fcfaac87",
+      "bytes": 41030
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.blocker-work-counts.json": {
+      "sha256": "d7ffcd1154ad5221728bdf06673338b3ae4ef21b554bd0f968f28468b50e24b2",
+      "bytes": 8798
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.input.v8.gz": {
+      "sha256": "ab94e5e81c3a8b4c51112794f7d1a583e5cd99e48e4a5c3a6368877c8efb2d51",
+      "bytes": 1400991
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.profile-summary.json": {
+      "sha256": "2a92645ee32652bc71efa052c79fb11ffda67307aaf5d9f45ba203f2444a9c16",
+      "bytes": 55124
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.profile.json.gz": {
+      "sha256": "3592b8f71f5543840f9fc899fd18a22d04856b3a80db2a4ab869fb249512eb14",
+      "bytes": 383364
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.region-cost-guard-counts.json": {
+      "sha256": "4e24a0d6f007e52af13e1ff2dba71a2cf3adba5ad47d6d0e006588782c75183c",
+      "bytes": 2336
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/006.source-attribution.json": {
+      "sha256": "57ba64da0dc4a4444d5eb64e8b74ff135f56bbb4b38be6a6205ecb7d025b3cd2",
+      "bytes": 52653
+    },
+    "docs/benchmarks/native-portpoint-da7e84745/source-copy-transform-hashes.json": {
+      "sha256": "0fbbdc63cc843822e03d3f958eff151b667323eb87292a914a70dc053f0478e9",
+      "bytes": 1133
+    }
+  }
+}

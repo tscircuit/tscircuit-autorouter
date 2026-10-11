@@ -1,0 +1,64 @@
+{
+  "kind": "isolated-region-cost-guard-census",
+  "noTimingComparison": true,
+  "sourceRoot": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter",
+  "sample": 6,
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/PackedDistanceAwareTinyHyperGraphSolver.ts": "d3ef2d6feccf593ee77e061a0578e2c301a13c2308b430d9e4112e43618adbef",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyRegionCostMemo.ts": "2b76b8965f675f4ed2716a10099c42ecf383d88332999ed2debfd415ea0093f4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/createTinyOrderedNeighborKernel.ts": "b332d3e215a39a85fc48a1394a22e9c75ad568fc220d2ee5ef2dca6e1c98b69e",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/TinyNativeSynchronousScope.ts": "a1ebeae3241caba87f6b4c9cf4208dee437d27214d2fdf490727d15525dd588b"
+  },
+  "geometryHash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+  "metrics": {
+    "routeCount": 255,
+    "traceDensityCandidateEvaluated": false,
+    "traceDensityCandidateSelected": false,
+    "downstreamNodePfSum": 32.550661414050566,
+    "downstreamNodePfSquaredSum": 25.661628766934466,
+    "downstreamNodePfMax": 2.4329200193579688,
+    "downstreamSquaredNodePortPointCount": 38424,
+    "changedPreloadedTraceSectionCount": 0,
+    "iterations": 2000000,
+    "bestMaxRegionCost": 19.599999999999866,
+    "bestTotalRegionCost": 162.44490649471732,
+    "finalMaxRegionSegmentCount": 29,
+    "finalSquaredRegionSegmentCount": 9606,
+    "finalSegmentCount": 2766,
+    "finalLayerChangeCount": 247,
+    "outsideInCompletedRouteCount": 0,
+    "outsideInFallbackRouteCount": 0,
+    "outsideInForwardExpansionCount": 0,
+    "outsideInReverseExpansionCount": 0
+  },
+  "census": [
+    {
+      "calls": 28191217,
+      "hits": 26642303,
+      "misses": 1548914,
+      "rank": [
+        17491421,
+        6779220,
+        1684141,
+        687521
+      ],
+      "objectIs": 255732710,
+      "geometryReads": 84573651,
+      "policyReads": 56382434
+    },
+    {
+      "calls": 51156315,
+      "hits": 47012602,
+      "misses": 4143713,
+      "rank": [
+        30034520,
+        11260423,
+        3867290,
+        1850369
+      ],
+      "objectIs": 466273545,
+      "geometryReads": 153468945,
+      "policyReads": 102312630
+    }
+  ]
+}

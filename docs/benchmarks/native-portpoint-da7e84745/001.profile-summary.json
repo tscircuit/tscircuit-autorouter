@@ -1,0 +1,1326 @@
+{
+  "kind": "unmodified-native-portpath-cpu-attribution",
+  "noTimingComparison": true,
+  "sourceRoot": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745",
+  "revision": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sample": 1,
+  "constructorInputSha256": "948b62f0936fff4325006bd22a6ad8f5f1c3022181604efbed67a2620bddda0f",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/PackedDistanceAwareTinyHyperGraphSolver.ts": "d3ef2d6feccf593ee77e061a0578e2c301a13c2308b430d9e4112e43618adbef",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyRegionCostMemo.ts": "2b76b8965f675f4ed2716a10099c42ecf383d88332999ed2debfd415ea0093f4",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyTriangularDistanceIndex.ts": "979846e88e6bf6bda6338eb424411ed2481bf66e96f6af23f96e89d02d59af55",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/createTinyOrderedNeighborKernel.ts": "b332d3e215a39a85fc48a1394a22e9c75ad568fc220d2ee5ef2dca6e1c98b69e",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/TinyNativeSynchronousScope.ts": "a1ebeae3241caba87f6b4c9cf4208dee437d27214d2fdf490727d15525dd588b",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/SelectiveReripTinyHyperGraphSolver.ts": "9efff4b5133951be39b2e528bd31681b7c90c3a1b6072a5c1781ab0e11a13152",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/tiny-hypergraph-fork/findPackedDistinctOwnerBlockerPath.ts": "4dd979545a919a1399d0f1ac922df22eb4210fc891ff895261094237bfe4ddf4"
+  },
+  "geometryHash": "50e96626294ebbf0a960bd0b5d430ad8546db2a258348d296459647c762a22b6",
+  "metrics": {
+    "routeCount": 205,
+    "traceDensityCandidateEvaluated": false,
+    "traceDensityCandidateSelected": false,
+    "downstreamNodePfSum": 5.08736996877905,
+    "downstreamNodePfSquaredSum": 0.642042402456049,
+    "downstreamNodePfMax": 0.35378835761357247,
+    "downstreamSquaredNodePortPointCount": 16324,
+    "changedPreloadedTraceSectionCount": 0,
+    "iterations": 220452,
+    "ripCount": 7,
+    "partialRipCount": 6,
+    "partiallyRippedRouteCount": 415,
+    "partiallyRippedSegmentCount": 2680,
+    "retainedPartialRipSegmentCount": 4621,
+    "firstMaxRegionCost": 3.135627851410052,
+    "bestMaxRegionCost": 1.9261052781501817,
+    "firstTotalRegionCost": 23.835998740532233,
+    "bestTotalRegionCost": 11.59159180811326,
+    "firstSegmentCount": 1335,
+    "bestSolvedSegmentCount": 1185,
+    "bestSolvedMaxRegionSegmentCount": 15,
+    "bestSolvedSquaredRegionSegmentCount": 4081,
+    "finalMaxRegionSegmentCount": 15,
+    "finalSquaredRegionSegmentCount": 4081,
+    "finalSegmentCount": 1185,
+    "finalLayerChangeCount": 80,
+    "warmupFullRipAttempts": 1,
+    "complexityAwareSelection": true,
+    "targetReached": false,
+    "outsideInCompletedRouteCount": 415,
+    "outsideInFallbackRouteCount": 0,
+    "outsideInForwardExpansionCount": 33590,
+    "outsideInReverseExpansionCount": 33358
+  },
+  "stackSamples": 597,
+  "phases": {
+    "primary": 597,
+    "completion": 0
+  },
+  "sourceRows": [
+    {
+      "file": "",
+      "name": "profile",
+      "selfSamples": 1,
+      "inclusiveSamples": 597,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "profileNativePortpoint.ts",
+      "name": "(module)",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "evaluate",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "asyncModuleEvaluation",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "asyncFunctionResume",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "promiseReactionJobWithoutPromiseUnwrapAsyncContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "promiseReactionJob",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "",
+      "name": "processTicksAndRejections",
+      "selfSamples": 0,
+      "inclusiveSamples": 597,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "file": "ParallelPortPointPathingSolver.ts",
+      "name": "solve",
+      "selfSamples": 1,
+      "inclusiveSamples": 596,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.998324958123953
+    },
+    {
+      "file": "ParallelPortPointPathingSolver.ts",
+      "name": "_step",
+      "selfSamples": 2,
+      "inclusiveSamples": 550,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.9212730318257957
+    },
+    {
+      "file": "BaseSolver.ts",
+      "name": "step",
+      "selfSamples": 0,
+      "inclusiveSamples": 550,
+      "selfShare": 0,
+      "inclusiveShare": 0.9212730318257957
+    },
+    {
+      "file": "BaseSolver.ts",
+      "name": "solve",
+      "selfSamples": 0,
+      "inclusiveSamples": 550,
+      "selfShare": 0,
+      "inclusiveShare": 0.9212730318257957
+    },
+    {
+      "file": "TinyHypergraphPortPointPathingSolver.ts",
+      "name": "_step",
+      "selfSamples": 1,
+      "inclusiveSamples": 547,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.916247906197655
+    },
+    {
+      "file": "index.js",
+      "name": "step",
+      "selfSamples": 9,
+      "inclusiveSamples": 544,
+      "selfShare": 0.01507537688442211,
+      "inclusiveShare": 0.9112227805695142
+    },
+    {
+      "file": "index.js",
+      "name": "_step",
+      "selfSamples": 0,
+      "inclusiveSamples": 538,
+      "selfShare": 0,
+      "inclusiveShare": 0.9011725293132329
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "_step",
+      "selfSamples": 0,
+      "inclusiveSamples": 462,
+      "selfShare": 0,
+      "inclusiveShare": 0.7738693467336684
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "_step",
+      "selfSamples": 16,
+      "inclusiveSamples": 253,
+      "selfShare": 0.02680067001675042,
+      "inclusiveShare": 0.423785594639866
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "expandOutsideInFrontier",
+      "selfSamples": 95,
+      "inclusiveSamples": 192,
+      "selfShare": 0.15912897822445563,
+      "inclusiveShare": 0.32160804020100503
+    },
+    {
+      "file": "createTinyOrderedNeighborKernel.ts",
+      "name": "scan",
+      "selfSamples": 8,
+      "inclusiveSamples": 121,
+      "selfShare": 0.01340033500837521,
+      "inclusiveShare": 0.20268006700167504
+    },
+    {
+      "file": "TinyNativeSynchronousScope.ts",
+      "name": "plainNativeData",
+      "selfSamples": 49,
+      "inclusiveSamples": 101,
+      "selfShare": 0.08207705192629816,
+      "inclusiveShare": 0.16917922948073702
+    },
+    {
+      "file": "core.ts",
+      "name": "computeG",
+      "selfSamples": 32,
+      "inclusiveSamples": 60,
+      "selfShare": 0.05360134003350084,
+      "inclusiveShare": 0.10050251256281408
+    },
+    {
+      "file": "TinyNativeSynchronousScope.ts",
+      "name": "canTrustTinyNativeScopeChild",
+      "selfSamples": 0,
+      "inclusiveSamples": 56,
+      "selfShare": 0,
+      "inclusiveShare": 0.09380234505862646
+    },
+    {
+      "file": "TinyHypergraphPortPointPathingSolver.ts",
+      "name": "loadHyperGraph",
+      "selfSamples": 0,
+      "inclusiveSamples": 51,
+      "selfShare": 0,
+      "inclusiveShare": 0.08542713567839195
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "loadSerializedHyperGraph",
+      "selfSamples": 0,
+      "inclusiveSamples": 50,
+      "selfShare": 0,
+      "inclusiveShare": 0.08375209380234507
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "computeGFromRegionTuple",
+      "selfSamples": 24,
+      "inclusiveSamples": 50,
+      "selfShare": 0.04020100502512563,
+      "inclusiveShare": 0.08375209380234507
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "",
+      "selfSamples": 32,
+      "inclusiveSamples": 49,
+      "selfShare": 0.05360134003350084,
+      "inclusiveShare": 0.08207705192629816
+    },
+    {
+      "file": "",
+      "name": ".wasm-function[1]",
+      "selfSamples": 2,
+      "inclusiveSamples": 48,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.08040201005025126
+    },
+    {
+      "file": "TinyNativeSynchronousScope.ts",
+      "name": "beginTinyNativeSynchronousScope",
+      "selfSamples": 0,
+      "inclusiveSamples": 45,
+      "selfShare": 0,
+      "inclusiveShare": 0.07537688442211055
+    },
+    {
+      "file": "TinyRegionCostMemo.ts",
+      "name": "get",
+      "selfSamples": 41,
+      "inclusiveSamples": 41,
+      "selfShare": 0.06867671691792294,
+      "inclusiveShare": 0.06867671691792294
+    },
+    {
+      "file": "PackedIndexedCandidateHeap.ts",
+      "name": "queueValues",
+      "selfSamples": 22,
+      "inclusiveSamples": 38,
+      "selfShare": 0.03685092127303183,
+      "inclusiveShare": 0.06365159128978225
+    },
+    {
+      "file": "",
+      "name": "map",
+      "selfSamples": 0,
+      "inclusiveSamples": 36,
+      "selfShare": 0,
+      "inclusiveShare": 0.06030150753768844
+    },
+    {
+      "file": "",
+      "name": ".wasm-function[0]",
+      "selfSamples": 32,
+      "inclusiveSamples": 32,
+      "selfShare": 0.05360134003350084,
+      "inclusiveShare": 0.05360134003350084
+    },
+    {
+      "file": "",
+      "name": "getOwnPropertyDescriptor",
+      "selfSamples": 29,
+      "inclusiveSamples": 29,
+      "selfShare": 0.048576214405360134,
+      "inclusiveShare": 0.048576214405360134
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "getSharedPortIdsForConnection",
+      "selfSamples": 1,
+      "inclusiveSamples": 27,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.04522613065326633
+    },
+    {
+      "file": "TinyHyperGraphSectionPipelineSolver.ts",
+      "name": "getConstructorParams",
+      "selfSamples": 0,
+      "inclusiveSamples": 26,
+      "selfShare": 0,
+      "inclusiveShare": 0.04355108877721943
+    },
+    {
+      "file": "ParallelPortPointPathingSolver.ts",
+      "name": "",
+      "selfSamples": 0,
+      "inclusiveSamples": 26,
+      "selfShare": 0,
+      "inclusiveShare": 0.04355108877721943
+    },
+    {
+      "file": "",
+      "name": "filter",
+      "selfSamples": 5,
+      "inclusiveSamples": 26,
+      "selfShare": 0.008375209380234505,
+      "inclusiveShare": 0.04355108877721943
+    },
+    {
+      "file": "TinyHyperGraphSectionPipelineSolver.ts",
+      "name": "getSectionStageParams",
+      "selfSamples": 0,
+      "inclusiveSamples": 26,
+      "selfShare": 0,
+      "inclusiveShare": 0.04355108877721943
+    },
+    {
+      "file": "",
+      "name": "forEach",
+      "selfSamples": 0,
+      "inclusiveSamples": 17,
+      "selfShare": 0,
+      "inclusiveShare": 0.02847571189279732
+    },
+    {
+      "file": "PackedIndexedCandidateHeap.ts",
+      "name": "insertOrReplace",
+      "selfSamples": 12,
+      "inclusiveSamples": 16,
+      "selfShare": 0.020100502512562814,
+      "inclusiveShare": 0.02680067001675042
+    },
+    {
+      "file": "PackedIndexedCandidateHeap.ts",
+      "name": "dequeue",
+      "selfSamples": 15,
+      "inclusiveSamples": 15,
+      "selfShare": 0.02512562814070352,
+      "inclusiveShare": 0.02512562814070352
+    },
+    {
+      "file": "",
+      "name": "from",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "selfShare": 0,
+      "inclusiveShare": 0.023450586264656615
+    },
+    {
+      "file": "",
+      "name": ".wasm-function[2]",
+      "selfSamples": 14,
+      "inclusiveSamples": 14,
+      "selfShare": 0.023450586264656615,
+      "inclusiveShare": 0.023450586264656615
+    },
+    {
+      "file": "",
+      "name": "cloneObject",
+      "selfSamples": 14,
+      "inclusiveSamples": 14,
+      "selfShare": 0.023450586264656615,
+      "inclusiveShare": 0.023450586264656615
+    },
+    {
+      "file": "",
+      "name": "ownKeys",
+      "selfSamples": 12,
+      "inclusiveSamples": 12,
+      "selfShare": 0.020100502512562814,
+      "inclusiveShare": 0.020100502512562814
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "recordSettledCandidate",
+      "selfSamples": 3,
+      "inclusiveSamples": 12,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.020100502512562814
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "",
+      "selfSamples": 1,
+      "inclusiveSamples": 12,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.020100502512562814
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "convertToSerializedHyperGraph",
+      "selfSamples": 0,
+      "inclusiveSamples": 12,
+      "selfShare": 0,
+      "inclusiveShare": 0.020100502512562814
+    },
+    {
+      "file": "",
+      "name": "sort",
+      "selfSamples": 9,
+      "inclusiveSamples": 11,
+      "selfShare": 0.01507537688442211,
+      "inclusiveShare": 0.018425460636515914
+    },
+    {
+      "file": "MinHeap.ts",
+      "name": "queue",
+      "selfSamples": 7,
+      "inclusiveSamples": 10,
+      "selfShare": 0.011725293132328308,
+      "inclusiveShare": 0.01675041876046901
+    },
+    {
+      "file": "",
+      "name": "set",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "selfShare": 0.01507537688442211,
+      "inclusiveShare": 0.01507537688442211
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "onAllRoutesRouted",
+      "selfSamples": 3,
+      "inclusiveSamples": 9,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.01507537688442211
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "considerOutsideInJoins",
+      "selfSamples": 5,
+      "inclusiveSamples": 9,
+      "selfShare": 0.008375209380234505,
+      "inclusiveShare": 0.01507537688442211
+    },
+    {
+      "file": "core.ts",
+      "name": "populateBaseSegmentGeometryScratch",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "selfShare": 0.01507537688442211,
+      "inclusiveShare": 0.01507537688442211
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "publishOutsideInStats",
+      "selfSamples": 0,
+      "inclusiveSamples": 8,
+      "selfShare": 0,
+      "inclusiveShare": 0.01340033500837521
+    },
+    {
+      "file": "layerLabels.ts",
+      "name": "getZLayerLabel",
+      "selfSamples": 2,
+      "inclusiveSamples": 7,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.011725293132328308
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "getSerializedPortData",
+      "selfSamples": 0,
+      "inclusiveSamples": 7,
+      "selfShare": 0,
+      "inclusiveShare": 0.011725293132328308
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "toObjectRecord",
+      "selfSamples": 0,
+      "inclusiveSamples": 6,
+      "selfShare": 0,
+      "inclusiveShare": 0.010050251256281407
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "computePortAngle",
+      "selfSamples": 2,
+      "inclusiveSamples": 5,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.008375209380234505
+    },
+    {
+      "file": "",
+      "name": "wasm-stub",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "selfShare": 0,
+      "inclusiveShare": 0.008375209380234505
+    },
+    {
+      "file": "index.js",
+      "name": "setup",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "selfShare": 0,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "core.ts",
+      "name": "getRouteHeuristic",
+      "selfSamples": 1,
+      "inclusiveSamples": 4,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "core.ts",
+      "name": "appendSegmentToRegionCache",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "selfShare": 0.006700167504187605,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "PackedIndexedCandidateHeap.ts",
+      "name": "siftUp",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "selfShare": 0.006700167504187605,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "preparePartialRip",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "selfShare": 0,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "buildJoinedCandidate",
+      "selfSamples": 1,
+      "inclusiveSamples": 4,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "",
+      "name": "Set",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "selfShare": 0.006700167504187605,
+      "inclusiveShare": 0.006700167504187605
+    },
+    {
+      "file": "",
+      "name": "apply",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "",
+      "name": "has",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "",
+      "name": "add",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "",
+      "name": "performIteration",
+      "selfSamples": 2,
+      "inclusiveSamples": 3,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "",
+      "name": "get",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "getCentermostPortIdForRegion",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "",
+      "name": "find",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "core.ts",
+      "name": "TinyHyperGraphSolver",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "_setup",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "selfShare": 0,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "computeH",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "core.ts",
+      "name": "getCandidateBestCost",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "getRouteEndPortId",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "core.ts",
+      "name": "isRegionReservedForDifferentNet",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "MinHeap.ts",
+      "name": "siftUp",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "countNewIntersections.ts",
+      "name": "setNewIntersectionCounts",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.005025125628140704,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "getSerializedRegionData",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "selfShare": 0,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "index.ts",
+      "name": "createSolvedSolverFromRegionSegments",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "selfShare": 0,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "index.ts",
+      "name": "TinyHyperGraphSectionSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "selfShare": 0,
+      "inclusiveShare": 0.005025125628140704
+    },
+    {
+      "file": "core.ts",
+      "name": "",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "PackedDistanceAwareTinyHyperGraphSolver",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "OutsideInPartialRipTinyHyperGraphSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "SelectiveReripTinyHyperGraphSolver.ts",
+      "name": "SelectiveReripTinyHyperGraphSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "",
+      "name": "TinyIndexedSelectiveReripHyperGraphSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "createTinyOrderedNeighborKernel.ts",
+      "name": "createTinyOrderedNeighborKernel",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "onPathFound",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "setCandidateBestCost",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "rebuildRetainedRoutingState",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "MinHeap.ts",
+      "name": "dequeue",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "dequeueFreshCandidate",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "core.ts",
+      "name": "getHopId",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "getSerializedPortY",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0033500837520938024,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "getIntraNodeCrossingsUsingCircle.ts",
+      "name": "getIntraNodeCrossingsUsingCircle",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "TinyHypergraphPortPointPathingSolver.ts",
+      "name": "summarizePipelineCandidate",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0033500837520938024
+    },
+    {
+      "file": "TinyNativeSynchronousScope.ts",
+      "name": "",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "isProxy",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "getRegionBounds",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "TinyHypergraphPortPointPathingSolver.ts",
+      "name": "applyMetadataPortPenalties",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "distance-aware-tiny-hypergraph-solver.ts",
+      "name": "DistanceAwareTinyHyperGraphSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "recordEndpointNet",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "computeProblemSetup",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "get problemSetup",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "_setup",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "distance-aware-tiny-hypergraph-solver.ts",
+      "name": "_setup",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "Module",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "createTinyOrderedNeighborKernel.ts",
+      "name": "TinyOrderedNeighborKernel",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "String",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "getActiveWord",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "onPathFound",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "distance-aware-tiny-hypergraph-solver.ts",
+      "name": "onPathFound",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "setCandidateBestCost",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "shuffle.ts",
+      "name": "shuffle",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "resetRoutingStateForRerip",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "resetRoutingStateForRerip",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "TinyIndexedSelectiveReripHyperGraphSolver.ts",
+      "name": "resetRoutingStateForRerip",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "indexCommittedSegmentsByRouteId",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "MinHeap.ts",
+      "name": "siftDown",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "PackedDistanceAwareTinyHyperGraphSolver.ts",
+      "name": "computeRegionCostForRegion",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "commitBestOutsideInJoin",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "appendPathToEnd",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "OutsideInPartialRipTinyHyperGraphSolver.ts",
+      "name": "getCommittedRouteSegments",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "cloneSolvedStateSnapshot",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "core.ts",
+      "name": "replaceBestSolvedState",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "getOrderedRoutePath",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "convertToSerializedHyperGraph.ts",
+      "name": "getSerializedSolvedRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "defineProperty",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "loadSerializedHyperGraph.ts",
+      "name": "addSerializedPortIdToMetadata",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "flatIntoArrayWithCallback",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "typedArrayViewIsTypedArrayView",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "",
+      "name": "next",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "initialAssignments.ts",
+      "name": "applyInitialAssignments",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "index.ts",
+      "name": "applyRouteSegmentsToSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "index.ts",
+      "name": "createSectionRoutePlans",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "index.ts",
+      "name": "_setup",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.0016750418760469012
+    },
+    {
+      "file": "getIntraNodeCrossingsUsingCircle.ts",
+      "name": "countChordCrossings",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.0016750418760469012,
+      "inclusiveShare": 0.0016750418760469012
+    }
+  ],
+  "topStacks": [
+    {
+      "stack": "OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step > ParallelPortPointPathingSolver.ts:_step",
+      "samples": 95
+    },
+    {
+      "stack": "TinyNativeSynchronousScope.ts:plainNativeData > TinyNativeSynchronousScope.ts:canTrustTinyNativeScopeChild > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 35
+    },
+    {
+      "stack": "core.ts:computeG > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 32
+    },
+    {
+      "stack": ":.wasm-function[0] > :.wasm-function[1] > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 28
+    },
+    {
+      "stack": "TinyRegionCostMemo.ts:get > PackedDistanceAwareTinyHyperGraphSolver.ts:computeGFromRegionTuple > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 26
+    },
+    {
+      "stack": "PackedDistanceAwareTinyHyperGraphSolver.ts:computeGFromRegionTuple > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 24
+    },
+    {
+      "stack": ":getOwnPropertyDescriptor > TinyNativeSynchronousScope.ts:plainNativeData > TinyNativeSynchronousScope.ts:beginTinyNativeSynchronousScope > ParallelPortPointPathingSolver.ts:solve > :profile > profileNativePortpoint.ts:(module) > :evaluate > :asyncModuleEvaluation",
+      "samples": 22
+    },
+    {
+      "stack": "PackedIndexedCandidateHeap.ts:queueValues > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 22
+    },
+    {
+      "stack": "PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step > ParallelPortPointPathingSolver.ts:_step",
+      "samples": 16
+    },
+    {
+      "stack": "PackedIndexedCandidateHeap.ts:dequeue > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 15
+    },
+    {
+      "stack": "loadSerializedHyperGraph.ts: > :filter > loadSerializedHyperGraph.ts:getSharedPortIdsForConnection > loadSerializedHyperGraph.ts: > :map > loadSerializedHyperGraph.ts:loadSerializedHyperGraph > TinyHypergraphPortPointPathingSolver.ts:loadHyperGraph > TinyHyperGraphSectionPipelineSolver.ts:getSectionStageParams",
+      "samples": 15
+    },
+    {
+      "stack": "TinyNativeSynchronousScope.ts:plainNativeData > TinyNativeSynchronousScope.ts:beginTinyNativeSynchronousScope > ParallelPortPointPathingSolver.ts:solve > :profile > profileNativePortpoint.ts:(module) > :evaluate > :asyncModuleEvaluation > :asyncFunctionResume",
+      "samples": 14
+    },
+    {
+      "stack": ":.wasm-function[2] > :.wasm-function[1] > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 13
+    },
+    {
+      "stack": "TinyRegionCostMemo.ts:get > core.ts:computeG > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 13
+    },
+    {
+      "stack": "PackedIndexedCandidateHeap.ts:insertOrReplace > PackedIndexedCandidateHeap.ts:queueValues > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 12
+    },
+    {
+      "stack": ":ownKeys > TinyNativeSynchronousScope.ts:plainNativeData > TinyNativeSynchronousScope.ts:canTrustTinyNativeScopeChild > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step",
+      "samples": 11
+    },
+    {
+      "stack": ":sort > OutsideInPartialRipTinyHyperGraphSolver.ts:recordSettledCandidate > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 9
+    },
+    {
+      "stack": "core.ts:populateBaseSegmentGeometryScratch > core.ts:computeG > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 9
+    },
+    {
+      "stack": "createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 8
+    },
+    {
+      "stack": ":getOwnPropertyDescriptor > TinyNativeSynchronousScope.ts:plainNativeData > TinyNativeSynchronousScope.ts:canTrustTinyNativeScopeChild > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step",
+      "samples": 7
+    },
+    {
+      "stack": ":set > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step",
+      "samples": 7
+    },
+    {
+      "stack": ":cloneObject > OutsideInPartialRipTinyHyperGraphSolver.ts:publishOutsideInStats > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 7
+    },
+    {
+      "stack": "MinHeap.ts:queue > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 7
+    },
+    {
+      "stack": "loadSerializedHyperGraph.ts: > :filter > loadSerializedHyperGraph.ts:getSharedPortIdsForConnection > loadSerializedHyperGraph.ts: > :map > loadSerializedHyperGraph.ts:loadSerializedHyperGraph > TinyHypergraphPortPointPathingSolver.ts:loadHyperGraph > TinyHyperGraphSectionPipelineSolver.ts:getConstructorParams",
+      "samples": 6
+    },
+    {
+      "stack": "index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step > ParallelPortPointPathingSolver.ts:_step > BaseSolver.ts:step > BaseSolver.ts:solve > ParallelPortPointPathingSolver.ts:solve > :profile > profileNativePortpoint.ts:(module)",
+      "samples": 6
+    },
+    {
+      "stack": ":cloneObject > convertToSerializedHyperGraph.ts:toObjectRecord > convertToSerializedHyperGraph.ts:getSerializedPortData > convertToSerializedHyperGraph.ts: > :from > convertToSerializedHyperGraph.ts:convertToSerializedHyperGraph > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 6
+    },
+    {
+      "stack": ":filter > loadSerializedHyperGraph.ts:getSharedPortIdsForConnection > loadSerializedHyperGraph.ts: > :map > loadSerializedHyperGraph.ts:loadSerializedHyperGraph > TinyHypergraphPortPointPathingSolver.ts:loadHyperGraph > TinyHyperGraphSectionPipelineSolver.ts:getConstructorParams > ParallelPortPointPathingSolver.ts:",
+      "samples": 5
+    },
+    {
+      "stack": "OutsideInPartialRipTinyHyperGraphSolver.ts:considerOutsideInJoins > OutsideInPartialRipTinyHyperGraphSolver.ts:expandOutsideInFrontier > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step > index.js:step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 5
+    },
+    {
+      "stack": ":.wasm-function[0] > :.wasm-function[1] > :wasm-stub > createTinyOrderedNeighborKernel.ts:scan > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step",
+      "samples": 4
+    },
+    {
+      "stack": "PackedIndexedCandidateHeap.ts:siftUp > PackedIndexedCandidateHeap.ts:insertOrReplace > PackedIndexedCandidateHeap.ts:queueValues > PackedDistanceAwareTinyHyperGraphSolver.ts:_step > OutsideInPartialRipTinyHyperGraphSolver.ts:_step > index.js:step > index.js:_step > TinyHypergraphPortPointPathingSolver.ts:_step",
+      "samples": 4
+    }
+  ]
+}
