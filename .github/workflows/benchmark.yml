@@ -86,7 +86,8 @@ jobs:
       (
         github.event_name == 'workflow_dispatch' &&
         inputs.same_machine_compare != true &&
-        inputs.effort_compare != true
+        inputs.effort_compare != true &&
+        inputs.solver_name != 'parallel-prototype'
       ) || (
         github.event_name == 'push' &&
         github.ref_name == 'main'
@@ -1510,6 +1511,80 @@ jobs:
               comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: finalBody,
             })
+
+  parallel-prototype-benchmark:
+    name: Four core parallel prototype benchmark
+    if: github.event_name == 'workflow_dispatch' && inputs.solver_name == 'parallel-prototype' && inputs.same_machine_compare != true && inputs.effort_compare != true
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    env:
+      PARALLEL_BENCHMARK_BASELINE_SHA: 65522c89c
+    steps:
+      - name: Checkout prototype
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          path: prototype
+          persist-credentials: false
+
+      - name: Checkout immutable baseline
+        uses: actions/checkout@v4
+        with:
+          ref: 65522c89c
+          path: baseline
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install prototype dependencies
+        working-directory: prototype
+        run: bun install
+
+      - name: Bundle immutable baseline against the same dependencies
+        run: |
+          ln -s "$GITHUB_WORKSPACE/prototype/node_modules" baseline/node_modules
+          cd baseline
+          bun build ./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target=bun --packages=external --outfile "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/baseline.js"
+
+      - name: Run paired SRJ18 benchmark on four CPUs
+        working-directory: prototype
+        env:
+          BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const { spawnSync } = require('node:child_process')
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
+            throw new Error('benchmark_args_json must be a JSON array of strings')
+          }
+          const allowed = fs.readFileSync('/proc/self/status', 'utf8').match(/^Cpus_allowed_list:\s*(.+)$/m)?.[1]
+          if (!allowed) throw new Error('Cannot determine CPU affinity')
+          const cpus = allowed.split(',').flatMap((range) => {
+            const [start, end = start] = range.split('-').map(Number)
+            return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+          }).slice(0, 4)
+          if (cpus.length !== 4) throw new Error('Four CPUs are required for this benchmark')
+          const env = {
+            ...process.env,
+            PARALLEL_BENCHMARK_BASELINE_MODULE: `${process.cwd()}/scripts/parallel-benchmark/baseline.js`,
+          }
+          console.log(`Binding controller and all routing workers to CPUs ${cpus.join(',')}`)
+          const result = spawnSync('taskset', ['-c', cpus.join(','), 'bun', 'scripts/parallel-benchmark/index.ts', ...args], { stdio: 'inherit', env })
+          if (result.error) throw result.error
+          process.exit(result.status ?? 1)
+          NODE
+
+      - name: Upload raw timing, stage profiles, routing and quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parallel-prototype-srj18
+          path: prototype/parallel-benchmark-results
+          if-no-files-found: warn
 
   same-machine-benchmark:
     name: Same machine benchmark
