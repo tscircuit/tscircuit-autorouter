@@ -1,0 +1,190 @@
+{
+  "kind": "Fresh-process pinned Flatten numeric-state worker admission; functional proof only",
+  "candidateBaseRevision": "7358f4b1ebf8fa15f9abf51e93b5e78780120ee6",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/canUseExpectedPortsMemo.ts": "37569fae31a34ad7862d886a03e9ea54b201fafacf4502abc21e30c9463a4b7b",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/prepareReferenceDrcTracePairFacts.ts": "555bad838ff56e65ba670e4ec8519dd977a3cfda8141c711f96667383909135c",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/prepareReferenceDrcPolygonFacts.ts": "6acecf4ea7506232b0a195ad5dbdad0d54dba99fbfaa4f7b4344c77dacfa4560",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "ec867607eb3eddb098414959e47bebd58a42b23ca046c4a48f6ee97a92302080",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPolygonFacts.ts": "42031bb3fee310fe6588b1cbac0af4939b19fc0487964d2e0b08f7a2fd3bddcc",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/NativeSyncReferenceBatchTransport.ts": "d9890d8c06fd41e921793982e2dac115358ac80a77bde2f9628f40e45346d3da",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityKernel.ts": "0246148be4ddcca89bd47de8c4639c778e18d26f8f2ae069cdffa1d3c117016f",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pathingWasm/regionScoringKernel.c": "745f14a543a671c1272a54e0e3353176fcb1bdbcc1447cd858dc1ecf575d13cd",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSyncReferenceProtocol.ts": "ee26220c47c6f512e5570b35647444a95d1ae3526ff197904d14b44133402f83",
+    "node_modules/@flatten-js/core/dist/main.mjs": "9e36ac3879f9e71f61d684be60c58212be1f3425b6688f72f1736ce89bf9b980",
+    "tests/fixtures/native-reference-tolerance/main.ts": "021c3e3b50362a0c65c5461476ebad483cc9d5aaddd2b60a6bede855f110124d",
+    "tests/solvers/reference-drc-preimport-tolerance-admission.test.ts": "a3f78a13450e9cd91475a4579038e68c90d70e81f84b8dc7c7c811ed660931b1",
+    "tests/solvers/native-sync-reference-seventeen-pass-parity.test.ts": "f2bb272f435da6b8380914d55f6930d5e1e8443dc3e9cdf480bf7ecf3a50ae67",
+    "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+  },
+  "boundary": [
+    "Flatten Utils.setTolerance is a public numeric-state setter. A pre-import call can leave the main module-captured tolerance different from fresh default workers, despite unchanged method descriptors.",
+    "The immutable module-captured admission is true only for the pinned worker default 1e-6. Both geometry producers decline before planning, availability probes, reservations, DTO copies or dispatch when it is false.",
+    "The original full Native checker admission still verifies all method/input/proxy contracts and its captured live tolerance. Original private primitive/scaled memo admission is unchanged; no extra tolerance getter or setter runs.",
+    "Trace-pair predicate is the pinned math-utils line-intersection implementation and does not consume Flatten state. The same conservative domain check protects both fact families. Pathing C intersection scoring is independent scalar arithmetic, with no Flatten dependency.",
+    "Changing tolerance after import follows the existing original Native guard decline. Restoring the original default re-admits worker preparation only for a default-captured realm. A nondefault-captured realm never admits prepared geometry.",
+    "The regression uses an actual default four-worker pool and genuinely minted executor. Readonly source evidence exports expose original memo/graph state; no Native method wrapping, brand bypass or custom fact executor is installed.",
+    "Native geometry constructor/predicate errors at tolerance10 remain original main-thread exceptions. Separate original and candidate invocations compare error prototypes/metadata and identical failed memo/scaled states; they are not claimed to allocate the same Error object.",
+    "Identical already-scaled raw circle snapshots have different Native contact truth at main tolerance10 versus worker default1e-6. The same snapshot hash in fresh default and nondefault realms proves the contact margin alone is insufficient.",
+    "An observer-bearing Flatten default.Utils namespace getter is rejected by the original full method guard without any getter read. No worker-global tolerance is mutated."
+  ],
+  "verification": {
+    "commands": [
+      "bun test --timeout 9999999 tests/solvers/reference-drc-preimport-tolerance-admission.test.ts",
+      "bun test --timeout 9999999 tests/solvers/native-sync-reference-seventeen-pass-parity.test.ts tests/solvers/reference-drc-warm-checker-configuration.test.ts tests/solvers/reference-drc-preimport-tolerance-admission.test.ts",
+      "bun test --timeout 9999999 tests/solvers/reference-drc-prepared-polygon-consumption-parity.test.ts tests/solvers/reference-drc-prepared-trace-pair-consumption-parity.test.ts",
+      "bunx tsc --noEmit"
+    ],
+    "freshProcessAssertions": 40,
+    "wholeSavedExecutions": 17,
+    "all17NativeErrorsAndPostCircuitJsonExact": true,
+    "defaultSavedFactRows": 28116,
+    "defaultSavedBatches": 26,
+    "defaultSavedReservations": 78,
+    "defaultSavedRetirements": 78,
+    "defaultSavedProtocolFaults": 0,
+    "maximumPreparedWorkerLanes": 3,
+    "maximumPreparedMainLanes": 1,
+    "freshResults": [
+      {
+        "initialTolerance": 1e-06,
+        "nativeContact": false,
+        "geometrySnapshotSha256": "945ed1b06d43eb68a512ed5ad80c42064601fa5d66bb494bf49729982e0b9f84",
+        "capturedPinned": true,
+        "phases": [
+          {
+            "tolerance": 1e-06,
+            "batches": 2,
+            "facts": 15,
+            "privateMemoEligible": true,
+            "nativeExceptions": 0
+          },
+          {
+            "tolerance": 10,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": false,
+            "nativeExceptions": 1
+          },
+          {
+            "tolerance": 1e-06,
+            "batches": 2,
+            "facts": 15,
+            "privateMemoEligible": true,
+            "nativeExceptions": 0
+          }
+        ],
+        "getterReads": 0,
+        "stats": {
+          "reservationsGranted": 4,
+          "reservationsDeclined": 0,
+          "workersReserved": 12,
+          "workersRetired": 12,
+          "batchesCompleted": 4,
+          "workerFactRowsCompleted": 24,
+          "mainFactRowsCompleted": 6,
+          "protocolFaults": 0,
+          "maxFactWorkerLanes": 3,
+          "mainFactLaneCount": 1
+        }
+      },
+      {
+        "initialTolerance": 10,
+        "nativeContact": true,
+        "geometrySnapshotSha256": "945ed1b06d43eb68a512ed5ad80c42064601fa5d66bb494bf49729982e0b9f84",
+        "capturedPinned": false,
+        "phases": [
+          {
+            "tolerance": 10,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": true,
+            "nativeExceptions": 1
+          },
+          {
+            "tolerance": 10,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": true,
+            "nativeExceptions": 1
+          },
+          {
+            "tolerance": 1e-06,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": false,
+            "nativeExceptions": 0
+          }
+        ],
+        "getterReads": 0,
+        "stats": {
+          "reservationsGranted": 0,
+          "reservationsDeclined": 0,
+          "workersReserved": 0,
+          "workersRetired": 0,
+          "batchesCompleted": 0,
+          "workerFactRowsCompleted": 0,
+          "mainFactRowsCompleted": 0,
+          "protocolFaults": 0,
+          "maxFactWorkerLanes": 0,
+          "mainFactLaneCount": 0
+        }
+      },
+      {
+        "initialTolerance": 5e-07,
+        "nativeContact": false,
+        "geometrySnapshotSha256": "945ed1b06d43eb68a512ed5ad80c42064601fa5d66bb494bf49729982e0b9f84",
+        "capturedPinned": false,
+        "phases": [
+          {
+            "tolerance": 5e-07,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": true,
+            "nativeExceptions": 0
+          },
+          {
+            "tolerance": 10,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": false,
+            "nativeExceptions": 1
+          },
+          {
+            "tolerance": 1e-06,
+            "batches": 0,
+            "facts": 0,
+            "privateMemoEligible": false,
+            "nativeExceptions": 0
+          }
+        ],
+        "getterReads": 0,
+        "stats": {
+          "reservationsGranted": 0,
+          "reservationsDeclined": 0,
+          "workersReserved": 0,
+          "workersRetired": 0,
+          "batchesCompleted": 0,
+          "workerFactRowsCompleted": 0,
+          "mainFactRowsCompleted": 0,
+          "protocolFaults": 0,
+          "maxFactWorkerLanes": 0,
+          "mainFactLaneCount": 0
+        }
+      }
+    ],
+    "checkerStateParity": [
+      "full Native errors",
+      "input mutations",
+      "error-source alias paths",
+      "physical net IDs",
+      "trace source object identities",
+      "primitive memo values/IDs/FIFO/diagnostics",
+      "scaled memo polygons/retained edges/diagnostics"
+    ],
+    "hasLocalElapsedComparison": false,
+    "hasSpeedClaim": false,
+    "nativeSiteConsumerAssertions": 19700,
+    "independentFreshProcessReviewAssertions": 40
+  }
+}

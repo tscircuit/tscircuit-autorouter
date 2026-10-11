@@ -9,6 +9,7 @@ import type { ParallelReferenceContinuityBatch, ParallelReferenceContinuityFact,
 import { assertParallelReferenceContinuityBatchResult } from "../nativeSyncReferenceProtocol"
 import { canAdmitNativeSyncReferenceFacts, isNativeSyncReferenceFactExecutor } from "../NativeSyncReferenceBatchTransport"
 import type { ReferenceDrcTracePairFactExecutor } from "./prepareReferenceDrcTracePairFacts"
+import { referenceDrcWorkerGeometryToleranceIsPinned } from "./canUseExpectedPortsMemo"
 
 type PolygonConductor = { id: string; layers: string[]; polygon: Polygon; bridges: boolean; geometryId: number }
 export type PreparedReferenceDrcPolygonFacts = { consume(left: number, right: number, nativePredicate: () => boolean): boolean; finish(): void }
@@ -31,6 +32,7 @@ export function prepareReferenceDrcPolygonFacts(
   tolerance: number,
   executor: ReferenceDrcTracePairFactExecutor | undefined,
 ): PreparedReferenceDrcPolygonFacts | undefined {
+  if (!referenceDrcWorkerGeometryToleranceIsPinned) return undefined
   if (memo === undefined || executor === undefined || !isPrivatelyOwnedReferenceDrcPrimitiveMemo(memo) || !isNativeSyncReferenceFactExecutor(executor) || !canAdmitNativeSyncReferenceFacts(executor)) return undefined
   const pairs: { left: number; right: number }[] = []
   const rows: { kind: string; input: number[] }[] = []

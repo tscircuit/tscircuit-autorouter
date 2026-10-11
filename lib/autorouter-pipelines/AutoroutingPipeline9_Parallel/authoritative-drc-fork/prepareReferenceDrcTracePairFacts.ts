@@ -6,6 +6,7 @@ import { prepareParallelReferenceContinuityContext } from "../parallelReferenceC
 import type { ParallelReferenceContinuityBatch, ParallelReferenceContinuityBatchResult, ParallelReferenceContinuityFact, ParallelReferenceContinuityTask } from "../parallelReferenceContinuityTypes"
 import { assertParallelReferenceContinuityBatchResult } from "../nativeSyncReferenceProtocol"
 import { canAdmitNativeSyncReferenceFacts, isNativeSyncReferenceFactExecutor } from "../NativeSyncReferenceBatchTransport"
+import { referenceDrcWorkerGeometryToleranceIsPinned } from "./canUseExpectedPortsMemo"
 
 export type ReferenceDrcTracePairFactExecutor = (batch: ParallelReferenceContinuityBatch) => ParallelReferenceContinuityBatchResult | undefined
 export type PreparedReferenceDrcTracePairFacts = {
@@ -27,6 +28,7 @@ export function prepareReferenceDrcTracePairFacts(
   candidates: Set<number>[],
   executor: ReferenceDrcTracePairFactExecutor | undefined,
 ): PreparedReferenceDrcTracePairFacts | undefined {
+  if (!referenceDrcWorkerGeometryToleranceIsPinned) return undefined
   if (memo === undefined || executor === undefined || !isPrivatelyOwnedReferenceDrcPrimitiveMemo(memo) || !isNativeSyncReferenceFactExecutor(executor) || !canAdmitNativeSyncReferenceFacts(executor)) return undefined
   let rowCount = 0
   for (let i = 0; i < candidates.length; i++) rowCount += candidates[i]!.size

@@ -14,6 +14,12 @@ const getPrototypeOf = Object.getPrototypeOf
 const objectIs = Object.is
 const nativeGetTolerance = Flatten.Utils.getTolerance
 const nativeTolerance = nativeGetTolerance()
+// Fresh default workers use Flatten's pinned 1e-6 numeric tolerance. A public
+// setTolerance call before this module loads must retain native memo behavior,
+// but its geometry cannot be prepared on workers with a different numeric state.
+// The complete checker guard still verifies the live tolerance before either
+// preparation site; this immutable admission adds no getter or callback read.
+export const referenceDrcWorkerGeometryToleranceIsPinned = objectIs(nativeTolerance, 1e-6)
 const additionalGlobals = [
   "WeakMap", "WeakSet", "Proxy", "JSON", "Reflect", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
