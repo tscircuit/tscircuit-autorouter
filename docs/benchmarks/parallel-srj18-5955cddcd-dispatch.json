@@ -20,11 +20,11 @@
       "0"
     ],
     "dispatchedAt": "2026-10-11T08:42:11.614Z",
-    "conclusion": "",
+    "conclusion": "success",
     "createdAt": "2026-10-11T08:42:13Z",
     "databaseId": 38125737831,
     "headSha": "5955cddcd002ca8265cc00afb1ecf6dcfbe4af5f",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38125737831"
   },
   {
@@ -48,11 +48,11 @@
       "0"
     ],
     "dispatchedAt": "2026-10-11T08:42:13.529Z",
-    "conclusion": "",
+    "conclusion": "success",
     "createdAt": "2026-10-11T08:42:15Z",
     "databaseId": 38125739865,
     "headSha": "5955cddcd002ca8265cc00afb1ecf6dcfbe4af5f",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38125739865"
   },
   {
@@ -76,11 +76,11 @@
       "0"
     ],
     "dispatchedAt": "2026-10-11T08:42:15.611Z",
-    "conclusion": "",
+    "conclusion": "success",
     "createdAt": "2026-10-11T08:42:17Z",
     "databaseId": 38125741749,
     "headSha": "5955cddcd002ca8265cc00afb1ecf6dcfbe4af5f",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38125741749"
   },
   {
@@ -104,11 +104,11 @@
       "0"
     ],
     "dispatchedAt": "2026-10-11T08:42:17.425Z",
-    "conclusion": "",
+    "conclusion": "success",
     "createdAt": "2026-10-11T08:42:19Z",
     "databaseId": 38125743805,
     "headSha": "5955cddcd002ca8265cc00afb1ecf6dcfbe4af5f",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38125743805"
   },
   {
@@ -132,11 +132,11 @@
       "0"
     ],
     "dispatchedAt": "2026-10-11T08:42:19.725Z",
-    "conclusion": "",
+    "conclusion": "success",
     "createdAt": "2026-10-11T08:42:21Z",
     "databaseId": 38125745931,
     "headSha": "5955cddcd002ca8265cc00afb1ecf6dcfbe4af5f",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38125745931"
   }
 ]

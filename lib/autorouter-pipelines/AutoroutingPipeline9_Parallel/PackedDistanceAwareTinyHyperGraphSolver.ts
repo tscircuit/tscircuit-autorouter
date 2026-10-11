@@ -7,6 +7,9 @@ import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
 import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
 import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
 import { TinyRegionCostMemo, type TinyRegionCostMethod } from "./TinyRegionCostMemo"
+import { canRejectTinyDistanceByBase } from "./TinyConservativeAxisDistanceBound"
+
+const nativeSqrt = Math.sqrt
 
 const nativeRegionCost = (TinyHyperGraphSolver.prototype as unknown as {
   computeRegionCostForRegion: TinyRegionCostMethod
@@ -15,6 +18,11 @@ const nativeRegionCost = (TinyHyperGraphSolver.prototype as unknown as {
 export type PackedDistanceAwareTinyHyperGraphSolverOptions = TinyHyperGraphSolverOptions & {
   /** Diagnostic opt-in: full-dataset measurements favor direct distance math. */
   enableTriangularDistanceCache?: boolean
+  /**
+   * Experimental base-only bound; requires built-in Math at module load.
+   * Later sqrt replacements and policy accessors retain the native path.
+   */
+  enableConservativeDistanceBound?: boolean
 }
 
 /** Keep native route policy while packing its directed-hop candidate frontier. */
@@ -27,6 +35,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
   private readonly activeIncidences: TinyActiveIncidenceIndex
   private activeSearchGeneration = 0
   private readonly distanceIndex?: TinyTriangularDistanceIndex
+  private readonly enableConservativeDistanceBound: boolean
   readonly regionCostMemo?: TinyRegionCostMemo
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
@@ -68,6 +77,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     )
     this.distanceIndex = options?.enableTriangularDistanceCache === true
       ? TinyTriangularDistanceIndex.forTopology(topology) : undefined
+    this.enableConservativeDistanceBound = options?.enableConservativeDistanceBound === true
     if (this.computeRegionCostForRegion === PackedDistanceAwareTinyHyperGraphSolver.prototype.computeRegionCostForRegion) {
       this.regionCostMemo = new TinyRegionCostMemo(this, nativeRegionCost.bind(this))
     }
@@ -185,6 +195,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
           state.regionCongestionCost[currentCandidate.nextRegionId]! +
           (problem.portPenalty?.[neighborPortId] ?? 0)
         let knownSegmentDistance: number | undefined
+        let capturedDistanceScale: number | undefined
         let lowerBoundCost = lowerBoundWithoutDistance
         if (this.ADD_SEGMENT_DISTANCE_TO_G) {
           const destinationX = topology.portX[neighborPortId]!
@@ -197,9 +208,21 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
           } else {
             const dx = sourceX - destinationX
             const dy = sourceY - destinationY
+            if (this.enableConservativeDistanceBound && lowerBoundWithoutDistance >= previousBestCost) {
+              // Recheck only prospective rejects: earlier callbacks can replace
+              // a plain policy field with an accessor during this expansion.
+              const policy = Object.getOwnPropertyDescriptor(this, "DISTANCE_TO_COST")
+              if (typeof policy?.value === "number" &&
+                Object.getOwnPropertyDescriptor(Math, "sqrt")?.value === nativeSqrt) {
+                capturedDistanceScale = policy.value
+                if (canRejectTinyDistanceByBase(dx, dy, lowerBoundWithoutDistance,
+                  previousBestCost, capturedDistanceScale!)) continue
+              }
+            }
             knownSegmentDistance = Math.sqrt(dx * dx + dy * dy)
           }
-          lowerBoundCost += knownSegmentDistance * this.DISTANCE_TO_COST
+          lowerBoundCost += knownSegmentDistance * (capturedDistanceScale === undefined
+            ? this.DISTANCE_TO_COST : capturedDistanceScale)
         }
         if (lowerBoundCost >= previousBestCost) continue
         const g = this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)

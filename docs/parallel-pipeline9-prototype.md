@@ -354,7 +354,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Eight frozen exploratory snapshots have complete paired results for all 16
+Ten frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -369,6 +369,8 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `414e04749` | ordered / indexed, force trials on coordinator | 1.367× | 1.485× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `64ca4e9a0` | ordered / indexed, force trials on coordinator | 1.386× | 1.510× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `f573c8deb` | ordered / indexed, force trials on coordinator | 1.329× | 1.426× | All solved, exact geometry and original-CAD quality parity; distance-cache pathing regressed |
+| `9470be55a` | ordered / indexed, force trials on coordinator | 1.360× | 1.484× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `5955cddcd` | ordered / indexed, force trials on coordinator | 1.372× | 1.495× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -437,5 +439,26 @@ check. Pathing latency increased on every sample versus `64ca4e9a0`; the
 triangular cache is being removed from the default path before the next
 evaluation. All 32 outcomes and immutable workflow records are in
 [parallel-srj18-f573c8deb.json](benchmarks/parallel-srj18-f573c8deb.json).
+
+Snapshot `9470be55a` disables the triangular distance cache, reuses four exact
+region-cost tuples per region, and shares immutable Bun worker contexts. All 32
+outcomes preserve native geometry, coverage, DRC and lint. Its average is 1.360×
+and aggregate is 1.484×; work reductions have not established the speed target.
+Complete evidence is in
+[parallel-srj18-9470be55a.json](benchmarks/parallel-srj18-9470be55a.json).
+
+Snapshot `5955cddcd` adds exact reference DRC predicates and retains complete
+native graphs and check ordering. Its 32 outcomes preserve native geometry and
+original-CAD quality; average speedup is 1.372× and aggregate is 1.495×.
+Evidence is in
+[parallel-srj18-5955cddcd.json](benchmarks/parallel-srj18-5955cddcd.json).
+
+Snapshot `d76229d4a` is being evaluated with the same complete dataset and
+ordered/indexed configuration. It adds bounded ready-route batches,
+work-gated scalar memo allocation, and
+cache-free A01/A03 quantum histories on idle cores. Packaged sample001/005
+outputs match the original serial solver and use at most four active workers.
+These functional checks do not establish a measured speedup.
+
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.

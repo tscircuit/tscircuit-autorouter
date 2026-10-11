@@ -1,9 +1,10 @@
 const MIN_NORMAL_SQUARED_AXIS = 2 ** -511
 const AXIS_WIDENING = 1 - 2 * Number.EPSILON
+const nativeIsFinite = Number.isFinite
 
 function eligible(dx: number, dy: number, base: number, best: number, scale: number): boolean {
-  return Number.isFinite(dx) && Number.isFinite(dy) && Number.isFinite(base) &&
-    Number.isFinite(best) && Number.isFinite(scale) && scale > 0
+  return nativeIsFinite(dx) && nativeIsFinite(dy) && nativeIsFinite(base) &&
+    nativeIsFinite(best) && nativeIsFinite(scale) && scale > 0
 }
 
 /** Only proves a rejection of the native base + sqrt(dx*dx + dy*dy)*scale. */
