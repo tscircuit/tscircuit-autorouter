@@ -1,8 +1,24 @@
 import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
+import { WorkerHighDensityA03Solver } from "./high-density-a01-fork/WorkerHighDensityA03Solver"
 import { PARALLEL_GRID_HISTORY_QUANTUM, type GridHistoryJob, type GridHistoryResult,
   type GridHistorySnapshot } from "./parallelGridHistoryTypes"
 
-export type NativeGridHistorySolver = HighDensitySolverA01 | HighDensitySolverA03
+export type NativeGridHistorySolver = HighDensitySolverA01 | HighDensitySolverA03 | WorkerHighDensityA03Solver
+
+const nativeA03PrototypeDescriptors = Object.getOwnPropertyDescriptors(HighDensitySolverA03.prototype)
+
+/** A native method override requires the original class, including its errors. */
+function hasNativeA03WorkerMethods(): boolean {
+  const currentDescriptors = Object.getOwnPropertyDescriptors(HighDensitySolverA03.prototype)
+  const names = Object.keys(nativeA03PrototypeDescriptors)
+  if (Object.keys(currentDescriptors).length !== names.length) return false
+  for (const name of names) {
+    const original = nativeA03PrototypeDescriptors[name]!
+    const current = currentDescriptors[name]
+    if (!current || current.value !== original.value || current.get !== original.get || current.set !== original.set) return false
+  }
+  return true
+}
 
 export function snapshotNativeGridHistory(solver: NativeGridHistorySolver): GridHistorySnapshot {
   let solvedSegmentCount = 0
@@ -31,7 +47,8 @@ export function assertGridHistoryJob(job: GridHistoryJob): void {
 export function executeGridHistoryJob(job: GridHistoryJob): GridHistoryResult {
   assertGridHistoryJob(job)
   const solver: NativeGridHistorySolver = job.algorithm === "a01"
-    ? new HighDensitySolverA01(job.params) : new HighDensitySolverA03(job.params)
+    ? new HighDensitySolverA01(job.params) : hasNativeA03WorkerMethods()
+      ? new WorkerHighDensityA03Solver(job.params) : new HighDensitySolverA03(job.params)
   solver.setup()
   if (job.maxIterations > solver.MAX_ITERATIONS) {
     throw new Error("Grid history cap exceeds the native candidate's setup limit")

@@ -379,6 +379,7 @@ function createSourceTraces(
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
   sourceSrj = srj,
   sourceConnectivityMap?: ConnectivityMap,
+  connectivityMapFactory = getConnectivityMapFromSimpleRouteJson,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
   const sourceTraceById = new Map<string, AnyCircuitElement>()
@@ -401,7 +402,7 @@ function createSourceTraces(
     createCircuitJsonSourceTraceIdResolver(
       connections,
       sourceConnectivityMap ??
-        getConnectivityMapFromSimpleRouteJson(
+        connectivityMapFactory(
           sourceSrj === srj ? srj : { ...sourceSrj, connections },
         ),
     )
@@ -1038,6 +1039,8 @@ export type ConvertToCircuitJsonOptions = {
   physicalPadElements?: readonly PhysicalPadElement[]
   /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Build missing maps at their original conversion sites from the current SRJ. */
+  connectivityMapFactory?: (srj: SimpleRouteJson) => ConnectivityMap
 }
 
 export type PhysicalPadElement = Extract<AnyCircuitElement, {
@@ -1103,6 +1106,7 @@ export function convertToCircuitJson(
         ? originalSrj
         : srjWithPointPairs,
       options.connectivityMaps?.source,
+      options.connectivityMapFactory,
     ),
   )
 
@@ -1152,7 +1156,9 @@ export function convertToCircuitJson(
           ]
         : srjWithPointPairs.connections,
       options.connectivityMaps?.route ??
-        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+        (options.connectivityMapFactory ?? getConnectivityMapFromSimpleRouteJson)(
+          srjWithPointPairs,
+        ),
     )
 
   // Process routes based on their type

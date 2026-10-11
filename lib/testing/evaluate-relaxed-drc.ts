@@ -8,6 +8,7 @@ import {
 } from "./getDrcErrors"
 import {
   type CircuitJsonConnectivityMaps,
+  type ConvertToCircuitJsonOptions,
   type PhysicalPadElement,
   convertToCircuitJson,
   createPcbBoardElement,
@@ -24,6 +25,8 @@ export interface EvaluateRelaxedDrcInput {
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Construct each missing connectivity map at its original conversion site. */
+  connectivityMapFactory?: ConvertToCircuitJsonOptions["connectivityMapFactory"]
   /** Exact original CAD copper and hole shapes for physical quality checks. */
   physicalPadElements?: readonly PhysicalPadElement[]
 }
@@ -62,6 +65,7 @@ export const evaluateRelaxedDrc = ({
   drcOptions,
   includeBoardClearance = false,
   connectivityMaps,
+  connectivityMapFactory,
   physicalPadElements,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
@@ -75,6 +79,7 @@ export const evaluateRelaxedDrc = ({
     originalSrj: inputSrj,
     includeOriginalConnections: true,
     connectivityMaps,
+    connectivityMapFactory,
     physicalPadElements,
   })
 

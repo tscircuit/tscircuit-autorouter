@@ -5,6 +5,7 @@ import {
 } from "../../testing/evaluate-relaxed-drc"
 import { ReferenceDrcPrimitiveMemo } from "./authoritative-drc-fork/ReferenceDrcPrimitiveMemo"
 import { checkTracesAreContiguous } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
+import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
 
 export type MemoizedReferenceDrcEvaluator = (
   input: EvaluateRelaxedDrcInput,
@@ -17,6 +18,7 @@ export function createMemoizedReferenceDrcEvaluator(
   return (input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult =>
     evaluateRelaxedDrc({
       ...input,
+      connectivityMapFactory: input.connectivityMapFactory ?? getParallelConnectivityMap,
       drcOptions: {
         ...input.drcOptions,
         traceContinuityChecker: (circuitJson): ReturnType<typeof checkTracesAreContiguous> =>
