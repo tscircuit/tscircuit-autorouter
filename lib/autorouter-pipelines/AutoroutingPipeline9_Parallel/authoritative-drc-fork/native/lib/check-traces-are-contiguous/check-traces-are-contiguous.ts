@@ -4,6 +4,7 @@ import { createExpectedPortsMemo } from "../../../createExpectedPortsMemo"
 import { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
 import type { ReferenceDrcTracePairFactExecutor } from "../../../prepareReferenceDrcTracePairFacts"
+import { isNativeSyncReferenceFactExecutor } from "../../../../NativeSyncReferenceBatchTransport"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { getTracePortLayerMismatches } from "../util/trace-port-layer-connectivity"
 import { createIndexedPcbConnectivityMap } from "../util/create-indexed-pcb-connectivity-map"
@@ -60,6 +61,7 @@ const privateMemoAdd = WeakSet.prototype.add
 const privatePolygonMemoGet = WeakMap.prototype.get
 const privatePolygonMemoSet = WeakMap.prototype.set
 const applyNative = Reflect.apply
+const privateCheckerBindings = new WeakMap<object, { executor?: ReferenceDrcTracePairFactExecutor }>()
 
 /** Internal planning admission uses the actual private owner, without reflection. */
 export function isPrivatelyOwnedReferenceDrcPrimitiveMemo(value: unknown): boolean {
@@ -73,8 +75,21 @@ export function isPrivatelyOwnedReferenceDrcPrimitiveMemo(value: unknown): boole
 export function createPrivatelyMemoizedTraceContinuityChecker(): (circuitJson: AnyCircuitElement[]) => PcbTraceError[] {
   const primitiveMemo = new ReferenceDrcPrimitiveMemo()
   applyNative(privateMemoAdd, privatelyOwnedMemos, [primitiveMemo])
-  return (circuitJson: AnyCircuitElement[]): PcbTraceError[] =>
-    checkTracesAreContiguous(circuitJson, { primitiveMemo })
+  const binding: { executor?: ReferenceDrcTracePairFactExecutor } = {}
+  const checker = (circuitJson: AnyCircuitElement[]): PcbTraceError[] =>
+    checkTracesAreContiguous(circuitJson, { primitiveMemo, preparedFactExecutor: binding.executor })
+  applyNative(privatePolygonMemoSet, privateCheckerBindings, [checker, binding])
+  return checker
+}
+
+/** Install a minted executor after construction without replacing warm state. */
+export function configurePreparedPrivatelyMemoizedTraceContinuityChecker(checker: unknown, executor: unknown): boolean {
+  // Identity lookup precedes every caller read; neither Proxy traps nor getter
+  // callbacks participate. The binding and original memo never leave the owner.
+  const binding = applyNative(privatePolygonMemoGet, privateCheckerBindings, [checker]) as { executor?: ReferenceDrcTracePairFactExecutor } | undefined
+  if (binding === undefined || !isNativeSyncReferenceFactExecutor(executor)) return false
+  binding.executor = executor
+  return true
 }
 
 /** Internal executor wiring still requires the complete native checker admission. */

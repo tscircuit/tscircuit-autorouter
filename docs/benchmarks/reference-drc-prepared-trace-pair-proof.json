@@ -1,11 +1,11 @@
 {
   "kind": "Prepared exact Native trace-pair fact consumption; functional and operation proof only",
-  "integrationStatus": "Native-site seam only. Default private factory is unchanged. Fixed synchronous oracle verifies fact consumption; actual branded existing-worker transport activation is a separate integration. No local elapsed-time comparison or speed claim.",
+  "integrationStatus": "Native-site seam and private late binding only. Default main evaluator is unconfigured until separate integration. Fixed synchronous oracle verifies full saved fact consumption; a genuine default pool verifies tiny warm/changed configuration. No local elapsed-time comparison or speed claim.",
   "controlRevision": "0f90c53d3",
   "candidateBaseRevision": "7410b399652efd0eb10bdfbc099fc541e1ab4ea0",
   "sourceHashes": {
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/prepareReferenceDrcTracePairFacts.ts": "71d743b6b17e0497770a365a1ef4ab30948f77e572dd56431365c3b959f3b8ba",
-    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "da47304093f98c868d15dd16d21665b8f7be43d08e792be8f1c5334d6455a2a6",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "ec867607eb3eddb098414959e47bebd58a42b23ca046c4a48f6ee97a92302080",
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/create-indexed-pcb-connectivity-map.ts": "df61c509c1d91b8697d2e19cb1946fef9addc8d98ad920cec2f7429ed9c92394",
     "tests/solvers/reference-drc-prepared-trace-pair-consumption-parity.test.ts": "2242f98b4af18e9535870c35acd7804ec8ac1ca573bb039361b9930b971cf57e",
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityKernel.ts": "d66bb352cd4e48fda3750b20aaeac06be94e04108091b592c3b626eab6c3588c",
@@ -14,7 +14,8 @@
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPrimitiveMissPlanning.ts": "47a354121359a6ae14455a90ac4ecd423210bc9bbc4666f672bb26ad98fc438f",
     "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36",
     "node_modules/circuit-json-to-connectivity-map/dist/index.js": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-    "node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils/dist/chunk-CHQOCSFB.js": "f1bc40143e971075a95244a32d0b7eda0ad50a49b3ff0e460f29dd8808bed4e0"
+    "node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils/dist/chunk-CHQOCSFB.js": "f1bc40143e971075a95244a32d0b7eda0ad50a49b3ff0e460f29dd8808bed4e0",
+    "tests/solvers/reference-drc-warm-checker-configuration.test.ts": "738b6831bfd579f9edf150f644c85aa0013675a63c46b757a83d35738481d004"
   },
   "preparationBoundary": [
     "Original full graph construction, physical trace map and bounds, ordered candidate-pair construction, and every original trace interning call complete before preparation.",
@@ -91,5 +92,27 @@
     "freshNativePairPredicates": 12215,
     "freshNativeSegmentPredicateVisits": 6494619,
     "interpretation": "Actual operation counts from authentic current-private captures, not local timing or a projected wall-speed measurement. DTO only prepares fresh trace-pair predicates; polygon and remaining continuity work are unchanged."
+  },
+  "warmConfiguration": {
+    "setter": "configurePreparedPrivatelyMemoizedTraceContinuityChecker(checker:unknown,executor:unknown):boolean",
+    "ownership": "Captured Native WeakMap identity lookup for exact normal-factory checkers, then actual minted executor WeakSet membership. No caller reflection/property/coercion/provider callback. Unowned or unbranded identities return false before work.",
+    "state": "Existing closed checker and original hidden primitive/polygon memo are retained; only private executor binding changes. No memo counters/IDs/cache values or pool stats change at configuration.",
+    "command": "bun test tests/solvers/reference-drc-warm-checker-configuration.test.ts tests/solvers/reference-drc-prepared-trace-pair-consumption-parity.test.ts --timeout 9999999",
+    "assertions": 38,
+    "combinedConsumerAndWarmAssertions": 12157,
+    "actualDefaultPoolWorkers": 4,
+    "warmFactsBeforeAndAfterConfiguration": 0,
+    "changedGeometryFreshRows": 2,
+    "changedGeometryWorkerLanes": 1,
+    "changedGeometryMainLanes": 1,
+    "batchesCompleted": 1,
+    "workersReserved": 1,
+    "workersRetired": 1,
+    "protocolFailures": 0,
+    "positiveOriginalMemoIdentityRetained": true,
+    "nativeMemoValuesIdsFifoCountersAndErrorsExact": true,
+    "repeatedWarmEvaluationNoNewBatch": true,
+    "unknownProxyFunctionRecordAndPrimitiveIdentityEvents": 0,
+    "scope": "Genuine default pool minted executor and original native worker entry exercised for tiny changed geometry; root/joint evaluator configuration and default pipeline activation are separate."
   }
 }
