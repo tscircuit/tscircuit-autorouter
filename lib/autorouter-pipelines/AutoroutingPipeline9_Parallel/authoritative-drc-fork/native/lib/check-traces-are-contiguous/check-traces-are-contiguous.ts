@@ -444,17 +444,35 @@ function checkTracesAreContiguous(
 
     const connectedTraceIds = new Set<string>()
     const pendingTraceIds = [startTrace.pcb_trace_id]
+    // The private guard owns a native, immutable physical map. Its string net
+    // label returns the complete component on the first query, so later queries
+    // of that label cannot add members. Pad adjacency still runs for every trace.
+    const expandedPhysicalNetIds = useExpectedPortMemo
+      ? new Set<string>()
+      : undefined
 
     while (pendingTraceIds.length > 0) {
       const traceId = pendingTraceIds.pop()!
       if (connectedTraceIds.has(traceId)) continue
       connectedTraceIds.add(traceId)
 
-      for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(
-        traceId,
-      )) {
-        if (!connectedTraceIds.has(connectedTrace.pcb_trace_id)) {
-          pendingTraceIds.push(connectedTrace.pcb_trace_id)
+      const physicalNetId = expandedPhysicalNetIds === undefined
+        ? undefined
+        : pcbConnectivityMap.connMap.getNetConnectedToId(traceId)
+      if (
+        expandedPhysicalNetIds === undefined ||
+        typeof physicalNetId !== "string" ||
+        !expandedPhysicalNetIds.has(physicalNetId)
+      ) {
+        if (typeof physicalNetId === "string") {
+          expandedPhysicalNetIds!.add(physicalNetId)
+        }
+        for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(
+          traceId,
+        )) {
+          if (!connectedTraceIds.has(connectedTrace.pcb_trace_id)) {
+            pendingTraceIds.push(connectedTrace.pcb_trace_id)
+          }
         }
       }
 

@@ -1,0 +1,738 @@
+{
+  "kind": "Exact native functional proof and operation census; no local elapsed-time comparison or speed claim",
+  "sources": {
+    "nativeRevision": "4584ae31ee362e74273751504f4bbc3c954aa8c7",
+    "checker": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts",
+    "test": "tests/solvers/reference-drc-component-once-continuity-parity.test.ts",
+    "fixture": "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz"
+  },
+  "sourceHashes": {
+    "nativeChecker": "f222c0f7cfa67fe3496244d68cdcce36b0d3370b61ea9af5a543a46e3cd5da55",
+    "candidateChecker": "fc41bc3a9af6b08d2039a31f1a5a9c8ef7c787f099bdf555cdc74c859842b71b",
+    "test": "2cc8588faa5fbd54edb98ebce83e18d98e04a2e01649d5ac70cc44597701902e",
+    "fixture": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+  },
+  "contract": [
+    "Only the existing privatelyOwnedMemo/no supplied pcbConnectivityMap/no supplied connMap/canUseExpectedPortsMemo admission enables component-once expansion.",
+    "Native classes, collection methods, numeric intrinsics and callback-free finite plain input are the existing guarded module-load contract; this slice introduces no new eligibility or public trust flag.",
+    "The fresh native physical connectivity map is immutable during this BFS. An actual string physical-net label has exactly the same complete native getAllTracesConnectedToTrace member array for every trace in that component.",
+    "The first physical component query remains native; subsequent same-string-label queries are omitted only after its members have all been enqueued. Non-string labels and all declined/supplied-map invocations retain every original query.",
+    "Pad adjacency runs for every visited trace, including bridges between distinct physical components and distinct logical nets.",
+    "The final original pcbTraces.filter determines circuit order, duplicate trace inclusion and actual trace object aliases; its array remains cached under every included trace ID.",
+    "Primitive memo intern/get/hit/miss/eviction and polygon/expected-port memo operations are unchanged. No worker or protocol change is made."
+  ],
+  "closureProof": [
+    "Let R(t) be the native physical-component member set returned for trace t, and P(t) its touched-pad neighbors. Native BFS finds the least set closed under R and P containing its start trace.",
+    "For equal native string labels, R(t) is identical. The first expansion queues every R member. Repeating that expansion adds no member that has not already been queued or visited.",
+    "Every newly reached trace still expands P(t), so a pad bridge can reach a new physical label, which is then expanded in full. Removing redundant R expansions preserves the least fixed point.",
+    "Internal pending-stack order may differ; no custom callbacks are eligible. The unchanged final filter restores the original returned order and references."
+  ],
+  "verification": {
+    "singleTestCommand": "bun test tests/solvers/reference-drc-component-once-continuity-parity.test.ts",
+    "singleTestAssertions": 116,
+    "singleTestPass": true,
+    "typecheckCommand": "bunx tsc --noEmit",
+    "typecheckExitCode": 0,
+    "independentReview": "Final production source/test cleared by review_parallel; its independent test run passed116 assertions.",
+    "records": 17,
+    "nativeErrors": [
+      0,
+      346,
+      251,
+      158,
+      130,
+      116,
+      105,
+      101,
+      100,
+      101,
+      100,
+      1,
+      6,
+      1,
+      2,
+      1,
+      0
+    ],
+    "edgeFixtureRuns": [
+      {
+        "name": "one native physical component",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "one native physical component",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "cross-logical-net native copper contact",
+        "repeat": 0,
+        "errors": 1
+      },
+      {
+        "name": "cross-logical-net native copper contact",
+        "repeat": 1,
+        "errors": 1
+      },
+      {
+        "name": "duplicate pcb trace id last physical-map entry",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "duplicate pcb trace id last physical-map entry",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "ids [1,\"1\",\"t2\"]",
+        "repeat": 0,
+        "exception": "TypeError"
+      },
+      {
+        "name": "ids [1,\"1\",\"t2\"]",
+        "repeat": 1,
+        "exception": "TypeError"
+      },
+      {
+        "name": "ids [\"__proto__\",\"constructor\",\"toString\"]",
+        "repeat": 0,
+        "errors": 1
+      },
+      {
+        "name": "ids [\"__proto__\",\"constructor\",\"toString\"]",
+        "repeat": 1,
+        "errors": 1
+      },
+      {
+        "name": "ids [\"\",false,null]",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "ids [\"\",false,null]",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "only touched-pad edge joins separate native components",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "only touched-pad edge joins separate native components",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "emitted via barrel joins physical layers",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "emitted via barrel joins physical layers",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "empty trace",
+        "repeat": 0,
+        "errors": 0
+      },
+      {
+        "name": "empty trace",
+        "repeat": 1,
+        "errors": 0
+      },
+      {
+        "name": "no expected source ports floating endpoint branch",
+        "repeat": 0,
+        "errors": 4
+      },
+      {
+        "name": "no expected source ports floating endpoint branch",
+        "repeat": 1,
+        "errors": 4
+      },
+      {
+        "name": "duplicate source first-find selection",
+        "repeat": 0,
+        "errors": 1
+      },
+      {
+        "name": "duplicate source first-find selection",
+        "repeat": 1,
+        "errors": 1
+      }
+    ],
+    "observerRows": [
+      {
+        "method": "getAllTracesConnectedToTrace",
+        "calls": 3,
+        "reads": 3
+      },
+      {
+        "method": "getNetConnectedToId",
+        "calls": 3,
+        "reads": 3
+      }
+    ],
+    "originalThrownIdentity": true,
+    "durableReplayRecipeExecuted": true,
+    "durableReplayAll17ErrorsMemoConsumedWorkAndAliasWitnessesExact": true
+  },
+  "operationCensus": {
+    "records": 17,
+    "allSavedErrorsExact": true,
+    "allOriginalPadVisitsAndFilterMembershipTestsExact": true,
+    "allMemoInternHitMissEvictionDiagnosticsExact": true,
+    "onlyChangedTraceCounters": [
+      "graphMembers",
+      "graphQueries"
+    ],
+    "totals": {
+      "originalGraphQueries": 7376,
+      "candidateGraphQueries": 534,
+      "originalGraphMembers": 2782044,
+      "candidateGraphMembers": 7376
+    },
+    "rows": [
+      {
+        "number": 1,
+        "errors": 0,
+        "expectedMemo": true,
+        "originalGraphQueries": 0,
+        "candidateGraphQueries": 0,
+        "originalGraphMembers": 0,
+        "candidateGraphMembers": 0,
+        "padTests": 0,
+        "candidateTraceTests": 0,
+        "memoDiagnostics": {
+          "hits": 0,
+          "misses": 0
+        },
+        "polygonDiagnostics": {
+          "hits": 0,
+          "misses": 0,
+          "creations": 0,
+          "evictions": 0,
+          "entries": 0,
+          "edges": 0,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 0,
+          "hits": 0,
+          "nativeFilters": 0,
+          "membershipEntries": 0
+        }
+      },
+      {
+        "number": 2,
+        "errors": 346,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 31,
+        "originalGraphMembers": 177309,
+        "candidateGraphMembers": 461,
+        "padTests": 429823,
+        "candidateTraceTests": 100816,
+        "memoDiagnostics": {
+          "hits": 200,
+          "misses": 5568
+        },
+        "polygonDiagnostics": {
+          "hits": 26,
+          "misses": 4832,
+          "creations": 4832,
+          "evictions": 0,
+          "entries": 4832,
+          "edges": 18125,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 3,
+        "errors": 251,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 31,
+        "originalGraphMembers": 177309,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 100816,
+        "memoDiagnostics": {
+          "hits": 2163,
+          "misses": 9125
+        },
+        "polygonDiagnostics": {
+          "hits": 2615,
+          "misses": 7096,
+          "creations": 7096,
+          "evictions": 0,
+          "entries": 7096,
+          "edges": 26452,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 4,
+        "errors": 158,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 174801,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 99291,
+        "memoDiagnostics": {
+          "hits": 3518,
+          "misses": 13178
+        },
+        "polygonDiagnostics": {
+          "hits": 5142,
+          "misses": 9426,
+          "creations": 9426,
+          "evictions": 0,
+          "entries": 9426,
+          "edges": 34689,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 5,
+        "errors": 130,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 174801,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 99291,
+        "memoDiagnostics": {
+          "hits": 6570,
+          "misses": 15519
+        },
+        "polygonDiagnostics": {
+          "hits": 8776,
+          "misses": 10651,
+          "creations": 10651,
+          "evictions": 0,
+          "entries": 10651,
+          "edges": 39268,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 6,
+        "errors": 116,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 9167,
+          "misses": 18119
+        },
+        "polygonDiagnostics": {
+          "hits": 12901,
+          "misses": 11221,
+          "creations": 11221,
+          "evictions": 0,
+          "entries": 11221,
+          "edges": 40393,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 7,
+        "errors": 105,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 12094,
+          "misses": 20384
+        },
+        "polygonDiagnostics": {
+          "hits": 16265,
+          "misses": 12554,
+          "creations": 12554,
+          "evictions": 0,
+          "entries": 12554,
+          "edges": 45398,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 8,
+        "errors": 101,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 16824,
+          "misses": 20787
+        },
+        "polygonDiagnostics": {
+          "hits": 20896,
+          "misses": 12618,
+          "creations": 12618,
+          "evictions": 0,
+          "entries": 12618,
+          "edges": 45480,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 9,
+        "errors": 100,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 20305,
+          "misses": 22437
+        },
+        "polygonDiagnostics": {
+          "hits": 25291,
+          "misses": 12906,
+          "creations": 12906,
+          "evictions": 0,
+          "entries": 12906,
+          "edges": 45780,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 10,
+        "errors": 101,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 23614,
+          "misses": 24247
+        },
+        "polygonDiagnostics": {
+          "hits": 29004,
+          "misses": 13875,
+          "creations": 13875,
+          "evictions": 0,
+          "entries": 13875,
+          "edges": 49440,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 11,
+        "errors": 100,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 32,
+        "originalGraphMembers": 176469,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 98720,
+        "memoDiagnostics": {
+          "hits": 28745,
+          "misses": 24247
+        },
+        "polygonDiagnostics": {
+          "hits": 33687,
+          "misses": 13875,
+          "creations": 13875,
+          "evictions": 0,
+          "entries": 13875,
+          "edges": 49440,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 12,
+        "errors": 1,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 31364,
+          "misses": 26298
+        },
+        "polygonDiagnostics": {
+          "hits": 36348,
+          "misses": 14569,
+          "creations": 14569,
+          "evictions": 0,
+          "entries": 14569,
+          "edges": 51478,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 13,
+        "errors": 6,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 35829,
+          "misses": 26506
+        },
+        "polygonDiagnostics": {
+          "hits": 39663,
+          "misses": 14638,
+          "creations": 14638,
+          "evictions": 0,
+          "entries": 14638,
+          "edges": 51739,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 14,
+        "errors": 1,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 40499,
+          "misses": 26506
+        },
+        "polygonDiagnostics": {
+          "hits": 43018,
+          "misses": 14638,
+          "creations": 14638,
+          "evictions": 0,
+          "entries": 14638,
+          "edges": 51739,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 15,
+        "errors": 2,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 44028,
+          "misses": 27600
+        },
+        "polygonDiagnostics": {
+          "hits": 46058,
+          "misses": 14953,
+          "creations": 14953,
+          "evictions": 0,
+          "entries": 14953,
+          "edges": 52828,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 16,
+        "errors": 1,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 48698,
+          "misses": 27600
+        },
+        "polygonDiagnostics": {
+          "hits": 49413,
+          "misses": 14953,
+          "creations": 14953,
+          "evictions": 0,
+          "entries": 14953,
+          "edges": 52828,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      },
+      {
+        "number": 17,
+        "errors": 0,
+        "expectedMemo": true,
+        "originalGraphQueries": 461,
+        "candidateGraphQueries": 36,
+        "originalGraphMembers": 169835,
+        "candidateGraphMembers": 461,
+        "padTests": 0,
+        "candidateTraceTests": 94552,
+        "memoDiagnostics": {
+          "hits": 52115,
+          "misses": 28847
+        },
+        "polygonDiagnostics": {
+          "hits": 52515,
+          "misses": 15191,
+          "creations": 15191,
+          "evictions": 0,
+          "entries": 15191,
+          "edges": 53096,
+          "oversized": 0
+        },
+        "expectedDiagnostics": {
+          "sources": 103,
+          "hits": 358,
+          "nativeFilters": 0,
+          "membershipEntries": 566
+        }
+      }
+    ],
+    "allComponentFilterOrdersAndActualReferenceAliasesExact": true,
+    "unchangedAdjacencyAndAliasWitnessCounts": {
+      "padAdjacencyVisits": 14752,
+      "touchingTraceNeighborVisits": 28704,
+      "componentMembershipTests": 200074,
+      "components": 434,
+      "filteredMemberReferences": 7376
+    }
+  },
+  "reproduction": {
+    "instructions": [
+      "Use an isolated checkout of the commit containing this proof and install its pinned dependencies. Source SHA checks reject a changed checker or fixture.",
+      "The focused test reproduces all17 saved whole-family errors and11 cold/warm duplicate, numeric/reserved ID, pad-only bridge, via, empty/floating and source-order fixtures; changed native graph accessors retain original calls/reads/throw identity.",
+      "To reproduce the time-free census, extract replaySource to a temporary .ts file and run it with Bun and this repository root as its argument. It extracts the recorded native revision, applies both read-only instrumentation patches in temporary directories, and compares every per-trace field except the two removed enumeration counters.",
+      "Instrumentation counts component queries/members, per-trace pad adjacency and final filter work, and records original circuit-array indices and reference witnesses. It does not replace native globals, classes, memo methods or geometry queries."
+    ],
+    "commands": [
+      "python3 -c 'import json; from pathlib import Path; p=json.loads(Path(\"docs/benchmarks/reference-drc-component-once-proof.json\").read_text()); Path(\"/tmp/replay-reference-component-once.ts\").write_text(p[\"reproduction\"][\"replaySource\"])'",
+      "bun /tmp/replay-reference-component-once.ts \"$PWD\""
+    ],
+    "replaySource": "import { readFileSync, writeFileSync, mkdtempSync, symlinkSync } from \"node:fs\"\nimport { execFileSync } from \"node:child_process\"\nimport { createHash } from \"node:crypto\"\nimport { tmpdir } from \"node:os\"\nimport { dirname, join, resolve } from \"node:path\"\nimport { gunzipSync } from \"node:zlib\"\nimport { deepStrictEqual, strictEqual } from \"node:assert\"\nconst repo = resolve(process.argv[2] ?? process.cwd())\nconst proof = JSON.parse(readFileSync(join(repo, \"docs/benchmarks/reference-drc-component-once-proof.json\"), \"utf8\"))\nconst checkerPath = proof.sources.checker\nconst sourceDir = dirname(join(repo, checkerPath))\nconst work = mkdtempSync(join(tmpdir(), \"reference-component-once-\"))\nsymlinkSync(join(repo, \"node_modules\"), join(work, \"node_modules\"))\nconst hash = (text: string | Uint8Array) => createHash(\"sha256\").update(text).digest(\"hex\")\nconst controls: any[] = []\nfor (const kind of [\"native\", \"candidate\"]) {\n const source = kind === \"native\"\n  ? execFileSync(\"git\", [\"show\", `${proof.sources.nativeRevision}:${checkerPath}`], { cwd: repo, encoding: \"utf8\" })\n  : readFileSync(join(repo, checkerPath), \"utf8\")\n strictEqual(hash(source), proof.sourceHashes[`${kind}Checker`])\n const dir = join(work, kind)\n execFileSync(\"mkdir\", [\"-p\", dir])\n const filename = join(dir, \"checker.ts\")\n writeFileSync(filename, source)\n execFileSync(\"patch\", [\"--batch\", \"-p0\"], { cwd: dir, input: proof.reproduction.instrumentationPatches[kind] })\n const instrumented = readFileSync(filename, \"utf8\").replace(/from\\s+\"(\\.[^\"]+)\"/g, (_match, spec) => `from ${JSON.stringify(resolve(sourceDir, spec))}`)\n writeFileSync(filename, instrumented)\n controls.push(await import(filename))\n}\nconst { getDrcErrors } = await import(join(repo, \"lib/testing/getDrcErrors.ts\"))\nconst { initializeReferenceDrcRuntime } = await import(join(repo, \"lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/initializeReferenceDrcRuntime.ts\"))\nconst { checkViaTraceClearanceWithLazyCenters } = await import(join(repo, \"lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/checkViaTraceClearanceWithLazyCenters.ts\"))\nawait initializeReferenceDrcRuntime()\nconst fixtureBytes = readFileSync(join(repo, proof.sources.fixture))\nstrictEqual(hash(fixtureBytes), proof.sourceHashes.fixture)\nconst captures = JSON.parse(gunzipSync(fixtureBytes).toString())\nconst checkers = controls.map((control) => control.createPrivatelyMemoizedTraceContinuityChecker())\nconst totals: any = { originalGraphQueries: 0, candidateGraphQueries: 0, originalGraphMembers: 0, candidateGraphMembers: 0 }\nconst unchanged: any = { padAdjacencyVisits: 0, touchingTraceNeighborVisits: 0, componentMembershipTests: 0, components: 0, filteredMemberReferences: 0 }\nconst rows: any[] = []\nfor (const capture of captures.records) {\n const states = controls.map((control, index) => {\n  control.resetPartitionCensus()\n  const result = getDrcErrors(structuredClone(capture.circuitJson), {\n   ...capture.options, traceContinuityChecker: checkers[index],\n   viaTraceChecker: (circuit: any, options: any) => checkViaTraceClearanceWithLazyCenters(circuit, { ...options, enableAxisRejection: true, enableConnectivityMemo: true }),\n  })\n  deepStrictEqual(JSON.parse(JSON.stringify(result)), capture.expected)\n  return structuredClone(control.partitionCensus)\n })\n const withoutTraces = ({ traces, ...rest }: any) => rest\n deepStrictEqual(withoutTraces(states[0]), withoutTraces(states[1]))\n strictEqual(states[0].expectedMemo, true)\n strictEqual(states[0].traces.length, states[1].traces.length)\n const row: any = { number: capture.number, errors: capture.expected.errors.length }\n for (let index = 0; index < states[0].traces.length; index++) {\n  const native = states[0].traces[index], candidate = states[1].traces[index]\n  const withoutGraphCounts = ({ graphQueries, graphMembers, ...rest }: any) => rest\n  deepStrictEqual(withoutGraphCounts(native), withoutGraphCounts(candidate))\n  for (const key of [\"padAdjacencyVisits\", \"touchingTraceNeighborVisits\", \"componentMembershipTests\"]) unchanged[key] += native[key]\n  unchanged.components += native.componentWitnesses.length\n  for (const witness of native.componentWitnesses) {\n   strictEqual(witness.aliasesExact, true)\n   unchanged.filteredMemberReferences += witness.memberIndexes.length\n  }\n }\n for (const [prefix, state] of [[\"original\", states[0]], [\"candidate\", states[1]]] as const) {\n  for (const [suffix, counter] of [[\"GraphQueries\", \"graphQueries\"], [\"GraphMembers\", \"graphMembers\"]]) {\n   row[prefix + suffix] = state.traces.reduce((sum: number, trace: any) => sum + trace[counter], 0)\n   totals[prefix + suffix] += row[prefix + suffix]\n  }\n }\n rows.push(row)\n}\ndeepStrictEqual(totals, proof.operationCensus.totals)\ndeepStrictEqual(unchanged, proof.operationCensus.unchangedAdjacencyAndAliasWitnessCounts)\nwriteFileSync(join(work, \"replay-result.json\"), JSON.stringify({ allSavedErrorsExact: true, allMemoAndConsumedWorkExact: true, totals, unchanged, rows }, null, 2) + \"\\n\")\nconsole.log(JSON.stringify({ records: rows.length, allSavedErrorsExact: true, totals, unchanged, output: join(work, \"replay-result.json\") }))\n",
+    "instrumentationPatches": {
+      "native": "--- checker.ts\n+++ checker.ts\n@@ -31,6 +31,15 @@\n import { getLayersOfPcbElement } from \"../util/getLayersOfPcbElement\"\n import { endpointTouchesVia, getViaContactIndex } from \"./via-contact-index\"\n \n+export const partitionCensus: { phase: string; row: any; traces: any[]; graphBuilds: number; expectedGets: number; sourceMemberships: number; expectedMemo: boolean; memoDiagnostics?: unknown; polygonDiagnostics?: unknown; expectedDiagnostics?: unknown } = { phase: \"setup\", row: undefined, traces: [], graphBuilds: 0, expectedGets: 0, sourceMemberships: 0, expectedMemo: false }\n+const rowsByTrace = new Map<object, any>()\n+export function resetPartitionCensus(): void { partitionCensus.phase = \"setup\"; partitionCensus.row = undefined; partitionCensus.traces = []; partitionCensus.graphBuilds = 0; partitionCensus.expectedGets = 0; partitionCensus.sourceMemberships = 0; rowsByTrace.clear() }\n+function useTraceRow(trace: any): void {\n+ let row = rowsByTrace.get(trace)\n+ if (!row) { row = { index: partitionCensus.traces.length, id: trace.pcb_trace_id, source: trace.source_trace_id, points: trace.route.length, padTests: 0, sourceFind: 0, portCandidates: 0, expectedPorts: 0, expectedValidated: 0, segmentCandidates: 0, graphQueries: 0, graphMembers: 0, componentMembershipTests: 0, padAdjacencyVisits: 0, touchingTraceNeighborVisits: 0, componentWitnesses: [], candidateTraceTests: 0, portRows: [], viaAlignments: 0 }; rowsByTrace.set(trace,row); partitionCensus.traces.push(row) }\n+ partitionCensus.row = row\n+}\n+\n type PcbPortId = PcbPort[\"pcb_port_id\"]\n type PcbTraceRoutePoint = PcbTrace[\"route\"][number]\n type PcbTraceWireRoutePoint = Extract<\n@@ -69,6 +78,7 @@\n }\n \n function routePointTouchesPad(point: PcbTraceRoutePoint, pad: PcbPad) {\n+  if (partitionCensus.row) partitionCensus.row.padTests++\n   return (\n     point.route_type === \"wire\" &&\n     getLayersOfPcbElement(pad).includes(point.layer) &&\n@@ -176,6 +186,7 @@\n   // Logical connectivity selects the eligible net. Geometry must still prove\n   // that this exact endpoint directly touches copper outside its owner trace.\n   for (const segment of candidateSegments) {\n+    if (partitionCensus.row) partitionCensus.row.segmentCandidates++\n     if (segment.trace.pcb_trace_id === ownerTrace.pcb_trace_id) continue\n \n     const maximumContactDistance =\n@@ -312,6 +323,7 @@\n   const privatelyOwnedMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo])\n   const useExpectedPortMemo = privatelyOwnedMemo &&\n     pcbConnectivityMap === undefined && connMap === undefined && canUseExpectedPortsMemo(circuitJson)\n+  partitionCensus.expectedMemo = useExpectedPortMemo\n   // A changed native geometry setting or observer must not consume retained\n   // predicate answers either. External supplied memos retain their opt-in path.\n   if (privatelyOwnedMemo && !useExpectedPortMemo) primitiveMemo = undefined\n@@ -355,7 +367,10 @@\n   ) as PcbPlatedHole[]\n \n   const padMap = new Map<PcbPortId, PcbPad[]>()\n+  partitionCensus.phase = \"physical-graph\"\n+  partitionCensus.graphBuilds++\n   pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)\n+  partitionCensus.phase = \"endpoint-pad-inventory\"\n   let fullConnectivityMap: ConnectivityMap | undefined = connMap\n   let traceWireSegmentsByNetAndLayer: TraceWireSegmentsByNetAndLayer | undefined\n   const getFullConnectivityMap = () => {\n@@ -404,6 +419,7 @@\n   // Record the PCB ports each routed trace physically reaches so contiguity can\n   // follow the copper network instead of relying on singular source_trace_ids.\n   for (const trace of pcbTraces) {\n+    useTraceRow(trace)\n     const touchedPortIds = new Set<PcbPortId>()\n     const firstPoint = trace.route[0]\n     const lastPoint = trace.route.at(-1)\n@@ -450,17 +466,21 @@\n       if (connectedTraceIds.has(traceId)) continue\n       connectedTraceIds.add(traceId)\n \n+      if (partitionCensus.row) partitionCensus.row.graphQueries++\n       for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(\n         traceId,\n       )) {\n+        if (partitionCensus.row) partitionCensus.row.graphMembers++\n         if (!connectedTraceIds.has(connectedTrace.pcb_trace_id)) {\n           pendingTraceIds.push(connectedTrace.pcb_trace_id)\n         }\n       }\n \n       for (const pcbPortId of touchedPortIdsByTraceId.get(traceId) ?? []) {\n+        if (partitionCensus.row) partitionCensus.row.padAdjacencyVisits++\n         for (const touchingTraceId of traceIdsByTouchedPortId.get(pcbPortId) ??\n           []) {\n+          if (partitionCensus.row) partitionCensus.row.touchingTraceNeighborVisits++\n           if (!connectedTraceIds.has(touchingTraceId)) {\n             pendingTraceIds.push(touchingTraceId)\n           }\n@@ -468,9 +488,11 @@\n       }\n     }\n \n-    const connectedTraces = pcbTraces.filter((trace) =>\n-      connectedTraceIds.has(trace.pcb_trace_id),\n-    )\n+    const connectedTraces = pcbTraces.filter((trace) => {\n+      if (partitionCensus.row) partitionCensus.row.componentMembershipTests++\n+      return connectedTraceIds.has(trace.pcb_trace_id)\n+    })\n+    if (partitionCensus.row) partitionCensus.row.componentWitnesses.push({ memberIndexes: connectedTraces.map((trace) => pcbTraces.indexOf(trace)), aliasesExact: connectedTraces.every((trace) => pcbTraces.some((original) => original === trace)) })\n     for (const trace of connectedTraces) {\n       physicallyConnectedTracesByTraceId.set(\n         trace.pcb_trace_id,\n@@ -480,28 +502,33 @@\n     return connectedTraces\n   }\n \n+  partitionCensus.phase = \"trace-validation\"\n   for (const trace of pcbTraces) {\n+    useTraceRow(trace)\n     if (trace.route.length === 0) continue\n \n     const firstPoint = trace.route[0]\n     const lastPoint = trace.route[trace.route.length - 1]\n \n     const sourceTrace = sourceTraces.find(\n-      (st) => st.source_trace_id === trace.source_trace_id,\n+      (st) => { partitionCensus.row.sourceFind++; return st.source_trace_id === trace.source_trace_id },\n     )\n \n+    if (sourceTrace) partitionCensus.expectedGets++\n     const expectedPorts = sourceTrace\n       ? expectedPortMemo ? expectedPortMemo.get(sourceTrace) : pcbPorts.filter((port) =>\n           sourceTrace.connected_source_port_ids?.includes(port.source_port_id),\n         )\n       : []\n \n+    partitionCensus.row.expectedPorts = expectedPorts.length\n     for (let i = 1; i < trace.route.length - 1; i++) {\n       const prevPoint = trace.route[i - 1]\n       const currentPoint = trace.route[i]\n       const nextPoint = trace.route[i + 1]\n \n       if (currentPoint.route_type === \"via\") {\n+        partitionCensus.row.viaAlignments++\n         const prevIsWire = prevPoint.route_type === \"wire\"\n         const nextIsWire = nextPoint.route_type === \"wire\"\n \n@@ -548,20 +575,23 @@\n       checkedSourceTraceIds.add(sourceTrace.source_trace_id)\n     }\n \n+    partitionCensus.row.expectedValidated = expectedPorts.length\n     for (const port of expectedPorts) {\n+      partitionCensus.row.portCandidates++\n       if (!port.pcb_port_id) continue\n \n       const pads = padMap.get(port.pcb_port_id)\n \n       if (!pads?.length) continue\n \n+      const beforeCandidateTests = partitionCensus.row.candidateTraceTests\n       const isConnectedByRoutedSourceTrace = getPhysicallyConnectedTraces(\n         trace,\n-      ).some((candidateTrace) =>\n-        touchedPortIdsByTraceId\n-          .get(candidateTrace.pcb_trace_id)\n-          ?.has(port.pcb_port_id),\n-      )\n+      ).some((candidateTrace) => {\n+        partitionCensus.row.candidateTraceTests++\n+        return touchedPortIdsByTraceId.get(candidateTrace.pcb_trace_id)?.has(port.pcb_port_id)\n+      })\n+      partitionCensus.row.portRows.push({ id: port.pcb_port_id, candidates: partitionCensus.row.candidateTraceTests - beforeCandidateTests, connected: isConnectedByRoutedSourceTrace })\n       if (isConnectedByRoutedSourceTrace) continue\n \n       const isFirstPointConnected = pads.some((pad) =>\n@@ -708,6 +738,11 @@\n     }\n   }\n \n+  partitionCensus.memoDiagnostics = primitiveMemo ? { ...primitiveMemo.diagnostics } : undefined\n+  partitionCensus.polygonDiagnostics = scaledPolygonMemo ? { ...scaledPolygonMemo.diagnostics } : undefined\n+  partitionCensus.expectedDiagnostics = expectedPortMemo ? { ...expectedPortMemo.diagnostics } : undefined\n+  partitionCensus.phase = \"complete\"\n+  partitionCensus.row = undefined\n   return errors\n }\n \n",
+      "candidate": "--- checker.ts\n+++ checker.ts\n@@ -31,6 +31,15 @@\n import { getLayersOfPcbElement } from \"../util/getLayersOfPcbElement\"\n import { endpointTouchesVia, getViaContactIndex } from \"./via-contact-index\"\n \n+export const partitionCensus: { phase: string; row: any; traces: any[]; graphBuilds: number; expectedGets: number; sourceMemberships: number; expectedMemo: boolean; memoDiagnostics?: unknown; polygonDiagnostics?: unknown; expectedDiagnostics?: unknown } = { phase: \"setup\", row: undefined, traces: [], graphBuilds: 0, expectedGets: 0, sourceMemberships: 0, expectedMemo: false }\n+const rowsByTrace = new Map<object, any>()\n+export function resetPartitionCensus(): void { partitionCensus.phase = \"setup\"; partitionCensus.row = undefined; partitionCensus.traces = []; partitionCensus.graphBuilds = 0; partitionCensus.expectedGets = 0; partitionCensus.sourceMemberships = 0; rowsByTrace.clear() }\n+function useTraceRow(trace: any): void {\n+ let row = rowsByTrace.get(trace)\n+ if (!row) { row = { index: partitionCensus.traces.length, id: trace.pcb_trace_id, source: trace.source_trace_id, points: trace.route.length, padTests: 0, sourceFind: 0, portCandidates: 0, expectedPorts: 0, expectedValidated: 0, segmentCandidates: 0, graphQueries: 0, graphMembers: 0, componentMembershipTests: 0, padAdjacencyVisits: 0, touchingTraceNeighborVisits: 0, componentWitnesses: [], candidateTraceTests: 0, portRows: [], viaAlignments: 0 }; rowsByTrace.set(trace,row); partitionCensus.traces.push(row) }\n+ partitionCensus.row = row\n+}\n+\n type PcbPortId = PcbPort[\"pcb_port_id\"]\n type PcbTraceRoutePoint = PcbTrace[\"route\"][number]\n type PcbTraceWireRoutePoint = Extract<\n@@ -69,6 +78,7 @@\n }\n \n function routePointTouchesPad(point: PcbTraceRoutePoint, pad: PcbPad) {\n+  if (partitionCensus.row) partitionCensus.row.padTests++\n   return (\n     point.route_type === \"wire\" &&\n     getLayersOfPcbElement(pad).includes(point.layer) &&\n@@ -176,6 +186,7 @@\n   // Logical connectivity selects the eligible net. Geometry must still prove\n   // that this exact endpoint directly touches copper outside its owner trace.\n   for (const segment of candidateSegments) {\n+    if (partitionCensus.row) partitionCensus.row.segmentCandidates++\n     if (segment.trace.pcb_trace_id === ownerTrace.pcb_trace_id) continue\n \n     const maximumContactDistance =\n@@ -312,6 +323,7 @@\n   const privatelyOwnedMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo])\n   const useExpectedPortMemo = privatelyOwnedMemo &&\n     pcbConnectivityMap === undefined && connMap === undefined && canUseExpectedPortsMemo(circuitJson)\n+  partitionCensus.expectedMemo = useExpectedPortMemo\n   // A changed native geometry setting or observer must not consume retained\n   // predicate answers either. External supplied memos retain their opt-in path.\n   if (privatelyOwnedMemo && !useExpectedPortMemo) primitiveMemo = undefined\n@@ -355,7 +367,10 @@\n   ) as PcbPlatedHole[]\n \n   const padMap = new Map<PcbPortId, PcbPad[]>()\n+  partitionCensus.phase = \"physical-graph\"\n+  partitionCensus.graphBuilds++\n   pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)\n+  partitionCensus.phase = \"endpoint-pad-inventory\"\n   let fullConnectivityMap: ConnectivityMap | undefined = connMap\n   let traceWireSegmentsByNetAndLayer: TraceWireSegmentsByNetAndLayer | undefined\n   const getFullConnectivityMap = () => {\n@@ -404,6 +419,7 @@\n   // Record the PCB ports each routed trace physically reaches so contiguity can\n   // follow the copper network instead of relying on singular source_trace_ids.\n   for (const trace of pcbTraces) {\n+    useTraceRow(trace)\n     const touchedPortIds = new Set<PcbPortId>()\n     const firstPoint = trace.route[0]\n     const lastPoint = trace.route.at(-1)\n@@ -442,34 +458,23 @@\n     )\n     if (cached) return cached\n \n+    const expandedPhysicalNetIds = useExpectedPortMemo ? new Set<string>() : undefined\n     const connectedTraceIds = new Set<string>()\n     const pendingTraceIds = [startTrace.pcb_trace_id]\n-    // The private guard owns a native, immutable physical map. Its string net\n-    // label returns the complete component on the first query, so later queries\n-    // of that label cannot add members. Pad adjacency still runs for every trace.\n-    const expandedPhysicalNetIds = useExpectedPortMemo\n-      ? new Set<string>()\n-      : undefined\n \n     while (pendingTraceIds.length > 0) {\n       const traceId = pendingTraceIds.pop()!\n       if (connectedTraceIds.has(traceId)) continue\n       connectedTraceIds.add(traceId)\n \n-      const physicalNetId = expandedPhysicalNetIds === undefined\n-        ? undefined\n-        : pcbConnectivityMap.connMap.getNetConnectedToId(traceId)\n-      if (\n-        expandedPhysicalNetIds === undefined ||\n-        typeof physicalNetId !== \"string\" ||\n-        !expandedPhysicalNetIds.has(physicalNetId)\n-      ) {\n-        if (typeof physicalNetId === \"string\") {\n-          expandedPhysicalNetIds!.add(physicalNetId)\n-        }\n-        for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(\n-          traceId,\n-        )) {\n+      const physicalNetId = expandedPhysicalNetIds === undefined ? undefined :\n+        pcbConnectivityMap.connMap.getNetConnectedToId(traceId)\n+      if (expandedPhysicalNetIds === undefined || typeof physicalNetId !== \"string\" ||\n+        !expandedPhysicalNetIds.has(physicalNetId)) {\n+        if (typeof physicalNetId === \"string\") expandedPhysicalNetIds!.add(physicalNetId)\n+        if (partitionCensus.row) partitionCensus.row.graphQueries++\n+        for (const connectedTrace of pcbConnectivityMap.getAllTracesConnectedToTrace(traceId)) {\n+          if (partitionCensus.row) partitionCensus.row.graphMembers++\n           if (!connectedTraceIds.has(connectedTrace.pcb_trace_id)) {\n             pendingTraceIds.push(connectedTrace.pcb_trace_id)\n           }\n@@ -477,8 +482,10 @@\n       }\n \n       for (const pcbPortId of touchedPortIdsByTraceId.get(traceId) ?? []) {\n+        if (partitionCensus.row) partitionCensus.row.padAdjacencyVisits++\n         for (const touchingTraceId of traceIdsByTouchedPortId.get(pcbPortId) ??\n           []) {\n+          if (partitionCensus.row) partitionCensus.row.touchingTraceNeighborVisits++\n           if (!connectedTraceIds.has(touchingTraceId)) {\n             pendingTraceIds.push(touchingTraceId)\n           }\n@@ -486,9 +493,11 @@\n       }\n     }\n \n-    const connectedTraces = pcbTraces.filter((trace) =>\n-      connectedTraceIds.has(trace.pcb_trace_id),\n-    )\n+    const connectedTraces = pcbTraces.filter((trace) => {\n+      if (partitionCensus.row) partitionCensus.row.componentMembershipTests++\n+      return connectedTraceIds.has(trace.pcb_trace_id)\n+    })\n+    if (partitionCensus.row) partitionCensus.row.componentWitnesses.push({ memberIndexes: connectedTraces.map((trace) => pcbTraces.indexOf(trace)), aliasesExact: connectedTraces.every((trace) => pcbTraces.some((original) => original === trace)) })\n     for (const trace of connectedTraces) {\n       physicallyConnectedTracesByTraceId.set(\n         trace.pcb_trace_id,\n@@ -498,28 +507,33 @@\n     return connectedTraces\n   }\n \n+  partitionCensus.phase = \"trace-validation\"\n   for (const trace of pcbTraces) {\n+    useTraceRow(trace)\n     if (trace.route.length === 0) continue\n \n     const firstPoint = trace.route[0]\n     const lastPoint = trace.route[trace.route.length - 1]\n \n     const sourceTrace = sourceTraces.find(\n-      (st) => st.source_trace_id === trace.source_trace_id,\n+      (st) => { partitionCensus.row.sourceFind++; return st.source_trace_id === trace.source_trace_id },\n     )\n \n+    if (sourceTrace) partitionCensus.expectedGets++\n     const expectedPorts = sourceTrace\n       ? expectedPortMemo ? expectedPortMemo.get(sourceTrace) : pcbPorts.filter((port) =>\n           sourceTrace.connected_source_port_ids?.includes(port.source_port_id),\n         )\n       : []\n \n+    partitionCensus.row.expectedPorts = expectedPorts.length\n     for (let i = 1; i < trace.route.length - 1; i++) {\n       const prevPoint = trace.route[i - 1]\n       const currentPoint = trace.route[i]\n       const nextPoint = trace.route[i + 1]\n \n       if (currentPoint.route_type === \"via\") {\n+        partitionCensus.row.viaAlignments++\n         const prevIsWire = prevPoint.route_type === \"wire\"\n         const nextIsWire = nextPoint.route_type === \"wire\"\n \n@@ -566,20 +580,23 @@\n       checkedSourceTraceIds.add(sourceTrace.source_trace_id)\n     }\n \n+    partitionCensus.row.expectedValidated = expectedPorts.length\n     for (const port of expectedPorts) {\n+      partitionCensus.row.portCandidates++\n       if (!port.pcb_port_id) continue\n \n       const pads = padMap.get(port.pcb_port_id)\n \n       if (!pads?.length) continue\n \n+      const beforeCandidateTests = partitionCensus.row.candidateTraceTests\n       const isConnectedByRoutedSourceTrace = getPhysicallyConnectedTraces(\n         trace,\n-      ).some((candidateTrace) =>\n-        touchedPortIdsByTraceId\n-          .get(candidateTrace.pcb_trace_id)\n-          ?.has(port.pcb_port_id),\n-      )\n+      ).some((candidateTrace) => {\n+        partitionCensus.row.candidateTraceTests++\n+        return touchedPortIdsByTraceId.get(candidateTrace.pcb_trace_id)?.has(port.pcb_port_id)\n+      })\n+      partitionCensus.row.portRows.push({ id: port.pcb_port_id, candidates: partitionCensus.row.candidateTraceTests - beforeCandidateTests, connected: isConnectedByRoutedSourceTrace })\n       if (isConnectedByRoutedSourceTrace) continue\n \n       const isFirstPointConnected = pads.some((pad) =>\n@@ -726,6 +743,11 @@\n     }\n   }\n \n+  partitionCensus.memoDiagnostics = primitiveMemo ? { ...primitiveMemo.diagnostics } : undefined\n+  partitionCensus.polygonDiagnostics = scaledPolygonMemo ? { ...scaledPolygonMemo.diagnostics } : undefined\n+  partitionCensus.expectedDiagnostics = expectedPortMemo ? { ...expectedPortMemo.diagnostics } : undefined\n+  partitionCensus.phase = \"complete\"\n+  partitionCensus.row = undefined\n   return errors\n }\n \n"
+    }
+  }
+}
