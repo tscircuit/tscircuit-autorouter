@@ -8,6 +8,7 @@ import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
 import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
 import { TinyRegionCostMemo, type TinyRegionCostMethod } from "./TinyRegionCostMemo"
 import { canRejectTinyDistanceByBase } from "./TinyConservativeAxisDistanceBound"
+import { createTinyOrderedNeighborKernel, type TinyOrderedNeighborKernel } from "./pathingWasm/createTinyOrderedNeighborKernel"
 
 const nativeSqrt = Math.sqrt
 
@@ -37,6 +38,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
   private readonly distanceIndex?: TinyTriangularDistanceIndex
   private readonly enableConservativeDistanceBound: boolean
   readonly regionCostMemo?: TinyRegionCostMemo
+  private wasmNeighborKernel?: TinyOrderedNeighborKernel
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
     options?: PackedDistanceAwareTinyHyperGraphSolverOptions) {
@@ -109,6 +111,17 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     this.packedCandidateQueue = queue
     this.activeSearchGeneration = 0
     this.state.candidateQueue = queue
+    this.wasmNeighborKernel = createTinyOrderedNeighborKernel({
+      owner: this, offsets: this.regionPortOffsets, ports: this.regionPorts,
+      nextRegions: this.nextRegionByIncidence, hops: this.hopByIncidence,
+      getActiveWord: (word) => this.activeIncidences.getWord(word),
+      costMemo: this.regionCostMemo,
+    })
+  }
+
+  override setCandidateBestCost(hopId: number, bestCost: number): void {
+    super.setCandidateBestCost(hopId, bestCost)
+    this.wasmNeighborKernel?.updateBest(hopId, bestCost, this.state.candidateBestCostGeneration)
   }
 
   override _step(): void {
@@ -158,6 +171,41 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     const sourceLocal = distanceIndex?.getSourceLocalIndex(currentCandidate.portId, currentCandidate.nextRegionId) ?? -1
     const sourceRevision = distanceIndex?.refreshPort(currentCandidate.portId, sourceX, sourceY) ?? 0
     const sourceWrap = distanceIndex?.wrapGeneration ?? 0
+    const batch = distanceIndex ? undefined : this.wasmNeighborKernel?.scan(
+      currentCandidate, queue.searchGeneration, state, sourceX, sourceY,
+    )
+    if (batch) {
+      // The native cost visitors retain CSR order. Earlier best-cost decreases
+      // can only reject additional survivors, including repeated incidences.
+      for (let row = 0; row < batch.count; row++) {
+        const position = batch.positions[row]!
+        const neighborPortId = this.regionPorts[position]!
+        if (neighborPortId === state.goalPortId) {
+          this.onPathFound(currentCandidate)
+          return
+        }
+        const nextRegionId = this.nextRegionByIncidence[position]!
+        const candidateHopId = this.hopByIncidence[position]!
+        const previousBestCost = this.getCandidateBestCost(candidateHopId)
+        if (currentCandidate.g >= previousBestCost) continue
+        const knownSegmentDistance = batch.distances[row]!
+        const lowerBoundCost = currentCandidate.g + state.regionCongestionCost[currentCandidate.nextRegionId]! +
+          (problem.portPenalty?.[neighborPortId] ?? 0) + knownSegmentDistance * this.DISTANCE_TO_COST
+        if (lowerBoundCost >= previousBestCost) continue
+        const g = this.computeG(currentCandidate, neighborPortId, previousBestCost, knownSegmentDistance)
+        if (!Number.isFinite(g) || g >= previousBestCost) continue
+        const h = this.computeH(neighborPortId)
+        if (neighborPortId === state.goalPortId) {
+          this.onPathFound({ hopId: candidateHopId, prevRegionId: currentCandidate.nextRegionId,
+            nextRegionId, portId: neighborPortId, g, h, f: g + h, prevCandidate: currentCandidate })
+          return
+        }
+        this.setCandidateBestCost(candidateHopId, g)
+        queue.queueValues(candidateHopId, currentCandidate.nextRegionId, nextRegionId,
+          neighborPortId, g, h, g + h, currentCandidate)
+      }
+      return
+    }
     const start = this.regionPortOffsets[currentCandidate.nextRegionId]!
     const end = this.regionPortOffsets[currentCandidate.nextRegionId + 1]!
     const firstWord = start >>> 5

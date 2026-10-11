@@ -9,6 +9,9 @@ import { TinyNegotiatedHyperGraphSolver } from "./TinyNegotiatedHyperGraphSolver
 import { TinyGoalBallSelectiveReripHyperGraphSolver } from "./TinyGoalBallSelectiveReripHyperGraphSolver"
 import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 import { ParallelDuplicateCongestedPortSolver } from "./ParallelDuplicateCongestedPortSolver"
+import { captureTinyKernelFactoryMethods, registerOwnedTinyKernelInput } from "./pathingWasm/createTinyOrderedNeighborKernel"
+
+const indexedKernelMethods = captureTinyKernelFactoryMethods(TinyIndexedSelectiveReripHyperGraphSolver.prototype)
 
 export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated" | "goal-balls"
 export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy; workerPool?: ParallelStageWorkerPool }
@@ -37,6 +40,7 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   private pathingStrategy?: Pipeline9PathingStrategy
   private readonly workerPool?: ParallelStageWorkerPool
   readonly requiresAsyncExecution: boolean
+  private readonly kernelFactories = new WeakSet<object>()
 
   constructor(
     params: ConstructorParameters<typeof TinyHypergraphPortPointPathingSolver>[0],
@@ -74,6 +78,15 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     switch (strategy) {
       case "indexed":
         solveGraphStep.solverClass = selective ? TinyIndexedSelectiveReripHyperGraphSolver : TinyHyperGraphSolver
+        if (selective && !this.kernelFactories.has(solveGraphStep)) {
+          const nativeGetConstructorParams = solveGraphStep.getConstructorParams
+          solveGraphStep.getConstructorParams = (pipeline) => {
+            const params = nativeGetConstructorParams(pipeline)
+            registerOwnedTinyKernelInput(params[0], params[1], indexedKernelMethods)
+            return params
+          }
+          this.kernelFactories.add(solveGraphStep)
+        }
         return
       case "adaptive-bitset":
         solveGraphStep.solverClass = selective ? TinyBitsetSelectiveReripHyperGraphSolver : TinyBitsetHyperGraphSolver
