@@ -1,0 +1,110 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index 17dffd6..dc57062 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -118,25 +118,58 @@ class MinHeap {
+ 
+   push(f: number, seq: number, id: number) {
+     let i = this.n++
+-    this.f[i] = f
+-    this.seq[i] = seq
+-    this.id[i] = id
++    const priorities = this.f
++    const sequences = this.seq
++    const ids = this.id
+     while (i > 0) {
+       const p = (i - 1) >> 1
+-      if (this.less(p, i)) break
+-      this.swap(i, p)
++      const parentF = priorities[p]!
++      const parentSeq = sequences[p]!
++      if (parentF !== f ? parentF < f : parentSeq < seq) break
++      priorities[i] = parentF
++      sequences[i] = parentSeq
++      ids[i] = ids[p]!
+       i = p
+     }
++    priorities[i] = f
++    sequences[i] = seq
++    ids[i] = id
+   }
+ 
+   pop(): number {
+     const out = this.id[0]!
+     this.n--
+     if (this.n > 0) {
+-      this.f[0] = this.f[this.n]!
+-      this.seq[0] = this.seq[this.n]!
+-      this.id[0] = this.id[this.n]!
+-      this.siftDown(0)
++      const priorities = this.f
++      const sequences = this.seq
++      const ids = this.id
++      const lastF = priorities[this.n]!
++      const lastSeq = sequences[this.n]!
++      const lastId = ids[this.n]!
++      let i = 0
++      while (true) {
++        const l = i * 2 + 1
++        const r = l + 1
++        if (l >= this.n) break
++        let m = l
++        if (r < this.n) {
++          const leftF = priorities[l]!
++          const rightF = priorities[r]!
++          if (
++            !(leftF !== rightF ? leftF < rightF : sequences[l]! < sequences[r]!)
++          ) m = r
++        }
++        const childF = priorities[m]!
++        const childSeq = sequences[m]!
++        if (lastF !== childF ? lastF < childF : lastSeq < childSeq) break
++        priorities[i] = childF
++        sequences[i] = childSeq
++        ids[i] = ids[m]!
++        i = m
++      }
++      priorities[i] = lastF
++      sequences[i] = lastSeq
++      ids[i] = lastId
+     }
+     return out
+   }
+@@ -149,37 +182,6 @@ class MinHeap {
+     this.n = 0
+   }
+ 
+-  private siftDown(i: number) {
+-    while (true) {
+-      const l = i * 2 + 1
+-      const r = l + 1
+-      if (l >= this.n) return
+-      let m = l
+-      if (r < this.n && !this.less(l, r)) m = r
+-      if (this.less(i, m)) return
+-      this.swap(i, m)
+-      i = m
+-    }
+-  }
+-
+-  private less(i: number, j: number) {
+-    const fi = this.f[i]!
+-    const fj = this.f[j]!
+-    if (fi !== fj) return fi < fj
+-    return this.seq[i]! < this.seq[j]!
+-  }
+-
+-  private swap(i: number, j: number) {
+-    const tmpF = this.f[i]!
+-    this.f[i] = this.f[j]!
+-    this.f[j] = tmpF
+-    const tmpS = this.seq[i]!
+-    this.seq[i] = this.seq[j]!
+-    this.seq[j] = tmpS
+-    const tmpI = this.id[i]!
+-    this.id[i] = this.id[j]!
+-    this.id[j] = tmpI
+-  }
+ }
+ 
+ // --- Types ---
