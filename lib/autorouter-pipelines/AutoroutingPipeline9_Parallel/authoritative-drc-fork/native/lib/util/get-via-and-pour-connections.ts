@@ -1,4 +1,5 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import type { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import type { Polygon } from "@flatten-js/core"
 import { all_layers, type AnyCircuitElement, type PcbVia } from "circuit-json"
@@ -27,6 +28,7 @@ type Conductor = {
 export function getViaAndPourConnections(
   circuit: AnyCircuitElement[],
   primitiveMemo?: ReferenceDrcPrimitiveMemo,
+  scaledPolygonMemo?: ScaledConductorPolygonMemo,
 ): string[][] {
   if (
     !circuit.some(
@@ -59,6 +61,16 @@ export function getViaAndPourConnections(
       })
   }
   const vias = circuit.filter((e) => e.type === "pcb_via")
+  const addMemoized = (
+    id: string,
+    layers: string[],
+    geometryId: number,
+    createPolygon: () => Polygon,
+    bridges = false,
+  ): void => {
+    const polygon = scaledPolygonMemo!.getOrCreate(geometryId, createPolygon)
+    if (polygon !== undefined) conductors.push({ id, layers, polygon, bridges, geometryId })
+  }
   const board = circuit.find((e) => e.type === "pcb_board")
   const stack = [
     "top",
@@ -69,7 +81,14 @@ export function getViaAndPourConnections(
   ]
   for (const copper of circuit) {
     if (copper.type === "pcb_via") {
-      add(
+      if (primitiveMemo && scaledPolygonMemo) addMemoized(
+        copper.pcb_via_id,
+        copper.layers,
+        primitiveMemo.intern(["via", copper]),
+        (): Polygon => circlePolygon(copper, copper.outer_diameter / 2),
+        true,
+      )
+      else add(
         copper.pcb_via_id,
         copper.layers,
         circlePolygon(copper, copper.outer_diameter / 2),
@@ -79,7 +98,14 @@ export function getViaAndPourConnections(
       if (copper.pcb_trace_id)
         connections.push([copper.pcb_via_id, copper.pcb_trace_id])
     } else if (copper.type === "pcb_copper_pour") {
-      add(
+      if (primitiveMemo && scaledPolygonMemo) addMemoized(
+        copper.pcb_copper_pour_id,
+        [copper.layer],
+        primitiveMemo.intern(["pour", copper]),
+        (): Polygon => getPourPolygon(copper),
+        true,
+      )
+      else add(
         copper.pcb_copper_pour_id,
         [copper.layer],
         getPourPolygon(copper),
@@ -97,7 +123,13 @@ export function getViaAndPourConnections(
           a.layer === b.layer &&
           (a.x !== b.x || a.y !== b.y)
         ) {
-          add(
+          if (primitiveMemo && scaledPolygonMemo) addMemoized(
+            copper.pcb_trace_id,
+            [a.layer],
+            primitiveMemo.intern(["wire", a, b, a.width]),
+            (): Polygon => getTraceSegmentPolygon(a, b, a.width),
+          )
+          else add(
             copper.pcb_trace_id,
             [a.layer],
             getTraceSegmentPolygon(a, b, a.width),
@@ -126,7 +158,14 @@ export function getViaAndPourConnections(
             hole_diameter: 0,
             layers: stack.slice(Math.min(from, to), Math.max(from, to) + 1),
           } as PcbVia
-          add(
+          if (primitiveMemo && scaledPolygonMemo) addMemoized(
+            copper.pcb_trace_id,
+            via.layers,
+            primitiveMemo.intern(["route-via", via]),
+            (): Polygon => circlePolygon(via, via.outer_diameter / 2),
+            true,
+          )
+          else add(
             copper.pcb_trace_id,
             via.layers,
             circlePolygon(via, via.outer_diameter / 2),

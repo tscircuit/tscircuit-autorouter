@@ -5,12 +5,15 @@ import * as Connectivity from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import { canUseLazyViaTraceCenters } from "./canUseLazyViaTraceCenters"
 import { ReferenceDrcPrimitiveMemo } from "./ReferenceDrcPrimitiveMemo"
+import { ScaledConductorPolygonMemo } from "./ScaledConductorPolygonMemo"
 
 const getOwnPropertyNames = Object.getOwnPropertyNames
 const getOwnPropertySymbols = Object.getOwnPropertySymbols
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor
 const getPrototypeOf = Object.getPrototypeOf
 const objectIs = Object.is
+const nativeGetTolerance = Flatten.Utils.getTolerance
+const nativeTolerance = nativeGetTolerance()
 const additionalGlobals = [
   "WeakMap", "WeakSet", "Proxy", "JSON", "Reflect", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
@@ -52,6 +55,7 @@ capture(CircuitJsonUtil)
 capture(Connectivity)
 capture(Flatbush)
 capture(ReferenceDrcPrimitiveMemo)
+capture(ScaledConductorPolygonMemo)
 capture(all_layers)
 capture(WeakMap)
 capture(WeakSet)
@@ -97,5 +101,7 @@ export function canUseExpectedPortsMemo(circuitJson: unknown): boolean {
         actual.writable !== expected.writable || actual.enumerable !== expected.enumerable || actual.configurable !== expected.configurable) return false
     }
   }
-  return true
+  // setTolerance changes Flatten's private numeric state without changing any
+  // method descriptor. Read it only after the complete native-method guard.
+  return objectIs(nativeGetTolerance(), nativeTolerance)
 }

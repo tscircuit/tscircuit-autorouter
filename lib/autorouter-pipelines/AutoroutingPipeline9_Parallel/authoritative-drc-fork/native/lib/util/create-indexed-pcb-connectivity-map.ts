@@ -1,4 +1,5 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import type { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 import { findOrderedIndexedConnectedNetworks } from "../../../findOrderedIndexedConnectedNetworks"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { createTracePortLayerConnectivity } from "./trace-port-layer-connectivity"
@@ -23,6 +24,7 @@ type TraceBounds = {
 export function createIndexedPcbConnectivityMap(
   circuitJson: AnyCircuitElement[],
   primitiveMemo?: ReferenceDrcPrimitiveMemo,
+  scaledPolygonMemo?: ScaledConductorPolygonMemo,
 ): PcbConnectivityMap {
   // Construct empty to avoid the dependency's all-pairs scan. Keep its exact
   // intersection predicate and query methods, including cross-net contacts.
@@ -120,7 +122,7 @@ export function createIndexedPcbConnectivityMap(
     for (const connection of connectionsByPort.get(portId) ?? [])
       connections.push(connection)
   }
-  connections.push(...getViaAndPourConnections(circuitJson, primitiveMemo))
+  connections.push(...getViaAndPourConnections(circuitJson, primitiveMemo, scaledPolygonMemo))
   map.connMap = new ConnectivityMap(primitiveMemo
     ? findOrderedIndexedConnectedNetworks(connections)
     : findConnectedNetworks(connections))

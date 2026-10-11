@@ -1,6 +1,7 @@
 import { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
 import { canUseExpectedPortsMemo } from "../../../canUseExpectedPortsMemo"
 import { createExpectedPortsMemo } from "../../../createExpectedPortsMemo"
+import { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { getTracePortLayerMismatches } from "../util/trace-port-layer-connectivity"
@@ -52,8 +53,11 @@ type TraceWireSegmentsByNetAndLayer = Map<
 const ENDPOINT_CONTACT_EPSILON = 1e-9
 const TRACE_SEGMENT_GEOMETRY_EPSILON = 1e-9
 const privatelyOwnedMemos = new WeakSet<ReferenceDrcPrimitiveMemo>()
+const privatelyOwnedPolygonMemos = new WeakMap<ReferenceDrcPrimitiveMemo, ScaledConductorPolygonMemo>()
 const privateMemoHas = WeakSet.prototype.has
 const privateMemoAdd = WeakSet.prototype.add
+const privatePolygonMemoGet = WeakMap.prototype.get
+const privatePolygonMemoSet = WeakMap.prototype.set
 const applyNative = Reflect.apply
 
 /** The cache is never exposed to an external callback or caller. */
@@ -305,8 +309,20 @@ function checkTracesAreContiguous(
     primitiveMemo?: ReferenceDrcPrimitiveMemo
   } = {},
 ): PcbTraceError[] {
-  const useExpectedPortMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo]) &&
+  const privatelyOwnedMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo])
+  const useExpectedPortMemo = privatelyOwnedMemo &&
     pcbConnectivityMap === undefined && connMap === undefined && canUseExpectedPortsMemo(circuitJson)
+  // A changed native geometry setting or observer must not consume retained
+  // predicate answers either. External supplied memos retain their opt-in path.
+  if (privatelyOwnedMemo && !useExpectedPortMemo) primitiveMemo = undefined
+  let scaledPolygonMemo: ScaledConductorPolygonMemo | undefined
+  if (useExpectedPortMemo) {
+    scaledPolygonMemo = applyNative(privatePolygonMemoGet, privatelyOwnedPolygonMemos, [primitiveMemo]) as ScaledConductorPolygonMemo | undefined
+    if (scaledPolygonMemo === undefined) {
+      scaledPolygonMemo = new ScaledConductorPolygonMemo()
+      applyNative(privatePolygonMemoSet, privatelyOwnedPolygonMemos, [primitiveMemo, scaledPolygonMemo])
+    }
+  }
   const errors: PcbTraceError[] = getTracePortLayerMismatches(circuitJson).map(
     ({ trace, point, index, port, padLayers }) => ({
       type: "pcb_trace_error",
@@ -339,7 +355,7 @@ function checkTracesAreContiguous(
   ) as PcbPlatedHole[]
 
   const padMap = new Map<PcbPortId, PcbPad[]>()
-  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo)
+  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)
   let fullConnectivityMap: ConnectivityMap | undefined = connMap
   let traceWireSegmentsByNetAndLayer: TraceWireSegmentsByNetAndLayer | undefined
   const getFullConnectivityMap = () => {
