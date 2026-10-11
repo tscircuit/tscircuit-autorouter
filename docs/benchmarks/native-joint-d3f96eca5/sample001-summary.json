@@ -1,0 +1,1574 @@
+{
+  "kind": "actual-unmodified-frozen-joint-stage-main-cpu-attribution",
+  "frozenRevision": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+  "sample": 1,
+  "noTimingComparison": true,
+  "profileScope": "Original actual parent-stage construction, preparation and complete ordered native solve; earlier-stage preparation and control excluded; worker CPU excluded",
+  "inputSha256": "21a09454dd05b86464cd2d882ea96de7461260bd473e67c87a0e46011e508ea9",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPipeline9JointDrcRepairSolver.ts": "aa57837d9daab3e8c42822e8d7819b90360857b41bae140553ad99a6bead66f6",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver.ts": "f936dc935c4b30146fa80058a98475aa6cb233bcf261fd1589b254158412cc69",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts": "43461aa4a6be3b08b9d4e3665bfa50f3b9e20b50f01220372aab5d0e6dd1239a",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/createMemoizedReferenceDrcEvaluator.ts": "ffec93cfefc606a5edc8199ec7fa1b14c07a987dbaefb7a539859a1a3109cb96"
+  },
+  "profileSha256": "53dec6969a06a80eb8ae60db1ab8360200444b7bdb95b535aff338b790b4e278",
+  "samples": 658,
+  "control": {
+    "geometry": "a414c4691f7196bf493eef00139f772d4e0c5dbed16dedee9ecb5aa792537426",
+    "iterations": 1,
+    "MAX_ITERATIONS": 100001,
+    "progress": 1,
+    "failed": false,
+    "solved": true,
+    "error": null,
+    "indexedDrcEvaluationCount": 7,
+    "indexedDrcCacheHitCount": 97,
+    "referenceDrcValidationCount": 1,
+    "referenceDrcFalseNegativeCount": 0
+  },
+  "actual": {
+    "geometry": "a414c4691f7196bf493eef00139f772d4e0c5dbed16dedee9ecb5aa792537426",
+    "iterations": 1,
+    "MAX_ITERATIONS": 100001,
+    "progress": 1,
+    "failed": false,
+    "solved": true,
+    "error": null,
+    "indexedDrcEvaluationCount": 7,
+    "indexedDrcCacheHitCount": 97,
+    "referenceDrcValidationCount": 1,
+    "referenceDrcFalseNegativeCount": 0
+  },
+  "hotSpots": [
+    {
+      "name": "",
+      "selfSamples": 24,
+      "inclusiveSamples": 658,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "asyncFunctionResume",
+      "selfSamples": 0,
+      "inclusiveSamples": 658,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "promiseReactionJobWithoutPromiseUnwrapAsyncContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 658,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "promiseReactionJob",
+      "selfSamples": 0,
+      "inclusiveSamples": 658,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "processTicksAndRejections",
+      "selfSamples": 0,
+      "inclusiveSamples": 658,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "stepAsync",
+      "selfSamples": 0,
+      "inclusiveSamples": 657,
+      "inclusiveShare": 0.9984802431610942
+    },
+    {
+      "name": "_step",
+      "selfSamples": 0,
+      "inclusiveSamples": 656,
+      "inclusiveShare": 0.9969604863221885
+    },
+    {
+      "name": "step",
+      "selfSamples": 0,
+      "inclusiveSamples": 656,
+      "inclusiveShare": 0.9969604863221885
+    },
+    {
+      "name": "solve",
+      "selfSamples": 0,
+      "inclusiveSamples": 499,
+      "inclusiveShare": 0.7583586626139818
+    },
+    {
+      "name": "startBroadBranch",
+      "selfSamples": 0,
+      "inclusiveSamples": 378,
+      "inclusiveShare": 0.574468085106383
+    },
+    {
+      "name": "applyBroadRepulsionPass",
+      "selfSamples": 6,
+      "inclusiveSamples": 258,
+      "inclusiveShare": 0.39209726443769
+    },
+    {
+      "name": "applyBroadRepulsionForces",
+      "selfSamples": 0,
+      "inclusiveSamples": 258,
+      "inclusiveShare": 0.39209726443769
+    },
+    {
+      "name": "evaluateRelaxedDrc",
+      "selfSamples": 0,
+      "inclusiveSamples": 243,
+      "inclusiveShare": 0.36930091185410335
+    },
+    {
+      "name": "getDrcErrors",
+      "selfSamples": 0,
+      "inclusiveSamples": 215,
+      "inclusiveShare": 0.32674772036474165
+    },
+    {
+      "name": "createDrcSnapshot",
+      "selfSamples": 0,
+      "inclusiveSamples": 189,
+      "inclusiveShare": 0.2872340425531915
+    },
+    {
+      "name": "drcEvaluator",
+      "selfSamples": 0,
+      "inclusiveSamples": 180,
+      "inclusiveShare": 0.2735562310030395
+    },
+    {
+      "name": "getSafeTranslationForPointIndexes",
+      "selfSamples": 0,
+      "inclusiveSamples": 171,
+      "inclusiveShare": 0.25987841945288753
+    },
+    {
+      "name": "Pipeline9JointDrcRepairSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 156,
+      "inclusiveShare": 0.23708206686930092
+    },
+    {
+      "name": "ParallelPipeline9JointDrcRepairSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 156,
+      "inclusiveShare": 0.23708206686930092
+    },
+    {
+      "name": "moveRoutePoint",
+      "selfSamples": 0,
+      "inclusiveSamples": 148,
+      "inclusiveShare": 0.22492401215805471
+    },
+    {
+      "name": "moveSegmentByDistribution",
+      "selfSamples": 0,
+      "inclusiveSamples": 148,
+      "inclusiveShare": 0.22492401215805471
+    },
+    {
+      "name": "getRoutePointIndexesMinBoardClearance",
+      "selfSamples": 2,
+      "inclusiveSamples": 145,
+      "inclusiveShare": 0.22036474164133737
+    },
+    {
+      "name": "segmentToSegmentMinDistance",
+      "selfSamples": 18,
+      "inclusiveSamples": 144,
+      "inclusiveShare": 0.2188449848024316
+    },
+    {
+      "name": "pushMovablesAwayFromObstacles",
+      "selfSamples": 1,
+      "inclusiveSamples": 132,
+      "inclusiveShare": 0.2006079027355623
+    },
+    {
+      "name": "getSegmentBoardClearance",
+      "selfSamples": 2,
+      "inclusiveSamples": 124,
+      "inclusiveShare": 0.1884498480243161
+    },
+    {
+      "name": "checkTracesAreContiguous",
+      "selfSamples": 0,
+      "inclusiveSamples": 123,
+      "inclusiveShare": 0.18693009118541035
+    },
+    {
+      "name": "evaluateCachedReferenceDrc",
+      "selfSamples": 0,
+      "inclusiveSamples": 115,
+      "inclusiveShare": 0.17477203647416414
+    },
+    {
+      "name": "pointToSegmentDistance",
+      "selfSamples": 107,
+      "inclusiveSamples": 114,
+      "inclusiveShare": 0.17325227963525835
+    },
+    {
+      "name": "referenceDrcEvaluator",
+      "selfSamples": 0,
+      "inclusiveSamples": 113,
+      "inclusiveShare": 0.1717325227963526
+    },
+    {
+      "name": "stepBranch",
+      "selfSamples": 0,
+      "inclusiveSamples": 112,
+      "inclusiveShare": 0.1702127659574468
+    },
+    {
+      "name": "createIndexedPcbConnectivityMap",
+      "selfSamples": 1,
+      "inclusiveSamples": 108,
+      "inclusiveShare": 0.1641337386018237
+    },
+    {
+      "name": "pushSegmentSegmentPair",
+      "selfSamples": 4,
+      "inclusiveSamples": 67,
+      "inclusiveShare": 0.10182370820668693
+    },
+    {
+      "name": "getSpatialCandidateIndexes",
+      "selfSamples": 45,
+      "inclusiveSamples": 51,
+      "inclusiveShare": 0.07750759878419453
+    },
+    {
+      "name": "getViaAndPourConnections",
+      "selfSamples": 2,
+      "inclusiveSamples": 48,
+      "inclusiveShare": 0.0729483282674772
+    },
+    {
+      "name": "doSegmentsIntersect",
+      "selfSamples": 22,
+      "inclusiveSamples": 47,
+      "inclusiveShare": 0.07142857142857142
+    },
+    {
+      "name": "applyDrcErrorForces",
+      "selfSamples": 0,
+      "inclusiveSamples": 47,
+      "inclusiveShare": 0.07142857142857142
+    },
+    {
+      "name": "checkPcbTracesOutOfBoard",
+      "selfSamples": 2,
+      "inclusiveSamples": 36,
+      "inclusiveShare": 0.0547112462006079
+    },
+    {
+      "name": "some",
+      "selfSamples": 3,
+      "inclusiveSamples": 33,
+      "inclusiveShare": 0.05015197568389058
+    },
+    {
+      "name": "getPointBoardClearance",
+      "selfSamples": 0,
+      "inclusiveSamples": 33,
+      "inclusiveShare": 0.05015197568389058
+    },
+    {
+      "name": "getOrCompute",
+      "selfSamples": 1,
+      "inclusiveSamples": 29,
+      "inclusiveShare": 0.044072948328267476
+    },
+    {
+      "name": "execute",
+      "selfSamples": 0,
+      "inclusiveSamples": 29,
+      "inclusiveShare": 0.044072948328267476
+    },
+    {
+      "name": "executor",
+      "selfSamples": 0,
+      "inclusiveSamples": 29,
+      "inclusiveShare": 0.044072948328267476
+    },
+    {
+      "name": "convertToCircuitJson",
+      "selfSamples": 1,
+      "inclusiveSamples": 28,
+      "inclusiveShare": 0.0425531914893617
+    },
+    {
+      "name": "getPointOutlineClearance",
+      "selfSamples": 0,
+      "inclusiveSamples": 28,
+      "inclusiveShare": 0.0425531914893617
+    },
+    {
+      "name": "evaluateInternal",
+      "selfSamples": 2,
+      "inclusiveSamples": 27,
+      "inclusiveShare": 0.041033434650455926
+    },
+    {
+      "name": "moveRoutePointIndexesByTranslation",
+      "selfSamples": 0,
+      "inclusiveSamples": 26,
+      "inclusiveShare": 0.03951367781155015
+    },
+    {
+      "name": "moveSegmentAwayFromObstacle",
+      "selfSamples": 0,
+      "inclusiveSamples": 26,
+      "inclusiveShare": 0.03951367781155015
+    },
+    {
+      "name": "clipPointIndexesTranslationAwayFromBoardEdge",
+      "selfSamples": 1,
+      "inclusiveSamples": 26,
+      "inclusiveShare": 0.03951367781155015
+    },
+    {
+      "name": "orientation",
+      "selfSamples": 24,
+      "inclusiveSamples": 25,
+      "inclusiveShare": 0.037993920972644375
+    },
+    {
+      "name": "map",
+      "selfSamples": 5,
+      "inclusiveSamples": 24,
+      "inclusiveShare": 0.0364741641337386
+    },
+    {
+      "name": "getConnectivityMapFromSimpleRouteJson",
+      "selfSamples": 2,
+      "inclusiveSamples": 23,
+      "inclusiveShare": 0.034954407294832825
+    },
+    {
+      "name": "prepareReferenceDrcTracePairFacts",
+      "selfSamples": 0,
+      "inclusiveSamples": 23,
+      "inclusiveShare": 0.034954407294832825
+    },
+    {
+      "name": "stringify",
+      "selfSamples": 22,
+      "inclusiveSamples": 22,
+      "inclusiveShare": 0.03343465045592705
+    },
+    {
+      "name": "filter",
+      "selfSamples": 5,
+      "inclusiveSamples": 21,
+      "inclusiveShare": 0.031914893617021274
+    },
+    {
+      "name": "wait",
+      "selfSamples": 20,
+      "inclusiveSamples": 20,
+      "inclusiveShare": 0.030395136778115502
+    },
+    {
+      "name": "_arePcbTracesConnected",
+      "selfSamples": 5,
+      "inclusiveSamples": 19,
+      "inclusiveShare": 0.028875379939209727
+    },
+    {
+      "name": "areIdsConnected",
+      "selfSamples": 8,
+      "inclusiveSamples": 18,
+      "inclusiveShare": 0.02735562310030395
+    },
+    {
+      "name": "collectViaNodes",
+      "selfSamples": 12,
+      "inclusiveSamples": 18,
+      "inclusiveShare": 0.02735562310030395
+    },
+    {
+      "name": "get",
+      "selfSamples": 17,
+      "inclusiveSamples": 17,
+      "inclusiveShare": 0.025835866261398176
+    },
+    {
+      "name": "getSegmentRectRepulsion",
+      "selfSamples": 5,
+      "inclusiveSamples": 17,
+      "inclusiveShare": 0.025835866261398176
+    },
+    {
+      "name": "prepareReferenceDrcPolygonFacts",
+      "selfSamples": 0,
+      "inclusiveSamples": 17,
+      "inclusiveShare": 0.025835866261398176
+    },
+    {
+      "name": "checkEachPcbTraceNonOverlapping",
+      "selfSamples": 2,
+      "inclusiveSamples": 16,
+      "inclusiveShare": 0.0243161094224924
+    },
+    {
+      "name": "pointIsInsideOutline",
+      "selfSamples": 10,
+      "inclusiveSamples": 16,
+      "inclusiveShare": 0.0243161094224924
+    },
+    {
+      "name": "getConnectedMultilayerObstacles",
+      "selfSamples": 0,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.022796352583586626
+    },
+    {
+      "name": "getNetConnectedToId",
+      "selfSamples": 15,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.022796352583586626
+    },
+    {
+      "name": "createDrcConnectivityMap",
+      "selfSamples": 0,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.022796352583586626
+    },
+    {
+      "name": "checkViaTraceClearanceWithLazyCenters",
+      "selfSamples": 6,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.022796352583586626
+    },
+    {
+      "name": "getClosestSegmentContact",
+      "selfSamples": 11,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.022796352583586626
+    },
+    {
+      "name": "findConnectedNetworks",
+      "selfSamples": 1,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "getFullConnectivityMapFromCircuitJson",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "segmentsDistance",
+      "selfSamples": 8,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "doesLineIntersectLine",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "getOrCreate",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "addMemoized",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.02127659574468085
+    },
+    {
+      "name": "getParallelConnectivityMap",
+      "selfSamples": 0,
+      "inclusiveSamples": 13,
+      "inclusiveShare": 0.019756838905775075
+    },
+    {
+      "name": "next",
+      "selfSamples": 13,
+      "inclusiveSamples": 13,
+      "inclusiveShare": 0.019756838905775075
+    },
+    {
+      "name": "getOutlineInwardNormal",
+      "selfSamples": 8,
+      "inclusiveSamples": 13,
+      "inclusiveShare": 0.019756838905775075
+    },
+    {
+      "name": "createSourceTraces",
+      "selfSamples": 0,
+      "inclusiveSamples": 12,
+      "inclusiveShare": 0.0182370820668693
+    },
+    {
+      "name": "snapshotKey",
+      "selfSamples": 6,
+      "inclusiveSamples": 12,
+      "inclusiveShare": 0.0182370820668693
+    },
+    {
+      "name": "checkTraceObstacle",
+      "selfSamples": 0,
+      "inclusiveSamples": 12,
+      "inclusiveShare": 0.0182370820668693
+    },
+    {
+      "name": "findOrderedIndexedConnectedNetworks",
+      "selfSamples": 7,
+      "inclusiveSamples": 11,
+      "inclusiveShare": 0.016717325227963525
+    },
+    {
+      "name": "areConnected",
+      "selfSamples": 0,
+      "inclusiveSamples": 11,
+      "inclusiveShare": 0.016717325227963525
+    },
+    {
+      "name": "add",
+      "selfSamples": 1,
+      "inclusiveSamples": 10,
+      "inclusiveShare": 0.015197568389057751
+    },
+    {
+      "name": "intern",
+      "selfSamples": 3,
+      "inclusiveSamples": 10,
+      "inclusiveShare": 0.015197568389057751
+    },
+    {
+      "name": "obstacleSharesNet",
+      "selfSamples": 0,
+      "inclusiveSamples": 10,
+      "inclusiveShare": 0.015197568389057751
+    },
+    {
+      "name": "Set",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.013677811550151976
+    },
+    {
+      "name": "getOrCreateNetwork",
+      "selfSamples": 8,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.013677811550151976
+    },
+    {
+      "name": "includes",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.013677811550151976
+    },
+    {
+      "name": "createSimplifiedTraces",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.013677811550151976
+    },
+    {
+      "name": "createSpatialIndex",
+      "selfSamples": 8,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.013677811550151976
+    },
+    {
+      "name": "getObjectsInBounds",
+      "selfSamples": 8,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "getOwnPropertyDescriptor",
+      "selfSamples": 8,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "flatIntoArrayWithCallback",
+      "selfSamples": 1,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "scale",
+      "selfSamples": 0,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "addConnections",
+      "selfSamples": 3,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "hypot",
+      "selfSamples": 8,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.0121580547112462
+    },
+    {
+      "name": "checkPadTraceClearance",
+      "selfSamples": 0,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "distance",
+      "selfSamples": 7,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "get box",
+      "selfSamples": 1,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "insertCellRange",
+      "selfSamples": 7,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "addToLayer",
+      "selfSamples": 0,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "buildDynamicIndexes",
+      "selfSamples": 0,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "getSpatialCellKey",
+      "selfSamples": 7,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.010638297872340425
+    },
+    {
+      "name": "from",
+      "selfSamples": 1,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "min",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "Polygon",
+      "selfSamples": 1,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "getTraceSegmentPolygon",
+      "selfSamples": 0,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "getRectRepulsion",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "pointIsOnSegment",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.00911854103343465
+    },
+    {
+      "name": "forEach",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "isPlainFiniteData",
+      "selfSamples": 2,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "canUseLazyViaTraceCenters",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "performIteration",
+      "selfSamples": 2,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "getTraceObstacleClearance",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "shapes2face",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "Face",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "addFace",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "findTouchedPorts",
+      "selfSamples": 1,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "resolveNetId",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "cloneRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "collectSegmentsForRoute",
+      "selfSamples": 5,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "executeParallelReferenceContinuityBatch",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.007598784194528876
+    },
+    {
+      "name": "getSrjDeclaredConnectionReferences",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "createCircuitJsonSourceTraceIdResolver",
+      "selfSamples": 2,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "createPcbPadElements",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "addObject",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "SpatialObjectIndex",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "box",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "start",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "reduce",
+      "selfSamples": 1,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "find",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "areSameXY",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "walkPlainGraph",
+      "selfSamples": 1,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "prepareOutputAliases",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "assertNativeSourceAliasOutput",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "prepareParallelReferenceContinuityContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "assertParallelReferenceContinuityContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0060790273556231
+    },
+    {
+      "name": "flatMap",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "getSegmentToPolygonClearanceFromPoints",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "canUseExpectedPortsMemo",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "insert",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "rotate",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "getGeometry",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "getReadableNameForPcbTrace",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "normalizeCandidateDrcResult",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "pushViaSegmentPair",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "getCoincidentPointIndexes",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "getMovableCoincidentPointIndexes",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "prepareReferenceDrcPrimitiveMissPlan",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "prepareMissPlan",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "postMessage",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "consume",
+      "selfSamples": 1,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.004559270516717325
+    },
+    {
+      "name": "evaluate",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "flatIntoArray",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "set",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "createTracePortLayerConnectivity",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "pointToBoxDistance",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "getPolygonShape",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "getClosestPointsBetweenSegments",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "Segment",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "Point",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "clone",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "breakToFunctional",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "translate",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "arc2arc",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "distanceTo",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "getLayersOfPcbElement",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "routePointTouchesPad",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "prepareCandidateDrcInput",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "query",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "cloneObject",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "projectPointOntoLineSegment",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "pointToSegmentProjection",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "collectSegments",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "translateVia",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "pushViaViaPair",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "ownData",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "ownValue",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "assertReferenceDrcPolygonSnapshot",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "Map",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "normalizePipeline9DrcErrorsForRepair",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.00303951367781155
+    },
+    {
+      "name": "profile",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "(module)",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "asyncModuleEvaluation",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "flat",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getOutput",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getChangedPreloadedTraceSections",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getPreloadedFixedRouteStateAfterHighDensity",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getPreparedMutatedPreloadedTraceSections",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getPreloadedTraceUpdatesAfterHighDensity",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getConstructorParams",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "cju",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "checkPcbTraceSelfShorts",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getPcbElementBounds",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getBoundsOfPcbElements",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "isViaTraceAxisSeparated",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "checkSameNetViaSpacing",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "transform",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "update_max",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "recalc_max",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "Arc",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "circularSegmentDefiniteIntegral",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "signedArea",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "ccw",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "Matrix",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "multiply",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "toArray",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "shapes",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "append",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "low",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "equal_to",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "tree_search",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "get start",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "search",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "equalTo",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "intersectArc2Arc",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "contains",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "rotatePoint",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getRotatedRectPoints",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "isPointInPad",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "indexStaticObstacles",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "Pipeline9MemoizedAutoroutingDrcEngine",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "createAutoroutingDrcEngine",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "ownedPool",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "initializeNativeReferenceDrcPoolForOwner",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "collectDynamicGeometry",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "checkTracePair",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "segmentToBoundsMinDistance",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "convertHdRouteToSimplifiedRoute",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getViaBounds",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "checkViaObstacle",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getNearestObstacleNearPoint",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getNearestTraceObstacleSegmentPair",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "values",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getSameRootViaSite",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "moveVia",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "clipPointTranslationAwayFromBoardEdge",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getConnectionPointLayers",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "createPcbPorts",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getViaTraceAxisBounds",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "pointToSegmentClosestPoint",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "checkDifferentNetViaSpacing",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "onSegment",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "sort",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "extendPath",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "assertParallelReferenceContinuityBatchResult",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "assertNativeSyncReferenceResponse",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "layersForPort",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "canConnect",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "Node",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "isCallbackFreeSnapshot",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "hasOwnProperty",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "reconstructReferenceDrcPolygon",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "createReferenceDrcPolygonFactEvaluator",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    },
+    {
+      "name": "getComponentAndPortInfo",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.001519756838905775
+    }
+  ]
+}

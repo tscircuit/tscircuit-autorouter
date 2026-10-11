@@ -789,3 +789,16 @@ All five Blacksmith groups cover the full sixteen samples against the same
 baseline and four-core budget; elapsed-time acceptance is pending.
 The immutable workflow branch, hashes, preflight and arguments are in
 [parallel-srj18-1169e1bb0-dispatch.json](benchmarks/parallel-srj18-1169e1bb0-dispatch.json).
+
+CPU attribution of the actual unmodified frozen Joint stage now includes its
+constructor, candidate preparation and complete original ordered solve. The
+earlier parent stages and same-source control are outside one async profiling
+span per process. Sample001 has658 samples and sample0158,757; recorded geometry,
+iterations, caps, progress and evaluator counters match their controls. In
+sample015, reference DRC accounts for35.98% inclusive samples, indexed candidate
+evaluation12.52%, and indexed PCB connectivity construction14.49%. These shares
+overlap and are main-thread CPU attribution, including native waits; worker CPU
+and dataset elapsed acceptance are separate. The narrower indexed-engine replay
+therefore does not represent the complete Joint stage. Exact source/raw hashes,
+limitations and reproducible driver are in
+[parallel-native-joint-stage-cpu-proof.json](benchmarks/parallel-native-joint-stage-cpu-proof.json).
