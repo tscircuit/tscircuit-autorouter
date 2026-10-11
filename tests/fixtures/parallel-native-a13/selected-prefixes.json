@@ -1,0 +1,771 @@
+[
+  {
+    "sample": 1,
+    "rows": [
+      {
+        "nodeId": "cmn_4__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 8854,
+        "width": 5.780000000000001,
+        "height": 8.4215
+      },
+      {
+        "nodeId": "cmn_61",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 969,
+        "width": 3.447199999999995,
+        "height": 2.245000000000001
+      },
+      {
+        "nodeId": "cmn_74",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 399,
+        "width": 2.6409999999999982,
+        "height": 2.1799999999999997
+      },
+      {
+        "nodeId": "cmn_8",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 64559,
+        "width": 5.579999999999998,
+        "height": 7.954000000000001
+      },
+      {
+        "nodeId": "cmn_3",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 2672,
+        "width": 4.299999999999999,
+        "height": 13.129999999999999
+      },
+      {
+        "nodeId": "cmn_123",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 870,
+        "width": 2,
+        "height": 7.029999999999999
+      },
+      {
+        "nodeId": "cmn_29__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 2232,
+        "width": 2.3050000000000015,
+        "height": 7.121124999999999
+      },
+      {
+        "nodeId": "cmn_29__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 2305,
+        "width": 2.3050000000000015,
+        "height": 7.121124999999999
+      },
+      {
+        "nodeId": "cmn_87",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 23741,
+        "width": 1.9549999999999983,
+        "height": 6.2357499999999995
+      },
+      {
+        "nodeId": "cmn_11",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 6719,
+        "width": 9.330000000000004,
+        "height": 3.1099999999999994
+      },
+      {
+        "nodeId": "cmn_36",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 15897,
+        "width": 8.565,
+        "height": 2.8
+      },
+      {
+        "nodeId": "cmn_1__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 500,
+        "routingIterations": 343959,
+        "width": 11.475000000000001,
+        "height": 9.264999999999999
+      },
+      {
+        "nodeId": "cmn_1__sub_0_1",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 1700,
+        "routingIterations": 936413,
+        "width": 11.475000000000001,
+        "height": 9.264999999999999
+      },
+      {
+        "nodeId": "cmn_0__sub_0_1",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 29500,
+        "width": 11.701666666666668,
+        "height": 8.862499999999997
+      },
+      {
+        "nodeId": "cmn_0__sub_0_2",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 200,
+        "routingIterations": 59576,
+        "width": 11.701666666666668,
+        "height": 8.862499999999997
+      },
+      {
+        "nodeId": "cmn_0__sub_1_1",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 12650,
+        "width": 11.701666666666668,
+        "height": 8.862499999999997
+      },
+      {
+        "nodeId": "cmn_0__sub_1_2",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 7422,
+        "width": 11.701666666666668,
+        "height": 8.862499999999997
+      },
+      {
+        "nodeId": "cmn_38",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 154,
+        "width": 2.9657500000000017,
+        "height": 2.6950000000000003
+      },
+      {
+        "nodeId": "cmn_2__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 54953,
+        "width": 6.479999999999999,
+        "height": 9.72
+      },
+      {
+        "nodeId": "cmn_2__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 3764,
+        "width": 6.479999999999999,
+        "height": 9.72
+      },
+      {
+        "nodeId": "cmn_44",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 20760,
+        "width": 2.449999999999999,
+        "height": 6.559999999999995
+      },
+      {
+        "nodeId": "cmn_45",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 200,
+        "routingIterations": 78663,
+        "width": 2.5300000000000007,
+        "height": 11.167375
+      },
+      {
+        "nodeId": "cmn_7",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 22929,
+        "width": 4.225000000000001,
+        "height": 6.670000000000002
+      },
+      {
+        "nodeId": "cmn_32",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 101,
+        "width": 2.3249999999999993,
+        "height": 2.3249999999999993
+      },
+      {
+        "nodeId": "cmn_99",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 107,
+        "width": 1.0749999999999993,
+        "height": 1.877749999999999
+      },
+      {
+        "nodeId": "cmn_14",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 471,
+        "width": 1.0749999999999993,
+        "height": 5.697250000000001
+      },
+      {
+        "nodeId": "cmn_395",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 1226,
+        "width": 8.244999999999997,
+        "height": 1.5
+      },
+      {
+        "nodeId": "cmn_84",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 55,
+        "width": 1.9549999999999983,
+        "height": 1.0749999999999993
+      },
+      {
+        "nodeId": "cmn_6__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 800,
+        "routingIterations": 474656,
+        "width": 9.8775,
+        "height": 6.585000000000004
+      },
+      {
+        "nodeId": "cmn_6__sub_0_1",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 759,
+        "width": 9.8775,
+        "height": 6.585000000000004
+      },
+      {
+        "nodeId": "cmn_55",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 265,
+        "width": 3.2250000000000014,
+        "height": 1.0749999999999993
+      },
+      {
+        "nodeId": "cmn_57",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 1090,
+        "width": 1.4749999999999979,
+        "height": 3.815
+      },
+      {
+        "nodeId": "cmn_62",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 410,
+        "width": 1.0750000000000028,
+        "height": 1.877749999999999
+      },
+      {
+        "nodeId": "cmn_20",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 235,
+        "width": 1.0750000000000028,
+        "height": 5.022250000000001
+      },
+      {
+        "nodeId": "cmn_13",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 4394,
+        "width": 3.379999999999999,
+        "height": 4.66
+      },
+      {
+        "nodeId": "cmn_31",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 99,
+        "width": 3.9299999999999997,
+        "height": 1.3100000000000023
+      },
+      {
+        "nodeId": "cmn_60",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 2378,
+        "width": 1.5,
+        "height": 8.55
+      },
+      {
+        "nodeId": "cmn_59",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 8472,
+        "width": 1.9649999999999963,
+        "height": 6.273999999999999
+      },
+      {
+        "nodeId": "cmn_16",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 200,
+        "routingIterations": 76270,
+        "width": 8.131999999999998,
+        "height": 6.135999999999999
+      }
+    ]
+  },
+  {
+    "sample": 5,
+    "rows": [
+      {
+        "nodeId": "cmn_138",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 118,
+        "width": 0.8249999999999993,
+        "height": 3.006125000000001
+      },
+      {
+        "nodeId": "cmn_44",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 3638,
+        "width": 1.5131000000000014,
+        "height": 4.539299999999999
+      },
+      {
+        "nodeId": "cmn_13",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 157,
+        "width": 3.6517000000000017,
+        "height": 5.827999999999999
+      },
+      {
+        "nodeId": "cmn_14",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 1251,
+        "width": 2.9370000000000047,
+        "height": 8.213999999999999
+      },
+      {
+        "nodeId": "cmn_46",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 509,
+        "width": 6.611999999999998,
+        "height": 2.2039999999999997
+      },
+      {
+        "nodeId": "topology_merge_295",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 774,
+        "width": 0.875,
+        "height": 0.8750000000000018
+      },
+      {
+        "nodeId": "topology_merge_356",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 1799,
+        "width": 2.5999999999999996,
+        "height": 2.3500000000000005
+      },
+      {
+        "nodeId": "cmn_45",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 900,
+        "routingIterations": 67970,
+        "width": 0.8499999999999996,
+        "height": 2.679999999999999
+      },
+      {
+        "nodeId": "cmn_19",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 19771,
+        "width": 5.511999999999997,
+        "height": 10.325400000000005
+      },
+      {
+        "nodeId": "cmn_209",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 4637,
+        "width": 3.3389999999999986,
+        "height": 1.729999999999999
+      },
+      {
+        "nodeId": "cmn_7",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 600,
+        "routingIterations": 375477,
+        "width": 4.837,
+        "height": 12.403999999999996
+      },
+      {
+        "nodeId": "cmn_9",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 1311,
+        "width": 7.07,
+        "height": 5.834
+      },
+      {
+        "nodeId": "cmn_11",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 36,
+        "width": 3.688300000000001,
+        "height": 3.9559999999999977
+      },
+      {
+        "nodeId": "cmn_10",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 16995,
+        "width": 3.1899999999999977,
+        "height": 9.886999999999999
+      },
+      {
+        "nodeId": "cmn_52",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 140,
+        "width": 3.0429999999999993,
+        "height": 3.3480000000000025
+      },
+      {
+        "nodeId": "cmn_61",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 8922,
+        "width": 2.8499999999999996,
+        "height": 5.024999999999995
+      },
+      {
+        "nodeId": "topology_merge_775__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 538,
+        "width": 12.1475,
+        "height": 6.019999999999999
+      },
+      {
+        "nodeId": "topology_merge_775__sub_0_1",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 20527,
+        "width": 12.1475,
+        "height": 6.019999999999999
+      },
+      {
+        "nodeId": "cmn_2",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 200,
+        "routingIterations": 93563,
+        "width": 10.635,
+        "height": 4.849000000000002
+      },
+      {
+        "nodeId": "topology_merge_788__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 300,
+        "routingIterations": 178117,
+        "width": 10.51,
+        "height": 12.053999999999997
+      },
+      {
+        "nodeId": "topology_merge_788__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 20962,
+        "width": 10.51,
+        "height": 12.053999999999997
+      },
+      {
+        "nodeId": "topology_merge_839__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 800,
+        "routingIterations": 542338,
+        "width": 10.321,
+        "height": 12.053999999999997
+      },
+      {
+        "nodeId": "topology_merge_839__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 11973,
+        "width": 10.321,
+        "height": 12.053999999999997
+      },
+      {
+        "nodeId": "cmn_3",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 9925,
+        "width": 7.521000000000001,
+        "height": 2.5069999999999997
+      },
+      {
+        "nodeId": "topology_merge_904",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 15305,
+        "width": 6.786299999999997,
+        "height": 4.849000000000002
+      },
+      {
+        "nodeId": "topology_merge_905__sub_0_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 656,
+        "width": 6.786299999999997,
+        "height": 12.053999999999997
+      },
+      {
+        "nodeId": "topology_merge_925",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 2005,
+        "width": 9.325,
+        "height": 6.019999999999999
+      },
+      {
+        "nodeId": "topology_merge_934",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 377,
+        "width": 5.794699999999999,
+        "height": 4.849000000000001
+      },
+      {
+        "nodeId": "cmn_17",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 100,
+        "routingIterations": 47057,
+        "width": 9.057700000000004,
+        "height": 12.623199999999994
+      },
+      {
+        "nodeId": "cmn_49__sub_1_0",
+        "hyperParameters": {
+          "HIGH_DENSITY_A13": true,
+          "SHUFFLE_SEED": 0
+        },
+        "steps": 800,
+        "routingIterations": 91263,
+        "width": 0.6036999999999999,
+        "height": 2.8705999999999996
+      }
+    ]
+  }
+]

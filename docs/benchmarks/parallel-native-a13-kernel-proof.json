@@ -1,0 +1,28 @@
+{
+  "kind": "functional-work-only-no-timing",
+  "nativeDependencyRevision": "c6812cebd44b09f29f2fee929837b313b822f2ae",
+  "kernelSourceSha256": "29d9795af19b90ccdd898a10173f865c47a8a7c452c9004afcbb2e4f5d1a41b7",
+  "kernelModuleSha256": "21e29e085112eb141a3bce375a7affb3b7f7ff3c61303bde18fd729b6f981c0d",
+  "kernelModuleBytes": 4560,
+  "kernelImports": [],
+  "source": "tests/solvers/parallel-native-a13-worker-prefix-parity.test.ts",
+  "wholeHdParitySource": "tests/features/parallel-native-a13-srj18-hd-parity.test.ts",
+  "selectedPrefixes": [
+    { "sample": 1, "candidates": 39, "nativeCalls": 6900, "quanta": 69, "cExpansions": 2270948, "cPositiveRunCalls": 3721, "privateArrays": 27600, "privateHeapRows": 116081664 },
+    { "sample": 5, "candidates": 30, "nativeCalls": 6000, "quanta": 60, "cExpansions": 1538111, "cPositiveRunCalls": 3033, "privateArrays": 24000, "privateHeapRows": 126257152 }
+  ],
+  "numericOracle": { "fixtures": 24, "fractionalQuantaAndCaps": 126, "wholeHeapRows": 129024, "signedZeroAndTies": true },
+  "eligibleNumericDomain": "Finite positive step multiplier <= 1,000,000; finite nonnegative search cap <= signed i32 maximum; default/auto/javascript backend. Other data retains original JS before setup.",
+  "checks": ["unchanged original candidate caps and setup", "every consumed native call state", "heapSize/goal/presentCost scalars", "distance/parents/versions/state coordinates/flags", "all heap capacity rows including stale slots", "solved/failed states and output geometry", "positive actual C work", "whole 001/005 HD routes and stage counters", "maximum four actual workers", "public/custom admission stays native", "getter/proxy declines are unobserved", "active method/export/offset/buffer/memory mutations fail", "missing WebAssembly/atob imports succeed"],
+  "reflectionCensusPerEligibleQuantum": {
+    "validation": { "objects": 646, "descriptors": 2024 },
+    "extraIntrinsicsIncludingRepeatedAncestry": { "objects": 138, "descriptors": 1462 },
+    "ownerPrototype": { "objects": 5, "descriptors": 43 },
+    "portfolioPrototype": { "objects": 5, "descriptors": 68 },
+    "connectivityPrototype": { "objects": 2, "descriptors": 18 },
+    "extraGlobalDescriptors": 23,
+    "baseJsPerCheck": { "objects": 38, "descriptors": 422, "globals": 17 },
+    "baseJsChecks": 2,
+    "note": "Static fixed snapshot comparisons from this source; additional live owner/kernel/buffer descriptors and Object.prototype metadata preflights are checked. Plain public graph proof runs once per selected candidate. No local wall-time inference."
+  }
+}
