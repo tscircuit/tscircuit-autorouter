@@ -201,6 +201,13 @@ proves execution and parity; speed is measured only by the frozen Blacksmith
 comparison. Source, compiler, and functional counts are documented in
 [parallel-native-a13-kernel-proof.json](benchmarks/parallel-native-a13-kernel-proof.json).
 
+The reviewed A13 upload change reuses immutable inputs only inside a privately
+owned original 100-call quantum. Markers reset at every quantum; mutable
+connection inputs still upload at every native search start, and unbranded
+kernels retain full uploads. The same native oracle records 2,013 search starts
+and reduces uploads from 332,890,026 to 201,669,154 bytes and from 16,104 to
+11,180 calls. C code, search resets and all checked private states are unchanged.
+
 Private reference continuity checks expand each original physical component
 once during their local traversal. Every trace still processes its original
 touched-pad adjacency, and final membership, native source aliases, error
@@ -577,7 +584,7 @@ remains unmet. Full outcomes and worker pool statistics are preserved in
 with immutable workflow records and packaged preflight checks in
 [parallel-srj18-9f87cb73b-dispatch.json](benchmarks/parallel-srj18-9f87cb73b-dispatch.json).
 
-Snapshot `afae314d5` is frozen for the next complete comparison. It combines
+Snapshot `afae314d5` completed the sixteenth full comparison. It combines
 the reviewed strict-f64 native A13 search, original-owner four-route lookahead,
 component-once continuity, and narrower batched guards, with the experimental
 A01 heap arena disabled by default. Its build, declarations, type checks and
@@ -590,8 +597,32 @@ The target remains unmet. The new lookahead adds substantial full-graph guard
 work: sample015 records 23.15 million descriptor reads for 6,328 speculative
 native steps, and simplification takes 12.33 seconds versus 5.97 seconds for
 the paired native baseline. The next revision removes repeated descriptor
-metadata allocations and evaluates a narrower exact per-window read set.
+metadata allocations and checks the exact per-window read set.
 Complete outcomes, stage counters and every worker pool statistic are in
 [parallel-srj18-afae314d5-complete.json](benchmarks/parallel-srj18-afae314d5-complete.json).
 The frozen revision, preflight hashes, exact arguments and workflow IDs are in
 [parallel-srj18-afae314d5-dispatch.json](benchmarks/parallel-srj18-afae314d5-dispatch.json).
+
+Reviewed changes after that snapshot retain admitted native via-layer arrays
+without recreating them for each segment. The same 23,731,201 original layer
+checks remain, while their repeated native getLayers calls and type checks
+are removed. Diagnostic observers retain the original execution. All 17 saved
+reference checks and layer mutation/error probes preserve native output; see
+[reference-drc-retained-via-layers-proof.json](benchmarks/reference-drc-retained-via-layers-proof.json).
+
+Lookahead descriptor comparison now reads each canonical descriptor once,
+with the same full contracts, keys, flags, accessors and buffer checks. In four
+paired operation censuses, descriptor work is unchanged and ownership probes
+fall from four to one per descriptor. These operation counts do not establish
+a timing improvement; see
+[parallel-lookahead-native-descriptor-work-proof.json](benchmarks/parallel-lookahead-native-descriptor-work-proof.json).
+
+The reviewed scoped lookahead keeps initial full admission and one private
+input clone before any await. Each pending window then checks its original
+route and native index-selected peers, all shallow containers, index structure,
+controls, options and intrinsics. Deferred unrelated geometry retains its
+original observation position. Six phases preserve 1,503 routes and 27,198
+logical steps; descriptor reads fall from 58,878,999 to 33,899,534 in the paired
+operation census. Exact counters, source hashes, observer regressions and
+full native-phase results are in
+[parallel-path-lookahead-scoped-input-proof.json](benchmarks/parallel-path-lookahead-scoped-input-proof.json).
