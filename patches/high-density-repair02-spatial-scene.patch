@@ -1,0 +1,229 @@
+diff --git a/lib/high-density-repair-solver/functions/repairNodeClearance.ts b/lib/high-density-repair-solver/functions/repairNodeClearance.ts
+--- a/lib/high-density-repair-solver/functions/repairNodeClearance.ts
++++ b/lib/high-density-repair-solver/functions/repairNodeClearance.ts
+@@ -1,9 +1,153 @@
++import Flatbush from "flatbush"
+ import { DEFAULT_TRACE_THICKNESS, EPSILON } from "../shared/constants"
+ import type { BoundaryRect, HdRoute, Obstacle, XY } from "../shared/types"
+ import { findInteriorDiagonalSegmentsInBufferZone } from "./findInteriorDiagonalSegmentsInBufferZone"
+ import { cloneRoute } from "./cloneRoute"
+ import type { FixedCopperClearanceGuard } from "./FixedCopperClearanceGuard"
+ import { segmentDistance } from "./segmentDistance"
++
++type CopperGeometry = {
++  start: XY
++  end: XY
++  radius: number
++}
++
++type CopperScene = {
++  index: Flatbush
++  routeIndexes: Uint32Array
++  copperIndexes: Uint32Array
++  maxMagnitude: number
++  fixedRoutes: HdRoute[]
++}
++
++/** Copper pairs grouped by the unchanged route, in original copper order. */
++export type NearbyCopperPairs = Map<number, number[][]>
++
++/** Reuse the unchanged board's broadphase throughout a candidate sweep. */
++export class RouteCopperScenePatternCache {
++  private scenes = new WeakMap<HdRoute[], Map<number, CopperScene>>()
++  private retainedBytes = 0
++  private readonly maximumBytes = 32 * 1024 * 1024
++
++  getCandidatePairs(
++    currentRoutes: HdRoute[],
++    fixedRoutes: HdRoute[],
++    changedRoute: number,
++    geometries: CopperGeometry[][],
++    clearance: number,
++  ): NearbyCopperPairs | undefined {
++    if (!Number.isFinite(clearance) || clearance < 0) return undefined
++    const changedCopper = geometries[changedRoute]!
++    for (const copper of changedCopper) {
++      if (
++        !Number.isFinite(copper.start.x) ||
++        !Number.isFinite(copper.start.y) ||
++        !Number.isFinite(copper.end.x) ||
++        !Number.isFinite(copper.end.y) ||
++        !Number.isFinite(copper.radius) ||
++        copper.radius < 0
++      ) return undefined
++    }
++    let byChangedRoute = this.scenes.get(currentRoutes)
++    let scene = byChangedRoute?.get(changedRoute)
++    if (scene?.fixedRoutes !== fixedRoutes) scene = undefined
++    if (!scene) {
++      let entryCount = 0
++      let maxMagnitude = 1
++      for (let routeIndex = 0; routeIndex < geometries.length; routeIndex++) {
++        if (routeIndex === changedRoute) continue
++        for (let copperIndex = 0; copperIndex < geometries[routeIndex]!.length; copperIndex++) {
++          const copper = geometries[routeIndex]![copperIndex]!
++          if (
++            !Number.isFinite(copper.start.x) ||
++            !Number.isFinite(copper.start.y) ||
++            !Number.isFinite(copper.end.x) ||
++            !Number.isFinite(copper.end.y) ||
++            !Number.isFinite(copper.radius) ||
++            copper.radius < 0
++          ) return undefined
++          maxMagnitude = Math.max(
++            maxMagnitude,
++            Math.abs(copper.start.x), Math.abs(copper.start.y),
++            Math.abs(copper.end.x), Math.abs(copper.end.y), copper.radius,
++          )
++          entryCount++
++        }
++      }
++      // Small scenes cost less to scan than to index.
++      if (entryCount < 32) return undefined
++      const index = new Flatbush(entryCount)
++      const routeIndexes = new Uint32Array(entryCount)
++      const copperIndexes = new Uint32Array(entryCount)
++      let entryIndex = 0
++      for (let routeIndex = 0; routeIndex < geometries.length; routeIndex++) {
++        if (routeIndex === changedRoute) continue
++        for (let copperIndex = 0; copperIndex < geometries[routeIndex]!.length; copperIndex++) {
++          const copper = geometries[routeIndex]![copperIndex]!
++          const minX = Math.min(copper.start.x, copper.end.x) - copper.radius
++          const minY = Math.min(copper.start.y, copper.end.y) - copper.radius
++          const maxX = Math.max(copper.start.x, copper.end.x) + copper.radius
++          const maxY = Math.max(copper.start.y, copper.end.y) + copper.radius
++          if (!Number.isFinite(minX) || !Number.isFinite(minY) ||
++              !Number.isFinite(maxX) || !Number.isFinite(maxY)) return undefined
++          index.add(minX, minY, maxX, maxY)
++          routeIndexes[entryIndex] = routeIndex
++          copperIndexes[entryIndex] = copperIndex
++          entryIndex++
++        }
++      }
++      index.finish()
++      scene = { index, routeIndexes, copperIndexes, maxMagnitude, fixedRoutes }
++      const bytes = index.data.byteLength + routeIndexes.byteLength + copperIndexes.byteLength
++      if (this.retainedBytes + bytes > this.maximumBytes) {
++        this.scenes = new WeakMap()
++        this.retainedBytes = 0
++        byChangedRoute = undefined
++      }
++      if (bytes <= this.maximumBytes) {
++        if (!byChangedRoute) {
++          byChangedRoute = new Map()
++          this.scenes.set(currentRoutes, byChangedRoute)
++        }
++        byChangedRoute.set(changedRoute, scene)
++        this.retainedBytes += bytes
++      }
++    }
++    const pairs: NearbyCopperPairs = new Map()
++    for (let changedIndex = 0; changedIndex < changedCopper.length; changedIndex++) {
++      const copper = changedCopper[changedIndex]!
++      const reach = clearance + copper.radius
++      // Broadphase arithmetic groups radii differently from the exact test.
++      // Expand by several ULPs; the original AABB predicate still decides.
++      const padding = Number.EPSILON * 8 * (
++        scene.maxMagnitude + Math.abs(copper.start.x) + Math.abs(copper.start.y) +
++        Math.abs(copper.end.x) + Math.abs(copper.end.y) + reach + 1
++      )
++      if (!Number.isFinite(padding + reach)) return undefined
++      const hits = scene.index.search(
++        Math.min(copper.start.x, copper.end.x) - reach - padding,
++        Math.min(copper.start.y, copper.end.y) - reach - padding,
++        Math.max(copper.start.x, copper.end.x) + reach + padding,
++        Math.max(copper.start.y, copper.end.y) + reach + padding,
++      ).sort((a, b) => a - b)
++      for (const hit of hits) {
++        const routeIndex = scene.routeIndexes[hit]!
++        const copperIndex = scene.copperIndexes[hit]!
++        let byFirstCopper = pairs.get(routeIndex)
++        if (!byFirstCopper) {
++          byFirstCopper = []
++          pairs.set(routeIndex, byFirstCopper)
++        }
++        const firstIndex = routeIndex < changedRoute ? copperIndex : changedIndex
++        const secondIndex = routeIndex < changedRoute ? changedIndex : copperIndex
++        const secondIndexes = byFirstCopper[firstIndex] ??= []
++        secondIndexes.push(secondIndex)
++      }
++    }
++    return pairs
++  }
++}
++
+ 
+ type Copper = {
+   start: XY
+@@ -75,8 +219,9 @@
+   clearance: number,
+   obstacles: Obstacle[],
+   fixedRoutes: HdRoute[] = [],
+-  previous?: { evaluation: Evaluation; changedRoute: number },
++  previous?: { evaluation: Evaluation; changedRoute: number; routes: HdRoute[] },
+   geometryCache = new WeakMap<HdRoute, Copper[]>(),
++  spatialPatternCache = new RouteCopperScenePatternCache(),
+ ): Evaluation => {
+   const allRoutes = [...routes, ...fixedRoutes]
+   const geometries = allRoutes.map((route) => {
+@@ -87,6 +232,11 @@
+     }
+     return copper
+   })
++  const nearbyPairs = previous
++    ? spatialPatternCache.getCandidatePairs(
++        previous.routes, fixedRoutes, previous.changedRoute, geometries, clearance,
++      )
++    : undefined
+   const conflicts: Conflict[] = previous
+     ? previous.evaluation.conflicts.filter(
+         (conflict) =>
+@@ -182,8 +332,19 @@
+       // Trace segments still share a key so splitting one does not change
+       // the objective merely by changing its number of pieces.
+       const worstByType = new Map<string, Conflict>()
+-      for (const first of geometries[firstRoute]!) {
+-        for (const second of geometries[secondRoute]!) {
++      const nearbySecondIndexes = nearbyPairs?.get(
++        firstRoute === previous?.changedRoute ? secondRoute : firstRoute,
++      )
++      if (nearbyPairs && !nearbySecondIndexes) continue
++      const firstGeometry = geometries[firstRoute]!
++      const secondGeometry = geometries[secondRoute]!
++      for (let firstIndex = 0; firstIndex < firstGeometry.length; firstIndex++) {
++        const first = firstGeometry[firstIndex]!
++        const secondIndexes = nearbySecondIndexes?.[firstIndex]
++        if (nearbyPairs && !secondIndexes) continue
++        const secondCount = secondIndexes ? secondIndexes.length : secondGeometry.length
++        for (let candidateIndex = 0; candidateIndex < secondCount; candidateIndex++) {
++          const second = secondGeometry[secondIndexes ? secondIndexes[candidateIndex]! : candidateIndex]!
+           if (sameNet && !(first.via && second.via)) continue
+           if (first.maxZ < second.minZ || second.maxZ < first.minZ) continue
+           if (
+@@ -411,6 +572,7 @@
+ }): NodeClearanceRepairResult => {
+   let current = routes
+   const geometryCache = new WeakMap<HdRoute, Copper[]>()
++  const spatialPatternCache = new RouteCopperScenePatternCache()
+   let evaluation = evaluate(
+     current,
+     clearance,
+@@ -418,6 +580,7 @@
+     fixedRoutes,
+     undefined,
+     geometryCache,
++    spatialPatternCache,
+   )
+   // Give each initial conflict a full sweep of both copper parts, three
+   // distances and eight directions, with room for a second improving move.
+@@ -509,8 +672,9 @@
+               clearance,
+               clearanceObstacles,
+               fixedRoutes,
+-              { evaluation, changedRoute: routeIndex },
++              { evaluation, changedRoute: routeIndex, routes: current },
+               geometryCache,
++              spatialPatternCache,
+             )
+             if (
+               next.conflicts.length > evaluation.conflicts.length ||
