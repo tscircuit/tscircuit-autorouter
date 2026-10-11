@@ -626,3 +626,13 @@ logical steps; descriptor reads fall from 58,878,999 to 33,899,534 in the paired
 operation census. Exact counters, source hashes, observer regressions and
 full native-phase results are in
 [parallel-path-lookahead-scoped-input-proof.json](benchmarks/parallel-path-lookahead-scoped-input-proof.json).
+
+Snapshot `24f2c48dd` is frozen for the seventeenth full comparison of all
+16 samples at the same baseline, dataset and four-core budget. It includes
+these reviewed scoped lookahead, A13 upload and native via-layer changes. The
+A01 bulk kernel in this revision remains isolated and inactive. ESM/DTS build,
+TypeScript and source/built browser checks pass. Packaged sample001 and
+sample015 both retain exact original geometry with at most four active workers.
+Five paired groups are dispatched; no speedup is claimed before all outcomes
+are complete. The exact SHA, checks, arguments and workflow IDs are in
+[parallel-srj18-24f2c48dd-dispatch.json](benchmarks/parallel-srj18-24f2c48dd-dispatch.json).
