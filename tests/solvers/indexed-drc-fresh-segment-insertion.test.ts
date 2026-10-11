@@ -238,7 +238,9 @@ function getCurrentHash(): any {
     source.indexOf("class SpatialHash<T>"),
     source.indexOf("const getClosestPointBetweenSegments ="),
   )
-  return new Function(transpiler.transformSync(hash) + "\nreturn SpatialHash;")()
+  return new Function(
+    transpiler.transformSync(hash) + "\nreturn SpatialHash;",
+  )()
 }
 function bounds(minX: number, minY: number, maxX: number, maxY: number): any {
   return { minX, minY, maxX, maxY }
