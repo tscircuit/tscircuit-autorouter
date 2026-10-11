@@ -1,5 +1,40 @@
 # Full LoRaLink V1 reproduction
 
+## Native autorouter debugger input
+
+`loralink-v1.solver-input.json` is captured directly from core's
+`solver:started` event while rendering this board's TSX. It contains the
+actual Pipeline 9 input and options (`effort: 5`, `cacheProvider: null`),
+not converted or stripped output PCB geometry. The full-board test compares
+the fresh native solver parameters against this saved input before replay.
+It preserves 27 connections, 166 obstacles, and both pre-routed USB traces.
+
+After the installation/build steps below, regenerate it from the fixture directory:
+
+```sh
+bun capture-input.ts
+```
+
+From the repository root, run the standalone native-input reproduction:
+
+```sh
+bun test tests/repro/loralink-v1-native-input.test.ts --timeout 9999999
+bun run start
+```
+
+In Cosmos, select `bug-reports/loralink-v1` to step through
+Pipeline 9 with the captured native options. The standalone test freshly
+routes the input and detects VBUS passing within the USB hole's 0.2 mm
+clearance. It is a passing characterization of the bug, not a fix.
+The full-board test below additionally checks finalized pours and shorts.
+
+Capture environment: tscircuit 0.0.2815, core 0.0.2124, and the locally built
+autorouter 0.0.969. The live render reproduced 52 components, 29 nets,
+121 traces, 113 vias, seven pours, eight emitted errors, two additional
+configured via-pad violations, four Gerber shorts, and one relaxed DRC error
+on macOS. The inherited Linux SVG snapshot differs on macOS; all native
+routing, trace-parity, and numeric DRC assertions passed before that comparison.
+
 This is the actual 60 × 35 mm, four-layer LoRaLink board: 52 components,
 29 nets, seven saved part definitions, four schematic sheets, two MCU USB
 links, the named `02-signals-power-and-ground` routing phase, and ground pours.

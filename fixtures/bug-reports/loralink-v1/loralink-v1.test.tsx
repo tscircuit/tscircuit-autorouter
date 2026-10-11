@@ -8,6 +8,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "@tscircuit/capac
 import { getBugReportSnapshotSvg } from "../../../lib/testing/getBugReportSnapshotSvg"
 import { evaluateRelaxedDrc } from "../../../lib/testing/evaluate-relaxed-drc"
 import LoRaLinkV1 from "./index.circuit"
+import capturedInput from "./loralink-v1.solver-input.json" with { type: "json" }
 
 test("routes the complete LoRaLink board and records its copper violations", async (): Promise<void> => {
   const coreModuleUrl = import.meta.resolve(
@@ -27,6 +28,7 @@ test("routes the complete LoRaLink board and records its copper violations", asy
   const nativeSolvers: AutoroutingPipelineSolver9_PreloadedTraceGraph[] = []
   circuit.on("solver:started", (event): void => {
     if (event.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph") {
+      expect(event.solverParams).toEqual(capturedInput)
       nativeSolvers.push(
         new AutoroutingPipelineSolver9_PreloadedTraceGraph(
           structuredClone(event.solverParams.input),
