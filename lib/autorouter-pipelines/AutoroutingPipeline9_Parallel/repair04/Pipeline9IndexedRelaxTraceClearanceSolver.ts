@@ -93,6 +93,35 @@ type PadContact = {
 }
 type InteriorPadContact = { x: number; y: number; depth: number }
 
+/** Prepared native topology consumed synchronously within one sweep batch. */
+export type ProjectionSweepGeometry = {
+  vertices: Vertex[]
+  segments: Segment[]
+  pairs: SegmentPair[]
+  padContacts: PadContact[]
+  canRejectSeparatedPairs: boolean
+  viaPadConstraints: ReadonlyMap<Vertex, ViaPadConstraint[]>
+  projectVertex: (
+    vertex: Vertex,
+    x: number,
+    y: number,
+    allowViaTangents: boolean,
+  ) => void
+  commitConstraintCursor: (pairIndex: number, padIndex: number) => void
+  hasNativeProjectionHooks: () => boolean
+}
+
+export type ProjectionBatchExecutor = {
+  isCompatible: () => boolean
+  restoreNativeState: () => void
+  executeBatch: (
+    pairStart: number,
+    pairEnd: number,
+    padStart: number,
+    padEnd: number,
+  ) => void
+}
+
 const MAX_SWEEPS = 256
 const MAX_DISPLACEMENT = 0.25
 
@@ -151,6 +180,19 @@ function getInteriorPadContact(
 
 /** Projects clearance constraints with persistent setup and sweep cursors. */
 export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
+  private static readonly nativeProjectionHooks = {
+    projectVertex: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.projectVertex,
+    project: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.project,
+    projectPair: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.projectPair,
+    projectPad: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.projectPad,
+    getSegmentBounds: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.getSegmentBounds,
+    getViaPadDistance: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.getViaPadDistance,
+    constrainViaDisplacement: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.constrainViaDisplacement,
+    shortenDisplacement: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.shortenDisplacement,
+    compensateTangentRounding: Pipeline9IndexedRelaxTraceClearanceSolver.prototype.compensateTangentRounding,
+  }
+  private static readonly nativeProjectionHookEntries =
+    Object.entries(Pipeline9IndexedRelaxTraceClearanceSolver.nativeProjectionHooks)
   readonly input: RelaxTraceClearanceInput
   private phase: "geometry" | "pairs" | "obstacles" | "sweeps" | "finalize" =
     "geometry"
@@ -178,6 +220,8 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
   private pairCandidateCursor = 0
   private readonly combinedVertices: Vertex[] = []
   private readonly combinedWeights: number[] = []
+  private projectionBatchExecutor?: ProjectionBatchExecutor
+  private projectionBatchExecutorPrepared = false
 
   constructor(input: RelaxTraceClearanceInput) {
     super()
@@ -622,7 +666,6 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
     deficit: number,
     allowViaTangents: boolean,
   ): void {
-    const viaPadConstraints = this.viaPadConstraints
     const combinedVertices = this.combinedVertices
     const combinedWeights = this.combinedWeights
     combinedVertices.length = 0
@@ -647,7 +690,7 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
     for (let index = 0; index < combinedVertices.length; index++) {
       const vertex = combinedVertices[index]!
       const weight = combinedWeights[index]!
-      let x = Math.max(
+      const x = Math.max(
         vertex.bounds.minX,
         vertex.original.x - MAX_DISPLACEMENT,
         Math.min(
@@ -656,7 +699,7 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
           vertex.x + nx * scale * weight,
         ),
       )
-      let y = Math.max(
+      const y = Math.max(
         vertex.bounds.minY,
         vertex.original.y - MAX_DISPLACEMENT,
         Math.min(
@@ -665,37 +708,74 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
           vertex.y + ny * scale * weight,
         ),
       )
-      // Two via sites can slide around pads to satisfy drill spacing. Pad and
-      // wire constraints keep their original motion: their movable endpoints
-      // may include a shared via without representing a drill-spacing error.
-      const pads = viaPadConstraints.get(vertex)
-      if (
-        pads?.some(
-          (pad): boolean =>
-            this.getViaPadDistance({ x, y }, pad) < pad.clearance,
-        )
-      ) {
-        if (!allowViaTangents) continue
-        const constrained = this.constrainViaDisplacement(
-          vertex,
-          { x, y },
-          pads,
-        )
-        x = constrained.x
-        y = constrained.y
-      }
-      // Keep the exact physical guard after constraining the displacement.
-      if (
-        pads?.some(
-          (pad): boolean =>
-            this.getViaPadDistance({ x, y }, pad) < pad.clearance,
-        )
-      )
-        continue
-      if (vertex.x !== x || vertex.y !== y) vertex.revision++
-      vertex.x = x
-      vertex.y = y
+      this.projectVertex(vertex, x, y, allowViaTangents)
     }
+  }
+
+  /** The original physical guard remains authoritative for each proposed move. */
+  protected projectVertex(
+    vertex: Vertex,
+    x: number,
+    y: number,
+    allowViaTangents: boolean,
+  ): void {
+    const viaPadConstraints = this.viaPadConstraints
+    // Two via sites can slide around pads to satisfy drill spacing. Pad and
+    // wire constraints keep their original motion: their movable endpoints
+    // may include a shared via without representing a drill-spacing error.
+    const pads = viaPadConstraints.get(vertex)
+    if (
+      pads?.some(
+        (pad): boolean =>
+          this.getViaPadDistance({ x, y }, pad) < pad.clearance,
+      )
+    ) {
+      if (!allowViaTangents) return
+      const constrained = this.constrainViaDisplacement(
+        vertex,
+        { x, y },
+        pads,
+      )
+      x = constrained.x
+      y = constrained.y
+    }
+    // Keep the exact physical guard after constraining the displacement.
+    if (
+      pads?.some(
+        (pad): boolean =>
+          this.getViaPadDistance({ x, y }, pad) < pad.clearance,
+      )
+    )
+      return
+    if (vertex.x !== x || vertex.y !== y) vertex.revision++
+    vertex.x = x
+    vertex.y = y
+  }
+
+  protected createProjectionBatchExecutor(
+    _geometry: ProjectionSweepGeometry,
+  ): ProjectionBatchExecutor | undefined {
+    return undefined
+  }
+
+  protected hasNativeProjectVertexHook(): boolean {
+    // Inspect descriptors without invoking custom getters that native execution
+    // would not have read until an actual constraint needed the method.
+    const entries = Pipeline9IndexedRelaxTraceClearanceSolver.nativeProjectionHookEntries
+    for (let index = 0; index < entries.length; index++) {
+      const entry = entries[index]!
+      const name = entry[0], native = entry[1]
+      let owner: object | null = this
+      let descriptor: PropertyDescriptor | undefined
+      while (owner) {
+        descriptor = Object.getOwnPropertyDescriptor(owner, name)
+        if (descriptor) break
+        owner = Object.getPrototypeOf(owner)
+      }
+      if (!descriptor || descriptor.get || descriptor.set || descriptor.value !== native)
+        return false
+    }
+    return true
   }
 
   private getViaPadDistance(point: Point, pad: ViaPadConstraint): number {
@@ -1094,18 +1174,56 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
   }
 
   private stepSweep(): void {
-    let processed = 0
-    while (processed < 4096 && this.sweepPairIndex < this.pairs.length) {
-      this.projectPair(this.pairs[this.sweepPairIndex++]!)
-      processed++
+    if (!this.projectionBatchExecutorPrepared) {
+      this.projectionBatchExecutor = this.createProjectionBatchExecutor({
+        vertices: [...this.vertices.values()],
+        segments: this.segments,
+        pairs: this.pairs,
+        padContacts: this.padContacts,
+        canRejectSeparatedPairs: this.canRejectSeparatedPairs,
+        viaPadConstraints: this.viaPadConstraints,
+        projectVertex: (vertex, x, y, tangents): void =>
+          this.projectVertex(vertex, x, y, tangents),
+        commitConstraintCursor: (pairIndex, padIndex): void => {
+          this.sweepPairIndex = pairIndex
+          this.sweepPadIndex = padIndex
+        },
+        hasNativeProjectionHooks: (): boolean => this.hasNativeProjectVertexHook(),
+      })
+      this.projectionBatchExecutorPrepared = true
     }
-    while (
-      processed < 4096 &&
-      this.sweepPairIndex === this.pairs.length &&
-      this.sweepPadIndex < this.padContacts.length
-    ) {
-      this.projectPad(this.padContacts[this.sweepPadIndex++]!)
-      processed++
+    if (this.projectionBatchExecutor && !this.projectionBatchExecutor.isCompatible()) {
+      this.projectionBatchExecutor.restoreNativeState()
+      this.projectionBatchExecutor = undefined
+    }
+    let processed = 0
+    if (this.projectionBatchExecutor) {
+      const pairStart = this.sweepPairIndex
+      const padStart = this.sweepPadIndex
+      const pairEnd = Math.min(this.pairs.length, pairStart + 4096)
+      const pairCount = pairEnd - pairStart
+      const padEnd = pairEnd === this.pairs.length
+        ? Math.min(this.padContacts.length, padStart + 4096 - pairCount)
+        : padStart
+      this.projectionBatchExecutor.executeBatch(
+        pairStart, pairEnd, padStart, padEnd,
+      )
+      this.sweepPairIndex = pairEnd
+      this.sweepPadIndex = padEnd
+      processed = pairCount + padEnd - padStart
+    } else {
+      while (processed < 4096 && this.sweepPairIndex < this.pairs.length) {
+        this.projectPair(this.pairs[this.sweepPairIndex++]!)
+        processed++
+      }
+      while (
+        processed < 4096 &&
+        this.sweepPairIndex === this.pairs.length &&
+        this.sweepPadIndex < this.padContacts.length
+      ) {
+        this.projectPad(this.padContacts[this.sweepPadIndex++]!)
+        processed++
+      }
     }
     this.projectedConstraintCount += processed
     if (

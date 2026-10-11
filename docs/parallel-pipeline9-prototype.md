@@ -354,7 +354,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Eleven frozen exploratory snapshots have complete paired results for all 16
+Twelve frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -372,6 +372,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `9470be55a` | ordered / indexed, force trials on coordinator | 1.360× | 1.484× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `5955cddcd` | ordered / indexed, force trials on coordinator | 1.372× | 1.495× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `d76229d4a` | ordered / indexed, force trials on coordinator | 1.346× | 1.447× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `2be345c05` | ordered / indexed, force trials on coordinator | 1.350× | 1.460× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -464,8 +465,18 @@ remains unmet. Complete results and immutable workflow records are in
 Snapshot `2be345c05` replaces native reference-map membership scans with the
 ordered indexed builder and adds bounded worker-only A03 geometry and
 distance memoization. The original live occupancy filters, native ordering,
-search state and iteration caps remain unchanged. It is undergoing frozen
-packaged validation before the next all-sample evaluation.
+search state and iteration caps remain unchanged. Its complete paired evaluation
+averages 1.350× with 1.460× aggregate speedup; native geometry and original-CAD
+quality match in all 32 outcomes. The target remains unmet. Evidence is in
+[parallel-srj18-2be345c05-complete.json](benchmarks/parallel-srj18-2be345c05-complete.json).
+
+The next frozen revision also indexes complete fresh physical and logical
+reference graphs and fuses A01 worker heap sifting. The projection sweep uses
+an embedded strict scalar WebAssembly kernel for eligible native inputs.
+Seven captured sample015 passes preserve 20,224 native sweep batches and
+98,258,176 vertex records, with unchanged caps, statistics and output hashes.
+Custom hooks, altered math and unsupported inputs retain native execution.
+These functional results do not establish a measured speedup.
 
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.
