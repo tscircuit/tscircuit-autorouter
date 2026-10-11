@@ -1,4 +1,5 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { getTracePortLayerMismatches } from "../util/trace-port-layer-connectivity"
 import { createIndexedPcbConnectivityMap } from "../util/create-indexed-pcb-connectivity-map"
@@ -325,7 +326,9 @@ function checkTracesAreContiguous(
   let fullConnectivityMap: ConnectivityMap | undefined = connMap
   let traceWireSegmentsByNetAndLayer: TraceWireSegmentsByNetAndLayer | undefined
   const getFullConnectivityMap = () => {
-    fullConnectivityMap ??= getFullConnectivityMapFromCircuitJson(circuitJson)
+    fullConnectivityMap ??= primitiveMemo
+      ? getOrderedIndexedFullConnectivityMap(circuitJson)
+      : getFullConnectivityMapFromCircuitJson(circuitJson)
     return fullConnectivityMap
   }
   const getTraceWireSegmentIndex = () => {

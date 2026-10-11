@@ -1,11 +1,26 @@
 import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
+import { WorkerHighDensityA01Solver } from "./high-density-a01-fork/WorkerHighDensityA01Solver"
 import { WorkerHighDensityA03Solver } from "./high-density-a01-fork/WorkerHighDensityA03Solver"
 import { PARALLEL_GRID_HISTORY_QUANTUM, type GridHistoryJob, type GridHistoryResult,
   type GridHistorySnapshot } from "./parallelGridHistoryTypes"
 
-export type NativeGridHistorySolver = HighDensitySolverA01 | HighDensitySolverA03 | WorkerHighDensityA03Solver
+export type NativeGridHistorySolver = HighDensitySolverA01 | HighDensitySolverA03 | WorkerHighDensityA01Solver | WorkerHighDensityA03Solver
 
+const nativeA01PrototypeDescriptors = Object.getOwnPropertyDescriptors(HighDensitySolverA01.prototype)
 const nativeA03PrototypeDescriptors = Object.getOwnPropertyDescriptors(HighDensitySolverA03.prototype)
+
+/** Custom A01 methods retain the original class and its callback sequence. */
+function hasNativeA01WorkerMethods(): boolean {
+  const currentDescriptors = Object.getOwnPropertyDescriptors(HighDensitySolverA01.prototype)
+  const names = Object.keys(nativeA01PrototypeDescriptors)
+  if (Object.keys(currentDescriptors).length !== names.length) return false
+  for (const name of names) {
+    const original = nativeA01PrototypeDescriptors[name]!
+    const current = currentDescriptors[name]
+    if (!current || current.value !== original.value || current.get !== original.get || current.set !== original.set) return false
+  }
+  return true
+}
 
 /** A native method override requires the original class, including its errors. */
 function hasNativeA03WorkerMethods(): boolean {
@@ -47,7 +62,8 @@ export function assertGridHistoryJob(job: GridHistoryJob): void {
 export function executeGridHistoryJob(job: GridHistoryJob): GridHistoryResult {
   assertGridHistoryJob(job)
   const solver: NativeGridHistorySolver = job.algorithm === "a01"
-    ? new HighDensitySolverA01(job.params) : hasNativeA03WorkerMethods()
+    ? hasNativeA01WorkerMethods() ? new WorkerHighDensityA01Solver(job.params) : new HighDensitySolverA01(job.params)
+    : hasNativeA03WorkerMethods()
       ? new WorkerHighDensityA03Solver(job.params) : new HighDensitySolverA03(job.params)
   solver.setup()
   if (job.maxIterations > solver.MAX_ITERATIONS) {

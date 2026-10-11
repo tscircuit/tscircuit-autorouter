@@ -1,0 +1,128 @@
+{
+  "scope": "17 captured sample015 fresh full logical graphs; functional operation counts, no timings",
+  "rows": [
+    {
+      "number": 1,
+      "nativeNetworkMembershipCalls": 214988,
+      "indexedNetworkMembershipCalls": 3484,
+      "nets": 123,
+      "ids": 1402
+    },
+    {
+      "number": 2,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 3,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 4,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 5,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 6,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 7,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 8,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 9,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 10,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 11,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 12,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 13,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 14,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 15,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 16,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    },
+    {
+      "number": 17,
+      "nativeNetworkMembershipCalls": 263584,
+      "indexedNetworkMembershipCalls": 10871,
+      "nets": 106,
+      "ids": 2989
+    }
+  ],
+  "total": {
+    "native": 4432332,
+    "indexed": 177420
+  }
+}

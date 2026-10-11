@@ -1,4 +1,5 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import { findOrderedIndexedConnectedNetworks } from "../../../findOrderedIndexedConnectedNetworks"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { createTracePortLayerConnectivity } from "./trace-port-layer-connectivity"
 import type { AnyCircuitElement } from "circuit-json"
@@ -120,6 +121,8 @@ export function createIndexedPcbConnectivityMap(
       connections.push(connection)
   }
   connections.push(...getViaAndPourConnections(circuitJson, primitiveMemo))
-  map.connMap = new ConnectivityMap(findConnectedNetworks(connections))
+  map.connMap = new ConnectivityMap(primitiveMemo
+    ? findOrderedIndexedConnectedNetworks(connections)
+    : findConnectedNetworks(connections))
   return map
 }
