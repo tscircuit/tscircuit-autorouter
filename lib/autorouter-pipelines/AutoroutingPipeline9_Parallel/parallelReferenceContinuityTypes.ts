@@ -1,4 +1,5 @@
 import type { PcbTrace } from "circuit-json"
+import type { ReferenceDrcPolygonSnapshot } from "./authoritative-drc-fork/referenceDrcPolygonFacts"
 
 /** Immutable, owner-prepared data for one original continuity invocation. */
 export type ParallelReferenceContinuityContext = {
@@ -12,6 +13,9 @@ export type ParallelReferenceContinuityContext = {
   touchedPortWords: Uint32Array
   /** Present only for already identified pure native geometry misses. */
   geometryTraces?: readonly PcbTrace[]
+  /** Already-scaled Native parameters, never original copper generator inputs. */
+  geometryPolygons?: readonly ReferenceDrcPolygonSnapshot[]
+  geometryTolerance?: number
 }
 
 export type ParallelReferenceContinuityTask = {
@@ -24,6 +28,11 @@ export type ParallelReferenceContinuityTask = {
   rowIndex: number
   leftTraceIndex: number
   rightTraceIndex: number
+} | {
+  kind: "native-polygon-contact-miss"
+  rowIndex: number
+  leftPolygonIndex: number
+  rightPolygonIndex: number
 }
 
 export type ParallelReferenceContinuityFact = {
@@ -36,7 +45,7 @@ export type ParallelReferenceContinuityFact = {
 } | {
   status: "exception"
   rowIndex: number
-  kind: "native-trace-pair-miss"
+  kind: "native-trace-pair-miss" | "native-polygon-contact-miss"
   consumedVisits: 1
   exception: { name: string; message: string; stack?: string }
 }
@@ -60,4 +69,6 @@ export type ParallelReferenceContinuitySourceRows = {
   portCount: number
   snapshotId: number
   geometryTraces?: readonly PcbTrace[]
+  geometryPolygons?: readonly ReferenceDrcPolygonSnapshot[]
+  geometryTolerance?: number
 }

@@ -1,5 +1,7 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
 import type { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
+import type { ReferenceDrcTracePairFactExecutor } from "../../../prepareReferenceDrcTracePairFacts"
+import { prepareReferenceDrcPolygonFacts } from "../../../prepareReferenceDrcPolygonFacts"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import type { Polygon } from "@flatten-js/core"
 import { all_layers, type AnyCircuitElement, type PcbVia } from "circuit-json"
@@ -29,6 +31,7 @@ export function getViaAndPourConnections(
   circuit: AnyCircuitElement[],
   primitiveMemo?: ReferenceDrcPrimitiveMemo,
   scaledPolygonMemo?: ScaledConductorPolygonMemo,
+  preparedFactExecutor?: ReferenceDrcTracePairFactExecutor,
 ): string[][] {
   if (
     !circuit.some(
@@ -183,6 +186,7 @@ export function getViaAndPourConnections(
     index.add(b.xmin, b.ymin, b.xmax, b.ymax)
   }
   index.finish()
+  const preparedPolygons = prepareReferenceDrcPolygonFacts(primitiveMemo, conductors, index, tolerance, preparedFactExecutor)
   for (const [i, a] of conductors.entries()) {
     if (!a.bridges) continue
     const box = a.polygon.box
@@ -200,11 +204,14 @@ export function getViaAndPourConnections(
         !a.layers.some((l) => b.layers.includes(l))
       )
         continue
-      if (primitiveMemo
+      if (preparedPolygons
+        ? preparedPolygons.consume(i, j, (): boolean => touches(a.polygon, b.polygon))
+        : primitiveMemo
         ? primitiveMemo.getOrCompute("polygon-contact", [a.geometryId, b.geometryId, tolerance],
             (): boolean => touches(a.polygon, b.polygon))
         : touches(a.polygon, b.polygon)) connections.push([a.id, b.id])
     }
   }
+  preparedPolygons?.finish()
   return connections
 }

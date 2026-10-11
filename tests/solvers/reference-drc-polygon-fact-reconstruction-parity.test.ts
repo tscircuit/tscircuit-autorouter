@@ -38,8 +38,8 @@ export function verifyNativeState(polygons:any[],before:any):void{deepStrictEqua
       expect(source.includes("  index.finish()\n")).toBe(true)
       expect(source.includes("(): boolean => touches(a.polygon, b.polygon)")).toBe(true)
       source = `import {census,prepare,verify,nativeState,verifyNativeState} from ${JSON.stringify(counterPath)}\n` + source.replace("  index.finish()\n", "  index.finish()\n  const prepared = prepare(conductors,tolerance)\n")
-        .replace('      if (primitiveMemo\n        ? primitiveMemo.getOrCompute("polygon-contact"', '      census.queries++\n      if (primitiveMemo\n        ? primitiveMemo.getOrCompute("polygon-contact"')
-        .replace("(): boolean => touches(a.polygon, b.polygon)", "(): boolean => { const before = nativeState([a.polygon,b.polygon]); const value = touches(a.polygon,b.polygon); verifyNativeState([a.polygon,b.polygon],before); verify(prepared,i,j,value); return value }")
+        .replace('      if (preparedPolygons\n', '      census.queries++\n      if (preparedPolygons\n')
+        .replaceAll("(): boolean => touches(a.polygon, b.polygon)", "(): boolean => { const before = nativeState([a.polygon,b.polygon]); const value = touches(a.polygon,b.polygon); verifyNativeState([a.polygon,b.polygon],before); verify(prepared,i,j,value); return value }")
     }
     source = source.replace(/from\s+"(\.[^"]+)"/g, (_match, spec: string): string => {
       let target = resolve(dirname(sources[kind]), spec)

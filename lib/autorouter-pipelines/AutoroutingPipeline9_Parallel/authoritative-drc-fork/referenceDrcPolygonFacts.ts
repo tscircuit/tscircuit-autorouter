@@ -94,6 +94,48 @@ export function captureReferenceDrcPolygonSnapshot(polygon: Polygon): ReferenceD
   return snapshot
 }
 
+/**
+ * Before-dispatch producer preflight under the complete private Native guard.
+ * The spare object/property budget covers the small enclosing context records;
+ * it does not weaken the globally validated transport's plain-data bounds.
+ * No native interner, primitive FIFO, polygon memo or query is consumed here.
+ */
+export function captureReferenceDrcPolygonSnapshotsWithinDomain(polygons: readonly Polygon[]): ReferenceDrcPolygonSnapshot[] | undefined {
+  const snapshots: ReferenceDrcPolygonSnapshot[] = []
+  let objects = 1, properties = 1, edgeCount = 0
+  for (let polygonIndex = 0; polygonIndex < polygons.length; polygonIndex++) {
+    objects += 2; properties += 3
+    const faces: ReferenceDrcPolygonSnapshot["faces"] = []
+    for (const face of polygons[polygonIndex]!.faces) {
+      objects++; properties += 2
+      const edges: ReferenceDrcPolygonSnapshot["faces"][number] = []
+      for (const edge of face) {
+        if (++edgeCount >= MAX_EDGES) return undefined
+        properties++
+        const shape = edge.shape
+        if (shape instanceof NativeSegment) {
+          const x1 = shape.ps.x, y1 = shape.ps.y, x2 = shape.pe.x, y2 = shape.pe.y
+          if (!isFiniteNative(x1) || !isFiniteNative(y1) || !isFiniteNative(x2) || !isFiniteNative(y2)) return undefined
+          objects += 3; properties += 7
+          edges.push({ kind: "segment", start: { x: x1, y: y1 }, end: { x: x2, y: y2 } })
+        } else if (shape instanceof NativeArc) {
+          const x = shape.pc.x, y = shape.pc.y, radius = shape.r, startAngle = shape.startAngle, endAngle = shape.endAngle, counterClockwise = shape.counterClockwise
+          if (!isFiniteNative(x) || !isFiniteNative(y) || !isFiniteNative(radius) || !isFiniteNative(startAngle) || !isFiniteNative(endAngle)) return undefined
+          if (typeof counterClockwise !== "boolean") throw new Error("Native polygon arc orientation is not boolean")
+          objects += 2; properties += 8
+          edges.push({ kind: "arc", center: { x, y }, radius, startAngle, endAngle, counterClockwise })
+        } else throw new Error("Native conductor has an unsupported polygon edge")
+        if (objects >= 90_000 || properties >= 900_000) return undefined
+      }
+      if (objects >= 90_000 || properties >= 900_000) return undefined
+      faces.push(edges)
+    }
+    if (objects >= 90_000 || properties >= 900_000) return undefined
+    snapshots.push({ faces })
+  }
+  return snapshots
+}
+
 /** All constructors run before fact queries; original main polygons stay owned. */
 export function reconstructReferenceDrcPolygon(snapshot: ReferenceDrcPolygonSnapshot): Polygon {
   assertReferenceDrcPolygonSnapshot(snapshot)

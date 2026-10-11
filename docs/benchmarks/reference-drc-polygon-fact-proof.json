@@ -3,9 +3,9 @@
   "integrationStatus": "Isolated helper only. No polygon worker protocol, Native-site fact consumption, pool dispatch or benchmark activation is introduced by this slice. No local elapsed-time comparison or speed claim.",
   "candidateBaseRevision": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
   "sourceHashes": {
-    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPolygonFacts.ts": "1f4fcdb2c2d1bc306c5569a2cd0c64eee7c8cc3dd0ce35dd13434cc71514b361",
-    "tests/solvers/reference-drc-polygon-fact-reconstruction-parity.test.ts": "832ff7c7100027204604b22b021c6bba078734ec976010c77536c9444908d1e5",
-    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/get-via-and-pour-connections.ts": "5694a5fe18c4dd8de29f8db4bccc463c09dc13c75be3882966d745f3c3e93322",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPolygonFacts.ts": "42031bb3fee310fe6588b1cbac0af4939b19fc0487964d2e0b08f7a2fd3bddcc",
+    "tests/solvers/reference-drc-polygon-fact-reconstruction-parity.test.ts": "69ef63420885563f442c8da95ed79c1246526519f593551e629b6e802fe1e234",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/get-via-and-pour-connections.ts": "a0bd685f7f91478299439e8cedb180c6b4d6e5d0c49621aac99e79a53897ae5c",
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/copper-pour-connectivity/create-copper-polygon-contact-tester.ts": "dd049f473ed5a6ebc7e8204201286368a9cd2c44c461e2cc1c29c710485a9434",
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "ec867607eb3eddb098414959e47bebd58a42b23ca046c4a48f6ee97a92302080",
     "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance.ts": "78600b22e2035e2c1ba8551131507cc5eeeb527ab5c03c12824a5ad09dd22dd0",
@@ -221,6 +221,8 @@
       "Keep per-row algorithm exceptions deferred to the original miss callback and validate unused rows globally."
     ],
     "typecheckExitCode": 0,
-    "independentReview": "review_parallel independently passed559 Bun assertions and all17 full result/state oracles,15901 fresh Native predicates and33959 ordered queries. Isolated source/test clear; future production nonfinite/resource admission and constructor-versus-query exception boundaries remain separate obligations."
-  }
+    "independentReview": "review_parallel independently passed559 Bun assertions and all17 full result/state oracles,15901 fresh Native predicates and33959 ordered queries. Isolated source/test clear; future production nonfinite/resource admission and constructor-versus-query exception boundaries remain separate obligations.",
+    "currentNativeProducerAnchorReplay": "Original native producer now has an optional prepared branch. Read-only instrumentation anchors count the same original query loop and every original miss callback; an unconfigured normal private checker retains the original Native path. Updated test passed in three-file20242assertion run; the subsequent prepared consumer adds17error-source alias assertions without further reconstruction changes."
+  },
+  "currentReplayBaseRevision": "6ddc81261100bf45d28249264a798e62c1d4ecd6"
 }

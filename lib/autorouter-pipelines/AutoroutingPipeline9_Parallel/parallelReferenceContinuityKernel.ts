@@ -1,6 +1,7 @@
 import { PcbConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 import { assertNativeSourceAliasOutput } from "./nativeSourceAliasProvenance"
+import { assertReferenceDrcPolygonSnapshot, createReferenceDrcPolygonFactEvaluator } from "./authoritative-drc-fork/referenceDrcPolygonFacts"
 import type { ParallelReferenceContinuityBatch, ParallelReferenceContinuityBatchResult, ParallelReferenceContinuityContext, ParallelReferenceContinuitySourceRows, ParallelReferenceContinuityTask } from "./parallelReferenceContinuityTypes"
 
 const getOwnDescriptor = Object.getOwnPropertyDescriptor
@@ -9,6 +10,7 @@ const applyNative = Reflect.apply
 const hasOwn = Object.prototype.hasOwnProperty
 const isView = ArrayBuffer.isView
 const isSafeInteger = Number.isSafeInteger
+const isFiniteNative = Number.isFinite
 const isArray = Array.isArray
 const ceil = Math.ceil
 const maximumSafeInteger = Number.MAX_SAFE_INTEGER
@@ -79,6 +81,15 @@ export function assertParallelReferenceContinuityContext(context: unknown): asse
     assertNativeSourceAliasOutput(geometry.value, [])
     invariant(isArray(geometry.value), "Expected geometry trace array")
   }
+  const polygons = getOwnDescriptor(context, "geometryPolygons")
+  const tolerance = getOwnDescriptor(context, "geometryTolerance")
+  if (polygons !== undefined || tolerance !== undefined) {
+    invariant(polygons !== undefined && tolerance !== undefined && applyNative(hasOwn, polygons, ["value"]) && applyNative(hasOwn, tolerance, ["value"]), "Expected own polygon geometry and tolerance data")
+    assertNativeSourceAliasOutput(polygons.value, [])
+    invariant(isArray(polygons.value), "Expected polygon geometry array")
+    invariant(typeof tolerance.value === "number" && isFiniteNative(tolerance.value), "Expected finite polygon geometry tolerance")
+    for (let i = 0; i < polygons.value.length; i++) assertReferenceDrcPolygonSnapshot(polygons.value[i])
+  }
 }
 
 /** This preparation consumes no native memo operations or circuit mutations. */
@@ -86,6 +97,7 @@ export function prepareParallelReferenceContinuityContext(source: ParallelRefere
   assertNativeSourceAliasOutput(source, [])
   index(source.snapshotId, maximumSafeInteger, "snapshotId")
   index(source.portCount, MAX_ITEMS, "portCount")
+  invariant(source.geometryPolygons !== undefined || source.geometryTolerance === undefined, "Polygon tolerance has no geometry snapshot")
   invariant(isArray(source.tracePortOrdinals) && isArray(source.components), "Expected source row arrays")
   index(source.tracePortOrdinals.length, MAX_ITEMS, "source trace count")
   const wordsPerTrace = ceil(source.portCount / 32)
@@ -122,6 +134,7 @@ export function prepareParallelReferenceContinuityContext(source: ParallelRefere
     snapshotId: source.snapshotId, traceCount: source.tracePortOrdinals.length, portCount: source.portCount,
     componentOffsets, componentTraceIndexes, touchedPortWords,
     ...(source.geometryTraces === undefined ? {} : { geometryTraces: source.geometryTraces }),
+    ...(source.geometryPolygons === undefined ? {} : { geometryPolygons: source.geometryPolygons, geometryTolerance: source.geometryTolerance }),
   }
   assertParallelReferenceContinuityContext(context)
   return context
@@ -143,6 +156,10 @@ export function executeParallelReferenceContinuityBatch(batch: ParallelReference
   invariant(isArray(tasks), "Expected pure task array")
   const wordsPerTrace = ceil(context.portCount / 32)
   let pairPredicate: PcbConnectivityMap | undefined
+  // Reconstruction is a context/infrastructure boundary, outside per-query
+  // exception rows. Its failures must never masquerade as Native contacts.
+  const polygonPredicate = context.geometryPolygons === undefined ? undefined
+    : createReferenceDrcPolygonFactEvaluator(context.geometryPolygons, context.geometryTolerance!)
   const rows = new NativeSet<number>()
   const facts: ParallelReferenceContinuityBatchResult["facts"] = []
   for (let taskIndex = 0; taskIndex < tasks.length; taskIndex++) {
@@ -163,8 +180,7 @@ export function executeParallelReferenceContinuityBatch(batch: ParallelReference
         consumedVisits++
         if ((context.touchedPortWords[trace * wordsPerTrace + (port >>> 5)]! & (1 << (port & 31))) !== 0) { value = true; break }
       }
-    } else {
-      invariant(kind === "native-trace-pair-miss", "Unknown pure task kind")
+    } else if (kind === "native-trace-pair-miss") {
       const traces = context.geometryTraces
       invariant(traces !== undefined, "Geometry miss task has no original trace snapshot")
       const left = ownValue(task, "leftTraceIndex"), right = ownValue(task, "rightTraceIndex")
@@ -175,6 +191,20 @@ export function executeParallelReferenceContinuityBatch(batch: ParallelReference
       } catch (error) {
         if (!(error instanceof Error)) throw new ParallelReferenceContinuityProtocolError("Native geometry threw a non-error value")
         facts.push({ status: "exception", kind: "native-trace-pair-miss", rowIndex: row, consumedVisits: 1,
+          exception: { name: error.name, message: error.message, ...(error.stack === undefined ? {} : { stack: error.stack }) } })
+        continue
+      }
+      consumedVisits = 1
+    } else {
+      invariant(kind === "native-polygon-contact-miss", "Unknown pure task kind")
+      invariant(context.geometryPolygons !== undefined && polygonPredicate !== undefined, "Polygon miss task has no original polygon snapshot")
+      const left = ownValue(task, "leftPolygonIndex"), right = ownValue(task, "rightPolygonIndex")
+      index(left, context.geometryPolygons.length, "leftPolygonIndex"); index(right, context.geometryPolygons.length, "rightPolygonIndex")
+      try {
+        value = polygonPredicate(left, right)
+      } catch (error) {
+        if (!(error instanceof Error)) throw new ParallelReferenceContinuityProtocolError("Native polygon geometry threw a non-error value")
+        facts.push({ status: "exception", kind: "native-polygon-contact-miss", rowIndex: row, consumedVisits: 1,
           exception: { name: error.name, message: error.message, ...(error.stack === undefined ? {} : { stack: error.stack }) } })
         continue
       }

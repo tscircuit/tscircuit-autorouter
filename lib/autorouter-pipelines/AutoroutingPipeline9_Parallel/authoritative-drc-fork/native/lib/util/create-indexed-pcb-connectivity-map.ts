@@ -128,7 +128,7 @@ export function createIndexedPcbConnectivityMap(
     for (const connection of connectionsByPort.get(portId) ?? [])
       connections.push(connection)
   }
-  connections.push(...getViaAndPourConnections(circuitJson, primitiveMemo, scaledPolygonMemo))
+  connections.push(...getViaAndPourConnections(circuitJson, primitiveMemo, scaledPolygonMemo, preparedFactExecutor))
   map.connMap = new ConnectivityMap(primitiveMemo
     ? findOrderedIndexedConnectedNetworks(connections)
     : findConnectedNetworks(connections))
