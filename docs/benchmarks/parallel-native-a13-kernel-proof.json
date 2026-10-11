@@ -12,6 +12,19 @@
     { "sample": 5, "candidates": 30, "nativeCalls": 6000, "quanta": 60, "cExpansions": 1538111, "cPositiveRunCalls": 3033, "privateArrays": 24000, "privateHeapRows": 126257152 }
   ],
   "numericOracle": { "fixtures": 24, "fractionalQuantaAndCaps": 126, "wholeHeapRows": 129024, "signedZeroAndTies": true },
+  "quantumLocalUploadOracle": {
+    "nativeSearchBegins": 2013,
+    "originalArrayUploads": 16104,
+    "originalCopiedBytes": 332890026,
+    "actualArrayUploads": 11180,
+    "actualCopiedBytes": 201669154,
+    "avoidedArrayUploads": 4924,
+    "avoidedCopiedBytes": 131220872,
+    "sample001": { "begins": 770, "quantumStartsWithSearchBegin": 67, "copiedBytes": 138843358, "avoidedBytes": 89911968 },
+    "sample005": { "begins": 1243, "quantumStartsWithSearchBegin": 56, "copiedBytes": 62825796, "avoidedBytes": 41308904 },
+    "scope": "Private genuine worker/kernel identity; reset every original 100-call quantum. viaAllowed once per quantum, history pair once per native round, consecutive immutable heuristic identity. Four connection-dependent arrays fresh at every begin; all original C resets and private-state comparisons retained.",
+    "negativeChecks": ["unbranded internal kernels refresh all mutated input bytes", "retired real token rejected", "forged token and active flags rejected"]
+  },
   "eligibleNumericDomain": "Finite positive step multiplier <= 1,000,000; finite nonnegative search cap <= signed i32 maximum; default/auto/javascript backend. Other data retains original JS before setup.",
   "checks": ["unchanged original candidate caps and setup", "every consumed native call state", "heapSize/goal/presentCost scalars", "distance/parents/versions/state coordinates/flags", "all heap capacity rows including stale slots", "solved/failed states and output geometry", "positive actual C work", "whole 001/005 HD routes and stage counters", "maximum four actual workers", "public/custom admission stays native", "getter/proxy declines are unobserved", "active method/export/offset/buffer/memory mutations fail", "missing WebAssembly/atob imports succeed"],
   "reflectionCensusPerEligibleQuantum": {

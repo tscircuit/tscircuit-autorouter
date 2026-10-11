@@ -25,8 +25,8 @@ let compiledModule: WebAssembly.Module | undefined
 /** One private memory per solver; the compiled, immutable module is shared.
  * The TS router retains all policy, validation, and debugger state. */
 export class NativeA13WasmSearchKernel {
-  private exports: KernelExports
-  private offsets: number[] = []
+  protected exports: KernelExports
+  protected offsets: number[] = []
   private states: number
   private heapCapacity = 1024
   constructor(

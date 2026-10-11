@@ -81,8 +81,25 @@ async function run(): Promise<object> {
     rejected++
   } finally { Object.defineProperty(NativeA13WasmSearchKernel.prototype, "begin", begin) }
   throws(() => (prototypeOwner as any).searchKernel.run(1, 1), /outside its owned quantum/)
+  const forgedOwner = make()
+  strictEqual(installer.install(forgedOwner, parent, dispatcher), true)
+  const retired = installer.beginQuantum(forgedOwner, parent, dispatcher)!
+  try { forgedOwner.step() } finally { installer.finishQuantum(retired) }
+  const privateOwner = forgedOwner as any
+  const inputs = Object.fromEntries(["traceCost", "viaCost", "fixed", "fixedVia", "history", "viaHistory", "heuristicCost", "viaAllowed"]
+    .map(name => [name, privateOwner[name]]))
+  // A stale real token, a forged object and caller-written active booleans cannot
+  // restore the module-private upload capability after its original finally.
+  try {
+    retired.state.active = true
+    for (const quantum of [retired, {}]) {
+      retired.state.activeQuantum = quantum
+      throws(() => privateOwner.searchKernel.begin(inputs, 0, 1, 0.5), /outside its owned quantum/)
+    }
+  } finally { retired.state.active = false; retired.state.activeQuantum = undefined }
+  strictEqual(installer.getUploadCensus(forgedOwner)!.begins, 1)
   strictEqual(observers, 0)
-  return { actualKernel: true, publicNative: true, observers, proxyTraps, rejected }
+  return { actualKernel: true, publicNative: true, observers, proxyTraps, rejected, forgedUploadsRejected: 2 }
 }
 self.onmessage = async (): Promise<void> => {
   try { self.postMessage({ result: await run() }) }

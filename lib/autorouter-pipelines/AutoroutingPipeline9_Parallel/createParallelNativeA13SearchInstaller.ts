@@ -15,13 +15,18 @@ type Owner = HighDensitySolverA13WithDrcValidation
 type PrivateOwner = { cols: number; rows: number; layers: number[]; pitchX: number; pitchY: number; searchKernel: unknown }
 type State = { setup?: (...args: never[]) => void; wrapper?: () => void; kernel?: NativeA13WasmSearchKernel;
   active: boolean; owner: Owner; portfolio: object; roots?: readonly unknown[]; buffers?: readonly unknown[];
-  kernelFields?: readonly PropertyDescriptor[]; exportsFields?: readonly PropertyDescriptor[]; offsets?: readonly number[] }
+  kernelFields?: readonly PropertyDescriptor[]; exportsFields?: readonly PropertyDescriptor[]; offsets?: readonly number[];
+  activeQuantum?: object; uploadStats?: NativeA13UploadStats }
+type NativeA13UploadStats = { begins: number; copiedCalls: number; copiedBytes: number; skippedCalls: number;
+  skippedBytes: number; quantumStarts: number; viaAllowedSkippedCalls: number; historySkippedCalls: number;
+  heuristicSkippedCalls: number }
 export type NativeA13SearchQuantum = { intrinsic: NativeGridIntrinsicQuantum; state: State }
 export type ParallelNativeA13SearchInstaller = {
   install(owner: Owner, portfolio: object, dispatcher?: GridHistoryDispatcher): boolean
   beginQuantum(owner: Owner, portfolio: object, dispatcher?: GridHistoryDispatcher): NativeA13SearchQuantum | null
   finishQuantum(quantum: NativeA13SearchQuantum | null): void
   getGuardCensus(): object
+  getUploadCensus(owner: Owner): NativeA13UploadStats | undefined
 }
 const descriptor = Object.getOwnPropertyDescriptor, prototype = Object.getPrototypeOf
 const keys = Reflect.ownKeys, hasOwn = Object.hasOwn, is = Object.is
@@ -148,6 +153,20 @@ function hasPrivateNativeBuffers(owner: PrivateOwner): boolean {
   return true
 }
 
+type UploadMarkers = { quantum: object; viaAllowed?: Uint8Array; history?: Float64Array;
+  viaHistory?: Float64Array; round?: number; heuristic?: Float64Array }
+// Neither a public option nor an unbranded internal wrapper can mint this scope.
+const uploadMarkers = new WeakMap<NativeA13WasmSearchKernel, UploadMarkers>()
+const getUploadMarkers = uploadMarkers.get.bind(uploadMarkers)
+const setUploadMarkers = uploadMarkers.set.bind(uploadMarkers)
+const deleteUploadMarkers = uploadMarkers.delete.bind(uploadMarkers)
+const uploadQuantumOwners = new WeakMap<object, State>()
+const getUploadQuantumOwner = uploadQuantumOwners.get.bind(uploadQuantumOwners)
+const setUploadQuantumOwner = uploadQuantumOwners.set.bind(uploadQuantumOwners)
+const deleteUploadQuantumOwner = uploadQuantumOwners.delete.bind(uploadQuantumOwners)
+const hasActiveUploadQuantum = (state: State): boolean => state.active === true && state.activeQuantum !== undefined &&
+  getUploadQuantumOwner(state.activeQuantum) === state
+
 /** Only original callback-free worker quanta may call the private C kernel. */
 class OwnedA13WasmSearchKernel extends NativeA13WasmSearchKernel {
   readonly #state: State
@@ -156,15 +175,57 @@ class OwnedA13WasmSearchKernel extends NativeA13WasmSearchKernel {
     this.#state = state
   }
   override begin(inputs: SearchInputs, start: number, goal: number, presentCost: number): void {
-    if (!this.#state.active) throw new Error("Native A13 search began outside its owned quantum")
-    super.begin(inputs, start, goal, presentCost)
+    const state = this.#state
+    if (!hasActiveUploadQuantum(state)) {
+      throw new Error("Native A13 search began outside its owned quantum")
+    }
+    let markers = getUploadMarkers(this)
+    const stats = state.uploadStats ??= { begins: 0, copiedCalls: 0, copiedBytes: 0, skippedCalls: 0,
+      skippedBytes: 0, quantumStarts: 0, viaAllowedSkippedCalls: 0, historySkippedCalls: 0, heuristicSkippedCalls: 0 }
+    if (!markers || markers.quantum !== state.activeQuantum) {
+      markers = { quantum: state.activeQuantum! }
+      setUploadMarkers(this, markers)
+      stats.quantumStarts++
+    }
+    // Preserve the original input-read order and every begin_search reset. Native
+    // prepareSearch rewrites the first four arrays for each active connection.
+    const target = new Uint8Array(this.exports.memory.buffer)
+    const sources = [inputs.traceCost, inputs.viaCost, inputs.fixed, inputs.fixedVia,
+      inputs.history, inputs.viaHistory, inputs.heuristicCost, inputs.viaAllowed]
+    const history = sources[4] as Float64Array, viaHistory = sources[5] as Float64Array
+    const heuristic = sources[6] as Float64Array, viaAllowed = sources[7] as Uint8Array
+    const round = (state.owner as unknown as { round: number }).round
+    const sameHistory = markers.round === round && markers.history === history && markers.viaHistory === viaHistory
+    stats.begins++
+    for (let index = 0; index < sources.length; index++) {
+      const source = sources[index]!
+      const reuse = index === 7 ? markers.viaAllowed === viaAllowed :
+        index === 4 || index === 5 ? sameHistory : index === 6 && markers.heuristic === heuristic
+      if (reuse) {
+        stats.skippedCalls++; stats.skippedBytes += source.byteLength
+        if (index === 7) stats.viaAllowedSkippedCalls++
+        else if (index === 6) stats.heuristicSkippedCalls++
+        else stats.historySkippedCalls++
+      } else {
+        // memory.grow preserves bytes but detaches previous views; never retain
+        // a memory/source view across native run calls or quantum boundaries.
+        target.set(new Uint8Array(source.buffer, source.byteOffset, source.byteLength), this.offsets[index]!)
+        stats.copiedCalls++; stats.copiedBytes += source.byteLength
+      }
+    }
+    // Native negotiate increments round before the only history writes. Cached
+    // heuristics are immutable; each changed consecutive identity is uploaded.
+    markers.viaAllowed = viaAllowed
+    markers.history = history; markers.viaHistory = viaHistory; markers.round = round
+    markers.heuristic = heuristic
+    this.exports.begin_search(start, goal, presentCost)
   }
   override run(steps: number, budget: number): { status: number; expansions: number } {
-    if (!this.#state.active) throw new Error("Native A13 search ran outside its owned quantum")
+    if (!hasActiveUploadQuantum(this.#state)) throw new Error("Native A13 search ran outside its owned quantum")
     return super.run(steps, budget)
   }
   override copyParents(target: Int32Array): void {
-    if (!this.#state.active) throw new Error("Native A13 parents copied outside their owned quantum")
+    if (!hasActiveUploadQuantum(this.#state)) throw new Error("Native A13 parents copied outside their owned quantum")
     super.copyParents(target)
   }
 }
@@ -273,6 +334,8 @@ export function createParallelNativeA13SearchInstaller(portfolioPrototype: objec
       }
       state.active = true
       const quantum = { intrinsic, state }
+      state.activeQuantum = quantum
+      setUploadQuantumOwner(quantum, state)
       addLive(quantum)
       return quantum
     },
@@ -280,8 +343,15 @@ export function createParallelNativeA13SearchInstaller(portfolioPrototype: objec
       if (!quantum) return
       if (!hasLive(quantum)) throw new Error("Native A13 quantum was not minted or was already released")
       deleteLive(quantum)
+      deleteUploadQuantumOwner(quantum)
+      if (quantum.state.kernel) deleteUploadMarkers(quantum.state.kernel)
+      quantum.state.activeQuantum = undefined
       quantum.state.active = false
       finishNativeGridIntrinsicQuantum(quantum.intrinsic)
+    },
+    getUploadCensus(owner): NativeA13UploadStats | undefined {
+      const stats = getState(owner)?.uploadStats
+      return stats ? { ...stats } : undefined
     },
     getGuardCensus(): object {
       const count = (contracts: readonly WorkerNativeGridPortfolioContract[]): object => ({

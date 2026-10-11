@@ -16,4 +16,5 @@ test("A13 worker C admission declines public/custom observations and fails activ
   expect(result.observers).toBe(0)
   expect(result.proxyTraps).toBe(0)
   expect(result.rejected).toBe(6)
+  expect(result.forgedUploadsRejected).toBe(2)
 })

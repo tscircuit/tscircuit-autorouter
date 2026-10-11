@@ -21,6 +21,8 @@ async function run(data: any): Promise<object> {
   const installer = createParallelNativeA13SearchInstaller(ParallelPortfolioSingleIntraNodeSolver.prototype)
   const params = { ...data.params, connMap: restoreWorkerConnectivityMap(data.params) }
   let candidates = 0, calls = 0, expansions = 0, privateHeapRows = 0, privateArrays = 0, quanta = 0, cPositiveRunCalls = 0
+  const uploadCensus = { begins: 0, copiedCalls: 0, copiedBytes: 0, skippedCalls: 0,
+    skippedBytes: 0, quantumStarts: 0, viaAllowedSkippedCalls: 0, historySkippedCalls: 0, heuristicSkippedCalls: 0 }
   for (const row of data.rows) {
     const node = params.nodePortPoints.find((value: any) => value.capacityMeshNodeId === row.nodeId)
     strictEqual(node.width, row.width); strictEqual(node.height, row.height)
@@ -77,11 +79,14 @@ async function run(data: any): Promise<object> {
         if (step % 100 === 0 || control.solved || control.failed || step === row.steps - 1) deepStrictEqual(owner.getOutput(), control.getOutput())
       }
     } finally { installer.finishQuantum(active) }
+    const uploads = installer.getUploadCensus(owner)
+    strictEqual(uploads !== undefined, true, "genuine owned C kernel must record its upload work")
+    for (const name of Object.keys(uploadCensus) as Array<keyof typeof uploadCensus>) uploadCensus[name] += uploads![name]
     strictEqual((owner as any).routingIterations, row.routingIterations)
     candidates++; expansions += (owner as any).routingIterations
   }
   return { candidates, calls, expansions, cExpansions: expansions, cPositiveRunCalls, privateHeapRows, privateArrays, quanta,
-    actualKernel: true, guardCensus: installer.getGuardCensus() }
+    actualKernel: true, guardCensus: installer.getGuardCensus(), uploadCensus }
 }
 self.onmessage = async (event: MessageEvent): Promise<void> => {
   try { self.postMessage({ result: await run(event.data) }) }

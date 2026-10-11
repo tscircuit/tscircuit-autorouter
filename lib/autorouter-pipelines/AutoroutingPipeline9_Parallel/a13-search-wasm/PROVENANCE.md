@@ -4,7 +4,9 @@ the repository's pinned `@tscircuit/high-density-a13` dependency.
 
 `kernel.c`, `SearchInputs.ts`, and the generated module bytes are unchanged.
 `NativeA13WasmSearchKernel.ts` is the original `WasmSearchKernel.ts` wrapper with
-only the exported class and generated-byte import renamed. The original MIT
+the exported class and generated-byte import renamed, and its existing exports
+and offsets fields made protected for the guarded private worker adapter. Its
+ordinary begin method still copies every input at every search. The original MIT
 license is retained in `LICENSE`.
 
 The C source SHA256 is
@@ -34,6 +36,14 @@ only the private search kernel after original setup inside an authenticated
 default-worker supervisor quantum. Public/direct/custom candidates use native
 JavaScript. Once C is active, a violated kernel/lifetime contract throws; it does
 not resume a stale JavaScript search.
+
+The private worker adapter reuses uploads only within each original 100-call
+supervisor quantum. It uploads viaAllowed once per quantum, the history pair once
+per native negotiation round, and an unchanged consecutive immutable heuristic
+array once. Connection-dependent trace/via costs and fixed masks are always
+uploaded at every original begin; the original C search reset always runs.
+Private kernel/quantum identity maps cannot be minted by public flags, and the
+original finally clears all reuse markers before any worker await.
 
 The proof fixture contains the original JavaScript search translation with only
 an added closure-state accessor. It compares every original call in 69 consumed
