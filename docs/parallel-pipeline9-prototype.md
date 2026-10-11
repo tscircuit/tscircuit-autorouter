@@ -415,7 +415,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Fifteen frozen exploratory snapshots have complete paired results for all 16
+Sixteen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -437,6 +437,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `ff70052f0` | ordered / indexed, force trials on coordinator | 1.344× | 1.465× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `7bb1b82e2` | ordered / indexed, force trials on coordinator | 1.369× | 1.523× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `9f87cb73b` | ordered / indexed, force trials on coordinator | 1.287× | 1.451× | All solved, exact geometry and original-CAD quality parity; high-density regression, target remains unmet |
+| `afae314d5` | ordered / indexed, force trials on coordinator | 1.239× | 1.391× | All solved, exact geometry and original-CAD quality parity; lookahead guard overhead, target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -582,7 +583,15 @@ component-once continuity, and narrower batched guards, with the experimental
 A01 heap arena disabled by default. Its build, declarations, type checks and
 source/built browser imports without SharedArrayBuffer pass. Packaged sample001
 and sample015 retain exact native geometry and use at most four active workers.
-All 16 samples are dispatched in five immutable groups; performance acceptance
-is pending the complete results. The frozen revision, preflight hashes, exact
-arguments and workflow IDs are preserved in
+All 32 paired outcomes are complete: all 16 samples solve with exact native
+geometry, original-CAD quality and connection coverage parity, at most four
+active workers, 1.239× arithmetic mean speedup and 1.391× aggregate speedup.
+The target remains unmet. The new lookahead adds substantial full-graph guard
+work: sample015 records 23.15 million descriptor reads for 6,328 speculative
+native steps, and simplification takes 12.33 seconds versus 5.97 seconds for
+the paired native baseline. The next revision removes repeated descriptor
+metadata allocations and evaluates a narrower exact per-window read set.
+Complete outcomes, stage counters and every worker pool statistic are in
+[parallel-srj18-afae314d5-complete.json](benchmarks/parallel-srj18-afae314d5-complete.json).
+The frozen revision, preflight hashes, exact arguments and workflow IDs are in
 [parallel-srj18-afae314d5-dispatch.json](benchmarks/parallel-srj18-afae314d5-dispatch.json).
