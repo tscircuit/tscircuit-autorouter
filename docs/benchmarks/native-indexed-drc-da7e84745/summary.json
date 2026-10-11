@@ -1,0 +1,688 @@
+{
+  "kind": "unmodified-frozen-indexed-drc-engine-cpu-attribution",
+  "noTimingComparison": true,
+  "sourceRoot": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745",
+  "sourceRevision": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts": "43461aa4a6be3b08b9d4e3665bfa50f3b9e20b50f01220372aab5d0e6dd1239a",
+    "lib/utils/getConnectivityMapFromSimpleRouteJson.ts": "966c0260033a9f50112778cebfaf45988c0663b88afd22563c36646d2aced281",
+    "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+    "node_modules/circuit-json-to-connectivity-map/dist/index.js": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585"
+  },
+  "profileScope": "one synchronous span: one original constructor and 17 original persistent-engine evaluations; native methods/builtins untouched; fixture preparation/control solves/assertions excluded",
+  "limitation": "17 saved actual015 reference geometries reconstructed under indexed-engine options; not all original indexed candidate evaluations and not the parent Joint/global candidate preparation or force-policy span",
+  "records": [
+    {
+      "record": 1,
+      "sourcePath": "/tmp/reference015-native-capture/reference-1.v8",
+      "sourceSha256": "91908699ae37d5f032cf8c28a61437744380575559c857ed47a7f7f9f8d6ed63",
+      "errors": 0,
+      "resultSha256": "bcfef1a65da1dd78f113bbf85e05980b20b5bd92ecb2d2acc9c9af1348c2ea1d",
+      "stats": {
+        "traceCount": 0,
+        "segmentCount": 0,
+        "viaCount": 0,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 0,
+        "exactCheckCount": 0
+      }
+    },
+    {
+      "record": 2,
+      "sourcePath": "/tmp/reference015-native-capture/reference-2.v8",
+      "sourceSha256": "a6709ca23ad0d07bc7ce962e6c83f37c21648e22588cad37f406bc848d3efbf6",
+      "errors": 580,
+      "resultSha256": "56fbb56737f210fd3e7ac56f7e4444db8ca4bfae641c293b362b5fa028c82930",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4456,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 72390,
+        "exactCheckCount": 19398
+      }
+    },
+    {
+      "record": 3,
+      "sourcePath": "/tmp/reference015-native-capture/reference-3.v8",
+      "sourceSha256": "5652b981643576ecb2e4526749b784245cb0a4cdadebec6d38b1536a41235c6f",
+      "errors": 446,
+      "resultSha256": "21488ce82b8d8177305fcdb01dbdca828e3b43ea707c6b93f432e3625af17b99",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4449,
+        "viaCount": 403,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 70197,
+        "exactCheckCount": 18160
+      }
+    },
+    {
+      "record": 4,
+      "sourcePath": "/tmp/reference015-native-capture/reference-4.v8",
+      "sourceSha256": "1d4470386a2daac91f2c3eca36986fdbda308bda7ec7250e7efc4c047a707e1d",
+      "errors": 285,
+      "resultSha256": "53b3ab31926c5132107e22619d4b2dcc8dbce035aa4b206a6b609f047f46f194",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4455,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 68965,
+        "exactCheckCount": 17488
+      }
+    },
+    {
+      "record": 5,
+      "sourcePath": "/tmp/reference015-native-capture/reference-5.v8",
+      "sourceSha256": "be579204173be918d38b9f79b6cb54ec089a86a1549c9c6674170fcf1fbf125e",
+      "errors": 236,
+      "resultSha256": "36534280f9bc2ac881ff6699e852288cbab0250f86d0df61a98e764ec80d55d9",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4457,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 68875,
+        "exactCheckCount": 17158
+      }
+    },
+    {
+      "record": 6,
+      "sourcePath": "/tmp/reference015-native-capture/reference-6.v8",
+      "sourceSha256": "1f5255c79cbbbc1550d2d3089e7458081c0bc600f8e9de082cd5a78bf87b6caa",
+      "errors": 215,
+      "resultSha256": "1b57a87a6f05ac8bf464adb1d632295dc6269c689d5ec2a0dcdb13ddccb73c2b",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4297,
+        "viaCount": 397,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 66028,
+        "exactCheckCount": 16201
+      }
+    },
+    {
+      "record": 7,
+      "sourcePath": "/tmp/reference015-native-capture/reference-7.v8",
+      "sourceSha256": "ed78b26123c6ff4dc0084950a115f7ed9901b6905a6acc392111de233640e561",
+      "errors": 190,
+      "resultSha256": "31d52c47c493a1fffaf609849eb8f3394820c172759c70f7d07774aa96b500b3",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4298,
+        "viaCount": 397,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65490,
+        "exactCheckCount": 15807
+      }
+    },
+    {
+      "record": 8,
+      "sourcePath": "/tmp/reference015-native-capture/reference-8.v8",
+      "sourceSha256": "6a515e00d5ce3e3adbbb14b3151ac502037642bd71e5479e43fba2047a53a27c",
+      "errors": 186,
+      "resultSha256": "cb1008aa08ea092a1b90f451d7b452117045d72a2ce98c1d88abf36a8cc2f8b2",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4298,
+        "viaCount": 395,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65364,
+        "exactCheckCount": 15780
+      }
+    },
+    {
+      "record": 9,
+      "sourcePath": "/tmp/reference015-native-capture/reference-9.v8",
+      "sourceSha256": "22a8c2b08446c58f9a9c555465453d1b2dc418224ef45a5f1285620e46aaf234",
+      "errors": 185,
+      "resultSha256": "740a6189ea73086f0d63bf1a9b511765281c72146137adf2e70c4d3f95081b6b",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65227,
+        "exactCheckCount": 15729
+      }
+    },
+    {
+      "record": 10,
+      "sourcePath": "/tmp/reference015-native-capture/reference-10.v8",
+      "sourceSha256": "70fa9327463325f409d195391b91fd1c75ef5c0d7ee91e312f1502c749f150ac",
+      "errors": 184,
+      "resultSha256": "7f63788f40718f730bceddb51b15e05e3d25f7a550dcbd5f8b2e339478757682",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65822,
+        "exactCheckCount": 15935
+      }
+    },
+    {
+      "record": 11,
+      "sourcePath": "/tmp/reference015-native-capture/reference-11.v8",
+      "sourceSha256": "22a8c2b08446c58f9a9c555465453d1b2dc418224ef45a5f1285620e46aaf234",
+      "errors": 185,
+      "resultSha256": "740a6189ea73086f0d63bf1a9b511765281c72146137adf2e70c4d3f95081b6b",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65227,
+        "exactCheckCount": 15729
+      }
+    },
+    {
+      "record": 12,
+      "sourcePath": "/tmp/reference015-native-capture/reference-12.v8",
+      "sourceSha256": "2fd04cb87a897df8157082d34354f86d3d75855d7d3ae05479df8fb1b4512d3d",
+      "errors": 29,
+      "resultSha256": "a0ff00b446f4e26ce68932d2deea8804ab0b98281dc27b7365a222667b3d6c37",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      }
+    },
+    {
+      "record": 13,
+      "sourcePath": "/tmp/reference015-native-capture/reference-13.v8",
+      "sourceSha256": "994a15734ebca57f2f45d33effed3efa2abafdc35188a29198567b11b102f5c5",
+      "errors": 34,
+      "resultSha256": "87cd1b240f32843425cd139f7a213129f10ca68f3c0a9dc7336e008e2b4ee9f4",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 3029,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28884,
+        "exactCheckCount": 6274
+      }
+    },
+    {
+      "record": 14,
+      "sourcePath": "/tmp/reference015-native-capture/reference-14.v8",
+      "sourceSha256": "2fd04cb87a897df8157082d34354f86d3d75855d7d3ae05479df8fb1b4512d3d",
+      "errors": 29,
+      "resultSha256": "a0ff00b446f4e26ce68932d2deea8804ab0b98281dc27b7365a222667b3d6c37",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      }
+    },
+    {
+      "record": 15,
+      "sourcePath": "/tmp/reference015-native-capture/reference-15.v8",
+      "sourceSha256": "556e3c01247b43cbc51b37cbed5682bc88b5b495c8edf6d4ac19b473461363ce",
+      "errors": 30,
+      "resultSha256": "98a68115bc63ee20ab6de6331af4b7607e34cc2edb45efe197f932b0a0f8438b",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28561,
+        "exactCheckCount": 6236
+      }
+    },
+    {
+      "record": 16,
+      "sourcePath": "/tmp/reference015-native-capture/reference-16.v8",
+      "sourceSha256": "2fd04cb87a897df8157082d34354f86d3d75855d7d3ae05479df8fb1b4512d3d",
+      "errors": 29,
+      "resultSha256": "a0ff00b446f4e26ce68932d2deea8804ab0b98281dc27b7365a222667b3d6c37",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      }
+    },
+    {
+      "record": 17,
+      "sourcePath": "/tmp/reference015-native-capture/reference-17.v8",
+      "sourceSha256": "50eaaf3f7905da0a0ae421d5e878dc609493338bfa624ed7848d4ee134c47e8e",
+      "errors": 27,
+      "resultSha256": "4536758a3191eb1b0b175bb48c598a6e028386f90e052446dc0d5334dddfcc44",
+      "stats": {
+        "traceCount": 461,
+        "segmentCount": 2985,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28420,
+        "exactCheckCount": 6219
+      }
+    }
+  ],
+  "exactErrorsAndStats": true,
+  "unchangedNativeMethodDescriptors": true,
+  "stackSamples": 256,
+  "totals": {
+    "traceCount": 7376,
+    "segmentCount": 61585,
+    "viaCount": 6107,
+    "obstacleCount": 10132,
+    "broadPhaseCandidateCount": 845145,
+    "exactCheckCount": 204840
+  },
+  "sourceRows": [
+    {
+      "url": "",
+      "name": "profile",
+      "selfSamples": 1,
+      "inclusiveSamples": 256,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "/private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts",
+      "name": "(module)",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "evaluate",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "asyncModuleEvaluation",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "asyncFunctionResume",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "promiseReactionJobWithoutPromiseUnwrapAsyncContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "promiseReactionJob",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "",
+      "name": "processTicksAndRejections",
+      "selfSamples": 0,
+      "inclusiveSamples": 256,
+      "selfShare": 0,
+      "inclusiveShare": 1
+    },
+    {
+      "url": "/private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts",
+      "name": "",
+      "selfSamples": 0,
+      "inclusiveSamples": 255,
+      "selfShare": 0,
+      "inclusiveShare": 0.99609375
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "evaluateInternal",
+      "selfSamples": 7,
+      "inclusiveSamples": 254,
+      "selfShare": 0.02734375,
+      "inclusiveShare": 0.9921875
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "areConnected",
+      "selfSamples": 21,
+      "inclusiveSamples": 175,
+      "selfShare": 0.08203125,
+      "inclusiveShare": 0.68359375
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "",
+      "selfSamples": 0,
+      "inclusiveSamples": 165,
+      "selfShare": 0,
+      "inclusiveShare": 0.64453125
+    },
+    {
+      "url": "",
+      "name": "some",
+      "selfSamples": 0,
+      "inclusiveSamples": 165,
+      "selfShare": 0,
+      "inclusiveShare": 0.64453125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "obstacleSharesNet",
+      "selfSamples": 1,
+      "inclusiveSamples": 155,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.60546875
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "checkTraceObstacle",
+      "selfSamples": 1,
+      "inclusiveSamples": 145,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.56640625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js",
+      "name": "getNetConnectedToId",
+      "selfSamples": 132,
+      "inclusiveSamples": 132,
+      "selfShare": 0.515625,
+      "inclusiveShare": 0.515625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "resolveNetId",
+      "selfSamples": 15,
+      "inclusiveSamples": 106,
+      "selfShare": 0.05859375,
+      "inclusiveShare": 0.4140625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js",
+      "name": "areIdsConnected",
+      "selfSamples": 8,
+      "inclusiveSamples": 49,
+      "selfShare": 0.03125,
+      "inclusiveShare": 0.19140625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "query",
+      "selfSamples": 28,
+      "inclusiveSamples": 28,
+      "selfShare": 0.109375,
+      "inclusiveShare": 0.109375
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "checkViaObstacle",
+      "selfSamples": 0,
+      "inclusiveSamples": 23,
+      "selfShare": 0,
+      "inclusiveShare": 0.08984375
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "buildDynamicIndexes",
+      "selfSamples": 2,
+      "inclusiveSamples": 19,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.07421875
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "addToLayer",
+      "selfSamples": 2,
+      "inclusiveSamples": 17,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.06640625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "insertCellRange",
+      "selfSamples": 13,
+      "inclusiveSamples": 16,
+      "selfShare": 0.05078125,
+      "inclusiveShare": 0.0625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "collectDynamicGeometry",
+      "selfSamples": 2,
+      "inclusiveSamples": 13,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.05078125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "checkTracePair",
+      "selfSamples": 2,
+      "inclusiveSamples": 11,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.04296875
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "getGeometryIdentity",
+      "selfSamples": 7,
+      "inclusiveSamples": 7,
+      "selfShare": 0.02734375,
+      "inclusiveShare": 0.02734375
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "checkTraceVia",
+      "selfSamples": 1,
+      "inclusiveSamples": 5,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.01953125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "registerItem",
+      "selfSamples": 3,
+      "inclusiveSamples": 3,
+      "selfShare": 0.01171875,
+      "inclusiveShare": 0.01171875
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "checkViaPairs",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "selfShare": 0,
+      "inclusiveShare": 0.0078125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/math-utils/dist/chunk-EFLPMB4J.js",
+      "name": "doSegmentsIntersect",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.0078125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "getTracePortIds",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "selfShare": 0.0078125,
+      "inclusiveShare": 0.0078125
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "SpatialHash",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "indexStaticObstacles",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "Pipeline9MemoizedAutoroutingDrcEngine",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+      "name": "rememberClearGeometry",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "",
+      "name": "get",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "",
+      "name": "min",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/@tscircuit/math-utils/dist/chunk-Y7G4VXR7.js",
+      "name": "segmentToSegmentMinDistance",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "selfShare": 0,
+      "inclusiveShare": 0.00390625
+    },
+    {
+      "url": "",
+      "name": "from",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "selfShare": 0.00390625,
+      "inclusiveShare": 0.00390625
+    }
+  ],
+  "topStacks": [
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal",
+      "samples": 67
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:areIdsConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal",
+      "samples": 35
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:query > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation > :asyncFunctionResume",
+      "samples": 27
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile",
+      "samples": 18
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:",
+      "samples": 14
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:insertCellRange > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:addToLayer > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:buildDynamicIndexes > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate",
+      "samples": 12
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:areIdsConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:",
+      "samples": 8
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:getGeometryIdentity > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:collectDynamicGeometry > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation",
+      "samples": 7
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkViaObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:",
+      "samples": 7
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTracePair > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module)",
+      "samples": 7
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation > :asyncFunctionResume > :promiseReactionJobWithoutPromiseUnwrapAsyncContext",
+      "samples": 7
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkViaObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal",
+      "samples": 6
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:registerItem > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:insertCellRange > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:addToLayer > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:buildDynamicIndexes > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module)",
+      "samples": 3
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:areIdsConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkViaObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:",
+      "samples": 3
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:resolveNetId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkTraceVia > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module)",
+      "samples": 3
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:getNetConnectedToId > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/circuit-json-to-connectivity-map/dist/index.js:areIdsConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkViaObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal",
+      "samples": 3
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:areConnected > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts: > :some > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:obstacleSharesNet > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:checkViaObstacle > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile",
+      "samples": 3
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:collectDynamicGeometry > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation > :asyncFunctionResume",
+      "samples": 2
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:buildDynamicIndexes > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation > :asyncFunctionResume",
+      "samples": 2
+    },
+    {
+      "stack": "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:getTracePortIds > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:collectDynamicGeometry > /Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts:evaluateInternal > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts: > :profile > /private/tmp/indexed-drc-da7e015/profileFrozenIndexedDrc.ts:(module) > :evaluate > :asyncModuleEvaluation",
+      "samples": 2
+    }
+  ],
+  "profileSha256": "869799e593769cfbe02e95f762855cdc05fe539f0d9b109f0699c2d9d5b091c0",
+  "scriptSha256": "bc14926e86d6337cafec650c9f2c03675187dbf2a944e249dbbe216ffc91ee2a"
+}

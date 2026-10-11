@@ -356,6 +356,79 @@ class SpatialHash<T> {
   }
 }
 
+// Internal observation metadata only: no engine construction or predicate activation.
+// The authoritative class-definition snapshot stays private. Each reader receives
+// fresh arrays/descriptors, so changing a returned record cannot forge provenance.
+const spatialHashGetDescriptor = Object.getOwnPropertyDescriptor
+const spatialHashGetPrototype = Object.getPrototypeOf
+const spatialHashDefineProperty = Object.defineProperty
+const spatialHashOwnKeys = Reflect.ownKeys
+const spatialHashFunctionSourceDescriptor = spatialHashGetDescriptor(spatialHashGetPrototype(function () {}), "toString")
+const spatialHashFunctionSourceSlot = spatialHashFunctionSourceDescriptor && spatialHashGetDescriptor(spatialHashFunctionSourceDescriptor, "value")
+const spatialHashFunctionSource = spatialHashFunctionSourceSlot?.value as typeof Function.prototype.toString | undefined
+const spatialHashKeys = spatialHashOwnKeys(SpatialHash.prototype)
+const spatialHashDescriptors: PropertyDescriptor[] = []
+for (let index = 0; index < spatialHashKeys.length; index++) {
+  spatialHashDefineProperty(spatialHashDescriptors, index, { configurable: true, enumerable: true, writable: true, value: spatialHashGetDescriptor(SpatialHash.prototype, spatialHashKeys[index]!)! })
+}
+const spatialHashParent = spatialHashGetPrototype(SpatialHash.prototype)
+export function readNativeIndexedDrcSpatialHashObservationContract(): {
+  readonly object: object
+  readonly parent: object | null
+  readonly keys: readonly PropertyKey[]
+  readonly descriptors: readonly PropertyDescriptor[]
+  readonly nativeFunctionSource: typeof Function.prototype.toString | undefined
+  readonly originalEngineConstructor: typeof Pipeline9MemoizedAutoroutingDrcEngine
+  readonly engineDefinition: {
+    readonly object: object
+    readonly parent: object | null
+    readonly keys: readonly PropertyKey[]
+    readonly descriptors: readonly PropertyDescriptor[]
+  }
+  readonly engineConstructorDefinition: {
+    readonly object: object
+    readonly parent: object | null
+    readonly keys: readonly PropertyKey[]
+    readonly descriptors: readonly PropertyDescriptor[]
+  }
+} {
+  const keys: PropertyKey[] = [], descriptors: PropertyDescriptor[] = []
+  for (let index = 0; index < spatialHashKeys.length; index++) {
+    spatialHashDefineProperty(keys, index, { configurable: true, enumerable: true, writable: true, value: spatialHashKeys[index]! })
+    const original = spatialHashDescriptors[index]!
+    spatialHashDefineProperty(descriptors, index, { configurable: true, enumerable: true, writable: true, value: {
+      value: original.value,
+      writable: original.writable,
+      enumerable: original.enumerable,
+      configurable: original.configurable,
+    } })
+  }
+  const engineKeys: PropertyKey[] = [], engineDescriptors: PropertyDescriptor[] = []
+  for (let index = 0; index < originalEngineKeys.length; index++) {
+    spatialHashDefineProperty(engineKeys, index, { configurable: true, enumerable: true, writable: true, value: originalEngineKeys[index]! })
+    const original = originalEngineDescriptors[index]!
+    spatialHashDefineProperty(engineDescriptors, index, { configurable: true, enumerable: true, writable: true, value: {
+      value: original.value,
+      writable: original.writable,
+      enumerable: original.enumerable,
+      configurable: original.configurable,
+    } })
+  }
+  const constructorKeys: PropertyKey[] = [], constructorDescriptors: PropertyDescriptor[] = []
+  for (let index = 0; index < originalEngineConstructorKeys.length; index++) {
+    spatialHashDefineProperty(constructorKeys, index, { configurable: true, enumerable: true, writable: true, value: originalEngineConstructorKeys[index]! })
+    const original = originalEngineConstructorDescriptors[index]!
+    spatialHashDefineProperty(constructorDescriptors, index, { configurable: true, enumerable: true, writable: true, value: {
+      value: original.value, writable: original.writable, enumerable: original.enumerable, configurable: original.configurable,
+    } })
+  }
+  return { object: SpatialHash.prototype, parent: spatialHashParent, keys, descriptors, nativeFunctionSource: spatialHashFunctionSource,
+    originalEngineConstructor: Pipeline9MemoizedAutoroutingDrcEngine,
+    engineDefinition: { object: originalEnginePrototype, parent: originalEngineParent, keys: engineKeys, descriptors: engineDescriptors },
+    engineConstructorDefinition: { object: Pipeline9MemoizedAutoroutingDrcEngine, parent: originalEngineConstructorParent,
+      keys: constructorKeys, descriptors: constructorDescriptors } }
+}
+
 const getClosestPointBetweenSegments = (
   segmentA: TraceSegment,
   segmentB: TraceSegment,
@@ -1357,3 +1430,21 @@ export class Pipeline9MemoizedAutoroutingDrcEngine {
 
 const getWireWidth = (start: WireRoutePoint, end: WireRoutePoint): number =>
   start.width ?? end.width ?? 0.1
+
+// Capture literal definition identities after module evaluation. Exact function
+// text alone cannot establish a method's original lexical bindings.
+const originalEnginePrototype = Pipeline9MemoizedAutoroutingDrcEngine.prototype
+const originalEngineParent = spatialHashGetPrototype(originalEnginePrototype)
+const originalEngineKeys = spatialHashOwnKeys(originalEnginePrototype)
+const originalEngineDescriptors: PropertyDescriptor[] = []
+for (let index = 0; index < originalEngineKeys.length; index++) {
+  spatialHashDefineProperty(originalEngineDescriptors, index, { configurable: true, enumerable: true, writable: true,
+    value: spatialHashGetDescriptor(originalEnginePrototype, originalEngineKeys[index]!)! })
+}
+const originalEngineConstructorParent = spatialHashGetPrototype(Pipeline9MemoizedAutoroutingDrcEngine)
+const originalEngineConstructorKeys = spatialHashOwnKeys(Pipeline9MemoizedAutoroutingDrcEngine)
+const originalEngineConstructorDescriptors: PropertyDescriptor[] = []
+for (let index = 0; index < originalEngineConstructorKeys.length; index++) {
+  spatialHashDefineProperty(originalEngineConstructorDescriptors, index, { configurable: true, enumerable: true, writable: true,
+    value: spatialHashGetDescriptor(Pipeline9MemoizedAutoroutingDrcEngine, originalEngineConstructorKeys[index]!)! })
+}

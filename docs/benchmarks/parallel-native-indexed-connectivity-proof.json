@@ -1,0 +1,479 @@
+{
+  "kind": "Dormant exact indexed-connectivity memo work proof; no production activation or timing claim",
+  "runtime": "1.3.2",
+  "provenance": "17 saved sample015 native reference geometries reconstructed under original indexed-engine options, not all remote candidate evaluations",
+  "oracle": "Separate persistent same-source native engine; exact errors/order/centers and lastRunStats at every record",
+  "admission": "Engine module first under native reflection; full pre-helper collection/class/helper provenance and per-evaluate callback-free plain data graph",
+  "rows": [
+    {
+      "record": 1,
+      "errors": 0,
+      "runStats": {
+        "traceCount": 0,
+        "segmentCount": 0,
+        "viaCount": 0,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 0,
+        "exactCheckCount": 0
+      },
+      "originalPredicateCalls": 0,
+      "memoHits": 0,
+      "memoEntries": 0,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 0,
+      "guardObjects": 6644,
+      "guardVisits": 141144,
+      "guardProperties": 245465
+    },
+    {
+      "record": 2,
+      "errors": 580,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4456,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 72390,
+        "exactCheckCount": 19398
+      },
+      "originalPredicateCalls": 41661,
+      "memoHits": 437077,
+      "memoEntries": 41661,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 18699,
+      "guardObjects": 13763,
+      "guardVisits": 180988,
+      "guardProperties": 292428
+    },
+    {
+      "record": 3,
+      "errors": 446,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4449,
+        "viaCount": 403,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 70197,
+        "exactCheckCount": 18160
+      },
+      "originalPredicateCalls": 41059,
+      "memoHits": 427792,
+      "memoEntries": 41059,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 18621,
+      "guardObjects": 13756,
+      "guardVisits": 180946,
+      "guardProperties": 292379
+    },
+    {
+      "record": 4,
+      "errors": 285,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4455,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 68965,
+        "exactCheckCount": 17488
+      },
+      "originalPredicateCalls": 40413,
+      "memoHits": 418398,
+      "memoEntries": 40413,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 18552,
+      "guardObjects": 13758,
+      "guardVisits": 180954,
+      "guardProperties": 292389
+    },
+    {
+      "record": 5,
+      "errors": 236,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4457,
+        "viaCount": 401,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 68875,
+        "exactCheckCount": 17158
+      },
+      "originalPredicateCalls": 39917,
+      "memoHits": 420665,
+      "memoEntries": 39917,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 18598,
+      "guardObjects": 13760,
+      "guardVisits": 180966,
+      "guardProperties": 292403
+    },
+    {
+      "record": 6,
+      "errors": 215,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4297,
+        "viaCount": 397,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 66028,
+        "exactCheckCount": 16201
+      },
+      "originalPredicateCalls": 39296,
+      "memoHits": 415177,
+      "memoEntries": 39296,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17943,
+      "guardObjects": 13592,
+      "guardVisits": 179950,
+      "guardProperties": 291219
+    },
+    {
+      "record": 7,
+      "errors": 190,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4298,
+        "viaCount": 397,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65490,
+        "exactCheckCount": 15807
+      },
+      "originalPredicateCalls": 39762,
+      "memoHits": 409241,
+      "memoEntries": 39762,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17969,
+      "guardObjects": 13594,
+      "guardVisits": 179962,
+      "guardProperties": 291233
+    },
+    {
+      "record": 8,
+      "errors": 186,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4298,
+        "viaCount": 395,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65364,
+        "exactCheckCount": 15780
+      },
+      "originalPredicateCalls": 39762,
+      "memoHits": 409215,
+      "memoEntries": 39762,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17877,
+      "guardObjects": 13594,
+      "guardVisits": 179962,
+      "guardProperties": 291233
+    },
+    {
+      "record": 9,
+      "errors": 185,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65227,
+        "exactCheckCount": 15729
+      },
+      "originalPredicateCalls": 39777,
+      "memoHits": 410246,
+      "memoEntries": 39777,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17851,
+      "guardObjects": 13581,
+      "guardVisits": 179882,
+      "guardProperties": 291140
+    },
+    {
+      "record": 10,
+      "errors": 184,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65822,
+        "exactCheckCount": 15935
+      },
+      "originalPredicateCalls": 39783,
+      "memoHits": 411166,
+      "memoEntries": 39783,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17984,
+      "guardObjects": 13580,
+      "guardVisits": 179876,
+      "guardProperties": 291133
+    },
+    {
+      "record": 11,
+      "errors": 185,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 4287,
+        "viaCount": 394,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 65227,
+        "exactCheckCount": 15729
+      },
+      "originalPredicateCalls": 39777,
+      "memoHits": 410246,
+      "memoEntries": 39777,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 17851,
+      "guardObjects": 13581,
+      "guardVisits": 179882,
+      "guardProperties": 291140
+    },
+    {
+      "record": 12,
+      "errors": 29,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 234927,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8120,
+      "guardObjects": 12218,
+      "guardVisits": 171630,
+      "guardProperties": 281525
+    },
+    {
+      "record": 13,
+      "errors": 34,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 3029,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28884,
+        "exactCheckCount": 6274
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 235410,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8232,
+      "guardObjects": 12247,
+      "guardVisits": 171804,
+      "guardProperties": 281728
+    },
+    {
+      "record": 14,
+      "errors": 29,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 234927,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8120,
+      "guardObjects": 12218,
+      "guardVisits": 171630,
+      "guardProperties": 281525
+    },
+    {
+      "record": 15,
+      "errors": 30,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28561,
+        "exactCheckCount": 6236
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 234921,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8119,
+      "guardObjects": 12218,
+      "guardVisits": 171630,
+      "guardProperties": 281525
+    },
+    {
+      "record": 16,
+      "errors": 29,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 3000,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28565,
+        "exactCheckCount": 6242
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 234927,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8120,
+      "guardObjects": 12218,
+      "guardVisits": 171630,
+      "guardProperties": 281525
+    },
+    {
+      "record": 17,
+      "errors": 27,
+      "runStats": {
+        "traceCount": 461,
+        "segmentCount": 2985,
+        "viaCount": 355,
+        "obstacleCount": 596,
+        "broadPhaseCandidateCount": 28420,
+        "exactCheckCount": 6219
+      },
+      "originalPredicateCalls": 35822,
+      "memoHits": 234295,
+      "memoEntries": 35822,
+      "entryLimitSkips": 0,
+      "sameNameFastReturns": 8072,
+      "guardObjects": 12203,
+      "guardVisits": 171540,
+      "guardProperties": 281420
+    }
+  ],
+  "totals": {
+    "evaluations": 17,
+    "admittedEvaluations": 17,
+    "nativeEvaluations": 0,
+    "sameNameFastReturns": 230728,
+    "originalPredicateCalls": 616139,
+    "memoHits": 5578630,
+    "memoEntries": 616139,
+    "entryLimitSkips": 0,
+    "guardObjects": 223168,
+    "guardVisits": 3108875,
+    "guardProperties": 5096874,
+    "intrinsicObjects": 792,
+    "intrinsicProperties": 10710
+  },
+  "mutationBetweenEvaluations": true,
+  "asymmetricActualPairs": true,
+  "sharedNetArrayAliases": true,
+  "capacityLimitNativeSites": 2729,
+  "observerProof": {
+    "freshProcessCases": 37,
+    "callbackBoundaryRows": [
+      {
+        "case": "engine-equal-source-closure",
+        "importObservations": 0,
+        "nativeObservations": 1,
+        "candidateObservations": 1,
+        "admitted": 0
+      },
+      {
+        "case": "source-printer-wrapper",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 0
+      },
+      {
+        "case": "source-printer-getter",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 0
+      },
+      {
+        "case": "native-marker-wrapper",
+        "importObservations": 0,
+        "nativeObservations": 270,
+        "candidateObservations": 270,
+        "admitted": 0
+      },
+      {
+        "case": "missing-map-global",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "error": "Map is not defined"
+      },
+      {
+        "case": "metadata-prototype-accessor",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 0
+      },
+      {
+        "case": "metadata-predicate-accessor",
+        "importObservations": 0,
+        "nativeObservations": 3,
+        "candidateObservations": 3,
+        "admitted": 0
+      },
+      {
+        "case": "global-getter-Array",
+        "importObservations": 0,
+        "nativeObservations": 5,
+        "candidateObservations": 5,
+        "admitted": 0
+      },
+      {
+        "case": "global-getter-Map",
+        "importObservations": 0,
+        "nativeObservations": 28,
+        "candidateObservations": 28,
+        "admitted": 0
+      },
+      {
+        "case": "global-getter-WeakSet",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 0
+      },
+      {
+        "case": "global-getter-Function",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 0
+      },
+      {
+        "case": "array-inherited-index",
+        "importObservations": 0,
+        "nativeObservations": 14,
+        "candidateObservations": 14,
+        "admitted": 0
+      },
+      {
+        "case": "spatial-copy-only",
+        "importObservations": 0,
+        "nativeObservations": 0,
+        "candidateObservations": 0,
+        "admitted": 1
+      },
+      {
+        "case": "retirement",
+        "importObservations": 0,
+        "nativeObservations": 7,
+        "candidateObservations": 7,
+        "admitted": 0
+      }
+    ]
+  },
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts": "f689b7b882723927f61f29c0a331ae3f6881f7fe565208f8a6f16c5bc6118435",
+    "scripts/parallel-benchmark/prototypes/native-indexed-connectivity/createPrivatelyMemoizedIndexedDrcEvaluator.ts": "86f8209bf6aebdff02e9afac7d336be0a61d7660554072057c6147592822e660",
+    "scripts/parallel-benchmark/prototypes/native-indexed-connectivity/hasPinnedNativeIndexedDrcFunctionSources.ts": "9ec630b034fa7a91a51ecafd5bfde43061ac4a9743bed5adadf76bd2f26a024e",
+    "tests/fixtures/native-indexed-connectivity/proof.ts": "cdbd50c69be86f4ebd7cd87de3a011365a97ec338878c229c43e537540bc9984",
+    "tests/fixtures/native-indexed-connectivity/observer.ts": "770276061852aee57a182e6f3a8896a9486c6dd54608a874055245fa9fa2087c",
+    "tests/fixtures/native-indexed-connectivity/sample015-reference-geometries.json.gz": "30c37cf6b8753a62a5e70e240626dc2f8719d28b08df1e4a6ae4ab670cc47fec"
+  }
+}

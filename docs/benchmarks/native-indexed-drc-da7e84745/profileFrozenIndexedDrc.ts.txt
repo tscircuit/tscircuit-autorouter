@@ -1,0 +1,98 @@
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
+import { deserialize, serialize } from "node:v8"
+import { createHash } from "node:crypto"
+import { deepStrictEqual } from "node:assert"
+import { gzipSync } from "node:zlib"
+import { profile } from "bun:jsc"
+
+const sourceRoot = "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-da7e84745"
+const sourceRevision = "da7e84745f2d024a390783c5dca718d6528429be"
+const outputRoot = "/tmp/indexed-drc-da7e015"
+const load = (path: string): string => `${sourceRoot}/${path}`
+const { Pipeline9MemoizedAutoroutingDrcEngine: Engine } = await import(load("lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts"))
+const { getConnectivityMapFromSimpleRouteJson } = await import(load("lib/utils/getConnectivityMapFromSimpleRouteJson.ts"))
+const { RELAXED_DRC_OPTIONS } = await import(load("lib/testing/drcPresets.ts"))
+const hash = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex")
+const rawInputs = Array.from({ length: 17 }, (_, index) => {
+  const path = `/tmp/reference015-native-capture/reference-${index + 1}.v8`
+  const bytes = new Uint8Array(readFileSync(path))
+  return { record: index + 1, sourcePath: path, sourceSha256: hash(bytes), input: deserialize(bytes) as any }
+})
+const base = rawInputs[0]!.input
+const makeSrj = (): any => ({ ...structuredClone(base.srjWithPointPairs),
+  obstacles: structuredClone(base.inputSrj.obstacles), minTraceWidth: base.inputSrj.minTraceWidth,
+  minViaDiameter: base.inputSrj.minViaDiameter ?? 0.3 })
+const makeOptions = (): any => ({ connMap: getConnectivityMapFromSimpleRouteJson(structuredClone(base.srjWithPointPairs)),
+  traceClearance: RELAXED_DRC_OPTIONS.traceClearance ?? 0.1, viaClearance: RELAXED_DRC_OPTIONS.viaClearance ?? 0.1,
+  includeTraceViaOwnerMetadata: true,
+  spatialCellSize: Math.max(0.3, base.inputSrj.minTraceWidth) + Math.max(RELAXED_DRC_OPTIONS.traceClearance ?? 0.1, RELAXED_DRC_OPTIONS.viaClearance ?? 0.1) })
+
+// These are two separate persistent same-source engines. Control work and all
+// fixture decoding, assertions, source hashing and report serialization are
+// outside the one sampled span. No native method or builtin is replaced.
+const originalDescriptors = Object.getOwnPropertyDescriptors(Engine.prototype)
+const oracle = new Engine(makeSrj(), makeOptions())
+const expected = rawInputs.map(({ input }) => {
+  const result = oracle.evaluate(structuredClone(input.routedTraces))
+  return { result, stats: { ...oracle.lastRunStats } }
+})
+const profiledInputs = rawInputs.map(({ input }) => structuredClone(input.routedTraces))
+const srj = makeSrj(), options = makeOptions()
+const actual: { result: any; stats: any }[] = []
+let engine: InstanceType<typeof Engine> | undefined
+const report = profile((): void => {
+  engine = new Engine(srj, options)
+  for (const traces of profiledInputs) {
+    const result = engine.evaluate(traces)
+    actual.push({ result, stats: { ...engine.lastRunStats } })
+  }
+})
+deepStrictEqual(Object.getOwnPropertyDescriptors(Engine.prototype), originalDescriptors)
+deepStrictEqual(actual, expected)
+
+type Frame = { name: string; sourceID: number }
+type Trace = { frames: Frame[] }
+const traces = report.stackTraces.traces as Trace[]
+const urls = new Map(report.stackTraces.sources.map(source => [source.sourceID, source.url ?? ""]))
+const rows = new Map<string, { url: string; name: string; selfSamples: number; inclusiveSamples: number }>()
+const stacks = new Map<string, number>()
+for (const trace of traces) {
+  const seen = new Set<string>()
+  for (let index = 0; index < trace.frames.length; index++) {
+    const frame = trace.frames[index]!, url = urls.get(frame.sourceID) ?? "", key = `${url}:${frame.name}`
+    let row = rows.get(key)
+    if (!row) { row = { url, name: frame.name, selfSamples: 0, inclusiveSamples: 0 }; rows.set(key, row) }
+    if (index === 0) row.selfSamples++
+    if (!seen.has(key)) { row.inclusiveSamples++; seen.add(key) }
+  }
+  const stack = trace.frames.slice(0, 8).map(frame => `${urls.get(frame.sourceID) ?? ""}:${frame.name}`).join(" > ")
+  stacks.set(stack, (stacks.get(stack) ?? 0) + 1)
+}
+const sourcePaths = [
+  "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair03/Pipeline9MemoizedAutoroutingDrcEngine.ts",
+  "lib/utils/getConnectivityMapFromSimpleRouteJson.ts",
+  "lib/testing/drcPresets.ts",
+  "node_modules/circuit-json-to-connectivity-map/dist/index.js",
+]
+const sourceHashes = Object.fromEntries(sourcePaths.map(path => [path, hash(new Uint8Array(readFileSync(load(path))))]))
+const totals: Record<string, number> = {}
+for (const row of actual) for (const [key, value] of Object.entries(row.stats)) {
+  if (typeof value === "number") totals[key] = (totals[key] ?? 0) + value
+}
+const summary = {
+  kind: "unmodified-frozen-indexed-drc-engine-cpu-attribution", noTimingComparison: true,
+  sourceRoot, sourceRevision, sourceHashes,
+  profileScope: "one synchronous span: one original constructor and17 original persistent-engine evaluations; native methods/builtins untouched; fixture preparation/control solves/assertions excluded",
+  limitation: "17 saved actual015 reference geometries reconstructed under indexed-engine options; not all original indexed candidate evaluations and not the parent Joint/global candidate preparation or force-policy span",
+  records: rawInputs.map(({ record, sourcePath, sourceSha256 }, index) => ({ record, sourcePath, sourceSha256,
+    errors: actual[index]!.result.errors.length, resultSha256: hash(new Uint8Array(serialize(actual[index]))), stats: actual[index]!.stats })),
+  exactErrorsAndStats: true, unchangedNativeMethodDescriptors: true, stackSamples: traces.length, totals,
+  sourceRows: [...rows.values()].map(row => ({ ...row, selfShare: row.selfSamples / traces.length, inclusiveShare: row.inclusiveSamples / traces.length }))
+    .sort((left, right) => right.inclusiveSamples - left.inclusiveSamples),
+  topStacks: [...stacks].map(([stack, samples]) => ({ stack, samples })).sort((left, right) => right.samples - left.samples).slice(0, 40),
+}
+mkdirSync(outputRoot, { recursive: true })
+writeFileSync(`${outputRoot}/profile.json.gz`, gzipSync(JSON.stringify(report)))
+writeFileSync(`${outputRoot}/summary.json`, JSON.stringify(summary, null, 2) + "\n")
+console.log(JSON.stringify({ kind: summary.kind, records: summary.records.length, exactErrorsAndStats: true, stackSamples: traces.length,
+  totals, sourceRows: summary.sourceRows.slice(0, 20) }, null, 2))
