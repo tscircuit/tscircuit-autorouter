@@ -1,4 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { serializeSolverCacheKeyData } from "lib/cache/serializeSolverCacheKeyData"
 import {
   getGlobalInMemoryCache,
   setupGlobalCaches,
@@ -28,7 +29,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -116,17 +117,6 @@ export class CachedPortfolioSingleIntraNodeSolver
       portPoints: normalizedPortPoints,
     }
 
-    const normalizedRelevantConnMap: string[][] = []
-
-    for (const portPoint of normalizedPortPoints) {
-      const relevantConnMap = this.connMap?.getIdsConnectedToNet(
-        portPoint.connectionName,
-      )
-      if (relevantConnMap) {
-        normalizedRelevantConnMap.push(relevantConnMap)
-      }
-    }
-
     const normalizedHyperParameters = Object.fromEntries(
       Object.entries(this.constructorParams.hyperParameters ?? {})
         .filter(([, value]) => value !== undefined)
@@ -147,7 +137,7 @@ export class CachedPortfolioSingleIntraNodeSolver
       // TODO connMap
     }
 
-    const cacheKey = `intranode:${objectHash(keyData)}`
+    const cacheKey = `intranode:${objectHash(serializeSolverCacheKeyData(keyData))}`
     const cacheToSolveSpaceTransform = {} // No transform needed for this approach
 
     this.cacheKey = cacheKey

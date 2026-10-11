@@ -1,4 +1,5 @@
 import objectHash from "object-hash"
+import { serializeSolverCacheKeyData } from "lib/cache/serializeSolverCacheKeyData"
 
 import {
   getGlobalInMemoryCache,
@@ -179,11 +180,7 @@ export class CachedIntraNodeRouteSolver
 
     // Buffer the typed serialization before hashing so the crypto implementation
     // receives one payload instead of thousands of small updates per candidate.
-    const serializedKeyData = objectHash(keyData, {
-      algorithm: "passthrough",
-      respectType: false,
-      unorderedObjects: false,
-    })
+    const serializedKeyData = serializeSolverCacheKeyData(keyData)
     const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
