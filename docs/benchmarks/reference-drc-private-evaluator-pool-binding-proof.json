@@ -1,0 +1,55 @@
+{
+  "kind": "inactive-native-evaluator-pool-binding-equivalence",
+  "performanceClaim": false,
+  "defaultPipelineActivation": false,
+  "maximumOrdinaryWorkers": 4,
+  "maximumSynchronousFactWorkerLanes": 3,
+  "mainFactLane": 1,
+  "policy": [
+    "module-private captured evaluator-to-original-checker WeakMap; external primitiveMemo evaluators cannot bind",
+    "same factory-created hidden checker, memo identities, FIFO and counters retained through late executor setup",
+    "owner proxy inspection and own data workerPool descriptor precede Native pool membership; no owner getter/custom pool method reads",
+    "captured original pool initializer used only for actual owned default pool; unsupported owners return undefined before a new await",
+    "exact privately minted Native pool executors cached in captured private WeakMap; no caller callback/provider/trust flag",
+    "Native checker performs complete ordinary-input/method/builtin admission and synchronous worker availability before any geometry planning or changed work",
+    "default root and joint caller activation awaits separate transport provenance/control/ordinary-bookkeeping clearance"
+  ],
+  "validation": {
+    "command": "bun test --timeout 9999999 tests/solvers/reference-drc-private-evaluator-pool-binding.test.ts",
+    "testFilesPassed": 1,
+    "assertionsPassed": 31,
+    "typeScriptCommand": "bunx tsc --noEmit",
+    "typeScriptPassed": true,
+    "independentReview": "owner Proxy/data descriptors, captured initializer, mint cache, preserved warm private checker/memo and unknown/external observer decline source and actual-pool test independently cleared"
+  },
+  "actualPoolProof": {
+    "workers": 4,
+    "unsupportedOwnerAndEvaluatorCallbackCount": 0,
+    "warmBatchCount": 0,
+    "changedGeometryUsesGenuineFactLanes": true,
+    "repeatedChangedGeometryAddsNoBatch": true,
+    "allOriginalErrorsCircuitJsonAndInputsEqual": true,
+    "allReservationsRetired": true,
+    "protocolFailures": 0
+  },
+  "checkerWarmStateProof": "docs/benchmarks/reference-drc-prepared-trace-pair-proof.json",
+  "checkerBindingRevision": "8c4848a2f",
+  "files": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/createMemoizedReferenceDrcEvaluator.ts",
+      "sha256": "ffec93cfefc606a5edc8199ec7fa1b14c07a987dbaefb7a539859a1a3109cb96"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/bindNativeReferenceDrcEvaluatorToPool.ts",
+      "sha256": "83cadb61dd160eac13002a83f69878d99881283fd8e5eebf474bcfecba2f5d6a"
+    },
+    {
+      "path": "tests/solvers/reference-drc-private-evaluator-pool-binding.test.ts",
+      "sha256": "08b8c6cd4737f78b0369cda377ba1ab0693e8e00ef4d313eb7c47badf87b874c"
+    }
+  ],
+  "fixture": {
+    "path": "tests/fixtures/reference-drc-srj18/sample015-constructor-input.json.gz",
+    "sha256": "f57134a30d64e42cdd6b8dfb7d388ab7f18784040dda00ad65f79777788f663c"
+  }
+}

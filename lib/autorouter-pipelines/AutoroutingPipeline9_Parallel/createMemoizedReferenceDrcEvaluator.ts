@@ -5,12 +5,24 @@ import {
 } from "../../testing/evaluate-relaxed-drc"
 import { checkViaTraceClearanceWithLazyCenters } from "./authoritative-drc-fork/checkViaTraceClearanceWithLazyCenters"
 import type { ReferenceDrcPrimitiveMemo } from "./authoritative-drc-fork/ReferenceDrcPrimitiveMemo"
-import { checkTracesAreContiguous, createPrivatelyMemoizedTraceContinuityChecker } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
+import { checkTracesAreContiguous, createPrivatelyMemoizedTraceContinuityChecker, configurePreparedPrivatelyMemoizedTraceContinuityChecker } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
 import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
 
 export type MemoizedReferenceDrcEvaluator = (
   input: EvaluateRelaxedDrcInput,
 ) => EvaluateRelaxedDrcResult
+
+const nativeApply = Reflect.apply
+const nativeWeakMapGet = WeakMap.prototype.get
+const nativeWeakMapSet = WeakMap.prototype.set
+const privateEvaluatorCheckers = new WeakMap<MemoizedReferenceDrcEvaluator, ReturnType<typeof createPrivatelyMemoizedTraceContinuityChecker>>()
+
+/** Attach facts to the same original private memo; caller evaluators remain unobserved. */
+export function configurePreparedMemoizedReferenceDrcEvaluator(evaluator: unknown, executor: unknown): boolean {
+  if (typeof evaluator !== "function") return false
+  const checker = nativeApply(nativeWeakMapGet, privateEvaluatorCheckers, [evaluator]) as ReturnType<typeof createPrivatelyMemoizedTraceContinuityChecker> | undefined
+  return checker !== undefined && configurePreparedPrivatelyMemoizedTraceContinuityChecker(checker, executor)
+}
 
 /** Keeps the native full checks and graph while reusing exact pure predicates. */
 export function createMemoizedReferenceDrcEvaluator(
@@ -20,7 +32,7 @@ export function createMemoizedReferenceDrcEvaluator(
     ? createPrivatelyMemoizedTraceContinuityChecker()
     : (circuitJson: Parameters<typeof checkTracesAreContiguous>[0]): ReturnType<typeof checkTracesAreContiguous> =>
         checkTracesAreContiguous(circuitJson, { primitiveMemo })
-  return (input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult =>
+  const evaluate = (input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult =>
     evaluateRelaxedDrc({
       ...input,
       connectivityMapFactory: input.connectivityMapFactory ?? getParallelConnectivityMap,
@@ -32,4 +44,6 @@ export function createMemoizedReferenceDrcEvaluator(
           continuityChecker(circuitJson),
       },
     })
+  if (primitiveMemo === undefined) nativeApply(nativeWeakMapSet, privateEvaluatorCheckers, [evaluate, continuityChecker])
+  return evaluate
 }
