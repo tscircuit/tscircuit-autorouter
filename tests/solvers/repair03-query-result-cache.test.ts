@@ -16,14 +16,14 @@ type ViaPoint = Extract<
 >
 type CacheInternals = {
   checkTracePair: (...args: unknown[]) => unknown
-  queryPatterns: Map<string, unknown>
-  queryPatternUnits: number
-  primitivePatternUnits: number
-  primitivePatternIds: Map<string, number>
-  getPrimitivePatternId: (values: unknown[]) => number
+  queryResultCache: Map<string, unknown>
+  queryResultUnits: number
+  primitiveKeyUnits: number
+  primitiveIdsByKey: Map<string, number>
+  getPrimitiveId: (values: unknown[]) => number
 }
 
-test("query DRC patterns preserve ordered results and logical stats across candidate mutations", (): void => {
+test("DRC query result cache preserves ordered results and logical stats across input changes", (): void => {
   const srj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.1,
@@ -124,7 +124,7 @@ test("query DRC patterns preserve ordered results and logical stats across candi
   const cached = new AutoroutingDrcEngine(srj, options)
   const reference = new AutoroutingDrcEngine(srj, {
     ...options,
-    queryPatternCacheSize: 0,
+    queryResultCacheBudget: 0,
   })
   const internals = cached as unknown as CacheInternals
   const tracePairChecks = spyOn(internals, "checkTracePair")
@@ -238,14 +238,12 @@ test("query DRC patterns preserve ordered results and logical stats across candi
 
     const disabled = new AutoroutingDrcEngine(srj, {
       ...options,
-      queryPatternCacheSize: 0,
+      queryResultCacheBudget: 0,
     })
     expect(disabled.evaluate(traces)).toEqual(reference.evaluate(traces))
     expect(disabled.lastRunStats).toEqual(reference.lastRunStats)
-    expect((disabled as unknown as CacheInternals).queryPatternUnits).toBe(0)
-    expect((disabled as unknown as CacheInternals).primitivePatternUnits).toBe(
-      0,
-    )
+    expect((disabled as unknown as CacheInternals).queryResultUnits).toBe(0)
+    expect((disabled as unknown as CacheInternals).primitiveKeyUnits).toBe(0)
 
     for (const traceClearance of [0, 0.05, 0.5]) {
       const context = {
@@ -256,7 +254,7 @@ test("query DRC patterns preserve ordered results and logical stats across candi
       const isolated = new AutoroutingDrcEngine(srj, context)
       const uncached = new AutoroutingDrcEngine(srj, {
         ...context,
-        queryPatternCacheSize: 0,
+        queryResultCacheBudget: 0,
       })
       expect(isolated.evaluate(traces)).toEqual(uncached.evaluate(traces))
       expect(isolated.evaluate(traces)).toEqual(uncached.evaluate(traces))
@@ -264,31 +262,30 @@ test("query DRC patterns preserve ordered results and logical stats across candi
 
     const bounded = new AutoroutingDrcEngine(srj, {
       ...options,
-      queryPatternCacheSize: 1_024,
+      queryResultCacheBudget: 1_024,
     })
     const boundedInternals = bounded as unknown as CacheInternals
     for (let index = 0; index < 8; index++) {
       wire.y += 0.001
       expect(bounded.evaluate(traces)).toEqual(reference.evaluate(traces))
       expect(
-        boundedInternals.queryPatternUnits +
-          boundedInternals.primitivePatternUnits,
+        boundedInternals.queryResultUnits + boundedInternals.primitiveKeyUnits,
       ).toBeLessThanOrEqual(1_024)
     }
     for (const capacity of [-1, 0.5, Infinity, NaN]) {
       expect(
         () =>
-          new AutoroutingDrcEngine(srj, { queryPatternCacheSize: capacity }),
-      ).toThrow("queryPatternCacheSize")
+          new AutoroutingDrcEngine(srj, { queryResultCacheBudget: capacity }),
+      ).toThrow("queryResultCacheBudget")
     }
     const specialValues = [0, -0, NaN, Infinity, -Infinity, null]
-    const specialPatternIds = specialValues.map((value) =>
-      internals.getPrimitivePatternId([value]),
+    const specialPrimitiveIds = specialValues.map((value) =>
+      internals.getPrimitiveId([value]),
     )
-    expect(new Set(specialPatternIds).size).toBe(specialValues.length)
+    expect(new Set(specialPrimitiveIds).size).toBe(specialValues.length)
     for (let index = 0; index < specialValues.length; index++) {
-      expect(internals.getPrimitivePatternId([specialValues[index]])).toBe(
-        specialPatternIds[index],
+      expect(internals.getPrimitiveId([specialValues[index]])).toBe(
+        specialPrimitiveIds[index],
       )
     }
   } finally {
