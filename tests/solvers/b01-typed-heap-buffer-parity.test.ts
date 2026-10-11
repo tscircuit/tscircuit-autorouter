@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { defaultB01Params, HighDensitySolverB01 } from "@tscircuit/high-density-b01"
+import {
+  defaultB01Params,
+  HighDensitySolverB01,
+} from "@tscircuit/high-density-b01"
 
 // Independent frozen swap-based heap from the pinned dependency.
 const frozenHeapSource = String.raw`
