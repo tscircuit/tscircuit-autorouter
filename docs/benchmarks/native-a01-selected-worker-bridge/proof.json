@@ -1,0 +1,165 @@
+{
+  "kind": "frozen-actual-selected-worker-cpu-attribution",
+  "noTimingComparison": true,
+  "frozenCommit": "05c72d631",
+  "defaultDisabledCommit": "752f8c03f",
+  "sample": "sample015",
+  "nodeId": "cmn_37",
+  "portCount": 22,
+  "nodePf": 1.1916019721434097,
+  "actualWorker": true,
+  "actualFrozenSourceEntry": true,
+  "nativeMethodsInstrumented": false,
+  "helperHistoriesAdmitted": 0,
+  "workerCount": 1,
+  "selectedLogicalQuantum": 100,
+  "originalWorkerResult": {
+    "status": "solved",
+    "nodeIterations": 7689,
+    "nodeMaximumIterations": 100000000,
+    "gridHistoryReplayWork": {
+      "logicalIterationsReplayed": 0,
+      "equivalentLogicalIterationsReplayed": 0,
+      "equivalentCandidatesAdmitted": 0
+    }
+  },
+  "rawStackSamples": 8202,
+  "humanFunctionTableSamples": 8200,
+  "normalization": "Shares divide by all8202 raw stack samples. Two outer-wrapper samples are absent from the JSC human function table.",
+  "hotspots": [
+    {
+      "name": "hasWritableNativeBulkState",
+      "selfSamples": 1071,
+      "inclusiveSamples": 5794,
+      "selfShare": 0.13057790782735917,
+      "inclusiveShare": 0.706413069982931,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/workerNativeA01BulkSearchPrototype.ts"
+      ]
+    },
+    {
+      "name": "getOwnPropertyDescriptors",
+      "selfSamples": 3242,
+      "inclusiveSamples": 3242,
+      "selfShare": 0.39526944647646917,
+      "inclusiveShare": 0.39526944647646917,
+      "sources": [
+        "native builtin"
+      ]
+    },
+    {
+      "name": "ownKeys",
+      "selfSamples": 838,
+      "inclusiveSamples": 838,
+      "selfShare": 0.10217020238966106,
+      "inclusiveShare": 0.10217020238966106,
+      "sources": [
+        "native builtin"
+      ]
+    },
+    {
+      "name": "hasOwn",
+      "selfSamples": 324,
+      "inclusiveSamples": 324,
+      "selfShare": 0.03950256035113387,
+      "inclusiveShare": 0.03950256035113387,
+      "sources": [
+        "native builtin"
+      ]
+    },
+    {
+      "name": "hasNativeDataRecord",
+      "selfSamples": 209,
+      "inclusiveSamples": 1734,
+      "selfShare": 0.02548158985613265,
+      "inclusiveShare": 0.21141185076810534,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/workerNativeA01BulkSearchPrototype.ts"
+      ]
+    },
+    {
+      "name": "runActiveSearch",
+      "selfSamples": 73,
+      "inclusiveSamples": 284,
+      "selfShare": 0.008900268227261643,
+      "inclusiveShare": 0.03462570104852475,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/NativeA01BulkSearchKernel.ts"
+      ]
+    },
+    {
+      "name": "flushState",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "selfShare": 0.000731528895391368,
+      "inclusiveShare": 0.000731528895391368,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/NativeA01BulkSearchKernel.ts"
+      ]
+    },
+    {
+      "name": "runWorkerNativeA01BulkSubsteps",
+      "selfSamples": 1,
+      "inclusiveSamples": 6365,
+      "selfShare": 0.000121921482565228,
+      "inclusiveShare": 0.7760302365276762,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/runWorkerNativeA01BulkSubsteps.ts"
+      ]
+    },
+    {
+      "name": "hasOriginalBulkSearchBackend",
+      "selfSamples": 0,
+      "inclusiveSamples": 79,
+      "selfShare": 0.0,
+      "inclusiveShare": 0.009631797122653012,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/workerNativeA01BulkSearchPrototype.ts"
+      ]
+    },
+    {
+      "name": "beginWorkerNativeGridKernelQuantum",
+      "selfSamples": 0,
+      "inclusiveSamples": 131,
+      "selfShare": 0.0,
+      "inclusiveShare": 0.015971714216044867,
+      "sources": [
+        "/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/autorouter-05c72d631/lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/workerNativeGridKernelQuantum.ts"
+      ]
+    }
+  ],
+  "rawProfile": "sample015-cmn37-profile.json.gz",
+  "capturedJob": "sample015-cmn37-job.json.gz",
+  "uncompressedProfileSha256": "6898e4b031271e530ebfc8421edc199e790d831440e1a8799e9e8390966c39fb",
+  "realJobSha256": "06054a034f9c7ac8e78b547c2e3dd56874c90ccaaa6839daa74d4d5448d229a9",
+  "frozenSourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/pipeline9LocalWorker.ts": "d9a8c4cf7bc7d1294177d38bb8481a5f8e28996b5b847fc775864e2ce4180970",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/executeParallelHighDensityNodeJob.ts": "00a5d0255b3902efdad9809b78ad993433f44618de3d691887d85c129b603fea",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPortfolioSingleIntraNodeSolver.ts": "7bcf0302f13b938d1713088d60c092455e8fe96bcb96ec4be056f719ed1cd169",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/runWorkerNativeA01BulkSubsteps.ts": "a4f5b2779d1b6d7da66a7a5f2d0fa990cfa4611cc45ac276e05d9aa2a0f6026d",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/workerNativeA01BulkSearchPrototype.ts": "116cae00059c1e7ac2c533ea5b5908c9b3584dc6097bb66f955c48ea454b9cf2",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/NativeA01BulkSearchKernel.ts": "eddcad31ced0e4e14ab4c900a210c611cf8f32bb6e4c19eee48cdb8d1a6ff2b1",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeDescriptorMetadataGuard.ts": "ae47029a3cd9e8373a881879f4af09db546a175c642f07516cebad09159212b3"
+  },
+  "reproduction": {
+    "rawStackSamples": 7229,
+    "writableStateInclusiveSamples": 5301,
+    "writableStateInclusiveShare": 0.7332964448748098,
+    "realJobSha256": "06054a034f9c7ac8e78b547c2e3dd56874c90ccaaa6839daa74d4d5448d229a9",
+    "sameCapturedJob": true
+  },
+  "commands": [
+    "A01_PROFILE_ROOT=/absolute/path/to/autorouter-05c72d631 A01_PROFILE_JOB=docs/benchmarks/native-a01-selected-worker-bridge/sample015-cmn37-job.json.gz A01_PROFILE_OUTPUT=/tmp/a01-profile bun scripts/parallel-benchmark/prototypes/native-a01-selected-worker-profile.ts"
+  ],
+  "interpretation": "Functional CPU attribution only. No local elapsed-time, throughput or speedup comparison. The frozen full16 Blacksmith run establishes the regression; one node profile identifies a likely cause.",
+  "finding": "hasWritableNativeBulkState takes70.64% inclusive samples; the C run plus state bridge takes3.46%. The major target is rebuilding descriptor maps over historical nodePool and heap arrays at every run, rather than optimizing C arithmetic.",
+  "nextDesignOnly": [
+    "A private original-worker task/solver capability must prove generated SearchNode/rip/cache records never escape to caller aliases; actualworker+dispatcher or unchanged array identity is insufficient.",
+    "Native SearchNode records, rip links and cached occupant rows are append-only/immutable while a native search continues; validate new generated rows rather than every historical record only after this provenance proof.",
+    "Heap columns remain mutable: refresh numeric contents at every original100 boundary, including inactive tails, and publish every original dirty write into the same arrays.",
+    "Validate small owner/method/intrinsic/private-storage contracts at each boundary; retain original numeric policy rechecks and no capability across awaits.",
+    "Release/flush before original start/goal/budget/empty/cap/error and ancestor/supervisor observations. Any unverified callback invalidates row trust until a complete safe recapture; restored method identity alone cannot resurrect trust.",
+    "Direct/custom/exposed owners remain native. All private-state/late-getter/readonly/mutation/cap/exception/cancellation oracles must still pass.",
+    "Keep default C disabled until a new all16 four-core Blacksmith run establishes a gain."
+  ]
+}
