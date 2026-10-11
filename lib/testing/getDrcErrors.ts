@@ -20,6 +20,7 @@ import {
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import { getViaInPadDrcErrors, type ViaInPadDrcError } from "./getViaInPadDrcErrors"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
@@ -34,6 +35,7 @@ type DrcError =
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | ViaInPadDrcError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -49,6 +51,7 @@ export interface GetDrcErrorsResult {
 }
 
 export interface GetDrcErrorsOptions {
+  allowViaInPad?: boolean
   holeClearance?: number
   viaClearance?: number
   traceClearance?: number
@@ -122,6 +125,7 @@ export const getDrcErrors = (
     ...padTraceErrors,
     ...holeTraceErrors,
     ...viaErrors,
+    ...(options.allowViaInPad === true ? [] : getViaInPadDrcErrors(circuitJson)),
   ]
 
   const vias = circuitJson.filter(
