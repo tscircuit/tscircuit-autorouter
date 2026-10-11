@@ -188,6 +188,19 @@ reflection operations; the optional arena extends this to 479 descriptors and
 230 operations. Reproducible functional evidence is in
 [parallel-native-grid-default-and-experimental-state-proof.json](benchmarks/parallel-native-grid-default-and-experimental-state-proof.json).
 
+Authentic default-worker A13 candidates use the pinned strict-f64 C search
+kernel after their original native setup. Public and custom A13 construction
+keeps its existing JavaScript backend. Private worker admission verifies the
+original input, owner, supervisor, validation, builtin, and WASM contracts;
+unsupported caps stay native before setup. An active ownership violation fails
+explicitly rather than switching to a stale search. The functional oracle
+checks 69 selected candidates, 12,900 original calls, 3,809,059 positive C
+expansions, and 242,338,816 complete active/stale heap rows. Original routing
+caps, tie ordering, fitness, setup errors, and output remain unchanged. This
+proves execution and parity; speed is measured only by the frozen Blacksmith
+comparison. Source, compiler, and functional counts are documented in
+[parallel-native-a13-kernel-proof.json](benchmarks/parallel-native-a13-kernel-proof.json).
+
 Topology, coordinated via changes, and joint DRC commits retain their serial
 execution. Ordered port-point pathing also retains its original coordinator;
 negotiated search is opt-in. High-density routing with fixed
