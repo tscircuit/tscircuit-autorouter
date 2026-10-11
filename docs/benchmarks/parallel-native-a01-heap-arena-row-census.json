@@ -1,0 +1,33 @@
+{
+  "result": {
+    "checkpoints": 10329,
+    "quanta": 10329,
+    "nativeSteps": 1032799,
+    "a01Steps": 957175,
+    "a03Steps": 75624,
+    "actualWorkerKernels": true,
+    "work": {
+      "descriptorCalls": 7154461,
+      "fullIntrinsicChecks": 10330,
+      "a01Pushes": 1064004,
+      "a01Pops": 955970,
+      "a01ArrayWrites": 24691773,
+      "a03HQueries": 79868,
+      "a03HHits": 79236,
+      "a03HypotCalls": 632,
+      "a03ViaQueries": 32114,
+      "a03GeometricHits": 16317,
+      "a03GeometricMisses": 112,
+      "a03CircleVisits": 4811,
+      "a01Quanta": 9572,
+      "a01DirtyRows": 1427773,
+      "a01MaxDirtyRows": 460,
+      "a01MaxHeapN": 537,
+      "a01MaxHighWaterRows": 537,
+      "a01HydratedRows": 4744007,
+      "a01ColumnReads": 37179015
+    },
+    "lateObserversRejected": true,
+    "storageProxyTraps": 0
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "kind": "functional-native-state-and-operation-count-proof",
+  "performanceClaim": false,
+  "criticalNode": "srj18-005/cmn_45",
+  "nativeA01Steps": 957175,
+  "original100StepQuanta": 9572,
+  "allPrivateCheckpointFieldsExact": true,
+  "terminalOutputsAndGridStatsExact": true,
+  "nativeSolverHeapAndArrayIdentitiesRetained": true,
+  "activeAndStaleRowsFullyRehydratedAtEveryBoundary": true,
+  "arenaDiagnostics": {
+    "batches": 9572,
+    "hydratedRows": 4744007,
+    "flushedRows": 1427773,
+    "dataBytesPerRow": 32,
+    "maximumRowsPerOwner": 262144
+  },
+  "nativeHeapColumnOperationCensus": {
+    "source": "parallel-native-a01-heap-arena-row-census.json",
+    "fusedJsReads": 37179015,
+    "fusedJsWrites": 24691773,
+    "arenaBoundaryJsReads": 14232021,
+    "arenaBoundaryJsWrites": 4283319,
+    "originalHeapComparisonsAndSiftingPolicyRetained": true
+  },
+  "oracleCoverage": {
+    "numericIeeeNativeOracleExpectAssertions": 1801769,
+    "allSixCriticalSearchesAtFullOriginalCaps": true,
+    "lateWasmAndArenaPrototypeGettersRejectedWithoutEvaluation": true,
+    "directDefaultAndForgedTokenDoNotHydrateArena": true,
+    "fourWorkerFullSrj18001And005HdStagesExact": true,
+    "fullBuildDeclarationsAndTypecheck": true,
+    "sourceAndBuiltPublicBrowserEntryLoad": true
+  },
+  "wasm": {
+    "bytes": 906,
+    "runtimeImports": 0,
+    "strictF64NoFastMathNoSimd": true,
+    "sourceSha256": "a26960d3f68de587fd2cb1103699c81a6ce14ca3d35df0d2d19a564857ed3b9b",
+    "wasmSha256": "f8ad448b85b8f7d2f72b03faa02ec2ee1984283352aec831e88eb6e0e011674b"
+  },
+  "reproduction": {
+    "compiler": "NATIVE_A01_HEAP_WASM_CLANG=/opt/homebrew/opt/llvm/bin/clang bun scripts/build-native-a01-heap-wasm-kernel.ts",
+    "tests": "bun test tests/solvers/native-a01-heap-arena-ieee-parity.test.ts tests/solvers/native-a01-heap-arena-cmn45-checkpoint-parity.test.ts tests/solvers/parallel-owner-grid-authentic-quantum-parity.test.ts --timeout 9999999",
+    "note": "Functional state and operation counts only; use Blacksmith full dataset reports for performance."
+  }
+}

@@ -129,7 +129,7 @@ creates and disposes a fresh owned pool for every prototype invocation.
 | High-density routing | Capacity-mesh node | Original node result order, route ownership, and parent statistics |
 | High-density force improvement | Node's assigned routes | Original sample order and route indexes |
 | High-density repair | Node repair sample | Original fixed-neighbor snapshots and route metadata |
-| Optional path simplification | Ready routes in the ordered geometry dependency graph | Original interacting predecessors, later original copper, route indexes, via operations, validation, and simplification loop budgets |
+| Optional path simplification | Up to four certified speculative routes, or ready routes in the ordered geometry dependency graph | Original interacting predecessors, later original copper, route indexes, via operations, validation, and simplification loop budgets |
 | Joint DRC force trials | Candidates sharing one immutable force frontier | Original trial order, candidate caches, error accounting, acceptance, and iteration budgets |
 | Opt-in negotiated pathing | Up to four route searches against immutable occupancy | Stable commits, live conflict checks, rescheduling, and shared original expansion budgets |
 | Opt-in landmark preparation | Relaxed-graph distance table | Original graph reservations and routing quality checks |
@@ -153,6 +153,21 @@ route attempts, statistics and iteration limits match native controls. The
 triangular distance cache is disabled by default after its measured regression;
 it remains available through an explicit solver diagnostic option.
 
+An eligible closed native search batches neighbor enumeration and region
+intersection counts in a strict floating-point WebAssembly kernel. JavaScript
+still performs the original live search checks, four-row memo accesses, scratch
+updates, and cost arithmetic in their original visitor order. Direct stepping,
+observable hooks, and unsupported cache shapes retain the original scoring path.
+
+Certified simplification lookahead retains at most four speculative results.
+Each worker records its native boolean query trajectory against the original
+future copper and the completed prefix. Before ordered publication, a
+certificate checks whether changed predecessor geometry could change any query.
+Rejected certificates rerun the route in its native ordered context. Physical
+speculation and reruns are counted separately from the original logical phase
+budget. Source mutations across awaits decline speculation and resume native
+execution against the live source.
+
 Reference DRC retains the complete native checks and rebuilds the full physical
 connectivity graph on every call. Exact snapshots reuse only successful pure
 geometry predicates and endpoint contact lists. An actual sample015 oracle
@@ -167,6 +182,14 @@ search work; they do not reduce routing budgets. Worker force improvement
 omits unused visualization snapshots, and small force/repair jobs are batched
 to reduce messages while retaining their original commits. Their performance
 is being evaluated in the next frozen all-sample run.
+
+Authentic worker-owned A01 searches also use a strict 64-bit floating-point
+heap arena during the original 100-step quantum. Every quantum rehydrates the
+complete active and stale native rows, then flushes dirty rows before any
+observer or await. The native heap, arrays, identities, tie order, and iteration
+limits remain intact. The arena proof records 957,175 native A01 steps and 9,572
+complete private-state checkpoints; it is functional evidence, not a timing
+claim.
 
 Topology, coordinated via changes, and joint DRC commits retain their serial
 execution. Ordered port-point pathing also retains its original coordinator;
