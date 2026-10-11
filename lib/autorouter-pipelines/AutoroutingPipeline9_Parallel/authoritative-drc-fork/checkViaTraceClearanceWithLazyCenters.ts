@@ -5,6 +5,7 @@ import { segmentToCircleMinDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbVia, PcbViaTraceClearanceError } from "circuit-json"
 import { formatMm } from "format-si-unit"
 import { type ConnectivityMap, getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import { getViaTraceAxisBounds, getViaTraceAxisQuery, isViaTraceAxisSeparated } from "./getViaTraceAxisBounds"
 import { canUseLazyViaTraceCenters } from "./canUseLazyViaTraceCenters"
 import { EPSILON, getBoardDrcValue, getPcbBoard } from "./native/lib/drc-defaults"
 import { jlcMinTolerances } from "./native/lib/jlcpcb-manufacturing-specs"
@@ -16,14 +17,16 @@ export type LazyViaTraceCenterDiagnostics = {
   nativeChecks: number
   gapCalls: number
   centerCalls: number
+  axisRejected?: number
 }
 
 export function checkViaTraceClearanceWithLazyCenters(
   circuitJson: AnyCircuitElement[],
-  { connMap, minClearance, diagnostics }: {
+  { connMap, minClearance, diagnostics, enableAxisRejection = false }: {
     connMap?: ConnectivityMap
     minClearance?: number
     diagnostics?: LazyViaTraceCenterDiagnostics
+    enableAxisRejection?: boolean
   } = {},
 ): PcbViaTraceClearanceError[] {
   if (!canUseLazyViaTraceCenters(circuitJson, connMap, minClearance)) {
@@ -37,12 +40,20 @@ export function checkViaTraceClearanceWithLazyCenters(
   const board = getPcbBoard(circuitJson)
   minClearance ??= getBoardDrcValue(board, "min_trace_to_pad_edge_clearance") ?? jlcMinTolerances.min_trace_to_pad_edge_clearance
   connMap ??= getFullConnectivityMapFromCircuitJson(circuitJson)
+  const axisBounds = enableAxisRejection ? segments.map(getViaTraceAxisBounds) : undefined
   const errors = new Map<string, { error: PcbViaTraceClearanceError; gap: number }>()
   const overlappingPairIds = new Set<string>()
   for (const via of vias) {
-    for (const segment of segments) {
+    const axisQuery = enableAxisRejection ? getViaTraceAxisQuery(via, minClearance!) : undefined
+    for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
+      const segment = segments[segmentIndex]!
       if (!getLayersOfPcbElement(via).includes(segment.layer)) continue
       if (connMap.areIdsConnected(segment.pcb_trace_id, via.pcb_via_id)) continue
+      const bounds = axisBounds?.[segmentIndex]
+      if (bounds && axisQuery && isViaTraceAxisSeparated(bounds, axisQuery)) {
+        if (diagnostics) diagnostics.axisRejected = (diagnostics.axisRejected ?? 0) + 1
+        continue
+      }
       const pairId = `${via.pcb_via_id}_${segment.pcb_trace_id}`
       // Identical native gap arithmetic, without its unused closest-point marker.
       const gap = segmentToCircleMinDistance(
