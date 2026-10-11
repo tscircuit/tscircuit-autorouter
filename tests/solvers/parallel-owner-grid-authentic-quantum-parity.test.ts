@@ -25,4 +25,7 @@ test("authentic selected native 100-step worker quanta preserve every A01/A03 cr
   expect(result.nativeSteps).toBe(1_032_799)
   expect(result.checkpoints).toBe(result.quanta)
   expect(result.quanta).toBe(10_329)
+  expect(result.arenaBatches).toBe(9572)
+  expect(result.arenaHydratedRows).toBe(4_744_007)
+  expect(result.arenaFlushedRows).toBe(1_427_773)
 })

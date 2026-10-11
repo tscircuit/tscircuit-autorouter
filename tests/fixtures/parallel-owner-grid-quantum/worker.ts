@@ -11,6 +11,8 @@ import type { GridHistoryDispatcher, GridHistoryResult } from "lib/autorouter-pi
 import type { MultiHeadHistoryResult } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelMultiHeadHistoryTypes"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import cmn45 from "../parallel-grid-history-cmn45.json"
+import { getParallelNativeA01HeapArenaDiagnostics } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap"
+import { NativeA01HeapArena } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-heap-arena/NativeA01HeapArena"
 
 type Grid = HighDensitySolverA01 | HighDensitySolverA03
 function nativeFields(solver: Grid, names: readonly string[]): object {
@@ -28,6 +30,7 @@ async function runOracle(): Promise<object> {
     { policy: "ordered", gridHistoryDispatcher: dispatcher })
   const contract = captureWorkerNativeGridPortfolioContract(ParallelPortfolioSingleIntraNodeSolver.prototype)
   let checkpoints = 0, quanta = 0, nativeSteps = 0, a01Steps = 0, a03Steps = 0
+  let arenaBatches = 0, arenaHydratedRows = 0, arenaFlushedRows = 0
   for (let scenario = 0; scenario < 7; scenario++) {
     const nodeWithPortPoints = structuredClone(cmn45) as NodeWithPortPoints
     const common = { nodeWithPortPoints, viaDiameter: 0.3, traceThickness: 0.1,
@@ -70,6 +73,11 @@ async function runOracle(): Promise<object> {
       strictEqual(heap.f, heapArrays[0]); strictEqual(heap.seq, heapArrays[1]); strictEqual(heap.id, heapArrays[2])
       strictEqual(native.iterations, scenario === 5 ? 157_175 : 160_000)
       a01Steps += native.iterations
+      const arena = getParallelNativeA01HeapArenaDiagnostics(owner as ReplayHighDensityA01Solver)
+      strictEqual(arena !== null, true, "authentic selected worker must use the actual heap arena")
+      arenaBatches += arena!.batches
+      arenaHydratedRows += arena!.hydratedRows
+      arenaFlushedRows += arena!.flushedRows
     } else { strictEqual(native.iterations, 75_624); a03Steps += native.iterations }
     nativeSteps += native.iterations
   }
@@ -91,6 +99,26 @@ async function runOracle(): Promise<object> {
     strictEqual(getterCalls, 0)
     strictEqual(isWorkerNativeGridKernelQuantumActive(blocked), false)
   } finally { Object.defineProperty(Math, "min", mathDescriptor) }
+  const moduleDescriptor = Object.getOwnPropertyDescriptor(WebAssembly, "Module")!
+  let wasmGetterCalls = 0
+  try {
+    Object.defineProperty(WebAssembly, "Module", { configurable: true, get(): never {
+      wasmGetterCalls++
+      throw new Error("instrumented WebAssembly.Module getter")
+    } })
+    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    strictEqual(wasmGetterCalls, 0)
+  } finally { Object.defineProperty(WebAssembly, "Module", moduleDescriptor) }
+  const arenaDescriptor = Object.getOwnPropertyDescriptor(NativeA01HeapArena.prototype, "begin")!
+  let arenaGetterCalls = 0
+  try {
+    Object.defineProperty(NativeA01HeapArena.prototype, "begin", { configurable: true, get(): never {
+      arenaGetterCalls++
+      throw new Error("instrumented heap arena begin getter")
+    } })
+    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    strictEqual(arenaGetterCalls, 0)
+  } finally { Object.defineProperty(NativeA01HeapArena.prototype, "begin", arenaDescriptor) }
   const replay = Object.getOwnPropertyDescriptor(blocked, "replay")!.value
   const replayPrototype = Object.getPrototypeOf(replay)
   const applyDescriptor = Object.getOwnPropertyDescriptor(replayPrototype, "applyStep")!
@@ -119,6 +147,7 @@ async function runOracle(): Promise<object> {
   strictEqual(Object.hasOwn(blocked, "computeH"), false)
   blockedHeap[typedName] = typedArray
   return { checkpoints, quanta, nativeSteps, a01Steps, a03Steps, actualWorkerKernels: true,
+    arenaBatches, arenaHydratedRows, arenaFlushedRows,
     lateObserversRejected: true, storageProxyTraps: proxyTraps }
 }
 

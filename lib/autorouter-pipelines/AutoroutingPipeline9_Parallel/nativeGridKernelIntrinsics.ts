@@ -1,17 +1,20 @@
 import { nativeOwnerDescriptor, nativeOwnerIs, nativeOwnerPrototype } from "./nativeOwnerKernelContract"
 import { hasWorkerNativeGridRuntime } from "./workerNativeGridRuntime"
+import { NativeA01HeapArena } from "./native-a01-heap-arena/NativeA01HeapArena"
 
 type IntrinsicSnapshot = { object: object; parent: object | null;
   names: readonly PropertyKey[]; descriptors: readonly PropertyDescriptor[] }
 export type NativeGridIntrinsicQuantum = { readonly ownedIntrinsicQuantum: unique symbol }
 const namesOf = Object.getOwnPropertyNames, symbolsOf = Object.getOwnPropertySymbols
 const globalNames = ["Math", "Object", "Reflect", "Array", "Map", "Set", "WeakMap", "WeakSet", "Number",
-  "String", "Function", "Float64Array", "Float32Array", "Int32Array", "Uint32Array", "Uint8Array"] as const
+  "String", "Function", "ArrayBuffer", "Float64Array", "Float32Array", "Int32Array", "Uint32Array", "Uint8Array"] as const
 const globalDescriptors: PropertyDescriptor[] = []
 const snapshots: IntrinsicSnapshot[] = []
 const liveScopes = new WeakSet<object>()
 const hasScope = liveScopes.has.bind(liveScopes), addScope = liveScopes.add.bind(liveScopes)
 const deleteScope = liveScopes.delete.bind(liveScopes)
+const wasmDescriptor = nativeOwnerDescriptor(globalThis, "WebAssembly")
+const wasmConstructors = ["Module", "Instance", "Memory", "Global"] as const
 
 function captureIntrinsicObject(object: object): void {
   let current: object | null = object
@@ -39,9 +42,22 @@ for (let index = 0; index < globalNames.length; index++) {
 captureIntrinsicObject(nativeOwnerPrototype([][Symbol.iterator]()))
 captureIntrinsicObject(nativeOwnerPrototype(new Map().values()))
 captureIntrinsicObject(nativeOwnerPrototype(new Set().values()))
+captureIntrinsicObject(NativeA01HeapArena)
+captureIntrinsicObject(NativeA01HeapArena.prototype)
+if (wasmDescriptor && Object.hasOwn(wasmDescriptor, "value") && wasmDescriptor.value) {
+  captureIntrinsicObject(wasmDescriptor.value)
+  for (let index = 0; index < wasmConstructors.length; index++) {
+    const constructor = nativeOwnerDescriptor(wasmDescriptor.value, wasmConstructors[index]!)!
+    captureIntrinsicObject(constructor.value)
+    const prototype = nativeOwnerDescriptor(constructor.value, "prototype")!
+    captureIntrinsicObject(prototype.value)
+  }
+}
 
 /** Full reachable builtin/global contracts; never evaluate a replaced getter. */
 function matchesNativeGridIntrinsics(): boolean {
+  const wasm = nativeOwnerDescriptor(globalThis, "WebAssembly")
+  if (wasm?.value !== wasmDescriptor?.value || wasm?.get !== wasmDescriptor?.get || wasm?.set !== wasmDescriptor?.set) return false
   for (let index = 0; index < globalNames.length; index++) {
     const current = nativeOwnerDescriptor(globalThis, globalNames[index]!), original = globalDescriptors[index]!
     if (!current || !nativeOwnerIs(current.value, original.value) || current.get !== original.get || current.set !== original.set) return false
@@ -58,6 +74,14 @@ function matchesNativeGridIntrinsics(): boolean {
     }
   }
   return true
+}
+
+/** Arena use requires the genuine existing worker scope, not a supplied flag. */
+export function canUseNativeGridHeapArena(quantum?: NativeGridIntrinsicQuantum): boolean {
+  // Unsupported browser/main execution retains native direct dispatch.
+  // A forged token cannot skip the complete constructor/builtin validation.
+  // This capability is minted only after private worker dispatcher admission.
+  return quantum !== undefined && hasScope(quantum) && wasmDescriptor?.value !== undefined
 }
 
 export function hasNativeGridKernelIntrinsics(quantum?: NativeGridIntrinsicQuantum): boolean {

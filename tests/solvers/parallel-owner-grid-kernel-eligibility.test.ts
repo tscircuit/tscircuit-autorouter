@@ -2,7 +2,8 @@ import { expect, test } from "bun:test"
 import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import { ReplayHighDensityA01Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ReplayHighDensityA01Solver"
 import { ReplayHighDensityA03Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ReplayHighDensityA03Solver"
-import { installParallelNativeA01Heap, prepareParallelNativeA01Heap } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap"
+import { getParallelNativeA01HeapArenaDiagnostics, installParallelNativeA01Heap, prepareParallelNativeA01Heap } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap"
+import type { NativeGridIntrinsicQuantum } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeGridKernelIntrinsics"
 import { installParallelNativeA03Geometry, prepareParallelNativeA03Geometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA03Geometry"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import cmn45 from "tests/fixtures/parallel-grid-history-cmn45.json"
@@ -207,6 +208,17 @@ test("owner kernels preserve default native lookup, late getter/errors, aliases,
   }
   expect(callbackCounts[1]).toEqual(callbackCounts[0])
   expect(callbackReplay.iterations).toBe(callbackNative.iterations)
+
+  // A supplied token cannot turn a direct internal call into a worker arena.
+  // The unused stale row is never read by the native direct heap operation.
+  const forged = createA01(), forgedHeap = readHeap(forged)
+  let staleGets = 0
+  Object.defineProperty(forgedHeap.f, 19, { configurable: true,
+    get(): number { staleGets++; return 123 } })
+  prepareParallelNativeA01Heap(forged, {} as NativeGridIntrinsicQuantum)
+  forgedHeap.push(0, 0, 0)
+  expect(staleGets).toBe(0)
+  expect(getParallelNativeA01HeapArenaDiagnostics(forged)).toBeNull()
 
   // A custom native setup remains exactly one setup and receives no installer.
   class CustomA01 extends ReplayHighDensityA01Solver {

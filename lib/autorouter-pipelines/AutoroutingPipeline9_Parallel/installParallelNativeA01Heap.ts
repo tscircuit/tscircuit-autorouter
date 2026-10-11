@@ -4,8 +4,9 @@ import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { hasNativeOwnerNumericPolicy, hasOriginalNativeOwnerNames, matchesNativeOwnerKernelContract,
   nativeOwnerDescriptor, nativeOwnerPrototype, nativeOwnerHasOwn, nativeOwnerDefine, nativeOwnerDelete,
   nativeOwnerGet, nativeOwnerApply, nativeOwnerIsArray, type NativeOwnerKernelContract } from "./nativeOwnerKernelContract"
-import { hasNativeGridKernelIntrinsics, type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
+import { canUseNativeGridHeapArena, hasNativeGridKernelIntrinsics, type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
 import { captureNativeGridOwnerStorage, hasNativeGridOwnerStorage, type NativeGridOwnerStorage } from "./nativeGridOwnerStorage"
+import { NativeA01HeapArena } from "./native-a01-heap-arena/NativeA01HeapArena"
 
 type NativeHeap = {
   f: number[]; seq: number[]; id: number[]; n: number
@@ -14,6 +15,7 @@ type NativeHeap = {
 }
 type HeapKernelState = {
   heap: NativeHeap; arrays: readonly number[][]; active: boolean; contract: NativeOwnerKernelContract; storage: NativeGridOwnerStorage
+  arena?: NativeA01HeapArena; arenaActive: boolean
 }
 const nativePrototype = HighDensitySolverA01.prototype
 const nativeDescriptors = Object.getOwnPropertyDescriptors(nativePrototype)
@@ -58,9 +60,14 @@ function hasNativeHeapState(state: HeapKernelState): boolean {
 }
 
 function pushNativeOwnerHeap(this: NativeHeap, f: number, seq: number, id: number): void {
-  if (!getHeapState(this)?.active) {
+  const state = getHeapState(this)
+  if (!state?.active) {
     const method = nativeOwnerGet(heapPrototype, "push", this) as NativeHeap["push"]
     nativeOwnerApply(method, this, [f, seq, id])
+    return
+  }
+  if (state.arenaActive) {
+    state.arena!.push(f, seq, id)
     return
   }
   let i = this.n++
@@ -79,9 +86,13 @@ function pushNativeOwnerHeap(this: NativeHeap, f: number, seq: number, id: numbe
 }
 
 function popNativeOwnerHeap(this: NativeHeap): number {
-  if (!getHeapState(this)?.active) {
+  const state = getHeapState(this)
+  if (!state?.active) {
     const method = nativeOwnerGet(heapPrototype, "pop", this) as NativeHeap["pop"]
     return nativeOwnerApply(method, this, [])
+  }
+  if (state.arenaActive) {
+    return state.arena!.pop()
   }
   const out = this.id[0]!
   this.n--
@@ -124,7 +135,8 @@ export function installParallelNativeA01Heap(owner: HighDensitySolverA01,
     if (!nativeOwnerIsArray(array)) return
     arrays[index] = array
   }
-  const state: HeapKernelState = { heap, arrays, active: false, contract, storage: captureNativeGridOwnerStorage(owner, "heap") }
+  const state: HeapKernelState = { heap, arrays, active: false, arenaActive: false, contract,
+    storage: captureNativeGridOwnerStorage(owner, "heap") }
   if (!hasNativeHeapState(state) || nativeOwnerHasOwn(heap, "push") || nativeOwnerHasOwn(heap, "pop")) return
   nativeOwnerDefine(heap, { push: { value: pushNativeOwnerHeap, writable: true, configurable: true },
     pop: { value: popNativeOwnerHeap, writable: true, configurable: true } })
@@ -139,6 +151,22 @@ export function prepareParallelNativeA01Heap(owner: HighDensitySolverA01, quantu
   if (hasNativeGridKernelIntrinsics(quantum) && hasNativeHeapState(state) && hasNativeGridOwnerStorage(owner, state.storage) &&
     hasNativeOwnerNumericPolicy(owner) &&
     matchesNativeOwnerKernelContract(owner, state.contract, nativePrototype, nativeDescriptors)) {
+    if (canUseNativeGridHeapArena(quantum)) {
+      const layers = owner.layers, rows = owner.rows, cols = owner.cols
+      const capacity = 1 + layers * rows * cols * (layers + 7)
+      const heap = state.heap, length = heap.f.length
+      // Each original search stamps an expanded cell once and emits at most
+      // eight planar neighbors plus every other layer; search resets clear n.
+      // Oversized/mutated columns stay in the existing exact JS numeric kernel.
+      if (Number.isSafeInteger(layers) && layers > 0 && Number.isSafeInteger(rows) && rows > 0 &&
+        Number.isSafeInteger(cols) && cols > 0 && Number.isSafeInteger(capacity) && capacity <= 262_144 &&
+        Number.isSafeInteger(heap.n) && heap.n >= 0 && heap.n <= length &&
+        length === heap.seq.length && length === heap.id.length && length <= capacity) {
+        if (!state.arena || state.arena.capacityRows !== capacity) state.arena = new NativeA01HeapArena(capacity)
+        state.arena.begin(heap)
+        state.arenaActive = true
+      }
+    }
     state.active = true
     return
   }
@@ -154,8 +182,21 @@ export function prepareParallelNativeA01Heap(owner: HighDensitySolverA01, quantu
 
 export function finishParallelNativeA01Heap(owner: HighDensitySolverA01): void {
   const state = getOwnerState(owner)
-  if (state) state.active = false
+  if (state) {
+    try {
+      if (state.arenaActive) state.arena!.finish()
+    } finally { state.arenaActive = false; state.active = false }
+  }
   // Outside the verified local step, installed methods dispatch through the
   // current native prototype, including a later getter or instrumentation.
   // No search state, array or heap identity is changed by leaving the batch.
+}
+
+/** Internal functional diagnostics; no policy or ownership capability is exposed. */
+export function getParallelNativeA01HeapArenaDiagnostics(owner: HighDensitySolverA01):
+  Readonly<{ batches: number; hydratedRows: number; flushedRows: number; memoryBytes: number }> | null {
+  const state = getOwnerState(owner)
+  // Original owner/heap/arrays stay authoritative at each released boundary.
+  // This read-only census proves actual arena admission in worker parity tests.
+  return state?.arena?.diagnostics ?? null
 }
