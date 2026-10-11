@@ -575,3 +575,14 @@ remains unmet. Full outcomes and worker pool statistics are preserved in
 [parallel-srj18-9f87cb73b-complete.json](benchmarks/parallel-srj18-9f87cb73b-complete.json),
 with immutable workflow records and packaged preflight checks in
 [parallel-srj18-9f87cb73b-dispatch.json](benchmarks/parallel-srj18-9f87cb73b-dispatch.json).
+
+Snapshot `afae314d5` is frozen for the next complete comparison. It combines
+the reviewed strict-f64 native A13 search, original-owner four-route lookahead,
+component-once continuity, and narrower batched guards, with the experimental
+A01 heap arena disabled by default. Its build, declarations, type checks and
+source/built browser imports without SharedArrayBuffer pass. Packaged sample001
+and sample015 retain exact native geometry and use at most four active workers.
+All 16 samples are dispatched in five immutable groups; performance acceptance
+is pending the complete results. The frozen revision, preflight hashes, exact
+arguments and workflow IDs are preserved in
+[parallel-srj18-afae314d5-dispatch.json](benchmarks/parallel-srj18-afae314d5-dispatch.json).
