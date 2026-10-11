@@ -4,14 +4,14 @@ import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escap
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("pour-via-escape01.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
 })

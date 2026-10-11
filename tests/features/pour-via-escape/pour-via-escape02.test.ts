@@ -5,7 +5,7 @@ import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escap
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -53,9 +53,7 @@ test(
       inner2Vias.some((segment) => distance(segment, pcbPort14) <= 1),
     ).toBe(true)
 
-    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
-    )
+    expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
   },
   { timeout: 180_000 },
 )
