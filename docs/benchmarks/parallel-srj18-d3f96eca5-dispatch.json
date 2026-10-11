@@ -187,12 +187,202 @@
     }
   ],
   "acceptance": {
-    "arithmeticMeanSpeedup": 2,
-    "aggregateSpeedup": 2,
+    "arithmeticMeanSpeedup": 1.286245577521235,
+    "aggregateSpeedup": 1.4266226474963382,
     "fullSampleCoverage": true,
     "allSolved": true,
     "exactNativeGeometry": true,
-    "originalCadQualityParity": true
+    "originalCadQualityParity": true,
+    "fullCoverage": true,
+    "allCompleted": true,
+    "exactGeometry": true,
+    "qualityPreserved": true,
+    "connectionCoveragePreserved": true,
+    "highDensityPolicy": "ordered",
+    "pathingStrategy": "indexed",
+    "physicalRouting": false,
+    "geometryRequired": true,
+    "coverageAcceptanceMode": "baseline-parity",
+    "geometricMeanSpeedup": 1.2669828951071425,
+    "targetReached": false,
+    "perSample": [
+      {
+        "sampleName": "sample001",
+        "baselineTimeMs": 20643.254849,
+        "parallelTimeMs": 18937.190357,
+        "speedup": 1.0900906871525091,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample002",
+        "baselineTimeMs": 195067.85244299998,
+        "parallelTimeMs": 135406.093453,
+        "speedup": 1.440613546027076,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample003",
+        "baselineTimeMs": 17761.243761,
+        "parallelTimeMs": 15541.84605,
+        "speedup": 1.1428014216496503,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample004",
+        "baselineTimeMs": 78910.62141800001,
+        "parallelTimeMs": 66605.252893,
+        "speedup": 1.1847507214598876,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample005",
+        "baselineTimeMs": 12591.115705,
+        "parallelTimeMs": 13274.680303000001,
+        "speedup": 0.948506134807215,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample006",
+        "baselineTimeMs": 175228.333904,
+        "parallelTimeMs": 126614.763226,
+        "speedup": 1.3839486758051083,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample007",
+        "baselineTimeMs": 18959.151593,
+        "parallelTimeMs": 17464.125201,
+        "speedup": 1.0856055699780711,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample008",
+        "baselineTimeMs": 76844.57283800001,
+        "parallelTimeMs": 54097.191823999994,
+        "speedup": 1.4204909764633704,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample009",
+        "baselineTimeMs": 22052.231497,
+        "parallelTimeMs": 21341.385298,
+        "speedup": 1.0333083438152733,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample010",
+        "baselineTimeMs": 30294.134014,
+        "parallelTimeMs": 27020.463361000002,
+        "speedup": 1.12115523739408,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample011",
+        "baselineTimeMs": 24763.235301,
+        "parallelTimeMs": 23302.800146999998,
+        "speedup": 1.0626720885381673,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample012",
+        "baselineTimeMs": 91692.00990599999,
+        "parallelTimeMs": 63522.260167,
+        "speedup": 1.4434626486044693,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample013",
+        "baselineTimeMs": 88775.735567,
+        "parallelTimeMs": 61054.323613,
+        "speedup": 1.4540450260282207,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample014",
+        "baselineTimeMs": 237222.346226,
+        "parallelTimeMs": 136580.92159,
+        "speedup": 1.7368629781113485,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample015",
+        "baselineTimeMs": 185271.76452300002,
+        "parallelTimeMs": 113038.74375400001,
+        "speedup": 1.6390111776737077,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample016",
+        "baselineTimeMs": 39273.212547,
+        "parallelTimeMs": 28201.277861,
+        "speedup": 1.392604006831604,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      }
+    ]
   },
-  "status": "running: all five Blacksmith groups dispatched for all sixteen samples; elapsed-time acceptance pending"
+  "status": "completed"
 }

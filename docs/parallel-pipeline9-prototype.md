@@ -422,7 +422,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Twenty frozen exploratory snapshots have complete paired results for all 16
+Twenty-one frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -449,6 +449,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `05c72d631` | ordered / indexed, selected A01 bulk, sixteen-target lookahead | 0.795× | 0.735× | All solved and exact Native quality; A01 bulk regresses all16 high-density stages; target unmet |
 | `752f8c03f` | ordered / indexed, Native trace fact lanes, selected A01 bulk off | 1.259× | 1.398× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
 | `da7e84745` | ordered / indexed, Native trace and polygon fact lanes, sixty-four-target lookahead | 1.268× | 1.412× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
+| `d3f96eca5` | ordered / indexed, Native trace and polygon fact lanes, fixed64 lookahead cohorts | 1.286× | 1.427× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -756,7 +757,12 @@ against the same immutable baseline and all sixteen samples. Immutable build,
 TypeScript, source and built browser imports, and packaged sample001/sample015
 Native geometry checks pass. The packaged fact ledgers retain three worker
 lanes plus main, zero faults and all reservations retired after disposal. All
-five Blacksmith groups are dispatched; elapsed-time acceptance remains pending.
+five Blacksmith groups completed all32 paired outcomes. Every sample solves
+with exact Native geometry and original-CAD quality/coverage parity. Arithmetic
+mean speedup is 1.286× and aggregate speedup 1.427×; the target remains unmet.
+Every original outcome, metadata field, worker statistic and source hash is
+preserved in
+[parallel-srj18-d3f96eca5-complete.json](benchmarks/parallel-srj18-d3f96eca5-complete.json).
 The exact candidate also has its own benchmark branch so later implementation
 commits cannot alter the workflow revision. Arguments, preflight and workflow
 IDs are in
