@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import stableStringify from "fast-json-stable-stringify"
 import { evaluateParallelBenchmarkDrc } from "./parallelBenchmarkDrc"
+import { createParallelBenchmarkReferenceFactStatsCollector } from "./collectParallelBenchmarkReferenceFactStats"
 import { collectParallelBenchmarkPathingDiagnostics } from "./parallelBenchmarkPathingDiagnostics"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { evaluateConnectionCoverage } from "./parallelBenchmarkConnectionCoverage"
@@ -74,6 +75,7 @@ const main = async (): Promise<void> => {
   const constructor = (autorouterModule as Record<string, unknown>)[solverName]
   if (typeof constructor !== "function") throw new Error(`Missing solver export ${solverName}`)
   const SolverClass = constructor as SolverConstructor
+  const collectReferenceFactStats = createParallelBenchmarkReferenceFactStatsCollector(autorouterModule)
   const input = structuredClone(scenario)
   let solver: Solver | undefined
   let error: string | undefined
@@ -139,6 +141,7 @@ const main = async (): Promise<void> => {
     workerPoolStats: solver?.workerPool ? {
       workerCount: solver.workerPool.workerCount,
       ...solver.workerPool.stats,
+      ...collectReferenceFactStats(solver.workerPool),
     } : undefined,
     stageStats: solver ? Object.fromEntries(solver.pipelineDef.flatMap(({ solverName }) => {
       const stage = (solver as unknown as Record<string, { stats?: Record<string, unknown> }>)[solverName]
