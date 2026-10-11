@@ -202,3 +202,12 @@ export function getParallelNativeA01HeapArenaDiagnostics(owner: HighDensitySolve
   // This read-only census proves actual arena admission in worker parity tests.
   return state?.arena?.diagnostics ?? null
 }
+
+/** Independent admission for the isolated bulk backend, never token-only. */
+export function hasParallelNativeA01HeapEligibility(owner: HighDensitySolverA01): boolean {
+  const state = getOwnerState(owner)
+  if (!state || !state.active || state.arenaActive || !hasNativeDescriptorMetadata()) return false
+  return hasNativeGridKernelIntrinsics() && hasNativeHeapState(state) && hasNativeGridOwnerStorage(owner, state.storage) &&
+    hasNativeOwnerNumericPolicy(owner) && hasOriginalNativeOwnerNames(state.contract, nativePrototype, nativeDescriptors) &&
+    matchesNativeOwnerKernelContract(owner, state.contract, nativePrototype, nativeDescriptors)
+}
