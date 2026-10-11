@@ -1,0 +1,149 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index 17dffd6..f47e1c4 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -780,26 +780,23 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+       const toFlatIdx = (toZ * this.rows + toRow) * cols + toCol
+       const fixedOwner = this.portOwnerFlat[toFlatIdx]!
+-      const fixedSameRoot =
+-        this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
+-      const allowFixedOverlap =
+-        fixedSameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      const seg = this.activeConnSeg
+-      const isSegEnd =
+-        !!seg &&
+-        toZ === seg.endZ &&
+-        toRow === seg.endRow &&
+-        toCol === seg.endCol
+-      if (
+-        fixedOwner >= 0 &&
+-        fixedOwner !== activeConn &&
+-        !allowFixedOverlap &&
+-        !isSegEnd
+-      ) {
+-        this._moveCost = -1
+-        this._moveRipped = r
+-        return
++      if (fixedOwner >= 0 && fixedOwner !== activeConn) {
++        const fixedSameRoot =
++          this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
++        const allowFixedOverlap =
++          fixedSameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        const seg = this.activeConnSeg
++        const isSegEnd =
++          !!seg &&
++          toZ === seg.endZ &&
++          toRow === seg.endRow &&
++          toCol === seg.endCol
++        if (!allowFixedOverlap && !isSegEnd) {
++          this._moveCost = -1
++          this._moveRipped = r
++          return
++        }
+       }
+ 
+       // Via footprint occupants (reusable scratch array)
+@@ -822,40 +819,39 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+       const flatIdx = (toZ * this.rows + toRow) * cols + toCol
+       const fixedOwner = this.portOwnerFlat[flatIdx]!
+-      const fixedSameRoot =
+-        this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
+-      const allowFixedOverlap =
+-        fixedSameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      const seg = this.activeConnSeg
+-      const isSegEnd =
+-        !!seg &&
+-        toZ === seg.endZ &&
+-        toRow === seg.endRow &&
+-        toCol === seg.endCol
+-      if (
+-        fixedOwner >= 0 &&
+-        fixedOwner !== activeConn &&
+-        !allowFixedOverlap &&
+-        !isSegEnd
+-      ) {
+-        this._moveCost = -1
+-        this._moveRipped = r
+-        return
++      if (fixedOwner >= 0 && fixedOwner !== activeConn) {
++        const fixedSameRoot =
++          this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
++        const allowFixedOverlap =
++          fixedSameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        const seg = this.activeConnSeg
++        const isSegEnd =
++          !!seg &&
++          toZ === seg.endZ &&
++          toRow === seg.endRow &&
++          toCol === seg.endCol
++        if (!allowFixedOverlap && !isSegEnd) {
++          this._moveCost = -1
++          this._moveRipped = r
++          return
++        }
+       }
+ 
+       const occ = this.usedCellsFlat[flatIdx]!
+-      const sameRoot =
+-        this.connIdToRootNet[occ] === this.connIdToRootNet[activeConn]
+-      const allowSameRootOverlap =
+-        sameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      if (occ !== -1 && occ !== activeConn && !allowSameRootOverlap) {
+-        if (!rippedContains(r, occ)) {
+-          cost += this.getRipCost(occ)
+-          r = { id: occ, prev: r }
++      if (occ !== -1 && occ !== activeConn) {
++        const sameRoot =
++          this.connIdToRootNet[occ] === this.connIdToRootNet[activeConn]
++        const allowSameRootOverlap =
++          sameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        if (!allowSameRootOverlap) {
++          if (!rippedContains(r, occ)) {
++            cost += this.getRipCost(occ)
++            r = { id: occ, prev: r }
++          }
++          cost += this.hyperParameters.ripTracePenalty
+         }
+-        cost += this.hyperParameters.ripTracePenalty
+       }
+ 
+       // usedCellsFlat only records occupied grid points. A diagonal segment
+@@ -894,19 +890,17 @@ export class HighDensitySolverA01 extends BaseSolver {
+         const sqCols = this.cols - 1
+         const diagBase = ((toZ * (this.rows - 1) + sqRow) * sqCols + sqCol) * 2
+         const crossingOcc = this.usedDiagFlat[diagBase + crossingSlot]!
+-        const crossingSameRoot =
+-          this.connIdToRootNet[crossingOcc] === this.connIdToRootNet[activeConn]
+-        const allowCrossingOverlap =
+-          crossingSameRoot &&
+-          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-        if (
+-          crossingOcc !== -1 &&
+-          crossingOcc !== activeConn &&
+-          !allowCrossingOverlap
+-        ) {
+-          this._moveCost = -1
+-          this._moveRipped = r
+-          return
++        if (crossingOcc !== -1 && crossingOcc !== activeConn) {
++          const crossingSameRoot =
++            this.connIdToRootNet[crossingOcc] === this.connIdToRootNet[activeConn]
++          const allowCrossingOverlap =
++            crossingSameRoot &&
++            this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++          if (!allowCrossingOverlap) {
++            this._moveCost = -1
++            this._moveRipped = r
++            return
++          }
+         }
+       }
+     }
