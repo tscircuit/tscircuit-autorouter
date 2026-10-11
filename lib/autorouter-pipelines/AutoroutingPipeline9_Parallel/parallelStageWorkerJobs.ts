@@ -12,8 +12,10 @@ import { executeNegotiatedPathingRouteJob } from "./TinyNegotiatedRouteSearch"
 import { executeParallelGoalBallJob } from "./parallelGoalBallWorkerJobs"
 import { ParallelPathWaveExecutor } from "./executeParallelPathWave"
 import { executeParallelGlobalDrcTrial } from "./executeParallelGlobalDrcTrial"
+import { ParallelPathLookaheadExecutor } from "./ParallelPathLookaheadExecutor"
 
 const pathWaveExecutor = new ParallelPathWaveExecutor()
+const pathLookaheadExecutor = new ParallelPathLookaheadExecutor()
 
 function executeForceImproveNode(job: ParallelForceImproveNodeJob): ParallelForceImproveNodeResult {
   const solver = new HighDensityForceImproveSolver({
@@ -95,6 +97,8 @@ export function executeParallelStageJob(
       return executeParallelGlobalDrcTrial(job)
     case "simplifyPathWave":
       return pathWaveExecutor.execute(job)
+    case "simplifyPathLookahead":
+      return pathLookaheadExecutor.execute(job)
     case "pathingGoalBalls":
       return executeParallelGoalBallJob(job)
     case "pathingNegotiatedRoute":

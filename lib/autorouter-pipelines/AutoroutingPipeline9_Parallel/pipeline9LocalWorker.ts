@@ -5,6 +5,7 @@ import { executeMultiHeadHistoryJob } from "./executeMultiHeadHistoryJob"
 import { MultiHeadHistoryWorkerClient } from "./MultiHeadHistoryWorkerClient"
 import { GridHistoryWorkerClient } from "./GridHistoryWorkerClient"
 import { registerWorkerNativeGridKernelDispatcher } from "./workerNativeGridKernelQuantum"
+import { initializeReferenceDrcRuntime } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 import { initializeWorkerNativeGridRuntime } from "./workerNativeGridRuntime"
 import { executeGridHistoryJob } from "./executeGridHistoryJob"
 import type { GridHistoryDelivery, GridHistoryGrant } from "./parallelGridHistoryTypes"
@@ -64,7 +65,7 @@ async function executeWorkerRequest({ taskId, job, sharedContext, idleWorkerAvai
     }
     if (sharedContext) {
       const expectedFamily = job.kind === "highDensityNode" || job.kind === "highDensityA13Node" || job.kind === "highDensityNodeBatch"
-        ? "high-density" : job.kind === "simplifyPathWave" ? "simplification"
+        ? "high-density" : job.kind === "simplifyPathWave" || job.kind === "simplifyPathLookahead" ? "simplification"
         : job.kind === "globalDrcForceTrial" ? "global-drc" : undefined
       if (!expectedFamily || sharedContext.family !== expectedFamily || !("contextId" in job) ||
         sharedContext.contextId !== job.contextId || "context" in job) {
@@ -73,6 +74,7 @@ async function executeWorkerRequest({ taskId, job, sharedContext, idleWorkerAvai
       const context = await deserializePipeline9SharedContext(sharedContext)
       job = { ...job, context } as Pipeline9LocalWorkerRequest["job"]
     }
+    if (job.kind === "simplifyPathLookahead") await initializeReferenceDrcRuntime()
     let result: unknown
     if (job.kind === "warmup") result = null
     else if (job.kind === "multiHeadHistory") result = executeMultiHeadHistoryJob(job)

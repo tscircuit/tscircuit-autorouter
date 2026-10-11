@@ -71,9 +71,9 @@ test("physical path sampling retains exact leading via clusters before serial an
   expect(parallel.failed).toBe(false)
   expect(jobs).toHaveLength(2)
   for (const job of jobs) {
-    expect(job.kind).toBe("simplifyPathComponent")
-    if (job.kind !== "simplifyPathComponent") throw new Error("Unexpected worker kind")
-    expect(job.params.preserveLeadingLayerTransitions).toBe(true)
+    expect(job.kind).toBe("simplifyPathWave")
+    if (job.kind !== "simplifyPathWave") throw new Error("Unexpected worker kind")
+    expect(job.context?.params.preserveLeadingLayerTransitions).toBe(true)
   }
   for (let index = 0; index < inputs.length; index++) expectAnchors(inputs[index]!, parallel.simplifiedHdRoutes[index]!)
   const started = new MultiSimplifiedPathSolver(params)

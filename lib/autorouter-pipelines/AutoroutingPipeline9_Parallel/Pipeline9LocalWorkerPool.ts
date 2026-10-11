@@ -11,6 +11,7 @@ import { assertParallelHighDensityNodeBatchJob, assertParallelHighDensityNodeBat
 import { Pipeline9SharedContextCodec, type Pipeline9SharedContextFamily, type Pipeline9SharedContextReference } from "./Pipeline9SharedContextCodec"
 import type { GridHistoryDelivery, GridHistoryGrant, GridHistoryRequest, GridHistoryResult } from "./parallelGridHistoryTypes"
 import { assertGridHistoryJob, assertGridHistoryResult } from "./executeGridHistoryJob"
+import { assertParallelPathLookaheadJob, assertParallelPathLookaheadResult } from "./ParallelPathLookaheadExecutor"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -35,6 +36,26 @@ export type Pipeline9LocalWorkerPoolOptions = {
   workerFactory?: (url: URL) => Worker
   contextTransport?: "structured-clone" | "bun-shared"
 }
+
+type NativePathPoolContract = { factory: (url: URL) => Worker; url: URL; href: string }
+const nativePathPools = new WeakMap<Pipeline9LocalWorkerPool, NativePathPoolContract>()
+const nativeWorker = typeof Worker === "undefined" ? undefined : Worker
+const nativeWorkerSource = nativeWorker && Function.prototype.toString.call(nativeWorker).includes("[native code]")
+const getOwnDescriptor = Object.getOwnPropertyDescriptor
+const getOwnPrototype = Object.getPrototypeOf
+const getOwnKeys = Reflect.ownKeys
+const nativeApply = Reflect.apply
+const nativeWeakMapGet = WeakMap.prototype.get
+const nativeHasOwn = Object.hasOwn
+function ownDescriptorValue(descriptor: PropertyDescriptor | undefined, field: keyof PropertyDescriptor): unknown {
+  return descriptor && nativeHasOwn(descriptor, field) ? descriptor[field] : undefined
+}
+const workerDescriptor = getOwnDescriptor(globalThis, "Worker")
+const nativeWorkerPrototype = nativeWorker && getOwnDescriptor(nativeWorker, "prototype")?.value as object | undefined
+const nativeWorkerPostMessageDescriptor = nativeWorkerPrototype && getOwnDescriptor(nativeWorkerPrototype, "postMessage")
+const nativeUrlPrototype = getOwnDescriptor(URL, "prototype")!.value as object
+const nativeUrlGlobalDescriptor = getOwnDescriptor(globalThis, "URL")
+const nativeUrlHrefDescriptor = getOwnDescriptor(nativeUrlPrototype, "href")
 
 /** A reusable local CPU pool. Each worker receives board context only once. */
 export class Pipeline9LocalWorkerPool {
@@ -79,6 +100,9 @@ export class Pipeline9LocalWorkerPool {
       import.meta.url,
     )
     this.workerFactory = options.workerFactory ?? ((url: URL): Worker => new Worker(url, { type: "module" }))
+    if (!options.workerFactory && !options.workerUrl && nativeWorkerSource) {
+      nativePathPools.set(this, { factory: this.workerFactory, url: this.workerUrl, href: this.workerUrl.href })
+    }
     // Custom worker protocols keep their original request shape.
     if (!options.workerFactory && !options.workerUrl && typeof SharedArrayBuffer !== "undefined") {
       this.idleWorkerAvailability = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
@@ -109,6 +133,15 @@ export class Pipeline9LocalWorkerPool {
       }
       if (job.kind === "gridHistory") {
         try { assertGridHistoryJob(job) }
+        catch (error: unknown) {
+          const failure = error instanceof Error ? error : new Error(String(error))
+          reject(failure)
+          this.fail(failure)
+          return
+        }
+      }
+      if (job.kind === "simplifyPathLookahead") {
+        try { assertParallelPathLookaheadJob(job) }
         catch (error: unknown) {
           const failure = error instanceof Error ? error : new Error(String(error))
           reject(failure)
@@ -258,6 +291,13 @@ export class Pipeline9LocalWorkerPool {
       }
       if (response.ok && task.job.kind === "globalDrcForceTrial") {
         try { assertParallelGlobalDrcTrialResult(task.job, response.result) }
+        catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (response.ok && task.job.kind === "simplifyPathLookahead") {
+        try { assertParallelPathLookaheadResult(response.result, task.job) }
         catch (error: unknown) {
           this.fail(error instanceof Error ? error : new Error(String(error)))
           return
@@ -581,7 +621,7 @@ export class Pipeline9LocalWorkerPool {
           slot.pathingGraphId = task.job.graphId
         }
       }
-      if (task.job.kind === "simplifyPathWave") {
+      if (task.job.kind === "simplifyPathWave" || task.job.kind === "simplifyPathLookahead") {
         const pathJob = task.job
         if (slot.simplificationContextId !== pathJob.contextId) {
           if (!pathJob.context) throw new Error(`Path worker needs context ${pathJob.contextId}`)
@@ -594,7 +634,9 @@ export class Pipeline9LocalWorkerPool {
         const updates = pathJob.updates.filter((update) => !slot.simplificationCompleted.has(update.index))
         job = { ...job, updates } as typeof pathJob
         for (const update of updates) slot.simplificationCompleted.add(update.index)
-        for (const index of pathJob.indexes) slot.simplificationCompleted.add(index)
+        if (pathJob.kind === "simplifyPathWave") {
+          for (const index of pathJob.indexes) slot.simplificationCompleted.add(index)
+        }
       }
       if (task.job.kind === "globalDrcForceTrial") {
         if (slot.globalDrcContextId === task.job.contextId) {
@@ -616,7 +658,7 @@ export class Pipeline9LocalWorkerPool {
       if (this.sharedContextCodec && "context" in job && job.context) {
         const family: Pipeline9SharedContextFamily | undefined =
           job.kind === "highDensityNode" || job.kind === "highDensityA13Node" || job.kind === "highDensityNodeBatch"
-            ? "high-density" : job.kind === "simplifyPathWave" ? "simplification"
+            ? "high-density" : job.kind === "simplifyPathWave" || job.kind === "simplifyPathLookahead" ? "simplification"
             : job.kind === "globalDrcForceTrial" ? "global-drc" : undefined
         if (family && "contextId" in job) {
           const { context, ...mutableJob } = job
@@ -656,4 +698,39 @@ export class Pipeline9LocalWorkerPool {
       slot.worker.terminate()
     }
   }
+}
+
+const nativePathPoolPrototype = Pipeline9LocalWorkerPool.prototype
+const nativePathPoolDescriptors = getOwnKeys(nativePathPoolPrototype).map((key) => ({ key, descriptor: getOwnDescriptor(nativePathPoolPrototype, key)! }))
+
+/** Only the owned default worker protocol can supply query certificates. */
+export function canUseNativePathLookaheadPool(pool: object): pool is Pipeline9LocalWorkerPool {
+  const contract = nativeApply(nativeWeakMapGet, nativePathPools, [pool]) as NativePathPoolContract | undefined
+  const worker = getOwnDescriptor(globalThis, "Worker")
+  const globalUrl = getOwnDescriptor(globalThis, "URL")
+  if (!contract || !nativeWorkerPrototype || !worker || !nativeHasOwn(worker, "value") ||
+    ownDescriptorValue(worker, "value") !== ownDescriptorValue(workerDescriptor, "value") || !globalUrl || !nativeHasOwn(globalUrl, "value") ||
+    ownDescriptorValue(globalUrl, "value") !== ownDescriptorValue(nativeUrlGlobalDescriptor, "value") || getOwnPrototype(pool) !== nativePathPoolPrototype) return false
+  const postMessage = getOwnDescriptor(nativeWorkerPrototype, "postMessage")
+  const href = getOwnDescriptor(nativeUrlPrototype, "href")
+  if (!postMessage || !nativeHasOwn(postMessage, "value") || ownDescriptorValue(postMessage, "value") !== ownDescriptorValue(nativeWorkerPostMessageDescriptor, "value") ||
+    !href || ownDescriptorValue(href, "get") !== ownDescriptorValue(nativeUrlHrefDescriptor, "get")) return false
+  const keys = getOwnKeys(nativePathPoolPrototype)
+  if (keys.length !== nativePathPoolDescriptors.length) return false
+  for (let index = 0; index < nativePathPoolDescriptors.length; index++) {
+    const expected = nativePathPoolDescriptors[index]!
+    const actual = getOwnDescriptor(nativePathPoolPrototype, expected.key)
+    if (keys[index] !== expected.key || getOwnDescriptor(pool, expected.key) || !actual ||
+      ownDescriptorValue(actual, "value") !== ownDescriptorValue(expected.descriptor, "value") ||
+      ownDescriptorValue(actual, "get") !== ownDescriptorValue(expected.descriptor, "get") ||
+      ownDescriptorValue(actual, "set") !== ownDescriptorValue(expected.descriptor, "set") ||
+      ownDescriptorValue(actual, "writable") !== ownDescriptorValue(expected.descriptor, "writable") ||
+      ownDescriptorValue(actual, "enumerable") !== ownDescriptorValue(expected.descriptor, "enumerable") ||
+      ownDescriptorValue(actual, "configurable") !== ownDescriptorValue(expected.descriptor, "configurable")) return false
+  }
+  const factory = getOwnDescriptor(pool, "workerFactory")
+  const url = getOwnDescriptor(pool, "workerUrl")
+  return Boolean(factory && nativeHasOwn(factory, "value") && ownDescriptorValue(factory, "value") === contract.factory &&
+    url && nativeHasOwn(url, "value") && ownDescriptorValue(url, "value") === contract.url &&
+    nativeApply(ownDescriptorValue(nativeUrlHrefDescriptor, "get") as (this: URL) => string, contract.url, []) === contract.href)
 }

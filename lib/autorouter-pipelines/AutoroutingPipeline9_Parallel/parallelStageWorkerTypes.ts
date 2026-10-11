@@ -7,6 +7,7 @@ import type { TinyLandmarkGraph, TinyLandmarkDistances } from "./TinyLandmarkHeu
 import type { NegotiatedPathingRouteJob, NegotiatedPathingRouteResult } from "./parallelNegotiatedPathingTypes"
 import type { ParallelGoalBallWorkerJob, ParallelGoalBallWorkerResult } from "./parallelGoalBallWorkerTypes"
 import type { ParallelGlobalDrcTrialJob, ParallelGlobalDrcTrialResult } from "./parallelGlobalDrcTrialTypes"
+import type { ParallelPathLookaheadJob, ParallelPathLookaheadResult } from "./parallelPathLookaheadTypes"
 
 export type ParallelRegionalFallbackResult = {
   kind: "regionalFallbackSolve"
@@ -104,6 +105,7 @@ export type ParallelStageWorkerJob =
   | ParallelNodeJob
   | ParallelNodeBatchJob
   | ParallelPathWaveJob
+  | ParallelPathLookaheadJob
   | ParallelGlobalDrcTrialJob
   | { kind: "pathingLandmark"; graph: TinyLandmarkGraph; landmarkPortId: number }
   | {
@@ -136,6 +138,7 @@ export type ParallelStageWorkerResult =
   | ParallelNodeResult
   | ParallelNodeBatchResult
   | ParallelPathWaveResult
+  | ParallelPathLookaheadResult
   | ParallelGlobalDrcTrialResult
   | { kind: "simplifyPathComponent"; routes: HighDensityRoute[] }
 

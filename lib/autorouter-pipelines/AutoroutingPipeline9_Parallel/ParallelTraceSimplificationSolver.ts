@@ -12,6 +12,7 @@ type Params = PhysicalSimplificationParams & {
 export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificationSolver {
   readonly workerPool: ParallelStageWorkerPool
   readonly workerCount: number
+  private readonly harvestedPathDiagnostics = new WeakSet<ParallelMultiSimplifiedPathSolver>()
 
   constructor({ workerPool, workerCount, ...params }: Params) {
     super(params)
@@ -53,6 +54,7 @@ export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificati
         preserveLeadingLayerTransitions: this.requiresPhysicalCopperTransitions,
         workerPool: this.workerPool,
         workerCount: this.workerCount,
+        useCertifiedLookahead: true,
       })
       this.activeSubSolver = pathSolver
       this.stats.pathSimplificationPhaseCount++
@@ -69,6 +71,15 @@ export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificati
       subSolver.solve()
     }
     super._step()
+    if (subSolver instanceof ParallelMultiSimplifiedPathSolver && subSolver.solved &&
+      !this.harvestedPathDiagnostics.has(subSolver)) {
+      this.harvestedPathDiagnostics.add(subSolver)
+      for (const [key, value] of Object.entries(subSolver.stats)) {
+        if (!key.startsWith("lookahead") || typeof value !== "number") continue
+        if (key === "lookaheadMaximumLookahead") this.stats[key] = Math.max(this.stats[key] ?? 0, value)
+        else this.stats[key] = (this.stats[key] ?? 0) + value
+      }
+    }
     this.pendingEffects = this.activeSubSolver?.pendingEffects ?? []
   }
 
