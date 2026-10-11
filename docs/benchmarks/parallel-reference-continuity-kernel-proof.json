@@ -1,0 +1,786 @@
+{
+  "kind": "Isolated exact native DRC fact kernel and privately owned FIFO miss-planning proof; operation census only",
+  "integrationStatus": "No pool/worker/Native-site integration. No elapsed-time comparison or speed claim.",
+  "controlRevision": "24f2c48dda71d72ccb9d13a8dd141fe8b0a3fc31",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityTypes.ts": "28c89edffd52dc4f9dcf05b4dbc39fbd95a7b5be86bf5517173a7bd0dec6feca",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityKernel.ts": "d66bb352cd4e48fda3750b20aaeac06be94e04108091b592c3b626eab6c3588c",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/ReferenceDrcPrimitiveMemo.ts": "ea1e628e88a37d5d2a01f400841cb7f230ed975e8a83d2dcb43731219f92f829",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPrimitiveMissPlanning.ts": "47a354121359a6ae14455a90ac4ecd423210bc9bbc4666f672bb26ad98fc438f",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "371615ec535e1430f25d17781ef3d705bd3d0440ea983b81393c969897f8a6f8",
+    "tests/solvers/parallel-reference-continuity-kernel-parity.test.ts": "3f01273ae8d3854ebe4a7965a515e073263472861ad0a98b1c49104c2ed3ff69",
+    "tests/solvers/reference-drc-primitive-miss-planning-parity.test.ts": "1cc1a854a9acb40b6736ce5a473129413d07aa6b3504cacc2d98eecfe0e90730",
+    "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+  },
+  "boundaries": [
+    "Original getDrcErrors family execution and final publication ordering remain untouched. Launch only inside original continuity after earlier checks complete.",
+    "Main owns circuit mutations, all original full/physical graph creation, intern calls, candidate construction, original hit/miss/insertion/FIFO eviction sites, source ownership, native error objects/centers and aliases.",
+    "The prepared context preserves original filtered component trace indexes including distinct duplicate-ID objects, final touched-port membership per trace ID, and original ordered port tasks.",
+    "Fact batches may reorder only independent pure work. Main consumes original rows in order. Ordered .some visitation counts are preserved; facts publish no graph or caller aliases.",
+    "Fresh trace-pair work invokes the pinned native _arePcbTracesConnected with original argument order. It intentionally retains the original predicate layer behavior; no math or policy rewrite.",
+    "Worker algorithm exceptions are per-row facts. At original selected main miss sites, the native predicate must be invoked to materialize the original Error semantics. Unknown/malformed protocol is fatal even for unused rows.",
+    "The existing full private/native/proxy checker admission is required. This isolated executor does not promise callback safety for arbitrary mutated globals or externally supplied state.",
+    "The proposed transport reserves at most three existing idle workers, with main as lane four, and requires synchronous dedicated MessagePort/SAB terminal publication. This proof creates no worker and makes no four-core execution claim."
+  ],
+  "missPlanning": {
+    "brand": "Actual captured WeakSet membership from the private checker factory; tested before reflecting caller arguments. No caller boolean/token or supplied memo can enable planning.",
+    "unchangedPublicMemoMethods": true,
+    "simulation": "Native immutable snapshot keys; initial key iterator, evicted-initial set, added-key insertion-order set and exact one-entry >maximumEntries eviction. No full retained-map clone.",
+    "planningMutations": "None: identities, nextIdentity, values and hit/miss counters remain unchanged.",
+    "consumption": "Validate actual original key/hit against private predicted row, then original cache value alias or miss counter/compute/insertion/FIFO deletion. Predicted mismatch throws before counters. A thrown compute increments exactly the native miss counter and inserts nothing.",
+    "finish": "Call only after all original rows are consumed successfully; do not use finally to overwrite a Native exception.",
+    "capacityCases": [
+      0,
+      -1,
+      1,
+      2,
+      2.5,
+      5,
+      100000,
+      "Infinity",
+      "NaN"
+    ],
+    "edgeCases": [
+      "mixed hits/misses",
+      "duplicate keys",
+      "FIFO reinsertions",
+      "no hit refresh",
+      "undefined snapshots",
+      "cycles",
+      "class objects",
+      "NaN/infinities/signedzero",
+      "bigint/null/undefined",
+      "oversized keys",
+      "native thrown sentinel identity",
+      "changed key/hit invariant failures",
+      "ordinary/proxy ownership decline",
+      "nested accessor/Proxy and intrinsic observer decline"
+    ]
+  },
+  "verification": {
+    "commands": [
+      "bun test --timeout 9999999 tests/solvers/parallel-reference-continuity-kernel-parity.test.ts tests/solvers/reference-drc-primitive-miss-planning-parity.test.ts",
+      "bunx tsc --noEmit"
+    ],
+    "isolatedKernelAssertions": 55383,
+    "privatePlannerAssertions": 675,
+    "typecheckExitCode": 0,
+    "all17SavedWholeNativeErrorsExact": true,
+    "populatedPortFactRecords": 16,
+    "orderedPortFactRows": 9024,
+    "nativeOrderedPortVisitsLowerBound": 1500000,
+    "nativeGeometryPairFacts": 9409,
+    "nativeExceptionAndMalformedUnusedProtocolCases": true,
+    "independentReview": "review_parallel independently passed both files and cleared source/ordering/schema/private-brand/no-mutation/FIFO semantics; production integration remains separate.",
+    "componentOncePortableReplay": "Existing proof replay passed after export-only checker SHA update:7376\u2192534 physical queries;2782044\u21927376 returned members; all17 errors, unchanged adjacency/memo/filter aliases exact."
+  },
+  "currentPrivateOperationCensus": {
+    "all17SavedErrorsExact": true,
+    "actualPrivateAndExpectedMemoGuardPositiveEveryRecord": true,
+    "totals": {
+      "tracePairQueries": 32251,
+      "tracePairMisses": 12215,
+      "polygonQueries": 33959,
+      "polygonMisses": 15901,
+      "nativeFreshTraceSegmentPredicateVisits": 6494619,
+      "freshTraceSegmentProductUpperBound": 11832193,
+      "freshPolygonEdgeInventoryReferences": 78953
+    },
+    "rows": [
+      {
+        "number": 1,
+        "errors": 0,
+        "tracePairQueries": 0,
+        "tracePairMisses": 0,
+        "polygonQueries": 0,
+        "polygonMisses": 0,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 0,
+          "misses": 0
+        },
+        "graphAfter": {
+          "hits": 0,
+          "misses": 0
+        },
+        "endpointBefore": {
+          "hits": 0,
+          "misses": 0
+        },
+        "endpointAfter": {
+          "hits": 0,
+          "misses": 0
+        },
+        "finalMemo": {
+          "hits": 0,
+          "misses": 0
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 0,
+        "freshTraceSegmentProductUpperBound": 0,
+        "freshPolygonEdgeInventoryReferences": 0
+      },
+      {
+        "number": 2,
+        "errors": 346,
+        "tracePairQueries": 2166,
+        "tracePairMisses": 2166,
+        "polygonQueries": 2680,
+        "polygonMisses": 2671,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 0,
+          "misses": 0
+        },
+        "tracePairSegmentPredicateVisits": 1004478,
+        "graphAfter": {
+          "hits": 9,
+          "misses": 4837
+        },
+        "endpointBefore": {
+          "hits": 9,
+          "misses": 4837
+        },
+        "endpointAfter": {
+          "hits": 200,
+          "misses": 5568
+        },
+        "finalMemo": {
+          "hits": 200,
+          "misses": 5568
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          257981,
+          239496,
+          262005,
+          244996
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 1004478,
+        "freshTraceSegmentProductUpperBound": 1854457,
+        "freshPolygonEdgeInventoryReferences": 13220
+      },
+      {
+        "number": 3,
+        "errors": 251,
+        "tracePairQueries": 2169,
+        "tracePairMisses": 1922,
+        "polygonQueries": 2429,
+        "polygonMisses": 1635,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 200,
+          "misses": 5568
+        },
+        "tracePairSegmentPredicateVisits": 1004815,
+        "graphAfter": {
+          "hits": 1241,
+          "misses": 9125
+        },
+        "endpointBefore": {
+          "hits": 1241,
+          "misses": 9125
+        },
+        "endpointAfter": {
+          "hits": 2163,
+          "misses": 9125
+        },
+        "finalMemo": {
+          "hits": 2163,
+          "misses": 9125
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          266575,
+          231957,
+          242308,
+          263975
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 1004815,
+        "freshTraceSegmentProductUpperBound": 1831137,
+        "freshPolygonEdgeInventoryReferences": 8100
+      },
+      {
+        "number": 4,
+        "errors": 158,
+        "tracePairQueries": 2168,
+        "tracePairMisses": 1923,
+        "polygonQueries": 2318,
+        "polygonMisses": 2130,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 2163,
+          "misses": 9125
+        },
+        "tracePairSegmentPredicateVisits": 1073324,
+        "graphAfter": {
+          "hits": 2596,
+          "misses": 13178
+        },
+        "endpointBefore": {
+          "hits": 2596,
+          "misses": 13178
+        },
+        "endpointAfter": {
+          "hits": 3518,
+          "misses": 13178
+        },
+        "finalMemo": {
+          "hits": 3518,
+          "misses": 13178
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          275786,
+          272125,
+          261188,
+          264225
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 1073324,
+        "freshTraceSegmentProductUpperBound": 1919650,
+        "freshPolygonEdgeInventoryReferences": 10590
+      },
+      {
+        "number": 5,
+        "errors": 130,
+        "tracePairQueries": 2169,
+        "tracePairMisses": 1509,
+        "polygonQueries": 2302,
+        "polygonMisses": 832,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 3518,
+          "misses": 13178
+        },
+        "tracePairSegmentPredicateVisits": 1042446,
+        "graphAfter": {
+          "hits": 5648,
+          "misses": 15519
+        },
+        "endpointBefore": {
+          "hits": 5648,
+          "misses": 15519
+        },
+        "endpointAfter": {
+          "hits": 6570,
+          "misses": 15519
+        },
+        "finalMemo": {
+          "hits": 6570,
+          "misses": 15519
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          265044,
+          265712,
+          260588,
+          251102
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 1042446,
+        "freshTraceSegmentProductUpperBound": 1855100,
+        "freshPolygonEdgeInventoryReferences": 4130
+      },
+      {
+        "number": 6,
+        "errors": 116,
+        "tracePairQueries": 2041,
+        "tracePairMisses": 427,
+        "polygonQueries": 2234,
+        "polygonMisses": 2173,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 6570,
+          "misses": 15519
+        },
+        "tracePairSegmentPredicateVisits": 295476,
+        "graphAfter": {
+          "hits": 8245,
+          "misses": 18119
+        },
+        "endpointBefore": {
+          "hits": 8245,
+          "misses": 18119
+        },
+        "endpointAfter": {
+          "hits": 9167,
+          "misses": 18119
+        },
+        "finalMemo": {
+          "hits": 9167,
+          "misses": 18119
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          76637,
+          75767,
+          69588,
+          73484
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 295476,
+        "freshTraceSegmentProductUpperBound": 501574,
+        "freshPolygonEdgeInventoryReferences": 10811
+      },
+      {
+        "number": 7,
+        "errors": 105,
+        "tracePairQueries": 2041,
+        "tracePairMisses": 1384,
+        "polygonQueries": 2229,
+        "polygonMisses": 881,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 9167,
+          "misses": 18119
+        },
+        "tracePairSegmentPredicateVisits": 877308,
+        "graphAfter": {
+          "hits": 11172,
+          "misses": 20384
+        },
+        "endpointBefore": {
+          "hits": 11172,
+          "misses": 20384
+        },
+        "endpointAfter": {
+          "hits": 12094,
+          "misses": 20384
+        },
+        "finalMemo": {
+          "hits": 12094,
+          "misses": 20384
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          213177,
+          217189,
+          218619,
+          228323
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 877308,
+        "freshTraceSegmentProductUpperBound": 1614319,
+        "freshPolygonEdgeInventoryReferences": 4375
+      },
+      {
+        "number": 8,
+        "errors": 101,
+        "tracePairQueries": 2041,
+        "tracePairMisses": 63,
+        "polygonQueries": 2170,
+        "polygonMisses": 340,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 12094,
+          "misses": 20384
+        },
+        "tracePairSegmentPredicateVisits": 54294,
+        "graphAfter": {
+          "hits": 15902,
+          "misses": 20787
+        },
+        "endpointBefore": {
+          "hits": 15902,
+          "misses": 20787
+        },
+        "endpointAfter": {
+          "hits": 16824,
+          "misses": 20787
+        },
+        "finalMemo": {
+          "hits": 16824,
+          "misses": 20787
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          12660,
+          13834,
+          13757,
+          14043
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 54294,
+        "freshTraceSegmentProductUpperBound": 112241,
+        "freshPolygonEdgeInventoryReferences": 1697
+      },
+      {
+        "number": 9,
+        "errors": 100,
+        "tracePairQueries": 2043,
+        "tracePairMisses": 8,
+        "polygonQueries": 2166,
+        "polygonMisses": 1642,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 16824,
+          "misses": 20787
+        },
+        "tracePairSegmentPredicateVisits": 542,
+        "graphAfter": {
+          "hits": 19383,
+          "misses": 22437
+        },
+        "endpointBefore": {
+          "hits": 19383,
+          "misses": 22437
+        },
+        "endpointAfter": {
+          "hits": 20305,
+          "misses": 22437
+        },
+        "finalMemo": {
+          "hits": 20305,
+          "misses": 22437
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          372,
+          22,
+          72,
+          76
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 542,
+        "freshTraceSegmentProductUpperBound": 1218,
+        "freshPolygonEdgeInventoryReferences": 8165
+      },
+      {
+        "number": 10,
+        "errors": 101,
+        "tracePairQueries": 2044,
+        "tracePairMisses": 1231,
+        "polygonQueries": 2153,
+        "polygonMisses": 579,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 20305,
+          "misses": 22437
+        },
+        "tracePairSegmentPredicateVisits": 866988,
+        "graphAfter": {
+          "hits": 22692,
+          "misses": 24247
+        },
+        "endpointBefore": {
+          "hits": 22692,
+          "misses": 24247
+        },
+        "endpointAfter": {
+          "hits": 23614,
+          "misses": 24247
+        },
+        "finalMemo": {
+          "hits": 23614,
+          "misses": 24247
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          218596,
+          206957,
+          212167,
+          229268
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 866988,
+        "freshTraceSegmentProductUpperBound": 1588526,
+        "freshPolygonEdgeInventoryReferences": 2877
+      },
+      {
+        "number": 11,
+        "errors": 100,
+        "tracePairQueries": 2043,
+        "tracePairMisses": 0,
+        "polygonQueries": 2166,
+        "polygonMisses": 0,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 23614,
+          "misses": 24247
+        },
+        "graphAfter": {
+          "hits": 27823,
+          "misses": 24247
+        },
+        "endpointBefore": {
+          "hits": 27823,
+          "misses": 24247
+        },
+        "endpointAfter": {
+          "hits": 28745,
+          "misses": 24247
+        },
+        "finalMemo": {
+          "hits": 28745,
+          "misses": 24247
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 0,
+        "freshTraceSegmentProductUpperBound": 0,
+        "freshPolygonEdgeInventoryReferences": 0
+      },
+      {
+        "number": 12,
+        "errors": 1,
+        "tracePairQueries": 1888,
+        "tracePairMisses": 709,
+        "polygonQueries": 1860,
+        "polygonMisses": 1342,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 28745,
+          "misses": 24247
+        },
+        "tracePairSegmentPredicateVisits": 108868,
+        "graphAfter": {
+          "hits": 30442,
+          "misses": 26298
+        },
+        "endpointBefore": {
+          "hits": 30442,
+          "misses": 26298
+        },
+        "endpointAfter": {
+          "hits": 31364,
+          "misses": 26298
+        },
+        "finalMemo": {
+          "hits": 31364,
+          "misses": 26298
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          28821,
+          26490,
+          28004,
+          25553
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 108868,
+        "freshTraceSegmentProductUpperBound": 223626,
+        "freshPolygonEdgeInventoryReferences": 6668
+      },
+      {
+        "number": 13,
+        "errors": 6,
+        "tracePairQueries": 1888,
+        "tracePairMisses": 168,
+        "polygonQueries": 1863,
+        "polygonMisses": 40,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 31364,
+          "misses": 26298
+        },
+        "tracePairSegmentPredicateVisits": 41082,
+        "graphAfter": {
+          "hits": 34907,
+          "misses": 26506
+        },
+        "endpointBefore": {
+          "hits": 34907,
+          "misses": 26506
+        },
+        "endpointAfter": {
+          "hits": 35829,
+          "misses": 26506
+        },
+        "finalMemo": {
+          "hits": 35829,
+          "misses": 26506
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          9110,
+          11518,
+          10394,
+          10060
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 41082,
+        "freshTraceSegmentProductUpperBound": 84005,
+        "freshPolygonEdgeInventoryReferences": 200
+      },
+      {
+        "number": 14,
+        "errors": 1,
+        "tracePairQueries": 1888,
+        "tracePairMisses": 0,
+        "polygonQueries": 1860,
+        "polygonMisses": 0,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 35829,
+          "misses": 26506
+        },
+        "graphAfter": {
+          "hits": 39577,
+          "misses": 26506
+        },
+        "endpointBefore": {
+          "hits": 39577,
+          "misses": 26506
+        },
+        "endpointAfter": {
+          "hits": 40499,
+          "misses": 26506
+        },
+        "finalMemo": {
+          "hits": 40499,
+          "misses": 26506
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 0,
+        "freshTraceSegmentProductUpperBound": 0,
+        "freshPolygonEdgeInventoryReferences": 0
+      },
+      {
+        "number": 15,
+        "errors": 2,
+        "tracePairQueries": 1886,
+        "tracePairMisses": 694,
+        "polygonQueries": 1815,
+        "polygonMisses": 400,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 40499,
+          "misses": 26506
+        },
+        "tracePairSegmentPredicateVisits": 124217,
+        "graphAfter": {
+          "hits": 43106,
+          "misses": 27600
+        },
+        "endpointBefore": {
+          "hits": 43106,
+          "misses": 27600
+        },
+        "endpointAfter": {
+          "hits": 44028,
+          "misses": 27600
+        },
+        "finalMemo": {
+          "hits": 44028,
+          "misses": 27600
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          32995,
+          29495,
+          30732,
+          30995
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 124217,
+        "freshTraceSegmentProductUpperBound": 243988,
+        "freshPolygonEdgeInventoryReferences": 1982
+      },
+      {
+        "number": 16,
+        "errors": 1,
+        "tracePairQueries": 1888,
+        "tracePairMisses": 0,
+        "polygonQueries": 1860,
+        "polygonMisses": 0,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 44028,
+          "misses": 27600
+        },
+        "graphAfter": {
+          "hits": 47776,
+          "misses": 27600
+        },
+        "endpointBefore": {
+          "hits": 47776,
+          "misses": 27600
+        },
+        "endpointAfter": {
+          "hits": 48698,
+          "misses": 27600
+        },
+        "finalMemo": {
+          "hits": 48698,
+          "misses": 27600
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 0,
+        "freshTraceSegmentProductUpperBound": 0,
+        "freshPolygonEdgeInventoryReferences": 0
+      },
+      {
+        "number": 17,
+        "errors": 0,
+        "tracePairQueries": 1888,
+        "tracePairMisses": 11,
+        "polygonQueries": 1854,
+        "polygonMisses": 1236,
+        "privatelyOwned": true,
+        "expectedMemo": true,
+        "graphBefore": {
+          "hits": 48698,
+          "misses": 27600
+        },
+        "tracePairSegmentPredicateVisits": 781,
+        "graphAfter": {
+          "hits": 51193,
+          "misses": 28847
+        },
+        "endpointBefore": {
+          "hits": 51193,
+          "misses": 28847
+        },
+        "endpointAfter": {
+          "hits": 52115,
+          "misses": 28847
+        },
+        "finalMemo": {
+          "hits": 52115,
+          "misses": 28847
+        },
+        "diagnosticFourLaneTraceLoadsUsingLengthProduct": [
+          372,
+          132,
+          116,
+          161
+        ],
+        "nativeFreshTraceSegmentPredicateVisits": 781,
+        "freshTraceSegmentProductUpperBound": 2352,
+        "freshPolygonEdgeInventoryReferences": 6138
+      }
+    ],
+    "weightsAreNotTimings": "Route-length products are only scheduling estimates. Per-lane counts are a diagnostic grouping of actual native segment predicate visits, not measured speedup.",
+    "fullyWarmRecords": [
+      11,
+      14,
+      16
+    ],
+    "predicateCounts": "Actual misses counted only inside the original memo compute callback. Native segment visitation counter replays the pinned installed predicate math and checks every result.",
+    "censusSourceHashes": {
+      "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "371615ec535e1430f25d17781ef3d705bd3d0440ea983b81393c969897f8a6f8",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/create-indexed-pcb-connectivity-map.ts": "f490f22e40c0c0cb44d479761c98adf07739420723bdf874b0a8d55a08120b35",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/get-via-and-pour-connections.ts": "5694a5fe18c4dd8de29f8db4bccc463c09dc13c75be3882966d745f3c3e93322",
+      "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+    }
+  },
+  "reproduction": {
+    "censusCommand": "Extract censusDriver to /tmp/reference-private-census-replay/driver.ts, then bun /tmp/reference-private-census-replay/driver.ts <repository-root>. It uses copied sources with read-only counters and authentic native memo classes, not prototype spies.",
+    "censusDriver": "import { readFileSync, writeFileSync, symlinkSync } from \"node:fs\"\nimport { join, dirname, resolve } from \"node:path\"\nimport { gunzipSync } from \"node:zlib\"\nimport { deepStrictEqual } from \"node:assert\"\nimport { createHash } from \"node:crypto\"\nconst repo = resolve(process.argv[2] ?? process.cwd())\nconst dir = import.meta.dir\ntry { symlinkSync(join(repo,\"node_modules\"),join(dir,\"node_modules\")) } catch(error: any) { if(error.code!==\"EEXIST\") throw error }\nconst base=join(repo,\"lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork\")\nconst checkerPath=join(base,\"native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts\")\nconst indexPath=join(base,\"native/lib/util/create-indexed-pcb-connectivity-map.ts\")\nconst viaPath=join(base,\"native/lib/util/get-via-and-pour-connections.ts\")\nconst counterPath=join(dir,\"counter.ts\")\nwriteFileSync(counterPath, `import { doesLineIntersectLine } from ${JSON.stringify(join(repo,\"node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils/dist/index.js\"))}; export function countPair(a:any,b:any,expected:boolean):void { let visits=0,value=false; outer: for(let i=0;i<a.route.length-1;i++){ const p=a.route[i],q=a.route[i+1]; if(p.route_type!==\"wire\"||q.route_type!==\"wire\")continue;for(let j=0;j<b.route.length-1;j++){ const r=b.route[j],t=b.route[j+1];if(r.route_type!==\"wire\"||t.route_type!==\"wire\")continue; visits++;if(doesLineIntersectLine([p,q],[r,t],{lineThickness:(p.width+r.width)/2})){value=true;break outer}}} if(value!==expected)throw new Error(\"Native pair counter differs\");census.tracePairSegmentPredicateVisits=(census.tracePairSegmentPredicateVisits??0)+visits; census.tracePairMissRows[census.tracePairMissRows.length-1][3]=visits; }; export let census: any = {}; export function reset(): void { census={tracePairQueries:0,tracePairMisses:0,polygonQueries:0,polygonMisses:0} }; export function snap(memo:any): any { return memo===undefined?null:{...memo.diagnostics} }\\n`)\nconst patchImports = (text:string, source:string, substitutions:Record<string,string>):string => text.replace(/from\\s+\"(\\.[^\"]+)\"/g,(_match,spec)=>`from ${JSON.stringify(substitutions[spec]??resolve(dirname(source),spec))}`)\nlet via=readFileSync(viaPath,\"utf8\")\nvia=via.replace(`      if (primitiveMemo\\n        ? primitiveMemo.getOrCompute(\"polygon-contact\"`, `      census.polygonQueries++\\n      if (primitiveMemo\\n        ? primitiveMemo.getOrCompute(\"polygon-contact\"`)\nvia=via.replace(`(): boolean => touches(a.polygon, b.polygon)`, `(): boolean => { census.polygonMisses++; const value=touches(a.polygon, b.polygon); census.polygonMissRows ??= []; census.polygonMissRows.push([a.polygon.edges.size,b.polygon.edges.size,value]); return value }`)\nwriteFileSync(join(dir,\"via.ts\"), `import {census} from ${JSON.stringify(counterPath)}\\n`+patchImports(via,viaPath,{}))\nlet index=readFileSync(indexPath,\"utf8\")\nindex=index.replace(`      if (primitiveMemo\\n        ? primitiveMemo.getOrCompute(\"trace-pair\"`, `      census.tracePairQueries++\\n      if (primitiveMemo\\n        ? primitiveMemo.getOrCompute(\"trace-pair\"`)\nindex=index.replace(`(): boolean => map._arePcbTracesConnected(traces[i], traces[j])`, `(): boolean => { census.tracePairMisses++; const value=map._arePcbTracesConnected(traces[i], traces[j]); census.tracePairMissRows ??= []; census.tracePairMissRows.push([traces[i].route.length,traces[j].route.length,value]); countPair(traces[i],traces[j],value); return value }`)\nwriteFileSync(join(dir,\"index.ts\"), `import {census,countPair} from ${JSON.stringify(counterPath)}\\n`+patchImports(index,indexPath,{\"./get-via-and-pour-connections\":join(dir,\"via.ts\")}))\nlet checker=readFileSync(checkerPath,\"utf8\")\nchecker=checker.replace(`  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)`, `  census.graphBefore=snap(primitiveMemo)\\n  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)\\n  census.graphAfter=snap(primitiveMemo)`)\nchecker=checker.replace(`  const padInventoryId = primitiveMemo ? primitiveMemo.intern([...padMap]) : 0`, `  census.endpointBefore=snap(primitiveMemo)\\n  const padInventoryId = primitiveMemo ? primitiveMemo.intern([...padMap]) : 0`)\nchecker=checker.replace(`  const physicallyConnectedTracesByTraceId = new Map`, `  census.endpointAfter=snap(primitiveMemo)\\n  const physicallyConnectedTracesByTraceId = new Map`)\nchecker=checker.replace(`  const useExpectedPortMemo = privatelyOwnedMemo &&`, `  census.privatelyOwned=privatelyOwnedMemo\\n  const useExpectedPortMemo = privatelyOwnedMemo &&`)\nchecker=checker.replace(`  let scaledPolygonMemo: ScaledConductorPolygonMemo | undefined`, `  census.expectedMemo=useExpectedPortMemo\\n  let scaledPolygonMemo: ScaledConductorPolygonMemo | undefined`)\nchecker=checker.replace(`  return errors\\n}`, `  census.finalMemo=snap(primitiveMemo)\\n  return errors\\n}`)\nwriteFileSync(join(dir,\"checker.ts\"), `import {census,snap} from ${JSON.stringify(counterPath)}\\n`+patchImports(checker,checkerPath,{\"../util/create-indexed-pcb-connectivity-map\":join(dir,\"index.ts\")}))\nconst {initializeReferenceDrcRuntime}=await import(join(base,\"initializeReferenceDrcRuntime.ts\"))\nconst {checkViaTraceClearanceWithLazyCenters}=await import(join(base,\"checkViaTraceClearanceWithLazyCenters.ts\"))\nconst {getDrcErrors}=await import(join(repo,\"lib/testing/getDrcErrors.ts\"))\nawait initializeReferenceDrcRuntime()\nconst {createPrivatelyMemoizedTraceContinuityChecker}=await import(join(dir,\"checker.ts\"))\nconst counts=await import(counterPath)\nconst nativeCheck=createPrivatelyMemoizedTraceContinuityChecker()\nconst fixture=join(repo,\"tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz\")\nconst captures=JSON.parse(gunzipSync(readFileSync(fixture)).toString())\nconst rows:any[]=[]\nfor(const capture of captures.records){\n counts.reset()\n const result=getDrcErrors(structuredClone(capture.circuitJson),{...capture.options,traceContinuityChecker:nativeCheck,viaTraceChecker:(circuit:any,options:any)=>checkViaTraceClearanceWithLazyCenters(circuit,{...options,enableAxisRejection:true,enableConnectivityMemo:true})})\n deepStrictEqual(JSON.parse(JSON.stringify(result)),capture.expected)\n if(counts.census.privatelyOwned!==true||counts.census.expectedMemo!==true) throw new Error(\"private native guard not admitted\")\n rows.push({number:capture.number,errors:capture.expected.errors.length,...structuredClone(counts.census)})\n}\nconst totals={tracePairQueries:0,tracePairMisses:0,polygonQueries:0,polygonMisses:0}\nfor(const row of rows) for(const key of Object.keys(totals)) totals[key]+=row[key]\nconst hashes=Object.fromEntries([checkerPath,indexPath,viaPath,fixture].map(path=>[path.slice(repo.length+1),createHash(\"sha256\").update(readFileSync(path)).digest(\"hex\")]))\nwriteFileSync(join(dir,\"census.json\"),JSON.stringify({kind:\"time-free operation census; all17 native saved errors exact\",hashes,totals,rows},null,2)+\"\\n\")\nconsole.log(JSON.stringify({records:rows.length,allSavedErrorsExact:true,totals,output:join(dir,\"census.json\")}))\n",
+    "output": "census.json alongside extracted driver"
+  }
+}

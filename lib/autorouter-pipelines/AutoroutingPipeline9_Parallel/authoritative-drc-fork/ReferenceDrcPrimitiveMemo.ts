@@ -1,5 +1,12 @@
 type CacheableSnapshot = { key: string } | { key: undefined }
 
+export type ReferenceDrcPrimitiveMissRow = { kind: string; input: unknown }
+export type ReferenceDrcPrimitiveMissPlan = {
+  readonly rows: readonly { rowIndex: number; hit: boolean; cacheable: boolean }[]
+  consume<T>(kind: string, input: unknown, compute: () => T): T
+  finish(): void
+}
+
 function snapshotKey(value: unknown, visiting: Set<object>): CacheableSnapshot {
   if (value === undefined) return { key: "u" }
   if (value === null) return { key: "l" }
@@ -46,6 +53,59 @@ export class ReferenceDrcPrimitiveMemo {
   readonly diagnostics = { hits: 0, misses: 0 }
 
   constructor(private readonly maximumEntries = 100_000) {}
+
+  /** Invoked only through the actual private-owner planning gateway. */
+  private prepareMissPlan(rows: readonly ReferenceDrcPrimitiveMissRow[]): ReferenceDrcPrimitiveMissPlan {
+    const initialKeys = this.values.keys()
+    const evictedInitialKeys = new Set<string>()
+    const addedKeys = new Set<string>()
+    let shadowSize = this.values.size
+    const expected: { key: string | undefined; hit: boolean }[] = []
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      const row = rows[rowIndex]!
+      const snapshot = snapshotKey(row.input, new Set())
+      const key = snapshot.key === undefined ? undefined : `${JSON.stringify(row.kind)}:${snapshot.key}`
+      const hit = key !== undefined && (addedKeys.has(key) || (this.values.has(key) && !evictedInitialKeys.has(key)))
+      expected.push({ key, hit })
+      if (key === undefined || hit) continue
+      addedKeys.add(key)
+      shadowSize++
+      if (shadowSize > this.maximumEntries) {
+        let oldest = initialKeys.next()
+        while (!oldest.done && evictedInitialKeys.has(oldest.value)) oldest = initialKeys.next()
+        if (!oldest.done) evictedInitialKeys.add(oldest.value)
+        else addedKeys.delete(addedKeys.keys().next().value!)
+        shadowSize--
+      }
+    }
+    let nextRow = 0
+    return {
+      rows: expected.map((row, rowIndex) => ({ rowIndex, hit: row.hit, cacheable: row.key !== undefined })),
+      consume: <T>(kind: string, input: unknown, compute: () => T): T => {
+        const row = expected[nextRow]
+        if (row === undefined) throw new Error("Reference DRC miss plan consumed beyond its rows")
+        const snapshot = snapshotKey(input, new Set())
+        const key = snapshot.key === undefined ? undefined : `${JSON.stringify(kind)}:${snapshot.key}`
+        const hit = key !== undefined && this.values.has(key)
+        if (key !== row.key || hit !== row.hit) throw new Error(`Reference DRC miss plan diverged at row ${nextRow}`)
+        nextRow++
+        if (hit) {
+          this.diagnostics.hits++
+          return this.values.get(key!) as T
+        }
+        this.diagnostics.misses++
+        const value = compute()
+        if (key !== undefined) {
+          this.values.set(key, value)
+          if (this.values.size > this.maximumEntries) this.values.delete(this.values.keys().next().value!)
+        }
+        return value
+      },
+      finish: (): void => {
+        if (nextRow !== expected.length) throw new Error(`Reference DRC miss plan has ${expected.length - nextRow} unconsumed rows`)
+      },
+    }
+  }
 
   intern(value: unknown): number {
     const snapshot = snapshotKey(value, new Set())

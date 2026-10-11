@@ -60,6 +60,14 @@ const privatePolygonMemoGet = WeakMap.prototype.get
 const privatePolygonMemoSet = WeakMap.prototype.set
 const applyNative = Reflect.apply
 
+/** Internal planning admission uses the actual private owner, without reflection. */
+export function isPrivatelyOwnedReferenceDrcPrimitiveMemo(value: unknown): boolean {
+  // Native WeakSet membership neither unwraps proxies nor invokes accessors.
+  // This is deliberately independent of any caller-provided trust flag.
+  // Ordinary externally supplied memo instances remain outside this domain.
+  return applyNative(privateMemoHas, privatelyOwnedMemos, [value]) as boolean
+}
+
 /** The cache is never exposed to an external callback or caller. */
 export function createPrivatelyMemoizedTraceContinuityChecker(): (circuitJson: AnyCircuitElement[]) => PcbTraceError[] {
   const primitiveMemo = new ReferenceDrcPrimitiveMemo()
