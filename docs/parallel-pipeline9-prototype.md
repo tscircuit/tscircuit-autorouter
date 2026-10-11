@@ -655,3 +655,13 @@ This is a measured work tradeoff, with elapsed time still to be established
 by the next full-dataset comparison. Exact counters, source hashes and
 mutation/cap cancellation checks are in
 [parallel-path-lookahead-sixteen-window-proof.json](benchmarks/parallel-path-lookahead-sixteen-window-proof.json).
+
+Snapshot `05c72d631` is frozen for the eighteenth comparison of all16
+samples at the same baseline, dataset and four-core budget. It activates
+the reviewed selected-owner A01 bulk search and sixteen-target lookahead.
+ESM/DTS, TypeScript and source/built browser imports pass; packaged sample001
+and sample015 retain exact native geometry with at most four active workers.
+All five Blacksmith groups are dispatched. Complete outcomes are pending;
+this revision has no elapsed-time acceptance claim yet. Exact arguments,
+preflight hashes and workflow IDs are in
+[parallel-srj18-05c72d631-dispatch.json](benchmarks/parallel-srj18-05c72d631-dispatch.json).
