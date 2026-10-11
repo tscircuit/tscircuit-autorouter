@@ -42,7 +42,30 @@ const patches:Record<string,[string,string][]>={
 }
 const sourceHashes:Record<string,string>={}
 const squaredGroupProbe=process.env.GENERIC_HD_CENSUS_SQUARED_GROUP_PROBE==="1"
+const squaredGroupScanner=process.env.GENERIC_HD_CENSUS_SQUARED_GROUP_SCANNER==="1"
 const captureGenericCandidates=process.env.GENERIC_HD_CENSUS_CAPTURE_CANDIDATES==="1"
+if(squaredGroupProbe&&squaredGroupScanner) throw new Error("Hypothetical probe and actual isolated scanner must use separate runs")
+if(squaredGroupScanner) {
+  const prefix="lib/autorouter-pipelines/AutoroutingPipeline9_Parallel"
+  const scannerPath=`${prefix}/generic-hd-closest-point/scanClosestFuturePointMiss.ts`
+  let scanner=await Bun.file(new URL(`../../../${scannerPath}`,import.meta.url)).text()
+  sourceHashes[scannerPath]=createHash("sha256").update(scanner).digest("hex")
+  scanner=scanner.replace('      pointIndex++\n      continue','      record(owner,"actualIsolatedSkippedIntrinsicSqrt")\n      pointIndex++\n      continue')
+    .replace('    if (pureNumericSqrt) baseDistance = nativeApply(callee, Math, [square])',
+      '    if (pureNumericSqrt) {record(owner,"actualIsolatedRequiredIntrinsicSqrt");baseDistance = nativeApply(callee, Math, [square])}')
+  await mkdir(`${copied}/${prefix}/generic-hd-closest-point`,{recursive:true})
+  await Bun.write(`${copied}/${scannerPath}`,'import {record} from "lib/genericHdWorkCounters"\n'+scanner)
+  // This copied-source oracle grants no production task/owner authority.
+  await Bun.write(`${copied}/${prefix}/NativeGenericHistoryTaskAuthority.ts`,
+    'export const isolatedScannerContext={sqrt:Math.sqrt,apply:Reflect.apply}\nexport function hasNativeGenericIntrinsicContext(value:unknown):boolean{return value===isolatedScannerContext}\n')
+  const routePath="lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
+  const original=await Bun.file(`${source}/${routePath}`).text()
+  const begin=original.indexOf('    let minDist = Infinity')
+  const end=original.indexOf('    // A fixed workspace avoids retaining every explored coordinate in large')
+  if(begin<0||end<begin) throw new Error("Isolated scanner could not identify the pinned native miss block")
+  patches[routePath]!.push([original.slice(begin,end),
+    '    const miss=scanClosestFuturePointMiss(this,node,isolatedScannerContext)\n    const closestPoint=miss.point,closestPointIndex=miss.index\n    const pointIndex=this.futureConnectionPoints.length\n\n'])
+}
 if(captureGenericCandidates) {
   patches["lib/solvers/HighDensitySolver/IntraNodeSolver.ts"]=[
     ['    super()\n    this.nodeWithPortPoints = nodeWithPortPoints','    super()\n    captureGenericConstructor(this,params)\n    this.nodeWithPortPoints = nodeWithPortPoints'],
@@ -81,7 +104,9 @@ for(const [path,replacements] of Object.entries(patches)) {
     if(text.indexOf(before)<0||text.indexOf(before)!==text.lastIndexOf(before)) throw new Error(`Census insertion is not unique: ${path}: ${before}`)
     text=text.replace(before,after)
   }
-  await Bun.write(`${copied}/${path}`,'import {record,closestRequest,closestMiss,captureGenericConstructor,captureGenericPostCacheMiss} from "lib/genericHdWorkCounters"\n'+text)
+  const scannerImport=squaredGroupScanner&&path.endsWith("SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts")
+    ? 'import {scanClosestFuturePointMiss} from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/generic-hd-closest-point/scanClosestFuturePointMiss"\nimport {isolatedScannerContext} from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/NativeGenericHistoryTaskAuthority"\n' : ""
+  await Bun.write(`${copied}/${path}`,scannerImport+'import {record,closestRequest,closestMiss,captureGenericConstructor,captureGenericPostCacheMiss} from "lib/genericHdWorkCounters"\n'+text)
 }
 const raw=new Uint8Array(await Bun.file(jobPath).arrayBuffer()),bytes=jobPath.endsWith(".gz")?Bun.gunzipSync(raw):raw
 const job=JSON.parse(new TextDecoder().decode(bytes))
@@ -112,7 +137,9 @@ const native=await runWorker(source,"reference-worker",false)
 deepStrictEqual(result.response,native.response,"Instrumentation must preserve the complete actual native worker result")
 deepStrictEqual(JSON.parse(JSON.stringify(native.response)),await Bun.file(referencePath).json(),"Fresh original worker must also match the saved frozen profile result")
 const proof={noTimingComparison:true,actualWorker:true,nativeMethodWrappers:false,fullOriginalResultEqual:true,
-  squaredGroupProbe,captureGenericCandidates,hypotheticalProbeRetainsEveryOriginalSqrtAndGetter:squaredGroupProbe,
+  squaredGroupProbe,squaredGroupScanner,captureGenericCandidates,
+  isolatedScannerUsesTestOnlyAuthority:squaredGroupScanner,productionActivation:false,
+  hypotheticalProbeRetainsEveryOriginalSqrtAndGetter:squaredGroupProbe,
   jobSha256:createHash("sha256").update(bytes).digest("hex"),frozenSourceRoot:source,sourceHashes,census:result.census}
 await Bun.write(`${directory}/proof.json`,JSON.stringify(proof,null,2))
 console.log(JSON.stringify(proof,null,2))
