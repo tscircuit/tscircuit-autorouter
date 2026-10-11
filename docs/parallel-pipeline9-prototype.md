@@ -201,6 +201,25 @@ proves execution and parity; speed is measured only by the frozen Blacksmith
 comparison. Source, compiler, and functional counts are documented in
 [parallel-native-a13-kernel-proof.json](benchmarks/parallel-native-a13-kernel-proof.json).
 
+Default worker path simplification also prepares a bounded window of four
+future routes. Publication stays in the original route order and uses the
+actual native parent and child owners. A candidate is accepted only when
+replaying its recorded native geometry queries against the committed prefix
+returns the same answers; rejected candidates execute at their original native
+position. The first exposed native child remains the actual child, and source
+point/metadata aliases are restored before publication. Input, control, buffer,
+and callback changes during an await withdraw the optimization and resume the
+original owner. Captured lifecycle operations settle pending effects without
+calling newly installed Promise callbacks or diagnostic accessors.
+
+Six captured phases preserve all 1,503 routes, 27,198 original logical steps,
+caps, and geometry hashes. The proof separately counts 27,273 speculative
+native steps, 6,771 actual owner steps, all native certificate queries, and
+complete guard work; speculative execution is not hidden from the accounting.
+Input-covered objects are checked once and excluded from the separate control
+snapshot. Functional results and source/fixture hashes are in
+[parallel-path-lookahead-functional-proof.json](benchmarks/parallel-path-lookahead-functional-proof.json).
+
 Topology, coordinated via changes, and joint DRC commits retain their serial
 execution. Ordered port-point pathing also retains its original coordinator;
 negotiated search is opt-in. High-density routing with fixed
