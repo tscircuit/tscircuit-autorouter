@@ -1,3 +1,4 @@
+import { isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
 export type NativeOwnerKernelContract = {
   prototype: object
   descriptors: Record<string, PropertyDescriptor>
@@ -69,7 +70,8 @@ export function hasOriginalNativeOwnerNames(contract: NativeOwnerKernelContract,
 /** A numeric data policy cannot execute a callback during a verified batch. */
 export function hasNativeOwnerNumericPolicy(owner: object): boolean {
   const descriptor = nativeOwnerDescriptor(owner, "hyperParameters")
-  if (!descriptor || !nativeOwnerHasOwn(descriptor, "value") || !descriptor.value || typeof descriptor.value !== "object") return false
+  if (!descriptor || !nativeOwnerHasOwn(descriptor, "value") || !descriptor.value || typeof descriptor.value !== "object" ||
+    isWorkerNativeGridProxy(descriptor.value)) return false
   for (let index = 0; index < policyNames.length; index++) {
     const policy = nativeOwnerDescriptor(descriptor.value, policyNames[index]!)
     if (!policy || !nativeOwnerHasOwn(policy, "value") || typeof policy.value !== "number") return false

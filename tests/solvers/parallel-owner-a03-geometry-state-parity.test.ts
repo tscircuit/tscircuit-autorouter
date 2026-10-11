@@ -52,7 +52,7 @@ function createRandomNode(seed: number): NodeWithPortPoints {
     width, height, availableZ, portPoints }
 }
 
-test("local original A03 owner memo preserves native identity, arrays, every checkpoint, live occupants and mutable numeric policy", (): void => {
+test("direct original A03 owner preserves native identity, arrays, every checkpoint, live occupants and mutable numeric policy", (): void => {
   let observedSolved = false
   let observedFailure = false
   for (let scenario = 0; scenario < 34; scenario++) {
@@ -71,8 +71,8 @@ test("local original A03 owner memo preserves native identity, arrays, every che
     const heap = Object.getOwnPropertyDescriptor(worker, "heap")!.value
     const geometry = [worker.cellCenterX, worker.cellCenterY]
     expect(worker instanceof HighDensitySolverA03).toBe(true)
-    expect(Object.hasOwn(worker, "computeH")).toBe(true)
-    expect(Object.hasOwn(worker, "fillViaOccupants")).toBe(true)
+    expect(Object.hasOwn(worker, "computeH")).toBe(false)
+    expect(Object.hasOwn(worker, "fillViaOccupants")).toBe(false)
     native.MAX_ITERATIONS = Math.min(native.MAX_ITERATIONS, scenario === 0 ? 160_000 : 12_000)
     worker.MAX_ITERATIONS = native.MAX_ITERATIONS
     const nativeKeys = Object.keys(native)

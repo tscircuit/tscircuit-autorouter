@@ -2,8 +2,8 @@ import { expect, test } from "bun:test"
 import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import { ReplayHighDensityA01Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ReplayHighDensityA01Solver"
 import { ReplayHighDensityA03Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ReplayHighDensityA03Solver"
-import { prepareParallelNativeA01Heap } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap"
-import { prepareParallelNativeA03Geometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA03Geometry"
+import { installParallelNativeA01Heap, prepareParallelNativeA01Heap } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap"
+import { installParallelNativeA03Geometry, prepareParallelNativeA03Geometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA03Geometry"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import cmn45 from "tests/fixtures/parallel-grid-history-cmn45.json"
 
@@ -18,6 +18,9 @@ function createA01(): ReplayHighDensityA01Solver {
     viaMinDistFromBorder: 0.15, traceMargin: 0.1, hyperParameters: { shuffleSeed: 0 } })
   solver.setup()
   expect(solver.failed).toBe(false)
+  expect(Object.hasOwn(readHeap(solver), "push")).toBe(false)
+  installParallelNativeA01Heap(solver, { prototype: ReplayHighDensityA01Solver.prototype,
+    descriptors: Object.getOwnPropertyDescriptors(ReplayHighDensityA01Solver.prototype) })
   return solver
 }
 
@@ -28,6 +31,9 @@ function createA03(optIn: boolean): ReplayHighDensityA03Solver {
     viaMinDistFromBorder: 0.15, traceMargin: 0.1 }, { immutableWorkerGeometry: optIn })
   solver.setup()
   expect(solver.failed).toBe(false)
+  expect(Object.hasOwn(solver, "computeH")).toBe(false)
+  if (optIn) installParallelNativeA03Geometry(solver, { prototype: ReplayHighDensityA03Solver.prototype,
+    descriptors: Object.getOwnPropertyDescriptors(ReplayHighDensityA03Solver.prototype) })
   return solver
 }
 
@@ -49,6 +55,8 @@ test("owner kernels preserve default native lookup, late getter/errors, aliases,
   const originalHeap = readHeap(memo), originalCenters = memo.cellCenterX
   const originalOwnerCache = (memo as unknown as A03View).viaOccupantsByCell
   memo._setup()
+  installParallelNativeA03Geometry(memo, { prototype: ReplayHighDensityA03Solver.prototype,
+    descriptors: Object.getOwnPropertyDescriptors(ReplayHighDensityA03Solver.prototype) })
   expect(memo.cellCenterX).not.toBe(originalCenters)
   expect(readHeap(memo)).not.toBe(originalHeap)
   expect((memo as unknown as A03View).viaOccupantsByCell).toBe(originalOwnerCache)
@@ -166,6 +174,39 @@ test("owner kernels preserve default native lookup, late getter/errors, aliases,
   } finally {
     Object.defineProperty(HighDensitySolverA01.prototype, "stepOnce", stepDescriptor)
   }
+
+  // Direct Replay has no trusted ownership and must retain native observers.
+  const callbackParams = { nodeWithPortPoints: structuredClone(cmn45) as NodeWithPortPoints,
+    cellSizeMm: 0.1, viaDiameter: 0.3, traceThickness: 0.1,
+    viaMinDistFromBorder: 0.15, traceMargin: 0.1 }
+  const callbackNative = new HighDensitySolverA01(structuredClone(callbackParams))
+  const callbackReplay = new ReplayHighDensityA01Solver(structuredClone(callbackParams))
+  callbackNative.setup()
+  callbackReplay.setup()
+  for (let index = 0; index < 10; index++) { callbackNative.step(); callbackReplay.step() }
+  expect(Object.hasOwn(readHeap(callbackReplay), "push")).toBe(false)
+  const minDescriptor = Object.getOwnPropertyDescriptor(Math, "min")!, nativeMin = Math.min
+  const callbackCounts: number[][] = []
+  for (const solver of [callbackNative, callbackReplay]) {
+    let minCalls = 0, lessCalls = 0
+    const sentinel = new Error("native comparator callback sentinel"), callbackHeap = readHeap(solver)
+    try {
+      Object.defineProperty(Math, "min", { ...minDescriptor, value: (...values: number[]): number => {
+        minCalls++
+        Object.defineProperty(callbackHeap, "less", { configurable: true, value: (): never => {
+          lessCalls++
+          throw sentinel
+        } })
+        return nativeMin(...values)
+      } })
+      expect(() => solver.step()).toThrow(sentinel.message)
+    } finally { Object.defineProperty(Math, "min", minDescriptor) }
+    callbackCounts.push([minCalls, lessCalls])
+    expect(solver.failed).toBe(true)
+    expect(solver.error).toContain(sentinel.message)
+  }
+  expect(callbackCounts[1]).toEqual(callbackCounts[0])
+  expect(callbackReplay.iterations).toBe(callbackNative.iterations)
 
   // A custom native setup remains exactly one setup and receives no installer.
   class CustomA01 extends ReplayHighDensityA01Solver {

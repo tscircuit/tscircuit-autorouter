@@ -1,8 +1,11 @@
 /** Exact heap kernel derived from the pinned MIT source in high-density-a01-fork/LICENSE. */
+import { isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { hasNativeOwnerNumericPolicy, hasOriginalNativeOwnerNames, matchesNativeOwnerKernelContract,
   nativeOwnerDescriptor, nativeOwnerPrototype, nativeOwnerHasOwn, nativeOwnerDefine, nativeOwnerDelete,
   nativeOwnerGet, nativeOwnerApply, nativeOwnerIsArray, type NativeOwnerKernelContract } from "./nativeOwnerKernelContract"
+import { hasNativeGridKernelIntrinsics, type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
+import { captureNativeGridOwnerStorage, hasNativeGridOwnerStorage, type NativeGridOwnerStorage } from "./nativeGridOwnerStorage"
 
 type NativeHeap = {
   f: number[]; seq: number[]; id: number[]; n: number
@@ -10,7 +13,7 @@ type NativeHeap = {
   pop(): number
 }
 type HeapKernelState = {
-  heap: NativeHeap; arrays: readonly number[][]; active: boolean; contract: NativeOwnerKernelContract
+  heap: NativeHeap; arrays: readonly number[][]; active: boolean; contract: NativeOwnerKernelContract; storage: NativeGridOwnerStorage
 }
 const nativePrototype = HighDensitySolverA01.prototype
 const nativeDescriptors = Object.getOwnPropertyDescriptors(nativePrototype)
@@ -25,7 +28,7 @@ const heapPrototype: object = nativeOwnerPrototype(nativeOwnerDescriptor(probe, 
 const heapDescriptors = Object.getOwnPropertyDescriptors(heapPrototype)
 const ownerStates = new WeakMap<HighDensitySolverA01, HeapKernelState>()
 const heapStates = new WeakMap<NativeHeap, HeapKernelState>()
-const heapMethodNames = ["push", "pop", "less", "swap", "siftDown"] as const
+const heapMethodNames = Object.getOwnPropertyNames(heapPrototype)
 const heapArrayNames = ["f", "seq", "id"] as const
 const getOwnerState = ownerStates.get.bind(ownerStates), setOwnerState = ownerStates.set.bind(ownerStates)
 const deleteOwnerState = ownerStates.delete.bind(ownerStates)
@@ -35,19 +38,20 @@ const deleteHeapState = heapStates.delete.bind(heapStates)
 /** Check only the fixed private operations that the fused kernel replaces. */
 function hasNativeHeapState(state: HeapKernelState): boolean {
   const heap = state.heap
-  if (nativeOwnerPrototype(heap) !== heapPrototype) return false
+  if (isWorkerNativeGridProxy(heap) || nativeOwnerPrototype(heap) !== heapPrototype) return false
   for (let index = 0; index < heapMethodNames.length; index++) {
     const name = heapMethodNames[index]!
     const descriptor = nativeOwnerDescriptor(heapPrototype, name)
     const original = heapDescriptors[name]!
-    if (!descriptor || descriptor.value !== original.value || descriptor.get || descriptor.set) return false
+    if (!descriptor || descriptor.value !== original.value || descriptor.get !== original.get || descriptor.set !== original.set) return false
     const own = nativeOwnerDescriptor(heap, name)
     const installed = name === "push" ? pushNativeOwnerHeap : name === "pop" ? popNativeOwnerHeap : undefined
     if (own && (installed === undefined || own.value !== installed || own.get || own.set)) return false
   }
   for (let index = 0; index < 3; index++) {
     const descriptor = nativeOwnerDescriptor(heap, heapArrayNames[index]!)
-    if (!descriptor || descriptor.value !== state.arrays[index] || descriptor.get || descriptor.set) return false
+    if (!descriptor || descriptor.value !== state.arrays[index] || descriptor.get || descriptor.set || isWorkerNativeGridProxy(descriptor.value) ||
+      nativeOwnerPrototype(descriptor.value) !== Array.prototype) return false
   }
   const size = nativeOwnerDescriptor(heap, "n")
   return size !== undefined && nativeOwnerHasOwn(size, "value") && typeof size.value === "number"
@@ -120,7 +124,7 @@ export function installParallelNativeA01Heap(owner: HighDensitySolverA01,
     if (!nativeOwnerIsArray(array)) return
     arrays[index] = array
   }
-  const state: HeapKernelState = { heap, arrays, active: false, contract }
+  const state: HeapKernelState = { heap, arrays, active: false, contract, storage: captureNativeGridOwnerStorage(owner, "heap") }
   if (!hasNativeHeapState(state) || nativeOwnerHasOwn(heap, "push") || nativeOwnerHasOwn(heap, "pop")) return
   nativeOwnerDefine(heap, { push: { value: pushNativeOwnerHeap, writable: true, configurable: true },
     pop: { value: popNativeOwnerHeap, writable: true, configurable: true } })
@@ -129,10 +133,11 @@ export function installParallelNativeA01Heap(owner: HighDensitySolverA01,
 }
 
 /** A native step has no external callbacks; late private hooks disable fusion. */
-export function prepareParallelNativeA01Heap(owner: HighDensitySolverA01): void {
+export function prepareParallelNativeA01Heap(owner: HighDensitySolverA01, quantum?: NativeGridIntrinsicQuantum): void {
   const state = getOwnerState(owner)
   if (!state) return
-  if (hasNativeHeapState(state) && hasNativeOwnerNumericPolicy(owner) &&
+  if (hasNativeGridKernelIntrinsics(quantum) && hasNativeHeapState(state) && hasNativeGridOwnerStorage(owner, state.storage) &&
+    hasNativeOwnerNumericPolicy(owner) &&
     matchesNativeOwnerKernelContract(owner, state.contract, nativePrototype, nativeDescriptors)) {
     state.active = true
     return

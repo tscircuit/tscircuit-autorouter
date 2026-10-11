@@ -155,9 +155,7 @@ export class HyperParameterSupervisorSolver<
       return
     }
 
-    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
-      supervisedSolver.solver.step()
-    }
+    this.runSupervisedSubsteps(supervisedSolver)
     this.activeSubSolver = supervisedSolver.solver
 
     supervisedSolver.g = this.computeG(supervisedSolver.solver)
@@ -168,6 +166,14 @@ export class HyperParameterSupervisorSolver<
       this.solved = true
       this.winningSolver = supervisedSolver.solver
       this.onSolve?.(supervisedSolver)
+    }
+  }
+
+  protected runSupervisedSubsteps(supervisedSolver: SupervisedSolver<T>): void {
+    // Subclasses can surround the native quantum without changing selection,
+    // fitness, onSolve or the original MIN_SUBSTEPS loop and its exceptions.
+    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
+      supervisedSolver.solver.step()
     }
   }
 

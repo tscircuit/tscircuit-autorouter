@@ -13,6 +13,9 @@ import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-dens
 import { ReplayHighDensityA01Solver } from "./ReplayHighDensityA01Solver"
 import { ReplayHighDensityA03Solver } from "./ReplayHighDensityA03Solver"
 import type { GridHistoryDispatcher, GridHistoryJob } from "./parallelGridHistoryTypes"
+import { beginWorkerNativeGridKernelQuantum, captureWorkerNativeGridPortfolioContract,
+  finishWorkerNativeGridKernelQuantum, registerWorkerNativeGridOwner } from "./workerNativeGridKernelQuantum"
+import type { SupervisedSolver } from "../../solvers/HyperParameterSupervisorSolver"
 
 type ReplayGridSolver = ReplayHighDensityA01Solver | ReplayHighDensityA03Solver
 
@@ -87,6 +90,7 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
         const replay = nativeGrid instanceof HighDensitySolverA01
           ? new ReplayHighDensityA01Solver(nativeGrid.getConstructorParams()[0])
           : new ReplayHighDensityA03Solver(nativeGrid.getConstructorParams()[0], { immutableWorkerGeometry: true })
+        registerWorkerNativeGridOwner(replay, this.gridDispatcher)
         this.gridCandidates.set(this.gridCandidates.size, replay)
         return replay as unknown as IntraNodeRouteSolver
       }
@@ -99,6 +103,22 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     })
     this.historyCandidates.set(this.historyCandidates.size, solver)
     return solver as unknown as IntraNodeRouteSolver
+  }
+
+  protected override runSupervisedSubsteps(supervisedSolver: SupervisedSolver<
+    NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]["solver"]>): void {
+    const solver = supervisedSolver.solver
+    if (!(solver instanceof ReplayHighDensityA01Solver || solver instanceof ReplayHighDensityA03Solver)) {
+      super.runSupervisedSubsteps(supervisedSolver)
+      return
+    }
+    const quantum = beginWorkerNativeGridKernelQuantum(this, nativeGridQuantumContract,
+      solver, this.gridDispatcher)
+    try {
+      super.runSupervisedSubsteps(supervisedSolver)
+    } finally {
+      finishWorkerNativeGridKernelQuantum(quantum)
+    }
   }
 
   async prepareForNextStep(): Promise<void> {
@@ -355,3 +375,5 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     }
   }
 }
+
+const nativeGridQuantumContract = captureWorkerNativeGridPortfolioContract(ParallelPortfolioSingleIntraNodeSolver.prototype)

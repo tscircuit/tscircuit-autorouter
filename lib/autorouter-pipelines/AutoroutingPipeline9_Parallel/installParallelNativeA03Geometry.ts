@@ -3,6 +3,8 @@ import { HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import { hasNativeOwnerNumericPolicy, hasOriginalNativeOwnerNames, matchesNativeOwnerKernelContract,
   nativeOwnerDescriptor, nativeOwnerHasOwn, nativeOwnerDefine, nativeOwnerDelete, nativeOwnerGet,
   nativeOwnerIs, nativeOwnerApply, type NativeOwnerKernelContract } from "./nativeOwnerKernelContract"
+import { hasNativeGridKernelIntrinsics, type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
+import { captureNativeGridOwnerStorage, hasNativeGridOwnerStorage, type NativeGridOwnerStorage } from "./nativeGridOwnerStorage"
 
 type GeometryOwnerView = {
   cellCenterX: Float64Array; cellCenterY: Float64Array
@@ -17,7 +19,8 @@ type GeometryOwnerView = {
 }
 type PlanarTable = { distances: Float64Array; valid: Uint8Array }
 type GeometryKernelState = {
-  active: boolean; contract: NativeOwnerKernelContract; arrays: readonly Float64Array[]; planeSize: number; radius: number
+  active: boolean; contract: NativeOwnerKernelContract; storage: NativeGridOwnerStorage;
+  arrays: readonly Float64Array[]; planeSize: number; radius: number
   geometricCells: Map<number, Int32Array>; geometricBytes: number
   planarTables: Map<number, PlanarTable>; planarBytes: number
 }
@@ -41,7 +44,9 @@ const deleteOwnerState = ownerStates.delete.bind(ownerStates)
 const byteLimit = 8 * 1024 * 1024, rowLimit = 8192
 
 /** Only the worker-owned generated grid is immutable, never its occupants. */
-function hasNativeGeometryState(owner: HighDensitySolverA03, state: GeometryKernelState): boolean {
+function hasNativeGeometryState(owner: HighDensitySolverA03, state: GeometryKernelState,
+  quantum?: NativeGridIntrinsicQuantum): boolean {
+  if (!hasNativeGridKernelIntrinsics(quantum) || !hasNativeGridOwnerStorage(owner, state.storage)) return false
   const mathGlobal = nativeOwnerDescriptor(globalThis, "Math")
   const push = nativeOwnerDescriptor(arrayPrototype, "push"), iterator = nativeOwnerDescriptor(arrayPrototype, Symbol.iterator)
   const get = nativeOwnerDescriptor(mapPrototype, "get"), set = nativeOwnerDescriptor(mapPrototype, "set")
@@ -153,7 +158,8 @@ export function installParallelNativeA03Geometry(owner: HighDensitySolverA03,
   const radius = nativeOwnerDescriptor(owner, "viaKeepoutRadius")
   if (!plane || !radius ||
     typeof plane.value !== "number" || typeof radius.value !== "number") return
-  const state: GeometryKernelState = { active: false, contract, arrays, planeSize: plane.value, radius: radius.value,
+  const state: GeometryKernelState = { active: false, contract, storage: captureNativeGridOwnerStorage(owner),
+    arrays, planeSize: plane.value, radius: radius.value,
     geometricCells: new Map(), geometricBytes: 0, planarTables: new Map(), planarBytes: 0 }
   if (!hasNativeGeometryState(owner, state)) return
   nativeOwnerDefine(owner, { computeH: { value: computeNativeOwnerH, writable: true, configurable: true },
@@ -161,10 +167,10 @@ export function installParallelNativeA03Geometry(owner: HighDensitySolverA03,
   setOwnerState(owner, state)
 }
 
-export function prepareParallelNativeA03Geometry(owner: HighDensitySolverA03): void {
+export function prepareParallelNativeA03Geometry(owner: HighDensitySolverA03, quantum?: NativeGridIntrinsicQuantum): void {
   const state = getOwnerState(owner)
   if (!state) return
-  if (hasNativeGeometryState(owner, state)) {
+  if (hasNativeGeometryState(owner, state, quantum)) {
     state.active = true
     return
   }

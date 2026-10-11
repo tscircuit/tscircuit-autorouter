@@ -51,7 +51,7 @@ function createRandomNode(seed: number): NodeWithPortPoints {
     width, height, availableZ, portPoints }
 }
 
-test("local original A01 owner heap preserves native identity, arrays, every checkpoint and all six critical seeded searches", (): void => {
+test("direct original A01 owner preserves native identity, arrays, every checkpoint and all six critical seeded searches", (): void => {
   let observedSolved = false
   let observedFailure = false
   let capturedIterations = 0
@@ -70,7 +70,7 @@ test("local original A01 owner heap preserves native identity, arrays, every che
     const heap = Object.getOwnPropertyDescriptor(worker, "heap")!.value
     const arrays = [heap.f, heap.seq, heap.id]
     expect(worker instanceof HighDensitySolverA01).toBe(true)
-    expect(Object.hasOwn(heap, "push")).toBe(true)
+    expect(Object.hasOwn(heap, "push")).toBe(false)
     expect(Object.keys(heap)).toEqual(Object.keys(Object.getOwnPropertyDescriptor(native, "heap")!.value))
     native.MAX_ITERATIONS = Math.min(native.MAX_ITERATIONS, captured ? 160_000 : 12_000)
     worker.MAX_ITERATIONS = native.MAX_ITERATIONS

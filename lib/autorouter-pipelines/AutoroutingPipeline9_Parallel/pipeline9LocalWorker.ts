@@ -4,6 +4,8 @@ import { executeParallelStageJob } from "./parallelStageWorkerJobs"
 import { executeMultiHeadHistoryJob } from "./executeMultiHeadHistoryJob"
 import { MultiHeadHistoryWorkerClient } from "./MultiHeadHistoryWorkerClient"
 import { GridHistoryWorkerClient } from "./GridHistoryWorkerClient"
+import { registerWorkerNativeGridKernelDispatcher } from "./workerNativeGridKernelQuantum"
+import { initializeWorkerNativeGridRuntime } from "./workerNativeGridRuntime"
 import { executeGridHistoryJob } from "./executeGridHistoryJob"
 import type { GridHistoryDelivery, GridHistoryGrant } from "./parallelGridHistoryTypes"
 import { executeParallelHighDensityNodeJob } from "./executeParallelHighDensityNodeJob"
@@ -92,6 +94,8 @@ async function executeWorkerRequest({ taskId, job, sharedContext, idleWorkerAvai
       a13Client = new FirstValidA13WorkerClient(taskId, (request): void => self.postMessage(request))
       const ownerHistoryClient = historyClient
       const ownerGridClient = gridClient
+      await initializeWorkerNativeGridRuntime()
+      registerWorkerNativeGridKernelDispatcher(ownerGridClient.dispatch)
       const ownerA13Client = a13Client
       if (job.kind === "highDensityNodeBatch") {
         assertParallelHighDensityNodeBatchJob(job, context)
