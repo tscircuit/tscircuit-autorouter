@@ -1,0 +1,198 @@
+{
+  "description": "Twenty-first frozen paired comparison: privately branded genuine default Native lookahead coordinators use fixed sixty-four-target cohorts and preserve complete cloned prefixes, Native certificates, ordered reruns, logical caps and original callbacks. Existing reviewed Native trace/polygon reference facts require the pinned default tolerance; selected A01 bulk stays off. Every sample and both variants are included.",
+  "candidateRevision": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+  "workflowRef": "codex/parallel-benchmark-d3f96eca5",
+  "baselineRevision": "65522c89c370d4b4f9f69e1a79af58de641752bc",
+  "datasetRevision": "100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "dependencyHash": "ca98582e44455e7eb74ce4a2f123a448373e75b4b3af1b69ca7b36c90e4bf124",
+  "sampleCount": 16,
+  "repetitions": 1,
+  "workerCount": 4,
+  "preflight": {
+    "buildAndDeclarations": "passed",
+    "typescript": "passed",
+    "browserSourceEntryWithoutSharedArrayBuffer": "passed; 50 exports, no Node globals or static Node imports",
+    "browserBuiltEntryWithoutSharedArrayBuffer": "passed; 50 exports, no Node globals or static Node imports",
+    "packagedNativeGeometry": [
+      {
+        "sample": "sample001",
+        "exact": true,
+        "hash": "a4c788251b5f5829d22c487487090a9a898a7cffee5fe96ca767440478b8c049",
+        "maxActiveWorkers": 4,
+        "nativeReferenceFacts": {
+          "reservationsGranted": 2,
+          "reservationsDeclined": 0,
+          "workersReserved": 6,
+          "workersRetired": 6,
+          "batchesCompleted": 2,
+          "workerFactRowsCompleted": 827,
+          "mainFactRowsCompleted": 276,
+          "protocolFaults": 0,
+          "maxFactWorkerLanes": 3,
+          "mainFactLaneCount": 1
+        },
+        "snapshotAfterDispose": true
+      },
+      {
+        "sample": "sample015",
+        "exact": true,
+        "hash": "659d06f8a5da880d6d2227a948271a096c2a2bff54f5af45b6bbe672f24608f7",
+        "maxActiveWorkers": 4,
+        "nativeReferenceFacts": {
+          "reservationsGranted": 24,
+          "reservationsDeclined": 0,
+          "workersReserved": 72,
+          "workersRetired": 72,
+          "batchesCompleted": 24,
+          "workerFactRowsCompleted": 17649,
+          "mainFactRowsCompleted": 5892,
+          "protocolFaults": 0,
+          "maxFactWorkerLanes": 3,
+          "mainFactLaneCount": 1
+        },
+        "snapshotAfterDispose": true
+      }
+    ]
+  },
+  "groups": [
+    {
+      "samples": "1,2,3,4",
+      "args": [
+        "--samples",
+        "1,2,3,4",
+        "--repetitions",
+        "1",
+        "--timeout-ms",
+        "1200000",
+        "--high-density-policy",
+        "ordered",
+        "--pathing-strategy",
+        "indexed",
+        "--physical-routing",
+        "0",
+        "--parallel-drc-trials",
+        "0"
+      ],
+      "dispatchedAt": "2026-10-11T15:09:51.959Z",
+      "conclusion": "",
+      "createdAt": "2026-10-11T15:09:51Z",
+      "databaseId": 38150126827,
+      "headSha": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+      "status": "queued",
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38150126827"
+    },
+    {
+      "samples": "5,6,7,8",
+      "args": [
+        "--samples",
+        "5,6,7,8",
+        "--repetitions",
+        "1",
+        "--timeout-ms",
+        "1200000",
+        "--high-density-policy",
+        "ordered",
+        "--pathing-strategy",
+        "indexed",
+        "--physical-routing",
+        "0",
+        "--parallel-drc-trials",
+        "0"
+      ],
+      "dispatchedAt": "2026-10-11T15:09:53.840Z",
+      "conclusion": "",
+      "createdAt": "2026-10-11T15:09:53Z",
+      "databaseId": 38150129066,
+      "headSha": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+      "status": "queued",
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38150129066"
+    },
+    {
+      "samples": "9,10,11,12,13,16",
+      "args": [
+        "--samples",
+        "9,10,11,12,13,16",
+        "--repetitions",
+        "1",
+        "--timeout-ms",
+        "1200000",
+        "--high-density-policy",
+        "ordered",
+        "--pathing-strategy",
+        "indexed",
+        "--physical-routing",
+        "0",
+        "--parallel-drc-trials",
+        "0"
+      ],
+      "dispatchedAt": "2026-10-11T15:09:55.738Z",
+      "conclusion": "",
+      "createdAt": "2026-10-11T15:09:55Z",
+      "databaseId": 38150131331,
+      "headSha": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+      "status": "queued",
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38150131331"
+    },
+    {
+      "samples": "14",
+      "args": [
+        "--samples",
+        "14",
+        "--repetitions",
+        "1",
+        "--timeout-ms",
+        "1200000",
+        "--high-density-policy",
+        "ordered",
+        "--pathing-strategy",
+        "indexed",
+        "--physical-routing",
+        "0",
+        "--parallel-drc-trials",
+        "0"
+      ],
+      "dispatchedAt": "2026-10-11T15:09:57.671Z",
+      "conclusion": "",
+      "createdAt": "2026-10-11T15:09:57Z",
+      "databaseId": 38150133400,
+      "headSha": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+      "status": "queued",
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38150133400"
+    },
+    {
+      "samples": "15",
+      "args": [
+        "--samples",
+        "15",
+        "--repetitions",
+        "1",
+        "--timeout-ms",
+        "1200000",
+        "--high-density-policy",
+        "ordered",
+        "--pathing-strategy",
+        "indexed",
+        "--physical-routing",
+        "0",
+        "--parallel-drc-trials",
+        "0"
+      ],
+      "dispatchedAt": "2026-10-11T15:09:59.762Z",
+      "conclusion": "",
+      "createdAt": "2026-10-11T15:09:59Z",
+      "databaseId": 38150135821,
+      "headSha": "d3f96eca56df3ce507cbb01d63d807731925e5cd",
+      "status": "queued",
+      "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38150135821"
+    }
+  ],
+  "acceptance": {
+    "arithmeticMeanSpeedup": 2,
+    "aggregateSpeedup": 2,
+    "fullSampleCoverage": true,
+    "allSolved": true,
+    "exactNativeGeometry": true,
+    "originalCadQualityParity": true
+  },
+  "status": "running: all five Blacksmith groups dispatched for all sixteen samples; elapsed-time acceptance pending"
+}

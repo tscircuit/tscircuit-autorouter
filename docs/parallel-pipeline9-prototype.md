@@ -693,7 +693,7 @@ policy. The regressing selected A01 bulk driver is off. Exact Native trace
 facts use at most three idle default-pool workers plus main; sixteen-target
 lookahead remains enabled. ESM/DTS, TypeScript and source/built browser imports
 pass, and packaged sample001/sample015 retain exact Native geometry with four
-workers. All five Blacksmith groups completed all32 paired outcomes. Every sample solves
+workers. All five Blacksmith groups completed all 32 paired outcomes. Every sample solves
 with exact Native geometry, original-CAD quality and coverage parity, at most
 four active workers, 1.259× arithmetic mean speedup and 1.398× aggregate speedup.
 The target remains unmet. Every outcome, metadata field and worker statistic is
@@ -728,9 +728,9 @@ sample001/sample015 Native geometry checks pass. The packaged checks show
 three fact worker lanes plus main, zero protocol faults and all leases retired.
 All five Blacksmith groups completed all32 paired outcomes. Every sample solves
 with exact Native geometry and original-CAD quality/coverage parity; mean
-speedup is1.268× and aggregate speedup1.412×. The target remains unmet.
-The after-disposal private ledger records81,735 fact rows,128 completed
-batches,382 worker reservations and retirements, zero faults, at most three
+speedup is 1.268× and aggregate speedup 1.412×. The target remains unmet.
+The after-disposal private ledger records 81,735 fact rows, 128 completed
+batches, 382 worker reservations and retirements, zero faults, at most three
 fact workers plus main, and at most four ordinary workers. Every original
 outcome, worker statistic, metadata and source report hash is preserved in
 [parallel-srj18-da7e84745-complete.json](benchmarks/parallel-srj18-da7e84745-complete.json).
@@ -750,3 +750,14 @@ aliases, a final two-route cohort, and cap/source/index mutation while the secon
 cohort is pending. Frozen main-thread CPU attribution and exact source/control
 hashes are in
 [parallel-path-lookahead-fixed-cohort-proof.json](benchmarks/parallel-path-lookahead-fixed-cohort-proof.json).
+
+The twenty-first frozen revision `d3f96eca5` evaluates this fixed-cohort change
+against the same immutable baseline and all sixteen samples. Immutable build,
+TypeScript, source and built browser imports, and packaged sample001/sample015
+Native geometry checks pass. The packaged fact ledgers retain three worker
+lanes plus main, zero faults and all reservations retired after disposal. All
+five Blacksmith groups are dispatched; elapsed-time acceptance remains pending.
+The exact candidate also has its own benchmark branch so later implementation
+commits cannot alter the workflow revision. Arguments, preflight and workflow
+IDs are in
+[parallel-srj18-d3f96eca5-dispatch.json](benchmarks/parallel-srj18-d3f96eca5-dispatch.json).
