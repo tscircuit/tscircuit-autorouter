@@ -1,0 +1,59 @@
+{
+  "description": "Functional Native-equivalence and operation census only; no local timing comparison.",
+  "candidateImplementationRevision": "c37dda8e57ae8cbcb5064f41616c401f6fe15b7e",
+  "commands": [
+    "bun test tests/solvers/native-grid-batched-descriptor-guard.test.ts tests/solvers/parallel-owner-grid-kernel-eligibility.test.ts tests/solvers/parallel-owner-grid-authentic-quantum-parity.test.ts --timeout 9999999"
+  ],
+  "operationCensus": {
+    "kind": "functional-reflection-operation-census",
+    "performanceClaim": false,
+    "sourcePaths": [
+      "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeGridKernelIntrinsics.ts",
+      "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeDescriptorMetadataGuard.ts"
+    ],
+    "fixedIntrinsicSnapshots": 49,
+    "fullIntrinsicDescriptorChecks": 479,
+    "objectPrototypePreflightDescriptorChecks": 12,
+    "originalReflectionCalls": 644,
+    "productionReflectionCalls": 230,
+    "original": {
+      "descriptor": 497,
+      "descriptorMap": 0,
+      "prototype": 49,
+      "setPrototype": 0,
+      "names": 49,
+      "symbols": 49,
+      "ownKeys": 0
+    },
+    "production": {
+      "descriptor": 18,
+      "descriptorMap": 50,
+      "prototype": 50,
+      "setPrototype": 62,
+      "names": 0,
+      "symbols": 0,
+      "ownKeys": 50
+    },
+    "nativeSolverCalls": 0,
+    "contractScope": "One full intrinsic guard; additional portfolio/owner metadata preflights remain at the original100-step boundary.",
+    "instrumentation": "Isolated source copies wrap only captured reflection references; no global intrinsic or production source mutation."
+  },
+  "adversarialBooleanOracle": {
+    "kind": "functional-guard-boolean-oracle",
+    "performanceClaim": false,
+    "checked": 465,
+    "lateGetterCalls": 0,
+    "proxyTraps": 0,
+    "inventory": {
+      "objects": 49,
+      "descriptors": 479,
+      "globals": 18,
+      "originalReflectionCalls": 644,
+      "batchedReflectionCalls": 231,
+      "descriptorObjectsRetained": 479,
+      "additionalDescriptorMaps": 49
+    },
+    "originalPrototypeObserver": true,
+    "batchRejectsInheritedMetadataWithoutGetter": true
+  }
+}
