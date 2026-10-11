@@ -1,0 +1,519 @@
+{
+  "kind": "Functional/call-work proof only; no elapsed times",
+  "sampleRows": [
+    {
+      "sample": 1,
+      "regions": 1301,
+      "ports": 12717,
+      "connections": 205,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 410,
+      "regionPredicateCalls": 684,
+      "spatialRowTests": 15257,
+      "candidateRows": 771,
+      "guardObjects": 19044,
+      "guardProperties": 48619,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 269415,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 2,
+      "regions": 2095,
+      "ports": 19473,
+      "connections": 244,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 488,
+      "regionPredicateCalls": 766,
+      "spatialRowTests": 24040,
+      "candidateRows": 860,
+      "guardObjects": 29421,
+      "guardProperties": 75039,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 574600,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 3,
+      "regions": 2046,
+      "ports": 14919,
+      "connections": 145,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 290,
+      "regionPredicateCalls": 885,
+      "spatialRowTests": 11241,
+      "candidateRows": 963,
+      "guardObjects": 25883,
+      "guardProperties": 65384,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 242060,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 4,
+      "regions": 1604,
+      "ports": 7879,
+      "connections": 114,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 228,
+      "regionPredicateCalls": 322,
+      "spatialRowTests": 8272,
+      "candidateRows": 503,
+      "guardObjects": 14944,
+      "guardProperties": 37628,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 197148,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 5,
+      "regions": 1492,
+      "ports": 14002,
+      "connections": 172,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 344,
+      "regionPredicateCalls": 507,
+      "spatialRowTests": 14129,
+      "candidateRows": 586,
+      "guardObjects": 21281,
+      "guardProperties": 54003,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 288520,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 6,
+      "regions": 13857,
+      "ports": 35896,
+      "connections": 255,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 510,
+      "regionPredicateCalls": 1497,
+      "spatialRowTests": 46351,
+      "candidateRows": 3074,
+      "guardObjects": 72213,
+      "guardProperties": 173580,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 3344545,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 7,
+      "regions": 2756,
+      "ports": 22331,
+      "connections": 263,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 526,
+      "regionPredicateCalls": 1752,
+      "spatialRowTests": 28153,
+      "candidateRows": 1928,
+      "guardObjects": 36044,
+      "guardProperties": 91224,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 444896,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 8,
+      "regions": 4176,
+      "ports": 21493,
+      "connections": 361,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 722,
+      "regionPredicateCalls": 2212,
+      "spatialRowTests": 39056,
+      "candidateRows": 2511,
+      "guardObjects": 43289,
+      "guardProperties": 109224,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 1490525,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 9,
+      "regions": 4147,
+      "ports": 22595,
+      "connections": 256,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 512,
+      "regionPredicateCalls": 1581,
+      "spatialRowTests": 37696,
+      "candidateRows": 1690,
+      "guardObjects": 40366,
+      "guardProperties": 101058,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 668330,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 10,
+      "regions": 2439,
+      "ports": 23095,
+      "connections": 310,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 620,
+      "regionPredicateCalls": 1777,
+      "spatialRowTests": 35210,
+      "candidateRows": 2005,
+      "guardObjects": 36926,
+      "guardProperties": 93832,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 777563,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 11,
+      "regions": 2432,
+      "ports": 17634,
+      "connections": 289,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 578,
+      "regionPredicateCalls": 1931,
+      "spatialRowTests": 41660,
+      "candidateRows": 2152,
+      "guardObjects": 29169,
+      "guardProperties": 74484,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 679975,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 12,
+      "regions": 6190,
+      "ports": 44221,
+      "connections": 504,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 1008,
+      "regionPredicateCalls": 3131,
+      "spatialRowTests": 110049,
+      "candidateRows": 3482,
+      "guardObjects": 68057,
+      "guardProperties": 171523,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 2670814,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 13,
+      "regions": 5577,
+      "ports": 21841,
+      "connections": 238,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 476,
+      "regionPredicateCalls": 1511,
+      "spatialRowTests": 32903,
+      "candidateRows": 1825,
+      "guardObjects": 38294,
+      "guardProperties": 94062,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 1340527,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 14,
+      "regions": 3824,
+      "ports": 21154,
+      "connections": 238,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 476,
+      "regionPredicateCalls": 1640,
+      "spatialRowTests": 23887,
+      "candidateRows": 1765,
+      "guardObjects": 32884,
+      "guardProperties": 81554,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 892648,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 15,
+      "regions": 5368,
+      "ports": 32290,
+      "connections": 461,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 922,
+      "regionPredicateCalls": 2675,
+      "spatialRowTests": 67287,
+      "candidateRows": 3237,
+      "guardObjects": 56462,
+      "guardProperties": 141877,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 2902952,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    },
+    {
+      "sample": 16,
+      "regions": 4414,
+      "ports": 17558,
+      "connections": 269,
+      "admitted": true,
+      "graphBuilds": 1,
+      "queries": 538,
+      "regionPredicateCalls": 1646,
+      "spatialRowTests": 59311,
+      "candidateRows": 2051,
+      "guardObjects": 38525,
+      "guardProperties": 96105,
+      "intrinsicObjects": 52,
+      "intrinsicProperties": 740,
+      "nativeRegionPredicateCalls": 1200837,
+      "originalTinySearchCalls": 0,
+      "candidateTinySearchCalls": 0
+    }
+  ],
+  "randomCases": 20000,
+  "observerCases": [
+    {
+      "kind": "point-getter",
+      "admitted": false,
+      "originalEvents": [
+        "point.x",
+        "point.x"
+      ],
+      "candidateEvents": [
+        "point.x",
+        "point.x"
+      ]
+    },
+    {
+      "kind": "node-getter",
+      "admitted": false,
+      "originalEvents": [
+        "node.width",
+        "node.width"
+      ],
+      "candidateEvents": [
+        "node.width",
+        "node.width"
+      ]
+    },
+    {
+      "kind": "connection-points-getter",
+      "admitted": false,
+      "originalEvents": [
+        "connection.points"
+      ],
+      "candidateEvents": [
+        "connection.points"
+      ]
+    },
+    {
+      "kind": "node-proxy",
+      "admitted": false,
+      "originalEvents": [
+        "node._connectedTo",
+        "node.capacityMeshNodeId",
+        "node.width",
+        "node.height",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.availableZ",
+        "node.width",
+        "node.height",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.availableZ"
+      ],
+      "candidateEvents": [
+        "node._connectedTo",
+        "node.capacityMeshNodeId",
+        "node.width",
+        "node.height",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.availableZ",
+        "node.width",
+        "node.height",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.center",
+        "node.availableZ"
+      ]
+    },
+    {
+      "kind": "connmap-query",
+      "admitted": false,
+      "originalEvents": [
+        "map.c"
+      ],
+      "candidateEvents": [
+        "map.c"
+      ]
+    },
+    {
+      "kind": "query-error",
+      "admitted": false,
+      "originalEvents": [
+        "map.c"
+      ],
+      "candidateEvents": [
+        "map.c"
+      ],
+      "error": [
+        "Error",
+        "original query error"
+      ]
+    },
+    {
+      "kind": "invalid-layer",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": [],
+      "error": [
+        "Error",
+        "Connection point must specify either layer or layers, never both"
+      ]
+    },
+    {
+      "kind": "missing-net",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": [],
+      "error": [
+        "Error",
+        "Could not resolve net ID for connection \"c\""
+      ]
+    },
+    {
+      "kind": "invalid-geometry",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": [],
+      "error": [
+        "Error",
+        "Could not find start region for connection \"c\""
+      ]
+    },
+    {
+      "kind": "undefined-layer-presence",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": [],
+      "error": [
+        "Error",
+        "Connection point must specify either layer or layers, never both"
+      ]
+    },
+    {
+      "kind": "bootstrap-point-mutation",
+      "admitted": true,
+      "originalEvents": [
+        "original-bootstrap"
+      ],
+      "candidateEvents": [
+        "original-bootstrap"
+      ]
+    },
+    {
+      "kind": "bootstrap-future-getter",
+      "admitted": false,
+      "originalEvents": [
+        "original-bootstrap",
+        "future.x",
+        "future.x"
+      ],
+      "candidateEvents": [
+        "original-bootstrap",
+        "future.x",
+        "future.x"
+      ]
+    },
+    {
+      "kind": "Math.sqrt-getter",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": []
+    },
+    {
+      "kind": "Math.abs-getter",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": []
+    },
+    {
+      "kind": "WeakMap.get-wrapper",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": []
+    },
+    {
+      "kind": "WeakMap.set-wrapper",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": []
+    },
+    {
+      "kind": "WeakMap.has-wrapper",
+      "admitted": false,
+      "originalEvents": [],
+      "candidateEvents": []
+    }
+  ],
+  "sourceCopy": true,
+  "ieeeBoundaryCases": 2640,
+  "totals": {
+    "nativeRegionPredicateCalls": 17985355,
+    "queries": 8648,
+    "regionPredicateCalls": 24517,
+    "spatialRowTests": 594502,
+    "candidateRows": 29403,
+    "guardObjects": 602802,
+    "guardProperties": 1509196,
+    "intrinsicObjects": 832,
+    "intrinsicProperties": 11840
+  },
+  "originalBuilderSha256": "8f18673b6ce1177b89b173ece9bd452cf23d01b6b45da58d242f48dd896f33df",
+  "activation": "Dormant isolated prototype only; no production pipeline imports"
+}
