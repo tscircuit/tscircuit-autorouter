@@ -174,8 +174,8 @@ omits unused visualization snapshots, and small force/repair jobs are batched
 to reduce messages while retaining their original commits. Their performance
 is being evaluated in the next frozen all-sample run.
 
-Authentic worker-owned A01 searches also use a strict 64-bit floating-point
-heap arena during the original 100-step quantum. Every quantum rehydrates the
+Snapshot `9f87cb73b` evaluated a strict 64-bit floating-point heap arena in
+authentic worker-owned A01 searches during the original 100-step quantum. Every quantum rehydrates the
 complete active and stale native rows, then flushes dirty rows before any
 observer or await. The native heap, arrays, identities, tie order, and iteration
 limits remain intact. The arena proof records 957,175 native A01 steps and 9,572
@@ -368,7 +368,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Fourteen frozen exploratory snapshots have complete paired results for all 16
+Fifteen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -389,6 +389,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `2be345c05` | ordered / indexed, force trials on coordinator | 1.350× | 1.460× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `ff70052f0` | ordered / indexed, force trials on coordinator | 1.344× | 1.465× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `7bb1b82e2` | ordered / indexed, force trials on coordinator | 1.369× | 1.523× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `9f87cb73b` | ordered / indexed, force trials on coordinator | 1.287× | 1.451× | All solved, exact geometry and original-CAD quality parity; high-density regression, target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -515,3 +516,15 @@ statistics are preserved in
 [parallel-srj18-7bb1b82e2-complete.json](benchmarks/parallel-srj18-7bb1b82e2-complete.json),
 with immutable workflow records and packaged preflight checks in
 [parallel-srj18-7bb1b82e2-dispatch.json](benchmarks/parallel-srj18-7bb1b82e2-dispatch.json).
+
+Snapshot `9f87cb73b` adds strict C intersection tuples to the original CSR
+pathing scan, private conductor geometry reuse, and the A01 heap arena. All 32
+outcomes solve with exact native geometry and original-CAD quality parity, but
+average speedup is 1.287× and aggregate speedup is 1.451×. High-density stage
+times regress across the measured samples: sample015 rises from 32.0 to 40.8
+seconds and sample005 from 4.2 to 6.2 seconds relative to `7bb1b82e2`. The next revision disables the arena by
+default while preserving its experimental state-parity proof. The 2× target
+remains unmet. Full outcomes and worker pool statistics are preserved in
+[parallel-srj18-9f87cb73b-complete.json](benchmarks/parallel-srj18-9f87cb73b-complete.json),
+with immutable workflow records and packaged preflight checks in
+[parallel-srj18-9f87cb73b-dispatch.json](benchmarks/parallel-srj18-9f87cb73b-dispatch.json).
