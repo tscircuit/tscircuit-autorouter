@@ -63,7 +63,7 @@ type ScopeBinding = { owner: MultiSimplifiedPathSolver; eligibility: ParallelPat
   contracts: ParallelPathPrototypeContract[]; covered: WeakSet<object>; indexState: AwaitStateGraph }
 const scopeCheckOwners = new WeakMap<() => boolean, ScopeBinding>()
 const nativeEligibilityOwners = new WeakMap<ParallelPathLookaheadEligibility, MultiSimplifiedPathSolver>()
-const nativeLookaheadWindowCapacity = 16
+const nativeLookaheadWindowCapacity = 64
 const globals = ["Object", "Array", "Math", "JSON", "Number", "String", "Boolean", "BigInt", "Symbol", "Map", "Set",
   "WeakMap", "WeakSet", "Reflect", "Function", "Atomics", "Promise", "Proxy", "isNaN", "isFinite", "parseInt", "parseFloat",
   "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",

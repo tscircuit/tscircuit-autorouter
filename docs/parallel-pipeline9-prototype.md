@@ -700,3 +700,18 @@ preserved in
 [parallel-srj18-752f8c03f-complete.json](benchmarks/parallel-srj18-752f8c03f-complete.json).
 Checks, hashes, arguments and workflow IDs are in
 [parallel-srj18-752f8c03f-dispatch.json](benchmarks/parallel-srj18-752f8c03f-dispatch.json).
+
+The next reviewed lookahead revision queues sixty-four targets on the same four
+physical workers. Genuine private owner/helper/default-pool/minted-run identity
+is still required; custom callbacks keep four pending targets. All six captured
+phases retain exact Native state and geometry for 1,503 routes and 27,198 logical
+steps. Compared with sixteen targets, descriptor reads fall from 14,261,172 to
+7,317,033 and descriptor builtin calls from 2,301,498 to 1,131,409. Ordered
+reruns increase from 167 to 306 and rerun steps from 6,840 to 11,702. This is an
+operation-count tradeoff, with elapsed-time acceptance still pending. Twenty
+functional files pass 2,439 assertions; independent review adds 88 assertions,
+including the last pending target, unsupported callbacks, caps, and cancellation
+of all sixty-four jobs. Exact source hashes and phase counters are in
+[parallel-path-lookahead-sixty-four-window-proof.json](benchmarks/parallel-path-lookahead-sixty-four-window-proof.json);
+the isolated 8/16/32/64 comparison and replay preload are in
+[parallel-path-window-capacity-census.json](benchmarks/parallel-path-window-capacity-census.json).

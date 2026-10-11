@@ -14,7 +14,7 @@ const ownerContract = captureParallelPathPrototypeContract(MultiSimplifiedPathSo
 
 function makeOwner(): MultiSimplifiedPathSolver {
   const routes: HighDensityRoute[] = []
-  for (let index = 0; index < 24; index++) {
+  for (let index = 0; index < 128; index++) {
     const y = index * 0.37
     routes.push({ connectionName: `window-${index}`, traceThickness: 0.15, viaDiameter: 0.3,
       route: [{ x: -2, y, z: index % 2 }, { x: -1, y: y + 0.4, z: index % 2 },
@@ -33,15 +33,15 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
   await initializeReferenceDrcRuntime()
   const owner = makeOwner(), helper = createParallelPathLookaheadEligibility(owner, ownerContract)!
   expect(helper()).toBe(true)
-  expect(getNativeParallelPathLookaheadWindowCapacity(owner, helper)).toBe(16)
+  expect(getNativeParallelPathLookaheadWindowCapacity(owner, helper)).toBe(64)
   expect(getNativeParallelPathLookaheadWindowCapacity(makeOwner(), helper)).toBeUndefined()
   expect(getNativeParallelPathLookaheadWindowCapacity(owner, Object.assign((): boolean => true, helper))).toBeUndefined()
-  const indexes = Array.from({ length: 16 }, (_, index) => index)
+  const indexes = Array.from({ length: 64 }, (_, index) => index)
   const scope = helper.captureScope(indexes)!
   const check = helper.captureAwaitState(scope)!
   expect(check()).toBe(true)
-  expect(helper.captureScope([...indexes, 16])).toBeUndefined()
-  const point = owner.unsimplifiedHdRoutes[15]!.route[0]!
+  expect(helper.captureScope([...indexes, 64])).toBeUndefined()
+  const point = owner.unsimplifiedHdRoutes[63]!.route[0]!
   const descriptor = Object.getOwnPropertyDescriptor(point, "x")!
   let reads = 0
   Object.defineProperty(point, "x", { configurable: true, enumerable: true, get: (): never => {
@@ -91,9 +91,9 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
       captureScope: nativeHelper.captureScope, captureAwaitState: nativeHelper.captureAwaitState })
     await native.solve()
     expect(state(nativeOwner)).toEqual(state(expected))
-    expect(native.stats.maximumLookahead).toBe(16)
-    expect(native.stats.certifiedRoutes + native.stats.orderedReruns).toBe(24)
-    expect(native.stats.speculativeJobs).toBe(24)
+    expect(native.stats.maximumLookahead).toBe(64)
+    expect(native.stats.certifiedRoutes + native.stats.orderedReruns).toBe(128)
+    expect(native.stats.speculativeJobs).toBe(128)
     expect(pool.stats.maxActiveWorkers).toBe(4)
 
     // A pending-source mutation withdraws the entire window before publication.
@@ -105,15 +105,15 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
       isEligible: changedHelper, nativeEligibility: changedHelper, nativeWorkerPool: pool,
       captureScope: changedHelper.captureScope, captureAwaitState: changedHelper.captureAwaitState })
     const changedSolve = changedCoordinator.solve()
-    changed.unsimplifiedHdRoutes[15]!.route[0]!.x += 0.2
-    expectedChanged.unsimplifiedHdRoutes[15]!.route[0]!.x += 0.2
+    changed.unsimplifiedHdRoutes[63]!.route[0]!.x += 0.2
+    expectedChanged.unsimplifiedHdRoutes[63]!.route[0]!.x += 0.2
     expectedChanged.solve()
     await changedSolve
     expect(state(changed)).toEqual(state(expectedChanged))
-    expect(changedCoordinator.stats.maximumLookahead).toBe(16)
+    expect(changedCoordinator.stats.maximumLookahead).toBe(64)
     expect(changedCoordinator.stats.certifiedRoutes).toBe(0)
     expect(changedCoordinator.stats.awaitStateDeclines).toBe(1)
-    expect(changedCoordinator.stats.cancellationSignals).toBe(16)
+    expect(changedCoordinator.stats.cancellationSignals).toBe(64)
 
     const capped = makeOwner(), expectedCapped = makeOwner()
     const cappedHelper = createParallelPathLookaheadEligibility(capped, ownerContract)!
@@ -129,7 +129,7 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
     await expect(cappedSolve).rejects.toThrow("Ordered native path failed")
     expect(state(capped)).toEqual(state(expectedCapped))
     expect(cappedCoordinator.stats.certifiedRoutes).toBe(0)
-    expect(cappedCoordinator.stats.cancellationSignals).toBe(16)
+    expect(cappedCoordinator.stats.cancellationSignals).toBe(64)
     expect(pool.stats.tasksCompleted).toBe(pool.stats.tasksStarted)
   } finally { pool.dispose() }
 })

@@ -269,7 +269,7 @@ export class ParallelPathLookaheadCoordinator {
   private dispatchWindow(prefix: number): void {
     const windowCapacity = nativeApply(nativeWeakMapGet, nativeWindowCapacities, [this]) as number
     if (typeof windowCapacity !== "number" || windowCapacity < this.params.workerCount ||
-      windowCapacity > 16 || windowCapacity % 1 !== 0) {
+      windowCapacity > 64 || windowCapacity % 1 !== 0) {
       throw new Error("Native lookahead owner is missing its private window capacity")
     }
     const end = Math.min(this.native.unsimplifiedHdRoutes.length, prefix + windowCapacity)
