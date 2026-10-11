@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import Flatbush from "flatbush"
 import type { CapacityMeshNode } from "lib/types"
 import {
   getBoundsIntersection,
@@ -19,6 +20,137 @@ import {
 export type TopologyMergingOutputProvenance = {
   groupIndexesByNodeId: Map<string, number[]>
   sourceKeysByNodeId: Map<string, string[]>
+}
+
+const nativeMapGet = Map.prototype.get
+const nativeMapValues = Map.prototype.values
+const nativeArrayFilter = Array.prototype.filter
+const nativeArrayIncludes = Array.prototype.includes
+const nativeArrayEvery = Array.prototype.every
+const nativeArraySome = Array.prototype.some
+const nativeArrayMap = Array.prototype.map
+const nativeArraySort = Array.prototype.sort
+const nativeArrayIterator = Array.prototype[Symbol.iterator]
+
+function isPlainDataObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null) return false
+  const prototype = Object.getPrototypeOf(value)
+  return (
+    (prototype === Object.prototype || prototype === null) &&
+    Object.values(Object.getOwnPropertyDescriptors(value)).every(
+      (descriptor) => "value" in descriptor,
+    )
+  )
+}
+
+function isPlainArray(value: unknown): value is unknown[] {
+  if (
+    !Array.isArray(value) ||
+    Object.getPrototypeOf(value) !== Array.prototype
+  ) {
+    return false
+  }
+  return Reflect.ownKeys(value).every((key) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!
+    return (
+      "value" in descriptor &&
+      (key === "length" ||
+        (typeof key === "string" && /^(0|[1-9][0-9]*)$/.test(key)))
+    )
+  })
+}
+
+function isPlainNode(node: CapacityMeshNode): boolean {
+  return (
+    isPlainDataObject(node) &&
+    isPlainDataObject(node.center) &&
+    typeof node.center.x === "number" &&
+    typeof node.center.y === "number" &&
+    typeof node.width === "number" &&
+    typeof node.height === "number" &&
+    isPlainArray(node.availableZ) &&
+    node.availableZ.every((z) => typeof z === "number")
+  )
+}
+
+function canIndexOverlapBounds({
+  nodes,
+  preparedNodeBySourceKey,
+  provenance,
+}: {
+  nodes: CapacityMeshNode[]
+  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  provenance: TopologyMergingOutputProvenance
+}): boolean {
+  if (
+    Object.getOwnPropertyDescriptor(Array.prototype, "filter")?.value !==
+      nativeArrayFilter ||
+    Object.getOwnPropertyDescriptor(Array.prototype, "includes")?.value !==
+      nativeArrayIncludes ||
+    Object.getOwnPropertyDescriptor(Array.prototype, "every")?.value !==
+      nativeArrayEvery ||
+    Object.getOwnPropertyDescriptor(Array.prototype, "some")?.value !==
+      nativeArraySome ||
+    Object.getOwnPropertyDescriptor(Array.prototype, "map")?.value !==
+      nativeArrayMap ||
+    Object.getOwnPropertyDescriptor(Array.prototype, "sort")?.value !==
+      nativeArraySort ||
+    Object.getOwnPropertyDescriptor(Array.prototype, Symbol.iterator)?.value !==
+      nativeArrayIterator ||
+    Object.getOwnPropertyDescriptor(Map.prototype, "get")?.value !== nativeMapGet ||
+    Object.getOwnPropertyDescriptor(Map.prototype, "values")?.value !==
+      nativeMapValues ||
+    !isPlainArray(nodes) ||
+    !isPlainDataObject(provenance)
+  ) {
+    return false
+  }
+  for (const map of [
+    preparedNodeBySourceKey,
+    provenance.groupIndexesByNodeId,
+    provenance.sourceKeysByNodeId,
+  ]) {
+    if (
+      Object.getPrototypeOf(map) !== Map.prototype ||
+      Object.getOwnPropertyDescriptor(map, "get") !== undefined ||
+      Object.getOwnPropertyDescriptor(map, "values") !== undefined
+    ) {
+      return false
+    }
+  }
+  if (!nodes.every(isPlainNode)) return false
+  for (const values of provenance.groupIndexesByNodeId.values()) {
+    if (
+      !isPlainArray(values) ||
+      !values.every((value) => typeof value === "number")
+    ) {
+      return false
+    }
+  }
+  for (const values of provenance.sourceKeysByNodeId.values()) {
+    if (
+      !isPlainArray(values) ||
+      !values.every((value) => typeof value === "string")
+    ) {
+      return false
+    }
+  }
+  for (const prepared of preparedNodeBySourceKey.values()) {
+    if (
+      !isPlainDataObject(prepared) ||
+      !isPlainNode(prepared.node) ||
+      !isPlainDataObject(prepared.bounds) ||
+      ![
+        prepared.bounds.minX,
+        prepared.bounds.minY,
+        prepared.bounds.maxX,
+        prepared.bounds.maxY,
+      ].every((value) => typeof value === "number")
+    ) {
+      return false
+    }
+  }
+  return true
 }
 
 export function createTopologyMergingOutputNodes({
@@ -161,9 +293,44 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  // Geometry is read again after individual validation, which can dispatch
+  // caller-supplied map methods. Accessors and custom methods keep the pair scan.
+  const nodeBounds =
+    nodes.length > 1 &&
+    canIndexOverlapBounds({ nodes, preparedNodeBySourceKey, provenance })
+      ? nodes.map(getCapacityMeshNodeBounds)
+      : undefined
+  const overlapIndex = nodeBounds?.every((bounds) =>
+    Number.isFinite(bounds.minX) &&
+    Number.isFinite(bounds.minY) &&
+    Number.isFinite(bounds.maxX) &&
+    Number.isFinite(bounds.maxY) &&
+    isValidCapacityBounds(bounds),
+  )
+    ? new Flatbush(nodes.length)
+    : undefined
+  if (overlapIndex) {
+    for (const bounds of nodeBounds!) {
+      overlapIndex.add(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+    }
+    overlapIndex.finish()
+  }
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
+    const boundsA = nodeBounds?.[aIndex]
+    const candidateIndexes = overlapIndex
+      ? overlapIndex
+          .search(boundsA!.minX, boundsA!.minY, boundsA!.maxX, boundsA!.maxY)
+          .filter((bIndex) => bIndex > aIndex)
+          .sort((a, b) => a - b)
+      : undefined
+    for (
+      let pairIndex = 0;
+      pairIndex < (candidateIndexes?.length ?? nodes.length - aIndex - 1);
+      pairIndex++
+    ) {
+      const bIndex = candidateIndexes?.[pairIndex] ?? aIndex + pairIndex + 1
       const nodeB = nodes[bIndex]!
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
@@ -171,8 +338,8 @@ export function validateTopologyMergingOutput({
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
-        getCapacityMeshNodeBounds(nodeB),
+        overlapIndex ? boundsA! : getCapacityMeshNodeBounds(nodeA),
+        overlapIndex ? nodeBounds![bIndex]! : getCapacityMeshNodeBounds(nodeB),
       )
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX

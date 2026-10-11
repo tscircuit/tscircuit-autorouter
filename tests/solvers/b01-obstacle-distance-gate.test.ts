@@ -522,10 +522,16 @@ function originalMove(
 const transpiler = new Bun.Transpiler({ loader: "ts" })
 const oracle = new Function(
   transpiler.transformSync(frozenOracleSource) +
-    "\nreturn { distance: getSquaredDistanceBetweenSegments, lateral: originalLateral, move: originalMove };",
+    "\nreturn { distance: getSquaredDistanceBetweenSegments," +
+    " intersects: doSegmentsIntersect, lateral: originalLateral," +
+    " move: originalMove };",
 )()
 
-function getCurrentPredicate(): (params: any, distance: number) => boolean {
+type SegmentPredicate = ((params: any, distance: number) => boolean) & {
+  intersects: (params: any, reuseOrientations?: boolean) => boolean
+}
+
+function getCurrentPredicate(): SegmentPredicate {
   const path =
     process.env.B01_TEST_SOURCE_PATH ??
     join(
@@ -538,8 +544,40 @@ function getCurrentPredicate(): (params: any, distance: number) => boolean {
     source.indexOf("export interface HighDensitySolverB01Props"),
   )
   return new Function(
-    transpiler.transformSync(helpers) + "\nreturn areSegmentsCloserThan;",
+    transpiler.transformSync(helpers) +
+      "\nreturn Object.assign((params, distance) =>" +
+      " areSegmentsCloserThan(params, distance, true)," +
+      " { intersects: doSegmentsIntersect });",
   )()
+}
+
+function makeAccessorSegments(points: any[]): {
+  params: any
+  reads: string[]
+} {
+  const reads: string[] = []
+  const accessorPoints = points.map((point, index): any => {
+    const accessorPoint = {}
+    for (const coordinate of ["x", "y"] as const) {
+      Object.defineProperty(accessorPoint, coordinate, {
+        enumerable: true,
+        get: (): number => {
+          reads.push(`${index}.${coordinate}`)
+          return point[coordinate]
+        },
+      })
+    }
+    return accessorPoint
+  })
+  return {
+    params: {
+      firstStart: accessorPoints[0],
+      firstEnd: accessorPoints[1],
+      secondStart: accessorPoints[2],
+      secondEnd: accessorPoints[3],
+    },
+    reads,
+  }
 }
 
 function makeProps(obstacles: any[] = [], name = "candidate"): any {
@@ -635,6 +673,9 @@ test("B01 skips distant projections and root-array allocation without changing e
       secondStart: points[2],
       secondEnd: points[3],
     }
+    const intersects = oracle.intersects(params)
+    expect(predicate.intersects(params, true)).toBe(intersects)
+    expect(predicate.intersects(params, false)).toBe(intersects)
     const distance = oracle.distance(params)
     for (const threshold of thresholds)
       expect(predicate(params, threshold)).toBe(
@@ -663,6 +704,35 @@ test("B01 skips distant projections and root-array allocation without changing e
   mutable.secondStart.y = -1
   mutable.secondEnd.x = 0.5
   expect(predicate(mutable, 0.1)).toBe(true)
+
+  for (const points of [
+    [
+      { x: 0, y: 0 },
+      { x: 2, y: 0 },
+      { x: 1, y: 0 },
+      { x: 3, y: 0 },
+    ],
+    [
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 1 },
+      { x: 1, y: 0 },
+    ],
+    [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 4, y: 1e-10 },
+      { x: 5, y: 1e-10 },
+    ],
+  ]) {
+    const original = makeAccessorSegments(points)
+    const current = makeAccessorSegments(points)
+    expect(predicate.intersects(current.params, false)).toBe(
+      oracle.intersects(original.params),
+    )
+    expect(current.reads).toEqual(original.reads)
+    expect(current.reads.length).toBeGreaterThan(0)
+  }
 
   const candidate: any = new HighDensitySolverB01(makeProps())
   const reference: any = new HighDensitySolverB01(makeProps())
@@ -723,6 +793,22 @@ test("B01 skips distant projections and root-array allocation without changing e
     connectionName: "candidate",
     rootConnectionName: "candidate",
   }
+  const accessorWall = structuredClone(wall)
+  Object.defineProperty(accessorWall.route[0], "x", {
+    enumerable: true,
+    get: (): number => 0,
+  })
+  const accessorProps = makeProps([accessorWall])
+  Object.defineProperty(accessorProps.nodeWithPortPoints.portPoints[0], "x", {
+    enumerable: true,
+    get: (): number => -2,
+  })
+  const accessorSolver: any = new HighDensitySolverB01(accessorProps)
+  accessorSolver._setup()
+  expect(accessorSolver.obstacleTracePrimitives[0].canReuseOrientations).toBe(
+    false,
+  )
+  expect(accessorSolver.unsolvedSegs[0].canReuseOrientations).toBe(false)
   const rotatedRect = {
     type: "rect",
     connectionName: "pad",

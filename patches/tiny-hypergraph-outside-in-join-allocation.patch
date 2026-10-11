@@ -103,3 +103,129 @@ index be89492..f5dc2b9 100644
        )
      }
    }
+diff --git a/lib/compat/loadSerializedHyperGraph.ts b/lib/compat/loadSerializedHyperGraph.ts
+index 63fbdfd..8ec48f9 100644
+--- a/lib/compat/loadSerializedHyperGraph.ts
++++ b/lib/compat/loadSerializedHyperGraph.ts
+@@ -322,6 +322,95 @@ const getSharedPortIdsForConnection = (
+     )
+     .map((port) => port.portId)
+ 
++const nativeArrayMap = Array.prototype.map
++const nativeArrayFilter = Array.prototype.filter
++const nativeArraySpecies = Object.getOwnPropertyDescriptor(
++  Array,
++  Symbol.species,
++)?.get
++const hasNativeArrayMethods =
++  Function.prototype.toString.call(nativeArrayMap).includes("[native code]") &&
++  Function.prototype.toString.call(nativeArrayFilter).includes("[native code]")
++
++const isPlainArray = (value: unknown): value is unknown[] =>
++  hasNativeArrayMethods &&
++  Array.isArray(value) &&
++  Object.getPrototypeOf(value) === Array.prototype &&
++  !Object.hasOwn(value, "map") &&
++  !Object.hasOwn(value, "filter") &&
++  !Object.hasOwn(value, "constructor") &&
++  Object.getOwnPropertyDescriptor(Array.prototype, "map")?.value ===
++    nativeArrayMap &&
++  Object.getOwnPropertyDescriptor(Array.prototype, "filter")?.value ===
++    nativeArrayFilter &&
++  Object.getOwnPropertyDescriptor(Array.prototype, "constructor")?.value ===
++    Array &&
++  Object.getOwnPropertyDescriptor(Array, Symbol.species)?.get ===
++    nativeArraySpecies
++
++const getOwnString = (value: object, key: string): string | undefined => {
++  const descriptor = Object.getOwnPropertyDescriptor(value, key)
++  return descriptor && "value" in descriptor && typeof descriptor.value === "string"
++    ? descriptor.value
++    : undefined
++}
++
++// Only replace repeated scans of plain records. Accessors and custom array
++// methods keep their original calls, including reads of matching port IDs.
++const getSharedRegionPairs = (
++  graph: SerializedHyperGraph,
++  connections: NonNullable<SerializedHyperGraph["connections"]>,
++): Map<string, Set<string>> | undefined => {
++  const portsDescriptor = Object.getOwnPropertyDescriptor(graph, "ports")
++  if (!portsDescriptor || !("value" in portsDescriptor)) return undefined
++  const ports: unknown = portsDescriptor.value
++  if (!isPlainArray(ports) || !isPlainArray(connections)) return undefined
++
++  for (let index = 0; index < connections.length; index++) {
++    const descriptor = Object.getOwnPropertyDescriptor(connections, index)
++    if (!descriptor || !("value" in descriptor)) return undefined
++    const connection = descriptor.value
++    if (!connection || typeof connection !== "object") return undefined
++    const prototype = Object.getPrototypeOf(connection)
++    if (prototype !== Object.prototype && prototype !== null) return undefined
++    if (
++      getOwnString(connection, "connectionId") === undefined ||
++      getOwnString(connection, "startRegionId") === undefined ||
++      getOwnString(connection, "endRegionId") === undefined
++    ) return undefined
++  }
++
++  const pairs = new Map<string, Set<string>>()
++  for (let index = 0; index < ports.length; index++) {
++    const descriptor = Object.getOwnPropertyDescriptor(ports, index)
++    if (!descriptor || !("value" in descriptor)) return undefined
++    const port = descriptor.value
++    if (!port || typeof port !== "object") return undefined
++    const prototype = Object.getPrototypeOf(port)
++    if (prototype !== Object.prototype && prototype !== null) return undefined
++    const firstRegionId = getOwnString(port, "region1Id")
++    const secondRegionId = getOwnString(port, "region2Id")
++    if (
++      getOwnString(port, "portId") === undefined ||
++      firstRegionId === undefined ||
++      secondRegionId === undefined
++    ) return undefined
++    let firstNeighbors = pairs.get(firstRegionId)
++    if (!firstNeighbors) {
++      firstNeighbors = new Set()
++      pairs.set(firstRegionId, firstNeighbors)
++    }
++    firstNeighbors.add(secondRegionId)
++    let secondNeighbors = pairs.get(secondRegionId)
++    if (!secondNeighbors) {
++      secondNeighbors = new Set()
++      pairs.set(secondRegionId, secondNeighbors)
++    }
++    secondNeighbors.add(firstRegionId)
++  }
++  return pairs
++}
++
+ export const loadSerializedHyperGraph = (
+   serializedHyperGraph: SerializedHyperGraph,
+ ): {
+@@ -478,13 +567,21 @@ export const loadSerializedHyperGraph = (
+     }
+   })
+ 
++  const sharedRegionPairs = getSharedRegionPairs(filteredHyperGraph, connections)
++  // Classification only consumes array length. Keep its original delayed
++  // length reads when custom records or array methods require the full scan.
++  const noSharedPortIds: string[] = []
++  const someSharedPortIds: string[] = [""]
+   const routableConnections = connections
+     .map((connection) => {
+       const solvedRoute = solvedRouteByConnectionId.get(connection.connectionId)
+-      const sharedPortIds = getSharedPortIdsForConnection(
+-        filteredHyperGraph,
+-        connection,
+-      )
++      const sharedPortIds = sharedRegionPairs
++        ? sharedRegionPairs.get(connection.startRegionId)?.has(
++            connection.endRegionId,
++          )
++          ? someSharedPortIds
++          : noSharedPortIds
++        : getSharedPortIdsForConnection(filteredHyperGraph, connection)
+ 
+       return {
+         connection,

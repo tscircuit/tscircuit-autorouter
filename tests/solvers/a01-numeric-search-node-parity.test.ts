@@ -15,11 +15,11 @@ type ObjectNode = {
 }
 type NumericNodeState = {
   nodeCount: number
-  nodeZ: Float64Array
-  nodeRow: Float64Array
-  nodeCol: Float64Array
+  nodeZ: Int32Array | Float64Array
+  nodeRow: Int32Array | Float64Array
+  nodeCol: Int32Array | Float64Array
   nodeG: Float64Array
-  nodeParent: Float64Array
+  nodeParent: Int32Array | Float64Array
   nodeRipped: Array<RippedNode | null>
   ripCount: number[]
   totalRipEvents: number
@@ -38,6 +38,7 @@ type NumericNodeState = {
 // Independent original object representation. Numeric reads use facades so the
 // unchanged expansion/finalization logic consumes the original JS values.
 function useObjectNodeReference(solver: HighDensitySolverA01): void {
+  solver.setup()
   const state = solver as unknown as NumericNodeState
   let nodes: ObjectNode[] = []
   const fields = {
@@ -118,6 +119,7 @@ test("numeric A01 nodes preserve object search results and release bounded reusa
   for (const [seed, layers, limited] of [
     [1, [0, 1], false],
     [3, [0, 1, 2, 3], false],
+    [5, [1.5, Number.MAX_SAFE_INTEGER], false],
     [1, [0, 1], true],
   ] as const) {
     const props = createProps(seed, [...layers])
@@ -141,6 +143,11 @@ test("numeric A01 nodes preserve object search results and release bounded reusa
     expect(numeric.getOutput()).toEqual(reference.getOutput())
     expect(actual.ripCount).toEqual(expected.ripCount)
     expect(actual.totalRipEvents).toBe(expected.totalRipEvents)
+    expect(actual.nodeZ).toBeInstanceOf(Int32Array)
+    expect(actual.nodeRow).toBeInstanceOf(Int32Array)
+    expect(actual.nodeCol).toBeInstanceOf(Int32Array)
+    expect(actual.nodeParent).toBeInstanceOf(Int32Array)
+    expect(actual.nodeG).toBeInstanceOf(Float64Array)
     expect(actual.nodeCount).toBe(0)
     expect(actual.nodeRipped.every((node) => node === null)).toBeTrue()
     observedRip ||= actual.ripCount.some((count) => count > 0)
@@ -148,6 +155,59 @@ test("numeric A01 nodes preserve object search results and release bounded reusa
     else expect(numeric.solved).toBeTrue()
   }
   expect(observedRip).toBeTrue()
+
+  const zeroProps = createProps(1, [-0, 1])
+  zeroProps.nodeWithPortPoints.portPoints =
+    zeroProps.nodeWithPortPoints.portPoints.slice(0, 2)
+  zeroProps.nodeWithPortPoints.portPoints[0]!.x = -1.451
+  zeroProps.nodeWithPortPoints.portPoints[0]!.y = -1.451
+  const zeroNumeric = new HighDensitySolverA01(zeroProps)
+  const zeroReference = new HighDensitySolverA01(zeroProps)
+  useObjectNodeReference(zeroReference)
+  zeroNumeric.setup()
+  const zeroState = zeroNumeric as unknown as NumericNodeState
+  expect(zeroState.nodeZ).toBeInstanceOf(Int32Array)
+  expect(zeroState.nodeZ).toHaveLength(0)
+  zeroNumeric.step()
+  zeroReference.step()
+  const zeroExpected = zeroReference as unknown as NumericNodeState
+  for (const field of ["nodeZ", "nodeRow", "nodeCol"] as const) {
+    // Math.max(0, ...) clamps rounded -0 to +0, and the z layer is the
+    // interned index +0 even when the constructor's public layer label is -0.
+    expect(Object.is(zeroExpected[field][0], 0)).toBeTrue()
+    expect(Object.is(zeroState[field][0], zeroExpected[field][0])).toBeTrue()
+  }
+
+  // A constructor endpoint outside the native integer invariant retains the
+  // original Float64 search representation, including its NaN coordinate.
+  const exceptionalProps = createProps(1, [0, 1])
+  exceptionalProps.nodeWithPortPoints.portPoints =
+    exceptionalProps.nodeWithPortPoints.portPoints.slice(0, 2)
+  exceptionalProps.nodeWithPortPoints.portPoints[0]!.x = NaN
+  const exceptionalNumeric = new HighDensitySolverA01(exceptionalProps)
+  const exceptionalReference = new HighDensitySolverA01(exceptionalProps)
+  useObjectNodeReference(exceptionalReference)
+  for (let step = 0; step < 20; step++) {
+    exceptionalNumeric.step()
+    exceptionalReference.step()
+    const actual = exceptionalNumeric as unknown as NumericNodeState
+    const expected = exceptionalReference as unknown as NumericNodeState
+    expect(actual.nodeCol).toBeInstanceOf(Float64Array)
+    expect(actual.nodeCount).toBe(expected.nodeCount)
+    expect(exceptionalNumeric.solved).toBe(exceptionalReference.solved)
+    expect(exceptionalNumeric.failed).toBe(exceptionalReference.failed)
+    expect(exceptionalNumeric.iterations).toBe(exceptionalReference.iterations)
+    for (let index = 0; index < actual.nodeCount; index++) {
+      expect(actual.nodeZ[index]).toBe(expected.nodeZ[index])
+      expect(actual.nodeRow[index]).toBe(expected.nodeRow[index])
+      expect(actual.nodeCol[index]).toBe(expected.nodeCol[index])
+      expect(actual.nodeG[index]).toBe(expected.nodeG[index])
+      expect(actual.nodeParent[index]).toBe(expected.nodeParent[index])
+    }
+  }
+  expect(exceptionalNumeric.getOutput()).toEqual(
+    exceptionalReference.getOutput(),
+  )
 
   const numeric = new HighDensitySolverA01(createProps(1, [0, 1]))
   const state = numeric as unknown as NumericNodeState
