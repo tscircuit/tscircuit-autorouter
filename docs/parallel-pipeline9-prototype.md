@@ -354,7 +354,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Thirteen frozen exploratory snapshots have complete paired results for all 16
+Fourteen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -374,6 +374,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `d76229d4a` | ordered / indexed, force trials on coordinator | 1.346× | 1.447× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `2be345c05` | ordered / indexed, force trials on coordinator | 1.350× | 1.460× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `ff70052f0` | ordered / indexed, force trials on coordinator | 1.344× | 1.465× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `7bb1b82e2` | ordered / indexed, force trials on coordinator | 1.369× | 1.523× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -488,3 +489,15 @@ paired outcomes retain native geometry and original-CAD quality parity. The
 arithmetic mean is 1.344× and aggregate speedup is 1.465×; the target remains
 unmet. Complete evidence is in
 [parallel-srj18-ff70052f0-complete.json](benchmarks/parallel-srj18-ff70052f0-complete.json).
+
+Snapshot `7bb1b82e2` combines strict ordered CSR neighbor scans, synchronous
+native pathing admission, worker-owned grid kernels at the original 100-step
+boundaries, endpoint-union work elimination, and private reference-check
+geometry/connectivity/source-port reuse. Its complete 32-outcome comparison
+averages 1.369× with 1.523× aggregate speedup. Every sample solves with exact
+native geometry and original-CAD coverage, DRC, and lint parity; the 2× target
+remains unmet. Full timing, quality, worker ownership, pathing, and stage
+statistics are preserved in
+[parallel-srj18-7bb1b82e2-complete.json](benchmarks/parallel-srj18-7bb1b82e2-complete.json),
+with immutable workflow records and packaged preflight checks in
+[parallel-srj18-7bb1b82e2-dispatch.json](benchmarks/parallel-srj18-7bb1b82e2-dispatch.json).

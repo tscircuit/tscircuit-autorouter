@@ -1,5 +1,5 @@
 {
-  "description": "Pending full-dataset paired four-core comparison; no speedup result claimed until every group completes.",
+  "description": "Complete full-dataset paired four-core comparison; the 2x target remains unmet.",
   "candidateRevision": "7bb1b82e2796942d9763285d19b713a557cf0570",
   "baselineRevision": "65522c89c370d4b4f9f69e1a79af58de641752bc",
   "datasetRevision": "100e8957ce789b5b288e14c476dc83f4efc5214b",
@@ -47,11 +47,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T10:34:49.659Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T10:34:51Z",
       "databaseId": 38132455061,
       "headSha": "7bb1b82e2796942d9763285d19b713a557cf0570",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38132455061"
     },
     {
@@ -73,11 +73,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T10:34:51.773Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T10:34:53Z",
       "databaseId": 38132456787,
       "headSha": "7bb1b82e2796942d9763285d19b713a557cf0570",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38132456787"
     },
     {
@@ -99,11 +99,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T10:34:53.370Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T10:34:54Z",
       "databaseId": 38132458636,
       "headSha": "7bb1b82e2796942d9763285d19b713a557cf0570",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38132458636"
     },
     {
@@ -125,11 +125,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T10:34:55.100Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T10:34:56Z",
       "databaseId": 38132460279,
       "headSha": "7bb1b82e2796942d9763285d19b713a557cf0570",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38132460279"
     },
     {
@@ -151,12 +151,206 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T10:34:56.810Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T10:34:58Z",
       "databaseId": 38132462013,
       "headSha": "7bb1b82e2796942d9763285d19b713a557cf0570",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38132462013"
     }
-  ]
+  ],
+  "summary": {
+    "fullCoverage": true,
+    "allCompleted": true,
+    "exactGeometry": true,
+    "qualityPreserved": true,
+    "connectionCoveragePreserved": true,
+    "highDensityPolicy": "ordered",
+    "pathingStrategy": "indexed",
+    "physicalRouting": false,
+    "geometryRequired": true,
+    "coverageAcceptanceMode": "baseline-parity",
+    "arithmeticMeanSpeedup": 1.3692656286654081,
+    "aggregateSpeedup": 1.5231768067585374,
+    "geometricMeanSpeedup": 1.3507707255031507,
+    "targetReached": false,
+    "perSample": [
+      {
+        "sampleName": "sample001",
+        "baselineTimeMs": 16881.697445,
+        "parallelTimeMs": 14198.604861,
+        "speedup": 1.1889687480049385,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample002",
+        "baselineTimeMs": 163091.67811399998,
+        "parallelTimeMs": 101823.877199,
+        "speedup": 1.6017036730516652,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample003",
+        "baselineTimeMs": 14593.500828,
+        "parallelTimeMs": 12606.746718999999,
+        "speedup": 1.1575945129448588,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample004",
+        "baselineTimeMs": 64936.190704,
+        "parallelTimeMs": 50205.719245,
+        "speedup": 1.293402259354486,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample005",
+        "baselineTimeMs": 11567.445822,
+        "parallelTimeMs": 10986.752094,
+        "speedup": 1.052853993885702,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample006",
+        "baselineTimeMs": 166796.737398,
+        "parallelTimeMs": 110779.131564,
+        "speedup": 1.5056692992906988,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample007",
+        "baselineTimeMs": 18162.401499000003,
+        "parallelTimeMs": 15519.925613000001,
+        "speedup": 1.1702634375893257,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample008",
+        "baselineTimeMs": 73918.807218,
+        "parallelTimeMs": 48928.194583000004,
+        "speedup": 1.5107609804119553,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample009",
+        "baselineTimeMs": 20316.744294,
+        "parallelTimeMs": 18585.340205,
+        "speedup": 1.093159666161731,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample010",
+        "baselineTimeMs": 30023.099631,
+        "parallelTimeMs": 25766.915751,
+        "speedup": 1.165180183811282,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample011",
+        "baselineTimeMs": 24327.730485,
+        "parallelTimeMs": 20458.089116,
+        "speedup": 1.1891496975625941,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample012",
+        "baselineTimeMs": 88756.598201,
+        "parallelTimeMs": 57641.574771,
+        "speedup": 1.5398017586024428,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample013",
+        "baselineTimeMs": 82803.159281,
+        "parallelTimeMs": 57017.555567,
+        "speedup": 1.452239726126104,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample014",
+        "baselineTimeMs": 224846.769161,
+        "parallelTimeMs": 121487.663477,
+        "speedup": 1.8507786118017482,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample015",
+        "baselineTimeMs": 181038.994514,
+        "parallelTimeMs": 109283.43209,
+        "speedup": 1.6566005573919562,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample016",
+        "baselineTimeMs": 39828.583817,
+        "parallelTimeMs": 26908.969789,
+        "speedup": 1.480122952655042,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      }
+    ]
+  }
 }
