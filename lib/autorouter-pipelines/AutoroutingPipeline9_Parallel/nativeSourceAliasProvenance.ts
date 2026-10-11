@@ -6,6 +6,10 @@ type Path = { parent: Path | undefined; key: string; depth: number }
 type Pending = { value: unknown; path: Path | undefined }
 type Budget = { objects: number; properties: number; pathParts: number; characters: number }
 type Substitution = { parent: object; key: string; descriptor: PropertyDescriptor; target: object; previous: object }
+type OutputAliasRow = { outputPath: string[]; sourcePath: string[]; previous: object } & (
+  | { root: true }
+  | { root: false; parent: object; key: string; descriptor: PropertyDescriptor }
+)
 
 const ownKeys = Reflect.ownKeys
 const getPrototype = Object.getPrototypeOf
@@ -164,13 +168,8 @@ function resolvePath(root: unknown, path: readonly string[], replaced?: WeakSet<
   return value
 }
 
-/** Validate the entire protocol before replacing a single output reference.
- * Structured clone already preserves fresh output-to-output aliases; replacing
- * only exact source identities also preserves those aliases and live metadata. */
-export function rehydrateNativeSourceAliases<T>(output: T, source: unknown, provenance: unknown): T {
-  const inspector = requireInspector()
-  const budget: Budget = { objects: 0, properties: 0, pathParts: 0, characters: 0 }
-  walkPlainGraph(source, inspector, budget)
+function prepareOutputAliases(output: unknown, provenance: unknown, inspector: ReferenceDrcProxyInspector,
+  budget: Budget): OutputAliasRow[] {
   walkPlainGraph(output, inspector, budget)
   if (typeof provenance !== "object" || provenance === null || inspector(provenance) || !arrayIsArray(provenance)) {
     throw new Error("Invalid native source alias provenance")
@@ -179,12 +178,10 @@ export function rehydrateNativeSourceAliases<T>(output: T, source: unknown, prov
   const length = ownData(provenance, "length").value as unknown
   if (typeof length !== "number" || !isSafeInteger(length) || length < 0 || length > MAX_OBJECTS ||
     ownKeys(provenance).length !== length + 1) throw new Error("Invalid native source alias provenance length")
-  const rows: { outputPath: string[]; sourcePath: string[] }[] = []
-  const substitutions: Substitution[] = []
+  const rows: OutputAliasRow[] = []
   const cells = new WeakMap<object, Set<string>>()
-  const replacementTargets = new WeakMap<object, object>()
+  const sourcePaths = new WeakMap<object, string[]>()
   const replaced = new WeakSet<object>()
-  let rootTarget: object | undefined
   for (let index = 0; index < length; index++) {
     const row = ownData(provenance, toString(index)).value as unknown
     if (typeof row !== "object" || row === null || inspector(row)) throw new Error("Invalid native source alias row")
@@ -195,18 +192,19 @@ export function rehydrateNativeSourceAliases<T>(output: T, source: unknown, prov
     }
     const outputPath = validatePath(ownData(row, "outputPath").value, inspector, budget)
     const sourcePath = validatePath(ownData(row, "sourcePath").value, inspector, budget)
-    const target = resolvePath(source, sourcePath)
     const previous = resolvePath(output, outputPath)
-    const previousTarget = apply(weakMapGet, replacementTargets, [previous]) as object | undefined
-    if (previousTarget !== undefined && previousTarget !== target) {
-      throw new Error("Conflicting source identity native source alias substitutions")
+    const previousPath = apply(weakMapGet, sourcePaths, [previous]) as string[] | undefined
+    if (previousPath !== undefined) {
+      if (previousPath.length !== sourcePath.length) throw new Error("Conflicting source identity native source alias substitutions")
+      for (let part = 0; part < previousPath.length; part++) {
+        if (previousPath[part] !== sourcePath[part]) throw new Error("Conflicting source identity native source alias substitutions")
+      }
     }
-    apply(weakMapSet, replacementTargets, [previous, target])
-    rows[rows.length] = { outputPath, sourcePath }
+    apply(weakMapSet, sourcePaths, [previous, sourcePath])
     apply(weakSetAdd, replaced, [previous])
     if (outputPath.length === 0) {
       if (length !== 1) throw new Error("Conflicting root native source alias substitutions")
-      rootTarget = target
+      rows[rows.length] = { outputPath, sourcePath, previous, root: true }
       continue
     }
     const parentPath = new Array<string>(outputPath.length - 1)
@@ -221,12 +219,41 @@ export function rehydrateNativeSourceAliases<T>(output: T, source: unknown, prov
     if (apply(setHas, keysForParent, [key])) throw new Error("Duplicate native source alias substitution")
     apply(setAdd, keysForParent, [key])
     const descriptor = ownData(parent, key)
-    if (descriptor.configurable === false && descriptor.writable === false && !objectIs(previous, target)) {
-      throw new Error("Native source alias substitution is not writable")
-    }
-    substitutions[substitutions.length] = { parent, key, descriptor, target, previous }
+    rows[rows.length] = { outputPath, sourcePath, previous, root: false, parent, key, descriptor }
   }
   for (let index = 0; index < rows.length; index++) resolvePath(output, rows[index]!.outputPath, replaced)
+  return rows
+}
+
+/** Protocol validation also runs on unused worker output. It never touches the
+ * caller's possibly changed source graph: source existence is checked only at
+ * actual ordered acceptance, after the owner establishes native eligibility. */
+export function assertNativeSourceAliasOutput(output: unknown, provenance: unknown): void {
+  const inspector = requireInspector()
+  const budget: Budget = { objects: 0, properties: 0, pathParts: 0, characters: 0 }
+  prepareOutputAliases(output, provenance, inspector, budget)
+}
+
+/** Validate the entire protocol before replacing a single output reference.
+ * Structured clone already preserves fresh output-to-output aliases; replacing
+ * only exact source identities also preserves those aliases and live metadata. */
+export function rehydrateNativeSourceAliases<T>(output: T, source: unknown, provenance: unknown): T {
+  const inspector = requireInspector()
+  const budget: Budget = { objects: 0, properties: 0, pathParts: 0, characters: 0 }
+  walkPlainGraph(source, inspector, budget)
+  const rows = prepareOutputAliases(output, provenance, inspector, budget)
+  const substitutions: Substitution[] = []
+  let rootTarget: object | undefined
+  for (let index = 0; index < rows.length; index++) {
+    const row = rows[index]!
+    const target = resolvePath(source, row.sourcePath)
+    if (row.root) { rootTarget = target; continue }
+    if (row.descriptor.configurable === false && row.descriptor.writable === false && !objectIs(row.previous, target)) {
+      throw new Error("Native source alias substitution is not writable")
+    }
+    substitutions[substitutions.length] = { parent: row.parent, key: row.key, descriptor: row.descriptor,
+      target, previous: row.previous }
+  }
   for (let index = 0; index < substitutions.length; index++) {
     const row = substitutions[index]!
     defineProperty(row.parent, row.key, { value: row.target, writable: row.descriptor.writable,

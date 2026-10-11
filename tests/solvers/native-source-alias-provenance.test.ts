@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "../../lib/types/high-density-types"
 import { initializeReferenceDrcRuntime } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/initializeReferenceDrcRuntime"
-import { captureNativeSourceAliasProvenance, rehydrateNativeSourceAliases } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance"
+import { assertNativeSourceAliasOutput, captureNativeSourceAliasProvenance, rehydrateNativeSourceAliases } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance"
 
 test("native source identity provenance restores source aliases without coalescing equal fresh points or observing rejected graphs", async (): Promise<void> => {
   await initializeReferenceDrcRuntime()
@@ -23,6 +23,10 @@ test("native source identity provenance restores source aliases without coalesci
     { outputPath: ["route", "2"], sourcePath: ["route", "1"] },
   ])
   const transported = structuredClone(output)
+  const oldTransportedPoint = transported.route[0]
+  assertNativeSourceAliasOutput(transported, structuredClone(aliases))
+  expect(transported.route[0]).toBe(oldTransportedPoint)
+  expect(oldTransportedPoint).not.toBe(point)
   const restored = rehydrateNativeSourceAliases(transported, source, structuredClone(aliases))
   expect(restored).toBe(transported)
   expect(restored.route[0]).toBe(point)
@@ -61,7 +65,9 @@ test("native source identity provenance restores source aliases without coalesci
     expect(() => captureNativeSourceAliasProvenance(badOutput, badSource)).toThrow("Proxy")
   }
   expect(() => rehydrateNativeSourceAliases(trap, source, [])).toThrow("Proxy")
+  expect(() => assertNativeSourceAliasOutput(trap, [])).toThrow("Proxy")
   expect(() => rehydrateNativeSourceAliases({}, source, trap)).toThrow("provenance")
+  expect(() => assertNativeSourceAliasOutput({}, trap)).toThrow("provenance")
   const getter = Object.defineProperty({}, "value", { enumerable: true, get(): never {
     observations++; throw new Error("getter observed")
   } })
@@ -72,10 +78,12 @@ test("native source identity provenance restores source aliases without coalesci
     observations++; throw new Error("row getter observed")
   } })
   expect(() => rehydrateNativeSourceAliases({}, source, [getterRow])).toThrow("own data")
+  expect(() => assertNativeSourceAliasOutput({}, [getterRow])).toThrow("own data")
   const getterPath = Object.defineProperty([], "0", { configurable: true, get(): never {
     observations++; throw new Error("path getter observed")
   } })
   expect(() => rehydrateNativeSourceAliases({}, source, [{ outputPath: getterPath, sourcePath: [] }])).toThrow("own data")
+  expect(() => assertNativeSourceAliasOutput({}, [{ outputPath: getterPath, sourcePath: [] }])).toThrow("own data")
   expect(observations).toBe(0)
 
   for (const bad of [NaN, Infinity, () => {}, Symbol("bad"), 1n, new Map(), { [Symbol("key")]: 0 }]) {
@@ -103,6 +111,18 @@ test("native source identity provenance restores source aliases without coalesci
     expect(target.a).toBe(oldA)
     expect(target.a.nested).toBe(oldNested)
   }
+  for (const provenance of [rejects[0], rejects[1], rejects[2], rejects[3], rejects[5],
+    rejects[7], rejects[8], rejects[9], rejects[10], rejects[11]]) {
+    const target = { a: { nested: {} } }
+    const oldA = target.a
+    expect(() => assertNativeSourceAliasOutput(target, provenance)).toThrow()
+    expect(target.a).toBe(oldA)
+  }
+  // The readonly protocol guard cannot resolve the main owner's live source.
+  // Valid source-path shapes pass now; actual acceptance rejects absent targets.
+  const unresolved = [{ outputPath: ["a"], sourcePath: ["late", "missing"] }]
+  expect(() => assertNativeSourceAliasOutput({ a: {} }, unresolved)).not.toThrow()
+  expect(() => rehydrateNativeSourceAliases({ a: {} }, source, unresolved)).toThrow()
   const shared = { item: {} }
   const aliasTarget = { left: shared, right: shared }
   expect(() => rehydrateNativeSourceAliases(aliasTarget, source, [

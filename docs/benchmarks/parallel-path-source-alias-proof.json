@@ -5,12 +5,12 @@
   "runtime": "1.3.2",
   "command": "bun test tests/solvers/native-source-alias-provenance.test.ts --timeout 9999999",
   "sourceSha256": {
-    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance.ts": "a76754344d006f0bc49d057ddafd0597999cb6f2eb29b7094b68df6d0993c63d",
-    "tests/solvers/native-source-alias-provenance.test.ts": "a1d437244f9b27afe898e1baba623639bd9d9ea5d7dc0b0059b9b11d1a27d4f8"
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSourceAliasProvenance.ts": "78600b22e2035e2c1ba8551131507cc5eeeb527ab5c03c12824a5ad09dd22dd0",
+    "tests/solvers/native-source-alias-provenance.test.ts": "d7427f3fe555a2bf8b803cbb6db0d4306658462f44306255dbb43178f7424ac3"
   },
   "result": {
     "testsPassed": 1,
-    "assertionsPassed": 97,
+    "assertionsPassed": 125,
     "proxyAndGetterObservations": 0
   },
   "nativeFixtures": [
@@ -41,7 +41,10 @@
     "missing/inherited paths",
     "nonwritable destination",
     "unsupported graph values",
-    "bounded deep paths"
+    "bounded deep paths",
+    "readonly unused-output protocol validation",
+    "no caller-source reads before eligibility",
+    "source path existence resolved only at actual acceptance"
   ],
   "contract": {
     "scope": "Already admitted native callback-free plain finite graphs; captured native reflection and collection intrinsics at module load.",
