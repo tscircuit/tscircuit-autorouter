@@ -1,40 +1,101 @@
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -2409,11 +2409,30 @@
+@@ -2409,15 +2409,56 @@
    getTraceSegmentPolygon
  } from "@tscircuit/circuit-json-util";
  import Flatbush2 from "flatbush";
 -function getViaAndPourConnections(circuit) {
+-  if (!circuit.some(
+-    (e) => e.type === "pcb_via" || e.type === "pcb_copper_pour" || e.type === "pcb_trace" && e.route.some((p) => p.route_type === "via")
+-  ))
 +import { Utils as traceContinuityGeometryUtils } from "@flatten-js/core";
-+const traceContinuityWirePolygonCaches = /* @__PURE__ */ new WeakMap();
++const traceContinuityWirePolygonCaches = new WeakMap;
 +const TRACE_CONTINUITY_WIRE_POLYGON_CACHE_SIZE = 4096;
++const nativeTraceContinuityToleranceDescriptor = Object.getOwnPropertyDescriptor(traceContinuityGeometryUtils, "getTolerance");
++const nativeTraceContinuityGetTolerance = nativeTraceContinuityToleranceDescriptor && Object.hasOwn(nativeTraceContinuityToleranceDescriptor, "value") ? nativeTraceContinuityToleranceDescriptor.value : undefined;
++function hasTraceContinuityOwnPrimitiveProperty(object, name, type) {
++  const descriptor = Object.getOwnPropertyDescriptor(object, name);
++  return Boolean(descriptor && Object.hasOwn(descriptor, "value") && typeof descriptor.value === type);
++}
++function canCacheTraceContinuityWirePolygon(trace, start, end) {
++  const toleranceDescriptor = Object.getOwnPropertyDescriptor(traceContinuityGeometryUtils, "getTolerance");
++  if (typeof nativeTraceContinuityGetTolerance !== "function" || !toleranceDescriptor || !Object.hasOwn(toleranceDescriptor, "value") || toleranceDescriptor.value !== nativeTraceContinuityGetTolerance || !hasTraceContinuityOwnPrimitiveProperty(trace, "pcb_trace_id", "string"))
++    return false;
++  for (const point of [start, end]) {
++    if (Object.getPrototypeOf(point) !== Object.prototype || !hasTraceContinuityOwnPrimitiveProperty(point, "x", "number") || !hasTraceContinuityOwnPrimitiveProperty(point, "y", "number") || !hasTraceContinuityOwnPrimitiveProperty(point, "width", "number") || !hasTraceContinuityOwnPrimitiveProperty(point, "layer", "string"))
++      return false;
++  }
++  return true;
++}
 +function getTraceContinuityWirePolygonCache(key) {
-+  if (!key) return;
++  if (!key)
++    return;
 +  let cache = traceContinuityWirePolygonCaches.get(key);
 +  if (!cache) {
-+    cache = new Map();
++    cache = new Map;
 +    traceContinuityWirePolygonCaches.set(key, cache);
 +  }
 +  return cache;
 +}
 +function getTraceContinuityWirePolygonCacheKey(start, end) {
-+  const values = [start.x, start.y, end.x, end.y, start.width, traceContinuityGeometryUtils.getTolerance()];
-+  // JSON keys must not conflate invalid numbers or signed-zero geometry.
-+  if (values.some((value) => !Number.isFinite(value) || Object.is(value, -0)) || start.width <= 0) return;
++  const values = [
++    start.x,
++    start.y,
++    end.x,
++    end.y,
++    start.width,
++    traceContinuityGeometryUtils.getTolerance()
++  ];
++  if (values.some((value) => !Number.isFinite(value) || Object.is(value, -0)) || start.width <= 0)
++    return;
 +  return JSON.stringify(values);
 +}
 +function getViaAndPourConnections(circuit, wirePolygonCacheKey) {
-   if (!circuit.some(
-     (e) => e.type === "pcb_via" || e.type === "pcb_copper_pour" || e.type === "pcb_trace" && e.route.some((p) => p.route_type === "via")
-   ))
++  if (!circuit.some((e) => e.type === "pcb_via" || e.type === "pcb_copper_pour" || e.type === "pcb_trace" && e.route.some((p) => p.route_type === "via")))
      return [];
 +  const wirePolygonCache = getTraceContinuityWirePolygonCache(wirePolygonCacheKey);
    const conductors = [];
    const connections = [];
    const scale = 1e6;
-@@ -2457,11 +2476,25 @@
-       for (let i = 0; i < copper.route.length; i++) {
+-  const tolerance = 1e-7 * scale;
++  const tolerance = 0.0000001 * scale;
+   const touches = createCopperPolygonContactTester(tolerance);
+   const add = (id, layers, polygon, bridges = false) => {
+     if (!polygon.isEmpty())
+@@ -2432,43 +2473,54 @@
+   const board = circuit.find((e) => e.type === "pcb_board");
+   const stack = [
+     "top",
+-    ...all_layers5.filter((l) => l.startsWith("inner")).slice(0, board ? Math.max(0, board.num_layers - 2) : void 0),
++    ...all_layers5.filter((l) => l.startsWith("inner")).slice(0, board ? Math.max(0, board.num_layers - 2) : undefined),
+     ...board?.num_layers === 1 ? [] : ["bottom"]
+   ];
+   for (const copper of circuit) {
+     if (copper.type === "pcb_via") {
+-      add(
+-        copper.pcb_via_id,
+-        copper.layers,
+-        circlePolygon(copper, copper.outer_diameter / 2),
+-        true
+-      );
++      add(copper.pcb_via_id, copper.layers, circlePolygon(copper, copper.outer_diameter / 2), true);
+       if (copper.pcb_trace_id)
+         connections.push([copper.pcb_via_id, copper.pcb_trace_id]);
+     } else if (copper.type === "pcb_copper_pour") {
+-      add(
+-        copper.pcb_copper_pour_id,
+-        [copper.layer],
+-        getPourPolygon2(copper),
+-        true
+-      );
++      add(copper.pcb_copper_pour_id, [copper.layer], getPourPolygon2(copper), true);
+     } else if (copper.type === "pcb_trace") {
+-      if (copper.route_thickness_mode === "interpolated") continue;
+-      for (let i = 0; i < copper.route.length; i++) {
++      if (copper.route_thickness_mode === "interpolated")
++        continue;
++      for (let i = 0;i < copper.route.length; i++) {
          const a = copper.route[i], b = copper.route[i + 1];
          if (a.route_type === "wire" && b?.route_type === "wire" && a.layer === b.layer && (a.x !== b.x || a.y !== b.y)) {
 -          add(
@@ -42,11 +103,18 @@ diff --git a/dist/index.js b/dist/index.js
 -            [a.layer],
 -            getTraceSegmentPolygon(a, b, a.width)
 -          );
++          if (!wirePolygonCache || !canCacheTraceContinuityWirePolygon(copper, a, b)) {
++            add(copper.pcb_trace_id, [a.layer], getTraceSegmentPolygon(a, b, a.width));
++            continue;
++          }
++          const conductorId = copper.pcb_trace_id;
++          const conductorLayers = [a.layer];
 +          const cacheKey = wirePolygonCache && getTraceContinuityWirePolygonCacheKey(a, b);
-+          let polygon = cacheKey && wirePolygonCache.get(cacheKey);
++          let polygon = cacheKey ? wirePolygonCache.get(cacheKey) : undefined;
 +          if (!polygon) {
 +            const originalPolygon = getTraceSegmentPolygon(a, b, a.width);
-+            if (originalPolygon.isEmpty()) continue;
++            if (originalPolygon.isEmpty())
++              continue;
 +            polygon = originalPolygon.scale(scale, scale);
 +            if (cacheKey) {
 +              if (wirePolygonCache.size >= TRACE_CONTINUITY_WIRE_POLYGON_CACHE_SIZE) {
@@ -56,15 +124,69 @@ diff --git a/dist/index.js b/dist/index.js
 +            }
 +          }
 +          conductors.push({
-+            id: copper.pcb_trace_id,
-+            layers: [a.layer],
++            id: conductorId,
++            layers: conductorLayers,
 +            polygon,
 +            bridges: false
 +          });
          } else if (a.route_type === "via") {
-           if (vias.some(
-             (v) => v.pcb_trace_id === copper.pcb_trace_id && Math.hypot(v.x - a.x, v.y - a.y) < 1e-9
-@@ -2514,7 +2547,7 @@
+-          if (vias.some(
+-            (v) => v.pcb_trace_id === copper.pcb_trace_id && Math.hypot(v.x - a.x, v.y - a.y) < 1e-9
+-          ))
++          if (vias.some((v) => v.pcb_trace_id === copper.pcb_trace_id && Math.hypot(v.x - a.x, v.y - a.y) < 0.000000001))
+             continue;
+           const from = stack.indexOf(a.from_layer), to = stack.indexOf(a.to_layer);
+-          if (from < 0 || to < 0 || !a.outer_diameter) continue;
++          if (from < 0 || to < 0 || !a.outer_diameter)
++            continue;
+           const via = {
+             type: "pcb_via",
+             pcb_via_id: `${copper.pcb_trace_id}_via_${i}`,
+@@ -2478,17 +2530,13 @@
+             hole_diameter: 0,
+             layers: stack.slice(Math.min(from, to), Math.max(from, to) + 1)
+           };
+-          add(
+-            copper.pcb_trace_id,
+-            via.layers,
+-            circlePolygon(via, via.outer_diameter / 2),
+-            true
+-          );
++          add(copper.pcb_trace_id, via.layers, circlePolygon(via, via.outer_diameter / 2), true);
+         }
+       }
+     }
+   }
+-  if (!conductors.length) return connections;
++  if (!conductors.length)
++    return connections;
+   const index = new Flatbush2(conductors.length);
+   for (const { polygon } of conductors) {
+     const b = polygon.box;
+@@ -2496,25 +2544,22 @@
+   }
+   index.finish();
+   for (const [i, a] of conductors.entries()) {
+-    if (!a.bridges) continue;
++    if (!a.bridges)
++      continue;
+     const box = a.polygon.box;
+-    for (const j of index.search(
+-      box.xmin - tolerance,
+-      box.ymin - tolerance,
+-      box.xmax + tolerance,
+-      box.ymax + tolerance
+-    )) {
++    for (const j of index.search(box.xmin - tolerance, box.ymin - tolerance, box.xmax + tolerance, box.ymax + tolerance)) {
+       const b = conductors[j];
+       if (i === j || a.id === b.id || b.bridges && j < i || !a.layers.some((l) => b.layers.includes(l)))
+         continue;
+-      if (touches(a.polygon, b.polygon)) connections.push([a.id, b.id]);
++      if (touches(a.polygon, b.polygon))
++        connections.push([a.id, b.id]);
+     }
+   }
+   return connections;
  }
  
  // lib/util/create-indexed-pcb-connectivity-map.ts
@@ -73,7 +195,7 @@ diff --git a/dist/index.js b/dist/index.js
    const map = new PcbConnectivityMap();
    map.circuitJson = circuitJson;
    for (const element of circuitJson) {
-@@ -2596,7 +2629,7 @@
+@@ -2596,7 +2641,7 @@
      for (const connection of connectionsByPort.get(portId) ?? [])
        connections.push(connection);
    }
@@ -82,7 +204,7 @@ diff --git a/dist/index.js b/dist/index.js
    map.connMap = new ConnectivityMap(findConnectedNetworks(connections));
    return map;
  }
-@@ -4953,7 +4986,8 @@
+@@ -4953,7 +4998,8 @@
  }
  function checkTracesAreContiguous(circuitJson, {
    connMap,
@@ -92,7 +214,7 @@ diff --git a/dist/index.js b/dist/index.js
  } = {}) {
    const errors = getTracePortLayerMismatches(circuitJson).map(
      ({ trace, point: point2, index, port, padLayers }) => ({
-@@ -4984,7 +5018,7 @@
+@@ -4984,7 +5030,7 @@
      (el) => el.type === "pcb_plated_hole"
    );
    const padMap = /* @__PURE__ */ new Map();
