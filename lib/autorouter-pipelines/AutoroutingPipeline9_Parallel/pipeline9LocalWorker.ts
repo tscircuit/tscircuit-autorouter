@@ -12,6 +12,7 @@ import { executeFirstValidA13CandidateJob } from "./executeFirstValidA13Candidat
 import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant } from "./firstValidA13CandidateTypes"
 import { executeFirstValidA13NodeJob } from "./executeFirstValidA13NodeJob"
 import type { FirstValidA13NodeJob } from "./parallelHighDensityFrontierTypes"
+import { deserializePipeline9SharedContext } from "./Pipeline9SharedContextCodec"
 import type {
   Pipeline9LocalWorkerRequest,
   Pipeline9LocalWorkerResponse,
@@ -44,8 +45,19 @@ self.onmessage = (event: MessageEvent<Pipeline9LocalWorkerRequest | MultiHeadHis
   void executeWorkerRequest(event.data)
 }
 
-async function executeWorkerRequest({ taskId, job }: Pipeline9LocalWorkerRequest): Promise<void> {
+async function executeWorkerRequest({ taskId, job, sharedContext }: Pipeline9LocalWorkerRequest): Promise<void> {
   try {
+    if (sharedContext) {
+      const expectedFamily = job.kind === "highDensityNode" || job.kind === "highDensityA13Node" || job.kind === "highDensityNodeBatch"
+        ? "high-density" : job.kind === "simplifyPathWave" ? "simplification"
+        : job.kind === "globalDrcForceTrial" ? "global-drc" : undefined
+      if (!expectedFamily || sharedContext.family !== expectedFamily || !("contextId" in job) ||
+        sharedContext.contextId !== job.contextId || "context" in job) {
+        throw new Error("Shared board context does not match its Pipeline9 worker job")
+      }
+      const context = await deserializePipeline9SharedContext(sharedContext)
+      job = { ...job, context } as Pipeline9LocalWorkerRequest["job"]
+    }
     let result: unknown
     if (job.kind === "warmup") result = null
     else if (job.kind === "multiHeadHistory") result = executeMultiHeadHistoryJob(job)

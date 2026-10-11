@@ -7,11 +7,11 @@
       "samples": "1,2,3,4",
       "strategy": "indexed",
       "trials": "0",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T07:45:23Z",
       "databaseId": 38122443715,
       "headSha": "414e04749077bd354d6b1b94292ad730c81d6224",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38122443715",
       "args": [
         "--samples",
@@ -53,10 +53,10 @@
       ],
       "databaseId": 38122463045,
       "dispatchedAt": "2026-10-11T07:45:44.180Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T07:45:43Z",
       "headSha": "414e04749077bd354d6b1b94292ad730c81d6224",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38122463045"
     },
     {
@@ -82,10 +82,10 @@
       ],
       "databaseId": 38122464873,
       "dispatchedAt": "2026-10-11T07:45:46.164Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T07:45:45Z",
       "headSha": "414e04749077bd354d6b1b94292ad730c81d6224",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38122464873"
     },
     {
@@ -111,10 +111,10 @@
       ],
       "databaseId": 38122466454,
       "dispatchedAt": "2026-10-11T07:45:47.837Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T07:45:47Z",
       "headSha": "414e04749077bd354d6b1b94292ad730c81d6224",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38122466454"
     },
     {
@@ -140,10 +140,10 @@
       ],
       "databaseId": 38122468323,
       "dispatchedAt": "2026-10-11T07:45:50.134Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T07:45:49Z",
       "headSha": "414e04749077bd354d6b1b94292ad730c81d6224",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38122468323"
     }
   ],

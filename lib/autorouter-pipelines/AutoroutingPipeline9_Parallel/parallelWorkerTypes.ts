@@ -7,6 +7,7 @@ import type { FirstValidHighDensityStats, ParallelHighDensityPolicy } from "./pa
 import type { FirstValidA13CandidateCancellation, FirstValidA13CandidateJob, FirstValidA13CandidateRequest } from "./firstValidA13CandidateTypes"
 import type { FirstValidA13NodeJob } from "./parallelHighDensityFrontierTypes"
 import type { ParallelHighDensityNodeBatchJob } from "./parallelHighDensityNodeBatching"
+import type { Pipeline9SharedContextReference } from "./Pipeline9SharedContextCodec"
 
 export type Pipeline9ParallelHighDensityContext = {
   connectivityNetMap: Record<string, string[]>
@@ -57,6 +58,7 @@ export type Pipeline9LocalWorkerJob =
 
 export type Pipeline9LocalWorkerRequest = {
   taskId: number
+  sharedContext?: Pipeline9SharedContextReference
   job: Pipeline9LocalWorkerJob | Omit<Pipeline9ParallelHighDensityNodeJob, "context"> |
     Omit<FirstValidA13NodeJob, "context"> | Omit<ParallelHighDensityNodeBatchJob, "context">
 }

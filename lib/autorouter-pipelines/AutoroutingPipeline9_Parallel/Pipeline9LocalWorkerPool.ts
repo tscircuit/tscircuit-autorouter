@@ -8,6 +8,7 @@ import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant, First
 import { assertParallelNodeBatchResult } from "./parallelNodeJobBatching"
 import { assertParallelGlobalDrcTrialResult } from "./executeParallelGlobalDrcTrial"
 import { assertParallelHighDensityNodeBatchJob, assertParallelHighDensityNodeBatchResult } from "./parallelHighDensityNodeBatching"
+import { Pipeline9SharedContextCodec, type Pipeline9SharedContextFamily, type Pipeline9SharedContextReference } from "./Pipeline9SharedContextCodec"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -30,6 +31,7 @@ export type Pipeline9LocalWorkerPoolOptions = {
   workerCount?: number
   workerUrl?: URL
   workerFactory?: (url: URL) => Worker
+  contextTransport?: "structured-clone" | "bun-shared"
 }
 
 /** A reusable local CPU pool. Each worker receives board context only once. */
@@ -40,7 +42,10 @@ export class Pipeline9LocalWorkerPool {
     historyCancellationSignals: 0, historyJobsStopped: 0, historyStepsCompleted: 0,
     a13RequestsGranted: 0, a13RequestsDenied: 0, a13CandidatesStarted: 0,
     a13CancellationSignals: 0, a13CandidatesStopped: 0, a13RoutingIterationsCompleted: 0,
-    a13NodeJobsCompleted: 0, a13NodeJobsStopped: 0, a13NodeRoutingIterationsCompleted: 0 }
+    a13NodeJobsCompleted: 0, a13NodeJobsStopped: 0, a13NodeRoutingIterationsCompleted: 0,
+    contextSerializationCalls: 0, contextSerializedBytes: 0, sharedContextMessages: 0,
+    contextAliasNativeMessages: 0, contextShapeNativeMessages: 0 }
+  readonly contextTransport: "structured-clone" | "bun-shared"
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
   private readonly workers: WorkerSlot[] = []
@@ -48,10 +53,16 @@ export class Pipeline9LocalWorkerPool {
   private nextTaskId = 0
   private nextContextId = 0
   private terminalError: Error | null = null
+  private sharedContextCodec?: Pipeline9SharedContextCodec
+  private contextTransportInitialization?: Promise<void>
   private readonly candidateCancellationByOwner = new Map<number, Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate">>()
 
   constructor(options: Pipeline9LocalWorkerPoolOptions = {}) {
     this.workerCount = options.workerCount ?? 4
+    this.contextTransport = options.contextTransport ?? "structured-clone"
+    if (this.contextTransport !== "structured-clone" && this.contextTransport !== "bun-shared") {
+      throw new Error("Pipeline9 contextTransport must be structured-clone or bun-shared")
+    }
     if (!Number.isInteger(this.workerCount) || this.workerCount < 1 || this.workerCount > 4) {
       throw new Error("Pipeline9 workerCount must be an integer between 1 and 4")
     }
@@ -70,6 +81,9 @@ export class Pipeline9LocalWorkerPool {
 
   run<T>(job: Pipeline9LocalWorkerJob): Promise<T> {
     if (this.terminalError) return Promise.reject(this.terminalError)
+    if (this.contextTransport === "bun-shared" && !this.sharedContextCodec) {
+      return this.initializeContextTransport().then((): Promise<T> => this.run<T>(job))
+    }
     return new Promise<T>((resolve, reject) => {
       if (job.kind === "highDensityNodeBatch") {
         try { assertParallelHighDensityNodeBatchJob(job, job.context) }
@@ -85,6 +99,22 @@ export class Pipeline9LocalWorkerPool {
       try { this.dispatch() }
       catch (error) { this.fail(error instanceof Error ? error : new Error(String(error))) }
     })
+  }
+
+  initializeContextTransport(): Promise<void> {
+    if (this.terminalError) return Promise.reject(this.terminalError)
+    if (this.contextTransport === "structured-clone") return Promise.resolve()
+    if (!this.contextTransportInitialization) {
+      this.contextTransportInitialization = Pipeline9SharedContextCodec.create(this.stats).then((codec): void => {
+        if (this.terminalError) throw this.terminalError
+        this.sharedContextCodec = codec
+      }).catch((error: unknown): never => {
+        const failure = error instanceof Error ? error : new Error(String(error))
+        this.fail(failure)
+        throw failure
+      })
+    }
+    return this.contextTransportInitialization
   }
 
   async warmup(): Promise<void> {
@@ -469,11 +499,24 @@ export class Pipeline9LocalWorkerPool {
           slot.globalDrcSnapshotId = task.job.snapshotId
         }
       }
+      let sharedContext: Pipeline9SharedContextReference | undefined
+      if (this.sharedContextCodec && "context" in job && job.context) {
+        const family: Pipeline9SharedContextFamily | undefined =
+          job.kind === "highDensityNode" || job.kind === "highDensityA13Node" || job.kind === "highDensityNodeBatch"
+            ? "high-density" : job.kind === "simplifyPathWave" ? "simplification"
+            : job.kind === "globalDrcForceTrial" ? "global-drc" : undefined
+        if (family && "contextId" in job) {
+          const { context, ...mutableJob } = job
+          sharedContext = this.sharedContextCodec.getReference(family, job.contextId, context, mutableJob)
+          if (sharedContext) job = mutableJob
+        }
+      }
       slot.worker.ref?.()
       this.stats.tasksStarted++
       this.stats.maxActiveWorkers = Math.max(this.stats.maxActiveWorkers,
         this.workers.filter((candidate) => candidate.task !== null).length)
-      slot.worker.postMessage({ taskId: task.taskId, job } satisfies Pipeline9LocalWorkerRequest)
+      slot.worker.postMessage({ taskId: task.taskId, job,
+        ...(sharedContext ? { sharedContext } : {}) } satisfies Pipeline9LocalWorkerRequest)
     }
   }
 

@@ -49,7 +49,8 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     if (opts.highDensityPolicy !== undefined && opts.highDensityPolicy !== "ordered" && opts.highDensityPolicy !== "first-valid") {
       throw new Error(`Invalid parallel high-density policy: ${opts.highDensityPolicy}`)
     }
-    this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount })
+    this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount,
+      contextTransport: typeof Bun === "undefined" ? "structured-clone" : "bun-shared" })
     this.ownsWorkerPool = opts.workerPool === undefined
     const alternativeRouting = opts.physicalRouting === true || opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated" || opts.pathingStrategy === "goal-balls"
     if (alternativeRouting) {
@@ -183,6 +184,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async stepAsync(): Promise<void> {
     if (this.solved || this.failed) return
     try {
+      await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       this.step()
       const effects = getPendingEffectsFromSolverTree(this)
@@ -196,6 +198,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async solveAsync(): Promise<void> {
     const startTime = performance.now()
     try {
+      await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (!this.solved && !this.failed) {
         if (this.activeSubSolver instanceof ParallelPortPointPathingSolver && this.activeSubSolver.requiresAsyncExecution) {
@@ -229,6 +232,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
 
   async solveUntilPhaseAsync(phase: string): Promise<void> {
     try {
+      await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
         this.step()

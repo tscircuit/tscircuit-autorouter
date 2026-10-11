@@ -335,7 +335,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Six frozen exploratory snapshots have complete paired results for all 16
+Eight frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -348,6 +348,8 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `da83da029` | ordered / indexed | 1.345× | 1.439× | All solved, exact geometry, identical connection coverage, DRC and lint |
 | `37746ebc4` | ordered / adaptive-bitset | 1.226× | 1.324× | All solved, exact geometry and original-CAD quality parity; force speculation regressed latency |
 | `414e04749` | ordered / indexed, force trials on coordinator | 1.367× | 1.485× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `64ca4e9a0` | ordered / indexed, force trials on coordinator | 1.386× | 1.510× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `f573c8deb` | ordered / indexed, force trials on coordinator | 1.329× | 1.426× | All solved, exact geometry and original-CAD quality parity; distance-cache pathing regressed |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -397,17 +399,24 @@ pathing configurations; they are not merged with this full-dataset result.
 Snapshot `64ca4e9a0` removes closed graph incidences from ordered neighbor scans,
 reuses exact force-projection geometry, and avoids repeated same-net obstacle
 classification during native simplification. Its complete paired evaluation is
-running with the same ordered/indexed configuration and force trials disabled.
-The exact dispatch arguments and immutable run URLs are recorded in
+1.386× on average and 1.510× in aggregate, with every output and quality check
+matching the baseline. The exact dispatch arguments and immutable run URLs are recorded in
 [parallel-srj18-64ca4e9a0-dispatch.json](benchmarks/parallel-srj18-64ca4e9a0-dispatch.json).
+All 32 results are retained in
+[parallel-srj18-64ca4e9a0.json](benchmarks/parallel-srj18-64ca4e9a0.json).
 
-The next snapshot shares a bounded triangular distance cache between native
+Snapshot `f573c8deb` shares a bounded triangular distance cache between native
 parent and completion searches, memoizes scalar high-density cost math while
 retaining native closest-point cache calls, and batches up to 16 simple ordered
 high-density nodes per worker request. The complete sample006 search preserves
 parent/completion states and the 2,000,000/3,683,422 iteration counts. All 583
 sample001 high-density node outputs, statistics and limits match native solves
 with four real workers; batching reduces its dispatch count to 317. These are
-functional and work-count checks, not measured speedups.
+functional and work-count checks. Its complete paired four-core evaluation is
+1.329× on average and 1.426× in aggregate, preserving every output and quality
+check. Pathing latency increased on every sample versus `64ca4e9a0`; the
+triangular cache is being removed from the default path before the next
+evaluation. All 32 outcomes and immutable workflow records are in
+[parallel-srj18-f573c8deb.json](benchmarks/parallel-srj18-f573c8deb.json).
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.
