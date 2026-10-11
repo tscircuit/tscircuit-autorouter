@@ -1,0 +1,80 @@
+{
+  "description": "Default native worker grid mode retains the JavaScript fused heap after the complete9f87 remote high-density regression. The strict-f64 arena is available only through an additional private genuine experimental-token gate; default Portfolio calls do not enable it.",
+  "implementationRevision": "4f092b4efb408a54c0b3b1ee1ea1103b42dc7b97",
+  "performanceClaim": false,
+  "remoteDecisionEvidence": "parallel-srj18-9f87cb73b-complete.json",
+  "reproduce": [
+    "bun test --timeout 9999999 tests/solvers/parallel-owner-grid-authentic-quantum-parity.test.ts",
+    "bun test --timeout 9999999 tests/solvers/native-grid-batched-descriptor-guard.test.ts"
+  ],
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeGridKernelIntrinsics.ts": "f25ba135904b81f7240ab1897d319d5a97f57934f7847a007a5fcec3fcd48065",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/workerNativeGridKernelQuantum.ts": "eb90de3840f193c3b088ab388b246586408b88240fd2597172dbcb4248e8e38d",
+    "tests/fixtures/parallel-owner-grid-quantum/worker.ts": "db25a86ba5e983baa24d0687a7551581b1d965099930aef87a024e2b98e9c695",
+    "tests/solvers/parallel-owner-grid-authentic-quantum-parity.test.ts": "d8bbfd5fe6a91609ce155b949cd0549185f8667e05d2df6e307e8e6fe47c82fd",
+    "tests/solvers/native-grid-batched-descriptor-guard.test.ts": "fe0ea2c1fcacf2d4cf1974519a771990ec73b393d8e80889183b56ec48384151"
+  },
+  "checkpointProof": {
+    "kind": "authentic-worker-default-js-and-experimental-arena-native-state-proof",
+    "performanceClaim": false,
+    "defaultJs": {
+      "checkpoints": 10329,
+      "quanta": 10329,
+      "nativeSteps": 1032799,
+      "a01Steps": 957175,
+      "a03Steps": 75624,
+      "actualWorkerKernels": true,
+      "arenaBatches": 0,
+      "arenaHydratedRows": 0,
+      "arenaFlushedRows": 0,
+      "lateObserversRejected": true,
+      "storageProxyTraps": 0
+    },
+    "experimentalArena": {
+      "checkpoints": 10329,
+      "quanta": 10329,
+      "nativeSteps": 1032799,
+      "a01Steps": 957175,
+      "a03Steps": 75624,
+      "actualWorkerKernels": true,
+      "arenaBatches": 9572,
+      "arenaHydratedRows": 4744007,
+      "arenaFlushedRows": 1427773,
+      "lateObserversRejected": true,
+      "storageProxyTraps": 0
+    },
+    "nativeCaps": "A01 six seeds160000/160000/160000/160000/160000/157175; A03seed0 75624; untouched100-step native supervisor loop",
+    "oracle": "Full private-state/output/gridStats equality and original heap/array identity at every100-step checkpoint; separate private genuine enabled-token gate, no public ownership flag."
+  },
+  "reflectionWork": {
+    "kind": "functional-default-js-and-experimental-arena-guard-census",
+    "performanceClaim": false,
+    "inventory": {
+      "baseObjects": 38,
+      "baseDescriptors": 422,
+      "extraArenaObjects": 11,
+      "extraArenaDescriptors": 57
+    },
+    "defaultJsReflectionCalls": 185,
+    "experimentalArenaReflectionCalls": 230,
+    "defaultJs": {
+      "descriptor": 17,
+      "descriptorMap": 39,
+      "prototype": 39,
+      "setPrototype": 51,
+      "names": 0,
+      "symbols": 0,
+      "ownKeys": 39
+    },
+    "experimentalArena": {
+      "descriptor": 18,
+      "descriptorMap": 50,
+      "prototype": 50,
+      "setPrototype": 62,
+      "names": 0,
+      "symbols": 0,
+      "ownKeys": 50
+    },
+    "nativeSolverCalls": 0
+  }
+}

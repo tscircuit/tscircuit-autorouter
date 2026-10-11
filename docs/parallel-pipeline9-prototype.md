@@ -180,7 +180,13 @@ complete active and stale native rows, then flushes dirty rows before any
 observer or await. The native heap, arrays, identities, tie order, and iteration
 limits remain intact. The arena proof records 957,175 native A01 steps and 9,572
 complete private-state checkpoints; it is functional evidence, not a timing
-claim.
+claim. After the measured high-density regression, revision `4f092b4ef` keeps
+the arena experimental and restores the JavaScript fused heap by default. Both
+modes match 1,032,799 native A01/A03 steps and all 10,329 full private-state
+checkpoints. Default admission checks all 422 relevant descriptors using 185
+reflection operations; the optional arena extends this to 479 descriptors and
+230 operations. Reproducible functional evidence is in
+[parallel-native-grid-default-and-experimental-state-proof.json](benchmarks/parallel-native-grid-default-and-experimental-state-proof.json).
 
 Topology, coordinated via changes, and joint DRC commits retain their serial
 execution. Ordered port-point pathing also retains its original coordinator;
