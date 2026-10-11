@@ -19,6 +19,88 @@ export type LocalHighDensityServer = {
   stats: LocalHighDensityServerStats
 }
 
+/** Geometry remains the checkout client's responsibility; terminal metadata cannot. */
+function assertLocalHighDensityTerminalResult(
+  value: unknown,
+  input: LocalHighDensityObject,
+): asserts value is LocalHighDensityObject {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(
+      "Local high-density helper returned an invalid terminal result",
+    )
+  }
+  const output = value as Record<string, unknown>
+  for (const field of [
+    "ok",
+    "source",
+    "autorouterVersion",
+    "cacheVersion",
+    "requestId",
+  ]) {
+    if (Object.prototype.hasOwnProperty.call(output, field)) {
+      throw new TypeError(
+        `Local high-density helper returned a server-owned field: ${field}`,
+      )
+    }
+  }
+  const stage = output.solutionStage
+  if (
+    (output.status !== "solved" && output.status !== "failed") ||
+    (stage !== "ordinary" &&
+      stage !== "regional-fallback" &&
+      stage !== "repair")
+  ) {
+    throw new TypeError(
+      "Local high-density helper returned an invalid terminal status or stage",
+    )
+  }
+  if (
+    (input.solvePolicy === "high_density_repair_v1" && stage !== "repair") ||
+    (input.solvePolicy === "ordinary_then_regional_without_fixed_copper_v1" &&
+      stage === "repair")
+  ) {
+    throw new TypeError(
+      "Local high-density helper returned a stage for a different solve policy",
+    )
+  }
+  if (
+    stage === "ordinary" &&
+    Object.prototype.hasOwnProperty.call(output, "ordinaryFailure")
+  ) {
+    throw new TypeError(
+      "Local high-density ordinary result cannot contain ordinaryFailure",
+    )
+  }
+  if (
+    stage === "regional-fallback" &&
+    (input.enableRegionalFallback !== true ||
+      typeof output.ordinaryFailure !== "string" ||
+      output.ordinaryFailure.trim().length === 0)
+  ) {
+    throw new TypeError(
+      "Local high-density regional result requires enabled repair and ordinaryFailure",
+    )
+  }
+  if (output.status === "failed") {
+    if (typeof output.error !== "string" || output.error.trim().length === 0) {
+      throw new TypeError(
+        "Local high-density failed result requires a nonempty error",
+      )
+    }
+    if (stage === "ordinary" && input.enableRegionalFallback === true) {
+      throw new TypeError(
+        "Local high-density ordinary failure did not complete enabled regional repair",
+      )
+    }
+  } else if (
+    !Array.isArray(stage === "repair" ? output.repairedRoutes : output.routes)
+  ) {
+    throw new TypeError(
+      "Local high-density solved result requires a route array",
+    )
+  }
+}
+
 /** One process computes one job at a time; only this exact HTTP cache persists. */
 export function createLocalHighDensityServer(
   options: LocalHighDensityServerOptions,
@@ -128,20 +210,14 @@ export function createLocalHighDensityServer(
           pending = (async (): Promise<LocalHighDensityObject> => {
             await previousSolve
             const start = performance.now()
-            const output = normalizeLocalHighDensityJson(
-              await options.solve(solveRequest.input),
+            const helperResult = await options.solve(solveRequest.input)
+            assertLocalHighDensityTerminalResult(
+              helperResult,
+              solveRequest.input,
             )
-            if (
-              output === null ||
-              typeof output !== "object" ||
-              Array.isArray(output) ||
-              !["solved", "failed"].includes(String(output.status)) ||
-              typeof output.solutionStage !== "string"
-            ) {
-              throw new TypeError(
-                "Local high-density helper returned an invalid terminal result",
-              )
-            }
+            const output = normalizeLocalHighDensityJson(
+              helperResult,
+            ) as LocalHighDensityObject
             stats.computeMs += performance.now() - start
             stats.jobsComputed++
             cache.set(key, output)

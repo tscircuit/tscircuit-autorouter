@@ -21,6 +21,7 @@ import {
   extractBenchmarkStageTiming,
   type PipelineStageTimingSource,
 } from "./benchmark-stage-timing"
+import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
 
 type SubSolverInstance = {
   progress?: number
@@ -35,17 +36,20 @@ type HighDensityBenchmarkSource = {
   waitForAllRemoteRequests?: () => Promise<void>
 }
 
-type SolverInstance = PipelineStageTimingSource & {
+type BenchmarkPipelineStep = {
+  solverName: string
+  solverClass?: Function
+  getConstructorParams?: (...args: any[]) => readonly unknown[]
+}
+
+type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   solved?: boolean
   failed?: boolean
   progress?: number
   iterations?: number
   error?: string | null
   activeSubSolver?: SubSolverInstance | null
-  pipelineDef: ReadonlyArray<{
-    solverName: string
-    solverClass?: Function
-  }>
+  pipelineDef: ReadonlyArray<BenchmarkPipelineStep>
   srjWithPointPairs?: SimpleRouteJson
   step?: () => void
   solve?: () => void | Promise<void>
@@ -134,6 +138,63 @@ const getSolverConstructor = (solverName: string): SolverConstructor => {
   return ctor as SolverConstructor
 }
 
+export const configureNetworkedBenchmarkRequestTimeout = (
+  solver: SolverInstance,
+  requestTimeoutMs: number,
+): void => {
+  if (!Number.isFinite(requestTimeoutMs) || requestTimeoutMs <= 0) {
+    throw new Error("Networked benchmark request timeout must be positive")
+  }
+  let configuredRouteStage = false
+  // These subclasses already accept the option in older checkouts. Extend
+  // the public lazy constructor callbacks instead of changing measured lib.
+  solver.pipelineDef = solver.pipelineDef.map(
+    (step): SolverInstance["pipelineDef"][number] => {
+      const isRouteStage = step.solverName === "highDensityRouteSolver"
+      if (!isRouteStage && step.solverName !== "highDensityRepairSolver")
+        return step
+      const getConstructorParams = step.getConstructorParams
+      if (typeof getConstructorParams !== "function") {
+        throw new Error(
+          `Networked benchmark ${step.solverName} constructor parameters are unavailable`,
+        )
+      }
+      if (isRouteStage) configuredRouteStage = true
+      return {
+        ...step,
+        getConstructorParams: (
+          instance: SolverInstance,
+        ): readonly unknown[] => {
+          const constructorParams = getConstructorParams.call(step, instance)
+          const params = constructorParams[0]
+          const isNetworkedParams =
+            params !== null &&
+            typeof params === "object" &&
+            !Array.isArray(params) &&
+            typeof (params as Record<string, unknown>).autorouterVersion ===
+              "string"
+          if (!isNetworkedParams) {
+            if (isRouteStage)
+              throw new Error(
+                "Networked benchmark high-density routing constructor identity is unavailable",
+              )
+            return constructorParams // Older checkouts perform repair locally.
+          }
+          return [
+            { ...params, requestTimeoutMs },
+            ...constructorParams.slice(1),
+          ]
+        },
+      }
+    },
+  )
+  if (!configuredRouteStage) {
+    throw new Error(
+      "Networked benchmark high-density routing stage is unavailable",
+    )
+  }
+}
+
 export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const constructorName = task.solverConstructorName ?? task.solverName
   const SolverConstructor = getSolverConstructor(constructorName)
@@ -148,11 +209,18 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
       "Pipeline9_Networked benchmark requires a configured local cluster or explicit --networked-remote; use benchmark.sh",
     )
   }
-  return new SolverConstructor(task.scenario, {
+  const solver = new SolverConstructor(task.scenario, {
     ...scenarioOptions,
     hdCache2ServerUrl: networkedServer.url,
     hdCache2CacheVersion: networkedServer.cacheVersion,
   })
+  if (networkedServer.requestTimeoutMs !== undefined) {
+    configureNetworkedBenchmarkRequestTimeout(
+      solver,
+      networkedServer.requestTimeoutMs,
+    )
+  }
+  return solver
 }
 
 const getErrorMessage = (error: unknown): string | undefined => {
@@ -372,7 +440,11 @@ const getNetworkedBenchmarkValidationError = (
   if (!task.networkedCachePass) return undefined
   const stats = getRoutingBenchmarkMetrics(solver).networkedHighDensity
   if (!stats) return "Pipeline9_Networked did not expose remote cache metrics"
-  if (stats.remoteTransportFallbacks > 0) {
+  const validationRejections =
+    task.networkedServer?.backend === "local"
+      ? countDeterministicNetworkedValidationRejections(stats)
+      : 0
+  if (stats.remoteTransportFallbacks > validationRejections) {
     return `Pipeline9_Networked used ${stats.remoteTransportFallbacks} local transport fallback(s)`
   }
   if (stats.remoteRequestsCompleted !== stats.remoteRequestsStarted) {
@@ -383,7 +455,8 @@ const getNetworkedBenchmarkValidationError = (
     (stats.remoteBatchCacheMisses > 0 ||
       stats.remoteSingleRequestsStarted > 0 ||
       stats.remoteSolverResults > 0 ||
-      stats.remoteCacheHits !== stats.remoteRequestsStarted)
+      stats.remoteCacheHits + validationRejections !==
+        stats.remoteRequestsStarted)
   ) {
     return `Pipeline9_Networked hot pass was not fully cached (${stats.remoteCacheHits}/${stats.remoteRequestsStarted} cache hit(s), ${stats.remoteBatchCacheMisses} batch miss(es), ${stats.remoteSingleRequestsStarted} single solve(s), ${stats.remoteSolverResults} solver result(s))`
   }

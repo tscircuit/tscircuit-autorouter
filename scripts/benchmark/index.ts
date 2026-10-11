@@ -46,7 +46,9 @@ import {
 import {
   startLocalHighDensityCluster,
   type LocalHighDensityCluster,
+  type LocalHighDensityClusterStats,
 } from "./startLocalHighDensityCluster"
+import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
 
 type BenchmarkOptions = {
   solverName?: string
@@ -92,6 +94,10 @@ type RunBenchmarkTasksOptions = {
   onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
   cpuLanes?: number[][]
   signal?: AbortSignal
+}
+
+type NetworkedColdHotValidationOptions = {
+  allowValidationRejections?: boolean
 }
 
 const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
@@ -1700,6 +1706,19 @@ export const summarizeSolverResults = (
             (sum, metrics) => sum + metrics.remoteTransportFallbacks,
             0,
           ),
+          ...(networkMetrics.some(
+            (metrics): boolean =>
+              metrics.remoteFallbackReasonCounts !== undefined,
+          )
+            ? {
+                validationRejections: networkMetrics.reduce(
+                  (sum, metrics): number =>
+                    sum +
+                    countDeterministicNetworkedValidationRejections(metrics),
+                  0,
+                ),
+              }
+            : {}),
         }
 
   return {
@@ -1732,6 +1751,7 @@ export const summarizeSolverResults = (
 
 export const validateNetworkedColdPassReadyForHot = (
   results: WorkerResult[],
+  options: NetworkedColdHotValidationOptions = {},
 ): void => {
   const coldResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
@@ -1758,9 +1778,19 @@ export const validateNetworkedColdPassReadyForHot = (
     (sum, metrics) => sum + metrics.remoteTransportFallbacks,
     0,
   )
-  if (localFallbacks > 0) {
+  const validationRejections = coldMetrics.map((metrics): number =>
+    options.allowValidationRejections
+      ? countDeterministicNetworkedValidationRejections(metrics)
+      : 0,
+  )
+  if (
+    coldMetrics.some(
+      (metrics, index): boolean =>
+        metrics.remoteTransportFallbacks !== validationRejections[index],
+    )
+  ) {
     throw new Error(
-      `Pipeline9_Networked cold pass used ${localFallbacks} local transport fallback(s)`,
+      `Pipeline9_Networked cold pass used ${localFallbacks} local transport fallback(s); rejected reason counts: ${JSON.stringify(coldMetrics.map((metrics) => metrics.remoteFallbackReasonCounts))}`,
     )
   }
 
@@ -1772,7 +1802,25 @@ export const validateNetworkedColdPassReadyForHot = (
     (sum, metrics) => sum + metrics.remoteSolverResults,
     0,
   )
-  if (coldRequests > 0 && coldSolverResults === 0) {
+  const coldValidationRejections = validationRejections.reduce(
+    (sum, count): number => sum + count,
+    0,
+  )
+  if (options.allowValidationRejections) {
+    for (const [index, metrics] of coldMetrics.entries()) {
+      if (
+        metrics.remoteSolverResults +
+          metrics.remoteCacheHits +
+          validationRejections[index] !==
+        metrics.remoteRequestsStarted
+      ) {
+        throw new Error(
+          `Pipeline9_Networked cold sample ${coldResults[index].scenarioName} returned ${metrics.remoteSolverResults} accepted solver result(s) and ${validationRejections[index]} validation rejection(s) for ${metrics.remoteRequestsStarted} request(s) (${metrics.remoteCacheHits} accepted cache hit(s))`,
+        )
+      }
+    }
+  }
+  if (coldRequests > 0 && coldSolverResults + coldValidationRejections === 0) {
     throw new Error(
       "Pipeline9_Networked cold pass did not produce any remote solver results",
     )
@@ -1781,11 +1829,13 @@ export const validateNetworkedColdPassReadyForHot = (
 
 export const validateNetworkedColdHotResults = (
   results: WorkerResult[],
+  options: NetworkedColdHotValidationOptions = {},
 ): void => {
-  validateNetworkedColdPassReadyForHot(results)
-  const coldResultCount = results.filter(
+  validateNetworkedColdPassReadyForHot(results, options)
+  const coldResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
-  ).length
+  )
+  const coldResultCount = coldResults.length
   const hotResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_HOT_NAME,
   )
@@ -1811,9 +1861,19 @@ export const validateNetworkedColdHotResults = (
     (sum, metrics) => sum + metrics.remoteTransportFallbacks,
     0,
   )
-  if (localFallbacks > 0) {
+  const validationRejections = hotMetrics.map((metrics): number =>
+    options.allowValidationRejections
+      ? countDeterministicNetworkedValidationRejections(metrics)
+      : 0,
+  )
+  if (
+    hotMetrics.some(
+      (metrics, index): boolean =>
+        metrics.remoteTransportFallbacks !== validationRejections[index],
+    )
+  ) {
     throw new Error(
-      `Pipeline9_Networked hot pass used ${localFallbacks} local transport fallback(s)`,
+      `Pipeline9_Networked hot pass used ${localFallbacks} local transport fallback(s); rejected reason counts: ${JSON.stringify(hotMetrics.map((metrics) => metrics.remoteFallbackReasonCounts))}`,
     )
   }
 
@@ -1825,9 +1885,13 @@ export const validateNetworkedColdHotResults = (
     (sum, metrics) => sum + metrics.remoteCacheHits,
     0,
   )
-  if (hotRequests !== hotCacheHits) {
+  const hotValidationRejections = validationRejections.reduce(
+    (sum, count): number => sum + count,
+    0,
+  )
+  if (hotRequests !== hotCacheHits + hotValidationRejections) {
     throw new Error(
-      `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits`,
+      `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits and ${hotValidationRejections} validation rejection(s)`,
     )
   }
   if (
@@ -1841,6 +1905,58 @@ export const validateNetworkedColdHotResults = (
     throw new Error(
       "Pipeline9_Networked hot pass computed work instead of using only exact cache hits",
     )
+  }
+  if (options.allowValidationRejections) {
+    const coldBySample = new Map(
+      coldResults.map((result) => [
+        JSON.stringify([result.scenarioName, result.sampleNumber]),
+        result,
+      ]),
+    )
+    const visitedSamples = new Set<string>()
+    if (coldBySample.size !== coldResults.length) {
+      throw new Error("Pipeline9_Networked cold pass repeated a sample")
+    }
+    for (const hotResult of hotResults) {
+      const sampleKey = JSON.stringify([
+        hotResult.scenarioName,
+        hotResult.sampleNumber,
+      ])
+      const coldResult = coldBySample.get(sampleKey)
+      const hot = hotResult.routingMetrics!.networkedHighDensity!
+      if (!coldResult || visitedSamples.has(sampleKey)) {
+        throw new Error(
+          `Pipeline9_Networked hot pass did not match a unique cold sample ${hotResult.scenarioName} (${hotResult.sampleNumber})`,
+        )
+      }
+      visitedSamples.add(sampleKey)
+      const cold = coldResult.routingMetrics!.networkedHighDensity!
+      const coldRejected = countDeterministicNetworkedValidationRejections(cold)
+      const hotRejected = countDeterministicNetworkedValidationRejections(hot)
+      if (hot.remoteCacheHits + hotRejected !== hot.remoteRequestsStarted) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} did not account for every cached result`,
+        )
+      }
+      if (
+        cold.remoteRequestsStarted !== hot.remoteRequestsStarted ||
+        coldRejected !== hotRejected
+      ) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} changed request or validation rejection counts: cold ${cold.remoteRequestsStarted} request(s), ${coldRejected} rejection(s); hot ${hot.remoteRequestsStarted} request(s), ${hotRejected} rejection(s)`,
+        )
+      }
+      if (
+        coldResult.didSolve !== hotResult.didSolve ||
+        coldResult.relaxedDrcPassed !== hotResult.relaxedDrcPassed ||
+        coldResult.viaCount !== hotResult.viaCount ||
+        coldResult.drcErrorCount !== hotResult.drcErrorCount
+      ) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} changed routing result: cold ${JSON.stringify({ didSolve: coldResult.didSolve, relaxedDrcPassed: coldResult.relaxedDrcPassed, viaCount: coldResult.viaCount, drcErrorCount: coldResult.drcErrorCount })}; hot ${JSON.stringify({ didSolve: hotResult.didSolve, relaxedDrcPassed: hotResult.relaxedDrcPassed, viaCount: hotResult.viaCount, drcErrorCount: hotResult.drcErrorCount })}`,
+        )
+      }
+    }
   }
 }
 
@@ -1990,6 +2106,7 @@ const main = async () => {
         .map((lane) => lane.coordinatorCpuIds),
       sampleAssignment: "fixed_round_robin",
       cacheIsolation: "per_sample",
+      passStats: [],
     }
     const cpuIds = resourcePlan.lanes
       .slice(0, concurrency)
@@ -2024,6 +2141,7 @@ const main = async () => {
     : 0
   const results: WorkerResult[] = []
   const clusters: LocalHighDensityCluster[] = []
+  let coldClusterStats: LocalHighDensityClusterStats[] | undefined
   const runAbort = new AbortController()
   const onInterrupt = (): void => {
     if (!runAbort.signal.aborted) {
@@ -2061,8 +2179,10 @@ const main = async () => {
       for (const [index, task] of taskGroup.entries()) {
         if (resourcePlan) {
           task.networkedServer = {
+            backend: "local",
             url: clusters[index % concurrency]!.url,
             cacheVersion: `${runNamespace}-sample-${index + 1}`,
+            requestTimeoutMs: getTaskTimeoutMs(task, sampleTimeoutMs),
           }
         } else if (networkedRemote) {
           const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
@@ -2072,7 +2192,7 @@ const main = async () => {
               "--networked-remote requires HD_CACHE2_CACHE_VERSION and HD_CACHE2_SERVER_URL",
             )
           }
-          task.networkedServer = { url, cacheVersion }
+          task.networkedServer = { url, cacheVersion, backend: "remote" }
         }
       }
     }
@@ -2096,8 +2216,56 @@ const main = async () => {
           signal: runAbort.signal,
         })),
       )
+      if (useLocalCluster && networkedColdHot) {
+        const laneStats = await Promise.all(
+          clusters.map((cluster) => cluster.getStats()),
+        )
+        const pass = groupIndex === 0 ? "cold" : "hot"
+        runtime.localHighDensityCluster!.passStats!.push({
+          pass,
+          lanes: laneStats,
+        })
+        console.log(
+          `[benchmark] local ${pass} server stats ${JSON.stringify(laneStats)}`,
+        )
+        if (groupIndex === 0) {
+          coldClusterStats = laneStats
+        } else {
+          if (
+            !coldClusterStats ||
+            coldClusterStats.length !== laneStats.length
+          ) {
+            throw new Error(
+              "Local high-density hot pass has no matching cold server statistics",
+            )
+          }
+          for (const [lane, stats] of laneStats.entries()) {
+            const cold = coldClusterStats[lane]
+            if (stats.servers.length !== cold.servers.length) {
+              throw new Error(
+                "Local high-density server count changed before the hot pass",
+              )
+            }
+            for (const [index, server] of stats.servers.entries()) {
+              const previous = cold.servers[index]
+              if (
+                server.pid !== previous.pid ||
+                server.cpuId !== previous.cpuId ||
+                server.stats.jobsComputed !== previous.stats.jobsComputed ||
+                server.stats.solveRequests !== previous.stats.solveRequests
+              ) {
+                throw new Error(
+                  `Local high-density hot pass changed server identity or computed new work in lane ${lane + 1}, server ${index + 1}`,
+                )
+              }
+            }
+          }
+        }
+      }
       if (networkedColdHot && groupIndex === 0) {
-        validateNetworkedColdPassReadyForHot(results)
+        validateNetworkedColdPassReadyForHot(results, {
+          allowValidationRejections: useLocalCluster,
+        })
         if (networkedCachePropagationDelayMs > 0) {
           console.log(
             `[benchmark] Waiting ${networkedCachePropagationDelayMs}ms for Workers KV propagation before the hot pass`,
@@ -2108,7 +2276,11 @@ const main = async () => {
         }
       }
     }
-    if (networkedColdHot) validateNetworkedColdHotResults(results)
+    if (networkedColdHot) {
+      validateNetworkedColdHotResults(results, {
+        allowValidationRejections: useLocalCluster,
+      })
+    }
   } catch (error) {
     if (resourcePlan) {
       await writeFile(

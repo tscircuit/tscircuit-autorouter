@@ -6,6 +6,7 @@ import {
   normalizeLocalHighDensityJson,
   type LocalHighDensityObject,
 } from "./localHighDensityProtocol"
+import { normalizeLocalHighDensityNodeResult } from "./normalizeLocalHighDensityNodeResult"
 
 export function startLocalHighDensityServerProcess(): void {
   const expectedVersion = process.argv[2]
@@ -18,11 +19,13 @@ export function startLocalHighDensityServerProcess(): void {
     autorouterVersion: AUTOROUTER_VERSION,
     solve: (input: LocalHighDensityObject): LocalHighDensityObject => {
       getGlobalInMemoryCache().clearCache()
+      const nodeInput = input as unknown as Parameters<
+        typeof solvePipeline9NetworkedHighDensityNode
+      >[0]
       return normalizeLocalHighDensityJson(
-        solvePipeline9NetworkedHighDensityNode(
-          input as unknown as Parameters<
-            typeof solvePipeline9NetworkedHighDensityNode
-          >[0],
+        normalizeLocalHighDensityNodeResult(
+          nodeInput,
+          solvePipeline9NetworkedHighDensityNode(nodeInput),
         ),
       ) as LocalHighDensityObject
     },

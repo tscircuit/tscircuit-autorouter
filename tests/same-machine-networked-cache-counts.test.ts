@@ -49,6 +49,7 @@ test("paired networked cold and hot comments expose each revision's cache counts
     solverResults: 10,
     batchCacheMisses: 10,
     localFallbacks: 0,
+    validationRejections: 0,
   }
   const baseHot = {
     remoteRequests: 10,
@@ -56,20 +57,23 @@ test("paired networked cold and hot comments expose each revision's cache counts
     solverResults: 0,
     batchCacheMisses: 0,
     localFallbacks: 0,
+    validationRejections: 0,
   }
   const prCold = {
     remoteRequests: 12,
     cacheHits: 0,
-    solverResults: 12,
+    solverResults: 11,
     batchCacheMisses: 12,
-    localFallbacks: 0,
+    localFallbacks: 1,
+    validationRejections: 1,
   }
   const prHot = {
     remoteRequests: 12,
     cacheHits: 11,
     solverResults: 0,
-    batchCacheMisses: 1,
+    batchCacheMisses: 0,
     localFallbacks: 1,
+    validationRejections: 1,
   }
   const render = (
     baseReport: BenchmarkReport,
@@ -100,10 +104,10 @@ test("paired networked cold and hot comments expose each revision's cache counts
     "| Pipeline9_Networked Cold | HD cache hits | 0/10 | 0/12 | 0 |",
   )
   expect(markdown).toContain(
-    "| Pipeline9_Networked Cold | HD solver results | 10 | 12 | +2 |",
+    "| Pipeline9_Networked Cold | HD solver results | 10 | 11 | +1 |",
   )
   expect(markdown).toContain(
-    "| Pipeline9_Networked Cold | HD local fallbacks | 0 | 0 | 0 |",
+    "| Pipeline9_Networked Cold | HD local fallbacks | 0 | 1 | +1 |",
   )
   expect(markdown).toContain(
     "| Pipeline9_Networked Hot | HD requests | 10 | 12 | +2 |",
@@ -116,6 +120,12 @@ test("paired networked cold and hot comments expose each revision's cache counts
   )
   expect(markdown).toContain(
     "| Pipeline9_Networked Hot | HD local fallbacks | 0 | 1 | +1 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Cold | HD validation retries | 0 | 1 | +1 |",
+  )
+  expect(markdown).toContain(
+    "| Pipeline9_Networked Hot | HD validation retries | 0 | 1 | +1 |",
   )
 
   const historicalBase = makeReport([
