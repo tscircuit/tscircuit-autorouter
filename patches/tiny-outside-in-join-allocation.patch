@@ -1,0 +1,105 @@
+diff --git a/lib/outside-in-partial-rip-tiny-hypergraph-solver.ts b/lib/outside-in-partial-rip-tiny-hypergraph-solver.ts
+index be89492..f5dc2b9 100644
+--- a/lib/outside-in-partial-rip-tiny-hypergraph-solver.ts
++++ b/lib/outside-in-partial-rip-tiny-hypergraph-solver.ts
+@@ -707,14 +707,9 @@ export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHy
+   private buildJoinedCandidate(
+     forwardCandidate: OutsideInCandidate,
+     reverseCandidate: OutsideInCandidate,
++    maximumJoinedCost?: number,
+   ): JoinedOutsideInCandidate | undefined {
+-    const forwardPath = this.getCandidatePath(forwardCandidate)
+-    const reversePath = this.getCandidatePath(reverseCandidate)
+-    const portIds = forwardPath.map(({ portId }) => portId)
+-    const regionIds = forwardPath
+-      .slice(0, -1)
+-      .map(({ nextRegionId }) => nextRegionId)
+-
++    let connectorCost = 0
+     if (forwardCandidate.portId !== reverseCandidate.portId) {
+       if (forwardCandidate.nextRegionId !== reverseCandidate.nextRegionId) {
+         return undefined
+@@ -739,8 +734,28 @@ export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHy
+       const connectorG = this.computeG(
+         forwardCandidate,
+         reverseCandidate.portId,
++        Number.POSITIVE_INFINITY,
++        connectorDistance,
+       )
+       if (!Number.isFinite(connectorG)) return undefined
++      connectorCost = connectorG - forwardCandidate.g
++    }
++
++    const cost = forwardCandidate.g + reverseCandidate.g + connectorCost
++    if (maximumJoinedCost !== undefined && cost >= maximumJoinedCost) {
++      return undefined
++    }
++
++    // Only improving joins need their paths materialized. Neither walking the
++    // parent chains nor building the joined chain changes the connector cost.
++    const forwardPath = this.getCandidatePath(forwardCandidate)
++    const reversePath = this.getCandidatePath(reverseCandidate)
++    const portIds = forwardPath.map(({ portId }) => portId)
++    const regionIds = forwardPath
++      .slice(0, -1)
++      .map(({ nextRegionId }) => nextRegionId)
++
++    if (forwardCandidate.portId !== reverseCandidate.portId) {
+       regionIds.push(forwardCandidate.nextRegionId)
+       portIds.push(reverseCandidate.portId)
+     }
+@@ -781,15 +796,9 @@ export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHy
+       }
+     }
+ 
+-    const connectorCost =
+-      forwardCandidate.portId === reverseCandidate.portId
+-        ? 0
+-        : this.computeG(forwardCandidate, reverseCandidate.portId) -
+-          forwardCandidate.g
+-
+     return {
+       candidate: joinedCandidate,
+-      cost: forwardCandidate.g + reverseCandidate.g + connectorCost,
++      cost,
+     }
+   }
+ 
+@@ -816,8 +825,16 @@ export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHy
+     if (samePortCandidate) {
+       considerJoinedCandidate(
+         expandingForward
+-          ? this.buildJoinedCandidate(candidate, samePortCandidate)
+-          : this.buildJoinedCandidate(samePortCandidate, candidate),
++          ? this.buildJoinedCandidate(
++              candidate,
++              samePortCandidate,
++              search.bestJoinedCost,
++            )
++          : this.buildJoinedCandidate(
++              samePortCandidate,
++              candidate,
++              search.bestJoinedCost,
++            ),
+       )
+     }
+ 
+@@ -826,8 +843,16 @@ export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHy
+     ) ?? []) {
+       considerJoinedCandidate(
+         expandingForward
+-          ? this.buildJoinedCandidate(candidate, oppositeCandidate)
+-          : this.buildJoinedCandidate(oppositeCandidate, candidate),
++          ? this.buildJoinedCandidate(
++              candidate,
++              oppositeCandidate,
++              search.bestJoinedCost,
++            )
++          : this.buildJoinedCandidate(
++              oppositeCandidate,
++              candidate,
++              search.bestJoinedCost,
++            ),
+       )
+     }
+   }
