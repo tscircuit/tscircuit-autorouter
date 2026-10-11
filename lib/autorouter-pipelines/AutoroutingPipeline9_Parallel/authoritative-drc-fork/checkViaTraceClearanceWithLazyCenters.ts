@@ -60,10 +60,16 @@ export function checkViaTraceClearanceWithLazyCenters(
     }
     let previousTraceId: string | undefined
     let previousConnected = false
+    // Admission proves plain layer arrays and native array methods. Retain the
+    // original array only when no diagnostics callback can change it mid-call;
+    // missing layers keep the original all_layers clone at every query site.
+    const retainedLayers = diagnostics === undefined && Array.isArray(via.layers)
+      ? via.layers
+      : undefined
     const axisQuery = enableAxisRejection ? getViaTraceAxisQuery(via, minClearance!) : undefined
     for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
       const segment = segments[segmentIndex]!
-      if (!getLayersOfPcbElement(via).includes(segment.layer)) continue
+      if (!(retainedLayers ?? getLayersOfPcbElement(via)).includes(segment.layer)) continue
       let connected: boolean | undefined
       if (connectedByTrace) {
         // Native segment lists usually contain consecutive segments of one

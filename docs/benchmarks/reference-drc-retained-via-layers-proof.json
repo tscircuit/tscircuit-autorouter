@@ -1,0 +1,214 @@
+{
+  "kind": "functional-work-only-no-timing",
+  "scope": "17 saved native sample015 DRC invocations with no diagnostics",
+  "method": "Exact loop-body invocation counts from each original via/segment Cartesian product; every original includes site is retained.",
+  "rows": [
+    {
+      "record": 0,
+      "eligible": true,
+      "vias": 0,
+      "segments": 0,
+      "retainedArrays": 0,
+      "originalGetLayersCalls": 0,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 0
+    },
+    {
+      "record": 1,
+      "eligible": true,
+      "vias": 401,
+      "segments": 4457,
+      "retainedArrays": 401,
+      "originalGetLayersCalls": 1787257,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1787257
+    },
+    {
+      "record": 2,
+      "eligible": true,
+      "vias": 403,
+      "segments": 4450,
+      "retainedArrays": 403,
+      "originalGetLayersCalls": 1793350,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1793350
+    },
+    {
+      "record": 3,
+      "eligible": true,
+      "vias": 401,
+      "segments": 4456,
+      "retainedArrays": 401,
+      "originalGetLayersCalls": 1786856,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1786856
+    },
+    {
+      "record": 4,
+      "eligible": true,
+      "vias": 401,
+      "segments": 4458,
+      "retainedArrays": 401,
+      "originalGetLayersCalls": 1787658,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1787658
+    },
+    {
+      "record": 5,
+      "eligible": true,
+      "vias": 397,
+      "segments": 4298,
+      "retainedArrays": 397,
+      "originalGetLayersCalls": 1706306,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1706306
+    },
+    {
+      "record": 6,
+      "eligible": true,
+      "vias": 397,
+      "segments": 4300,
+      "retainedArrays": 397,
+      "originalGetLayersCalls": 1707100,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1707100
+    },
+    {
+      "record": 7,
+      "eligible": true,
+      "vias": 395,
+      "segments": 4300,
+      "retainedArrays": 395,
+      "originalGetLayersCalls": 1698500,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1698500
+    },
+    {
+      "record": 8,
+      "eligible": true,
+      "vias": 394,
+      "segments": 4289,
+      "retainedArrays": 394,
+      "originalGetLayersCalls": 1689866,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1689866
+    },
+    {
+      "record": 9,
+      "eligible": true,
+      "vias": 394,
+      "segments": 4288,
+      "retainedArrays": 394,
+      "originalGetLayersCalls": 1689472,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1689472
+    },
+    {
+      "record": 10,
+      "eligible": true,
+      "vias": 394,
+      "segments": 4289,
+      "retainedArrays": 394,
+      "originalGetLayersCalls": 1689866,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1689866
+    },
+    {
+      "record": 11,
+      "eligible": true,
+      "vias": 355,
+      "segments": 3000,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1065000,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1065000
+    },
+    {
+      "record": 12,
+      "eligible": true,
+      "vias": 355,
+      "segments": 3029,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1075295,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1075295
+    },
+    {
+      "record": 13,
+      "eligible": true,
+      "vias": 355,
+      "segments": 3000,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1065000,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1065000
+    },
+    {
+      "record": 14,
+      "eligible": true,
+      "vias": 355,
+      "segments": 3000,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1065000,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1065000
+    },
+    {
+      "record": 15,
+      "eligible": true,
+      "vias": 355,
+      "segments": 3000,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1065000,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1065000
+    },
+    {
+      "record": 16,
+      "eligible": true,
+      "vias": 355,
+      "segments": 2985,
+      "retainedArrays": 355,
+      "originalGetLayersCalls": 1059675,
+      "retainedGetLayersCalls": 0,
+      "unchangedIncludesCalls": 1059675
+    }
+  ],
+  "totals": {
+    "vias": 6107,
+    "retainedArrays": 6107,
+    "originalGetLayersCalls": 23731201,
+    "retainedGetLayersCalls": 0,
+    "unchangedIncludesCalls": 23731201
+  },
+  "sourceHashes": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/checkViaTraceClearanceWithLazyCenters.ts",
+      "sha256": "345a34c7cc9ae8bfcaa928f20dd0fb322118b6a91d170907c0751f07836dbd4d"
+    },
+    {
+      "path": "tests/solvers/reference-drc-retained-via-layers-parity.test.ts",
+      "sha256": "8e42109ec4933f0779dcb45caeb70459dbd48dc867fa40d7e654aef9c15c57c7"
+    },
+    {
+      "path": "scripts/diagnostics/verify-reference-via-layer-retention.ts",
+      "sha256": "a151ece4f4239dd6ff5116e050d01d8a0b672c764d583e5cbcbba1ae5f31e415"
+    },
+    {
+      "path": "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz",
+      "sha256": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+    }
+  ],
+  "checks": [
+    "All 17 complete DRC results equal native outputs and saved native fixture",
+    "Explicit, empty, missing, duplicate and multiple via layers",
+    "Diagnostic setter replaces layers at original query boundary",
+    "Accessor reads equal native checker",
+    "Raw observer exception identity preserved",
+    "TypeScript noEmit passed"
+  ],
+  "reproduce": [
+    "bun scripts/diagnostics/verify-reference-via-layer-retention.ts /tmp/reference-via-layer-retention-census.json",
+    "bun test --timeout 9999999 tests/solvers/reference-drc-retained-via-layers-parity.test.ts"
+  ]
+}
