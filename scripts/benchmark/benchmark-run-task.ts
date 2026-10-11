@@ -29,6 +29,12 @@ type SubSolverInstance = {
   getSolverName?: () => string
 }
 
+type HighDensityBenchmarkSource = {
+  iterations?: number
+  stats?: Record<string, unknown>
+  waitForAllRemoteRequests?: () => Promise<void>
+}
+
 type SolverInstance = PipelineStageTimingSource & {
   solved?: boolean
   failed?: boolean
@@ -52,11 +58,8 @@ type SolverInstance = PipelineStageTimingSource & {
       | TinyHypergraphBenchmarkMetrics
       | undefined
   }
-  highDensityRouteSolver?: {
-    iterations?: number
-    stats?: Record<string, unknown>
-    waitForAllRemoteRequests?: () => Promise<void>
-  }
+  highDensityRouteSolver?: HighDensityBenchmarkSource
+  highDensityRepairSolver?: HighDensityBenchmarkSource
   timeSpentOnPhase: Record<string, number>
 }
 
@@ -135,20 +138,20 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const constructorName = task.solverConstructorName ?? task.solverName
   const SolverConstructor = getSolverConstructor(constructorName)
   const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
-  if (!task.networkedCachePass) {
+  if (constructorName !== "AutoroutingPipelineSolver9_Networked") {
     return new SolverConstructor(task.scenario, scenarioOptions)
   }
 
-  const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
-  if (!cacheVersion) {
+  const networkedServer = task.networkedServer
+  if (!networkedServer) {
     throw new Error(
-      "Pipeline9_Networked benchmark requires HD_CACHE2_CACHE_VERSION",
+      "Pipeline9_Networked benchmark requires a configured local cluster or explicit --networked-remote; use benchmark.sh",
     )
   }
   return new SolverConstructor(task.scenario, {
     ...scenarioOptions,
-    hdCache2ServerUrl: process.env.HD_CACHE2_SERVER_URL,
-    hdCache2CacheVersion: cacheVersion,
+    hdCache2ServerUrl: networkedServer.url,
+    hdCache2CacheVersion: networkedServer.cacheVersion,
   })
 }
 
@@ -308,33 +311,48 @@ const getProgressKey = (solver: SolverInstance): string => {
   return `${phaseName}|${phaseSolverName}`
 }
 
-const getRoutingBenchmarkMetrics = (
+export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
-  const highDensityStats = solver.highDensityRouteSolver?.stats
-  const networkedHighDensity =
-    highDensityStats &&
-    typeof highDensityStats.remoteRequestsStarted === "number"
-      ? {
-          remoteRequestsStarted: highDensityStats.remoteRequestsStarted,
-          remoteRequestsCompleted: Number(
-            highDensityStats.remoteRequestsCompleted ?? 0,
-          ),
-          remoteBatchCacheMisses: Number(
-            highDensityStats.remoteBatchCacheMisses ?? 0,
-          ),
-          remoteSingleRequestsStarted: Number(
-            highDensityStats.remoteSingleRequestsStarted ?? 0,
-          ),
-          remoteCacheHits: Number(highDensityStats.remoteCacheHits ?? 0),
-          remoteSolverResults: Number(
-            highDensityStats.remoteSolverResults ?? 0,
-          ),
-          remoteTransportFallbacks: Number(
-            highDensityStats.remoteTransportFallbacks ?? 0,
-          ),
+  const networkedStats = [
+    solver.highDensityRouteSolver?.stats,
+    solver.highDensityRepairSolver?.stats,
+  ].filter((stats): stats is Record<string, unknown> =>
+    stats !== undefined && typeof stats.remoteRequestsStarted === "number",
+  )
+  let networkedHighDensity: RoutingBenchmarkMetrics["networkedHighDensity"]
+  if (networkedStats.length > 0) {
+    networkedHighDensity = {
+      remoteRequestsStarted: 0,
+      remoteRequestsCompleted: 0,
+      remoteBatchCacheMisses: 0,
+      remoteSingleRequestsStarted: 0,
+      remoteCacheHits: 0,
+      remoteSolverResults: 0,
+      remoteTransportFallbacks: 0,
+    }
+    for (const stats of networkedStats) {
+      for (const key of [
+        "remoteRequestsStarted",
+        "remoteRequestsCompleted",
+        "remoteBatchCacheMisses",
+        "remoteSingleRequestsStarted",
+        "remoteCacheHits",
+        "remoteSolverResults",
+        "remoteTransportFallbacks",
+      ] as const) {
+        networkedHighDensity[key] += Number(stats[key] ?? 0)
+      }
+      const reasonCounts = stats.remoteFallbackReasonCounts as
+        Record<string, number> | undefined
+      if (reasonCounts) {
+        const combined = networkedHighDensity.remoteFallbackReasonCounts ??= {}
+        for (const [reason, count] of Object.entries(reasonCounts)) {
+          combined[reason] = (combined[reason] ?? 0) + count
         }
-      : undefined
+      }
+    }
+  }
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
@@ -354,6 +372,9 @@ const getNetworkedBenchmarkValidationError = (
   if (stats.remoteTransportFallbacks > 0) {
     return `Pipeline9_Networked used ${stats.remoteTransportFallbacks} local transport fallback(s)`
   }
+  if (stats.remoteRequestsCompleted !== stats.remoteRequestsStarted) {
+    return `Pipeline9_Networked did not drain all requests (${stats.remoteRequestsCompleted}/${stats.remoteRequestsStarted})`
+  }
   if (
     task.networkedCachePass === "hot" &&
     (stats.remoteBatchCacheMisses > 0 ||
@@ -364,6 +385,30 @@ const getNetworkedBenchmarkValidationError = (
     return `Pipeline9_Networked hot pass was not fully cached (${stats.remoteCacheHits}/${stats.remoteRequestsStarted} cache hit(s), ${stats.remoteBatchCacheMisses} batch miss(es), ${stats.remoteSingleRequestsStarted} single solve(s), ${stats.remoteSolverResults} solver result(s))`
   }
   return undefined
+}
+
+export const validateNetworkedBenchmark = async (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+): Promise<void> => {
+  if (!task.networkedCachePass) return
+  const sources = [
+    { name: "highDensityRouteSolver", source: solver.highDensityRouteSolver, required: true },
+    { name: "highDensityRepairSolver", source: solver.highDensityRepairSolver,
+      required: typeof solver.highDensityRepairSolver?.stats?.remoteRequestsStarted === "number" },
+  ]
+  const drains = await Promise.allSettled(sources.map(async ({ name, source, required }): Promise<void> => {
+    if (typeof source?.waitForAllRemoteRequests === "function") {
+      await source.waitForAllRemoteRequests()
+    } else if (required) {
+      throw new Error(`Pipeline9_Networked benchmark requires an explicit remote-request drain for ${name}`)
+    }
+  }))
+  for (const drain of drains) {
+    if (drain.status === "rejected") throw drain.reason
+  }
+  const validationError = getNetworkedBenchmarkValidationError(task, solver)
+  if (validationError) throw new Error(validationError)
 }
 
 export const solveWithProgress = async (
@@ -492,20 +537,15 @@ export const runTask = async (
     solveError = getErrorMessage(error)
   }
 
-  const elapsedTimeMs = performance.now() - start
   if (task.networkedCachePass) {
     try {
-      await solver.highDensityRouteSolver?.waitForAllRemoteRequests?.()
-      const networkedBenchmarkValidationError =
-        getNetworkedBenchmarkValidationError(task, solver)
-      if (networkedBenchmarkValidationError) {
-        throw new Error(networkedBenchmarkValidationError)
-      }
+      await validateNetworkedBenchmark(task, solver)
     } catch (error) {
       solver.solved = false
       solveError = getErrorMessage(error)
     }
   }
+  const elapsedTimeMs = performance.now() - start
 
   const didSolve = Boolean(solver.solved)
   const routingMetrics = getRoutingBenchmarkMetrics(solver)

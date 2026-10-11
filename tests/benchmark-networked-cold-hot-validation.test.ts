@@ -57,6 +57,14 @@ test("networked cold-hot validation requires a fresh cold solve and complete hot
       { ...hot, didTimeout: true, routingMetrics: undefined },
     ]),
   ).toThrow("hot pass completed 0/1 drained task(s)")
+  const incomplete = createResult("Pipeline9_Networked Cold", 0, 3)
+  incomplete.routingMetrics!.networkedHighDensity!.remoteRequestsCompleted = 2
+  expect(() => validateNetworkedColdPassReadyForHot([incomplete])).toThrow("cannot start hot pass")
+  expect(() => validateNetworkedColdHotResults([
+    cold, { ...incomplete, solverName: "Pipeline9_Networked Hot" },
+  ])).toThrow("hot pass completed 0/1 drained task(s)")
+  const unexpectedCompute = createResult("Pipeline9_Networked Hot", 3, 1)
+  expect(() => validateNetworkedColdHotResults([cold, unexpectedCompute])).toThrow("computed work")
   expect(parseNetworkedCachePropagationDelayMs(undefined)).toBe(
     DEFAULT_NETWORKED_CACHE_PROPAGATION_DELAY_MS,
   )

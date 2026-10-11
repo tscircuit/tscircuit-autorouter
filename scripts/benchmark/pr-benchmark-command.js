@@ -1,3 +1,13 @@
+/** @param {string[]} args @returns {boolean} */
+const usesNetworkedPipeline9 = (args) => {
+  return args.some((arg, index) => {
+    if (arg === "--pipeline") {
+      return args[index + 1]?.toLowerCase() === "9net"
+    }
+    return arg === "AutoroutingPipelineSolver9_Networked"
+  })
+}
+
 const splitShellArgs = (input) => {
   const args = []
   let current = ""
@@ -82,11 +92,7 @@ export const parsePrBenchmarkCommand = (body) => {
   const isProfile = /^\/profile(?:\s|$)/.test(command)
   if (isProfile) {
     const parsedArgs = splitShellArgs(command.slice("/profile".length).trim())
-    const usesNetworkedPipeline9 = parsedArgs.some(
-      (arg, index) =>
-        arg === "--pipeline" && parsedArgs[index + 1]?.toLowerCase() === "9net",
-    )
-    if (usesNetworkedPipeline9) {
+    if (usesNetworkedPipeline9(parsedArgs)) {
       throw new Error("Pipeline 9net is only supported by /benchmark")
     }
     let datasetName = "dataset01"
@@ -140,22 +146,18 @@ export const parsePrBenchmarkCommand = (body) => {
       : "/benchmark"
   const parsedArgs = splitShellArgs(command.slice(commandPrefix.length).trim())
   const benchmarkArgs =
-    isLongBenchmark && !parsedArgs.includes("--concurrency")
+    isLongBenchmark &&
+    !usesNetworkedPipeline9(parsedArgs) &&
+    !parsedArgs.includes("--concurrency")
       ? ["--concurrency", "8"]
       : []
-  let datasetName = "dataset01"
+  const isNetworkedPipeline9 = usesNetworkedPipeline9(parsedArgs)
+  let datasetName = isNetworkedPipeline9 ? "srj18" : "dataset01"
   let profileSolvers = false
   let sameMachineCompare = false
-  let usesNetworkedPipeline9 = false
 
   for (let index = 0; index < parsedArgs.length; index += 1) {
     const arg = parsedArgs[index]
-    if (
-      arg === "--pipeline" &&
-      parsedArgs[index + 1]?.toLowerCase() === "9net"
-    ) {
-      usesNetworkedPipeline9 = true
-    }
     if (arg === "--same-machine") {
       sameMachineCompare = true
       continue
@@ -175,10 +177,7 @@ export const parsePrBenchmarkCommand = (body) => {
     benchmarkArgs.push(arg)
   }
 
-  if (usesNetworkedPipeline9 && sameMachineCompare) {
-    throw new Error("Pipeline 9net does not support --same-machine")
-  }
-  if (usesNetworkedPipeline9 && profileSolvers) {
+  if (isNetworkedPipeline9 && profileSolvers) {
     throw new Error("Pipeline 9net does not support --profile-solvers")
   }
 
@@ -192,6 +191,6 @@ export const parsePrBenchmarkCommand = (body) => {
     datasetName,
     profileSolvers,
     sameMachineCompare:
-      sameMachineCompare || (isBenchmark && !usesNetworkedPipeline9),
+      sameMachineCompare || isBenchmark || isNetworkedPipeline9,
   }
 }

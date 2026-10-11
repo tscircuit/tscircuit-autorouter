@@ -257,6 +257,19 @@ export const renderSameMachineBenchmarkResults = ({
         `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(baseAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(baseAverage, prAverage)} |`,
       )
     }
+    if (
+      prSummary.solverName === "Pipeline9_Networked Cold" ||
+      prSummary.solverName === "Pipeline9_Networked Hot"
+    ) {
+      const baseCache = baseSummary.networkCache
+      const prCache = prSummary.networkCache
+      lines.push(
+        `| ${solver} | HD requests | ${baseCache?.remoteRequests ?? "n/a"} | ${prCache?.remoteRequests ?? "n/a"} | ${formatCountDelta(baseCache?.remoteRequests ?? null, prCache?.remoteRequests ?? null)} |`,
+        `| ${solver} | HD cache hits | ${baseCache ? `${baseCache.cacheHits}/${baseCache.remoteRequests}` : "n/a"} | ${prCache ? `${prCache.cacheHits}/${prCache.remoteRequests}` : "n/a"} | ${formatCountDelta(baseCache?.cacheHits ?? null, prCache?.cacheHits ?? null)} |`,
+        `| ${solver} | HD solver results | ${baseCache?.solverResults ?? "n/a"} | ${prCache?.solverResults ?? "n/a"} | ${formatCountDelta(baseCache?.solverResults ?? null, prCache?.solverResults ?? null)} |`,
+        `| ${solver} | HD local fallbacks | ${baseCache?.localFallbacks ?? "n/a"} | ${prCache?.localFallbacks ?? "n/a"} | ${formatCountDelta(baseCache?.localFallbacks ?? null, prCache?.localFallbacks ?? null)} |`,
+      )
+    }
   }
 
   const improvementCount = changedOutcomes.filter(

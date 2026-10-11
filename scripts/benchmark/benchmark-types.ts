@@ -6,6 +6,10 @@ export type BenchmarkTask = {
   solverName: string
   solverConstructorName?: string
   networkedCachePass?: "cold" | "hot"
+  networkedServer?: {
+    url: string
+    cacheVersion: string
+  }
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
@@ -106,6 +110,7 @@ export type RoutingBenchmarkMetrics = {
     remoteCacheHits: number
     remoteSolverResults: number
     remoteTransportFallbacks: number
+    remoteFallbackReasonCounts?: Record<string, number>
   }
 }
 
@@ -229,6 +234,14 @@ export type BenchmarkRuntimeMetadata = {
   memoryBudgetPerWorkerBytes: number
   requestedConcurrency: number
   workerCount: number
+  localHighDensityCluster?: {
+    serversPerLane: 8
+    laneCount: number
+    effectiveCpuCount: number
+    laneCpuIds: number[][]
+    sampleAssignment: "fixed_round_robin"
+    cacheIsolation: "per_sample"
+  }
 }
 
 export type BenchmarkReport = {

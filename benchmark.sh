@@ -8,9 +8,11 @@ SAMPLE_TIMEOUT=""
 SAMPLE_NUMBERS=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
+DATASET_WAS_SET=false
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver9_PreloadedTraceGraph"
 PIPELINE_ID=""
 NETWORKED_COLD_HOT=false
+NETWORKED_REMOTE=false
 
 resolve_pipeline_solver_name() {
   case "$1" in
@@ -84,7 +86,8 @@ Usage:
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline ID        Run a pipeline alias (1-7, 9, 9net, 10, or krt). 9net runs cold then hot against hd-cache2.
+  --pipeline ID        Run a pipeline alias (1-7, 9, 9net, 10, or krt). 9net runs local cold then hot passes.
+  --networked-remote   Explicitly use HD_CACHE2_SERVER_URL instead of local servers
   --limit N            Run only first N scenarios (same as second positional arg)
   --scenario-limit N   Backward-compatible alias for --limit
   --concurrency N      Number of Bun workers used per solver, or "auto"
@@ -99,6 +102,8 @@ Options:
 Defaults:
   Running ./benchmark.sh with no parameters benchmarks only AutoroutingPipelineSolver9_PreloadedTraceGraph.
   Every sample runs in a fresh process so its peak memory can be reported.
+  Pipeline 9net defaults to dataset18 and eight local servers per sample lane.
+  Local networked samples run serially per lane; two lanes require 16 effective cores.
   Use "all" to benchmark every available solver.
 
 Examples:
@@ -183,9 +188,6 @@ while [ "$#" -gt 0 ]; do
     --concurrency)
       CONCURRENCY="${2:-}"
       CONCURRENCY_WAS_SET=true
-      if [ "$CONCURRENCY" = "auto" ]; then
-        CONCURRENCY="$(default_concurrency)"
-      fi
       shift 2
       ;;
     --effort)
@@ -202,7 +204,16 @@ while [ "$#" -gt 0 ]; do
       ;;
     --dataset)
       DATASET="${2:-}"
+      DATASET_WAS_SET=true
       shift 2
+      ;;
+    --networked-cold-hot)
+      NETWORKED_COLD_HOT=true
+      shift
+      ;;
+    --networked-remote)
+      NETWORKED_REMOTE=true
+      shift
       ;;
     --include-assignable)
       INCLUDE_ASSIGNABLE=true
@@ -223,12 +234,29 @@ if [ -n "$PIPELINE_ID" ]; then
   esac
 fi
 
+if [ "$SOLVER_NAME" = "AutoroutingPipelineSolver9_Networked" ]; then
+  NETWORKED_COLD_HOT=true
+  if [ "$DATASET_WAS_SET" = false ]; then
+    DATASET="srj18"
+  fi
+  if [ "$NETWORKED_REMOTE" = false ] && [ "$CONCURRENCY_WAS_SET" = false ]; then
+    CONCURRENCY="auto"
+  fi
+elif [ "$NETWORKED_REMOTE" = true ]; then
+  echo "--networked-remote requires Pipeline 9net" >&2
+  exit 1
+fi
+
+if [ "$CONCURRENCY" = "auto" ] && { [ "$SOLVER_NAME" != "AutoroutingPipelineSolver9_Networked" ] || [ "$NETWORKED_REMOTE" = true ]; }; then
+  CONCURRENCY="$(default_concurrency)"
+fi
+
 if [ "$NETWORKED_COLD_HOT" = true ]; then
   if [ -n "$EFFORT" ] && [ "$EFFORT" != "1" ]; then
     echo "Pipeline 9net only supports --effort 1" >&2
     exit 1
   fi
-  if [ -z "${HD_CACHE2_CACHE_VERSION:-}" ]; then
+  if [ "$NETWORKED_REMOTE" = true ] && [ -z "${HD_CACHE2_CACHE_VERSION:-}" ]; then
     echo "Pipeline 9net requires HD_CACHE2_CACHE_VERSION" >&2
     exit 1
   fi
@@ -248,6 +276,10 @@ CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
 
 if [ "$NETWORKED_COLD_HOT" = true ]; then
   CMD+=("--networked-cold-hot")
+fi
+
+if [ "$NETWORKED_REMOTE" = true ]; then
+  CMD+=("--networked-remote")
 fi
 
 if [ -z "$SOLVER_NAME" ]; then
