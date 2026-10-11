@@ -1,0 +1,83 @@
+diff --git a/lib/HighDensitySolverB01/HighDensitySolverB01.ts b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+index 3d40333..5791af4 100644
+--- a/lib/HighDensitySolverB01/HighDensitySolverB01.ts
++++ b/lib/HighDensitySolverB01/HighDensitySolverB01.ts
+@@ -104,12 +104,23 @@ class TypedMinHeap {
+     this.f[i] = f
+     this.seq[i] = seq
+     this.id[i] = id
++    // Read back the typed values before comparing or moving them.
++    const savedF = this.f[i]!
++    const savedSeq = this.seq[i]!
++    const savedId = this.id[i]!
+     while (i > 0) {
+       const p = (i - 1) >> 1
+-      if (this.less(p, i)) break
+-      this.swap(i, p)
++      const parentF = this.f[p]!
++      const parentSeq = this.seq[p]!
++      if (parentF !== savedF ? parentF < savedF : parentSeq < savedSeq) break
++      this.f[i] = parentF
++      this.seq[i] = parentSeq
++      this.id[i] = this.id[p]!
+       i = p
+     }
++    this.f[i] = savedF
++    this.seq[i] = savedSeq
++    this.id[i] = savedId
+   }
+ 
+   pop(): number {
+@@ -150,17 +161,27 @@ class TypedMinHeap {
+     this.id = ni
+   }
+ 
+-  private siftDown(i: number) {
++  private siftDown(i: number): void {
++    const savedF = this.f[i]!
++    const savedSeq = this.seq[i]!
++    const savedId = this.id[i]!
+     while (true) {
+       const l = i * 2 + 1
+       const r = l + 1
+-      if (l >= this.n) return
++      if (l >= this.n) break
+       let m = l
+       if (r < this.n && !this.less(l, r)) m = r
+-      if (this.less(i, m)) return
+-      this.swap(i, m)
++      const childF = this.f[m]!
++      const childSeq = this.seq[m]!
++      if (savedF !== childF ? savedF < childF : savedSeq < childSeq) break
++      this.f[i] = childF
++      this.seq[i] = childSeq
++      this.id[i] = this.id[m]!
+       i = m
+     }
++    this.f[i] = savedF
++    this.seq[i] = savedSeq
++    this.id[i] = savedId
+   }
+ 
+   private less(i: number, j: number) {
+@@ -169,20 +190,6 @@ class TypedMinHeap {
+     if (fi !== fj) return fi < fj
+     return this.seq[i]! < this.seq[j]!
+   }
+-
+-  private swap(i: number, j: number) {
+-    const tf = this.f[i]!
+-    this.f[i] = this.f[j]!
+-    this.f[j] = tf
+-
+-    const ts = this.seq[i]!
+-    this.seq[i] = this.seq[j]!
+-    this.seq[j] = ts
+-
+-    const ti = this.id[i]!
+-    this.id[i] = this.id[j]!
+-    this.id[j] = ti
+-  }
+ }
+ 
+ class TypedNodePool {
