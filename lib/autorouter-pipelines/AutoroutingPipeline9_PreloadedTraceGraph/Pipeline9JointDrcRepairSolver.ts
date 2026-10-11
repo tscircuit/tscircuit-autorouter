@@ -1302,12 +1302,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
+      preparedCandidateDrcInput?: PreparedCandidateDrcInput,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
-      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
+      const candidateDrcInput =
+        preparedCandidateDrcInput ?? prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
         includeBoardClearance: true,
         connectivityMaps,
@@ -1359,6 +1361,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
+    const evaluateCachedReferenceDrc = (
+      evaluatedRoutes: HighDensityRoute[],
+      candidateKey: string = JSON.stringify(evaluatedRoutes),
+      preparedCandidateDrcInput?: PreparedCandidateDrcInput,
+    ): ReturnType<DrcEvaluator> => {
+      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
+        return referenceDrcCandidateCache.result
+      }
+      this.referenceDrcValidationCount += 1
+      const result = referenceDrcEvaluator(
+        { traces: [], routes: evaluatedRoutes, hdRoutes: evaluatedRoutes },
+        true,
+        preparedCandidateDrcInput,
+      )
+      referenceDrcCandidateCache = { candidateKey, result }
+      return result
+    }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1367,18 +1386,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
-      const candidateKey = JSON.stringify(evaluatedRoutes)
-      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
-        return referenceDrcCandidateCache.result
-      }
-      this.referenceDrcValidationCount += 1
-      const result = referenceDrcEvaluator({
-        traces: [],
-        routes: evaluatedRoutes,
-        hdRoutes: evaluatedRoutes,
-      })
-      referenceDrcCandidateCache = { candidateKey, result }
-      return result
+      return evaluateCachedReferenceDrc(evaluatedRoutes)
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
@@ -1496,11 +1504,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
       if (evaluatedNewErrors.length === 0) {
         const validationCountBefore = this.referenceDrcValidationCount
-        const referenceResult = cachedReferenceDrcEvaluator({
-          traces: [],
-          routes: evaluatedRoutes,
-          hdRoutes: evaluatedRoutes,
-        })
+        // The reference checker evaluates the same immutable candidate. Reuse
+        // its traces and exact serialized key while retaining all reference DRC.
+        const referenceResult = evaluateCachedReferenceDrc(
+          evaluatedRoutes,
+          candidateKey,
+          candidateDrcInput,
+        )
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors

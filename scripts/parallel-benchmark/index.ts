@@ -162,6 +162,7 @@ const main = async (): Promise<void> => {
     revision: process.env.PARALLEL_BENCHMARK_PROTOTYPE_SHA ?? process.env.GITHUB_SHA,
     baselineRevision: process.env.PARALLEL_BENCHMARK_BASELINE_SHA,
     baselineModule: process.env.PARALLEL_BENCHMARK_BASELINE_MODULE,
+    parallelModule: process.env.PARALLEL_BENCHMARK_PARALLEL_MODULE ?? path.resolve(import.meta.dir, "../../dist/index.js"),
     runner: process.env.RUNNER_NAME ?? os.hostname(),
     runtime: process.versions,
     cpuModel: os.cpus()[0]?.model,

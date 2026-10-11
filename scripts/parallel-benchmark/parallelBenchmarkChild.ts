@@ -49,12 +49,13 @@ const main = async (): Promise<void> => {
     ? "AutoroutingPipelineSolver9_PreloadedTraceGraph"
     : "AutoroutingPipelineSolver9_Parallel"
   const baselineModule = process.env.PARALLEL_BENCHMARK_BASELINE_MODULE
+  const parallelModule = process.env.PARALLEL_BENCHMARK_PARALLEL_MODULE ?? new URL("../../dist/index.js", import.meta.url).href
   if (variant === "baseline" && process.env.GITHUB_ACTIONS === "true" && !baselineModule) {
     throw new Error("Blacksmith benchmark requires a frozen baseline module")
   }
-  const autorouterModule = variant === "baseline" && baselineModule
-    ? await import(baselineModule)
-    : await import("../../lib")
+  const autorouterModule = variant === "parallel"
+    ? await import(parallelModule)
+    : baselineModule ? await import(baselineModule) : await import("../../lib")
   const constructor = (autorouterModule as Record<string, unknown>)[solverName]
   if (typeof constructor !== "function") throw new Error(`Missing solver export ${solverName}`)
   const SolverClass = constructor as SolverConstructor

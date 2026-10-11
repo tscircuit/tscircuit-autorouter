@@ -1543,13 +1543,17 @@ jobs:
         working-directory: prototype
         run: bun install
 
-      - name: Bundle immutable baseline against the same dependencies
+      - name: Build prototype package and local worker entry
+        working-directory: prototype
+        run: bun run build
+
+      - name: Build immutable baseline package against the same dependencies
         run: |
           ln -s "$GITHUB_WORKSPACE/prototype/node_modules" baseline/node_modules
           printf 'PARALLEL_BENCHMARK_BASELINE_SHA=%s\n' "$(git -C baseline rev-parse HEAD)" >> "$GITHUB_ENV"
           printf 'PARALLEL_BENCHMARK_PROTOTYPE_SHA=%s\n' "$(git -C prototype rev-parse HEAD)" >> "$GITHUB_ENV"
           cd baseline
-          bun "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/buildBaseline.ts" "$GITHUB_WORKSPACE/baseline" "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/baseline.js"
+          bun run build
 
       - name: Run paired SRJ18 benchmark on four CPUs
         working-directory: prototype
@@ -1589,7 +1593,8 @@ jobs:
           if (cpus.length !== 4) throw new Error('Four CPUs are required for this benchmark')
           const env = {
             ...process.env,
-            PARALLEL_BENCHMARK_BASELINE_MODULE: `${process.cwd()}/scripts/parallel-benchmark/baseline.js`,
+            PARALLEL_BENCHMARK_BASELINE_MODULE: `${process.cwd()}/../baseline/dist/index.js`,
+            PARALLEL_BENCHMARK_PARALLEL_MODULE: `${process.cwd()}/dist/index.js`,
           }
           console.log(`Binding controller and all routing workers to CPUs ${cpus.join(',')}`)
           const result = spawnSync('taskset', ['-c', cpus.join(','), 'bun', 'scripts/parallel-benchmark/index.ts', ...args], { stdio: 'inherit', env })

@@ -122,6 +122,7 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
       .map((error) => getDrcErrorIdentity(error, new Map())),
   )
   baselineErrorIdentities.delete(undefined)
+  if (baselineErrorIdentities.size === 0) return errors.slice()
   return errors.filter((error) => {
     const identity = getDrcErrorIdentity(
       error,
