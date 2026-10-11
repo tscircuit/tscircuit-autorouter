@@ -72,6 +72,13 @@ function internSnapshotKey(value: unknown, visiting: Set<object>, completed: Com
   return { key }
 }
 
+/** Readonly authority for Native graph work within this same guarded interval.
+ * The actual hidden memo identity is already branded by successful admission;
+ * unknown, unscoped and supplied objects require no property inspection. */
+export function isReferenceDrcNativeInternScopeActive(memo: unknown): boolean {
+  return applyNative(activeHas, activeMemos, [memo]) as boolean
+}
+
 /** Actual ownership precedes reflection. The complete original Native guard
  * runs once here; an external memo or caller token cannot activate reuse.
  * This inherits that guard's module-first native-method contract. Source data
