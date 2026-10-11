@@ -13,6 +13,20 @@ import { getCompactViaCopperDiagnosticSvg } from "tests/fixtures/compactViaCoppe
 test("compact Core pcbPath preserves retained copper in native routing consumers", async (): Promise<void> => {
   const { circuitJson, srj } = await getCompactViaCopperCircuit()
   const original = structuredClone(srj)
+  expect(
+    circuitJson.filter(
+      (element) =>
+        element.type === "source_component" &&
+        element.ftype === "simple_resistor",
+    ),
+  ).toHaveLength(6)
+  const pads = circuitJson.filter((element) => element.type === "pcb_smtpad")
+  expect(pads).toHaveLength(12)
+  expect(
+    pads.every(
+      (pad) => pad.shape === "rect" && pad.width === 0.8 && pad.height === 0.95,
+    ),
+  ).toBeTrue()
   expect(srj.traces).toHaveLength(1)
   const retained = srj.traces![0]!
   expect(retained.route).toEqual([
@@ -66,12 +80,19 @@ test("compact Core pcbPath preserves retained copper in native routing consumers
     const trace = traces.find(
       (trace) => trace.connection_name === connection.name,
     )!
-    for (const [index, endpoint] of connection.pointsToConnect.entries()) {
-      const copperEndpoint = index === 0 ? trace.route[0]! : trace.route.at(-1)!
+    for (const endpoint of connection.pointsToConnect) {
       const pad = srj.obstacles.find(
         (obstacle) =>
           obstacle.circuitJsonMetadata?.pcb_port_id === endpoint.pcb_port_id,
       )!
+      const copperEndpoint = [trace.route[0]!, trace.route.at(-1)!].find(
+        (point) =>
+          point.route_type === "wire" &&
+          point.layer === endpoint.layer &&
+          Math.abs(point.x - pad.center.x) <= pad.width / 2 &&
+          Math.abs(point.y - pad.center.y) <= pad.height / 2,
+      )!
+      expect(copperEndpoint).toBeDefined()
       expect(copperEndpoint.route_type).toBe("wire")
       if (copperEndpoint.route_type !== "wire")
         throw new Error("Expected pad wire contact")

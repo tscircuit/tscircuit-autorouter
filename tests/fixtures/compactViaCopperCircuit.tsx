@@ -11,15 +11,10 @@ export async function getCompactViaCopperCircuit(
   explicitViaContacts = false,
 ): Promise<{ circuitJson: CircuitJson; srj: SimpleRouteJson }> {
   const circuit = new RootCircuit()
-  const footprint = (
-    <footprint>
-      <smtpad portHints={["pin1"]} shape="rect" width={0.5} height={0.5} />
-    </footprint>
-  )
   // The runtime supports pcbPath; the repository's legacy Core337 JSX types
   // predate it. Pass the authored props without loading a second global JSX graph.
   const viaPoint = {
-    x: 0,
+    x: -0.825,
     y: 3,
     via: true,
     fromLayer: "top",
@@ -27,7 +22,7 @@ export async function getCompactViaCopperCircuit(
   }
   const compactPath = {
     pcbPath: explicitViaContacts
-      ? [{ x: 0, y: 3 }, viaPoint, { x: 0, y: 3 }]
+      ? [{ x: -0.825, y: 3 }, viaPoint, { x: -0.825, y: 3 }]
       : [viaPoint],
   }
   circuit.add(
@@ -38,47 +33,66 @@ export async function getCompactViaCopperCircuit(
       routingDisabled
       minTraceWidth={0.2}
     >
-      <chip name="SAVED_START" pcbY={-2} footprint={footprint} />
-      <chip
-        name="SAVED_END"
-        pcbX={2}
+      <resistor
+        name="R1"
+        resistance="10k"
+        footprint="0603"
+        pcbX={0.825}
+        pcbY={-2}
+      />
+      <resistor
+        name="R2"
+        resistance="10k"
+        footprint="0603"
+        pcbX={2.825}
         pcbY={1}
         layer="bottom"
-        footprint={footprint}
       />
-      <chip name="TOP_LEFT" pcbX={-2} footprint={footprint} />
-      <chip name="TOP_RIGHT" pcbX={2} footprint={footprint} />
-      <chip
-        name="BOTTOM_LOWER"
-        pcbX={1}
+      <resistor
+        name="R3"
+        resistance="10k"
+        footprint="0603"
+        pcbX={-2.825}
+      />
+      <resistor
+        name="R4"
+        resistance="10k"
+        footprint="0603"
+        pcbX={2.825}
+      />
+      <resistor
+        name="R5"
+        resistance="10k"
+        footprint="0603"
+        pcbX={0.175}
         pcbY={-1}
         layer="bottom"
-        footprint={footprint}
       />
-      <chip
-        name="BOTTOM_UPPER"
-        pcbX={1}
+      <resistor
+        name="R6"
+        resistance="10k"
+        footprint="0603"
+        pcbX={0.175}
         pcbY={3}
         layer="bottom"
-        footprint={footprint}
       />
       <trace
         name="RETAINED"
-        from="SAVED_START.1"
-        to="SAVED_END.1"
+        from="R1.1"
+        to="R2.2"
         thickness={0.2}
         {...compactPath}
       />
       <trace
         name="TOP_CROSSING"
-        from="TOP_LEFT.1"
-        to="TOP_RIGHT.1"
+        from="R3.2"
+        to="R4.1"
         thickness={0.2}
       />
       <trace
         name="BOTTOM_CROSSING"
-        from="BOTTOM_LOWER.1"
-        to="BOTTOM_UPPER.1"
+        from="R5.1"
+        to="R6.1"
         thickness={0.2}
       />
     </board>,

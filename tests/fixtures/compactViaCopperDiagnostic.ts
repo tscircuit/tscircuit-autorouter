@@ -87,7 +87,36 @@ export function getCompactViaCopperDiagnosticSvg({
                 )
               : undefined
           const name = source?.type === "source_component" ? source.name : "pad"
-          return `<rect x="${x(pad.x - pad.width / 2)}" y="${y(pad.y + pad.height / 2)}" width="${pad.width * 65}" height="${pad.height * 65}" rx="3" fill="#ddd" stroke="#555"/><text x="${x(pad.x)}" y="${y(pad.y) + 35}" text-anchor="middle" font-size="12">${name}</text>`
+          return `<rect x="${x(pad.x - pad.width / 2)}" y="${y(pad.y + pad.height / 2)}" width="${pad.width * 65}" height="${pad.height * 65}" rx="3" fill="#ddd" stroke="#555"/><text x="${x(pad.x)}" y="${y(pad.y) + 5}" text-anchor="middle" font-size="11">${name}.${pad.port_hints![0]}</text>`
+        })
+        .join("")
+      const silk = circuitJson
+        .filter(
+          (element) =>
+            element.type === "pcb_silkscreen_path" && element.layer === layer,
+        )
+        .map((path) => {
+          if (path.type !== "pcb_silkscreen_path")
+            throw new Error("Expected compiled footprint silk")
+          return `<polyline points="${path.route.map((point) => `${x(point.x)},${y(point.y)}`).join(" ")}" fill="none" stroke="#555" stroke-width="${path.stroke_width * 65}"/>`
+        })
+        .join("")
+      const components = circuitJson
+        .filter(
+          (element) =>
+            element.type === "pcb_component" && element.layer === layer,
+        )
+        .map((component) => {
+          if (component.type !== "pcb_component")
+            throw new Error("Expected compiled footprint component")
+          const source = circuitJson.find(
+            (element) =>
+              element.type === "source_component" &&
+              element.source_component_id === component.source_component_id,
+          )!
+          if (source.type !== "source_component")
+            throw new Error("Expected compiled resistor source")
+          return `<text x="${x(component.center.x)}" y="${y(component.center.y) + 50}" text-anchor="middle" font-size="12">${source.name} · 0603 · 10kΩ</text>`
         })
         .join("")
       const newVias = traces
@@ -118,8 +147,8 @@ export function getCompactViaCopperDiagnosticSvg({
       const marker = short
         ? `<circle cx="${x(layer === "top" ? 0 : 1)}" cy="${y(layer === "top" ? 0 : 1)}" r="22" fill="none" stroke="#c92936" stroke-width="3"/><text x="${x(layer === "top" ? 0 : 1) + 28}" y="${y(layer === "top" ? 0 : 1) - 16}" fill="#c92936" font-size="14" font-weight="bold">ACTUAL SHORT</text>`
         : ""
-      return `<g><rect x="${left}" y="191" width="574" height="491" rx="8" fill="#fafafa" stroke="#c4c8ce"/><text x="${left + 20}" y="224" font-size="22" font-weight="bold">${layer.toUpperCase()} COPPER</text><path d="M${x(-3.3)} ${y(0)}H${x(3.3)} M${x(0)} ${y(-3)}V${y(3.1)}" stroke="#e5e7eb"/>${reservations}${copper}${pads}<circle cx="${x(via.x)}" cy="${y(via.y)}" r="10" fill="#7357a4"/><circle cx="${x(via.x)}" cy="${y(via.y)}" r="4" fill="white"/><text x="${x(via.x) - 14}" y="${y(via.y) - 20}" text-anchor="end" font-size="13">EXISTING VIA</text>${newVias}${marker}</g>`
+      return `<g><rect x="${left}" y="191" width="574" height="491" rx="8" fill="#fafafa" stroke="#c4c8ce"/><text x="${left + 20}" y="224" font-size="22" font-weight="bold">${layer.toUpperCase()} COPPER</text><path d="M${x(-3.3)} ${y(0)}H${x(3.3)} M${x(0)} ${y(-3)}V${y(3.1)}" stroke="#e5e7eb"/>${reservations}${copper}${pads}${silk}${components}<circle cx="${x(via.x)}" cy="${y(via.y)}" r="10" fill="#7357a4"/><circle cx="${x(via.x)}" cy="${y(via.y)}" r="4" fill="white"/><text x="${x(via.x) - 14}" y="${y(via.y) - 20}" text-anchor="end" font-size="13">EXISTING VIA</text>${newVias}${marker}</g>`
     })
     .join("")
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="780" viewBox="0 0 1280 780"><rect width="1280" height="780" fill="white"/><g font-family="Arial, sans-serif" fill="#222"><text x="48" y="50" font-size="27" font-weight="bold">${heading}</text><text x="48" y="84" font-size="19">Core-authored pcbPath: 3 mm TOP wire → via → 2 mm BOTTOM wire (no point stripping)</text><text x="48" y="119" font-size="21" fill="${color}" font-weight="bold">${wireObstacleCount}/2 retained segments visible • Pipeline 4 solved • independent trace overlap DRC: ${errors.length} shorts</text><text x="48" y="157" font-size="16">Orange: unchanged retained copper | Green: native routes (dashed = INNER1 transit) | Blue dashed: reservations</text>${panels}<text x="48" y="724" font-size="18" fill="${color}">${pass ? "Both pending nets connect without crossing retained copper." : "Router sees only the existing via; it routes both foreign nets directly through real copper."}</text><text x="48" y="753" font-size="15">Diagnostic of this compiled fixture and native Pipeline 4 output; no claim of completing the AM3352 board.</text></g></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="780" viewBox="0 0 1280 780"><rect width="1280" height="780" fill="white"/><g font-family="Arial, sans-serif" fill="#222"><text x="48" y="50" font-size="27" font-weight="bold">${heading}</text><text x="48" y="84" font-size="19">Standard 0603 resistor pads: R1.1 → 3 mm TOP → via → 2 mm BOTTOM → R2.2</text><text x="48" y="119" font-size="21" fill="${color}" font-weight="bold">${wireObstacleCount}/2 retained segments visible • Pipeline 4 solved • independent trace overlap DRC: ${errors.length} shorts</text><text x="48" y="157" font-size="16">0603 pads/silk | Orange: retained | Green: native routes (dashed = INNER1) | Blue dashed: reservations</text>${panels}<text x="48" y="724" font-size="18" fill="${color}">${pass ? "Both pending nets connect without crossing retained copper." : "Router sees only the existing via; it routes both foreign nets directly through real copper."}</text><text x="48" y="753" font-size="15">Diagnostic of this compiled fixture and native Pipeline 4 output; no claim of completing the AM3352 board.</text></g></svg>`
 }
