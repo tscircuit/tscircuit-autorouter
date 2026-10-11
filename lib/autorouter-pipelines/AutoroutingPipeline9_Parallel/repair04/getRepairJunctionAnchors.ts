@@ -13,6 +13,10 @@ import {
   REGION_EPSILON,
 } from "./repair04Helpers"
 import { normalizeRepairTrace, type RelaxTraceClearanceInput } from "@tscircuit/repair04"
+import {
+  getReferenceDrcProxyInspector,
+  type ReferenceDrcProxyInspector,
+} from "../authoritative-drc-fork/initializeReferenceDrcRuntime"
 type SimpleRouteJson = RelaxTraceClearanceInput["srj"]
 import {
   getLocalObstacleDistance,
@@ -49,6 +53,122 @@ type Via = Point & {
 export type RepairJunctionAnchors = {
   segmentTimes: Map<number, number[]>
   viaPositions: Point[]
+}
+
+export type JunctionPreparationDiagnostics = {
+  usedEndpointComponentProof: boolean
+  canonicalNetCount: number
+}
+
+export type JunctionPreparationOptions = {
+  skipProvenSingleEndpointComponents?: boolean
+  diagnostics?: JunctionPreparationDiagnostics
+}
+
+const ownDescriptor = Object.getOwnPropertyDescriptor
+const ownKeys = Reflect.ownKeys
+const prototypeOf = Object.getPrototypeOf
+const plainObjectPrototype = Object.prototype
+const plainArrayPrototype = Array.prototype
+const isArray = Array.isArray
+const arrayIteratorPrototype = prototypeOf([][Symbol.iterator]())
+const iteratorPrototype = prototypeOf(arrayIteratorPrototype)
+const nativeJunctionIntrinsics: Array<[object, PropertyKey, unknown]> = [
+  [Math, "min", Math.min], [Math, "max", Math.max],
+  [Math, "abs", Math.abs], [Math, "floor", Math.floor],
+  [Math, "hypot", Math.hypot], [JSON, "stringify", JSON.stringify],
+  [Array.prototype, "map", Array.prototype.map],
+  [Array.prototype, "push", Array.prototype.push],
+  [Array.prototype, "some", Array.prototype.some],
+  [Array.prototype, Symbol.iterator, Array.prototype[Symbol.iterator]],
+  [arrayIteratorPrototype, "next", arrayIteratorPrototype.next],
+  [iteratorPrototype, Symbol.iterator, iteratorPrototype[Symbol.iterator]],
+  [Map.prototype, "get", Map.prototype.get],
+  [Map.prototype, "set", Map.prototype.set],
+  [Set.prototype, "add", Set.prototype.add],
+  [Set.prototype, "has", Set.prototype.has],
+  [String.prototype, "startsWith", String.prototype.startsWith],
+  [String.prototype, "slice", String.prototype.slice],
+  [globalThis, "Number", Number], [globalThis, "Map", Map],
+  [globalThis, "Set", Set], [globalThis, "Math", Math],
+  [globalThis, "JSON", JSON],
+]
+
+/** Eligibility inspection must not evaluate custom geometry getters. */
+const hasPlainDataProperties = (
+  value: unknown,
+  array: boolean,
+  isProxy: ReferenceDrcProxyInspector,
+): boolean => {
+  if (typeof value !== "object" || value === null || isProxy(value) ||
+    prototypeOf(value) !== (array ? plainArrayPrototype : plainObjectPrototype)) return false
+  const keys = ownKeys(value)
+  for (let index = 0; index < keys.length; index++) {
+    const descriptor = ownDescriptor(value, keys[index]!)!
+    if (!("value" in descriptor)) return false
+  }
+  return true
+}
+
+/** Ordinary finite routes keep all native collection loops well-defined. */
+const canUseEndpointComponentProof = (
+  srj: SimpleRouteJson,
+  routes: HighDensityRoute[],
+  bounds: Bounds,
+): boolean => {
+  const isProxy = getReferenceDrcProxyInspector()
+  if (!isProxy) return false
+  const finite = (value: unknown): value is number =>
+    typeof value === "number" && value === value && value >= -10_000 && value <= 10_000
+  // The native path remains observable when numeric or collection hooks change.
+  // Inspect descriptors by index, without invoking unsupported accessors or iterators.
+  for (let index = 0; index < nativeJunctionIntrinsics.length; index++) {
+    const entry = nativeJunctionIntrinsics[index]!
+    const descriptor = ownDescriptor(entry[0], entry[1])
+    if (!descriptor || !("value" in descriptor) || descriptor.value !== entry[2]) return false
+  }
+  if (!hasPlainDataProperties(srj, false, isProxy) ||
+    !hasPlainDataProperties(bounds, false, isProxy) ||
+    !hasPlainDataProperties(routes, true, isProxy)) return false
+  const traceDescriptor = ownDescriptor(srj, "traces")
+  if (ownDescriptor(plainObjectPrototype, "traces")) return false
+  const traces: unknown = traceDescriptor?.value
+  if (traces !== undefined && (isProxy(traces) || !isArray(traces) || traces.length !== 0)) return false
+  const layerCount: unknown = ownDescriptor(srj, "layerCount")?.value
+  const minX: unknown = ownDescriptor(bounds, "minX")?.value
+  const maxX: unknown = ownDescriptor(bounds, "maxX")?.value
+  const minY: unknown = ownDescriptor(bounds, "minY")?.value
+  const maxY: unknown = ownDescriptor(bounds, "maxY")?.value
+  if (!finite(minX) || !finite(maxX) || !finite(minY) || !finite(maxY) ||
+    minX > maxX || minY > maxY || !finite(layerCount) ||
+    layerCount <= 0 || layerCount % 1 !== 0) return false
+  const optionalKeys = ["traceThickness", "pcb_port_id", "toNextSegmentType", "rootConnectionName"]
+  for (let keyIndex = 0; keyIndex < optionalKeys.length; keyIndex++) {
+    if (ownDescriptor(plainObjectPrototype, optionalKeys[keyIndex]!)) return false
+  }
+  for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
+    const route: unknown = ownDescriptor(routes, `${routeIndex}`)?.value
+    if (!hasPlainDataProperties(route, false, isProxy)) return false
+    const name: unknown = ownDescriptor(route as object, "connectionName")?.value
+    if (typeof name !== "string") return false
+    const thickness: unknown = ownDescriptor(route as object, "traceThickness")?.value
+    const diameter: unknown = ownDescriptor(route as object, "viaDiameter")?.value
+    const points: unknown = ownDescriptor(route as object, "route")?.value
+    if (!finite(thickness) || thickness < 0 || !finite(diameter) || diameter < 0 ||
+      !hasPlainDataProperties(points, true, isProxy)) return false
+    const pointArray = points as unknown[]
+    for (let pointIndex = 0; pointIndex < pointArray.length; pointIndex++) {
+      const point: unknown = ownDescriptor(pointArray, `${pointIndex}`)?.value
+      if (!hasPlainDataProperties(point, false, isProxy)) return false
+      const x: unknown = ownDescriptor(point as object, "x")?.value
+      const y: unknown = ownDescriptor(point as object, "y")?.value
+      const z: unknown = ownDescriptor(point as object, "z")?.value
+      const width: unknown = ownDescriptor(point as object, "traceThickness")?.value
+      if (!finite(x) || !finite(y) || !finite(z) || z % 1 !== 0 || z < 0 || z >= layerCount ||
+        (width !== undefined && (!finite(width) || width < 0))) return false
+    }
+  }
+  return true
 }
 
 const getClosestSegmentContact = (
@@ -290,7 +410,12 @@ export const getRepairJunctionAnchors = (
   srj: SimpleRouteJson,
   routes: HighDensityRoute[],
   bounds: Bounds,
+  options?: JunctionPreparationOptions,
 ): RepairJunctionAnchors[] => {
+  if (options?.diagnostics) {
+    options.diagnostics.usedEndpointComponentProof = false
+    options.diagnostics.canonicalNetCount = 0
+  }
   const canonicalNet = getCanonicalNets(srj, routes)
   const endpointComponents = routes.map((_, index) => index)
   const findEndpointComponent = (index: number): number => {
@@ -352,6 +477,35 @@ export const getRepairJunctionAnchors = (
           endpointComponents[findEndpointComponent(routeIndex)] =
             findEndpointComponent(previousRouteIndex)
       }
+    }
+  }
+  if (options?.skipProvenSingleEndpointComponents &&
+    canUseEndpointComponentProof(srj, routes, bounds)) {
+    const componentByNet = new Map<string, number>()
+    let allRoutesAlreadyConnected = true
+    for (let index = 0; index < routes.length; index++) {
+      const net = canonicalNet(routes[index]!.connectionName)
+      const component = findEndpointComponent(index)
+      const previous = componentByNet.get(net)
+      if (previous !== undefined && previous !== component) {
+        allRoutesAlreadyConnected = false
+        break
+      }
+      componentByNet.set(net, component)
+    }
+    if (options.diagnostics)
+      options.diagnostics.canonicalNetCount = componentByNet.size
+    if (allRoutesAlreadyConnected) {
+      // With no fixed preloads, every later contact is between route sources.
+      // Same-net sources already share an immutable endpoint component, so all
+      // anchor, via and segment comparisons take the native component skip.
+      // Endpoints and their physical pad attachments above were still checked.
+      if (options.diagnostics)
+        options.diagnostics.usedEndpointComponentProof = true
+      return routes.map((): RepairJunctionAnchors => ({
+        segmentTimes: new Map(),
+        viaPositions: [],
+      }))
     }
   }
   const sharesImmutableEndpointComponent = (

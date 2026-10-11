@@ -1,3 +1,11 @@
+import type { RelaxTraceClearanceInput } from "@tscircuit/repair04"
+import type { HighDensityRoute } from "high-density-repair03/lib"
+import type { Bounds } from "./repair04Helpers"
+import {
+  getRepairJunctionAnchors,
+  type JunctionPreparationDiagnostics,
+  type RepairJunctionAnchors,
+} from "./getRepairJunctionAnchors"
 import {
   Pipeline9IndexedRelaxTraceClearanceSolver,
   type ProjectionBatchExecutor,
@@ -14,6 +22,22 @@ export class Pipeline9WasmRelaxTraceClearanceSolver extends Pipeline9IndexedRela
     enabled: false,
     batches: 0,
     guardCalls: 0,
+  }
+
+  readonly junctionPreparationDiagnostics: JunctionPreparationDiagnostics = {
+    usedEndpointComponentProof: false,
+    canonicalNetCount: 0,
+  }
+
+  protected override createJunctionAnchors(
+    srj: RelaxTraceClearanceInput["srj"],
+    routes: HighDensityRoute[],
+    bounds: Bounds,
+  ): RepairJunctionAnchors[] {
+    return getRepairJunctionAnchors(srj, routes, bounds, {
+      skipProvenSingleEndpointComponents: true,
+      diagnostics: this.junctionPreparationDiagnostics,
+    })
   }
 
   protected override createProjectionBatchExecutor(

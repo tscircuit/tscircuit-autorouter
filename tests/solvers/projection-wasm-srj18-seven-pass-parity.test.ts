@@ -1,8 +1,11 @@
+import { initializeReferenceDrcRuntime } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/initializeReferenceDrcRuntime"
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { RelaxTraceClearanceInput } from "@tscircuit/repair04"
+import type { HighDensityRoute } from "high-density-repair03/lib"
+import type { RepairJunctionAnchors } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair04/getRepairJunctionAnchors"
 import stableStringify from "fast-json-stable-stringify"
 import { Pipeline9IndexedRelaxTraceClearanceSolver } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair04/Pipeline9IndexedRelaxTraceClearanceSolver"
 import { Pipeline9WasmRelaxTraceClearanceSolver } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/repair04/Pipeline9WasmRelaxTraceClearanceSolver"
@@ -30,7 +33,34 @@ type Fixture = {
   }[]
 }
 
-test("WASM preserves every native batch in all seven actual SRJ18 sample015 projection passes", (): void => {
+class NativeAnchorCapture extends Pipeline9IndexedRelaxTraceClearanceSolver {
+  preparedAnchors: RepairJunctionAnchors[] = []
+
+  protected override createJunctionAnchors(
+    srj: RelaxTraceClearanceInput["srj"],
+    routes: HighDensityRoute[],
+    bounds: RelaxTraceClearanceInput["bounds"],
+  ): RepairJunctionAnchors[] {
+    this.preparedAnchors = super.createJunctionAnchors(srj, routes, bounds)
+    return this.preparedAnchors
+  }
+}
+
+class OptimizedAnchorCapture extends Pipeline9WasmRelaxTraceClearanceSolver {
+  preparedAnchors: RepairJunctionAnchors[] = []
+
+  protected override createJunctionAnchors(
+    srj: RelaxTraceClearanceInput["srj"],
+    routes: HighDensityRoute[],
+    bounds: RelaxTraceClearanceInput["bounds"],
+  ): RepairJunctionAnchors[] {
+    this.preparedAnchors = super.createJunctionAnchors(srj, routes, bounds)
+    return this.preparedAnchors
+  }
+}
+
+test("WASM preserves every native batch in all seven actual SRJ18 sample015 projection passes", async (): Promise<void> => {
+  await initializeReferenceDrcRuntime()
   const fixture: Fixture = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
     new URL("../fixtures/projection-wasm-srj18/sample015-native-seven-passes.json.gz", import.meta.url),
   ))).toString())
@@ -39,8 +69,8 @@ test("WASM preserves every native batch in all seven actual SRJ18 sample015 proj
   let completedBatches = 0
   for (const { number, input, expected } of fixture.rows) {
     const immutableInput = structuredClone(input)
-    const native = new Pipeline9IndexedRelaxTraceClearanceSolver(input)
-    const optimized = new Pipeline9WasmRelaxTraceClearanceSolver(input)
+    const native = new NativeAnchorCapture(input)
+    const optimized = new OptimizedAnchorCapture(input)
     const nativeState = native as unknown as ProjectionState
     const optimizedState = optimized as unknown as ProjectionState
     while (!native.solved && !native.failed) {
@@ -74,6 +104,11 @@ test("WASM preserves every native batch in all seven actual SRJ18 sample015 proj
         completedBatches++
       }
     }
+    expect(optimized.preparedAnchors).toEqual(native.preparedAnchors)
+    expect(optimized.preparedAnchors).toHaveLength(input.routes.length)
+    expect(optimized.junctionPreparationDiagnostics).toEqual({
+      usedEndpointComponentProof: true, canonicalNetCount: 103,
+    })
     expect(native.solved && optimized.solved && !optimized.failed).toBe(true)
     expect(optimized.getOutput()).toEqual(native.getOutput())
     expect(optimized.iterations).toBe(expected.iterations)

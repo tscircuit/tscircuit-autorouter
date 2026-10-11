@@ -17,7 +17,7 @@ import {
 } from "./obstacleDistanceGeometry"
 import { getNetRepresentatives } from "./repair04Helpers"
 import { getViaPadClearance } from "./repair04Helpers"
-import { getRepairJunctionAnchors } from "./getRepairJunctionAnchors"
+import { getRepairJunctionAnchors, type RepairJunctionAnchors } from "./getRepairJunctionAnchors"
 import { REGION_EPSILON } from "./repair04Helpers"
 import { areExpandedBoundsSeparated } from "./repair04Helpers"
 import type {
@@ -229,6 +229,14 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1024
   }
 
+  protected createJunctionAnchors(
+    srj: RelaxTraceClearanceInput["srj"],
+    routes: HighDensityRoute[],
+    bounds: Bounds,
+  ): RepairJunctionAnchors[] {
+    return getRepairJunctionAnchors(srj, routes, bounds)
+  }
+
   private prepareGeometry(): void {
     const input = this.input
     const routes = structuredClone(input.routes)
@@ -243,7 +251,7 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
     }
     // Keep existing endpoint, wire and via attachments without inserting points.
     // Retaining both ends of the contacted segment also retains interior contacts.
-    const junctions = getRepairJunctionAnchors(input.srj, routes, input.bounds)
+    const junctions = this.createJunctionAnchors(input.srj, routes, input.bounds)
     const vertices = new Map<string, Vertex>()
     const routeVertices = routes.map((route, ri): Vertex[] =>
       route.route.map((point, pi): Vertex => {
