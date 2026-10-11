@@ -7,6 +7,7 @@ import { nativeOwnerApply, nativeOwnerDescriptor, nativeOwnerHasOwn, nativeOwner
 import { beginNativeGridIntrinsicQuantum, finishNativeGridIntrinsicQuantum,
   type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
 import { hasWorkerNativeGridRuntime, isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
+import { hasNativeDescriptorMetadata } from "./nativeDescriptorMetadataGuard"
 import { GridHistoryReplayState } from "./GridHistoryReplayState"
 
 type NativeGridOwner = HighDensitySolverA01 | HighDensitySolverA03
@@ -35,6 +36,15 @@ export function registerWorkerNativeGridKernelDispatcher(dispatcher: GridHistory
   // or an option accepted by an ordinary Replay/native solver constructor.
   // The worker owns the generated grid and receives callback-free message data.
   addWorkerDispatcher(dispatcher)
+}
+
+/** Internal membership test for the actual structured-clone worker dispatcher. */
+export function isWorkerNativeGridKernelDispatcher(dispatcher?: GridHistoryDispatcher): boolean {
+  // No public option, serialized field or caller-supplied predicate can mint
+  // this identity. Testing it reads no dispatcher metadata or accessor.
+  // Other owned kernels may maintain their own private candidate memberships.
+  // The runtime gate ran before the dispatcher entered this private WeakSet.
+  return dispatcher !== undefined && hasWorkerDispatcher(dispatcher)
 }
 
 export function registerWorkerNativeGridOwner(owner: NativeGridOwner, dispatcher: GridHistoryDispatcher): void {
@@ -110,7 +120,9 @@ function hasCallbackFreeNativeReplay(owner: NativeGridOwner): boolean {
 export function beginWorkerNativeGridKernelQuantum(portfolio: object,
   contract: WorkerNativeGridPortfolioContract, owner: NativeGridOwner,
   dispatcher?: GridHistoryDispatcher): WorkerNativeGridQuantum | null {
-  if (!dispatcher || !hasWorkerDispatcher(dispatcher) || !hasOwnedOwner(owner) || !matchesSnapshots(contract, portfolio) ||
+  if (!dispatcher || !hasWorkerDispatcher(dispatcher) || !hasOwnedOwner(owner) ||
+    isWorkerNativeGridProxy(portfolio) || isWorkerNativeGridProxy(owner) || !hasNativeDescriptorMetadata() ||
+    !matchesSnapshots(contract, portfolio) ||
     !matchesSnapshots(externalBaseContract) || !hasCallbackFreeNativeReplay(owner)) return null
   const ownNames = nativeNames(portfolio)
   for (let index = 0; index < ownNames.length; index++) {

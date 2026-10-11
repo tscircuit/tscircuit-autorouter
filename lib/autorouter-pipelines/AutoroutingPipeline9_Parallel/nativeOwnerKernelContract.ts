@@ -1,3 +1,4 @@
+import { hasNativeDescriptorMetadata } from "./nativeDescriptorMetadataGuard"
 import { isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
 export type NativeOwnerKernelContract = {
   prototype: object
@@ -35,7 +36,7 @@ export function matchesNativeOwnerKernelContract(owner: object,
   contract: NativeOwnerKernelContract, nativePrototype: object,
   nativeDescriptors: Record<string, PropertyDescriptor>,
   installedOwnMethods?: Record<string, unknown>): boolean {
-  if (nativeOwnerPrototype(owner) !== contract.prototype) return false
+  if (!hasNativeDescriptorMetadata() || nativeOwnerPrototype(owner) !== contract.prototype) return false
   if (contract.prototype !== nativePrototype && nativeOwnerPrototype(contract.prototype) !== nativePrototype) return false
   for (let level = 0; level < 2; level++) {
     const prototype = level === 0 ? contract.prototype : nativePrototype

@@ -1,5 +1,6 @@
 import { nativeOwnerDescriptor, nativeOwnerIs, nativeOwnerPrototype } from "./nativeOwnerKernelContract"
 import { hasWorkerNativeGridRuntime } from "./workerNativeGridRuntime"
+import { hasNativeDescriptorMetadata, getNativeDescriptorMap, nativeDescriptorMapKeys } from "./nativeDescriptorMetadataGuard"
 import { NativeA01HeapArena } from "./native-a01-heap-arena/NativeA01HeapArena"
 
 type IntrinsicSnapshot = { object: object; parent: object | null;
@@ -56,6 +57,7 @@ if (wasmDescriptor && Object.hasOwn(wasmDescriptor, "value") && wasmDescriptor.v
 
 /** Full reachable builtin/global contracts; never evaluate a replaced getter. */
 function matchesNativeGridIntrinsics(): boolean {
+  if (!hasNativeDescriptorMetadata()) return false
   const wasm = nativeOwnerDescriptor(globalThis, "WebAssembly")
   if (wasm?.value !== wasmDescriptor?.value || wasm?.get !== wasmDescriptor?.get || wasm?.set !== wasmDescriptor?.set) return false
   for (let index = 0; index < globalNames.length; index++) {
@@ -64,10 +66,11 @@ function matchesNativeGridIntrinsics(): boolean {
   }
   for (let objectIndex = 0; objectIndex < snapshots.length; objectIndex++) {
     const snapshot = snapshots[objectIndex]!
-    if (nativeOwnerPrototype(snapshot.object) !== snapshot.parent ||
-      namesOf(snapshot.object).length + symbolsOf(snapshot.object).length !== snapshot.names.length) return false
+    if (nativeOwnerPrototype(snapshot.object) !== snapshot.parent) return false
+    const descriptors = getNativeDescriptorMap(snapshot.object)
+    if (nativeDescriptorMapKeys(descriptors).length !== snapshot.names.length) return false
     for (let index = 0; index < snapshot.names.length; index++) {
-      const current = nativeOwnerDescriptor(snapshot.object, snapshot.names[index]!), original = snapshot.descriptors[index]!
+      const current = descriptors[snapshot.names[index]!], original = snapshot.descriptors[index]!
       if (!current || !nativeOwnerIs(current.value, original.value) || current.get !== original.get || current.set !== original.set ||
         current.writable !== original.writable || current.enumerable !== original.enumerable ||
         current.configurable !== original.configurable) return false

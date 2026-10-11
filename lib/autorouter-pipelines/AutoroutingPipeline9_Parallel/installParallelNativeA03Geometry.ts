@@ -1,3 +1,4 @@
+import { hasNativeDescriptorMetadata } from "./nativeDescriptorMetadataGuard"
 /** Geometry kernels derived from the pinned MIT source in high-density-a01-fork/LICENSE. */
 import { HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import { hasNativeOwnerNumericPolicy, hasOriginalNativeOwnerNames, matchesNativeOwnerKernelContract,
@@ -143,10 +144,11 @@ export function installParallelNativeA03Geometry(owner: HighDensitySolverA03,
   if (previous) {
     for (let index = 0; index < 2; index++) {
       const name = index === 0 ? "computeH" : "fillViaOccupants"
-      if (nativeOwnerDescriptor(owner, name)?.value === installedMethods[name]) nativeOwnerDelete(owner, name)
+      const descriptor = nativeOwnerDescriptor(owner, name)
+      if (descriptor && nativeOwnerHasOwn(descriptor, "value") && descriptor.value === installedMethods[name]) nativeOwnerDelete(owner, name)
     }
   }
-  if (owner.failed || !hasOriginalNativeOwnerNames(contract, nativePrototype, nativeDescriptors) ||
+  if (!hasNativeDescriptorMetadata() || owner.failed || !hasOriginalNativeOwnerNames(contract, nativePrototype, nativeDescriptors) ||
     !matchesNativeOwnerKernelContract(owner, contract, nativePrototype, nativeDescriptors)) return
   const arrays: Float64Array[] = []
   for (let index = 0; index < geometryNames.length; index++) {
@@ -177,7 +179,8 @@ export function prepareParallelNativeA03Geometry(owner: HighDensitySolverA03, qu
   state.active = false
   for (let index = 0; index < 2; index++) {
     const name = index === 0 ? "computeH" : "fillViaOccupants"
-    if (nativeOwnerDescriptor(owner, name)?.value === installedMethods[name]) nativeOwnerDelete(owner, name)
+    const descriptor = nativeOwnerDescriptor(owner, name)
+    if (descriptor && nativeOwnerHasOwn(descriptor, "value") && descriptor.value === installedMethods[name]) nativeOwnerDelete(owner, name)
   }
   deleteOwnerState(owner)
 }

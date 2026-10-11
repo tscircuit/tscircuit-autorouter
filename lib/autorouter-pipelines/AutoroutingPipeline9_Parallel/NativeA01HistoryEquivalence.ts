@@ -1,3 +1,4 @@
+import { hasNativeDescriptorMetadata } from "./nativeDescriptorMetadataGuard"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 
 type PrototypeContract = {
@@ -9,16 +10,21 @@ type A01HistoryDomain = {
   connections: HighDensitySolverA01["unsolvedConnections"]
 }
 
+const nativePrototype = Object.getPrototypeOf
+const nativeDescriptors = Object.getOwnPropertyDescriptors
+const nativeKeys = Object.keys, nativeValues = Object.values, nativeOwnKeys = Reflect.ownKeys
+const nativeHasOwn = Object.hasOwn, nativeIs = Object.is, nativeIsArray = Array.isArray
+const objectPrototype = Object.prototype, arrayPrototype = Array.prototype
 const nativeContracts: PrototypeContract[] = []
 for (let prototype: object | null = HighDensitySolverA01.prototype;
-  prototype && prototype !== Object.prototype; prototype = Object.getPrototypeOf(prototype)) {
-  nativeContracts.push({ prototype, descriptors: Object.getOwnPropertyDescriptors(prototype) })
+  prototype && prototype !== objectPrototype; prototype = nativePrototype(prototype)) {
+  nativeContracts.push({ prototype, descriptors: nativeDescriptors(prototype) })
 }
 
 function matchesPrototypeContract(contract: PrototypeContract): boolean {
-  const current = Object.getOwnPropertyDescriptors(contract.prototype)
-  const names = Object.keys(contract.descriptors)
-  if (Object.keys(current).length !== names.length) return false
+  const current = nativeDescriptors(contract.prototype)
+  const names = nativeKeys(contract.descriptors)
+  if (nativeKeys(current).length !== names.length) return false
   for (const name of names) {
     const before = contract.descriptors[name]!
     const after = current[name]
@@ -34,14 +40,14 @@ function isPlainDataGraph(value: unknown, seen = new Set<object>()): boolean {
     return value === null || ["undefined", "string", "number", "boolean"].includes(typeof value)
   }
   if (seen.has(value)) return true
-  const prototype = Object.getPrototypeOf(value)
-  if (prototype !== Object.prototype && prototype !== Array.prototype) return false
+  const prototype = nativePrototype(value)
+  if (prototype !== objectPrototype && prototype !== arrayPrototype) return false
   seen.add(value)
-  const descriptors = Object.getOwnPropertyDescriptors(value)
-  for (const key of Reflect.ownKeys(descriptors)) {
+  const descriptors = nativeDescriptors(value)
+  for (const key of nativeOwnKeys(descriptors)) {
     if (typeof key !== "string") return false
     const descriptor = descriptors[key]!
-    if (!("value" in descriptor) || (!descriptor.enumerable && !(Array.isArray(value) && key === "length")) ||
+    if (!("value" in descriptor) || (!descriptor.enumerable && !(nativeIsArray(value) && key === "length")) ||
       !isPlainDataGraph(descriptor.value, seen)) return false
   }
   return true
@@ -50,16 +56,16 @@ function isPlainDataGraph(value: unknown, seen = new Set<object>()): boolean {
 /** Bijection preserves point aliases, array holes, property order and signed zero. */
 function equalDataGraphs(left: unknown, right: unknown,
   leftToRight = new Map<object, object>(), rightToLeft = new Map<object, object>()): boolean {
-  if (!left || !right || typeof left !== "object" || typeof right !== "object") return Object.is(left, right)
-  if (Array.isArray(left) !== Array.isArray(right)) return false
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return nativeIs(left, right)
+  if (nativeIsArray(left) !== nativeIsArray(right)) return false
   if (leftToRight.has(left)) return leftToRight.get(left) === right
   if (rightToLeft.has(right)) return false
   leftToRight.set(left, right)
   rightToLeft.set(right, left)
-  const leftKeys = Object.keys(left)
-  const rightKeys = Object.keys(right)
+  const leftKeys = nativeKeys(left)
+  const rightKeys = nativeKeys(right)
   if (leftKeys.length !== rightKeys.length ||
-    (Array.isArray(left) && left.length !== (right as unknown[]).length)) return false
+    (nativeIsArray(left) && left.length !== (right as unknown[]).length)) return false
   for (let index = 0; index < leftKeys.length; index++) {
     const key = leftKeys[index]!
     if (key !== rightKeys[index] || !equalDataGraphs(
@@ -69,15 +75,15 @@ function equalDataGraphs(left: unknown, right: unknown,
 }
 
 function hasNativeMethods(solver: HighDensitySolverA01, replayContract?: PrototypeContract): boolean {
-  if (Object.getPrototypeOf(solver) !== (replayContract?.prototype ?? HighDensitySolverA01.prototype) ||
+  if (!hasNativeDescriptorMetadata() || nativePrototype(solver) !== (replayContract?.prototype ?? HighDensitySolverA01.prototype) ||
     (replayContract && !matchesPrototypeContract(replayContract)) ||
-    (replayContract && Object.getPrototypeOf(replayContract.prototype) !== HighDensitySolverA01.prototype) ||
+    (replayContract && nativePrototype(replayContract.prototype) !== HighDensitySolverA01.prototype) ||
     !nativeContracts.every((contract, index) => matchesPrototypeContract(contract) &&
-      Object.getPrototypeOf(contract.prototype) === (nativeContracts[index + 1]?.prototype ?? Object.prototype))) return false
-  const own = Object.getOwnPropertyDescriptors(solver)
-  for (const descriptor of Object.values(own)) if (!("value" in descriptor)) return false
+      nativePrototype(contract.prototype) === (nativeContracts[index + 1]?.prototype ?? objectPrototype))) return false
+  const own = nativeDescriptors(solver)
+  for (const descriptor of nativeValues(own)) if (!("value" in descriptor)) return false
   for (const { descriptors } of nativeContracts) {
-    for (const name of Object.keys(descriptors)) if (name !== "constructor" && Object.hasOwn(own, name)) return false
+    for (const name of nativeKeys(descriptors)) if (name !== "constructor" && nativeHasOwn(own, name)) return false
   }
   return true
 }

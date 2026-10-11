@@ -1,3 +1,4 @@
+import { hasNativeDescriptorMetadata } from "./nativeDescriptorMetadataGuard"
 /** Exact heap kernel derived from the pinned MIT source in high-density-a01-fork/LICENSE. */
 import { isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
@@ -124,7 +125,7 @@ function popNativeOwnerHeap(this: NativeHeap): number {
 export function installParallelNativeA01Heap(owner: HighDensitySolverA01,
   contract: NativeOwnerKernelContract): void {
   deleteOwnerState(owner)
-  if (owner.failed || !hasOriginalNativeOwnerNames(contract, nativePrototype, nativeDescriptors) ||
+  if (!hasNativeDescriptorMetadata() || owner.failed || !hasOriginalNativeOwnerNames(contract, nativePrototype, nativeDescriptors) ||
     !matchesNativeOwnerKernelContract(owner, contract, nativePrototype, nativeDescriptors)) return
   const descriptor = nativeOwnerDescriptor(owner, "heap")
   if (!descriptor || !nativeOwnerHasOwn(descriptor, "value")) return
@@ -174,7 +175,8 @@ export function prepareParallelNativeA01Heap(owner: HighDensitySolverA01, quantu
   for (let index = 0; index < 2; index++) {
     const name = index === 0 ? "push" : "pop"
     const method = index === 0 ? pushNativeOwnerHeap : popNativeOwnerHeap
-    if (nativeOwnerDescriptor(state.heap, name)?.value === method) nativeOwnerDelete(state.heap, name)
+    const descriptor = nativeOwnerDescriptor(state.heap, name)
+    if (descriptor && nativeOwnerHasOwn(descriptor, "value") && descriptor.value === method) nativeOwnerDelete(state.heap, name)
   }
   deleteOwnerState(owner)
   deleteHeapState(state.heap)

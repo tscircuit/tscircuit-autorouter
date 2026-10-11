@@ -99,6 +99,23 @@ async function runOracle(): Promise<object> {
     strictEqual(getterCalls, 0)
     strictEqual(isWorkerNativeGridKernelQuantumActive(blocked), false)
   } finally { Object.defineProperty(Math, "min", mathDescriptor) }
+  // Metadata preflight precedes portfolio/Base/Replay descriptor reads too.
+  const nativeDefine = Object.defineProperty, nativeDelete = Reflect.deleteProperty
+  let metadataGetterCalls = 0
+  const metadataNames = ["value", "get", "set", "writable", "enumerable", "configurable"]
+  for (let index = 0; index < metadataNames.length; index++) {
+    const name = metadataNames[index]!
+    let quantumWasRejected = false
+    try {
+      nativeDefine(Object.prototype, name, { __proto__: null, configurable: true, get(): never {
+        metadataGetterCalls++
+        throw new Error("inherited worker descriptor metadata observer")
+      } } as PropertyDescriptor)
+      quantumWasRejected = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher) === null
+    } finally { nativeDelete(Object.prototype, name) }
+    strictEqual(quantumWasRejected, true)
+    strictEqual(metadataGetterCalls, 0)
+  }
   const moduleDescriptor = Object.getOwnPropertyDescriptor(WebAssembly, "Module")!
   let wasmGetterCalls = 0
   try {
