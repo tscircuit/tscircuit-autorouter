@@ -773,6 +773,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
             heuristicWeight: input.pathHeuristicWeight,
             stats,
             getAdditionalEdgeCost,
+            synchronousEdgeCosts: true,
             existingPath: route.route,
             viaHoleDiameter: input.viaHoleDiameter,
           })

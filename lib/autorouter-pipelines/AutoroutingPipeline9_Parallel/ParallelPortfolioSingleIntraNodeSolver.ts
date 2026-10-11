@@ -7,6 +7,8 @@ import type { FirstValidHighDensityStats, ParallelHighDensityPolicy, ParallelHig
 import { validateFirstValidHighDensityRoutes } from "./validateFirstValidHighDensityRoutes"
 import { CompletedFirstValidA13Solver } from "./CompletedFirstValidA13Solver"
 import type { FirstValidA13CandidateDispatcher, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
+import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
+import { installParallelIntraNodeGridKernel } from "./installParallelHighDensityGridKernel"
 
 type CompletedCompetitiveCandidate =
   | { kind: "multi-head"; candidateId: number; history: MultiHeadHistoryResult }
@@ -38,7 +40,9 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     dispatcher: MultiHeadHistoryDispatcher,
     options: ParallelHighDensityPolicyOptions = { policy: "ordered" },
   ) {
-    super(params)
+    // Worker node jobs publish routes and statistics, not exploratory graphics.
+    // This flag only controls retained search coordinates and failed children.
+    super({ ...params, captureSearchDebug: false })
     this.dispatcher = dispatcher
     this.policy = options.policy
     this.onAcceptedCandidate = options.onAcceptedCandidate
@@ -64,7 +68,10 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
         requirePhysicalCopper: true,
       }) as unknown as IntraNodeRouteSolver
     }
-    if (!hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) return super.generateSolver(hyperParameters)
+    if (!hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
+      const solver = super.generateSolver(hyperParameters)
+      return solver instanceof CachedIntraNodeRouteSolver ? installParallelIntraNodeGridKernel(solver) : solver
+    }
     const solver = new ReplayMultiHeadPolyLineSolver({
       nodeWithPortPoints: this.nodeWithPortPoints,
       connMap: this.connMap, hyperParameters,

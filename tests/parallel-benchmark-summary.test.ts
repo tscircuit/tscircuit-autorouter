@@ -57,6 +57,10 @@ test("parallel benchmark target requires every sample, complete solves, matching
   expect(successful.fullCoverage).toBe(true)
   expect(successful.allCompleted).toBe(true)
   expect(successful.exactGeometry).toBe(true)
+  expect(successful.physicalRouting).toBe(false)
+  expect(successful.geometryRequired).toBe(true)
+  expect(successful.coverageAcceptanceMode).toBe("baseline-parity")
+  expect(summarizeParallelBenchmark(successfulRuns, { ...options, physicalRouting: false }).targetReached).toBe(true)
   expect(successful.arithmeticMeanSpeedup).toBeCloseTo(2.5)
   expect(successful.aggregateSpeedup).toBeCloseTo(2.5)
 
@@ -200,7 +204,35 @@ test("parallel benchmark target requires every sample, complete solves, matching
       },
     },
   }))
+  const identicalPartial = successfulRuns.map((run): RunResult => ({
+    ...run, quality: { ...run.quality!, connectionCoverage: {
+      requiredNetCount: 2, requiredPairCount: 3, coveredNetCount: 1,
+      uncoveredNetCount: 1, missingPortCount: 1, singletonNetCount: 0, errorCount: 2,
+      connectedNetNames: ["connected"], unconnectedNetNames: ["original-omission"],
+      missingPortIds: ["original-missing-port"], detailsHash: "same-original-physical-output",
+    } },
+  }))
+  const identicalPartialSummary = summarizeParallelBenchmark(identicalPartial, options)
+  expect(identicalPartialSummary.targetReached).toBe(true)
+  expect(identicalPartialSummary.coverageAcceptanceMode).toBe("baseline-parity")
+  expect(identicalPartialSummary.connectionCoveragePreserved).toBe(true)
+  expect(summarizeParallelBenchmark(identicalPartial, { ...options, physicalRouting: true }).targetReached).toBe(false)
+  for (const changedCoverage of [
+    { coveredNetCount: 0, uncoveredNetCount: 2, errorCount: 3 },
+    { connectedNetNames: ["different-net"] },
+    { unconnectedNetNames: ["different-omission"] },
+    { missingPortIds: ["different-port"] },
+    { detailsHash: "different-physical-details" },
+  ]) {
+    const changedPartial = identicalPartial.map((run): RunResult => run.variant === "parallel" ? {
+      ...run, quality: { ...run.quality!, connectionCoverage: { ...run.quality!.connectionCoverage!, ...changedCoverage } },
+    } : run)
+    expect(summarizeParallelBenchmark(changedPartial, options).targetReached).toBe(false)
+  }
+  const changedIncompleteGeometry = identicalPartial.map((run): RunResult => run.variant === "parallel" ? { ...run, geometryHash: "different-incomplete-geometry" } : run)
+  expect(summarizeParallelBenchmark(changedIncompleteGeometry, options).targetReached).toBe(false)
   const alternatives = [
+    { physicalRouting: true },
     { highDensityPolicy: "first-valid" as const },
     { pathingStrategy: "landmark" as const },
     { pathingStrategy: "negotiated" as const },
@@ -212,6 +244,7 @@ test("parallel benchmark target requires every sample, complete solves, matching
     expect(alternativeSummary.exactGeometry).toBe(false)
     expect(alternativeSummary.geometryRequired).toBe(false)
     expect(alternativeSummary.connectionCoveragePreserved).toBe(true)
+    expect(alternativeSummary.coverageAcceptanceMode).toBe("full-physical-completion")
     expect(summarizeParallelBenchmark(successfulRuns, { ...options, ...alternative }).targetReached).toBe(false)
     for (const coverageRegression of [
       { requiredNetCount: 3 }, { requiredPairCount: 4 }, { coveredNetCount: 1 },
@@ -230,6 +263,10 @@ test("parallel benchmark target requires every sample, complete solves, matching
       ...run, quality: { ...run.quality!, drcErrorCount: 1 },
     } : run)
     expect(summarizeParallelBenchmark(extraDrc, { ...options, ...alternative }).targetReached).toBe(false)
+    const extraLint = coveredRuns.map((run): RunResult => run.variant === "parallel" ? {
+      ...run, quality: { ...run.quality!, traceLintIssueCounts: { odd_angle: 2 } },
+    } : run)
+    expect(summarizeParallelBenchmark(extraLint, { ...options, ...alternative }).targetReached).toBe(false)
   }
   expect(summarizeParallelBenchmark(coveredRuns, options).targetReached).toBe(false)
 })

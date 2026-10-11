@@ -10,9 +10,9 @@ import {
 } from "tiny-hypergraph/lib/core"
 import { OutsideInPartialRipTinyHyperGraphSolver } from "./OutsideInPartialRipTinyHyperGraphSolver"
 import {
-  findDistinctOwnerBlockerPath,
   type DistinctOwnerBlockerSearchResult,
 } from "tiny-hypergraph/lib/find-distinct-owner-blocker-path"
+import { findPackedDistinctOwnerBlockerPath } from "./findPackedDistinctOwnerBlockerPath"
 import type { PortId, RegionId, RouteId } from "tiny-hypergraph/lib/types"
 
 type RelaxedSearchState = {
@@ -398,7 +398,8 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
     // Occupancy stays fixed during this synchronous search. Distinct owner
     // labels revisit the same hop, but their outgoing resources are identical.
     const hopsByState = new Map<number, RelaxedSearchHop[]>()
-    return findDistinctOwnerBlockerPath({
+    return findPackedDistinctOwnerBlockerPath({
+      ownerCount: this.problem.routeCount,
       start: { portId: startPortId, nextRegionId: startRegionId },
       getStateKey: ({ portId, nextRegionId }): number =>
         this.getHopId(portId, nextRegionId),

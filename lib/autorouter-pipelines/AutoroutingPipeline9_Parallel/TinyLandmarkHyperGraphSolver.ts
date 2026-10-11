@@ -1,9 +1,9 @@
-import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
+import { PackedDistanceAwareTinyHyperGraphSolver } from "./PackedDistanceAwareTinyHyperGraphSolver"
 import type { TinyHyperGraphProblem, TinyHyperGraphSolverOptions, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
 import { TinyLandmarkHeuristic } from "./TinyLandmarkHeuristic"
 
 /** The landmark policy always pays the geometric distance used by its bound. */
-export class TinyLandmarkHyperGraphSolver extends DistanceAwareTinyHyperGraphSolver {
+export class TinyLandmarkHyperGraphSolver extends PackedDistanceAwareTinyHyperGraphSolver {
   readonly landmarkHeuristic: TinyLandmarkHeuristic
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,

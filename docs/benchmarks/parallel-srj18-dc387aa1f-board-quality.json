@@ -1,0 +1,1012 @@
+{
+  "sourceRevision": "dc387aa1f5b4c3c9edeae8194f04b4df28c640b1",
+  "baselineRevision": "65522c89c370d4b4f9f69e1a79af58de641752bc",
+  "datasetDependency": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
+  "datasetHashes": {
+    "sample001": "21a09454dd05b86464cd2d882ea96de7461260bd473e67c87a0e46011e508ea9",
+    "sample002": "2e2f6e8619e884afde2102e987cffcda8e7197ef2c63f8358aa5dd7cb14c8101",
+    "sample003": "c5abc751ef4ee68f0369df3d747174c527e47771fb673c61b72bbca0b93bc843",
+    "sample004": "be67af8cc71fb962e9c1cf6a6de00b416eb057750b52f4cdd0f95c46f930b083",
+    "sample005": "3027de7f902a95002172e25378e41c0c826f51e95155317dc97a55864df1b681",
+    "sample006": "ccaa924e0b5430bd717ea42bf45712412dba9ecd672853bb7bd3c70d69ed3608",
+    "sample007": "a995e7ec0bbf70d96837b56280b966d3b29e3f7c477126acd0820581106b66d5",
+    "sample008": "86c0bebed1bfe8396c5e1eadaa486f4711a3c9efbed35fdfa65bf092555dd9fd",
+    "sample009": "53167849b45863bb21382c13a0464851cdd6d2bd5a4988d9e41962b46c928556",
+    "sample010": "54809fdc0cee2685cab2f539bbfc6a68f0714fab47c8982f50037ccc5d32ffdb",
+    "sample011": "c30aee0833640f6f370ce83c0ad5fc9476d80c40442a7c69f5db6b28af168afd",
+    "sample012": "be78defe9bac976077fe427fe2cce0ba54dfc1397ce2a3f9bd3dc0b9f2ce394d",
+    "sample013": "37b01a5f7cf5ff8f3056ad2c72137085e7608f2444ddfc74d188813c6c0f2554",
+    "sample014": "cd4fb3f2814dc459650c17ccc21bb1d72a852ab2301fa6c389c1f82305207919",
+    "sample015": "cd24268f1713fc03c4c032a937d666fe6fb4d772187190d611ce4e3013a8d6fe",
+    "sample016": "dfefcf84ec3f1aa45eb058f31e25de646692f0f216f85bf9e98c02457e7611c8"
+  },
+  "sourceHarnessVersion": 1,
+  "sourceDrcIncludedBoard": false,
+  "supplementalDrcIncludesBoardClearance": true,
+  "sourceRepetitions": 1,
+  "requiredSampleCount": 16,
+  "requiredOutcomeCount": 32,
+  "qualityAvailableCount": 29,
+  "allOutcomesSolved": false,
+  "allSamplesAccepted": false,
+  "timingReusedWithoutModification": true,
+  "evaluator": "Current source shared relaxed DRC + enforced physical board + direct conductor connection coverage; saved routed outputs only, no rerouting",
+  "workflowRuns": [
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618"
+  ],
+  "rows": [
+    {
+      "sampleName": "sample001",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 205,
+      "viaCount": 174,
+      "traceLintIssueCounts": {
+        "odd_angle": 193
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 53,
+        "requiredPairCount": 209,
+        "coveredNetCount": 53,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 9,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample001",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 205,
+      "viaCount": 188,
+      "traceLintIssueCounts": {
+        "odd_angle": 192
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 53,
+        "requiredPairCount": 209,
+        "coveredNetCount": 53,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 9,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample002",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 244,
+      "viaCount": 548,
+      "traceLintIssueCounts": {
+        "odd_angle": 931
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 112,
+        "requiredPairCount": 248,
+        "coveredNetCount": 112,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 40,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample002",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 244,
+      "viaCount": 570,
+      "traceLintIssueCounts": {
+        "odd_angle": 1005
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 112,
+        "requiredPairCount": 248,
+        "coveredNetCount": 112,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 40,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample003",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 145,
+      "viaCount": 90,
+      "traceLintIssueCounts": {
+        "odd_angle": 275
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 49,
+        "requiredPairCount": 149,
+        "coveredNetCount": 49,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 5,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample003",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 145,
+      "viaCount": 101,
+      "traceLintIssueCounts": {
+        "odd_angle": 18
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 49,
+        "requiredPairCount": 149,
+        "coveredNetCount": 49,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 5,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample004",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 114,
+      "viaCount": 140,
+      "traceLintIssueCounts": {
+        "odd_angle": 848
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 45,
+        "requiredPairCount": 118,
+        "coveredNetCount": 45,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 15,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample004",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 114,
+      "viaCount": 136,
+      "traceLintIssueCounts": {
+        "odd_angle": 462
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 45,
+        "requiredPairCount": 118,
+        "coveredNetCount": 45,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 15,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405"
+    },
+    {
+      "sampleName": "sample005",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 172,
+      "viaCount": 146,
+      "traceLintIssueCounts": {
+        "odd_angle": 29
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 62,
+        "requiredPairCount": 176,
+        "coveredNetCount": 62,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 18,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample005",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 172,
+      "viaCount": 166,
+      "traceLintIssueCounts": {
+        "odd_angle": 11
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 62,
+        "requiredPairCount": 176,
+        "coveredNetCount": 62,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 18,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample006",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 255,
+      "viaCount": 281,
+      "traceLintIssueCounts": {
+        "odd_angle": 932
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 66,
+        "requiredPairCount": 255,
+        "coveredNetCount": 66,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 158,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample006",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 255,
+      "viaCount": 269,
+      "traceLintIssueCounts": {
+        "odd_angle": 615
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 66,
+        "requiredPairCount": 255,
+        "coveredNetCount": 66,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 158,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample007",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 263,
+      "viaCount": 202,
+      "traceLintIssueCounts": {
+        "odd_angle": 123
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 61,
+        "requiredPairCount": 263,
+        "coveredNetCount": 61,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 66,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample007",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 263,
+      "viaCount": 224,
+      "traceLintIssueCounts": {
+        "odd_angle": 13
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 61,
+        "requiredPairCount": 263,
+        "coveredNetCount": 61,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 66,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample008",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 361,
+      "viaCount": 287,
+      "traceLintIssueCounts": {
+        "odd_angle": 963
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 77,
+        "requiredPairCount": 365,
+        "coveredNetCount": 77,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 33,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample008",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 361,
+      "viaCount": 319,
+      "traceLintIssueCounts": {
+        "odd_angle": 860
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 77,
+        "requiredPairCount": 365,
+        "coveredNetCount": 77,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 33,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916"
+    },
+    {
+      "sampleName": "sample009",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 256,
+      "viaCount": 119,
+      "traceLintIssueCounts": {
+        "odd_angle": 269
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 72,
+        "requiredPairCount": 256,
+        "coveredNetCount": 71,
+        "uncoveredNetCount": 1,
+        "missingPortCount": 0,
+        "singletonNetCount": 25,
+        "errorCount": 1
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample009",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 256,
+      "viaCount": 127,
+      "traceLintIssueCounts": {
+        "odd_angle": 260
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 72,
+        "requiredPairCount": 256,
+        "coveredNetCount": 72,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 25,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample010",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 310,
+      "viaCount": 175,
+      "traceLintIssueCounts": {
+        "odd_angle": 177
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 59,
+        "requiredPairCount": 314,
+        "coveredNetCount": 59,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 36,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample010",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 310,
+      "viaCount": 174,
+      "traceLintIssueCounts": {
+        "odd_angle": 23
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 59,
+        "requiredPairCount": 314,
+        "coveredNetCount": 59,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 36,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample011",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 289,
+      "viaCount": 190,
+      "traceLintIssueCounts": {
+        "odd_angle": 519
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 74,
+        "requiredPairCount": 291,
+        "coveredNetCount": 73,
+        "uncoveredNetCount": 1,
+        "missingPortCount": 0,
+        "singletonNetCount": 65,
+        "errorCount": 1
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample011",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 291,
+      "viaCount": 207,
+      "traceLintIssueCounts": {
+        "odd_angle": 108
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 74,
+        "requiredPairCount": 291,
+        "coveredNetCount": 74,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 65,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample012",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 504,
+      "viaCount": 302,
+      "traceLintIssueCounts": {
+        "odd_angle": 897
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 97,
+        "requiredPairCount": 508,
+        "coveredNetCount": 97,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 101,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample012",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 504,
+      "viaCount": 319,
+      "traceLintIssueCounts": {
+        "odd_angle": 135
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 97,
+        "requiredPairCount": 508,
+        "coveredNetCount": 97,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 101,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample013",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 238,
+      "viaCount": 207,
+      "traceLintIssueCounts": {
+        "odd_angle": 592
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 52,
+        "requiredPairCount": 238,
+        "coveredNetCount": 52,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 72,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample013",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "failed",
+      "qualityAvailable": false,
+      "error": "Error: Physical simplification found a noncolocated layer change for source_trace_59__source_net_59\n    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1511861)\n    at map (native:1:11)\n    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1511435)\n    at map (native:1:11)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:1179742)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1513939)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:1097609)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1472580)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:541849)\n    at solveAsync (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1638976)\n    at async <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/scripts/parallel-benchmark/parallelBenchmarkChild.ts:99:22)",
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample014",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 238,
+      "viaCount": 294,
+      "traceLintIssueCounts": {
+        "odd_angle": 709
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 56,
+        "requiredPairCount": 238,
+        "coveredNetCount": 56,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 68,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004"
+    },
+    {
+      "sampleName": "sample014",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "failed",
+      "qualityAvailable": false,
+      "error": "Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_332\" for \"source_trace_8__source_net_8_mst17\"\n    at new eg (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:786395)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:802946)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:541849)\n    at solve (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:542427)\n    at solveAsync (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1638942)\n    at unknown\n    at processTicksAndRejections (native:7:39)",
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004"
+    },
+    {
+      "sampleName": "sample015",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 461,
+      "viaCount": 357,
+      "traceLintIssueCounts": {
+        "odd_angle": 1213
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 103,
+        "requiredPairCount": 465,
+        "coveredNetCount": 103,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 20,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618"
+    },
+    {
+      "sampleName": "sample015",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "failed",
+      "qualityAvailable": false,
+      "error": "Route stitch for \"source_trace_50__source_net_50_mst0\" has unreachable route fragments",
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618"
+    },
+    {
+      "sampleName": "sample016",
+      "variant": "baseline",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 269,
+      "viaCount": 109,
+      "traceLintIssueCounts": {
+        "odd_angle": 389
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 59,
+        "requiredPairCount": 273,
+        "coveredNetCount": 59,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 11,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    },
+    {
+      "sampleName": "sample016",
+      "variant": "parallel",
+      "repeat": 1,
+      "status": "solved",
+      "qualityAvailable": true,
+      "originalRawDrcErrorCount": 0,
+      "recheckedWithoutBoardDrcErrorCount": 0,
+      "recheckedWithoutBoardMatchesRaw": true,
+      "boardInclusiveDrcErrorCount": 0,
+      "boardInclusiveDrcErrorTypes": {},
+      "traceCount": 269,
+      "viaCount": 110,
+      "traceLintIssueCounts": {
+        "odd_angle": 295
+      },
+      "recheckedLintMatchesRaw": true,
+      "connectionCoverage": {
+        "requiredNetCount": 59,
+        "requiredPairCount": 273,
+        "coveredNetCount": 59,
+        "uncoveredNetCount": 0,
+        "missingPortCount": 0,
+        "singletonNetCount": 11,
+        "errorCount": 0
+      },
+      "workflowRun": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406"
+    }
+  ],
+  "perSample": [
+    {
+      "sampleName": "sample001",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample002",
+      "bothSolved": true,
+      "perTypeLintNoWorse": false,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": false
+    },
+    {
+      "sampleName": "sample003",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample004",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample005",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample006",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample007",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample008",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample009",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample010",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample011",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample012",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    },
+    {
+      "sampleName": "sample013",
+      "bothSolved": false,
+      "perTypeLintNoWorse": false,
+      "coverageComplete": false,
+      "boardDrcNoWorse": false,
+      "accepted": false
+    },
+    {
+      "sampleName": "sample014",
+      "bothSolved": false,
+      "perTypeLintNoWorse": false,
+      "coverageComplete": false,
+      "boardDrcNoWorse": false,
+      "accepted": false
+    },
+    {
+      "sampleName": "sample015",
+      "bothSolved": false,
+      "perTypeLintNoWorse": false,
+      "coverageComplete": false,
+      "boardDrcNoWorse": false,
+      "accepted": false
+    },
+    {
+      "sampleName": "sample016",
+      "bothSolved": true,
+      "perTypeLintNoWorse": true,
+      "coverageComplete": true,
+      "boardDrcNoWorse": true,
+      "accepted": true
+    }
+  ]
+}

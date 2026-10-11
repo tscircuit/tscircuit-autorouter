@@ -1,10 +1,12 @@
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import type { ParallelStageWorkerPool, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
 import { getParallelPathBatches } from "./getParallelPathBatches"
+import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
 
 type Params = ConstructorParameters<typeof MultiSimplifiedPathSolver>[0] & {
   workerPool: ParallelStageWorkerPool
   workerCount: number
+  preserveLeadingLayerTransitions?: boolean
 }
 
 /** Run only geometrically independent components concurrently. */
@@ -12,14 +14,17 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
   readonly workerPool: ParallelStageWorkerPool
   readonly batches: number[][]
   private launched = false
+  readonly preserveLeadingLayerTransitions: boolean
 
-  constructor({ workerPool, workerCount, ...params }: Params) {
+  constructor({ workerPool, workerCount, preserveLeadingLayerTransitions, ...params }: Params) {
     super(params)
     this.workerPool = workerPool
+    this.preserveLeadingLayerTransitions = preserveLeadingLayerTransitions ?? false
     const groups = getParallelPathBatches(params.unsimplifiedHdRoutes, this.useTraceWidthAwareClearance, workerCount)
     this.batches = groups.batches
     this.stats = { interactionComponentCount: groups.interactionComponentCount, parallelBatchCount: this.batches.length }
     this.pendingEffects = []
+    if (this.preserveLeadingLayerTransitions) preserveLeadingPathLayerTransitions(this)
   }
 
   override getSolverName(): string {
@@ -52,6 +57,7 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
           defaultViaDiameter: this.defaultViaDiameter,
           useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
           enableVertexShortcuts: this.enableVertexShortcuts,
+          preserveLeadingLayerTransitions: this.preserveLeadingLayerTransitions,
         },
       })
     })).then((results) => {

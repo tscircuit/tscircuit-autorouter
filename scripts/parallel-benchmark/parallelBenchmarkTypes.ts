@@ -18,6 +18,10 @@ export type ParallelBenchmarkQuality = {
     missingPortCount: number
     singletonNetCount: number
     errorCount: number
+    connectedNetNames?: string[]
+    unconnectedNetNames?: string[]
+    missingPortIds?: string[]
+    detailsHash?: string
   }
 }
 
@@ -36,6 +40,7 @@ export type ParallelBenchmarkResult = {
   workerStats?: Record<string, unknown>
   workerPoolStats?: Record<string, unknown>
   stageStats?: Record<string, Record<string, unknown>>
+  pathingSearchStats?: Record<string, unknown>
 }
 
 export type ParallelBenchmarkChildMessage =
@@ -54,6 +59,7 @@ export type ParallelBenchmarkSummaryOptions = {
   targetSpeedup: number
   highDensityPolicy?: BenchmarkHighDensityPolicy
   pathingStrategy?: BenchmarkPathingStrategy
+  physicalRouting?: boolean
 }
 
 export type ParallelBenchmarkSampleSummary = {
@@ -76,7 +82,9 @@ export type ParallelBenchmarkSummary = {
   connectionCoveragePreserved: boolean
   highDensityPolicy: BenchmarkHighDensityPolicy
   pathingStrategy: BenchmarkPathingStrategy
+  physicalRouting: boolean
   geometryRequired: boolean
+  coverageAcceptanceMode: "baseline-parity" | "full-physical-completion"
   arithmeticMeanSpeedup: number
   aggregateSpeedup: number
   geometricMeanSpeedup: number

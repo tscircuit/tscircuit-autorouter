@@ -3,6 +3,7 @@ import type {
   ParallelBenchmarkSummary,
   ParallelBenchmarkSummaryOptions,
 } from "./parallelBenchmarkTypes"
+import stableStringify from "fast-json-stable-stringify"
 
 export const summarizeParallelBenchmark = (
   results: ParallelBenchmarkResult[],
@@ -10,13 +11,16 @@ export const summarizeParallelBenchmark = (
 ): ParallelBenchmarkSummary => {
   const highDensityPolicy = options.highDensityPolicy ?? "ordered"
   const pathingStrategy = options.pathingStrategy ?? "indexed"
+  const physicalRouting = options.physicalRouting ?? false
+  if (typeof physicalRouting !== "boolean") throw new Error("Invalid physical routing flag")
   if (highDensityPolicy !== "ordered" && highDensityPolicy !== "first-valid") {
     throw new Error("Invalid high density policy")
   }
   if (!["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated", "goal-balls"].includes(pathingStrategy)) {
     throw new Error("Invalid pathing strategy")
   }
-  const geometryRequired = highDensityPolicy === "ordered" && pathingStrategy !== "landmark" && pathingStrategy !== "negotiated" && pathingStrategy !== "goal-balls"
+  const geometryRequired = !physicalRouting && highDensityPolicy === "ordered" && pathingStrategy !== "landmark" && pathingStrategy !== "negotiated" && pathingStrategy !== "goal-balls"
+  const coverageAcceptanceMode = geometryRequired ? "baseline-parity" : "full-physical-completion"
   for (const result of results) {
     if (
       result.status === "solved" &&
@@ -85,6 +89,9 @@ export const summarizeParallelBenchmark = (
       if ([a, b].some((coverage) => countFields.some((field) =>
         !Number.isInteger(coverage[field]) || coverage[field] < 0,
       ))) return false
+      // An immutable-output performance rewrite preserves the baseline's
+      // recorded physical behavior, including visible original omissions.
+      if (geometryRequired && exactGeometry) return stableStringify(a) === stableStringify(b)
       return a.requiredNetCount === b.requiredNetCount &&
         a.requiredPairCount === b.requiredPairCount &&
         b.coveredNetCount === b.requiredNetCount &&
@@ -142,7 +149,9 @@ export const summarizeParallelBenchmark = (
     connectionCoveragePreserved,
     highDensityPolicy,
     pathingStrategy,
+    physicalRouting,
     geometryRequired,
+    coverageAcceptanceMode,
     arithmeticMeanSpeedup,
     aggregateSpeedup,
     geometricMeanSpeedup,

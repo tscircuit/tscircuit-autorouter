@@ -1,7 +1,9 @@
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { TraceSimplificationSolver, UselessViaRemovalSolver, MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
 import type { HighDensityRoute } from "../../types/high-density-types"
 import type { Obstacle } from "../../types"
 import { getPhysicalCopperObstacleZLayers, markPhysicalCopperTransitions } from "./markPhysicalCopperTransitions"
+import { useOptimizedViaRemovalSpatialIndex } from "./useOptimizedViaRemovalSpatialIndex"
+import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
 
 export type PhysicalSimplificationParams = ConstructorParameters<typeof TraceSimplificationSolver>[0] & {
   requirePhysicalCopperTransitions?: boolean
@@ -9,6 +11,9 @@ export type PhysicalSimplificationParams = ConstructorParameters<typeof TraceSim
 
 /** Keeps a real via when a rectangular routing approximation cannot prove copper contact. */
 export class PhysicalTraceSimplificationSolver extends TraceSimplificationSolver {
+  private readonly immutableHdRoutes: ReadonlyArray<HighDensityRoute>
+  private readonly indexedViaRemovalSolvers = new WeakSet<UselessViaRemovalSolver>()
+
   constructor(params: PhysicalSimplificationParams) {
     // The pinned base normalizer ignores public zLayers and widens empty spans.
     // Retain the physical input separately before its constructor calls this hook.
@@ -18,6 +23,30 @@ export class PhysicalTraceSimplificationSolver extends TraceSimplificationSolver
       })) : params.obstacles,
     }
     super(config)
+    this.immutableHdRoutes = params.otherHdRoutes ?? []
+  }
+
+  protected get requiresPhysicalCopperTransitions(): boolean {
+    return (this as unknown as { simplificationConfig: PhysicalSimplificationParams }).simplificationConfig.requirePhysicalCopperTransitions === true
+  }
+
+  protected prepareSimplificationChild(): void {
+    const solver = this.activeSubSolver
+    if (solver instanceof UselessViaRemovalSolver && !this.indexedViaRemovalSolvers.has(solver)) {
+      useOptimizedViaRemovalSpatialIndex(solver, this.immutableHdRoutes)
+      this.indexedViaRemovalSolvers.add(solver)
+    }
+    if (this.requiresPhysicalCopperTransitions && solver instanceof MultiSimplifiedPathSolver) {
+      preserveLeadingPathLayerTransitions(solver)
+    }
+  }
+
+  override _step(): void {
+    // Install after native child construction and before its first route step.
+    // This also precedes the parallel wrapper's synchronous child drain.
+    this.prepareSimplificationChild()
+    super._step()
+    this.prepareSimplificationChild()
   }
 
   override markThroughObstacleSegments(routes: readonly HighDensityRoute[]): HighDensityRoute[] {

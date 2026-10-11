@@ -1,0 +1,1041 @@
+{
+  "description": "Compact evidence index; complete source reports and routed outputs remain in linked workflow artifacts.",
+  "fullMergedReportSha256": "25c95615c0ee66bf8a9b8c444d0858cc04864d749f1b95daaad7d40b34c87446",
+  "workflowRuns": [
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38111715965",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38111717769",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38111719520",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38111721374",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38111723103"
+  ],
+  "metadata": {
+    "dataset": "srj18",
+    "datasetDependency": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
+    "datasetHashes": {
+      "sample001": "21a09454dd05b86464cd2d882ea96de7461260bd473e67c87a0e46011e508ea9",
+      "sample002": "2e2f6e8619e884afde2102e987cffcda8e7197ef2c63f8358aa5dd7cb14c8101",
+      "sample003": "c5abc751ef4ee68f0369df3d747174c527e47771fb673c61b72bbca0b93bc843",
+      "sample004": "be67af8cc71fb962e9c1cf6a6de00b416eb057750b52f4cdd0f95c46f930b083",
+      "sample005": "3027de7f902a95002172e25378e41c0c826f51e95155317dc97a55864df1b681",
+      "sample006": "ccaa924e0b5430bd717ea42bf45712412dba9ecd672853bb7bd3c70d69ed3608",
+      "sample007": "a995e7ec0bbf70d96837b56280b966d3b29e3f7c477126acd0820581106b66d5",
+      "sample008": "86c0bebed1bfe8396c5e1eadaa486f4711a3c9efbed35fdfa65bf092555dd9fd",
+      "sample009": "53167849b45863bb21382c13a0464851cdd6d2bd5a4988d9e41962b46c928556",
+      "sample010": "54809fdc0cee2685cab2f539bbfc6a68f0714fab47c8982f50037ccc5d32ffdb",
+      "sample011": "c30aee0833640f6f370ce83c0ad5fc9476d80c40442a7c69f5db6b28af168afd",
+      "sample012": "be78defe9bac976077fe427fe2cce0ba54dfc1397ce2a3f9bd3dc0b9f2ce394d",
+      "sample013": "37b01a5f7cf5ff8f3056ad2c72137085e7608f2444ddfc74d188813c6c0f2554",
+      "sample014": "cd4fb3f2814dc459650c17ccc21bb1d72a852ab2301fa6c389c1f82305207919",
+      "sample015": "cd24268f1713fc03c4c032a937d666fe6fb4d772187190d611ce4e3013a8d6fe",
+      "sample016": "dfefcf84ec3f1aa45eb058f31e25de646692f0f216f85bf9e98c02457e7611c8"
+    },
+    "revision": "7a31111148a5f8367c7a32602f49c13a5da3df0d",
+    "baselineRevision": "65522c89c370d4b4f9f69e1a79af58de641752bc",
+    "baselineModule": "/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/../baseline/dist/index.js",
+    "parallelModule": "/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js",
+    "runner": "multiple matched four-core ARM Blacksmith runners",
+    "runtime": {
+      "node": "26.3.0",
+      "bun": "1.4.2",
+      "boringssl": "41bf9b59c2ebf277a7aa427e1ecad5cc80dd4d4f",
+      "openssl": "1.1.0",
+      "llhttp": "9.3.0",
+      "libarchive": "ded82291ab41d5e355831b96b0e1ff49e24d8939",
+      "mimalloc": "6a64e1ba7f5b2130d4efccb67ec87fd0003f0f6a",
+      "picohttpparser": "066d2b1e9ab820703db0837a7255d92d30f0c9f5",
+      "uwebsockets": "744846f844374847c902b5e7fd59b4342a51ef99",
+      "webkit": "2e2aa2290fac856d6f451ceacb58f7f5b44dd057",
+      "zig": "04e7f6ac1e009525bc00934f20199c68f04e0a24",
+      "zlib": "12731092979c6d07f42da27da673a9f6c7b13586",
+      "tinycc": "05f0fafaa3be31e31d7b4b5c17dc60f62c991171",
+      "lolhtml": "725ce499aa9b71e38b7a2d0a9fbb6d7294a4079e",
+      "ares": "c7a3138dcfe3bb0eaaf10c0c24c36dc66dc790ab",
+      "libdeflate": "c8c56a20f8f621e6a966b716b31f1dedab6a41e3",
+      "usockets": "744846f844374847c902b5e7fd59b4342a51ef99",
+      "lshpack": "8905c024b6d052f083a3d11d0a169b3c2735c8a1",
+      "zstd": "f8745da6ff1ad1e7bab384bd1f9d742439278e99",
+      "v8": "14.6.202.34-node.20",
+      "uv": "1.48.0",
+      "napi": "10",
+      "icu": "78.3",
+      "unicode": "17.0",
+      "sqlite": "3.53.2",
+      "modules": "147"
+    },
+    "cpuModel": "unknown",
+    "availableParallelism": 4,
+    "timing": "Construction, solve, owned pool startup and dispose; module import, input clone, output hashing, DRC and lint excluded",
+    "qualityValidationTimeoutMs": 1200000,
+    "startedAt": "2026-10-11T04:31:01.485Z",
+    "sourceRunnerCount": 5,
+    "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+    "installedDependenciesVerified": true
+  },
+  "options": {
+    "repetitions": 1,
+    "timeoutMs": 1200000,
+    "effort": 1,
+    "workerCount": 4,
+    "parallelPathSimplification": true,
+    "pathingStrategy": "indexed",
+    "targetSpeedup": 2,
+    "variants": [
+      "baseline",
+      "parallel"
+    ],
+    "sampleNumbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "highDensityPolicy": "ordered"
+  },
+  "sourceReportHashes": [
+    {
+      "sourceReportHash": "e93f5a96d5ccbb7df074763e068dbef9fc3c1f8a238c99f335760a4e0893e66a",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample001",
+        "sample002",
+        "sample003",
+        "sample004"
+      ],
+      "resultCount": 8
+    },
+    {
+      "sourceReportHash": "03815da188612200d0efe361fc6383131ae716bc14cb9d90959834df297822ed",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample005",
+        "sample006",
+        "sample007",
+        "sample008"
+      ],
+      "resultCount": 8
+    },
+    {
+      "sourceReportHash": "e59a476b1908519e58f8a45a3a839a947dca7e474a273717685319ae53445638",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample009",
+        "sample010",
+        "sample011",
+        "sample012",
+        "sample013",
+        "sample016"
+      ],
+      "resultCount": 12
+    },
+    {
+      "sourceReportHash": "cd7502199352e28abf9f51258ae68b6b4a1012f03274c3f08432d03a80cccc0f",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample014"
+      ],
+      "resultCount": 2
+    },
+    {
+      "sourceReportHash": "9910c916f452a6e6247695945c126d148f08ce7d7b8d26bdf6e77d84b08b6bee",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample015"
+      ],
+      "resultCount": 2
+    }
+  ],
+  "summary": {
+    "fullCoverage": true,
+    "allCompleted": true,
+    "exactGeometry": true,
+    "qualityPreserved": true,
+    "connectionCoveragePreserved": true,
+    "highDensityPolicy": "ordered",
+    "pathingStrategy": "indexed",
+    "geometryRequired": true,
+    "arithmeticMeanSpeedup": 1.2735823576047778,
+    "aggregateSpeedup": 1.335852719797836,
+    "geometricMeanSpeedup": 1.2671534835786964,
+    "targetReached": false,
+    "perSample": [
+      {
+        "sampleName": "sample001",
+        "baselineTimeMs": 17576.541394,
+        "parallelTimeMs": 16437.938015,
+        "speedup": 1.0692668008579298,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample002",
+        "baselineTimeMs": 169707.568414,
+        "parallelTimeMs": 131044.244811,
+        "speedup": 1.2950402259844576,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample003",
+        "baselineTimeMs": 14390.187894,
+        "parallelTimeMs": 11668.327515,
+        "speedup": 1.2332691103760125,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample004",
+        "baselineTimeMs": 64864.199509,
+        "parallelTimeMs": 47602.591226,
+        "speedup": 1.3626190893904933,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample005",
+        "baselineTimeMs": 14958.88089,
+        "parallelTimeMs": 12591.348805,
+        "speedup": 1.188028472697052,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample006",
+        "baselineTimeMs": 190844.803449,
+        "parallelTimeMs": 145124.285195,
+        "speedup": 1.315043882507786,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample007",
+        "baselineTimeMs": 22366.251927,
+        "parallelTimeMs": 19082.766841,
+        "speedup": 1.1720654616470667,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample008",
+        "baselineTimeMs": 91199.28734899999,
+        "parallelTimeMs": 63852.044486,
+        "speedup": 1.4282907944943888,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample009",
+        "baselineTimeMs": 20885.853430000003,
+        "parallelTimeMs": 18768.465848,
+        "speedup": 1.1128162311798988,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample010",
+        "baselineTimeMs": 31823.974273,
+        "parallelTimeMs": 25547.074409,
+        "speedup": 1.2456993612461826,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample011",
+        "baselineTimeMs": 26214.961119,
+        "parallelTimeMs": 23449.627908,
+        "speedup": 1.11792652838029,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample012",
+        "baselineTimeMs": 89844.68837799999,
+        "parallelTimeMs": 76935.497819,
+        "speedup": 1.1677923835544735,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample013",
+        "baselineTimeMs": 86854.83783199999,
+        "parallelTimeMs": 67236.832579,
+        "speedup": 1.2917746791529747,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample014",
+        "baselineTimeMs": 268248.134693,
+        "parallelTimeMs": 185766.07695400002,
+        "speedup": 1.4440103332721208,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample015",
+        "baselineTimeMs": 213856.292496,
+        "parallelTimeMs": 149041.327196,
+        "speedup": 1.4348791474109976,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample016",
+        "baselineTimeMs": 40467.468634,
+        "parallelTimeMs": 26999.99847,
+        "speedup": 1.4987952195243217,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": true,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      }
+    ]
+  },
+  "results": [
+    {
+      "sampleName": "sample001",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 17576.541394,
+      "geometryHash": "f5e24677dbc3e789cdef91070ad39ec556ddc3b9c4b56a64d6acd79719f57e1a",
+      "outputHash": "d39996e28547c504b872485238a47d9b34a78132495f4925733cee9372513ce8",
+      "quality": {
+        "traceCount": 205,
+        "viaCount": 174,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 193
+        }
+      }
+    },
+    {
+      "sampleName": "sample001",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 16437.938015,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1706,
+        "tasksCompleted": 1706,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 0,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "f5e24677dbc3e789cdef91070ad39ec556ddc3b9c4b56a64d6acd79719f57e1a",
+      "outputHash": "d39996e28547c504b872485238a47d9b34a78132495f4925733cee9372513ce8",
+      "quality": {
+        "traceCount": 205,
+        "viaCount": 174,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 193
+        }
+      }
+    },
+    {
+      "sampleName": "sample002",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 169707.568414,
+      "geometryHash": "7bf50f0bd9c666fcae212b16bcf57d503c0bbc88bedc96705f0072628adccd15",
+      "outputHash": "8f44998acb56db01f959396807002b5e1b1788c86f4e8117fce132a2843a3605",
+      "quality": {
+        "traceCount": 244,
+        "viaCount": 548,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 931
+        }
+      }
+    },
+    {
+      "sampleName": "sample002",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 131044.244811,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2177,
+        "tasksCompleted": 2177,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 3,
+        "historyRequestsDenied": 4,
+        "historyJobsStarted": 6
+      },
+      "geometryHash": "7bf50f0bd9c666fcae212b16bcf57d503c0bbc88bedc96705f0072628adccd15",
+      "outputHash": "8f44998acb56db01f959396807002b5e1b1788c86f4e8117fce132a2843a3605",
+      "quality": {
+        "traceCount": 244,
+        "viaCount": 548,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 931
+        }
+      }
+    },
+    {
+      "sampleName": "sample003",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 14390.187894,
+      "geometryHash": "4727429a78a1a7ab60efe4a737eefba602298941627db8be6d61b18f2efab57b",
+      "outputHash": "3e9e93d1c0b1bc0a3a226e4a1b3b29d9772a8189e9f1577e44c47bb8bb5473af",
+      "quality": {
+        "traceCount": 145,
+        "viaCount": 90,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 275
+        }
+      }
+    },
+    {
+      "sampleName": "sample003",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 11668.327515,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1738,
+        "tasksCompleted": 1738,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 8,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "4727429a78a1a7ab60efe4a737eefba602298941627db8be6d61b18f2efab57b",
+      "outputHash": "3e9e93d1c0b1bc0a3a226e4a1b3b29d9772a8189e9f1577e44c47bb8bb5473af",
+      "quality": {
+        "traceCount": 145,
+        "viaCount": 90,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 275
+        }
+      }
+    },
+    {
+      "sampleName": "sample004",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 64864.199509,
+      "geometryHash": "6e738fcc6a33c1673c16527bc527a3c676d06902f2f987d4bc1569416388f8c0",
+      "outputHash": "d334c85bd037549a490d7be37a120daed6041870037fc2f4092715be5d1ed37f",
+      "quality": {
+        "traceCount": 114,
+        "viaCount": 140,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 848
+        }
+      }
+    },
+    {
+      "sampleName": "sample004",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 47602.591226,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1545,
+        "tasksCompleted": 1545,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 18,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "6e738fcc6a33c1673c16527bc527a3c676d06902f2f987d4bc1569416388f8c0",
+      "outputHash": "d334c85bd037549a490d7be37a120daed6041870037fc2f4092715be5d1ed37f",
+      "quality": {
+        "traceCount": 114,
+        "viaCount": 140,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 848
+        }
+      }
+    },
+    {
+      "sampleName": "sample005",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 14958.88089,
+      "geometryHash": "709673d41dd1cc3e6c50efc92d07e315cdeb002110badcfe8e8cba5aa2d183ea",
+      "outputHash": "0a87f4a8f65ea0289cddc5c8458e15b831d69ca06722a6f06a80e8600b3cc69f",
+      "quality": {
+        "traceCount": 172,
+        "viaCount": 146,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 29
+        }
+      }
+    },
+    {
+      "sampleName": "sample005",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 12591.348805,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1531,
+        "tasksCompleted": 1531,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 2,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "709673d41dd1cc3e6c50efc92d07e315cdeb002110badcfe8e8cba5aa2d183ea",
+      "outputHash": "0a87f4a8f65ea0289cddc5c8458e15b831d69ca06722a6f06a80e8600b3cc69f",
+      "quality": {
+        "traceCount": 172,
+        "viaCount": 146,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 29
+        }
+      }
+    },
+    {
+      "sampleName": "sample006",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 190844.803449,
+      "geometryHash": "3a0150e7fa017933a2df8cd4cfa8aca4e343929fff5ce7af68efbdeac2f4ed5f",
+      "outputHash": "925df1570a7af17cf568af7e23916efb555fb8ca63f32b0d9282d331e1a04a5b",
+      "quality": {
+        "traceCount": 255,
+        "viaCount": 281,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 932
+        }
+      }
+    },
+    {
+      "sampleName": "sample006",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 145124.285195,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4740,
+        "tasksCompleted": 4740,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 59,
+        "historyJobsStarted": 2
+      },
+      "geometryHash": "3a0150e7fa017933a2df8cd4cfa8aca4e343929fff5ce7af68efbdeac2f4ed5f",
+      "outputHash": "925df1570a7af17cf568af7e23916efb555fb8ca63f32b0d9282d331e1a04a5b",
+      "quality": {
+        "traceCount": 255,
+        "viaCount": 281,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 932
+        }
+      }
+    },
+    {
+      "sampleName": "sample007",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 22366.251927,
+      "geometryHash": "fb391a001b3b5dd757bcef8a3e74899b2925053cd867333d29dffa1891f50c2d",
+      "outputHash": "b0c1460985672c134fad178d96346e6f34ee2da15806d9c6ff6039a83523df73",
+      "quality": {
+        "traceCount": 263,
+        "viaCount": 202,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 123
+        }
+      }
+    },
+    {
+      "sampleName": "sample007",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 19082.766841,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2114,
+        "tasksCompleted": 2114,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 0,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "fb391a001b3b5dd757bcef8a3e74899b2925053cd867333d29dffa1891f50c2d",
+      "outputHash": "b0c1460985672c134fad178d96346e6f34ee2da15806d9c6ff6039a83523df73",
+      "quality": {
+        "traceCount": 263,
+        "viaCount": 202,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 123
+        }
+      }
+    },
+    {
+      "sampleName": "sample008",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 91199.28734899999,
+      "geometryHash": "5f0e13af76c77fc24b25ba4f5e12b943b237fd3786881b307ff9b55c1a9ec50e",
+      "outputHash": "f71a3090c6b52f395859f51b9705320ce5ee0d47c7a828a0b534afdf002f823d",
+      "quality": {
+        "traceCount": 361,
+        "viaCount": 287,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 963
+        }
+      }
+    },
+    {
+      "sampleName": "sample008",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 63852.044486,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 3563,
+        "tasksCompleted": 3563,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 42,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "5f0e13af76c77fc24b25ba4f5e12b943b237fd3786881b307ff9b55c1a9ec50e",
+      "outputHash": "f71a3090c6b52f395859f51b9705320ce5ee0d47c7a828a0b534afdf002f823d",
+      "quality": {
+        "traceCount": 361,
+        "viaCount": 287,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 963
+        }
+      }
+    },
+    {
+      "sampleName": "sample009",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 20885.853430000003,
+      "geometryHash": "77a075149093b9c2f9eb7edd147d6feabd0686a62d323aaa7da0ce368675236e",
+      "outputHash": "666fc9842097f9556b5d7ec00891e3b11b5dce872d126acdd356148941a76939",
+      "quality": {
+        "traceCount": 256,
+        "viaCount": 119,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 269
+        }
+      }
+    },
+    {
+      "sampleName": "sample009",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 18768.465848,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2494,
+        "tasksCompleted": 2494,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 7,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "77a075149093b9c2f9eb7edd147d6feabd0686a62d323aaa7da0ce368675236e",
+      "outputHash": "666fc9842097f9556b5d7ec00891e3b11b5dce872d126acdd356148941a76939",
+      "quality": {
+        "traceCount": 256,
+        "viaCount": 119,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 269
+        }
+      }
+    },
+    {
+      "sampleName": "sample010",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 31823.974273,
+      "geometryHash": "52024e2345fbe28894e804f19e453827696fa699dca74d4f4b00ac14df7e842a",
+      "outputHash": "5c8d15f1648dd16f9fded0b2583ef34878d3ff3d43b8856d983c309f9ab4985a",
+      "quality": {
+        "traceCount": 310,
+        "viaCount": 175,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 177
+        }
+      }
+    },
+    {
+      "sampleName": "sample010",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 25547.074409,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2365,
+        "tasksCompleted": 2365,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 4,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "52024e2345fbe28894e804f19e453827696fa699dca74d4f4b00ac14df7e842a",
+      "outputHash": "5c8d15f1648dd16f9fded0b2583ef34878d3ff3d43b8856d983c309f9ab4985a",
+      "quality": {
+        "traceCount": 310,
+        "viaCount": 175,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 177
+        }
+      }
+    },
+    {
+      "sampleName": "sample011",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 26214.961119,
+      "geometryHash": "10c138d3d295b089fe46d1c74aaef5aec521701ee487ce810a0e9c99e0d1521b",
+      "outputHash": "2c94370abf847395ffd8e541d3dea1566847e1c6bc996e0824d9f360dab6e544",
+      "quality": {
+        "traceCount": 289,
+        "viaCount": 190,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 519
+        }
+      }
+    },
+    {
+      "sampleName": "sample011",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 23449.627908,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2335,
+        "tasksCompleted": 2335,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 3,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "10c138d3d295b089fe46d1c74aaef5aec521701ee487ce810a0e9c99e0d1521b",
+      "outputHash": "2c94370abf847395ffd8e541d3dea1566847e1c6bc996e0824d9f360dab6e544",
+      "quality": {
+        "traceCount": 289,
+        "viaCount": 190,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 519
+        }
+      }
+    },
+    {
+      "sampleName": "sample012",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 89844.68837799999,
+      "geometryHash": "a09f616ee6687fe2221cb3ffe5b4b5ef695211091099eb40953cabfcdb90f762",
+      "outputHash": "fe7973d4c3b7b48f49ffcc9c3bc62f430254892c9c4cc019a5d6e2aeaf700f50",
+      "quality": {
+        "traceCount": 504,
+        "viaCount": 302,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 897
+        }
+      }
+    },
+    {
+      "sampleName": "sample012",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 76935.497819,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4461,
+        "tasksCompleted": 4461,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 6,
+        "historyJobsStarted": 2
+      },
+      "geometryHash": "a09f616ee6687fe2221cb3ffe5b4b5ef695211091099eb40953cabfcdb90f762",
+      "outputHash": "fe7973d4c3b7b48f49ffcc9c3bc62f430254892c9c4cc019a5d6e2aeaf700f50",
+      "quality": {
+        "traceCount": 504,
+        "viaCount": 302,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 897
+        }
+      }
+    },
+    {
+      "sampleName": "sample013",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 86854.83783199999,
+      "geometryHash": "6729ecea53d1bcc24a999a894fd03720f5aaa26bae4552ba78f5c2aebd24c619",
+      "outputHash": "863383c27b8a788e7d045e8e456940672ce33734140f88973e139d00672a6beb",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 207,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 592
+        }
+      }
+    },
+    {
+      "sampleName": "sample013",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 67236.832579,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2758,
+        "tasksCompleted": 2758,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 22,
+        "historyJobsStarted": 2
+      },
+      "geometryHash": "6729ecea53d1bcc24a999a894fd03720f5aaa26bae4552ba78f5c2aebd24c619",
+      "outputHash": "863383c27b8a788e7d045e8e456940672ce33734140f88973e139d00672a6beb",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 207,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 592
+        }
+      }
+    },
+    {
+      "sampleName": "sample014",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 268248.134693,
+      "geometryHash": "92f76855381b48e7f49db5858dbc71f6648ec97fa1786a9ca3f2a6e558d370cb",
+      "outputHash": "e7d8bf80947a8f4edba7a0ef0e9f754021f4b1a52834d7c237cd63431ee38b09",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 294,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 709
+        }
+      }
+    },
+    {
+      "sampleName": "sample014",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 185766.07695400002,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 3657,
+        "tasksCompleted": 3657,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 29,
+        "historyJobsStarted": 0
+      },
+      "geometryHash": "92f76855381b48e7f49db5858dbc71f6648ec97fa1786a9ca3f2a6e558d370cb",
+      "outputHash": "e7d8bf80947a8f4edba7a0ef0e9f754021f4b1a52834d7c237cd63431ee38b09",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 294,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 709
+        }
+      }
+    },
+    {
+      "sampleName": "sample015",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 213856.292496,
+      "geometryHash": "d762a355253f284f9ba39abe1c0860762bcdbea0cebddbff6ad837d967044634",
+      "outputHash": "c43a2e94fc94f5ab4f5c23556e35d711207f3c7d8f01bcd4238c1fac6d669719",
+      "quality": {
+        "traceCount": 461,
+        "viaCount": 357,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 1213
+        }
+      }
+    },
+    {
+      "sampleName": "sample015",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 149041.327196,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4513,
+        "tasksCompleted": 4513,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 81,
+        "historyJobsStarted": 1
+      },
+      "geometryHash": "d762a355253f284f9ba39abe1c0860762bcdbea0cebddbff6ad837d967044634",
+      "outputHash": "c43a2e94fc94f5ab4f5c23556e35d711207f3c7d8f01bcd4238c1fac6d669719",
+      "quality": {
+        "traceCount": 461,
+        "viaCount": 357,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 1213
+        }
+      }
+    },
+    {
+      "sampleName": "sample016",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 40467.468634,
+      "geometryHash": "bc315e2987fe5f4df68a29c7b213c72337efe93978cf187d445aaa7d0e92315f",
+      "outputHash": "e9353be1ec262703436741929e56ec2fb3a69b051c73efb9088edd2e4ede7390",
+      "quality": {
+        "traceCount": 269,
+        "viaCount": 109,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 389
+        }
+      }
+    },
+    {
+      "sampleName": "sample016",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 26999.99847,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2273,
+        "tasksCompleted": 2273,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 17,
+        "historyJobsStarted": 2
+      },
+      "geometryHash": "bc315e2987fe5f4df68a29c7b213c72337efe93978cf187d445aaa7d0e92315f",
+      "outputHash": "e9353be1ec262703436741929e56ec2fb3a69b051c73efb9088edd2e4ede7390",
+      "quality": {
+        "traceCount": 269,
+        "viaCount": 109,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 389
+        }
+      }
+    }
+  ]
+}

@@ -90,7 +90,58 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect(merged.metadata.installedDependenciesVerified).toBe(true)
   expect((merged.metadata.options as Record<string, unknown>).pathingStrategy).toBe("adaptive-bitset")
   expect((merged.metadata.options as Record<string, unknown>).highDensityPolicy).toBe("ordered")
+  expect((merged.metadata.options as Record<string, unknown>).physicalRouting).toBe(false)
+  expect(merged.summary.physicalRouting).toBe(false)
   expect(sources).toEqual(makeMergeSources())
+  const equivalentLegacyPhysicalFlag = makeMergeSources()
+  Object.assign(equivalentLegacyPhysicalFlag[0]!.report.metadata.options as Record<string, unknown>, { physicalRouting: false })
+  expect(mergeParallelBenchmarkReports(equivalentLegacyPhysicalFlag).summary.targetReached).toBe(true)
+  const physicalSources = makeMergeSources()
+  for (const source of physicalSources) {
+    Object.assign(source.report.metadata.options as Record<string, unknown>, { physicalRouting: true, pathingStrategy: "indexed" })
+    for (const result of source.report.results) {
+      result.quality!.connectionCoverage = {
+        requiredNetCount: 2, requiredPairCount: 3, coveredNetCount: 2,
+        uncoveredNetCount: 0, missingPortCount: 0, singletonNetCount: 1, errorCount: 0,
+      }
+      if (result.variant === "parallel") result.geometryHash = "physically-correct-alternative"
+    }
+  }
+  const physicalReport = mergeParallelBenchmarkReports(physicalSources)
+  expect((physicalReport.metadata.options as Record<string, unknown>).physicalRouting).toBe(true)
+  expect(physicalReport.summary.physicalRouting).toBe(true)
+  expect(physicalReport.summary.geometryRequired).toBe(false)
+  expect(physicalReport.summary.exactGeometry).toBe(false)
+  expect(physicalReport.summary.connectionCoveragePreserved).toBe(true)
+  expect(physicalReport.summary.targetReached).toBe(true)
+  Object.assign(physicalSources[0]!.report.metadata.options as Record<string, unknown>, { physicalRouting: false })
+  expect(() => mergeParallelBenchmarkReports(physicalSources)).toThrow("Incompatible benchmark options")
+  Object.assign(physicalSources[0]!.report.metadata.options as Record<string, unknown>, { physicalRouting: "true" })
+  expect(() => mergeParallelBenchmarkReports(physicalSources)).toThrow("Invalid physicalRouting")
+  expect(merged.metadata.harnessVersion).toBe(1)
+  expect(merged.metadata.drcIncludesBoardClearance).toBe(false)
+  expect(merged.metadata.coveragePolicyVersion).toBe(1)
+  const parityPolicySources = makeMergeSources()
+  for (const source of parityPolicySources) Object.assign(source.report.metadata, {
+    harnessVersion: 3, drcIncludesBoardClearance: true, coveragePolicyVersion: 2,
+  })
+  const parityPolicy = mergeParallelBenchmarkReports(parityPolicySources)
+  expect(parityPolicy.metadata.coveragePolicyVersion).toBe(2)
+  expect(parityPolicy.summary.coverageAcceptanceMode).toBe("baseline-parity")
+  Object.assign(parityPolicySources[0]!.report.metadata, { harnessVersion: 2, coveragePolicyVersion: 1 })
+  expect(() => mergeParallelBenchmarkReports(parityPolicySources)).toThrow("Incompatible benchmark quality policy")
+  const boardInclusiveSources = makeMergeSources()
+  for (const source of boardInclusiveSources) Object.assign(source.report.metadata, {
+    harnessVersion: 2, drcIncludesBoardClearance: true,
+  })
+  const boardInclusive = mergeParallelBenchmarkReports(boardInclusiveSources)
+  expect(boardInclusive.metadata.harnessVersion).toBe(2)
+  expect(boardInclusive.metadata.drcIncludesBoardClearance).toBe(true)
+  delete boardInclusiveSources[0]!.report.metadata.harnessVersion
+  delete boardInclusiveSources[0]!.report.metadata.drcIncludesBoardClearance
+  expect(() => mergeParallelBenchmarkReports(boardInclusiveSources)).toThrow("Incompatible benchmark quality policy")
+  Object.assign(boardInclusiveSources[0]!.report.metadata, { harnessVersion: 2, drcIncludesBoardClearance: false })
+  expect(() => mergeParallelBenchmarkReports(boardInclusiveSources)).toThrow("Invalid benchmark quality policy")
 
   for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated", "goal-balls"]) {
     const strategySources = makeMergeSources()

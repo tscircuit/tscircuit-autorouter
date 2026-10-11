@@ -1,0 +1,1472 @@
+{
+  "description": "Compact evidence index; complete source reports and routed outputs remain in linked workflow artifacts.",
+  "fullMergedReportSha256": "b4934b80d049ce2ecdce1e7e3ffa3bbb2242f104354a2f91b4df62cd7ef0fb0c",
+  "workflowRuns": [
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004",
+    "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618"
+  ],
+  "metadata": {
+    "dataset": "srj18",
+    "datasetDependency": "git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b",
+    "datasetHashes": {
+      "sample001": "21a09454dd05b86464cd2d882ea96de7461260bd473e67c87a0e46011e508ea9",
+      "sample002": "2e2f6e8619e884afde2102e987cffcda8e7197ef2c63f8358aa5dd7cb14c8101",
+      "sample003": "c5abc751ef4ee68f0369df3d747174c527e47771fb673c61b72bbca0b93bc843",
+      "sample004": "be67af8cc71fb962e9c1cf6a6de00b416eb057750b52f4cdd0f95c46f930b083",
+      "sample005": "3027de7f902a95002172e25378e41c0c826f51e95155317dc97a55864df1b681",
+      "sample006": "ccaa924e0b5430bd717ea42bf45712412dba9ecd672853bb7bd3c70d69ed3608",
+      "sample007": "a995e7ec0bbf70d96837b56280b966d3b29e3f7c477126acd0820581106b66d5",
+      "sample008": "86c0bebed1bfe8396c5e1eadaa486f4711a3c9efbed35fdfa65bf092555dd9fd",
+      "sample009": "53167849b45863bb21382c13a0464851cdd6d2bd5a4988d9e41962b46c928556",
+      "sample010": "54809fdc0cee2685cab2f539bbfc6a68f0714fab47c8982f50037ccc5d32ffdb",
+      "sample011": "c30aee0833640f6f370ce83c0ad5fc9476d80c40442a7c69f5db6b28af168afd",
+      "sample012": "be78defe9bac976077fe427fe2cce0ba54dfc1397ce2a3f9bd3dc0b9f2ce394d",
+      "sample013": "37b01a5f7cf5ff8f3056ad2c72137085e7608f2444ddfc74d188813c6c0f2554",
+      "sample014": "cd4fb3f2814dc459650c17ccc21bb1d72a852ab2301fa6c389c1f82305207919",
+      "sample015": "cd24268f1713fc03c4c032a937d666fe6fb4d772187190d611ce4e3013a8d6fe",
+      "sample016": "dfefcf84ec3f1aa45eb058f31e25de646692f0f216f85bf9e98c02457e7611c8"
+    },
+    "revision": "dc387aa1f5b4c3c9edeae8194f04b4df28c640b1",
+    "baselineRevision": "65522c89c370d4b4f9f69e1a79af58de641752bc",
+    "baselineModule": "/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/../baseline/dist/index.js",
+    "parallelModule": "/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js",
+    "runner": "multiple matched four-core ARM Blacksmith runners",
+    "runtime": {
+      "node": "26.3.0",
+      "bun": "1.4.2",
+      "boringssl": "41bf9b59c2ebf277a7aa427e1ecad5cc80dd4d4f",
+      "openssl": "1.1.0",
+      "llhttp": "9.3.0",
+      "libarchive": "ded82291ab41d5e355831b96b0e1ff49e24d8939",
+      "mimalloc": "6a64e1ba7f5b2130d4efccb67ec87fd0003f0f6a",
+      "picohttpparser": "066d2b1e9ab820703db0837a7255d92d30f0c9f5",
+      "uwebsockets": "744846f844374847c902b5e7fd59b4342a51ef99",
+      "webkit": "2e2aa2290fac856d6f451ceacb58f7f5b44dd057",
+      "zig": "04e7f6ac1e009525bc00934f20199c68f04e0a24",
+      "zlib": "12731092979c6d07f42da27da673a9f6c7b13586",
+      "tinycc": "05f0fafaa3be31e31d7b4b5c17dc60f62c991171",
+      "lolhtml": "725ce499aa9b71e38b7a2d0a9fbb6d7294a4079e",
+      "ares": "c7a3138dcfe3bb0eaaf10c0c24c36dc66dc790ab",
+      "libdeflate": "c8c56a20f8f621e6a966b716b31f1dedab6a41e3",
+      "usockets": "744846f844374847c902b5e7fd59b4342a51ef99",
+      "lshpack": "8905c024b6d052f083a3d11d0a169b3c2735c8a1",
+      "zstd": "f8745da6ff1ad1e7bab384bd1f9d742439278e99",
+      "v8": "14.6.202.34-node.20",
+      "uv": "1.48.0",
+      "napi": "10",
+      "icu": "78.3",
+      "unicode": "17.0",
+      "sqlite": "3.53.2",
+      "modules": "147"
+    },
+    "cpuModel": "unknown",
+    "availableParallelism": 4,
+    "timing": "Construction, solve, owned pool startup and dispose; module import, input clone, output hashing, DRC and lint excluded",
+    "qualityValidationTimeoutMs": 1200000,
+    "startedAt": "2026-10-11T05:46:47.165Z",
+    "harnessVersion": 1,
+    "drcIncludesBoardClearance": false,
+    "sourceRunnerCount": 5,
+    "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+    "installedDependenciesVerified": true
+  },
+  "options": {
+    "repetitions": 1,
+    "timeoutMs": 1200000,
+    "effort": 1,
+    "workerCount": 4,
+    "parallelPathSimplification": true,
+    "pathingStrategy": "goal-balls",
+    "highDensityPolicy": "first-valid",
+    "targetSpeedup": 2,
+    "variants": [
+      "baseline",
+      "parallel"
+    ],
+    "sampleNumbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  },
+  "sourceReportHashes": [
+    {
+      "sourceReportHash": "19c4e00f4c6a1825b5e998bfd1fd2c4ebcb3e0ed2344ce525b4ad3538d3848d3",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample001",
+        "sample002",
+        "sample003",
+        "sample004"
+      ],
+      "resultCount": 8
+    },
+    {
+      "sourceReportHash": "f7711523cedc431a7117e91eb5e865a3f6a7b0c770529ae9a5f14c7ca6568499",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample005",
+        "sample006",
+        "sample007",
+        "sample008"
+      ],
+      "resultCount": 8
+    },
+    {
+      "sourceReportHash": "d1829b71f0f66f6bfaa50b77053e414c2420f41559f290623a16ab3200eb8e84",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample009",
+        "sample010",
+        "sample011",
+        "sample012",
+        "sample013",
+        "sample016"
+      ],
+      "resultCount": 12
+    },
+    {
+      "sourceReportHash": "b502ac1c9f3116239c74254ccbc87d23dff5e3aec9b7c5921602e100a8d80065",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample014"
+      ],
+      "resultCount": 2
+    },
+    {
+      "sourceReportHash": "65fedc62e5cc768919bbf877898c628e1eea51970e8b384ff5ceef3f2f42c60b",
+      "installedDependencyHash": "f4f2c40545f0855b6c59bd8d8351df7e61a72ef0cb4f99f27c3741e94a5291d9",
+      "sampleNames": [
+        "sample015"
+      ],
+      "resultCount": 2
+    }
+  ],
+  "summary": {
+    "fullCoverage": true,
+    "allCompleted": false,
+    "exactGeometry": false,
+    "qualityPreserved": false,
+    "connectionCoveragePreserved": false,
+    "highDensityPolicy": "first-valid",
+    "pathingStrategy": "goal-balls",
+    "geometryRequired": false,
+    "arithmeticMeanSpeedup": 0.8971589329827645,
+    "aggregateSpeedup": 0.30663837291225965,
+    "geometricMeanSpeedup": 0.7069413881634878,
+    "targetReached": false,
+    "perSample": [
+      {
+        "sampleName": "sample001",
+        "baselineTimeMs": 16866.752954,
+        "parallelTimeMs": 21611.503784,
+        "speedup": 0.7804525368793281,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample002",
+        "baselineTimeMs": 167167.16590899997,
+        "parallelTimeMs": 112079.032175,
+        "speedup": 1.4915115045603309,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": false,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample003",
+        "baselineTimeMs": 14591.147597,
+        "parallelTimeMs": 13125.314714,
+        "speedup": 1.1116798274891253,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample004",
+        "baselineTimeMs": 63923.368972000004,
+        "parallelTimeMs": 41309.465596,
+        "speedup": 1.5474266744857068,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample005",
+        "baselineTimeMs": 12570.756408,
+        "parallelTimeMs": 14073.138246,
+        "speedup": 0.8932447182896806,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample006",
+        "baselineTimeMs": 166635.10219099998,
+        "parallelTimeMs": 151312.18775,
+        "speedup": 1.1012668884697954,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample007",
+        "baselineTimeMs": 18048.044872000002,
+        "parallelTimeMs": 22105.611082,
+        "speedup": 0.8164463223862667,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample008",
+        "baselineTimeMs": 75316.46971800001,
+        "parallelTimeMs": 56390.621027999994,
+        "speedup": 1.3356205047041891,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample009",
+        "baselineTimeMs": 25034.892125,
+        "parallelTimeMs": 34031.517065,
+        "speedup": 0.7356384400138113,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample010",
+        "baselineTimeMs": 35239.48654799999,
+        "parallelTimeMs": 26554.723038,
+        "speedup": 1.327051556801102,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample011",
+        "baselineTimeMs": 29050.493677000002,
+        "parallelTimeMs": 46319.63749,
+        "speedup": 0.627174461010662,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample012",
+        "baselineTimeMs": 105765.471842,
+        "parallelTimeMs": 146813.893198,
+        "speedup": 0.7204050620697035,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      },
+      {
+        "sampleName": "sample013",
+        "baselineTimeMs": 101543.70036199999,
+        "parallelTimeMs": 1200000,
+        "speedup": 0.08461975030166666,
+        "baselineSolved": 1,
+        "parallelSolved": 0,
+        "exactGeometry": false,
+        "qualityPreserved": false,
+        "connectionCoveragePreserved": false
+      },
+      {
+        "sampleName": "sample014",
+        "baselineTimeMs": 226822.924255,
+        "parallelTimeMs": 1200000,
+        "speedup": 0.18901910354583332,
+        "baselineSolved": 1,
+        "parallelSolved": 0,
+        "exactGeometry": false,
+        "qualityPreserved": false,
+        "connectionCoveragePreserved": false
+      },
+      {
+        "sampleName": "sample015",
+        "baselineTimeMs": 218405.276734,
+        "parallelTimeMs": 1200000,
+        "speedup": 0.18200439727833334,
+        "baselineSolved": 1,
+        "parallelSolved": 0,
+        "exactGeometry": false,
+        "qualityPreserved": false,
+        "connectionCoveragePreserved": false
+      },
+      {
+        "sampleName": "sample016",
+        "baselineTimeMs": 47512.807062,
+        "parallelTimeMs": 33673.593776,
+        "speedup": 1.4109811794386955,
+        "baselineSolved": 1,
+        "parallelSolved": 1,
+        "exactGeometry": false,
+        "qualityPreserved": true,
+        "connectionCoveragePreserved": true
+      }
+    ]
+  },
+  "results": [
+    {
+      "sampleName": "sample001",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 16866.752954,
+      "geometryHash": "f5e24677dbc3e789cdef91070ad39ec556ddc3b9c4b56a64d6acd79719f57e1a",
+      "outputHash": "d39996e28547c504b872485238a47d9b34a78132495f4925733cee9372513ce8",
+      "quality": {
+        "traceCount": 205,
+        "viaCount": 174,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 193
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 53,
+          "requiredPairCount": 209,
+          "coveredNetCount": 53,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 9,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample001",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 21611.503784,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1809,
+        "tasksCompleted": 1809,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 638,
+        "historyJobsStarted": 1,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 2,
+        "a13RequestsDenied": 513,
+        "a13CandidatesStarted": 2,
+        "a13CancellationSignals": 2,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 86,
+        "a13NodeJobsStopped": 13,
+        "a13NodeRoutingIterationsCompleted": 2310733
+      },
+      "geometryHash": "5b18a00785cc86b21ee41085906691299b72138c7edee3d9761fdbbfa36f0328",
+      "outputHash": "adcbf8aeec8ca0f4003b75f32468ab6ddb19a4071b25e41f56d528b32c4b2943",
+      "quality": {
+        "traceCount": 205,
+        "viaCount": 188,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 192
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 53,
+          "requiredPairCount": 209,
+          "coveredNetCount": 53,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 9,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample002",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 167167.16590899997,
+      "geometryHash": "7bf50f0bd9c666fcae212b16bcf57d503c0bbc88bedc96705f0072628adccd15",
+      "outputHash": "8f44998acb56db01f959396807002b5e1b1788c86f4e8117fce132a2843a3605",
+      "quality": {
+        "traceCount": 244,
+        "viaCount": 548,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 931
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 112,
+          "requiredPairCount": 248,
+          "coveredNetCount": 112,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 40,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample002",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 112079.032175,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2292,
+        "tasksCompleted": 2292,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 1601,
+        "historyJobsStarted": 4,
+        "historyCancellationSignals": 0,
+        "historyJobsStopped": 0,
+        "historyStepsCompleted": 4,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 651,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 111,
+        "a13NodeJobsStopped": 70,
+        "a13NodeRoutingIterationsCompleted": 31568053
+      },
+      "geometryHash": "55a1f28b8deea1bf41981f6a5f38807739036974da96d2f4f1422c4b1300e35d",
+      "outputHash": "ec3802184bee24656b1dedcce1beb18391fc749960fe8bd047c7ac29133a65c0",
+      "quality": {
+        "traceCount": 244,
+        "viaCount": 570,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 1005
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 112,
+          "requiredPairCount": 248,
+          "coveredNetCount": 112,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 40,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample003",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 14591.147597,
+      "geometryHash": "4727429a78a1a7ab60efe4a737eefba602298941627db8be6d61b18f2efab57b",
+      "outputHash": "3e9e93d1c0b1bc0a3a226e4a1b3b29d9772a8189e9f1577e44c47bb8bb5473af",
+      "quality": {
+        "traceCount": 145,
+        "viaCount": 90,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 275
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 49,
+          "requiredPairCount": 149,
+          "coveredNetCount": 49,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 5,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample003",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 13125.314714,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1799,
+        "tasksCompleted": 1799,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 757,
+        "historyJobsStarted": 1,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 533,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 67,
+        "a13NodeJobsStopped": 29,
+        "a13NodeRoutingIterationsCompleted": 798107
+      },
+      "geometryHash": "0fc435894007ee22bfeb31fe9fe41f01ff4edea3f45645ef4c275c06ee23fd1e",
+      "outputHash": "c8a3ff63408418e2c105ebc5a1f8d10044397e39e09267e2ae1cfb9e7583daf9",
+      "quality": {
+        "traceCount": 145,
+        "viaCount": 101,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 18
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 49,
+          "requiredPairCount": 149,
+          "coveredNetCount": 49,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 5,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample004",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 63923.368972000004,
+      "geometryHash": "6e738fcc6a33c1673c16527bc527a3c676d06902f2f987d4bc1569416388f8c0",
+      "outputHash": "d334c85bd037549a490d7be37a120daed6041870037fc2f4092715be5d1ed37f",
+      "quality": {
+        "traceCount": 114,
+        "viaCount": 140,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 848
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 45,
+          "requiredPairCount": 118,
+          "coveredNetCount": 45,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 15,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample004",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 41309.465596,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1620,
+        "tasksCompleted": 1620,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 1008,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 456,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 67,
+        "a13NodeJobsStopped": 38,
+        "a13NodeRoutingIterationsCompleted": 2388399
+      },
+      "geometryHash": "ad56b3b09b86963b1e10e53a8ca4585e3c4f09888bf07514284418e5d76bef34",
+      "outputHash": "79fd55ff479cf650cf4966725156f792f75e8033d6e5dfdc884107dc161a3eef",
+      "quality": {
+        "traceCount": 114,
+        "viaCount": 136,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 462
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 45,
+          "requiredPairCount": 118,
+          "coveredNetCount": 45,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 15,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample005",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 12570.756408,
+      "geometryHash": "709673d41dd1cc3e6c50efc92d07e315cdeb002110badcfe8e8cba5aa2d183ea",
+      "outputHash": "0a87f4a8f65ea0289cddc5c8458e15b831d69ca06722a6f06a80e8600b3cc69f",
+      "quality": {
+        "traceCount": 172,
+        "viaCount": 146,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 29
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 62,
+          "requiredPairCount": 176,
+          "coveredNetCount": 62,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 18,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample005",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 14073.138246,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 1609,
+        "tasksCompleted": 1609,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 639,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 498,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 74,
+        "a13NodeJobsStopped": 25,
+        "a13NodeRoutingIterationsCompleted": 1551313
+      },
+      "geometryHash": "9f6222e3c8f2ef3043457cf85b337b7b5fde8f6d1d05d560c79c71dc639111bf",
+      "outputHash": "1a83e5abe5c58358ca166dae3333649371734c4833a023b8d1e2fde67f2e46da",
+      "quality": {
+        "traceCount": 172,
+        "viaCount": 166,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 11
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 62,
+          "requiredPairCount": 176,
+          "coveredNetCount": 62,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 18,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample006",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 166635.10219099998,
+      "geometryHash": "3a0150e7fa017933a2df8cd4cfa8aca4e343929fff5ce7af68efbdeac2f4ed5f",
+      "outputHash": "925df1570a7af17cf568af7e23916efb555fb8ca63f32b0d9282d331e1a04a5b",
+      "quality": {
+        "traceCount": 255,
+        "viaCount": 281,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 932
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 66,
+          "requiredPairCount": 255,
+          "coveredNetCount": 66,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 158,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample006",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 151312.18775,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4897,
+        "tasksCompleted": 4897,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 2773,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 1574,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 102,
+        "a13NodeJobsStopped": 46,
+        "a13NodeRoutingIterationsCompleted": 13474858
+      },
+      "geometryHash": "638874bb6c8eebb3db7e7b045e208a661432c7270f2aff389f1af989422168c3",
+      "outputHash": "9ecf96a65cd1a0c571857863cfd83a8e331906de4a15a7db8f59b3eb366956fe",
+      "quality": {
+        "traceCount": 255,
+        "viaCount": 269,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 615
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 66,
+          "requiredPairCount": 255,
+          "coveredNetCount": 66,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 158,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample007",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 18048.044872000002,
+      "geometryHash": "fb391a001b3b5dd757bcef8a3e74899b2925053cd867333d29dffa1891f50c2d",
+      "outputHash": "b0c1460985672c134fad178d96346e6f34ee2da15806d9c6ff6039a83523df73",
+      "quality": {
+        "traceCount": 263,
+        "viaCount": 202,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 123
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 61,
+          "requiredPairCount": 263,
+          "coveredNetCount": 61,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 66,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample007",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 22105.611082,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2219,
+        "tasksCompleted": 2219,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 817,
+        "historyJobsStarted": 3,
+        "historyCancellationSignals": 3,
+        "historyJobsStopped": 3,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 656,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 79,
+        "a13NodeJobsStopped": 12,
+        "a13NodeRoutingIterationsCompleted": 4905401
+      },
+      "geometryHash": "24f0faad947779931090f1302303c970465e83d21c69712fcc2ea420de60b4e4",
+      "outputHash": "dd7ef4a180b1be869aa93ee696df19ec2a44083895d2f990220c6efe3345ccd6",
+      "quality": {
+        "traceCount": 263,
+        "viaCount": 224,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 13
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 61,
+          "requiredPairCount": 263,
+          "coveredNetCount": 61,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 66,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample008",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 75316.46971800001,
+      "geometryHash": "5f0e13af76c77fc24b25ba4f5e12b943b237fd3786881b307ff9b55c1a9ec50e",
+      "outputHash": "f71a3090c6b52f395859f51b9705320ce5ee0d47c7a828a0b534afdf002f823d",
+      "quality": {
+        "traceCount": 361,
+        "viaCount": 287,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 963
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 77,
+          "requiredPairCount": 365,
+          "coveredNetCount": 77,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 33,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample008",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 56390.621027999994,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 3832,
+        "tasksCompleted": 3832,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 1691,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 0,
+        "a13RequestsDenied": 1074,
+        "a13CandidatesStarted": 0,
+        "a13CancellationSignals": 0,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 199,
+        "a13NodeJobsStopped": 75,
+        "a13NodeRoutingIterationsCompleted": 3495644
+      },
+      "geometryHash": "30a528e503326a42f4b8391a77ef5fef77f2eb201df4fde4e54780deb955ecc6",
+      "outputHash": "2d493862d6faf96f295f21b8e276dd6a8520a0cff2713e297cb6bb2febad7382",
+      "quality": {
+        "traceCount": 361,
+        "viaCount": 319,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 860
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 77,
+          "requiredPairCount": 365,
+          "coveredNetCount": 77,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 33,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample009",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 25034.892125,
+      "geometryHash": "77a075149093b9c2f9eb7edd147d6feabd0686a62d323aaa7da0ce368675236e",
+      "outputHash": "666fc9842097f9556b5d7ec00891e3b11b5dce872d126acdd356148941a76939",
+      "quality": {
+        "traceCount": 256,
+        "viaCount": 119,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 269
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 72,
+          "requiredPairCount": 256,
+          "coveredNetCount": 71,
+          "uncoveredNetCount": 1,
+          "missingPortCount": 0,
+          "singletonNetCount": 25,
+          "errorCount": 1
+        }
+      }
+    },
+    {
+      "sampleName": "sample009",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 34031.517065,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2675,
+        "tasksCompleted": 2675,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 1085,
+        "historyJobsStarted": 1,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 2,
+        "a13RequestsDenied": 869,
+        "a13CandidatesStarted": 2,
+        "a13CancellationSignals": 2,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 70,
+        "a13NodeJobsStopped": 20,
+        "a13NodeRoutingIterationsCompleted": 812144
+      },
+      "geometryHash": "ae538b47767dd6ebc98cb20acf75c6e8aef59f117c7f9fc4211ffed679e69032",
+      "outputHash": "d1e64f128ac5830f4410c3cfc6c1c6cadd9fd2827ff19e9d2617b75627a0fe30",
+      "quality": {
+        "traceCount": 256,
+        "viaCount": 127,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 260
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 72,
+          "requiredPairCount": 256,
+          "coveredNetCount": 72,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 25,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample010",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 35239.48654799999,
+      "geometryHash": "52024e2345fbe28894e804f19e453827696fa699dca74d4f4b00ac14df7e842a",
+      "outputHash": "5c8d15f1648dd16f9fded0b2583ef34878d3ff3d43b8856d983c309f9ab4985a",
+      "quality": {
+        "traceCount": 310,
+        "viaCount": 175,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 177
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 59,
+          "requiredPairCount": 314,
+          "coveredNetCount": 59,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 36,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample010",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 26554.723038,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2453,
+        "tasksCompleted": 2453,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 1117,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 0,
+        "a13RequestsDenied": 773,
+        "a13CandidatesStarted": 0,
+        "a13CancellationSignals": 0,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 81,
+        "a13NodeJobsStopped": 34,
+        "a13NodeRoutingIterationsCompleted": 953404
+      },
+      "geometryHash": "85a3b2ae8b9fe4f3f3b0716ac32450baddbb70439f234964aaa762f0d7e66a38",
+      "outputHash": "6374293969e953aff13c243ed21ce0b1ce4e7c38de2143acb45bf8d13e400e32",
+      "quality": {
+        "traceCount": 310,
+        "viaCount": 174,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 23
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 59,
+          "requiredPairCount": 314,
+          "coveredNetCount": 59,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 36,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample011",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 29050.493677000002,
+      "geometryHash": "10c138d3d295b089fe46d1c74aaef5aec521701ee487ce810a0e9c99e0d1521b",
+      "outputHash": "2c94370abf847395ffd8e541d3dea1566847e1c6bc996e0824d9f360dab6e544",
+      "quality": {
+        "traceCount": 289,
+        "viaCount": 190,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 519
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 74,
+          "requiredPairCount": 291,
+          "coveredNetCount": 73,
+          "uncoveredNetCount": 1,
+          "missingPortCount": 0,
+          "singletonNetCount": 65,
+          "errorCount": 1
+        }
+      }
+    },
+    {
+      "sampleName": "sample011",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 46319.63749,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2429,
+        "tasksCompleted": 2429,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 1316,
+        "historyJobsStarted": 0,
+        "historyCancellationSignals": 0,
+        "historyJobsStopped": 0,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 737,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 86,
+        "a13NodeJobsStopped": 39,
+        "a13NodeRoutingIterationsCompleted": 1611278
+      },
+      "geometryHash": "21735cd8aa7b57bc246e9c2d383dacd32f11be98fed241d567f23abf6abb139c",
+      "outputHash": "4df56ae0b6e13772b5bc2c421c3ccbbf3f4e9a03802c801b1c7ea95383f36c56",
+      "quality": {
+        "traceCount": 291,
+        "viaCount": 207,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 108
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 74,
+          "requiredPairCount": 291,
+          "coveredNetCount": 74,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 65,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample012",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 105765.471842,
+      "geometryHash": "a09f616ee6687fe2221cb3ffe5b4b5ef695211091099eb40953cabfcdb90f762",
+      "outputHash": "fe7973d4c3b7b48f49ffcc9c3bc62f430254892c9c4cc019a5d6e2aeaf700f50",
+      "quality": {
+        "traceCount": 504,
+        "viaCount": 302,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 897
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 97,
+          "requiredPairCount": 508,
+          "coveredNetCount": 97,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 101,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample012",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 146813.893198,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4553,
+        "tasksCompleted": 4553,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 4533,
+        "historyJobsStarted": 1,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 2,
+        "a13RequestsDenied": 4198,
+        "a13CandidatesStarted": 2,
+        "a13CancellationSignals": 2,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 125,
+        "a13NodeJobsStopped": 77,
+        "a13NodeRoutingIterationsCompleted": 3710115
+      },
+      "geometryHash": "7a63a49b545ab4d92f0377c4da00c9d0648b6d220b6cc645639b9b0d253c17bb",
+      "outputHash": "ef9b8fcd8752aeff02bf7c4fce30bbe32ac16e6d0438ee3ebc92991434c7beb9",
+      "quality": {
+        "traceCount": 504,
+        "viaCount": 319,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 135
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 97,
+          "requiredPairCount": 508,
+          "coveredNetCount": 97,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 101,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample013",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 101543.70036199999,
+      "geometryHash": "6729ecea53d1bcc24a999a894fd03720f5aaa26bae4552ba78f5c2aebd24c619",
+      "outputHash": "863383c27b8a788e7d045e8e456940672ce33734140f88973e139d00672a6beb",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 207,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 592
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 52,
+          "requiredPairCount": 238,
+          "coveredNetCount": 52,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 72,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample013",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "failed",
+      "elapsedTimeMs": 39553.684543999996,
+      "error": "Error: Physical simplification found a noncolocated layer change for source_trace_59__source_net_59\n    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1511861)\n    at map (native:1:11)\n    at <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1511435)\n    at map (native:1:11)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:1179742)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1513939)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:1097609)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1472580)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:541849)\n    at solveAsync (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1638976)\n    at async <anonymous> (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/scripts/parallel-benchmark/parallelBenchmarkChild.ts:99:22)",
+      "phaseName": "traceSimplificationSolver",
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2821,
+        "tasksCompleted": 2821,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 1408,
+        "historyJobsStarted": 2,
+        "historyCancellationSignals": 2,
+        "historyJobsStopped": 2,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 0,
+        "a13RequestsDenied": 823,
+        "a13CandidatesStarted": 0,
+        "a13CancellationSignals": 0,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 98,
+        "a13NodeJobsStopped": 61,
+        "a13NodeRoutingIterationsCompleted": 1940286
+      }
+    },
+    {
+      "sampleName": "sample014",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 226822.924255,
+      "geometryHash": "92f76855381b48e7f49db5858dbc71f6648ec97fa1786a9ca3f2a6e558d370cb",
+      "outputHash": "e7d8bf80947a8f4edba7a0ef0e9f754021f4b1a52834d7c237cd63431ee38b09",
+      "quality": {
+        "traceCount": 238,
+        "viaCount": 294,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 709
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 56,
+          "requiredPairCount": 238,
+          "coveredNetCount": 56,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 68,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample014",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "failed",
+      "elapsedTimeMs": 108567.821291,
+      "error": "Error: SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal \"pcb_port_332\" for \"source_trace_8__source_net_8_mst17\"\n    at new eg (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:786395)\n    at _step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:802946)\n    at step (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:541849)\n    at solve (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/chunk-FU3YU2QS.js:1:542427)\n    at solveAsync (/home/runner/_work/tscircuit-autorouter/tscircuit-autorouter/prototype/dist/index.js:1:1638942)\n    at unknown\n    at processTicksAndRejections (native:7:39)",
+      "phaseName": "highDensityStitchSolver",
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 3824,
+        "tasksCompleted": 3824,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 2,
+        "historyRequestsDenied": 2653,
+        "historyJobsStarted": 3,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 6,
+        "a13RequestsGranted": 1,
+        "a13RequestsDenied": 1075,
+        "a13CandidatesStarted": 1,
+        "a13CancellationSignals": 1,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 173,
+        "a13NodeJobsStopped": 73,
+        "a13NodeRoutingIterationsCompleted": 5369704
+      }
+    },
+    {
+      "sampleName": "sample015",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 218405.276734,
+      "geometryHash": "d762a355253f284f9ba39abe1c0860762bcdbea0cebddbff6ad837d967044634",
+      "outputHash": "c43a2e94fc94f5ab4f5c23556e35d711207f3c7d8f01bcd4238c1fac6d669719",
+      "quality": {
+        "traceCount": 461,
+        "viaCount": 357,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 1213
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 103,
+          "requiredPairCount": 465,
+          "coveredNetCount": 103,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 20,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample015",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "failed",
+      "elapsedTimeMs": 91926.94359,
+      "error": "Route stitch for \"source_trace_50__source_net_50_mst0\" has unreachable route fragments",
+      "phaseName": "highDensityStitchSolver",
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 4604,
+        "tasksCompleted": 4604,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 0,
+        "historyRequestsDenied": 2184,
+        "historyJobsStarted": 0,
+        "historyCancellationSignals": 0,
+        "historyJobsStopped": 0,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 0,
+        "a13RequestsDenied": 1344,
+        "a13CandidatesStarted": 0,
+        "a13CancellationSignals": 0,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 220,
+        "a13NodeJobsStopped": 107,
+        "a13NodeRoutingIterationsCompleted": 3365269
+      }
+    },
+    {
+      "sampleName": "sample016",
+      "repeat": 1,
+      "variant": "baseline",
+      "status": "solved",
+      "elapsedTimeMs": 47512.807062,
+      "geometryHash": "bc315e2987fe5f4df68a29c7b213c72337efe93978cf187d445aaa7d0e92315f",
+      "outputHash": "e9353be1ec262703436741929e56ec2fb3a69b051c73efb9088edd2e4ede7390",
+      "quality": {
+        "traceCount": 269,
+        "viaCount": 109,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 389
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 59,
+          "requiredPairCount": 273,
+          "coveredNetCount": 59,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 11,
+          "errorCount": 0
+        }
+      }
+    },
+    {
+      "sampleName": "sample016",
+      "repeat": 1,
+      "variant": "parallel",
+      "status": "solved",
+      "elapsedTimeMs": 33673.593776,
+      "workerPoolStats": {
+        "workerCount": 4,
+        "tasksStarted": 2347,
+        "tasksCompleted": 2347,
+        "maxActiveWorkers": 4,
+        "historyRequestsGranted": 1,
+        "historyRequestsDenied": 1174,
+        "historyJobsStarted": 1,
+        "historyCancellationSignals": 1,
+        "historyJobsStopped": 1,
+        "historyStepsCompleted": 0,
+        "a13RequestsGranted": 2,
+        "a13RequestsDenied": 746,
+        "a13CandidatesStarted": 2,
+        "a13CancellationSignals": 2,
+        "a13CandidatesStopped": 0,
+        "a13RoutingIterationsCompleted": 0,
+        "a13NodeJobsCompleted": 63,
+        "a13NodeJobsStopped": 30,
+        "a13NodeRoutingIterationsCompleted": 1980919
+      },
+      "geometryHash": "4511140e0a00bca217ab99ca24d2d70e7046748688179876746d868fd81cc591",
+      "outputHash": "a63b6ab3b9681d4380065a60e1503ab7d8145f12538f9e946847e8dc95657245",
+      "quality": {
+        "traceCount": 269,
+        "viaCount": 110,
+        "drcErrorCount": 0,
+        "traceLintIssueCounts": {
+          "odd_angle": 295
+        },
+        "connectionCoverage": {
+          "requiredNetCount": 59,
+          "requiredPairCount": 273,
+          "coveredNetCount": 59,
+          "uncoveredNetCount": 0,
+          "missingPortCount": 0,
+          "singletonNetCount": 11,
+          "errorCount": 0
+        }
+      }
+    }
+  ]
+}

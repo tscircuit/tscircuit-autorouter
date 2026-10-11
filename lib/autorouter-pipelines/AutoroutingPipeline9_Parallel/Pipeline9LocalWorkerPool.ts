@@ -5,6 +5,7 @@ import type {
 } from "./parallelWorkerTypes"
 import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
 import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant, FirstValidA13CandidateRequest, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
+import { assertParallelNodeBatchResult } from "./parallelNodeJobBatching"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -136,6 +137,13 @@ export class Pipeline9LocalWorkerPool {
           if (task.job.kind === "highDensityA13Node") this.validateA13NodeResult(response.result)
           else this.validateCompetitiveGenericResult(response.result)
         } catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (response.ok && (task.job.kind === "forceImproveNodeBatch" || task.job.kind === "repairNodeBatch")) {
+        try { assertParallelNodeBatchResult(task.job, response.result) }
+        catch (error: unknown) {
           this.fail(error instanceof Error ? error : new Error(String(error)))
           return
         }

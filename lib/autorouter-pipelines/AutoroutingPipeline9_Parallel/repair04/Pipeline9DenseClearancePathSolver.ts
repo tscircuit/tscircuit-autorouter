@@ -58,9 +58,14 @@ type ClearancePathPhase =
   | "search"
   | "finished"
 
+export type Pipeline9DenseClearancePathInput = ClearancePathInput & {
+  /** Only the internal synchronous edge-cost kernel may reuse callback points. */
+  synchronousEdgeCosts?: boolean
+}
+
 /** Persistent clearance-aware A* state, advancing at most 128 heap pops per step. */
 export class Pipeline9DenseClearancePathSolver extends BaseSolver {
-  readonly input: ClearancePathInput
+  readonly input: Pipeline9DenseClearancePathInput
   override stats: ClearancePathSearchStats
   private phase: ClearancePathPhase = "initialize"
   private cursor = 0
@@ -77,7 +82,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
   private seedSearch?: () => void
   private searchBatch?: () => void
 
-  constructor(input: ClearancePathInput) {
+  constructor(input: Pipeline9DenseClearancePathInput) {
     super()
     this.input = input
     this.stats = input.stats ?? { nodesPopped: 0, completionReason: "no-path" }
@@ -643,6 +648,13 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
         z: Math.floor(id / (nx * ny)),
         traceThickness,
       })
+      const pointInto = (id: number, output: Point): Point => {
+        output.x = bounds.minX + ((id % nx) + 0.5) * grid
+        output.y = bounds.minY + ((Math.floor(id / nx) % ny) + 0.5) * grid
+        output.z = Math.floor(id / (nx * ny))
+        output.traceThickness = traceThickness
+        return output
+      }
       const idAt = (x: number, y: number, z: number): number =>
         (z * ny + y) * nx + x
       const idOf = (p: Point): number =>
@@ -654,7 +666,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
       const heuristic = (p: Point): number =>
         Math.hypot(p.x - end.x, p.y - end.y) + (p.z === end.z ? 0 : 1)
       const denseNodeCount = nx * ny * srj.layerCount
-      // Bound dense queue storage to 4 MB; unusually large grids remain sparse.
+      // Bound dense state storage; unusually large grids remain sparse.
       const useDenseStorage =
         nx > 0 &&
         ny > 0 &&
@@ -684,6 +696,15 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
       const heap = new ClearancePathHeap(
         useDenseStorage ? denseNodeCount : undefined,
       )
+      // Public callbacks keep their original independent point objects. The
+      // negotiation kernel reads coordinates synchronously and retains no points.
+      const usePointScratch = useDenseStorage &&
+        (!input.getAdditionalEdgeCost || input.synchronousEdgeCosts === true)
+      const currentPoint: Point = { x: 0, y: 0, z: 0, traceThickness }
+      const neighborPoint: Point = { x: 0, y: 0, z: 0, traceThickness }
+      const currentNode = { id: 0, cost: 0, priority: 0 }
+      const denseNeighborIds = useDenseStorage
+        ? new Int32Array(8 + srj.layerCount - 1) : undefined
       // The queue's bounded integer grid also admits exact numeric state arrays.
       // Costs are finite when queued, so Infinity retains the meaning of an
       // undiscovered state without storing a Map entry for each visited node.
@@ -705,7 +726,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
             y = sy + dy
           if (x < 0 || x >= nx || y < 0 || y >= ny) continue
           const id = idAt(x, y, start.z),
-            p = point(id)
+            p = usePointScratch ? pointInto(id, neighborPoint) : point(id)
           if (!clear(start, p)) continue
           const cost =
             Math.hypot(p.x - start.x, p.y - start.y) + extraCost(start, p)
@@ -714,11 +735,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
           else costs.set(id, cost)
           if (densePrevious) densePrevious[id] = -1
           else previous.set(id, -1)
-          heap.push({
-            id,
-            cost,
-            priority: cost + heuristicWeight * cachedHeuristic(id, p),
-          })
+          heap.pushValues(id, cost, cost + heuristicWeight * cachedHeuristic(id, p))
         }
       const gridNodeCount = nx * ny * srj.layerCount
       // Only pack edges when every grid-node pair has an exact integer key.
@@ -761,7 +778,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
       this.searchBatch = (): void => {
         const stopAt = Math.min(expanded + 128, input.maxNodes ?? 30000)
         while (heap.length && expanded < stopAt) {
-          const current = heap.pop()
+          const current = heap.popInto(currentNode)
           expanded++
           if (this.stats) this.stats.nodesPopped = expanded
           if (
@@ -771,7 +788,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
             continue
           if (denseSettled) denseSettled[current.id] = 1
           else settled?.add(current.id)
-          const a = point(current.id)
+          const a = usePointScratch ? pointInto(current.id, currentPoint) : point(current.id)
           const viaPath = viaPaths.get(current.id)
           if (
             a.z === end.z &&
@@ -838,7 +855,8 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
           }
           const x = current.id % nx,
             y = Math.floor(current.id / nx) % ny
-          const neighbors: number[] = []
+          const neighbors = denseNeighborIds ?? []
+          let neighborCount = 0
           for (let dx = -1; dx <= 1; dx++)
             for (let dy = -1; dy <= 1; dy++) {
               if (
@@ -849,16 +867,17 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
                 y + dy >= ny
               )
                 continue
-              neighbors.push(idAt(x + dx, y + dy, a.z))
+              neighbors[neighborCount++] = idAt(x + dx, y + dy, a.z)
             }
           if (input.allowLayerChanges !== false && clearsDrills(a, viaPath)) {
             for (let z = 0; z < srj.layerCount; z++)
-              if (z !== a.z) neighbors.push(idAt(x, y, z))
+              if (z !== a.z) neighbors[neighborCount++] = idAt(x, y, z)
           }
-          for (const id of neighbors) {
+          for (let neighborIndex = 0; neighborIndex < neighborCount; neighborIndex++) {
+            const id = neighbors[neighborIndex]!
             if (denseSettled ? denseSettled[id] === 1 : settled?.has(id))
               continue
-            const b = point(id),
+            const b = usePointScratch ? pointInto(id, neighborPoint) : point(id),
               baseCost =
                 current.cost +
                 (a.z === b.z ? Math.hypot(a.x - b.x, a.y - b.y) : 1),
@@ -927,11 +946,7 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
             else costs.set(id, cost)
             if (densePrevious) densePrevious[id] = current.id
             else previous.set(id, current.id)
-            heap.push({
-              id,
-              cost,
-              priority: cost + heuristicWeight * cachedHeuristic(id, b),
-            })
+            heap.pushValues(id, cost, cost + heuristicWeight * cachedHeuristic(id, b))
           }
         }
         if (heap.length && expanded < (input.maxNodes ?? 30000)) return

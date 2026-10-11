@@ -17,6 +17,7 @@ type Options = {
   parallelPathSimplification: boolean
   pathingStrategy: BenchmarkPathingStrategy
   highDensityPolicy: BenchmarkHighDensityPolicy
+  physicalRouting: boolean
   targetSpeedup: number
   variants: BenchmarkVariant[]
   sampleNumbers: number[]
@@ -32,6 +33,7 @@ const parseOptions = (): Options => {
     parallelPathSimplification: true,
     pathingStrategy: "indexed",
     highDensityPolicy: "ordered",
+    physicalRouting: false,
     targetSpeedup: 2,
     variants: ["baseline", "parallel"],
     sampleNumbers: Array.from({ length: 16 }, (_, index) => index + 1),
@@ -52,6 +54,9 @@ const parseOptions = (): Options => {
     } else if (key === "--parallel-path-simplification") {
       if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
       options.parallelPathSimplification = value === "1"
+    } else if (key === "--physical-routing") {
+      if (value !== "0" && value !== "1") throw new Error("--physical-routing must be 0 or 1")
+      options.physicalRouting = value === "1"
     } else if (key === "--pathing-strategy") {
       if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost" && value !== "landmark" && value !== "negotiated" && value !== "goal-balls") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, cached-cost, landmark, negotiated, or goal-balls")
       options.pathingStrategy = value
@@ -87,7 +92,7 @@ const runSample = async (
   const scriptPath = path.join(import.meta.dir, "parallelBenchmarkChild.ts")
   console.log(`[start] ${sampleName} repeat=${repeat} ${variant}`)
   return await new Promise<ParallelBenchmarkResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy, options.highDensityPolicy], { stdio: ["ignore", "pipe", "pipe"] })
+    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy, options.highDensityPolicy, options.physicalRouting ? "1" : "0"], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
     const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []
@@ -165,6 +170,9 @@ const main = async (): Promise<void> => {
   const datasetRoot = path.dirname(require.resolve("dataset-srj18"))
   const datasetHashes = Object.fromEntries(await Promise.all(expectedSamples.map(async (sampleName) => [sampleName, createHash("sha256").update(new Uint8Array(await readFile(path.join(datasetRoot, "samples", `${sampleName}.json`)))).digest("hex")])))
   const metadata = {
+    harnessVersion: 3,
+    coveragePolicyVersion: 2,
+    drcIncludesBoardClearance: true,
     options,
     dataset: "srj18",
     datasetDependency: JSON.parse(await readFile("package.json", "utf8")).devDependencies["dataset-srj18"],
@@ -189,21 +197,23 @@ const main = async (): Promise<void> => {
       const order = (repeat + sampleNumber) % 2 === 0 ? options.variants : [...options.variants].reverse()
       for (const variant of order) {
         results.push(await runSample(sampleNumber, repeat, variant, options))
-        const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy })
+        const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy, physicalRouting: options.physicalRouting })
         await writeFile(path.join(options.outDir, "checkpoint.json"), JSON.stringify({ metadata, results, summary }, null, 2))
       }
     }
   }
-  const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy })
+  const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy, physicalRouting: options.physicalRouting })
   await writeFile(path.join(options.outDir, "report.json"), JSON.stringify({ metadata, results, summary }, null, 2))
   const text = [
     `SRJ18 paired benchmark: ${results.length} runs`,
     `Arithmetic mean speedup: ${summary.arithmeticMeanSpeedup.toFixed(3)}x`,
     `Aggregate speedup: ${summary.aggregateSpeedup.toFixed(3)}x`,
     `Geometric mean speedup: ${summary.geometricMeanSpeedup.toFixed(3)}x`,
-    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}`,
+    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; physical routing: ${summary.physicalRouting}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}`,
+    `Coverage acceptance mode: ${summary.coverageAcceptanceMode}; coverage policy version: ${metadata.coveragePolicyVersion}`,
     `Full coverage: ${summary.fullCoverage}; all solved: ${summary.allCompleted}; exact geometry: ${summary.exactGeometry}; quality preserved: ${summary.qualityPreserved}`,
     `Target reached: ${summary.targetReached}`,
+    `Harness version: ${metadata.harnessVersion}; DRC includes original physical board: ${metadata.drcIncludesBoardClearance}`,
     "",
     "| Sample | Baseline median (s) | Parallel median (s) | Speedup | Solved base/parallel | Geometry | Quality |",
     "| --- | ---: | ---: | ---: | --- | --- | --- |",

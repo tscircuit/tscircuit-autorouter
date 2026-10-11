@@ -303,8 +303,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = this.snapEndpointToTerminal(start, [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
-        end = this.snapEndpointToTerminal(end, [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
+        // The island endpoints have already been assigned to opposite terminals.
+        // Independently choosing either pad can turn a short near-pad stub into
+        // a route whose two ends both claim the same physical PCB terminal.
+        start = this.snapEndpointToTerminal(start, this.preserveTerminalLayers ? [globalStart] : [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
+        end = this.snapEndpointToTerminal(end, this.preserveTerminalLayers ? [globalEnd] : [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -322,7 +325,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
       }
 
-      const selectedHdRoutes = selectRoutesAlongEndpointPath({
+      const selectedHdRoutes = this.preserveTerminalLayers ? hdRoutes : selectRoutesAlongEndpointPath({
         connectionName: hdRoutes[0].connectionName,
         hdRoutes,
         start,
@@ -401,7 +404,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             })
           : null
 
-      if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
+      if (!this.preserveTerminalLayers && !hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
         return unsolvedRoutes
       }
 
@@ -410,7 +413,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           connectionName,
           hdRoutes:
             sharedRootPathRoutes ??
-            selectRoutesAlongEndpointPath({
+            (this.preserveTerminalLayers ? hdRoutes : selectRoutesAlongEndpointPath({
               connectionName,
               hdRoutes,
               start,
@@ -418,7 +421,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               endpointIndex: this.endpointIndex,
               canStitchBetweenTerminals: (selection) =>
                 this.canStitchBetweenTerminals(selection),
-            }),
+            })),
           start,
           end,
         },

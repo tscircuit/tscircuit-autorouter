@@ -1,13 +1,43 @@
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { HighDensityForceImproveSolver } from "./force-improvement-fork/HighDensityForceImproveSolver"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
+import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
 import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
 import { getPipeline9RegionalB01CandidateOutput, preparePipeline9RegionalB01Candidate } from "../AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
-import type { ParallelRegionalB01CandidateResult, ParallelRegionalFallbackResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import type { ParallelForceImproveNodeJob, ParallelForceImproveNodeResult, ParallelIndexedNodeResult, ParallelRepairNodeJob, ParallelRepairNodeResult, ParallelRegionalB01CandidateResult, ParallelRegionalFallbackResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import { assertParallelNodeBatchJob } from "./parallelNodeJobBatching"
 import { computeTinyLandmarkDistances } from "./TinyLandmarkHeuristic"
 import { executeNegotiatedPathingRouteJob } from "./TinyNegotiatedRouteSearch"
 import { executeParallelGoalBallJob } from "./parallelGoalBallWorkerJobs"
+
+function executeForceImproveNode(job: ParallelForceImproveNodeJob): ParallelForceImproveNodeResult {
+  const solver = new HighDensityForceImproveSolver({
+    nodeWithPortPoints: [job.nodeWithPortPoints],
+    hdRoutes: job.hdRoutes,
+    totalStepsPerNode: job.totalStepsPerNode,
+    nodeAssignmentMargin: job.nodeAssignmentMargin,
+    captureDiagnostics: false,
+  })
+  solver.solve()
+  if (solver.failed || !solver.solved) {
+    throw new Error(`Parallel force improvement failed: ${solver.error}`)
+  }
+  return { kind: job.kind, routes: solver.getOutput() }
+}
+
+function executeRepairNode(job: ParallelRepairNodeJob): ParallelRepairNodeResult {
+  const solver = new HighDensityRepairSolver({
+    repairBoundaryDiagonals: false,
+    sample: job.sample,
+    margin: job.margin,
+  })
+  solver.solve()
+  if (solver.failed || !solver.solved) {
+    throw new Error(`Parallel high density repair failed: ${solver.error}`)
+  }
+  return { kind: job.kind, repairedRoutes: solver.getOutput().repairedRoutes, stats: solver.stats }
+}
 
 function executeRegionalFallback(
   job: Extract<ParallelStageWorkerJob, { kind: "regionalFallbackSolve" }>,
@@ -67,40 +97,32 @@ export function executeParallelStageJob(
       return executeRegionalFallback(job)
     case "regionalB01Candidate":
       return executeRegionalB01Candidate(job)
-    case "forceImproveNode": {
-      const solver = new HighDensityForceImproveSolver({
-        nodeWithPortPoints: [job.nodeWithPortPoints],
-        hdRoutes: job.hdRoutes,
-        totalStepsPerNode: job.totalStepsPerNode,
-        nodeAssignmentMargin: job.nodeAssignmentMargin,
-      })
-      solver.solve()
-      if (solver.failed || !solver.solved) {
-        throw new Error(`Parallel force improvement failed: ${solver.error}`)
+    case "forceImproveNode":
+      return executeForceImproveNode(job)
+    case "repairNode":
+      return executeRepairNode(job)
+    case "forceImproveNodeBatch": {
+      assertParallelNodeBatchJob(job)
+      const results: ParallelIndexedNodeResult<ParallelForceImproveNodeResult>[] = []
+      for (const entry of job.jobs) {
+        results.push({ entryIndex: entry.entryIndex, result: executeForceImproveNode(entry.job) })
       }
-      return { kind: job.kind, routes: solver.getOutput() }
+      return { kind: job.kind, results }
     }
-    case "repairNode": {
-      const solver = new HighDensityRepairSolver({
-        repairBoundaryDiagonals: false,
-        sample: job.sample,
-        margin: job.margin,
-      })
-      solver.solve()
-      if (solver.failed || !solver.solved) {
-        throw new Error(`Parallel high density repair failed: ${solver.error}`)
+    case "repairNodeBatch": {
+      assertParallelNodeBatchJob(job)
+      const results: ParallelIndexedNodeResult<ParallelRepairNodeResult>[] = []
+      for (const entry of job.jobs) {
+        results.push({ entryIndex: entry.entryIndex, result: executeRepairNode(entry.job) })
       }
-      return {
-        kind: job.kind,
-        repairedRoutes: solver.getOutput().repairedRoutes,
-        stats: solver.stats,
-      }
+      return { kind: job.kind, results }
     }
     case "simplifyPathComponent": {
       const solver = new MultiSimplifiedPathSolver({
         ...job.params,
         connMap: restoreWorkerConnectivityMap(job),
       })
+      if (job.params.preserveLeadingLayerTransitions) preserveLeadingPathLayerTransitions(solver)
       solver.solve()
       if (solver.failed || !solver.solved) {
         throw new Error(`Parallel path simplification failed: ${solver.error}`)

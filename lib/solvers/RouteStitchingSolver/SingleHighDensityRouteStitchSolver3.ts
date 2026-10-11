@@ -5,6 +5,7 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
+import { findPhysicalStitchPath } from "./findPhysicalStitchPath"
 import {
   comparePoints,
   compareRoutes,
@@ -184,6 +185,49 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           )
         }
       }
+    }
+
+    if (this.preserveTerminalLayers) {
+      this.start = opts.start
+      this.end = opts.end
+      let blockedLayerTransition = false
+      let blockedClearance = false
+      const path = findPhysicalStitchPath({
+        connectionName: opts.connectionName,
+        hdRoutes: canonicalHdRoutes,
+        start: opts.start,
+        end: opts.end,
+        traceThickness: canonicalHdRoutes[0]!.traceThickness,
+        allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
+        isStitchSegmentClear: this.isStitchSegmentClear,
+        stitchClearanceMode: this.stitchClearanceMode,
+        onBlockedConnector: (reason): void => {
+          if (reason === "layer-transition") blockedLayerTransition = true
+          if (reason === "clearance") blockedClearance = true
+        },
+      })
+      if (!path) {
+        this.failed = true
+        const reason = blockedLayerTransition ? "Layer transition is not allowed" :
+          blockedClearance ? "copper clearance blocks the stitch" : "unreachable route fragments"
+        this.error = `Route stitch for "${opts.connectionName}" cannot reach its declared endpoint: ${reason}`
+        return
+      }
+      const firstFragment = canonicalHdRoutes[path.routeIndexes[0]!]!
+      this.mergedHdRoute = {
+        connectionName: opts.connectionName,
+        ...(opts.preserveTerminalPcbPortIds && opts.start.pcb_port_id ? { startPcbPortId: opts.start.pcb_port_id } : {}),
+        ...(opts.preserveTerminalPcbPortIds && opts.end.pcb_port_id ? { endPcbPortId: opts.end.pcb_port_id } : {}),
+        rootConnectionName: firstFragment.rootConnectionName,
+        traceThickness: firstFragment.traceThickness,
+        viaDiameter: firstFragment.viaDiameter,
+        route: path.route,
+        vias: path.vias,
+        jumpers: path.jumpers,
+      }
+      this.remainingHdRoutes = []
+      this.solved = true
+      return
     }
 
     let bestDist = Infinity

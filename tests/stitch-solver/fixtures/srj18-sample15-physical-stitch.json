@@ -1,0 +1,1080 @@
+{
+  "connections": [
+    {
+      "name": "source_trace_50__source_net_50_mst0",
+      "pointsToConnect": [
+        {
+          "x": -23.269,
+          "y": -6.574,
+          "layer": "top",
+          "pointId": "pcb_port_87",
+          "pcb_port_id": "pcb_port_87"
+        },
+        {
+          "x": -23.044,
+          "y": -6.32,
+          "layer": "bottom",
+          "pointId": "pcb_port_281",
+          "pcb_port_id": "pcb_port_281"
+        }
+      ],
+      "isOffBoard": false,
+      "__rootConnectionNames": [
+        "source_trace_50",
+        "source_net_50"
+      ],
+      "nominalTraceWidth": 0.1
+    }
+  ],
+  "hdRoutes": [
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1642",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19,
+          "y": -6.502,
+          "z": 0
+        },
+        {
+          "x": -19,
+          "y": -6.5,
+          "z": 0
+        },
+        {
+          "x": -18.888,
+          "y": -6.288,
+          "z": 0
+        },
+        {
+          "x": -18.842,
+          "y": -6.093,
+          "z": 0
+        },
+        {
+          "x": -18.818,
+          "y": -5.897,
+          "z": 0
+        },
+        {
+          "x": -18.8,
+          "y": -5.7,
+          "z": 0
+        },
+        {
+          "x": -19,
+          "y": -5.512,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1618__sub_1_0",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19,
+          "y": -5.512,
+          "z": 0
+        },
+        {
+          "x": -19.119,
+          "y": -5.512,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1617",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.119,
+          "y": -6.502,
+          "z": 0
+        },
+        {
+          "x": -19,
+          "y": -6.502,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1427",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.283,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -19.278,
+          "y": -6.206,
+          "z": 0
+        },
+        {
+          "x": -19.243,
+          "y": -6.27,
+          "z": 0
+        },
+        {
+          "x": -19.218,
+          "y": -6.321,
+          "z": 0
+        },
+        {
+          "x": -19.202,
+          "y": -6.374,
+          "z": 0
+        },
+        {
+          "x": -19.172,
+          "y": -6.432,
+          "z": 0
+        },
+        {
+          "x": -19.119,
+          "y": -6.502,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1427",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.969,
+          "y": -6.786,
+          "z": 0
+        },
+        {
+          "x": -19.916,
+          "y": -6.829,
+          "z": 0
+        },
+        {
+          "x": -19.968999,
+          "y": -6.805,
+          "z": 0
+        },
+        {
+          "x": -19.966748024224017,
+          "y": -6.812464521159326,
+          "z": 0
+        },
+        {
+          "x": -19.275130990335253,
+          "y": -6.48620203557075,
+          "z": 0
+        },
+        {
+          "x": -19.298,
+          "y": -6.449,
+          "z": 0
+        },
+        {
+          "x": -19.295,
+          "y": -6.448,
+          "z": 0
+        },
+        {
+          "x": -19.299,
+          "y": -6.447,
+          "z": 0
+        },
+        {
+          "x": -19.307,
+          "y": -6.443,
+          "z": 0
+        },
+        {
+          "x": -19.304,
+          "y": -6.448,
+          "z": 0
+        },
+        {
+          "x": -19.298,
+          "y": -6.447,
+          "z": 0
+        },
+        {
+          "x": -19.263,
+          "y": -6.446,
+          "z": 0
+        },
+        {
+          "x": -19.268,
+          "y": -6.447,
+          "z": 0
+        },
+        {
+          "x": -19.279,
+          "y": -6.442,
+          "z": 0
+        },
+        {
+          "x": -19.276,
+          "y": -6.395,
+          "z": 0
+        },
+        {
+          "x": -19.273,
+          "y": -6.325,
+          "z": 0
+        },
+        {
+          "x": -19.28,
+          "y": -6.271,
+          "z": 0
+        },
+        {
+          "x": -19.289,
+          "y": -6.225,
+          "z": 0
+        },
+        {
+          "x": -19.305,
+          "y": -6.206,
+          "z": 0
+        },
+        {
+          "x": -19.544,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -19.612,
+          "y": -6.149,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1324",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -20.05,
+          "y": -6.999,
+          "z": 0
+        },
+        {
+          "x": -20.05,
+          "y": -6.999,
+          "z": 0
+        },
+        {
+          "x": -20.038,
+          "y": -6.922,
+          "z": 0
+        },
+        {
+          "x": -20.03,
+          "y": -6.887,
+          "z": 0
+        },
+        {
+          "x": -20,
+          "y": -6.85,
+          "z": 0
+        },
+        {
+          "x": -19.969,
+          "y": -6.786,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1320",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -20.13,
+          "y": -7.078,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1244",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -20.295,
+          "y": -7.078,
+          "z": 0
+        },
+        {
+          "x": -20.13,
+          "y": -7.078,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1140",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -20.52,
+          "y": -7.242,
+          "z": 0
+        },
+        {
+          "x": -20.343,
+          "y": -7.31,
+          "z": 0
+        },
+        {
+          "x": -20.343,
+          "y": -7.31,
+          "z": 0
+        },
+        {
+          "x": -20.343,
+          "y": -7.31,
+          "z": 0
+        },
+        {
+          "x": -20.343,
+          "y": -7.31,
+          "z": 0
+        },
+        {
+          "x": -20.307,
+          "y": -7.011,
+          "z": 0
+        },
+        {
+          "x": -20.295,
+          "y": -7.078,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "cmn_8",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.395,
+          "y": -5.3,
+          "z": 0
+        },
+        {
+          "x": -19.395,
+          "y": -5.15,
+          "z": 0
+        },
+        {
+          "x": -19.539,
+          "y": -5.149,
+          "z": 0
+        },
+        {
+          "x": -19.818,
+          "y": -5.149,
+          "z": 0
+        },
+        {
+          "x": -19.947,
+          "y": -5.15,
+          "z": 0
+        },
+        {
+          "x": -19.947,
+          "y": -5.3,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "cmn_183",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.119,
+          "y": -5.512,
+          "z": 0
+        },
+        {
+          "x": -19.229,
+          "y": -5.3,
+          "z": 0
+        },
+        {
+          "x": -19.395,
+          "y": -5.3,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "cmn_183",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.947,
+          "y": -5.3,
+          "z": 0
+        },
+        {
+          "x": -19.781,
+          "y": -5.3,
+          "z": 0
+        },
+        {
+          "x": -19.707,
+          "y": -5.377,
+          "z": 0
+        },
+        {
+          "x": -19.654,
+          "y": -5.456,
+          "z": 0
+        },
+        {
+          "x": -19.647,
+          "y": -5.552,
+          "z": 0
+        },
+        {
+          "x": -19.652,
+          "y": -5.678,
+          "z": 0
+        },
+        {
+          "x": -19.676,
+          "y": -5.833,
+          "z": 0
+        },
+        {
+          "x": -19.759,
+          "y": -5.967,
+          "z": 0
+        },
+        {
+          "x": -19.849,
+          "y": -6.025,
+          "z": 0
+        },
+        {
+          "x": -19.8177,
+          "y": -6.025,
+          "z": 0
+        },
+        {
+          "x": -20.023983458166082,
+          "y": -6.025,
+          "z": 0
+        },
+        {
+          "x": -20.318534019918236,
+          "y": -5.945,
+          "z": 0
+        },
+        {
+          "x": -20.43925056175215,
+          "y": -5.933,
+          "z": 0
+        },
+        {
+          "x": -20.546,
+          "y": -5.871,
+          "z": 0
+        },
+        {
+          "x": -20.665,
+          "y": -5.783,
+          "z": 0
+        },
+        {
+          "x": -20.775,
+          "y": -5.662,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1083",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -21.021,
+          "y": -7.242,
+          "z": 0
+        },
+        {
+          "x": -20.965,
+          "y": -7.258,
+          "z": 0
+        },
+        {
+          "x": -20.804,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.803773405489988,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.78545266775801,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.766141445577993,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.747027563543615,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.74206981009593,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -20.576,
+          "y": -7.258,
+          "z": 0
+        },
+        {
+          "x": -20.52,
+          "y": -7.242,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_1009",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -21.522,
+          "y": -7.242,
+          "z": 0
+        },
+        {
+          "x": -21.469,
+          "y": -7.267,
+          "z": 0
+        },
+        {
+          "x": -21.341,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.325242276638075,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.30722826094693,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.265431489117322,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.211874920252267,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.19208982084152,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.184791841820577,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.048,
+          "y": -7.267,
+          "z": 0
+        },
+        {
+          "x": -21.021,
+          "y": -7.242,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_947",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.021,
+          "y": -7.269,
+          "z": 0
+        },
+        {
+          "x": -21.966,
+          "y": -7.267,
+          "z": 0
+        },
+        {
+          "x": -21.630805029497388,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.629966849894902,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.629900583615463,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.629900583615463,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.629975036002566,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.618629357142208,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -21.577,
+          "y": -7.267,
+          "z": 0
+        },
+        {
+          "x": -21.522,
+          "y": -7.242,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_870",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.494,
+          "y": -6.999,
+          "z": 0
+        },
+        {
+          "x": -22.516,
+          "y": -7.005,
+          "z": 0
+        },
+        {
+          "x": -22.0351564490789,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -22.0351564490789,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -22.0351564490789,
+          "y": -7.322999,
+          "z": 0
+        },
+        {
+          "x": -22.028,
+          "y": -7.317,
+          "z": 0
+        },
+        {
+          "x": -22.021,
+          "y": -7.269,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_841",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.522,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -22.51912667734976,
+          "y": -6.1628733226502375,
+          "z": 0
+        },
+        {
+          "x": -22.475,
+          "y": -6.4,
+          "z": 0
+        },
+        {
+          "x": -22.488,
+          "y": -6.513,
+          "z": 0
+        },
+        {
+          "x": -22.475,
+          "y": -6.626,
+          "z": 0
+        },
+        {
+          "x": -22.494130452634817,
+          "y": -6.80297336816808,
+          "z": 0
+        },
+        {
+          "x": -22.494,
+          "y": -6.999,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "cmn_34",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.902,
+          "y": -6.025,
+          "z": 3
+        },
+        {
+          "x": -22.864,
+          "y": -6.025,
+          "z": 3
+        },
+        {
+          "x": -22.796,
+          "y": -5.875,
+          "z": 3
+        },
+        {
+          "x": -22.671,
+          "y": -5.605,
+          "z": 3
+        },
+        {
+          "x": -22.671,
+          "y": -5.605,
+          "z": 0
+        },
+        {
+          "x": -22.622,
+          "y": -5.744,
+          "z": 0
+        },
+        {
+          "x": -22.314,
+          "y": -5.801,
+          "z": 0
+        },
+        {
+          "x": -22.078,
+          "y": -5.821,
+          "z": 0
+        },
+        {
+          "x": -21.867,
+          "y": -5.834,
+          "z": 0
+        },
+        {
+          "x": -21.665,
+          "y": -5.844,
+          "z": 0
+        },
+        {
+          "x": -21.464,
+          "y": -5.869,
+          "z": 0
+        },
+        {
+          "x": -21.246498902867675,
+          "y": -5.886403654430891,
+          "z": 0
+        },
+        {
+          "x": -21.054498902867675,
+          "y": -5.901403654430891,
+          "z": 0
+        },
+        {
+          "x": -20.864,
+          "y": -5.637,
+          "z": 0
+        },
+        {
+          "x": -20.775,
+          "y": -5.662,
+          "z": 0
+        }
+      ],
+      "vias": [
+        {
+          "x": -22.671,
+          "y": -5.605
+        }
+      ]
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "topology_merge_767",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -23.129,
+          "y": -6.337,
+          "z": 0
+        },
+        {
+          "x": -22.987,
+          "y": -6.149,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "endPcbPortId": "pcb_port_281",
+      "regionId": "cmn_837",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.902,
+          "y": -6.025,
+          "z": 3
+        },
+        {
+          "x": -23.044,
+          "y": -6.32,
+          "z": 3
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "startPcbPortId": "pcb_port_87",
+      "regionId": "topology_merge_743",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -23.269,
+          "y": -6.574,
+          "z": 0
+        },
+        {
+          "x": -23.129,
+          "y": -6.337,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "new-new-cmn_5-49-2__sub_0_6",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -19.283,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -19.275,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -19.332,
+          "y": -6.108,
+          "z": 0
+        },
+        {
+          "x": -19.378,
+          "y": -6.101,
+          "z": 0
+        },
+        {
+          "x": -19.425,
+          "y": -6.1,
+          "z": 0
+        },
+        {
+          "x": -19.473,
+          "y": -6.101,
+          "z": 0
+        },
+        {
+          "x": -19.518,
+          "y": -6.108,
+          "z": 0
+        },
+        {
+          "x": -19.575,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -19.612,
+          "y": -6.149,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_trace_50__source_net_50_mst0",
+      "rootConnectionName": "source_trace_50",
+      "regionId": "new-new-cmn_5-49-2__sub_0_1",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": -22.987,
+          "y": -6.149,
+          "z": 0
+        },
+        {
+          "x": -23.027122563430602,
+          "y": -6.089,
+          "z": 0
+        },
+        {
+          "x": -22.8,
+          "y": -6.089,
+          "z": 0
+        },
+        {
+          "x": -22.668,
+          "y": -6.089,
+          "z": 0
+        },
+        {
+          "x": -22.537,
+          "y": -6.089,
+          "z": 0
+        },
+        {
+          "x": -22.522,
+          "y": -6.149,
+          "z": 0
+        }
+      ],
+      "vias": []
+    }
+  ],
+  "colorMap": {},
+  "layerCount": 4,
+  "defaultViaDiameter": 0.3,
+  "preserveTerminalPcbPortIds": true,
+  "preferSameLayerTerminalEndpoints": true,
+  "snapTerminalsOnSameLayer": true,
+  "preserveTerminalLayers": true
+}

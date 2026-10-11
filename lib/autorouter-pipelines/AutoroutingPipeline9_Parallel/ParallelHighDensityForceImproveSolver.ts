@@ -1,6 +1,7 @@
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import type { PendingEffect } from "../../solvers/BaseSolver"
-import type { ParallelStageWorkerPool, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import type { ParallelIndexedNodeResult, ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
+import { getParallelNodeJobDispatches, runParallelNodeJobDispatch, type ParallelWeightedNodeJob } from "./parallelNodeJobBatching"
 
 type Params = ConstructorParameters<typeof HighDensityForceImproveSolver>[0] & {
   workerPool: ParallelStageWorkerPool
@@ -24,22 +25,28 @@ export class ParallelHighDensityForceImproveSolver extends HighDensityForceImpro
   override _step(): void {
     if (this.launched) return
     this.launched = true
-    const orderedEntries = this.sampleEntries.map((entry, entryIndex) => ({
-      entry,
-      entryIndex,
-      weight: entry.routeIndexes.reduce((total, index) => total + this.originalHdRoutes[index].route.length, 0) * entry.routeIndexes.length,
-    })).sort((left, right) => right.weight - left.weight || left.entryIndex - right.entryIndex)
-    const promise = Promise.all(
-      orderedEntries.map(({ entry, entryIndex }) =>
-        this.workerPool.run<ParallelStageWorkerResult>({
+    const orderedEntries: ParallelWeightedNodeJob[] = []
+    for (let entryIndex = 0; entryIndex < this.sampleEntries.length; entryIndex++) {
+      const entry = this.sampleEntries[entryIndex]!
+      orderedEntries.push({
+        entryIndex,
+        weight: entry.routeIndexes.reduce((total, index) => total + this.originalHdRoutes[index].route.length, 0) * entry.routeIndexes.length,
+        job: {
           kind: "forceImproveNode",
           nodeWithPortPoints: entry.node,
           hdRoutes: entry.routeIndexes.map((index) => this.originalHdRoutes[index]),
           totalStepsPerNode: this.totalStepsPerNode,
           nodeAssignmentMargin: this.nodeAssignmentMargin,
-        }).then((result) => ({ entryIndex, result })),
-      ),
-    ).then((results) => {
+        },
+      })
+    }
+    orderedEntries.sort((left, right) => right.weight - left.weight || left.entryIndex - right.entryIndex)
+    const dispatched: Promise<ParallelIndexedNodeResult[]>[] = []
+    for (const dispatch of getParallelNodeJobDispatches(orderedEntries, this.workerPool.workerCount)) {
+      dispatched.push(runParallelNodeJobDispatch(dispatch, this.workerPool))
+    }
+    const promise = Promise.all(dispatched).then((batchedResults) => {
+      const results = batchedResults.flat()
       results.sort((left, right) => left.entryIndex - right.entryIndex)
       for (const { entryIndex, result } of results) {
         const entry = this.sampleEntries[entryIndex]

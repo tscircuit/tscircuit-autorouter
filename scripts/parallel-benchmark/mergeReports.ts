@@ -39,6 +39,7 @@ type SourceOptions = Record<string, unknown> & {
   parallelPathSimplification: boolean
   pathingStrategy: BenchmarkPathingStrategy
   highDensityPolicy: BenchmarkHighDensityPolicy
+  physicalRouting: boolean
   targetSpeedup: number
   variants: string[]
   sampleNumbers: number[]
@@ -50,6 +51,19 @@ const comparisonFields = [
   "runtime", "cpuModel", "availableParallelism", "timing", "qualityValidationTimeoutMs",
 ] as const
 
+const getSourceQualityPolicy = (source: ParallelBenchmarkReportSource): { harnessVersion: number; drcIncludesBoardClearance: boolean; coveragePolicyVersion: number } => {
+  const { metadata } = source.report
+  const harnessVersion = metadata.harnessVersion ?? 1
+  const drcIncludesBoardClearance = metadata.drcIncludesBoardClearance ?? false
+  const coveragePolicyVersion = metadata.coveragePolicyVersion ?? 1
+  if (!Number.isInteger(harnessVersion) || ![1, 2, 3].includes(harnessVersion as number) ||
+    typeof drcIncludesBoardClearance !== "boolean" || ((harnessVersion as number) >= 2 && !drcIncludesBoardClearance) ||
+    ![1, 2].includes(coveragePolicyVersion as number) || ((harnessVersion === 3) !== (coveragePolicyVersion === 2))) {
+    throw new Error(`Invalid benchmark quality policy: ${source.sourcePath}`)
+  }
+  return { harnessVersion: harnessVersion as number, drcIncludesBoardClearance, coveragePolicyVersion: coveragePolicyVersion as number }
+}
+
 const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions => {
   const metadata = source.report.metadata
   const raw = metadata.options
@@ -60,12 +74,16 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
     ...raw,
     pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset",
     highDensityPolicy: (raw as Record<string, unknown>).highDensityPolicy ?? "ordered",
+    physicalRouting: (raw as Record<string, unknown>).physicalRouting === undefined ? false : (raw as Record<string, unknown>).physicalRouting,
   } as SourceOptions
   if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost" && options.pathingStrategy !== "landmark" && options.pathingStrategy !== "negotiated" && options.pathingStrategy !== "goal-balls") {
     throw new Error(`Invalid pathingStrategy: ${source.sourcePath}`)
   }
   if (options.highDensityPolicy !== "ordered" && options.highDensityPolicy !== "first-valid") {
     throw new Error(`Invalid highDensityPolicy: ${source.sourcePath}`)
+  }
+  if (typeof options.physicalRouting !== "boolean") {
+    throw new Error(`Invalid physicalRouting: ${source.sourcePath}`)
   }
   for (const key of ["repetitions", "timeoutMs", "effort", "workerCount", "targetSpeedup"] as const) {
     if (typeof options[key] !== "number" || !Number.isFinite(options[key]) || options[key] <= 0) {
@@ -90,6 +108,7 @@ export const mergeParallelBenchmarkReports = (
   if (sources.length === 0) throw new Error("At least one paired report is required")
   const reference = sources[0]!
   const referenceOptions = getSourceOptions(reference)
+  const referenceQualityPolicy = getSourceQualityPolicy(reference)
   const sourcePaths = new Set<string>()
   const resultKeys = new Set<string>()
   const sampleOwners = new Map<string, string>()
@@ -105,6 +124,9 @@ export const mergeParallelBenchmarkReports = (
     sourcePaths.add(source.sourcePath)
     const metadata = source.report.metadata
     const options = getSourceOptions(source)
+    if (stableStringify(getSourceQualityPolicy(source)) !== stableStringify(referenceQualityPolicy)) {
+      throw new Error(`Incompatible benchmark quality policy: ${source.sourcePath}`)
+    }
     if (metadata.availableParallelism !== 4) throw new Error(`Four-core affinity budget required: ${source.sourcePath}`)
     if (typeof metadata.runner !== "string" || !metadata.runner.startsWith("blacksmith-4vcpu-ubuntu-2404-arm")) {
       throw new Error(`Expected a four-core ARM Blacksmith runner: ${source.sourcePath}`)
@@ -165,10 +187,12 @@ export const mergeParallelBenchmarkReports = (
     targetSpeedup: referenceOptions.targetSpeedup,
     highDensityPolicy: referenceOptions.highDensityPolicy,
     pathingStrategy: referenceOptions.pathingStrategy,
+    physicalRouting: referenceOptions.physicalRouting,
   })
   return {
     metadata: {
       ...reference.report.metadata,
+      ...referenceQualityPolicy,
       options: { ...referenceOptions, sampleNumbers: Array.from({ length: 16 }, (_, index) => index + 1), outDir: "merged" },
       runner: "multiple matched four-core ARM Blacksmith runners",
       sourceRunnerCount: new Set(sources.map((source) => source.report.metadata.runner)).size,
@@ -223,8 +247,10 @@ const main = async (): Promise<void> => {
     `Prototype revision: ${merged.metadata.revision}`,
     `Baseline revision: ${merged.metadata.baselineRevision}`,
     `Sources: ${merged.sources.length}; runs: ${merged.results.length}; installed dependencies verified: ${merged.metadata.installedDependenciesVerified}`,
+    `Harness version: ${merged.metadata.harnessVersion}; DRC includes original physical board: ${merged.metadata.drcIncludesBoardClearance}`,
     `Arithmetic mean speedup: ${summary.arithmeticMeanSpeedup.toFixed(3)}×; aggregate: ${summary.aggregateSpeedup.toFixed(3)}×; geometric mean: ${summary.geometricMeanSpeedup.toFixed(3)}×.`,
-    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}.`,
+    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; physical routing: ${summary.physicalRouting}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}.`,
+    `Coverage acceptance mode: ${summary.coverageAcceptanceMode}; coverage policy version: ${merged.metadata.coveragePolicyVersion}.`,
     `Full coverage: ${summary.fullCoverage}; all solved: ${summary.allCompleted}; exact geometry: ${summary.exactGeometry}; quality preserved: ${summary.qualityPreserved}; target reached: ${summary.targetReached}.`,
     "",
     "| Sample | Baseline median (s) | Parallel median (s) | Speedup | Solved base/parallel | Geometry | Quality |",

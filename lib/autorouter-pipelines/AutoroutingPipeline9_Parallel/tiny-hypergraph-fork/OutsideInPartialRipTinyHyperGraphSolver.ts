@@ -9,7 +9,7 @@ import {
   type TinyHyperGraphSolverOptions,
   type TinyHyperGraphTopology,
 } from "tiny-hypergraph/lib/core"
-import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
+import { PackedDistanceAwareTinyHyperGraphSolver } from "../PackedDistanceAwareTinyHyperGraphSolver"
 import { MinHeap } from "tiny-hypergraph/lib/MinHeap"
 import type { PortId, RegionId, RouteId } from "tiny-hypergraph/lib/types"
 
@@ -80,7 +80,7 @@ const NO_PREFERRED_PRESERVED_ROUTE_IDS = new Set<RouteId>()
  * partial-rip state transition. Initial whole routes retain the established
  * one-ended search; the bounded two-ended search applies to reopened spans.
  */
-export class OutsideInPartialRipTinyHyperGraphSolver extends DistanceAwareTinyHyperGraphSolver {
+export class OutsideInPartialRipTinyHyperGraphSolver extends PackedDistanceAwareTinyHyperGraphSolver {
   protected partialRipRoutePlans = new Map<RouteId, PartialRipRoutePlan>()
   private outsideInRouteSearch?: OutsideInRouteSearch
   private oneSidedFallbackRouteId?: RouteId

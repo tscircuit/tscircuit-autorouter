@@ -50,6 +50,7 @@ export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificati
         defaultViaDiameter: active.defaultViaDiameter,
         useTraceWidthAwareClearance: active.useTraceWidthAwareClearance,
         enableVertexShortcuts: active.enableVertexShortcuts,
+        preserveLeadingLayerTransitions: this.requiresPhysicalCopperTransitions,
         workerPool: this.workerPool,
         workerCount: this.workerCount,
       })
@@ -59,6 +60,7 @@ export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificati
       this.stats.interactionComponentCountMax = Math.max(this.stats.interactionComponentCountMax, pathSolver.stats.interactionComponentCount)
       if (pathSolver.batches.length > 1) this.stats.componentJobs += pathSolver.batches.length
     }
+    this.prepareSimplificationChild()
     const subSolver = this.activeSubSolver
     if (subSolver && (!(subSolver instanceof ParallelMultiSimplifiedPathSolver) || subSolver.batches.length <= 1)) {
       // These children have no asynchronous work. Use their own solve loops

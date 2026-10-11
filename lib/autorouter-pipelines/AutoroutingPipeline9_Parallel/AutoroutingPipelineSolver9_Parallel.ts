@@ -23,6 +23,8 @@ export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolve
   workerPool?: Pipeline9LocalWorkerPool
   enableParallelPathSimplification?: boolean
   highDensityPolicy?: ParallelHighDensityPolicy
+  /** Enforce physical terminals and copper transitions with any pathing strategy. */
+  physicalRouting?: boolean
 }
 
 /** Opt-in Pipeline9 prototype using at most four local routing workers. */
@@ -37,7 +39,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     }
     this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount })
     this.ownsWorkerPool = opts.workerPool === undefined
-    const alternativeRouting = opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated" || opts.pathingStrategy === "goal-balls"
+    const alternativeRouting = opts.physicalRouting === true || opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated" || opts.pathingStrategy === "goal-balls"
     if (alternativeRouting) {
       for (const [name, solverClass] of [
         ["preprocessSimpleRouteJsonSolver", PhysicalPreprocessSimpleRouteJsonSolver],

@@ -71,6 +71,10 @@ Alternative policies use a layer-aware point-pair tree and same-layer terminal
 snapping. This retains distinct opposite-layer pads at identical coordinates,
 which the original XY-only tree can omit. The output must physically connect
 every original net terminal; metadata alone does not establish connectivity.
+Set `physicalRouting: true` (or `--physical-routing 1` in the benchmark) to
+use these physical-terminal checks with ordered, indexed routing as well.
+The default remains false, preserving the native route geometry and its
+existing terminal behavior for the exact-output comparison.
 
 A caller can reuse worker imports across boards by providing a pool. The
 caller owns a supplied pool, so `solver.dispose()` leaves that pool alive.
@@ -128,6 +132,15 @@ expensive nodes first while harvesting results in the original order. Shared
 board context is sent once to each worker for that routing context rather
 than retransmitted with every node.
 
+Worker grid searches use typed priority queues and reuse rejected candidate
+storage while retaining accepted nodes, parent identity, native tie order,
+costs, and expansion limits. Indexed Tiny searches and blocker completion
+also use packed queues and label storage. These changes preserve the original
+search work; they do not reduce routing budgets. Worker force improvement
+omits unused visualization snapshots, and small force/repair jobs are batched
+to reduce messages while retaining their original commits. Their performance
+is being evaluated in the next frozen all-sample run.
+
 Topology, coordinated via changes, and joint DRC commits retain their serial
 execution. Ordered port-point pathing also retains its original coordinator;
 negotiated search is opt-in. High-density routing with fixed
@@ -148,7 +161,7 @@ gh workflow run benchmark.yml \
   -f solver_name=parallel-prototype \
   -f ref=YOUR_BRANCH \
   -f same_machine_compare=false \
-  -f benchmark_args_json='["--repetitions","3","--timeout-ms","180000","--parallel-path-simplification","1"]'
+  -f benchmark_args_json='["--repetitions","3","--timeout-ms","1200000","--parallel-path-simplification","1"]'
 ```
 
 For a baseline profile run, use
@@ -230,9 +243,12 @@ least 2×. Missing samples, duplicate runs, failed routes, timeouts, and missing
 quality evidence cannot pass the gate.
 
 With ordered high-density routing and indexed, adaptive-bitset, or cached-cost
-pathing, the
+pathing and `physicalRouting: false`, the
 gate also requires matching SHA-256 hashes of the full simplified trace
-outputs and unchanged trace/via counts. In first-valid, landmark, negotiated,
+outputs, unchanged trace/via counts, and identical recorded physical coverage.
+This comparison preserves the baseline's behavior, including any incomplete
+baseline nets, which remain visible in the quality evidence.
+In physical routing, first-valid, landmark, negotiated,
 or goal-balls mode,
 geometry and counts are diagnostic; legitimate alternative routes can pass
 when physical connection coverage and the quality comparisons pass. Reports
@@ -246,7 +262,8 @@ and pad geometry using the existing geometry helpers and a spatial index.
 Ordinary wire strokes use their starting width; rotated pads use their actual
 polygons. Conductors join only through actual contact on a shared layer;
 vias and plated-hole barrels supply their declared layer span. Trace or port
-metadata does not join disconnected copper. Every required net must have a
+metadata does not join disconnected copper. In changed-geometry or physical
+routing modes, every required net must have a
 physical component contacted by all its original terminals, with no uncovered
 nets or missing port identities. Multiple allowed layers remain alternative
 contacts and do not create a barrel. Pad-less terminals can contact wire
@@ -262,7 +279,8 @@ bottom connection in sample011: `pcb_port_395` shares coordinates with top
 `pcb_port_75`, but the two SMT pads occupy different layers. The original
 relaxed DRC conversion selected the top pad's port alias and omitted the
 bottom requirement. Both earlier variants have that omission; the new
-coverage gate retains the bottom port and requires the candidate to connect it.
+coverage evaluator retains the bottom port. Physical routing requires the
+candidate to connect it; native geometry parity records the unchanged omission.
 
 The same audit found disconnected terminals in sample009 where a layer
 transition used a circular plated hole's bounding-box corner. Alternative
@@ -274,7 +292,12 @@ These functional checks establish connectivity and DRC behavior; the paired
 benchmark still evaluates trace lint and performance independently.
 
 DRC uses the existing benchmark's `evaluateRelaxedDrc` evaluator and rule
-preset. Exact trace hashes provide a stronger equivalence check for this
+preset. Harness version 2 explicitly includes the original board outline and
+board-edge clearance. Earlier version 1 reports omitted the board element;
+their DRC counts alone do not establish board-boundary compliance. The merger
+rejects incompatible quality policies. Harness version 3 records the coverage
+policy explicitly: native output comparisons require baseline coverage parity,
+while changed geometry requires full physical completion. Exact trace hashes provide a stronger equivalence check for this
 deterministic execution rewrite; they do not independently establish that
 the baseline's routes satisfy every manufacturing rule.
 
@@ -299,8 +322,8 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Two frozen exploratory snapshots have complete paired results for all 16
-samples, with one repetition per variant. Neither meets the target. Both use
+Three frozen exploratory snapshots have complete paired results for all 16
+samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
 
@@ -308,6 +331,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | --- | --- | ---: | ---: | --- |
 | `7a3111114` | ordered / indexed | 1.274× | 1.336× | All solved, identical geometry; legacy report lacks physical coverage evidence |
 | `489368291` | first-valid / negotiated | 1.113× | 0.761× | All solved; physical coverage and trace-lint regressions fail acceptance |
+| `dc387aa1f` | first-valid / goal-balls | 0.897× | 0.307× | Samples 013–015 failed; sample002 trace lint regressed |
 
 The `489368291` result includes every sample, including the 852.229-second
 prototype run for sample006; no slow case is excluded. Raw artifacts are
@@ -318,7 +342,21 @@ available from workflow runs
 [38113196970](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113196970), and
 [38113199046](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113199046).
 
-The next evaluation adds stage-level high-density competition, exact DRC
-memoization, completion goal bounds, and physical transition/terminal fixes.
-Its timings and quality gates remain unmeasured. A successful result must be
-repeated with three paired runs per variant before claiming the target.
+The `dc387aa1f` report includes all 32 paired outcomes and scores the three
+failed prototype runs at the configured 1,200-second deadline. Its 13 solved
+prototype outputs meet full physical terminal coverage; sample002 has 1,005
+odd-angle issues against the baseline's 931. Its observed high-density routing
+work increased, so the additional competition is not an accepted speedup.
+Raw artifacts are available from workflow runs
+[38115780405](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115780405),
+[38115781916](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115781916),
+[38115783406](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115783406),
+[38115785004](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004), and
+[38115786618](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618).
+
+The next evaluation adds packed search heaps and candidate storage, removes
+unused worker diagnostics, reuses the exact spatial index during via removal,
+and corrects terminal-path and leading-via simplification failures. These
+changes have functional parity checks; their speedup remains unmeasured.
+A successful result must be repeated with three paired runs per variant
+under the board-inclusive quality policy before claiming the target.
