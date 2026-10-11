@@ -669,12 +669,16 @@ export function createParallelPathLookaheadEligibility(
     const indexState = captureAwaitGraph([nativeIndex], coveredControlObjects, stats, { index: nativeIndex, originals: inputScopeGraph })
     if (!indexState) return undefined
     const roots: unknown[] = []
+    const verifiedInputTargets = new WeakSet<object>()
     for (let position = 0; position < indexes.length; position++) {
       const routeIndex = indexList.entries[position]!.descriptor.value as number
       const route = routes[routeIndex]!
       const inputScope = inputScopeGraph.collect([route], (): undefined => undefined)
       if (!inputScope) return undefined
-      for (let index = 0; index < inputScope.contracts.length; index++) if (!matchesContract(inputScope.contracts[index]!, stats)) return undefined
+      for (let index = 0; index < inputScope.contracts.length; index++) {
+        if (!matchesContract(inputScope.contracts[index]!, stats)) return undefined
+        verifiedInputTargets.add(inputScope.contracts[index]!.target)
+      }
       roots.push(route)
       if (route.route.length <= 1) continue
       const bounds = route.route.reduce((acc, point) => ({ minX: Math.min(acc.minX, point.x), minY: Math.min(acc.minY, point.y),
@@ -704,7 +708,13 @@ export function createParallelPathLookaheadEligibility(
       return captureParallelPathPrototypeContract(target, stats)
     })
     if (!scope) return undefined
-    for (let index = 0; index < scope.contracts.length; index++) if (!matchesContract(scope.contracts[index]!, stats)) return undefined
+    // The inspected Native index queries do not mutate their source pointers.
+    // Reuse only validations performed in this synchronous capture; every
+    // original contract remains in scope for the complete check after await.
+    for (let index = 0; index < scope.contracts.length; index++) {
+      if (verifiedInputTargets.has(scope.contracts[index]!.target)) continue
+      if (!matchesContract(scope.contracts[index]!, stats)) return undefined
+    }
     // Complete connection/outline/color contracts are prerequisites on every
     // call, so their aliases need not be scanned again through owner controls.
     for (let index = 0; index < essentialScope.contracts.length; index++) scope.covered.add(essentialScope.contracts[index]!.target)

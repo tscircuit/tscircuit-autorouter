@@ -767,3 +767,15 @@ The exact candidate also has its own benchmark branch so later implementation
 commits cannot alter the workflow revision. Arguments, preflight and workflow
 IDs are in
 [parallel-srj18-d3f96eca5-dispatch.json](benchmarks/parallel-srj18-d3f96eca5-dispatch.json).
+
+A reviewed within-capture lookahead simplification reuses an input target check
+only after its original contract matches within that same synchronous capture.
+The guarded Native index queries do not mutate source pointers. The final
+scope still retains every original contract and rechecks all targets after an
+await; fresh output targets and later captures receive their original checks.
+Six full phases preserve all Native states,1,503 routes and27,198 logical steps.
+Descriptor reads fall from7,317,033 to7,032,371 and descriptor builtin calls
+from1,131,409 to1,058,359. These are operation counts; elapsed-time acceptance
+remains pending. Shared metadata getters, aliasing and post-await point changes
+pass independent review. Exact controls and hashes are in
+[parallel-path-lookahead-within-capture-dedup-proof.json](benchmarks/parallel-path-lookahead-within-capture-dedup-proof.json).
