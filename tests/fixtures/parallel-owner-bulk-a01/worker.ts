@@ -39,13 +39,13 @@ function runProductionObserverCases(portfolio:ParallelPortfolioSingleIntraNodeSo
       if(kind.endsWith("getter")&&kind!=="step-getter") {
         const name=kind.startsWith("solved")?"solved":"failed"
         Object.defineProperty(solver,name,{configurable:true,enumerable:true,get():boolean {
-          strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false);reads[index]++;return false
+          strictEqual(getWorkerNativeA01BulkSearchPrototypeDiagnostics(owner),null);reads[index]++;return false
         }})
       } else {
         const name=kind.startsWith("step")?"step":"computeProgress"
         const original=(solver as unknown as Record<string,Function>)[name]!
         const forwarding=():unknown=>{
-          callbacks[index]++;strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false)
+          callbacks[index]++;strictEqual(getWorkerNativeA01BulkSearchPrototypeDiagnostics(owner),null)
           if(kind==="step-rebind") records[index]!.solver={step():void{replacements[index]++}} as HighDensitySolverA01&ReplayHighDensityA01Solver
           return name==="computeProgress"?1:Reflect.apply(original,solver,[])
         }
@@ -224,12 +224,14 @@ async function runOracle(productionLoop:boolean):Promise<object> {
       checkpoints++
     }
     strictEqual(owner.iterations,seed===5?157175:160000)
-    const diagnostics=getWorkerNativeA01BulkSearchPrototypeDiagnostics(owner)!
-    strictEqual(diagnostics.consumed>0,true);steps+=owner.iterations;bulkSteps+=diagnostics.consumed
-    batches+=diagnostics.batches;heapPops+=diagnostics.heapPops;heapPushes+=diagnostics.heapPushes
+    const diagnostics=getWorkerNativeA01BulkSearchPrototypeDiagnostics(owner)
+    if(productionLoop) strictEqual(diagnostics,null)
+    else strictEqual(diagnostics!.consumed>0,true)
+    steps+=owner.iterations;bulkSteps+=diagnostics?.consumed??0
+    batches+=diagnostics?.batches??0;heapPops+=diagnostics?.heapPops??0;heapPushes+=diagnostics?.heapPushes??0
   }
   return {actualWorker:true,steps,checkpoints,frontiers,bulkSteps,batches,heapPops,heapPushes,
-    lateObservers,productionObservers,productionLoop,noDefaultActivation:!productionLoop,noLeaseAfterQuantum:true}
+    lateObservers,productionObservers,productionLoop,noDefaultActivation:true,noLeaseAfterQuantum:true}
 }
 onmessage=(event:MessageEvent<{productionLoop?:boolean}>):void=>{
   runOracle(event.data.productionLoop===true).then((result):void=>postMessage({result}),
