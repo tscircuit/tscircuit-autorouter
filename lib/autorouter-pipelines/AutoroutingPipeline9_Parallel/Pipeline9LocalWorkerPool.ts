@@ -51,11 +51,12 @@ export class Pipeline9LocalWorkerPool {
     gridHistoryCancellationSignals: 0, gridHistoryJobsStopped: 0, gridHistoryComputedIterations: 0,
     gridHistoryPrefixIterationsRecomputed: 0, gridHistoryCheckpointsCompleted: 0,
     gridHistoryLogicalIterationsReplayed: 0, gridHistoryEquivalentLogicalIterationsReplayed: 0,
-    gridHistoryEquivalentCandidatesAdmitted: 0 }
+    gridHistoryEquivalentCandidatesAdmitted: 0, gridHistoryRequestsSkippedForNoIdleWorker: 0 }
   readonly contextTransport: "structured-clone" | "bun-shared"
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
   private readonly workers: WorkerSlot[] = []
+  private readonly idleWorkerAvailability?: Int32Array
   private readonly queue: QueuedTask[] = []
   private nextTaskId = 0
   private nextContextId = 0
@@ -78,6 +79,11 @@ export class Pipeline9LocalWorkerPool {
       import.meta.url,
     )
     this.workerFactory = options.workerFactory ?? ((url: URL): Worker => new Worker(url, { type: "module" }))
+    // Custom worker protocols keep their original request shape.
+    if (!options.workerFactory && !options.workerUrl && typeof SharedArrayBuffer !== "undefined") {
+      this.idleWorkerAvailability = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
+      Atomics.store(this.idleWorkerAvailability, 0, this.workerCount)
+    }
   }
 
   createContextId(): number {
@@ -182,6 +188,15 @@ export class Pipeline9LocalWorkerPool {
       if (!task || response.taskId !== task.taskId) {
         this.fail(new Error(`Pipeline9 worker returned unexpected task ${response.taskId}`))
         return
+      }
+      if (response.gridHistoryRequestsSkippedForNoIdleWorker !== undefined) {
+        const skipped = response.gridHistoryRequestsSkippedForNoIdleWorker
+        if ((task.job.kind !== "highDensityNode" && task.job.kind !== "highDensityNodeBatch") ||
+            !Number.isSafeInteger(skipped) || skipped < 0) {
+          this.fail(new Error("Malformed grid history skipped-request count"))
+          return
+        }
+        this.stats.gridHistoryRequestsSkippedForNoIdleWorker += skipped
       }
       if (response.gridHistoryReplayWork !== undefined) {
         const work = response.gridHistoryReplayWork
@@ -540,10 +555,14 @@ export class Pipeline9LocalWorkerPool {
 
   private dispatch(): void {
     if (this.terminalError) return
+    this.publishIdleWorkerAvailability()
     while (this.queue.length > 0) {
       let slot = this.workers.find((candidate) => candidate.task === null)
       if (!slot && this.workers.length < this.workerCount) slot = this.createWorker()
-      if (!slot) return
+      if (!slot) {
+        this.publishIdleWorkerAvailability()
+        return
+      }
       const task = this.queue.shift()!
       slot.task = task
       let job: Pipeline9LocalWorkerRequest["job"] = task.job
@@ -609,14 +628,26 @@ export class Pipeline9LocalWorkerPool {
       this.stats.tasksStarted++
       this.stats.maxActiveWorkers = Math.max(this.stats.maxActiveWorkers,
         this.workers.filter((candidate) => candidate.task !== null).length)
+      this.publishIdleWorkerAvailability()
       slot.worker.postMessage({ taskId: task.taskId, job,
+        ...(this.idleWorkerAvailability ? { idleWorkerAvailability: this.idleWorkerAvailability.buffer as SharedArrayBuffer } : {}),
         ...(sharedContext ? { sharedContext } : {}) } satisfies Pipeline9LocalWorkerRequest)
     }
+    this.publishIdleWorkerAvailability()
+  }
+
+  private publishIdleWorkerAvailability(): void {
+    if (!this.idleWorkerAvailability) return
+    const capacity = !this.terminalError && this.queue.length === 0
+      ? this.workerCount - this.workers.filter((slot) => slot.task !== null).length
+      : 0
+    Atomics.store(this.idleWorkerAvailability, 0, capacity)
   }
 
   private fail(error: Error): void {
     if (this.terminalError) return
     this.terminalError = error
+    this.publishIdleWorkerAvailability()
     for (const ownerTaskId of this.candidateCancellationByOwner.keys()) this.cancelOwnerCandidates(ownerTaskId)
     for (const task of this.queue.splice(0)) task.reject(error)
     for (const slot of this.workers) {

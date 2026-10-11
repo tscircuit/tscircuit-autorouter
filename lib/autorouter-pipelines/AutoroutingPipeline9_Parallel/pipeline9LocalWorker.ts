@@ -53,8 +53,13 @@ self.onmessage = (event: MessageEvent<Pipeline9LocalWorkerRequest | MultiHeadHis
   void executeWorkerRequest(event.data)
 }
 
-async function executeWorkerRequest({ taskId, job, sharedContext }: Pipeline9LocalWorkerRequest): Promise<void> {
+async function executeWorkerRequest({ taskId, job, sharedContext, idleWorkerAvailability }: Pipeline9LocalWorkerRequest): Promise<void> {
   try {
+    if (idleWorkerAvailability !== undefined &&
+        (typeof SharedArrayBuffer === "undefined" || !(idleWorkerAvailability instanceof SharedArrayBuffer) ||
+          idleWorkerAvailability.byteLength !== Int32Array.BYTES_PER_ELEMENT)) {
+      throw new Error("Worker idle availability must contain one shared atomic word")
+    }
     if (sharedContext) {
       const expectedFamily = job.kind === "highDensityNode" || job.kind === "highDensityA13Node" || job.kind === "highDensityNodeBatch"
         ? "high-density" : job.kind === "simplifyPathWave" ? "simplification"
@@ -82,7 +87,8 @@ async function executeWorkerRequest({ taskId, job, sharedContext }: Pipeline9Loc
       // child. Request IDs never restart and late deliveries retain their exact
       // original promises until the next outer job arrives on this message port.
       historyClient = new MultiHeadHistoryWorkerClient(taskId, (request): void => self.postMessage(request))
-      gridClient = new GridHistoryWorkerClient(taskId, (request): void => self.postMessage(request))
+      gridClient = new GridHistoryWorkerClient(taskId, (request): void => self.postMessage(request),
+        idleWorkerAvailability ? new Int32Array(idleWorkerAvailability) : undefined)
       a13Client = new FirstValidA13WorkerClient(taskId, (request): void => self.postMessage(request))
       const ownerHistoryClient = historyClient
       const ownerGridClient = gridClient
@@ -101,9 +107,11 @@ async function executeWorkerRequest({ taskId, job, sharedContext }: Pipeline9Loc
       }
     }
     self.postMessage({ taskId, ok: true, result,
+      ...(gridClient && idleWorkerAvailability ? { gridHistoryRequestsSkippedForNoIdleWorker: gridClient.requestsSkippedForNoIdleWorker } : {}),
       ...(gridClient ? { gridHistoryReplayWork: gridClient.replayWork } : {}) } satisfies Pipeline9LocalWorkerResponse)
   } catch (error) {
     self.postMessage({ taskId, ok: false,
+      ...(gridClient && idleWorkerAvailability ? { gridHistoryRequestsSkippedForNoIdleWorker: gridClient.requestsSkippedForNoIdleWorker } : {}),
       error: error instanceof Error ? (error.stack ?? error.message) : String(error),
       ...(gridClient ? { gridHistoryReplayWork: gridClient.replayWork } : {}) } satisfies Pipeline9LocalWorkerResponse)
   }

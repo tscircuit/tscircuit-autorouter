@@ -61,6 +61,7 @@ export type Pipeline9LocalWorkerJob =
 export type Pipeline9LocalWorkerRequest = {
   taskId: number
   sharedContext?: Pipeline9SharedContextReference
+  idleWorkerAvailability?: SharedArrayBuffer
   job: Pipeline9LocalWorkerJob | Omit<Pipeline9ParallelHighDensityNodeJob, "context"> |
     Omit<FirstValidA13NodeJob, "context"> | Omit<ParallelHighDensityNodeBatchJob, "context">
 }
@@ -72,5 +73,5 @@ export type Pipeline9LocalWorkerResponse =
   | GridHistoryCancellation
   | FirstValidA13CandidateRequest
   | FirstValidA13CandidateCancellation
-  | { taskId: number; ok: true; result: unknown; gridHistoryReplayWork?: GridHistoryReplayWork }
-  | { taskId: number; ok: false; error: string; gridHistoryReplayWork?: GridHistoryReplayWork }
+  | { taskId: number; ok: true; result: unknown; gridHistoryReplayWork?: GridHistoryReplayWork; gridHistoryRequestsSkippedForNoIdleWorker?: number }
+  | { taskId: number; ok: false; error: string; gridHistoryReplayWork?: GridHistoryReplayWork; gridHistoryRequestsSkippedForNoIdleWorker?: number }

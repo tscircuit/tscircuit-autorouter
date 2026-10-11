@@ -1,5 +1,6 @@
 import type { GridHistoryCancellation, GridHistoryDelivery, GridHistoryDispatcher,
   GridHistoryGrant, GridHistoryRequest, GridHistoryResult, GridHistoryReplayWork } from "./parallelGridHistoryTypes"
+import { assertGridHistoryJob } from "./executeGridHistoryJob"
 
 type GridCandidateDelivery = {
   promise: Promise<GridHistoryResult>
@@ -18,10 +19,12 @@ export class GridHistoryWorkerClient {
   private readonly requests = new Map<number, GridRequestState>()
   readonly replayWork: GridHistoryReplayWork = { logicalIterationsReplayed: 0,
     equivalentLogicalIterationsReplayed: 0, equivalentCandidatesAdmitted: 0 }
+  requestsSkippedForNoIdleWorker = 0
 
   constructor(
     private readonly taskId: number,
     private readonly postMessage: (request: GridHistoryRequest | GridHistoryCancellation) => void,
+    private readonly idleWorkerAvailability?: Int32Array,
   ) {}
 
   readonly cancelUnusedHistories = (): void => {
@@ -33,11 +36,18 @@ export class GridHistoryWorkerClient {
     const requestId = ++this.nextRequestId
     const candidates = new Map<number, GridCandidateDelivery>()
     for (const job of jobs) {
+      if (this.idleWorkerAvailability) assertGridHistoryJob(job)
       if (candidates.has(job.candidateId)) throw new Error("Grid request repeats a candidate ID")
       let resolve!: GridCandidateDelivery["resolve"]
       let reject!: GridCandidateDelivery["reject"]
       const promise = new Promise<GridHistoryResult>((res, rej) => { resolve = res; reject = rej })
       candidates.set(job.candidateId, { promise, resolve, reject })
+    }
+    // This is advisory only. A stale positive value still uses the coordinator's
+    // unchanged admission check; a zero keeps native local work progressing.
+    if (this.idleWorkerAvailability && Atomics.load(this.idleWorkerAvailability, 0) === 0) {
+      this.requestsSkippedForNoIdleWorker++
+      return new Map<number, Promise<GridHistoryResult>>()
     }
     const grant = new Promise<Map<number, Promise<GridHistoryResult>>>((resolveGrant) => {
       this.requests.set(requestId, { candidates, resolveGrant })
