@@ -1,3 +1,4 @@
+import { bindNativeReferenceDrcEvaluatorToPool } from "./bindNativeReferenceDrcEvaluatorToPool"
 import { createMemoizedReferenceDrcEvaluator, type MemoizedReferenceDrcEvaluator } from "./createMemoizedReferenceDrcEvaluator"
 import type { EvaluateRelaxedDrcInput, EvaluateRelaxedDrcResult } from "../../testing/evaluate-relaxed-drc"
 import { getPendingEffectsFromSolverTree } from "../../solvers/getPendingEffectsFromSolverTree"
@@ -33,6 +34,7 @@ export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepa
       evaluate = createMemoizedReferenceDrcEvaluator()
       referenceEvaluators.set(this, evaluate)
     }
+    bindNativeReferenceDrcEvaluatorToPool(this, evaluate)
     return evaluate(input)
   }
 

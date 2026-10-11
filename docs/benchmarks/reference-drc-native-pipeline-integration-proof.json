@@ -1,0 +1,72 @@
+{
+  "kind": "actual-pipeline-native-reference-fact-integration",
+  "performanceClaim": false,
+  "maximumOrdinaryWorkers": 4,
+  "maximumSynchronousFactWorkerLanes": 3,
+  "mainFactLane": 1,
+  "policy": [
+    "root and joint keep original private evaluator closures and same original warm memo/interner/FIFO counters",
+    "virtual evaluator invoked during super sees no own workerPool and declines configuration without getter reads",
+    "all three root async entry points finish genuine Native pool transport runtime initialization after existing context initialization and before original worker start",
+    "custom/proxy/owner-getter pools retain original behavior; no public option, callback provider or trust flag",
+    "no high-density quantum persists through added initialization await",
+    "full private Native checker data/method/builtin and actual pool idle/default-worker provenance admission precedes planning and reservation",
+    "main retains complete Native geometry construction, memo miss consumption, mutable graph/cache state and ordered errors; workers provide immutable numeric facts only",
+    "at most three actually idle same-pool workers plus main; ordinary active/queued tasks decline before changed work",
+    "infra/protocol/worker death/deadline errors are raw fatal outcomes; all reservations retired and future ordinary tasks reject; no post-activation fallback"
+  ],
+  "validation": {
+    "command": "bun test --timeout 9999999 tests/solvers/reference-drc-native-pipeline-lane-parity.test.ts tests/solvers/reference-drc-private-evaluator-pool-binding.test.ts",
+    "testFilesPassed": 2,
+    "assertionsPassed": 44,
+    "typeScriptCommand": "bunx tsc --noEmit",
+    "typeScriptPassed": true,
+    "independentReview": "final root/joint wiring, all three async initialization paths, original evaluator retention and super decline cleared together with transport foreign/deadline/ledger observers and full17 Native source execution; 280 independent assertions",
+    "frozenPackagedPreflight": "required separately before each all16 timing dispatch"
+  },
+  "actualSourceSample001": {
+    "entryPoints": [
+      "stepAsync",
+      "solveUntilPhaseAsync",
+      "solveAsync"
+    ],
+    "exactOriginalNativeGeometry": true,
+    "geometryHash": "a4c788251b5f5829d22c487487090a9a898a7cffee5fe96ca767440478b8c049",
+    "allOrdinaryTasksCompleted": true,
+    "maxActiveOrdinaryWorkers": 4,
+    "positiveWorkerFactRows": true,
+    "positiveMainFactRows": true,
+    "allReservationsRetired": true,
+    "protocolFailures": 0
+  },
+  "separateFullSourceSolveCensus": {
+    "sample": "sample001",
+    "nativeGeometryHash": "a4c788251b5f5829d22c487487090a9a898a7cffee5fe96ca767440478b8c049",
+    "workersReserved": 3,
+    "workersRetired": 3,
+    "batchesCompleted": 1,
+    "workerFactRows": 767,
+    "mainFactRows": 256,
+    "protocolFailures": 0,
+    "interpretation": "Functional lane proof, not elapsed-time comparison. Exact frozen source and packaged checks are recorded in each dispatch."
+  },
+  "relatedProofs": [
+    "docs/benchmarks/reference-drc-sync-transport-proof.json",
+    "docs/benchmarks/reference-drc-prepared-trace-pair-proof.json",
+    "docs/benchmarks/reference-drc-private-evaluator-pool-binding-proof.json"
+  ],
+  "files": [
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/AutoroutingPipelineSolver9_Parallel.ts",
+      "sha256": "f511be987362bb43316efa711792bc29b6b24201bb286a12d9c9402bccf43681"
+    },
+    {
+      "path": "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPipeline9JointDrcRepairSolver.ts",
+      "sha256": "aa57837d9daab3e8c42822e8d7819b90360857b41bae140553ad99a6bead66f6"
+    },
+    {
+      "path": "tests/solvers/reference-drc-native-pipeline-lane-parity.test.ts",
+      "sha256": "2b73af1078222b079d089ac9eb122e94786332f828cfd55b23ac066955e69dcc"
+    }
+  ]
+}

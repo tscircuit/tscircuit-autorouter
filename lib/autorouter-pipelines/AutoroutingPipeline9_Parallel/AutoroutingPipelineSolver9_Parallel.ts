@@ -22,6 +22,7 @@ import type { EvaluateRelaxedDrcInput, EvaluateRelaxedDrcResult } from "../../te
 import { createMemoizedReferenceDrcEvaluator, type MemoizedReferenceDrcEvaluator } from "./createMemoizedReferenceDrcEvaluator"
 
 import { initializeReferenceDrcRuntime } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
+import { bindNativeReferenceDrcEvaluatorToPool, initializeNativeReferenceDrcPoolForOwner } from "./bindNativeReferenceDrcEvaluatorToPool"
 
 const referenceDrcEvaluators = new WeakMap<object, MemoizedReferenceDrcEvaluator>()
 
@@ -58,6 +59,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
       evaluate = createMemoizedReferenceDrcEvaluator()
       referenceDrcEvaluators.set(this, evaluate)
     }
+    bindNativeReferenceDrcEvaluatorToPool(this, evaluate)
     return evaluate(input)
   }
 
@@ -203,6 +205,8 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     try {
       await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
+      const referenceInitialization = initializeNativeReferenceDrcPoolForOwner(this)
+      if (referenceInitialization !== undefined) await referenceInitialization
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       this.step()
       const effects = getPendingEffectsFromSolverTree(this)
@@ -218,6 +222,8 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     try {
       await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
+      const referenceInitialization = initializeNativeReferenceDrcPoolForOwner(this)
+      if (referenceInitialization !== undefined) await referenceInitialization
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (!this.solved && !this.failed) {
         if (this.activeSubSolver instanceof ParallelPortPointPathingSolver && this.activeSubSolver.requiresAsyncExecution) {
@@ -253,6 +259,8 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     try {
       await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
+      const referenceInitialization = initializeNativeReferenceDrcPoolForOwner(this)
+      if (referenceInitialization !== undefined) await referenceInitialization
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
         this.step()

@@ -422,7 +422,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Seventeen frozen exploratory snapshots have complete paired results for all 16
+Eighteen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -670,3 +670,17 @@ outcomes, original metadata and every worker statistic are preserved in
 [parallel-srj18-05c72d631-complete.json](benchmarks/parallel-srj18-05c72d631-complete.json).
 Exact checks, arguments and completed workflow IDs are in
 [parallel-srj18-05c72d631-dispatch.json](benchmarks/parallel-srj18-05c72d631-dispatch.json).
+
+The reviewed Native reference DRC path now reserves at most three idle
+default-pool workers and computes the fourth lane on the main thread. The
+original checker retains constructor order, mutable graph state, exact
+cache identities/FIFO, original miss sites and ordered errors. All facts,
+including unused rows, are validated before consumption. Actual worker
+provenance and private ports/signals prevent custom or ordinary queued
+tasks from entering the synchronous reservation; deadline and protocol
+failures remain fatal. Root and joint evaluators retain their warm private
+memos across setup, and all three async root entry points initialize only
+the genuine owned pool. Actual sample001 preserves Native geometry while
+exercising worker and main fact lanes. These checks establish functional
+parity; full-dataset elapsed-time acceptance is still pending. See
+[reference-drc-native-pipeline-integration-proof.json](benchmarks/reference-drc-native-pipeline-integration-proof.json).
