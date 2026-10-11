@@ -53,6 +53,7 @@ import {
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
+import type { Pipeline9PreparedIndexedDrcEvaluation, Pipeline9PreparedJointDrcContext } from "../AutoroutingPipeline9_Parallel/createPreparedJointDrcEvaluation"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
@@ -684,6 +685,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof Pipeline9BoundedRegionalRepairSolver
   >[0]
   private boundedRegionalRepairStartedAt?: number
+  private preparedIndexedDrcContext?: Omit<Pipeline9PreparedJointDrcContext, "connectivityNetMap" | "connectivityIdToNetMap">
   readonly pipelineDef = [
     {
       solverName: "clearanceProjectionSolver",
@@ -708,7 +710,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         if (!this.exactRepairParams) {
           throw new Error("Pipeline9 exact repair stage is missing its input")
         }
-        this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+        this.exactRepairSolver = this.createExactRepairSolver({
           ...this.exactRepairParams,
           hdRoutes:
             this.clearanceProjectionSolver?.getOutput() ??
@@ -749,6 +751,37 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
+
+  protected createExactRepairSolver(
+    params: ConstructorParameters<typeof GlobalDrcBranchPortfolioSolver>[0],
+  ): GlobalDrcBranchPortfolioSolver {
+    // The default executes the unchanged dependency portfolio. An opt-in
+    // coordinator may schedule its independent trials while retaining this
+    // solver's evaluation, budgets, validation and publication.
+    return new GlobalDrcBranchPortfolioSolver(params)
+  }
+
+  protected getPreparedIndexedDrcContext(): Pipeline9PreparedJointDrcContext | undefined {
+    if (!this.preparedIndexedDrcContext) return undefined
+    // Clone all aliases together: native netMap entries may share array objects.
+    // Neither speculative worker geometry nor its metadata can mutate live SRJ.
+    return structuredClone({
+      ...this.preparedIndexedDrcContext,
+      connectivityNetMap: this.params.connMap.netMap,
+      connectivityIdToNetMap: this.params.connMap.idToNetMap,
+    })
+  }
+
+  protected takePreparedIndexedDrcEvaluation(
+    candidateKey: string,
+    evaluatedRoutes: HighDensityRoute[],
+  ): Pipeline9PreparedIndexedDrcEvaluation | undefined {
+    // Only opt-in subclasses provide an exact result computed speculatively.
+    // The native path continues to prepare and evaluate its current geometry.
+    void candidateKey
+    void evaluatedRoutes
+    return undefined
+  }
 
   protected createRegionalB01RepairSolver(
     params: ConstructorParameters<typeof Pipeline9RegionalB01RepairSolver>[0],
@@ -1138,26 +1171,46 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
+    const autoroutingDrcSrj = {
+      ...extendedSrjWithPointPairs,
+      obstacles: params.originalSrj.obstacles,
+      minTraceWidth: params.originalSrj.minTraceWidth,
+      minViaDiameter:
+        params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
+    } as RepairSimpleRouteJson
+    const autoroutingDrcEngineOptions = {
+      connMap: params.connMap,
+      traceClearance,
+      viaClearance,
+      includeTraceViaOwnerMetadata: true,
+      spatialCellSize:
+        Math.max(
+          params.defaultViaDiameter,
+          params.originalSrj.minTraceWidth,
+        ) + Math.max(traceClearance, viaClearance),
+    }
     const autoroutingDrcEngine = this.createAutoroutingDrcEngine(
-      {
-        ...extendedSrjWithPointPairs,
-        obstacles: params.originalSrj.obstacles,
-        minTraceWidth: params.originalSrj.minTraceWidth,
-        minViaDiameter:
-          params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
-      } as RepairSimpleRouteJson,
-      {
-        connMap: params.connMap,
-        traceClearance,
-        viaClearance,
-        includeTraceViaOwnerMetadata: true,
-        spatialCellSize:
-          Math.max(
-            params.defaultViaDiameter,
-            params.originalSrj.minTraceWidth,
-          ) + Math.max(traceClearance, viaClearance),
-      },
+      autoroutingDrcSrj,
+      autoroutingDrcEngineOptions,
     )
+    const { connMap: _workerConnMap, ...engineOptions } = autoroutingDrcEngineOptions
+    this.preparedIndexedDrcContext = {
+      newConnections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      originalPreloadedTraces: params.originalSrj.traces ?? [],
+      nonMovableMutatedPreloadedTraces,
+      movablePreloadedSections: this.movablePreloadedSections.map((section): Pipeline9PreparedJointDrcContext["movablePreloadedSections"][number] => ({
+        originalTrace: section.originalTrace,
+        syntheticConnectionName: section.syntheticConnectionName,
+        evaluationTraceId: section.evaluationTraceId,
+      })),
+      syntheticConnectionNames: [...this.syntheticConnectionNames],
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      engineSrj: autoroutingDrcSrj,
+      engineOptions,
+    }
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
@@ -1488,10 +1541,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const evaluationStartedAtMs = performance.now()
       this.indexedDrcEvaluationCount += 1
-      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = autoroutingDrcEngine.evaluate(
-        candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
-      )
+      const preparedEvaluation = this.takePreparedIndexedDrcEvaluation(candidateKey, evaluatedRoutes)
+      if (preparedEvaluation && preparedEvaluation.candidateKey !== candidateKey) {
+        throw new Error("Pipeline9 prepared indexed DRC evaluation does not match its consumed candidate")
+      }
+      const candidateDrcInput = preparedEvaluation
+        ? preparedEvaluation.preparedCandidateDrcInput
+        : prepareCandidateDrcInput(evaluatedRoutes)
+      const evaluatedDrc = preparedEvaluation
+        ? preparedEvaluation.evaluatedDrc
+        : autoroutingDrcEngine.evaluate(
+            candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
+          )
       const viaCircuitJson = getAutoroutingViaElements(
         candidateDrcInput.evaluatedTraces,
       )

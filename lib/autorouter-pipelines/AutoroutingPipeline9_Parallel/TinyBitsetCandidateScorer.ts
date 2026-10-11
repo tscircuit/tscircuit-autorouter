@@ -1,16 +1,19 @@
 import type { Candidate, TinyHyperGraphSolver } from "tiny-hypergraph/lib/core"
 import type { MutableIntersectionCount } from "tiny-hypergraph/lib/countNewIntersections"
 import { TinyBitsetIntersectionIndex } from "./TinyBitsetIntersectionIndex"
+import { TinyTypedAnglePrefixIntersectionIndex } from "./TinyTypedAnglePrefixIntersectionIndex"
 import { TinyBitsetRegionCostCache, type TinyBitsetRegionCost } from "./TinyBitsetRegionCostCache"
 
 export type TinyBitsetScoringOptions = {
   minimumBitsetSegmentCount?: number
   enableRegionCostCache?: boolean
+  enableStaticAnglePrefixes?: boolean
 }
 
 /** Preserve core.computeG's arithmetic order, pruning, and topology angles. */
 export class TinyBitsetCandidateScorer {
   private readonly index: TinyBitsetIntersectionIndex
+  private readonly typedAnglePrefixes?: TinyTypedAnglePrefixIntersectionIndex
   private readonly intersectionScratch: MutableIntersectionCount = {
     netId: 0, lesserAngle: 0, greaterAngle: 0, layerMask: 0,
     entryExitLayerChanges: 0, sameLayerIntersectionCount: 0, crossingLayerIntersectionCount: 0,
@@ -31,6 +34,11 @@ export class TinyBitsetCandidateScorer {
     this.regionCost = regionCost
     this.useCostCache = options.enableRegionCostCache === true
     this.index = new TinyBitsetIntersectionIndex(options.minimumBitsetSegmentCount ?? 8)
+    if (options.enableStaticAnglePrefixes === true) {
+      this.typedAnglePrefixes = new TinyTypedAnglePrefixIntersectionIndex(
+        solver.topology, firstRegionByPortId, secondRegionByPortId, options.minimumBitsetSegmentCount ?? 8,
+      )
+    }
     this.costCache = new TinyBitsetRegionCostCache(solver, regionCost)
   }
 
@@ -87,7 +95,11 @@ export class TinyBitsetCandidateScorer {
       scratch.greaterAngle = greaterAngle
       scratch.layerMask = (1 << z1) | (1 << z2)
       scratch.entryExitLayerChanges = entryExitChanges
-      this.index.setCounts(regionCache, scratch)
+      if (this.typedAnglePrefixes) {
+        this.typedAnglePrefixes.setCounts(regionCache, scratch, regionId,
+          angle1 < angle2 ? fromPortId : neighborPortId,
+          angle1 < angle2 ? neighborPortId : fromPortId, z1, z2)
+      } else this.index.setCounts(regionCache, scratch)
       sameLayer = scratch.sameLayerIntersectionCount
       crossLayer = scratch.crossingLayerIntersectionCount
     }

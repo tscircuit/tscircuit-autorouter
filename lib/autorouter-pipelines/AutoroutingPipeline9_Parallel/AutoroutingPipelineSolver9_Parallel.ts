@@ -1,4 +1,5 @@
 import type { SimpleRouteJson } from "../../types/srj-types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getPendingEffectsFromSolverTree } from "../../solvers/getPendingEffectsFromSolverTree"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph, type AutoroutingPipelineSolverOptions } from "../AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9LocalWorkerPool } from "./Pipeline9LocalWorkerPool"
@@ -15,6 +16,7 @@ import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointD
 import { Pipeline9MemoizedGlobalDrcForceImproveSolver } from "./Pipeline9MemoizedGlobalDrcForceImproveSolver"
 import type { ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 import { Pipeline9LayerAwareNetToPointPairsSolver } from "./Pipeline9LayerAwareNetToPointPairsSolver"
+import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
   workerCount?: number
@@ -31,6 +33,13 @@ export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolve
 export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolver9_PreloadedTraceGraph {
   readonly workerPool: Pipeline9LocalWorkerPool
   private readonly ownsWorkerPool: boolean
+
+  protected override createConnectivityMap(srj: SimpleRouteJson): ConnectivityMap {
+    // The serial constructor calls this before subclass fields initialize.
+    // Construction has no pool state and retains every native alias and net ID.
+    const connectivityMap = getParallelConnectivityMap(srj)
+    return connectivityMap
+  }
 
   constructor(srj: SimpleRouteJson, opts: AutoroutingPipelineSolver9ParallelOptions = {}) {
     super(srj, opts)
@@ -126,8 +135,8 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
           getConstructorParams: (solver: AutoroutingPipelineSolver9_Parallel) => {
             const [params] = getStageParams(solver)
             return [{ ...params, requirePhysicalCopperTransitions: alternativeRouting,
-              ...(alternativeRouting ? { enableVertexShortcuts: true,
-                useTraceWidthAwareClearance: true, preserveRouteEndpoints: true } : {}),
+              ...(alternativeRouting ? { enableVertexShortcuts: false,
+                useTraceWidthAwareClearance: false, preserveRouteEndpoints: true } : {}),
               ...(opts.enableParallelPathSimplification ? {
                 workerPool: solver.workerPool, workerCount: solver.workerPool.workerCount,
               } : {}),

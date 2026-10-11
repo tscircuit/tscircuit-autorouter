@@ -449,7 +449,6 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
 
       this.barrierCount = barriers.length
     }
-    const cells = new Map<number, Map<number, Barrier[]>>()
     const queryReach =
       Math.max(route.viaDiameter, traceThickness) / 2 +
       Math.max(
@@ -461,6 +460,24 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
         srj.minViaEdgeToPadEdgeClearance ?? 0,
       ) +
       1e-5
+    const minCellX = Math.floor(bounds.minX - queryReach)
+    const minCellY = Math.floor(bounds.minY - queryReach)
+    const cellColumnCount = Math.floor(bounds.maxX + queryReach) - minCellX + 1
+    const cellRowCount = Math.floor(bounds.maxY + queryReach) - minCellY + 1
+    // Every indexed barrier is clipped to this integer-cell domain. Arrays keep
+    // precisely the same x/y bucket and insertion order as the original maps,
+    // without a hashed lookup for each hard-clearance query. Columns remain lazy
+    // and larger or non-finite domains retain the original sparse storage.
+    const arrayCells =
+      ordinaryBoundsDomain &&
+      Number.isSafeInteger(cellColumnCount) &&
+      Number.isSafeInteger(cellRowCount) &&
+      cellColumnCount > 0 &&
+      cellRowCount > 0 &&
+      cellColumnCount * cellRowCount <= 262_144
+        ? new Array<Array<Barrier[] | undefined> | undefined>(cellColumnCount)
+        : undefined
+    const cells = new Map<number, Map<number, Barrier[]>>()
 
     this.indexBarrier = (index): void => {
       const barrier = barriers[index]!
@@ -470,19 +487,30 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
         x <= Math.floor(Math.min(barrier.maxX, bounds.maxX + queryReach));
         x++
       ) {
-        let column = cells.get(x)
+        let arrayColumn = arrayCells?.[x - minCellX]
+        let column = arrayCells ? undefined : cells.get(x)
         for (
           let y = Math.floor(Math.max(barrier.minY, bounds.minY - queryReach));
           y <= Math.floor(Math.min(barrier.maxY, bounds.maxY + queryReach));
           y++
         ) {
-          if (!column) {
+          if (arrayCells) {
+            if (!arrayColumn) {
+              arrayColumn = new Array<Barrier[] | undefined>(cellRowCount)
+              arrayCells[x - minCellX] = arrayColumn
+            }
+            const bucket = arrayColumn[y - minCellY]
+            if (bucket) bucket.push(barrier)
+            else arrayColumn[y - minCellY] = [barrier]
+          } else if (!column) {
             column = new Map<number, Barrier[]>()
             cells.set(x, column)
+            column.set(y, [barrier])
+          } else {
+            const bucket = column.get(y)
+            if (bucket) bucket.push(barrier)
+            else column.set(y, [barrier])
           }
-          const bucket = column.get(y)
-          if (bucket) bucket.push(barrier)
-          else column.set(y, [barrier])
         }
       }
     }
@@ -515,14 +543,17 @@ export class Pipeline9DenseClearancePathSolver extends BaseSolver {
         x <= Math.floor(maxX + reach);
         x++
       ) {
-        const column = cells.get(x)
-        if (!column) continue
+        const arrayColumn = arrayCells?.[x - minCellX]
+        const column = arrayCells ? undefined : cells.get(x)
+        if (!arrayColumn && !column) continue
         for (
           let y = Math.floor(minY - reach);
           y <= Math.floor(maxY + reach);
           y++
         ) {
-          const bucket = column.get(y)
+          const bucket = arrayColumn
+            ? arrayColumn[y - minCellY]
+            : column!.get(y)
           if (!bucket) continue
           for (const barrier of bucket) {
             if (barrier.viaOnly && !isVia) continue

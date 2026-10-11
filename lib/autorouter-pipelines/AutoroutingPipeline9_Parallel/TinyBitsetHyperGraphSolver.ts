@@ -14,7 +14,7 @@ export class TinyBitsetHyperGraphSolver extends TinyHyperGraphSolver {
       () => this.ADD_SEGMENT_DISTANCE_TO_G,
       (regionId, sameLayer, crossLayer, entryExitChanges, segmentCount) =>
         this.computeRegionCostForRegion(regionId, sameLayer, crossLayer, entryExitChanges, segmentCount),
-      scoringOptions,
+      scoringOptions ?? { enableStaticAnglePrefixes: true },
     )
   }
 

@@ -6,6 +6,7 @@ import type { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_Pr
 import type { TinyLandmarkGraph, TinyLandmarkDistances } from "./TinyLandmarkHeuristic"
 import type { NegotiatedPathingRouteJob, NegotiatedPathingRouteResult } from "./parallelNegotiatedPathingTypes"
 import type { ParallelGoalBallWorkerJob, ParallelGoalBallWorkerResult } from "./parallelGoalBallWorkerTypes"
+import type { ParallelGlobalDrcTrialJob, ParallelGlobalDrcTrialResult } from "./parallelGlobalDrcTrialTypes"
 
 export type ParallelRegionalFallbackResult = {
   kind: "regionalFallbackSolve"
@@ -77,11 +78,33 @@ export type ParallelNodeBatchResult = {
   results: ParallelIndexedNodeResult<ParallelRepairNodeResult>[]
 }
 
+export type ParallelPathWaveContext = {
+  params: Omit<ConstructorParameters<typeof MultiSimplifiedPathSolver>[0], "connMap"> & {
+    preserveLeadingLayerTransitions?: boolean
+  }
+  connectivityNetMap: Record<string, string[]>
+  connectivityIdToNetMap: Record<string, string>
+}
+export type ParallelPathWaveJob = {
+  kind: "simplifyPathWave"
+  contextId: number
+  context?: ParallelPathWaveContext
+  indexes: number[]
+  updates: Array<{ index: number; route: HighDensityRoute }>
+}
+export type ParallelPathWaveResult = {
+  kind: "simplifyPathWave"
+  contextId: number
+  results: Array<{ index: number; route: HighDensityRoute; nativeSteps: number }>
+}
+
 export type ParallelStageWorkerJob =
   | ParallelGoalBallWorkerJob
   | NegotiatedPathingRouteJob
   | ParallelNodeJob
   | ParallelNodeBatchJob
+  | ParallelPathWaveJob
+  | ParallelGlobalDrcTrialJob
   | { kind: "pathingLandmark"; graph: TinyLandmarkGraph; landmarkPortId: number }
   | {
       kind: "regionalFallbackSolve"
@@ -112,10 +135,13 @@ export type ParallelStageWorkerResult =
   | ParallelRegionalB01CandidateResult
   | ParallelNodeResult
   | ParallelNodeBatchResult
+  | ParallelPathWaveResult
+  | ParallelGlobalDrcTrialResult
   | { kind: "simplifyPathComponent"; routes: HighDensityRoute[] }
 
 export type ParallelStageWorkerPool = {
   /** Custom executors can omit the batching hint; planning then uses four slots. */
   readonly workerCount?: number
+  createContextId?(): number
   run<T>(job: ParallelStageWorkerJob): Promise<T>
 }

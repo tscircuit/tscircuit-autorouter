@@ -53,12 +53,16 @@ test("physical stitch search follows the terminal branch and records only permit
   const terminalGap = { ...opts, hdRoutes: [routes[0]!],
     end: { x: 3.1, y: 0, z: 1, pcb_port_id: "end" },
     allowedLayerTransitionPointKeys: new Set([getXyPointKey({ x: 3.1, y: 0 })]) }
-  const withTerminalVia = findPhysicalStitchPath(terminalGap)
+  expect(findPhysicalStitchPath(terminalGap)).toBeNull()
+  const coincidentTerminal = { ...terminalGap, end: { x: 2, y: 0, z: 1, pcb_port_id: "end" },
+    allowedLayerTransitionPointKeys: new Set([getXyPointKey({ x: 2, y: 0 })]) }
+  const withTerminalVia = findPhysicalStitchPath(coincidentTerminal)
   expect(withTerminalVia).not.toBeNull()
-  expect(withTerminalVia!.route.at(-1)).toEqual({ x: 3.1, y: 0, z: 1 })
-  expect(withTerminalVia!.vias).toEqual([{ x: 3.1, y: 0 }])
-  expect(findPhysicalStitchPath({ ...terminalGap, isStitchSegmentClear: () => false })).toBeNull()
-  expect(findPhysicalStitchPath({ ...terminalGap, isStitchSegmentClear: () => false,
+  expect(withTerminalVia!.route.at(-1)).toEqual({ x: 2, y: 0, z: 1 })
+  expect(withTerminalVia!.vias).toEqual([{ x: 2, y: 0 }])
+  const planarTerminalGap = { ...terminalGap, end: { x: 3.1, y: 0, z: 0, pcb_port_id: "end" } }
+  expect(findPhysicalStitchPath({ ...planarTerminalGap, isStitchSegmentClear: () => false })).toBeNull()
+  expect(findPhysicalStitchPath({ ...planarTerminalGap, isStitchSegmentClear: () => false,
     stitchClearanceMode: "prefer_clear" })).not.toBeNull()
   expect(findPhysicalStitchPath({ ...opts, hdRoutes: [] })).toBeNull()
 

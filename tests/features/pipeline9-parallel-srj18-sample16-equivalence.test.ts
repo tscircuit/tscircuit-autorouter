@@ -11,7 +11,7 @@ test("the parallel pipeline retains complete SRJ18 sample 16 routing geometry", 
   serial.solve()
   expect(serial.solved).toBe(true)
   getGlobalInMemoryCache().clearCache()
-  const parallel = new AutoroutingPipelineSolver9_Parallel(structuredClone(scenario), { effort: 1, cacheProvider: null, workerCount: 4 })
+  const parallel = new AutoroutingPipelineSolver9_Parallel(structuredClone(scenario), { effort: 1, cacheProvider: null, workerCount: 4, enableParallelPathSimplification: true })
   try {
     await parallel.solveAsync()
     expect(parallel.solved).toBe(true)

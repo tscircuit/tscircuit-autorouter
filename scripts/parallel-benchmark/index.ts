@@ -5,8 +5,10 @@ import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
 import { createInterface } from "node:readline"
+import stableStringify from "fast-json-stable-stringify"
 import { loadScenarios } from "../benchmark/scenarios"
 import { summarizeParallelBenchmark } from "./parallelBenchmarkSummary"
+import { loadSrj18PhysicalPadElements } from "./loadSrj18PhysicalPadElements"
 import type { BenchmarkHighDensityPolicy, BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
 
 type Options = {
@@ -169,10 +171,17 @@ const main = async (): Promise<void> => {
   const require = createRequire(import.meta.url)
   const datasetRoot = path.dirname(require.resolve("dataset-srj18"))
   const datasetHashes = Object.fromEntries(await Promise.all(expectedSamples.map(async (sampleName) => [sampleName, createHash("sha256").update(new Uint8Array(await readFile(path.join(datasetRoot, "samples", `${sampleName}.json`)))).digest("hex")])))
+  const physicalPadHashes = Object.fromEntries(scenarios.map(([sampleName, scenario]) => {
+    const pads = loadSrj18PhysicalPadElements(scenario)
+    if (!pads) throw new Error(`Missing original CAD physical pads: ${sampleName}`)
+    return [sampleName, createHash("sha256").update(stableStringify(pads)).digest("hex")]
+  }))
   const metadata = {
-    harnessVersion: 3,
+    harnessVersion: 4,
     coveragePolicyVersion: 2,
     drcIncludesBoardClearance: true,
+    physicalPadSource: "original-circuit-json",
+    physicalPadHashes,
     options,
     dataset: "srj18",
     datasetDependency: JSON.parse(await readFile("package.json", "utf8")).devDependencies["dataset-srj18"],
@@ -214,6 +223,7 @@ const main = async (): Promise<void> => {
     `Full coverage: ${summary.fullCoverage}; all solved: ${summary.allCompleted}; exact geometry: ${summary.exactGeometry}; quality preserved: ${summary.qualityPreserved}`,
     `Target reached: ${summary.targetReached}`,
     `Harness version: ${metadata.harnessVersion}; DRC includes original physical board: ${metadata.drcIncludesBoardClearance}`,
+    `Pad/hole source: ${metadata.physicalPadSource}; original CAD traces and vias excluded`,
     "",
     "| Sample | Baseline median (s) | Parallel median (s) | Speedup | Solved base/parallel | Geometry | Quality |",
     "| --- | ---: | ---: | ---: | --- | --- | --- |",

@@ -112,6 +112,12 @@ function endpointConnector(options: PhysicalStitchPathOptions, from: Point3, to:
 
 function terminalConnector(options: PhysicalStitchPathOptions, terminal: Terminal, endpoint: Node): Connector | null {
   if (endpoint.pcbPortId && endpoint.pcbPortId !== terminal.pcb_port_id) return null
+  // A terminal's routed tail establishes which layer can safely leave its pad.
+  // A nearby endpoint on another layer cannot justify inventing a via at the
+  // terminal and a new wire across that layer's pads. Existing coincident
+  // endpoints can request a physical transition without replacing the tail.
+  if (terminal.z !== endpoint.point.z &&
+      Math.hypot(terminal.x - endpoint.point.x, terminal.y - endpoint.point.y) >= GEOMETRIC_TOLERANCE) return null
   const onEndpointLayer = { x: terminal.x, y: terminal.y, z: endpoint.point.z }
   const cost = planarCost(options, onEndpointLayer, endpoint.point, MAX_TERMINAL_STITCH_GAP_DISTANCE_3)
   if (cost === null) return null

@@ -11,6 +11,7 @@ import type {
 } from "@tscircuit/repair04"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { Pipeline9DenseClearancePathSolver as FindClearancePathSolver } from "./Pipeline9DenseClearancePathSolver"
+import { ClearanceCopperGridIndex } from "./ClearanceCopperGridIndex"
 import { prepareSegmentDistanceGeometry, segmentToSegmentMinDistanceWithGeometry,
   updateSegmentDistanceGeometry, type SegmentDistanceGeometry } from "./segmentToSegmentMinDistanceWithGeometry"
 import Flatbush from "flatbush"
@@ -473,7 +474,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
         this.startPath = (): void => {
           const createCopperIndex = (
             indexedCopper: Copper[],
-          ): { index: Flatbush; copper: Copper[] } | undefined => {
+          ): { index: Pick<Flatbush, "search">; copper: Copper[] } | undefined => {
             if (!indexedCopper.length) return undefined
             const index = new Flatbush(indexedCopper.length)
             for (const copper of indexedCopper) {
@@ -485,12 +486,20 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               )
             }
             index.finish()
-            return { index, copper: indexedCopper }
+            return {
+              index: ClearanceCopperGridIndex.create(index, {
+                minX: input.bounds.minX - .5,
+                minY: input.bounds.minY - .5,
+                maxX: input.bounds.maxX + .5,
+                maxY: input.bounds.maxY + .5,
+              }),
+              copper: indexedCopper,
+            }
           }
           const copperIndex = createCopperIndex(coppers)
           const copperByLayer = new Map<
             number,
-            { index: Flatbush; copper: Copper[] } | undefined
+            { index: Pick<Flatbush, "search">; copper: Copper[] } | undefined
           >()
           for (let z = 0; z < input.srj.layerCount; z++) {
             copperByLayer.set(

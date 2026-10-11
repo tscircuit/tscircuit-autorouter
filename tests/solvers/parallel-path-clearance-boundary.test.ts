@@ -76,8 +76,9 @@ test("clearance-boundary components retain interacting routes and serial output 
       expect(parallel.simplifiedHdRoutes).toEqual(serial.simplifiedHdRoutes)
       expect(parallel.simplifiedHdRoutes.map((route) => route.connectionName)).toEqual(routes.map((route) => route.connectionName))
     }
-    expect(pool.stats.tasksCompleted).toBe(6)
-    expect(pool.stats.maxActiveWorkers).toBe(3)
+    expect(pool.stats.tasksCompleted).toBe(10)
+    expect(pool.stats.maxActiveWorkers).toBeGreaterThanOrEqual(3)
+    expect(pool.stats.maxActiveWorkers).toBeLessThanOrEqual(4)
   } finally {
     pool.dispose()
   }

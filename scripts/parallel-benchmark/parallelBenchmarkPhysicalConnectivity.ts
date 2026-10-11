@@ -40,12 +40,37 @@ const touches = (a: Shape, b: Shape): boolean => {
 }
 
 const rectangle = (center: Point, width: number, height: number, rotation = 0): Shape => {
+  if (![width, height, rotation].every(Number.isFinite) || width <= 0 || height <= 0) throw new Error("Invalid rectangular copper geometry")
   const angle = rotation * Math.PI / 180
   const cos = Math.cos(angle), sin = Math.sin(angle)
   return { kind: "polygon", points: [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => {
     const dx = x! * width / 2, dy = y! * height / 2
     return { x: center.x + dx * cos - dy * sin, y: center.y + dx * sin + dy * cos }
   }) }
+}
+
+const rotateOffset = (center: Point, x: number, y: number, rotation: number): Point => {
+  const angle = rotation * Math.PI / 180
+  return { x: center.x + x * Math.cos(angle) - y * Math.sin(angle), y: center.y + x * Math.sin(angle) + y * Math.cos(angle) }
+}
+
+/** Exact rounded-rectangle union, including capsules and circular pads. */
+const roundedRectangle = (center: Point, width: number, height: number, radius: number, rotation = 0): Shape[] => {
+  if (![width, height, radius, rotation].every(Number.isFinite) || width <= 0 || height <= 0 || radius < 0 || radius > Math.min(width, height) / 2) throw new Error("Invalid rounded copper geometry")
+  if (radius === 0) return [rectangle(center, width, height, rotation)]
+  const dx = width / 2 - radius, dy = height / 2 - radius
+  if (dx === 0 || dy === 0) return [{
+    kind: "stroke", a: rotateOffset(center, -dx, -dy, rotation),
+    b: rotateOffset(center, dx, dy, rotation), radius,
+  }]
+  return [
+    rectangle(center, width - 2 * radius, height, rotation),
+    rectangle(center, width, height - 2 * radius, rotation),
+    ...[[-dx, -dy], [dx, -dy], [dx, dy], [-dx, dy]].map(([x, y]): Shape => {
+      const point = rotateOffset(center, x!, y!, rotation)
+      return { kind: "stroke", a: point, b: point, radius }
+    }),
+  ]
 }
 
 /** Build copper components from geometry, without trace/port identity joins. */
@@ -61,7 +86,7 @@ export const buildPhysicalConnectivity = (circuitJson: AnyCircuitElement[], laye
   const add = (shape: Shape, layers: string[], sourceType: Conductor["sourceType"], padPortId?: string): void => {
     const points = shape.kind === "stroke" ? [shape.a, shape.b] : shape.points
     const radius = shape.kind === "stroke" ? shape.radius : 0
-    if (points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y)) || !Number.isFinite(radius) || radius < 0) throw new Error("Invalid copper geometry")
+    if ((shape.kind === "polygon" && points.length < 3) || points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y)) || !Number.isFinite(radius) || radius < 0) throw new Error("Invalid copper geometry")
     conductors.push({ shape, layers, sourceType, padPortId, bounds: [
       Math.min(...points.map((point) => point.x)) - radius - 1e-9,
       Math.min(...points.map((point) => point.y)) - radius - 1e-9,
@@ -81,11 +106,15 @@ export const buildPhysicalConnectivity = (circuitJson: AnyCircuitElement[], laye
       add({ kind: "stroke", a: element, b: element, radius: element.outer_diameter / 2 }, span(element.layers), "via")
     } else if (element.type === "pcb_smtpad") {
       if (element.shape === "rect" || element.shape === "rotated_rect") {
-        add(rectangle(element, element.width, element.height, element.shape === "rotated_rect" ? element.ccw_rotation : 0), [element.layer], "pad", element.pcb_port_id)
+        for (const shape of roundedRectangle(element, element.width, element.height, element.rect_border_radius ?? element.corner_radius ?? 0, element.shape === "rotated_rect" ? element.ccw_rotation : 0)) add(shape, [element.layer], "pad", element.pcb_port_id)
       } else if (element.shape === "circle") {
         add({ kind: "stroke", a: element, b: element, radius: element.radius }, [element.layer], "pad", element.pcb_port_id)
+      } else if (element.shape === "pill" || element.shape === "rotated_pill") {
+        for (const shape of roundedRectangle(element, element.width, element.height, element.radius, element.shape === "rotated_pill" ? element.ccw_rotation : 0)) add(shape, [element.layer], "pad", element.pcb_port_id)
+      } else if (element.shape === "polygon") {
+        add({ kind: "polygon", points: element.points }, [element.layer], "pad", element.pcb_port_id)
       } else {
-        throw new Error(`Unsupported SMT coverage geometry: ${element.shape}`)
+        throw new Error(`Unsupported SMT coverage geometry: ${(element as { shape: unknown }).shape}`)
       }
     } else if (element.type === "pcb_plated_hole") {
       // Imported through holes may list generic inner planes absent from this board.
@@ -97,6 +126,8 @@ export const buildPhysicalConnectivity = (circuitJson: AnyCircuitElement[], laye
       } else if ("rect_pad_width" in element && "rect_pad_height" in element) {
         const rotation = "rect_ccw_rotation" in element ? element.rect_ccw_rotation ?? 0 : 0
         add(rectangle(element, element.rect_pad_width, element.rect_pad_height, rotation), layers, "pad", element.pcb_port_id)
+      } else if (element.shape === "pill") {
+        for (const shape of roundedRectangle(element, element.outer_width, element.outer_height, Math.min(element.outer_width, element.outer_height) / 2, element.ccw_rotation)) add(shape, layers, "pad", element.pcb_port_id)
       } else {
         throw new Error(`Unsupported plated-hole coverage geometry: ${element.shape}`)
       }

@@ -804,7 +804,7 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
   }
 }
 
-class CongestionAwareFinalRouteSolver extends SelectiveReripTinyHyperGraphSolver {
+export class CongestionAwareFinalRouteSolver extends SelectiveReripTinyHyperGraphSolver {
   remainingReripBudget = 0
 
   override onOutOfCandidates(): void {

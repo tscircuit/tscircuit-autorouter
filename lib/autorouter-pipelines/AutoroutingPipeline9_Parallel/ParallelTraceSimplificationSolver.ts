@@ -62,7 +62,7 @@ export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificati
     }
     this.prepareSimplificationChild()
     const subSolver = this.activeSubSolver
-    if (subSolver && (!(subSolver instanceof ParallelMultiSimplifiedPathSolver) || subSolver.batches.length <= 1)) {
+    if (subSolver && (!(subSolver instanceof ParallelMultiSimplifiedPathSolver) || !subSolver.hasParallelWork)) {
       // These children have no asynchronous work. Use their own solve loops
       // and iteration budgets, then let the original parent validate and
       // harvest the finished phase exactly as it does during stepped solving.

@@ -51,17 +51,19 @@ const comparisonFields = [
   "runtime", "cpuModel", "availableParallelism", "timing", "qualityValidationTimeoutMs",
 ] as const
 
-const getSourceQualityPolicy = (source: ParallelBenchmarkReportSource): { harnessVersion: number; drcIncludesBoardClearance: boolean; coveragePolicyVersion: number } => {
+const getSourceQualityPolicy = (source: ParallelBenchmarkReportSource): { harnessVersion: number; drcIncludesBoardClearance: boolean; coveragePolicyVersion: number; physicalPadSource: "srj-obstacles" | "original-circuit-json" } => {
   const { metadata } = source.report
   const harnessVersion = metadata.harnessVersion ?? 1
   const drcIncludesBoardClearance = metadata.drcIncludesBoardClearance ?? false
   const coveragePolicyVersion = metadata.coveragePolicyVersion ?? 1
-  if (!Number.isInteger(harnessVersion) || ![1, 2, 3].includes(harnessVersion as number) ||
+  const physicalPadSource = metadata.physicalPadSource ?? "srj-obstacles"
+  if (!Number.isInteger(harnessVersion) || ![1, 2, 3, 4].includes(harnessVersion as number) ||
     typeof drcIncludesBoardClearance !== "boolean" || ((harnessVersion as number) >= 2 && !drcIncludesBoardClearance) ||
-    ![1, 2].includes(coveragePolicyVersion as number) || ((harnessVersion === 3) !== (coveragePolicyVersion === 2))) {
+    ![1, 2].includes(coveragePolicyVersion as number) || (((harnessVersion as number) >= 3) !== (coveragePolicyVersion === 2)) ||
+    !["srj-obstacles", "original-circuit-json"].includes(physicalPadSource as string) || ((harnessVersion === 4) !== (physicalPadSource === "original-circuit-json"))) {
     throw new Error(`Invalid benchmark quality policy: ${source.sourcePath}`)
   }
-  return { harnessVersion: harnessVersion as number, drcIncludesBoardClearance, coveragePolicyVersion: coveragePolicyVersion as number }
+  return { harnessVersion: harnessVersion as number, drcIncludesBoardClearance, coveragePolicyVersion: coveragePolicyVersion as number, physicalPadSource: physicalPadSource as "srj-obstacles" | "original-circuit-json" }
 }
 
 const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions => {
@@ -143,6 +145,15 @@ export const mergeParallelBenchmarkReports = (
     const hashes = metadata.datasetHashes as Record<string, unknown>
     if (!hashes || typeof hashes !== "object" || Object.keys(hashes).length !== 16 || expectedSamples.some((sampleName) => typeof hashes[sampleName] !== "string" || hashes[sampleName] === "")) {
       throw new Error(`All 16 dataset hashes are required: ${source.sourcePath}`)
+    }
+    if (referenceQualityPolicy.physicalPadSource === "original-circuit-json") {
+      const padHashes = metadata.physicalPadHashes as Record<string, unknown>
+      if (!padHashes || typeof padHashes !== "object" || Object.keys(padHashes).length !== 16 || expectedSamples.some((sampleName) => typeof padHashes[sampleName] !== "string" || !/^[a-f0-9]{64}$/.test(padHashes[sampleName] as string))) {
+        throw new Error(`All 16 original CAD physical pad hashes are required: ${source.sourcePath}`)
+      }
+      if (stableStringify(padHashes) !== stableStringify(reference.report.metadata.physicalPadHashes)) {
+        throw new Error(`Incompatible physical pad hashes: ${source.sourcePath}`)
+      }
     }
     const { sampleNumbers: _sourceSamples, outDir: _sourceOutDir, ...settings } = options
     const { sampleNumbers: _referenceSamples, outDir: _referenceOutDir, ...referenceSettings } = referenceOptions
@@ -248,6 +259,7 @@ const main = async (): Promise<void> => {
     `Baseline revision: ${merged.metadata.baselineRevision}`,
     `Sources: ${merged.sources.length}; runs: ${merged.results.length}; installed dependencies verified: ${merged.metadata.installedDependenciesVerified}`,
     `Harness version: ${merged.metadata.harnessVersion}; DRC includes original physical board: ${merged.metadata.drcIncludesBoardClearance}`,
+    `Pad/hole source: ${merged.metadata.physicalPadSource}; original CAD traces and vias excluded for original-circuit-json`,
     `Arithmetic mean speedup: ${summary.arithmeticMeanSpeedup.toFixed(3)}×; aggregate: ${summary.aggregateSpeedup.toFixed(3)}×; geometric mean: ${summary.geometricMeanSpeedup.toFixed(3)}×.`,
     `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; physical routing: ${summary.physicalRouting}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}.`,
     `Coverage acceptance mode: ${summary.coverageAcceptanceMode}; coverage policy version: ${merged.metadata.coveragePolicyVersion}.`,

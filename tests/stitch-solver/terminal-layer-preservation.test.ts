@@ -57,7 +57,7 @@ test("opt-in stitching preserves real terminal layers with permitted colocated v
   expect(startTransition.mergedHdRoute.route.at(-1)!.z).toBe(0)
   expect(startTransition.mergedHdRoute.vias).toEqual([{ x: 0, y: 0 }])
   const blockedPlanar = new SingleHighDensityRouteStitchSolver3({
-    connectionName: "net", start, end, preserveTerminalLayers: true,
+    connectionName: "net", start, end: { ...end, z: 0 }, preserveTerminalLayers: true,
     hdRoutes: [{ ...fragment, route: [{ x: 0, y: 0, z: 0 }, { x: 1.5, y: 0, z: 0 }] }],
     isStitchSegmentClear: () => false, stitchClearanceMode: "require_clear",
   })

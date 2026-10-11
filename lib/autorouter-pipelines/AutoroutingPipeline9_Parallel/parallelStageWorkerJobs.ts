@@ -10,6 +10,10 @@ import { assertParallelNodeBatchJob } from "./parallelNodeJobBatching"
 import { computeTinyLandmarkDistances } from "./TinyLandmarkHeuristic"
 import { executeNegotiatedPathingRouteJob } from "./TinyNegotiatedRouteSearch"
 import { executeParallelGoalBallJob } from "./parallelGoalBallWorkerJobs"
+import { ParallelPathWaveExecutor } from "./executeParallelPathWave"
+import { executeParallelGlobalDrcTrial } from "./executeParallelGlobalDrcTrial"
+
+const pathWaveExecutor = new ParallelPathWaveExecutor()
 
 function executeForceImproveNode(job: ParallelForceImproveNodeJob): ParallelForceImproveNodeResult {
   const solver = new HighDensityForceImproveSolver({
@@ -87,6 +91,10 @@ export function executeParallelStageJob(
   job: ParallelStageWorkerJob,
 ): ParallelStageWorkerResult {
   switch (job.kind) {
+    case "globalDrcForceTrial":
+      return executeParallelGlobalDrcTrial(job)
+    case "simplifyPathWave":
+      return pathWaveExecutor.execute(job)
     case "pathingGoalBalls":
       return executeParallelGoalBallJob(job)
     case "pathingNegotiatedRoute":

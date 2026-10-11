@@ -1034,9 +1034,15 @@ export type ConvertToCircuitJsonOptions = {
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
+  /** Original CAD pad and hole primitives, without source traces or vias. */
+  physicalPadElements?: readonly PhysicalPadElement[]
   /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
 }
+
+export type PhysicalPadElement = Extract<AnyCircuitElement, {
+  type: "pcb_smtpad" | "pcb_plated_hole" | "pcb_hole"
+}>
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   const { minX, maxX, minY, maxY } = srj.bounds
@@ -1110,7 +1116,16 @@ export function convertToCircuitJson(
   )
 
   // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  if (options.physicalPadElements !== undefined) {
+    for (const element of options.physicalPadElements) {
+      if (element.type !== "pcb_smtpad" && element.type !== "pcb_plated_hole" && element.type !== "pcb_hole") {
+        throw new Error("Physical pad conversion accepts only original pads and holes")
+      }
+      circuitJson.push(structuredClone(element))
+    }
+  } else {
+    circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  }
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(

@@ -6,8 +6,10 @@ import { mapLayerNameToZ } from "./mapLayerNameToZ"
 const pointHash = (point: { x: number; y: number }) =>
   `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
 
-export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
-  const connMap = new ConnectivityMap({})
+export const getConnectivityMapFromSimpleRouteJson = (
+  srj: SimpleRouteJson,
+  connMap = new ConnectivityMap({}),
+) => {
   for (const connection of srj.connections) {
     for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
       connMap.addConnections([[connection.name, rootConnectionName]])

@@ -92,6 +92,8 @@ test("tiny bitset candidate scoring preserves native angles, costs, pruning, and
   for (const scoringOptions of [
     { minimumBitsetSegmentCount: 8, enableRegionCostCache: false },
     { minimumBitsetSegmentCount: Infinity, enableRegionCostCache: true },
+    { minimumBitsetSegmentCount: 8, enableRegionCostCache: false, enableStaticAnglePrefixes: true },
+    { minimumBitsetSegmentCount: 8, enableRegionCostCache: true, enableStaticAnglePrefixes: true },
   ]) {
   for (const includeSecondAngles of [false, true]) {
     for (const addDistance of [false, true]) {

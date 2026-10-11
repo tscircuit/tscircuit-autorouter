@@ -121,6 +121,7 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect(merged.metadata.harnessVersion).toBe(1)
   expect(merged.metadata.drcIncludesBoardClearance).toBe(false)
   expect(merged.metadata.coveragePolicyVersion).toBe(1)
+  expect(merged.metadata.physicalPadSource).toBe("srj-obstacles")
   const parityPolicySources = makeMergeSources()
   for (const source of parityPolicySources) Object.assign(source.report.metadata, {
     harnessVersion: 3, drcIncludesBoardClearance: true, coveragePolicyVersion: 2,
@@ -130,6 +131,22 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect(parityPolicy.summary.coverageAcceptanceMode).toBe("baseline-parity")
   Object.assign(parityPolicySources[0]!.report.metadata, { harnessVersion: 2, coveragePolicyVersion: 1 })
   expect(() => mergeParallelBenchmarkReports(parityPolicySources)).toThrow("Incompatible benchmark quality policy")
+  const cadPolicySources = makeMergeSources()
+  for (const source of cadPolicySources) Object.assign(source.report.metadata, {
+    harnessVersion: 4, drcIncludesBoardClearance: true, coveragePolicyVersion: 2,
+    physicalPadSource: "original-circuit-json", physicalPadHashes: { ...source.report.metadata.datasetHashes as Record<string, unknown> },
+  })
+  const cadPolicy = mergeParallelBenchmarkReports(cadPolicySources)
+  expect(cadPolicy.metadata.physicalPadSource).toBe("original-circuit-json")
+  expect(cadPolicy.metadata.physicalPadHashes).toEqual(cadPolicySources[0]!.report.metadata.physicalPadHashes)
+  expect(cadPolicy.summary.targetReached).toBe(true)
+  const firstPadHashes = cadPolicySources[0]!.report.metadata.physicalPadHashes as Record<string, unknown>
+  firstPadHashes.sample001 = "f".repeat(64)
+  expect(() => mergeParallelBenchmarkReports(cadPolicySources)).toThrow("Incompatible physical pad hashes")
+  delete firstPadHashes.sample001
+  expect(() => mergeParallelBenchmarkReports(cadPolicySources)).toThrow("All 16 original CAD physical pad hashes are required")
+  Object.assign(cadPolicySources[0]!.report.metadata, { physicalPadSource: "srj-obstacles" })
+  expect(() => mergeParallelBenchmarkReports(cadPolicySources)).toThrow("Invalid benchmark quality policy")
   const boardInclusiveSources = makeMergeSources()
   for (const source of boardInclusiveSources) Object.assign(source.report.metadata, {
     harnessVersion: 2, drcIncludesBoardClearance: true,

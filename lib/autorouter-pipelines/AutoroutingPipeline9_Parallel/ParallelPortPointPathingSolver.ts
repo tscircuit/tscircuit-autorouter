@@ -93,19 +93,15 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     const tiny = pipeline.getSolver<TinyGoalBallSelectiveReripHyperGraphSolver>("solveGraph")
     if (!tiny) return
     if (this.pendingEffects && this.pendingEffects.length > 0) return
+    if (!tiny.needsCompletionGoalPreparation) return
     const heuristic = tiny.goalBallHeuristic
     const recordPreparation = (): void => {
       pipeline.stats = { ...pipeline.stats, ...heuristic.stats }
       this.pendingEffects = []
     }
     let promise: Promise<void> | undefined
-    if (!heuristic.landmarkHeuristic.ready) {
-      promise = heuristic.prepareLandmarks(this.workerPool)
-      if (!promise) recordPreparation()
-    } else if (tiny.needsCompletionGoalPreparation) {
-      if (this.workerPool) promise = heuristic.prepare(this.workerPool)
-      else { heuristic.prepareSync(); recordPreparation() }
-    }
+    if (this.workerPool) promise = heuristic.prepare(this.workerPool)
+    else { heuristic.prepareSync(); recordPreparation() }
     if (!promise) return
     this.pendingEffects = [{ name: "parallel-pathing-goal-balls", promise: promise.then(recordPreparation)
       .catch((error: unknown): never => {

@@ -362,7 +362,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
-          cms.connMap = getConnectivityMapFromSimpleRouteJson(
+          cms.connMap = cms.createConnectivityMap(
             cms.srjWithPointPairs!,
           )
         },
@@ -1115,12 +1115,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.viaDiameter = viaDimensions.padDiameter
     this.viaHoleDiameter = viaDimensions.holeDiameter
     this.minTraceWidth = this.srj.minTraceWidth
-    this.connMap = getConnectivityMapFromSimpleRouteJson(this.srj)
+    this.connMap = this.createConnectivityMap(this.srj)
     this.colorMap = getColorMap(this.srj, this.connMap)
   }
 
   getConstructorParams() {
     return [this.srj, this.opts] as const
+  }
+
+  protected createConnectivityMap(srj: SimpleRouteJson): ConnectivityMap {
+    // Keep the public serial builder unchanged; asynchronous implementations
+    // may replace construction while publishing the same native map data.
+    const connectivityMap = getConnectivityMapFromSimpleRouteJson(srj)
+    return connectivityMap
   }
 
   currentPipelineStepIndex = 0

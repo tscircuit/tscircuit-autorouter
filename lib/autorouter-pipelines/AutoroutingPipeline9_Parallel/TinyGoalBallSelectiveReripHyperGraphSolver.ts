@@ -4,7 +4,7 @@ import { TinyGoalBallHeuristic } from "./TinyGoalBallHeuristic"
 import type { ParallelGoalBallWorkerPool } from "./parallelGoalBallWorkerTypes"
 
 export class TinyGoalBallSelectiveReripHyperGraphSolver extends TinyIndexedSelectiveReripHyperGraphSolver {
-  readonly goalBallHeuristic: TinyGoalBallHeuristic
+  private goalBallHeuristicInstance?: TinyGoalBallHeuristic
   private cachedRouteId?: number
   private cachedTargetPortId?: number
   private cachedBounds?: Float64Array
@@ -17,15 +17,35 @@ export class TinyGoalBallSelectiveReripHyperGraphSolver extends TinyIndexedSelec
     return this.ADD_SEGMENT_DISTANCE_TO_G
   }
 
+  get goalBallHeuristic(): TinyGoalBallHeuristic {
+    if (!this.goalBallHeuristicInstance) {
+      this.goalBallHeuristicInstance = new TinyGoalBallHeuristic(this)
+    }
+    return this.goalBallHeuristicInstance
+  }
+
+  get hasGoalBallHeuristic(): boolean {
+    // Inspect allocation without invoking the lazy getter. Successful native
+    // searches never need a CSR graph or any landmark/goal preparation.
+    const heuristic = this.goalBallHeuristicInstance
+    return heuristic !== undefined
+  }
+
   get needsCompletionGoalPreparation(): boolean {
-    return !this.useGoalBallBounds && !this.goalBallHeuristic.ready &&
-      this.iterations + 1 >= this.MAX_ITERATIONS
+    // Test the existing route budget before allocating the static graph.
+    // The outer preparation consumes no route-search iterations.
+    if (this.useGoalBallBounds || this.solved || this.failed || this.iterations + 1 < this.MAX_ITERATIONS) return false
+    if (!this.ACCEPT_BEST_SOLUTION_ON_TIMEOUT || (this.bestSolvedStateSnapshot && this.bestSolvedStateSummary)) return false
+    if (!(Math.max(0, Math.floor(this.GREEDY_FINAL_ROUTE_ITERS)) > 0) ||
+      !(this.state.ripCount < this.costAwareFinalReripBudget)) return false
+    if (this.state.currentRouteId === undefined && this.state.unroutedRoutes.length === 0) return false
+    return !this.goalBallHeuristic.ready
   }
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
     options?: TinyHyperGraphSolverOptions, heuristic?: TinyGoalBallHeuristic) {
     super(topology, problem, options)
-    this.goalBallHeuristic = heuristic ?? new TinyGoalBallHeuristic(this)
+    this.goalBallHeuristicInstance = heuristic
     if (heuristic) heuristic.validateSolver(this)
   }
 
@@ -52,11 +72,12 @@ export class TinyGoalBallSelectiveReripHyperGraphSolver extends TinyIndexedSelec
   }
 
   override computeH(portId: number): number {
+    // The parent retains native indexed geometry, candidate ties, and PF.
+    if (!this.useGoalBallBounds) return super.computeH(portId)
     const routeId = this.state.currentRouteId
     if (routeId === undefined) throw new Error("Goal-ball route heuristic requires an active route")
     const target = this.getRouteEndPortId(routeId)
     const landmark = this.goalBallHeuristic.landmarkHeuristic.lowerBound(portId, target)
-    if (!this.useGoalBallBounds) return Math.max(super.computeH(portId), landmark)
     if (this.cachedRouteId !== routeId || this.cachedTargetPortId !== target || !this.cachedBounds) {
       this.cachedRouteId = routeId
       this.cachedTargetPortId = target
@@ -66,7 +87,6 @@ export class TinyGoalBallSelectiveReripHyperGraphSolver extends TinyIndexedSelec
   }
 
   override _step(): void {
-    if (!this.goalBallHeuristic.landmarkHeuristic.ready) this.goalBallHeuristic.prepareLandmarks()
     // Standalone and synchronous completion calls still prepare temporary
     // partial-rip targets before their first candidate expansion.
     if (this.useGoalBallBounds) {
@@ -76,17 +96,12 @@ export class TinyGoalBallSelectiveReripHyperGraphSolver extends TinyIndexedSelec
     super._step()
   }
 
-  override tryFinalAcceptance(): void {
-    // The outer adapter performs this prephase asynchronously before the last
-    // ordinary step. Standalone callers retain the same completion semantics.
-    if (!this.goalBallHeuristic.ready) this.goalBallHeuristic.prepareSync()
-    super.tryFinalAcceptance()
-  }
-
   protected override createGreedyFinalRouteSolver(
     options: TinyHyperGraphSolverOptions, attempt: number,
   ): TinyHyperGraphSolver {
     if (attempt >= 0) return super.createGreedyFinalRouteSolver(options, attempt)
+    // Native final acceptance still controls attempts and budgets. Standalone
+    // synchronous children prepare the shared heuristic before their first step.
     const solver = new GoalBallCongestionAwareFinalRouteSolver(this.topology, this.problem, {
       ...options, MAX_ITERATIONS: Math.max(options.MAX_ITERATIONS ?? 50_000, this.MAX_ITERATIONS * 2),
     }, this.goalBallHeuristic)

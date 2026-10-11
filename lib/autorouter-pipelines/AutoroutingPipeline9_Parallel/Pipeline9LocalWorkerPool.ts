@@ -6,6 +6,7 @@ import type {
 import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
 import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant, FirstValidA13CandidateRequest, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
 import { assertParallelNodeBatchResult } from "./parallelNodeJobBatching"
+import { assertParallelGlobalDrcTrialResult } from "./executeParallelGlobalDrcTrial"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -19,6 +20,10 @@ type WorkerSlot = {
   task: QueuedTask | null
   contextId: number | null
   pathingGraphId: number | null
+  simplificationContextId: number | null
+  simplificationCompleted: Set<number>
+  globalDrcContextId: number | null
+  globalDrcSnapshotId: number | null
 }
 export type Pipeline9LocalWorkerPoolOptions = {
   workerCount?: number
@@ -94,7 +99,9 @@ export class Pipeline9LocalWorkerPool {
 
   private createWorker(): WorkerSlot {
     const worker = this.workerFactory(this.workerUrl) as WorkerWithLifecycle
-    const slot: WorkerSlot = { worker, task: null, contextId: null, pathingGraphId: null }
+    const slot: WorkerSlot = { worker, task: null, contextId: null, pathingGraphId: null,
+      simplificationContextId: null, simplificationCompleted: new Set(), globalDrcContextId: null,
+      globalDrcSnapshotId: null }
     worker.onmessage = (event: MessageEvent<Pipeline9LocalWorkerResponse>): void => {
       const response = event.data
       const task = slot.task
@@ -143,6 +150,13 @@ export class Pipeline9LocalWorkerPool {
       }
       if (response.ok && (task.job.kind === "forceImproveNodeBatch" || task.job.kind === "repairNodeBatch")) {
         try { assertParallelNodeBatchResult(task.job, response.result) }
+        catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (response.ok && task.job.kind === "globalDrcForceTrial") {
+        try { assertParallelGlobalDrcTrialResult(task.job, response.result) }
         catch (error: unknown) {
           this.fail(error instanceof Error ? error : new Error(String(error)))
           return
@@ -402,6 +416,37 @@ export class Pipeline9LocalWorkerPool {
         } else {
           if (!task.job.graph) throw new Error(`Negotiated pathing worker needs graph ${task.job.graphId}`)
           slot.pathingGraphId = task.job.graphId
+        }
+      }
+      if (task.job.kind === "simplifyPathWave") {
+        const pathJob = task.job
+        if (slot.simplificationContextId !== pathJob.contextId) {
+          if (!pathJob.context) throw new Error(`Path worker needs context ${pathJob.contextId}`)
+          slot.simplificationContextId = pathJob.contextId
+          slot.simplificationCompleted.clear()
+        } else {
+          const { context: _context, ...withoutContext } = pathJob
+          job = withoutContext
+        }
+        const updates = pathJob.updates.filter((update) => !slot.simplificationCompleted.has(update.index))
+        job = { ...job, updates } as typeof pathJob
+        for (const update of updates) slot.simplificationCompleted.add(update.index)
+        for (const index of pathJob.indexes) slot.simplificationCompleted.add(index)
+      }
+      if (task.job.kind === "globalDrcForceTrial") {
+        if (slot.globalDrcContextId === task.job.contextId) {
+          const { context: _context, ...trialJob } = task.job
+          job = trialJob
+        } else {
+          if (!task.job.context) throw new Error(`Global DRC worker needs context ${task.job.contextId}`)
+          slot.globalDrcContextId = task.job.contextId
+        }
+        if (slot.globalDrcSnapshotId === task.job.snapshotId) {
+          const { snapshot: _snapshot, ...trialJob } = job as typeof task.job
+          job = trialJob
+        } else {
+          if (!task.job.snapshot) throw new Error(`Global DRC worker needs snapshot ${task.job.snapshotId}`)
+          slot.globalDrcSnapshotId = task.job.snapshotId
         }
       }
       slot.worker.ref?.()

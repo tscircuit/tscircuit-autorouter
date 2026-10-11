@@ -38,6 +38,14 @@ type Bounds = {
   maxY: number
 }
 
+type DynamicIndexSnapshot = {
+  segmentCount: number
+  viaCount: number
+  cellBounds: Float64Array
+  segmentLayers: string[]
+  viaLayers: string[][]
+}
+
 type WireRoutePoint = Extract<
   SimplifiedPcbTrace["route"][number],
   { route_type: "wire" }
@@ -215,8 +223,12 @@ class SpatialHash<T> {
   private readonly rowItems: T[] = []
   private visitedGenerations = new Uint32Array(0)
   private queryGeneration = 0
+  private readonly queryCache = new Map<string, T[]>()
 
-  constructor(private readonly cellSize: number) {}
+  constructor(
+    private readonly cellSize: number,
+    private readonly cacheQueries = false,
+  ) {}
 
   private registerItem(item: T): number {
     const existingId = this.itemIds.get(item)
@@ -243,6 +255,18 @@ class SpatialHash<T> {
     const maxCellX = Math.floor(bounds.maxX / this.cellSize)
     const minCellY = Math.floor(bounds.minY / this.cellSize)
     const maxCellY = Math.floor(bounds.maxY / this.cellSize)
+    this.insertCellRange(item, minCellX, maxCellX, minCellY, maxCellY)
+  }
+
+  insertCellRange(
+    item: T,
+    minCellX: number,
+    maxCellX: number,
+    minCellY: number,
+    maxCellY: number,
+  ): void {
+    // Cached query arrays are valid only while cell membership is immutable.
+    this.queryCache.clear()
     let itemId: number | undefined
 
     for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
@@ -263,11 +287,34 @@ class SpatialHash<T> {
     }
   }
 
+  replaceItems(replace: (item: T) => T): void {
+    // Cell arrays retain their original row IDs and traversal order. Geometry
+    // and metadata always come from this evaluation's freshly collected rows.
+    this.itemIds.clear()
+    this.queryCache.clear()
+    for (let itemId = 0; itemId < this.rowItems.length; itemId++) {
+      const currentItem = replace(this.rowItems[itemId]!)
+      this.rowItems[itemId] = currentItem
+      this.itemIds.set(currentItem, itemId)
+    }
+  }
+
   query(bounds: Bounds): T[] {
     const minCellX = Math.floor(bounds.minX / this.cellSize)
     const maxCellX = Math.floor(bounds.maxX / this.cellSize)
     const minCellY = Math.floor(bounds.minY / this.cellSize)
     const maxCellY = Math.floor(bounds.maxY / this.cellSize)
+    // Unsafe/infinite endpoints must still enter the original traversal. In
+    // particular, a cache hit cannot hide its nonprogressing-loop semantics.
+    const cacheKey = this.cacheQueries &&
+      Number.isSafeInteger(minCellX) && Number.isSafeInteger(maxCellX) &&
+      Number.isSafeInteger(minCellY) && Number.isSafeInteger(maxCellY)
+      ? `${minCellX},${maxCellX},${minCellY},${maxCellY}`
+      : undefined
+    if (cacheKey !== undefined) {
+      const cached = this.queryCache.get(cacheKey)
+      if (cached !== undefined) return cached
+    }
     let generation = this.queryGeneration + 1
     if (generation > 0xffffffff) {
       this.visitedGenerations.fill(0)
@@ -297,6 +344,14 @@ class SpatialHash<T> {
       }
     }
 
+    if (cacheKey !== undefined) {
+      if (this.queryCache.size >= 4096) {
+        this.queryCache.delete(this.queryCache.keys().next().value!)
+      }
+      // These arrays remain private to the engine's read-only candidate loops.
+      // Returned errors are still constructed anew from live row metadata.
+      this.queryCache.set(cacheKey, results)
+    }
     return results
   }
 }
@@ -513,6 +568,9 @@ export class Pipeline9MemoizedAutoroutingDrcEngine {
     string,
     SpatialHash<StaticObstacle>
   >()
+  private dynamicIndexSnapshot?: DynamicIndexSnapshot
+  private dynamicIndexesByLayer?: Map<string, SpatialHash<DynamicCollidable>>
+  private dynamicCellBounds = new Float64Array(0)
 
   lastRunStats: AutoroutingDrcEngineRunStats = {
     traceCount: 0,
@@ -712,7 +770,7 @@ export class Pipeline9MemoizedAutoroutingDrcEngine {
       for (const layer of obstacle.layers) {
         let index = this.obstacleIndexesByLayer.get(layer)
         if (!index) {
-          index = new SpatialHash<StaticObstacle>(this.cellSize)
+          index = new SpatialHash<StaticObstacle>(this.cellSize, true)
           this.obstacleIndexesByLayer.set(layer, index)
         }
         index.insert(obstacle, bounds)
@@ -793,29 +851,89 @@ export class Pipeline9MemoizedAutoroutingDrcEngine {
     segments: TraceSegment[],
     vias: Via[],
   ): Map<string, SpatialHash<DynamicCollidable>> {
+    const cellBoundCount = (segments.length + vias.length) * 4
+    if (this.dynamicCellBounds.length < cellBoundCount) {
+      this.dynamicCellBounds = new Float64Array(cellBoundCount)
+    }
+    let reusable = this.dynamicIndexSnapshot !== undefined &&
+      this.dynamicIndexesByLayer !== undefined &&
+      this.dynamicIndexSnapshot.segmentCount === segments.length &&
+      this.dynamicIndexSnapshot.viaCount === vias.length
+    const snapshot = this.dynamicIndexSnapshot
+    for (let row = 0; row < segments.length + vias.length; row++) {
+      const segment = row < segments.length ? segments[row]! : undefined
+      const via = segment ? undefined : vias[row - segments.length]!
+      const bounds = expandBounds(
+        segment ? getSegmentBounds(segment) : getViaBounds(via!),
+        this.traceClearance,
+      )
+      const offset = row * 4
+      this.dynamicCellBounds[offset] = Math.floor(bounds.minX / this.cellSize)
+      this.dynamicCellBounds[offset + 1] = Math.floor(bounds.maxX / this.cellSize)
+      this.dynamicCellBounds[offset + 2] = Math.floor(bounds.minY / this.cellSize)
+      this.dynamicCellBounds[offset + 3] = Math.floor(bounds.maxY / this.cellSize)
+      for (let coordinate = offset; coordinate < offset + 4; coordinate++) {
+        const cell = this.dynamicCellBounds[coordinate]!
+        if (!Number.isSafeInteger(cell) || !Object.is(cell, snapshot?.cellBounds[coordinate])) {
+          reusable = false
+        }
+      }
+      if (segment) {
+        if (snapshot?.segmentLayers[row] !== segment.layer) reusable = false
+      } else {
+        const previousLayers = snapshot?.viaLayers[row - segments.length]
+        if (!previousLayers || previousLayers.length !== via!.layers.length) {
+          reusable = false
+        } else {
+          for (let layer = 0; layer < previousLayers.length; layer++) {
+            if (previousLayers[layer] !== via!.layers[layer]) reusable = false
+          }
+        }
+      }
+    }
+    if (reusable) {
+      for (const index of this.dynamicIndexesByLayer!.values()) {
+        index.replaceItems((item): DynamicCollidable => item.kind === "trace_segment"
+          ? segments[item.order]!
+          : vias[item.order]!)
+      }
+      return this.dynamicIndexesByLayer!
+    }
+
     const indexes = new Map<string, SpatialHash<DynamicCollidable>>()
     const addToLayer = (
       layer: string,
       item: DynamicCollidable,
-      bounds: Bounds,
-    ) => {
+      offset: number,
+    ): void => {
       let index = indexes.get(layer)
       if (!index) {
         index = new SpatialHash<DynamicCollidable>(this.cellSize)
         indexes.set(layer, index)
       }
-      index.insert(item, expandBounds(bounds, this.traceClearance))
+      index.insertCellRange(item,
+        this.dynamicCellBounds[offset]!, this.dynamicCellBounds[offset + 1]!,
+        this.dynamicCellBounds[offset + 2]!, this.dynamicCellBounds[offset + 3]!)
     }
 
     for (const segment of segments) {
-      addToLayer(segment.layer, segment, getSegmentBounds(segment))
+      addToLayer(segment.layer, segment, segment.order * 4)
     }
     for (const via of vias) {
       for (const layer of via.layers) {
-        addToLayer(layer, via, getViaBounds(via))
+        addToLayer(layer, via, (segments.length + via.order) * 4)
       }
     }
 
+    this.dynamicIndexSnapshot = {
+      segmentCount: segments.length,
+      viaCount: vias.length,
+      cellBounds: this.dynamicCellBounds.slice(0, cellBoundCount),
+      segmentLayers: segments.map((segment): string => segment.layer),
+      // Explicit via layer arrays may belong to mutable caller input.
+      viaLayers: vias.map((via): string[] => via.layers.slice()),
+    }
+    this.dynamicIndexesByLayer = indexes
     return indexes
   }
 

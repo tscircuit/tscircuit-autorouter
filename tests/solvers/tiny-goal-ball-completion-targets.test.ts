@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { TinyGoalBallSelectiveReripHyperGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyGoalBallSelectiveReripHyperGraphSolver"
+import { TinyIndexedSelectiveReripHyperGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/TinyIndexedSelectiveReripHyperGraphSolver"
 import type { Candidate, TinyHyperGraphSolver, TinyHyperGraphSolverOptions } from "tiny-hypergraph/lib/core"
 
 class Harness extends TinyGoalBallSelectiveReripHyperGraphSolver {
@@ -11,6 +12,12 @@ class Harness extends TinyGoalBallSelectiveReripHyperGraphSolver {
     this.partialRipRoutePlans.set(0, { routeId: 0, activeStartPortId: 1,
       activeEndPortId: 2, forcedStartRegionId: 1, forcedEndRegionId: 1,
       rippedSegmentCount: 1, retainedSegmentCount: 2 })
+  }
+  completionBounds(): void {
+    // The real congestion-aware child opts into these bounds. Keep the parent
+    // native until this harness explicitly models that child behavior.
+    this.useGoalBallBounds = true
+    this.goalBallHeuristic.validateSolver(this)
   }
   override onPathFound(candidate: Candidate): void {
     this.acceptedCandidates.push({ portId: candidate.portId, g: candidate.g })
@@ -46,6 +53,11 @@ test("goal balls score the final goal arc and share prepared bounds with tempora
   parent.goalBallHeuristic.prepareSync()
   parent.state.currentRouteId = 0
   parent.state.currentRouteNetId = 10
+  const indexed = new TinyIndexedSelectiveReripHyperGraphSolver(topology, problem, options)
+  indexed.state.currentRouteId = 0
+  indexed.state.currentRouteNetId = 10
+  expect(parent.computeH(1)).toBe(indexed.computeH(1))
+  parent.completionBounds()
   expect(parent.computeH(1)).toBeGreaterThan(50)
   parent.temporaryTarget()
   expect(() => parent.goalBallHeuristic.getBounds(10, 2)).toThrow("before target preparation")

@@ -1,7 +1,9 @@
 import { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
-import type { ParallelStageWorkerPool, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 import { getParallelPathBatches } from "./getParallelPathBatches"
 import { preserveLeadingPathLayerTransitions } from "./preserveLeadingPathLayerTransitions"
+import { getParallelPathDependencies, type ParallelPathDependencies } from "./getParallelPathDependencies"
+import type { ParallelPathWaveContext, ParallelPathWaveResult } from "./parallelStageWorkerTypes"
 
 type Params = ConstructorParameters<typeof MultiSimplifiedPathSolver>[0] & {
   workerPool: ParallelStageWorkerPool
@@ -9,19 +11,29 @@ type Params = ConstructorParameters<typeof MultiSimplifiedPathSolver>[0] & {
   preserveLeadingLayerTransitions?: boolean
 }
 
-/** Run only geometrically independent components concurrently. */
+let customPathContextId = 0
+
+/** Preserve ordered geometry dependencies without serializing an entire component. */
 export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver {
   readonly workerPool: ParallelStageWorkerPool
   readonly batches: number[][]
   private launched = false
   readonly preserveLeadingLayerTransitions: boolean
+  readonly hasParallelWork: boolean
+  readonly dependencies: ParallelPathDependencies
+  private readonly workerCount: number
+  private readonly contextId: number
 
   constructor({ workerPool, workerCount, preserveLeadingLayerTransitions, ...params }: Params) {
     super(params)
     this.workerPool = workerPool
+    this.workerCount = workerCount
+    this.contextId = workerPool.createContextId?.() ?? --customPathContextId
     this.preserveLeadingLayerTransitions = preserveLeadingLayerTransitions ?? false
     const groups = getParallelPathBatches(params.unsimplifiedHdRoutes, this.useTraceWidthAwareClearance, workerCount)
     this.batches = groups.batches
+    this.dependencies = getParallelPathDependencies(params.unsimplifiedHdRoutes, this.useTraceWidthAwareClearance, this.connMap)
+    this.hasParallelWork = workerCount > 1 && this.dependencies.maximumReadyCount > 1
     this.stats = { interactionComponentCount: groups.interactionComponentCount, parallelBatchCount: this.batches.length }
     this.pendingEffects = []
     if (this.preserveLeadingLayerTransitions) preserveLeadingPathLayerTransitions(this)
@@ -31,25 +43,32 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
     return "ParallelMultiSimplifiedPathSolver"
   }
 
+  override solve(): void {
+    if (this.hasParallelWork) throw new Error("Parallel path simplification requires awaiting pendingEffects or solveAsync()")
+    super.solve()
+  }
+
+  async solveAsync(): Promise<void> {
+    while (!this.solved && !this.failed) {
+      this.step()
+      await Promise.all(this.pendingEffects!.map((effect) => effect.promise))
+    }
+    if (this.failed) throw new Error(`Parallel path simplification failed: ${this.error}`)
+  }
+
   override _step(): void {
-    if (this.batches.length <= 1) {
+    if (!this.hasParallelWork) {
       super._step()
       return
     }
     if (this.launched) return
     this.launched = true
-    const promise = Promise.all(this.batches.map((indexes) => {
-      const ownedIndexes = new Set(indexes)
-      return this.workerPool.run<ParallelStageWorkerResult>({
-        kind: "simplifyPathComponent",
+    const context: ParallelPathWaveContext = {
         connectivityNetMap: this.connMap.netMap,
         connectivityIdToNetMap: this.connMap.idToNetMap,
         params: {
-          unsimplifiedHdRoutes: indexes.map((index) => this.unsimplifiedHdRoutes[index]),
-          otherHdRoutes: [
-            ...this.otherHdRoutes,
-            ...this.unsimplifiedHdRoutes.filter((_, index) => !ownedIndexes.has(index)),
-          ],
+          unsimplifiedHdRoutes: this.unsimplifiedHdRoutes,
+          otherHdRoutes: this.otherHdRoutes,
           obstacles: this.obstacles,
           colorMap: this.colorMap,
           outline: this.outline,
@@ -59,23 +78,56 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
           enableVertexShortcuts: this.enableVertexShortcuts,
           preserveLeadingLayerTransitions: this.preserveLeadingLayerTransitions,
         },
-      })
-    })).then((results) => {
-      const routesByIndex = new Map<number, (typeof this.simplifiedHdRoutes)[number]>()
-      for (let batchIndex = 0; batchIndex < results.length; batchIndex++) {
-        const result = results[batchIndex]
-        const indexes = this.batches[batchIndex]
-        if (result.kind !== "simplifyPathComponent" || result.routes.length !== indexes.length) {
-          throw new Error(`Invalid parallel path simplification output for batch ${batchIndex}`)
+    }
+    const remaining = this.dependencies.predecessors.map((indexes) => indexes.length)
+    const ready = remaining.flatMap((count, index) => count === 0 ? [index] : [])
+    const routesByIndex = new Map<number, (typeof this.simplifiedHdRoutes)[number]>()
+    const stepsByIndex = new Array<number>(this.unsimplifiedHdRoutes.length)
+    let activeJobs = 0
+    let failed = false
+    const promise = new Promise<void>((resolve, reject) => {
+      const dispatch = (): void => {
+        while (!failed && activeJobs < this.workerCount && ready.length > 0) {
+          // Heavy ready routes start first. Completion order never chooses geometry.
+          ready.sort((left, right) => this.unsimplifiedHdRoutes[right]!.route.length - this.unsimplifiedHdRoutes[left]!.route.length || left - right)
+          const routeIndex = ready.shift()!
+          activeJobs++
+          const updates = [...routesByIndex].sort(([left], [right]) => left - right).map(([index, route]) => ({ index, route }))
+          void this.workerPool.run<ParallelPathWaveResult>({ kind: "simplifyPathWave", contextId: this.contextId,
+            context, indexes: [routeIndex], updates }).then((result): void => {
+            if (failed) return
+            if (result.kind !== "simplifyPathWave" || result.contextId !== this.contextId || result.results.length !== 1 ||
+              result.results[0]!.index !== routeIndex || !Number.isSafeInteger(result.results[0]!.nativeSteps) || result.results[0]!.nativeSteps < 1) {
+              throw new Error(`Invalid path simplification result for route ${routeIndex}`)
+            }
+            const output = result.results[0]!
+            routesByIndex.set(routeIndex, output.route)
+            stepsByIndex[routeIndex] = output.nativeSteps
+            activeJobs--
+            for (const successor of this.dependencies.successors[routeIndex]!) {
+              remaining[successor]!--
+              if (remaining[successor] === 0) ready.push(successor)
+            }
+            if (routesByIndex.size === this.unsimplifiedHdRoutes.length) resolve()
+            else dispatch()
+          }).catch((error: unknown): void => {
+            failed = true
+            reject(error)
+          })
         }
-        for (let index = 0; index < indexes.length; index++) routesByIndex.set(indexes[index], result.routes[index])
       }
+      dispatch()
+    }).then(() => {
+      let nativeSteps = 1
+      for (const count of stepsByIndex) nativeSteps += count
+      if (nativeSteps > this.MAX_ITERATIONS + 1) throw new Error("Parallel path simplification exceeded the native phase iteration budget")
       this.simplifiedHdRoutes = this.unsimplifiedHdRoutes.map((_, index) => {
         const route = routesByIndex.get(index)
         if (!route) throw new Error(`Parallel path simplification omitted route ${index}`)
         return route
       })
       this.currentUnsimplifiedHdRouteIndex = this.unsimplifiedHdRoutes.length
+      this.stats.nativePathSteps = nativeSteps
       this.solved = true
       this.pendingEffects = []
     }).catch((error: unknown) => {

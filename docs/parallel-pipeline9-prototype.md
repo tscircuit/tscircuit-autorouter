@@ -122,7 +122,8 @@ creates and disposes a fresh owned pool for every prototype invocation.
 | High-density routing | Capacity-mesh node | Original node result order, route ownership, and parent statistics |
 | High-density force improvement | Node's assigned routes | Original sample order and route indexes |
 | High-density repair | Node repair sample | Original fixed-neighbor snapshots and route metadata |
-| Optional path simplification | Geometrically independent interaction components | Original route indexes, via operations, validation, and simplification loop budgets |
+| Optional path simplification | Ready routes in the ordered geometry dependency graph | Original interacting predecessors, later original copper, route indexes, via operations, validation, and simplification loop budgets |
+| Joint DRC force trials | Candidates sharing one immutable force frontier | Original trial order, candidate caches, error accounting, acceptance, and iteration budgets |
 | Opt-in negotiated pathing | Up to four route searches against immutable occupancy | Stable commits, live conflict checks, rescheduling, and shared original expansion budgets |
 | Opt-in landmark preparation | Relaxed-graph distance table | Original graph reservations and routing quality checks |
 
@@ -297,7 +298,11 @@ board-edge clearance. Earlier version 1 reports omitted the board element;
 their DRC counts alone do not establish board-boundary compliance. The merger
 rejects incompatible quality policies. Harness version 3 records the coverage
 policy explicitly: native output comparisons require baseline coverage parity,
-while changed geometry requires full physical completion. Exact trace hashes provide a stronger equivalence check for this
+while changed geometry requires full physical completion. Harness version 4 uses
+the original CAD pad, plated-hole, and non-plated-hole shapes for both DRC and
+coverage, with their inventory hashes recorded in each report. Original CAD
+traces and vias are excluded from this geometry inventory. The merger rejects
+mixed quality versions or pad inventories. Exact trace hashes provide a stronger equivalence check for this
 deterministic execution rewrite; they do not independently establish that
 the baseline's routes satisfy every manufacturing rule.
 
@@ -310,8 +315,9 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Current limitations
 
-- A large connected path-simplification component remains sequential. Small
-  jobs may cost more to serialize and schedule than they save in parallel work.
+- Interacting path-simplification predecessors remain ordered. Independent
+  routes within a connected component can run concurrently, but small jobs may
+  cost more to serialize and schedule than they save in parallel work.
 - Fixed preloaded-route mutation retains the serial high-density path.
 - Serial topology, port-point pathing, joint DRC, and other coordinated stages
   limit the possible whole-board speedup even when node work scales well.
@@ -322,7 +328,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Three frozen exploratory snapshots have complete paired results for all 16
+Four frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -332,6 +338,15 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `7a3111114` | ordered / indexed | 1.274× | 1.336× | All solved, identical geometry; legacy report lacks physical coverage evidence |
 | `489368291` | first-valid / negotiated | 1.113× | 0.761× | All solved; physical coverage and trace-lint regressions fail acceptance |
 | `dc387aa1f` | first-valid / goal-balls | 0.897× | 0.307× | Samples 013–015 failed; sample002 trace lint regressed |
+| `da83da029` | ordered / indexed | 1.345× | 1.439× | All solved, exact geometry, identical connection coverage, DRC and lint |
+
+The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
+startup and disposal included. Every sample preserves its native output and
+recorded physical coverage, including native omissions; its acceptance mode is
+explicitly `baseline-parity`. This does not establish full original terminal
+coverage or manufacturing compliance. Sample speedups range from 1.114× to
+1.750×. Evidence is in [parallel-srj18-da83da029.json](benchmarks/parallel-srj18-da83da029.json)
+and the linked immutable workflow artifacts.
 
 The `489368291` result includes every sample, including the 852.229-second
 prototype run for sample006; no slow case is excluded. Raw artifacts are
@@ -354,9 +369,11 @@ Raw artifacts are available from workflow runs
 [38115785004](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115785004), and
 [38115786618](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38115786618).
 
-The next evaluation adds packed search heaps and candidate storage, removes
-unused worker diagnostics, reuses the exact spatial index during via removal,
-and corrects terminal-path and leading-via simplification failures. These
-changes have functional parity checks; their speedup remains unmeasured.
+The next evaluation adds ordered simplification dependencies, persistent worker
+geometry indexes, exact connectivity construction, DRC cell-query/topology
+reuse, parallel force-trial frontiers, and a CSR copper index for bounded
+clearance searches. Pathing experiments add exact typed angle-prefix queries
+and completion cost caching. These changes have functional parity checks;
+their speedup remains unmeasured.
 A successful result must be repeated with three paired runs per variant
 under the board-inclusive quality policy before claiming the target.
