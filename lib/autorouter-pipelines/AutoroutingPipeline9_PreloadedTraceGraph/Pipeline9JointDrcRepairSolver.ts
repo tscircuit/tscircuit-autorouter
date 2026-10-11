@@ -40,7 +40,10 @@ import {
   type PreloadedHighDensityRoute,
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
-import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
+import {
+  createPipeline9DrcErrorsAgainstBaselineFilter,
+  filterPipeline9DrcErrorsAgainstBaseline,
+} from "./filterPipeline9DrcErrorsAgainstBaseline"
 import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
@@ -1149,6 +1152,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
+    const filterReferenceErrors =
+      createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrors)
+    const filterReferenceErrorsWithCenters =
+      createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrorsWithCenters)
+    const filterIndexedErrors =
+      createPipeline9DrcErrorsAgainstBaselineFilter(autoroutingBaselineDrc.errors)
+    const filterIndexedErrorsWithCenters =
+      createPipeline9DrcErrorsAgainstBaselineFilter(
+        autoroutingBaselineDrc.errorsWithCenters,
+      )
     let referenceDrcCandidateCache:
       | {
           candidateKey: string
@@ -1337,16 +1350,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterReferenceErrors({
         errors: evaluatedErrors,
-        baselineErrors,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterReferenceErrorsWithCenters({
           errors: evaluatedErrorsWithCenters,
-          baselineErrors: baselineErrorsWithCenters,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
@@ -1476,21 +1487,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: viaCircuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterIndexedErrors({
         errors: evaluatedErrors,
-        baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterIndexedErrorsWithCenters({
           errors: evaluatedErrorsWithCenters,
-          baselineErrors:
-            autoroutingBaselineDrc.errorsWithCenters as unknown as Array<
-              Record<string, unknown>
-            >,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
