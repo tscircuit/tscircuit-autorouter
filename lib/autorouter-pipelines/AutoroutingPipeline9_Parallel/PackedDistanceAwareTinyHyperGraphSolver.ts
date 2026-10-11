@@ -2,10 +2,20 @@
 // 474f5222e799b54348da41d96a0da0694509fab8. MIT license retained by the fork.
 // Copyright (c) 2026 tscircuit. See tiny-hypergraph-fork/LICENSE.
 import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
-import type { TinyHyperGraphProblem, TinyHyperGraphSolverOptions, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
+import { TinyHyperGraphSolver, type TinyHyperGraphProblem, type TinyHyperGraphSolverOptions, type TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
 import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
 import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
 import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
+import { TinyRegionCostMemo, type TinyRegionCostMethod } from "./TinyRegionCostMemo"
+
+const nativeRegionCost = (TinyHyperGraphSolver.prototype as unknown as {
+  computeRegionCostForRegion: TinyRegionCostMethod
+}).computeRegionCostForRegion
+
+export type PackedDistanceAwareTinyHyperGraphSolverOptions = TinyHyperGraphSolverOptions & {
+  /** Diagnostic opt-in: full-dataset measurements favor direct distance math. */
+  enableTriangularDistanceCache?: boolean
+}
 
 /** Keep native route policy while packing its directed-hop candidate frontier. */
 export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHyperGraphSolver {
@@ -17,9 +27,10 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
   private readonly activeIncidences: TinyActiveIncidenceIndex
   private activeSearchGeneration = 0
   private readonly distanceIndex?: TinyTriangularDistanceIndex
+  readonly regionCostMemo?: TinyRegionCostMemo
 
   constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
-    options?: TinyHyperGraphSolverOptions) {
+    options?: PackedDistanceAwareTinyHyperGraphSolverOptions) {
     super(topology, problem, options)
     this.regionPortOffsets = new Int32Array(topology.regionCount + 1)
     let count = 0
@@ -55,7 +66,25 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     this.activeIncidences = new TinyActiveIncidenceIndex(
       this.regionPorts, this.hopByIncidence, this.nextRegionByIncidence, this.candidateHopCapacity,
     )
-    this.distanceIndex = TinyTriangularDistanceIndex.forTopology(topology)
+    this.distanceIndex = options?.enableTriangularDistanceCache === true
+      ? TinyTriangularDistanceIndex.forTopology(topology) : undefined
+    if (this.computeRegionCostForRegion === PackedDistanceAwareTinyHyperGraphSolver.prototype.computeRegionCostForRegion) {
+      this.regionCostMemo = new TinyRegionCostMemo(this, nativeRegionCost.bind(this))
+    }
+  }
+
+  protected override computeRegionCostForRegion(regionId: number, same: number,
+    cross: number, changes: number, count: number): number {
+    const currentNative = (TinyHyperGraphSolver.prototype as unknown as {
+      computeRegionCostForRegion: TinyRegionCostMethod
+    }).computeRegionCostForRegion
+    // Constructors can call the virtual method before the memo exists. Custom
+    // overrides calling super must retain their native callback path as well.
+    if (!this.regionCostMemo || currentNative !== nativeRegionCost ||
+      this.computeRegionCostForRegion !== PackedDistanceAwareTinyHyperGraphSolver.prototype.computeRegionCostForRegion) {
+      return super.computeRegionCostForRegion(regionId, same, cross, changes, count)
+    }
+    return this.regionCostMemo.get(regionId, same, cross, changes, count)
   }
 
   override _setup(): void {

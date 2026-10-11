@@ -29,7 +29,8 @@ test("cached routing retains native cap, goal order, costs and queues while coor
     const options = { MAX_ITERATIONS: 160, STATIC_REACHABILITY_PRECHECK: false,
       ACCEPT_BEST_SOLUTION_ON_TIMEOUT: false, RIP_THRESHOLD_RAMP_ATTEMPTS: 0 }
     const native = new DistanceAwareTinyHyperGraphSolver(structuredClone(input.topology), structuredClone(input.problem), options)
-    const packed = new PackedDistanceAwareTinyHyperGraphSolver(structuredClone(input.topology), structuredClone(input.problem), options)
+    const packed = new PackedDistanceAwareTinyHyperGraphSolver(structuredClone(input.topology), structuredClone(input.problem),
+      { ...options, enableTriangularDistanceCache: true })
     while (!native.solved && !native.failed) {
       const iteration = native.iterations
       if (iteration > 0 && iteration % 3 === 0) {
