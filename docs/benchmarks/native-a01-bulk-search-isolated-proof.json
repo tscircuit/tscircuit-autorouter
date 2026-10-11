@@ -1,0 +1,199 @@
+{
+  "kind": "isolated-exact-a01-bulk-functional-proof",
+  "sourceCommit": "707d02a8f",
+  "productionActivation": "inactive in this commit",
+  "performanceClaim": null,
+  "constraint": "No local timing comparison; formal speed benchmarks require Blacksmith.",
+  "nativeProvenance": "@tscircuit/high-density-a01 44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34 (MIT)",
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/searchKernel.c": "7ffc3239148581d146dd6daf3f8adafadf9620564e7facfccc7cad822f0ac309",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/searchKernelBytes.ts": "d8174037b3c6ee2b038611b24649543cd92eca83319af0774c8a1dbeb426bffe",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/NativeA01BulkSearchKernel.ts": "eddcad31ced0e4e14ab4c900a210c611cf8f32bb6e4c19eee48cdb8d1a6ff2b1",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/workerNativeA01BulkSearchPrototype.ts": "116cae00059c1e7ac2c533ea5b5908c9b3584dc6097bb66f955c48ea454b9cf2",
+    "tests/fixtures/parallel-owner-bulk-a01/worker.ts": "95eea2bded35cb585f638bfc792a0a046329658aef0902c4deaa6d27589640fa",
+    "tests/solvers/native-a01-bulk-search-authentic-worker-parity.test.ts": "96668ae00f55ec5904b5e93f3c8add4a0c256a78af5192b14d0288cdd959cc23",
+    "tests/solvers/native-a01-bulk-search-cmn45-checkpoint-parity.test.ts": "aaac43d31558dbe9b294d12306edd39d744b34d7b17f38db4e72fb06e6587890"
+  },
+  "commands": [
+    "NATIVE_A01_BULK_SEARCH_WASM_CLANG=/opt/homebrew/opt/llvm/bin/clang bun scripts/build-native-a01-bulk-search-wasm-kernel.ts",
+    "BULK_A01_PROOF_PATH=/tmp/native-a01-bulk-search-proof.json bun test --timeout 9999999 tests/solvers/native-a01-bulk-search-cmn45-checkpoint-parity.test.ts",
+    "BULK_A01_WORKER_PROOF_PATH=/tmp/native-a01-bulk-search-authentic-worker-proof.json bun test --timeout 9999999 tests/solvers/native-a01-bulk-search-authentic-worker-parity.test.ts",
+    "bun test --timeout 9999999 tests/solvers/native-a01-bulk-search-event-and-ieee-parity.test.ts tests/solvers/native-a01-bulk-search-grid-layout-parity.test.ts"
+  ],
+  "rawOracle": {
+    "kind": "functional-state-and-operation-proof",
+    "noTimingComparison": true,
+    "totals": {
+      "nativeSteps": 957175,
+      "checkpoints": 9572,
+      "frontierChecks": 11976,
+      "nativeEventSteps": 2435,
+      "batches": 10746,
+      "consumed": 954765,
+      "heapPushes": 1062783,
+      "heapPops": 954765,
+      "expansions": 277393,
+      "visitedSkips": 677372,
+      "hydratedHeapRows": 5318516,
+      "hydratedLiveNodeRows": 1598913,
+      "hydratedRipRows": 373696,
+      "createdNodeRows": 1062783,
+      "createdRipRows": 102114,
+      "flushedHeapRows": 1471160
+    },
+    "outcomes": [
+      {
+        "seed": 0,
+        "iterations": 160000,
+        "solved": false,
+        "failed": true,
+        "error": "HighDensitySolverA01 ran out of iterations",
+        "diagnostics": {
+          "batches": 1796,
+          "consumed": 159604,
+          "heapPushes": 177101,
+          "heapPops": 159604,
+          "expansions": 46255,
+          "visitedSkips": 113349,
+          "hydratedHeapRows": 948366,
+          "hydratedLiveNodeRows": 264636,
+          "hydratedRipRows": 59594,
+          "createdNodeRows": 177101,
+          "createdRipRows": 16224,
+          "flushedHeapRows": 245219,
+          "memoryBytes": 456160
+        }
+      },
+      {
+        "seed": 1,
+        "iterations": 160000,
+        "solved": false,
+        "failed": true,
+        "error": "HighDensitySolverA01 ran out of iterations",
+        "diagnostics": {
+          "batches": 1795,
+          "consumed": 159596,
+          "heapPushes": 177416,
+          "heapPops": 159596,
+          "expansions": 46273,
+          "visitedSkips": 113323,
+          "hydratedHeapRows": 866753,
+          "hydratedLiveNodeRows": 264462,
+          "hydratedRipRows": 59349,
+          "createdNodeRows": 177416,
+          "createdRipRows": 16408,
+          "flushedHeapRows": 246007,
+          "memoryBytes": 456160
+        }
+      },
+      {
+        "seed": 2,
+        "iterations": 160000,
+        "solved": false,
+        "failed": true,
+        "error": "HighDensitySolverA01 ran out of iterations",
+        "diagnostics": {
+          "batches": 1795,
+          "consumed": 159600,
+          "heapPushes": 178528,
+          "heapPops": 159600,
+          "expansions": 46731,
+          "visitedSkips": 112869,
+          "hydratedHeapRows": 897535,
+          "hydratedLiveNodeRows": 283482,
+          "hydratedRipRows": 75603,
+          "createdNodeRows": 178528,
+          "createdRipRows": 19563,
+          "flushedHeapRows": 249951,
+          "memoryBytes": 456160
+        }
+      },
+      {
+        "seed": 3,
+        "iterations": 160000,
+        "solved": false,
+        "failed": true,
+        "error": "HighDensitySolverA01 ran out of iterations",
+        "diagnostics": {
+          "batches": 1795,
+          "consumed": 159596,
+          "heapPushes": 177416,
+          "heapPops": 159596,
+          "expansions": 46273,
+          "visitedSkips": 113323,
+          "hydratedHeapRows": 866753,
+          "hydratedLiveNodeRows": 264462,
+          "hydratedRipRows": 59349,
+          "createdNodeRows": 177416,
+          "createdRipRows": 16408,
+          "flushedHeapRows": 246007,
+          "memoryBytes": 456160
+        }
+      },
+      {
+        "seed": 4,
+        "iterations": 160000,
+        "solved": false,
+        "failed": true,
+        "error": "HighDensitySolverA01 ran out of iterations",
+        "diagnostics": {
+          "batches": 1795,
+          "consumed": 159596,
+          "heapPushes": 177416,
+          "heapPops": 159596,
+          "expansions": 46273,
+          "visitedSkips": 113323,
+          "hydratedHeapRows": 866753,
+          "hydratedLiveNodeRows": 264462,
+          "hydratedRipRows": 59349,
+          "createdNodeRows": 177416,
+          "createdRipRows": 16408,
+          "flushedHeapRows": 246007,
+          "memoryBytes": 456160
+        }
+      },
+      {
+        "seed": 5,
+        "iterations": 157175,
+        "solved": false,
+        "failed": true,
+        "error": "Convergence failure: exceeded MAX_RIPS 200",
+        "diagnostics": {
+          "batches": 1770,
+          "consumed": 156773,
+          "heapPushes": 174906,
+          "heapPops": 156773,
+          "expansions": 45588,
+          "visitedSkips": 111185,
+          "hydratedHeapRows": 872356,
+          "hydratedLiveNodeRows": 257409,
+          "hydratedRipRows": 60452,
+          "createdNodeRows": 174906,
+          "createdRipRows": 17103,
+          "flushedHeapRows": 237969,
+          "memoryBytes": 456160
+        }
+      }
+    ]
+  },
+  "authenticWorkerOracle": {
+    "kind": "authentic-worker-functional-proof",
+    "noTimingComparison": true,
+    "actualWorker": true,
+    "steps": 957175,
+    "checkpoints": 9572,
+    "frontiers": 11951,
+    "bulkSteps": 954765,
+    "batches": 10746,
+    "heapPops": 954765,
+    "heapPushes": 1062783,
+    "lateObservers": 11,
+    "noDefaultActivation": true,
+    "noLeaseAfterQuantum": true
+  },
+  "remainingGaps": [
+    "No production driver wiring in707d02a8f; no all-sample performance result for this kernel.",
+    "Conservative full intrinsic guard retained; backend-specific inventory not yet admitted.",
+    "Physical history-worker cancellation must retain the original per-step atomic frontier."
+  ]
+}
