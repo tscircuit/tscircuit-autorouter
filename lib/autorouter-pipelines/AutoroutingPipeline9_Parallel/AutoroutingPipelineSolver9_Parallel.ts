@@ -6,8 +6,13 @@ import { Pipeline9ParallelHighDensitySolver } from "./Pipeline9ParallelHighDensi
 import { ParallelHighDensityForceImproveSolver } from "./ParallelHighDensityForceImproveSolver"
 import { ParallelHighDensityRepairSolver } from "./ParallelHighDensityRepairSolver"
 import { ParallelTraceSimplificationSolver } from "./ParallelTraceSimplificationSolver"
+import { PhysicalTraceSimplificationSolver } from "./PhysicalTraceSimplificationSolver"
+import { PhysicalPreprocessSimpleRouteJsonSolver } from "./PhysicalPreprocessSimpleRouteJsonSolver"
+import { PhysicalEffortCleanupSolver } from "./PhysicalEffortCleanupSolver"
+import { markPhysicalCopperTransitions } from "./markPhysicalCopperTransitions"
 import { ParallelPortPointPathingSolver, type Pipeline9PathingStrategy } from "./ParallelPortPointPathingSolver"
 import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointDrcRepairSolver"
+import { Pipeline9MemoizedGlobalDrcForceImproveSolver } from "./Pipeline9MemoizedGlobalDrcForceImproveSolver"
 import type { ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 import { Pipeline9LayerAwareNetToPointPairsSolver } from "./Pipeline9LayerAwareNetToPointPairsSolver"
 
@@ -32,7 +37,17 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     }
     this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount })
     this.ownsWorkerPool = opts.workerPool === undefined
-    if (opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated") {
+    const alternativeRouting = opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated" || opts.pathingStrategy === "goal-balls"
+    if (alternativeRouting) {
+      for (const [name, solverClass] of [
+        ["preprocessSimpleRouteJsonSolver", PhysicalPreprocessSimpleRouteJsonSolver],
+        ["effortCleanupSolver", PhysicalEffortCleanupSolver],
+      ] as const) {
+        const index = this.pipelineDef.findIndex((step) => step.solverName === name)
+        const step = this.pipelineDef[index]
+        if (!step) throw new Error(`Pipeline9 ${name} step is missing`)
+        this.pipelineDef[index] = { ...step, solverClass: solverClass as any } as any
+      }
       const pairsIndex = this.pipelineDef.findIndex((step) => step.solverName === "netToPointPairsSolver")
       const pairsStep = this.pipelineDef[pairsIndex]
       if (!pairsStep) throw new Error("Pipeline9 netToPointPairsSolver step is missing")
@@ -43,7 +58,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
       this.pipelineDef[stitchIndex] = { ...stitchStep,
         getConstructorParams: (cms: AutoroutingPipelineSolver9_PreloadedTraceGraph): any[] => {
           const params = stitchStep.getConstructorParams(cms)
-          return [{ ...params[0], snapTerminalsOnSameLayer: true }]
+          return [{ ...params[0], snapTerminalsOnSameLayer: true, preserveTerminalLayers: true }]
         },
       } as any
     }
@@ -65,10 +80,15 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
       getConstructorParams: (solver: AutoroutingPipelineSolver9_Parallel) => {
         const [params] = getOriginalParams(solver)
         return [{ ...params, workerPool: solver.workerPool, highDensityPolicy: opts.highDensityPolicy ?? "ordered",
+          requirePhysicalCopper: alternativeRouting,
           firstValidClearance: Math.max(0.1, solver.srj.minTraceToPadEdgeClearance ?? 0.1,
             solver.srj.minViaEdgeToPadEdgeClearance ?? 0.1) }]
       },
     } as any
+    const globalDrcIndex = this.pipelineDef.findIndex((step) => step.solverName === "globalDrcForceImproveSolver")
+    const globalDrcStep = this.pipelineDef[globalDrcIndex]
+    if (!globalDrcStep) throw new Error("Pipeline9 globalDrcForceImproveSolver step is missing")
+    this.pipelineDef[globalDrcIndex] = { ...globalDrcStep, solverClass: Pipeline9MemoizedGlobalDrcForceImproveSolver as any } as any
     for (const [solverName, solverClass] of [
       ["highDensityForceImproveSolver", ParallelHighDensityForceImproveSolver],
       ["highDensityRepairSolver", ParallelHighDensityRepairSolver],
@@ -82,21 +102,34 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
         ...originalStage, solverClass: solverClass as any,
         getConstructorParams: (solver: AutoroutingPipelineSolver9_Parallel) => {
           const [params] = getStageParams(solver)
+          if (alternativeRouting && solverName === "pipeline9JointDrcRepairSolver") {
+            const jointParams = params as ConstructorParameters<typeof ParallelPipeline9JointDrcRepairSolver>[0]
+            return [{ ...jointParams, workerPool: solver.workerPool,
+              newHdRoutes: markPhysicalCopperTransitions(jointParams.newHdRoutes, jointParams),
+            }]
+          }
           return [{ ...params, workerPool: solver.workerPool }]
         },
       } as any
     }
-    if (opts.enableParallelPathSimplification) {
+    if (opts.enableParallelPathSimplification || alternativeRouting) {
       for (const solverName of ["traceSimplificationSolver", "mutatedPreloadedTraceSimplificationSolver"] as const) {
         const stageIndex = this.pipelineDef.findIndex((step) => step.solverName === solverName)
         const originalStage = this.pipelineDef[stageIndex]
         if (!originalStage) throw new Error(`Pipeline9 ${solverName} step is missing`)
         const getStageParams = originalStage.getConstructorParams
         this.pipelineDef[stageIndex] = {
-          ...originalStage, solverClass: ParallelTraceSimplificationSolver as any,
+          ...originalStage, solverClass: (opts.enableParallelPathSimplification
+            ? ParallelTraceSimplificationSolver : PhysicalTraceSimplificationSolver) as any,
           getConstructorParams: (solver: AutoroutingPipelineSolver9_Parallel) => {
             const [params] = getStageParams(solver)
-            return [{ ...params, workerPool: solver.workerPool, workerCount: solver.workerPool.workerCount }]
+            return [{ ...params, requirePhysicalCopperTransitions: alternativeRouting,
+              ...(alternativeRouting ? { enableVertexShortcuts: true,
+                useTraceWidthAwareClearance: true, preserveRouteEndpoints: true } : {}),
+              ...(opts.enableParallelPathSimplification ? {
+                workerPool: solver.workerPool, workerCount: solver.workerPool.workerCount,
+              } : {}),
+            }]
           },
         } as any
       }
@@ -117,6 +150,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async stepAsync(): Promise<void> {
     if (this.solved || this.failed) return
     try {
+      if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       this.step()
       const effects = getPendingEffectsFromSolverTree(this)
       if (effects.length > 0) await Promise.race(effects.map((effect) => effect.promise))
@@ -129,6 +163,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async solveAsync(): Promise<void> {
     const startTime = performance.now()
     try {
+      if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (!this.solved && !this.failed) {
         if (this.activeSubSolver instanceof ParallelPortPointPathingSolver && this.activeSubSolver.requiresAsyncExecution) {
           await this.activeSubSolver.solveAsync()
@@ -160,6 +195,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
 
   async solveUntilPhaseAsync(phase: string): Promise<void> {
     try {
+      if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
         this.step()
         const effects = getPendingEffectsFromSolverTree(this)

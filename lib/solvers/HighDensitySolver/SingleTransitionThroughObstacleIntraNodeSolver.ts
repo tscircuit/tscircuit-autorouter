@@ -9,6 +9,7 @@ import type {
 } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
+import { pointInsideObstacleCopper } from "lib/utils/pointInsideObstacleCopper"
 
 type Route = {
   A: PortPoint
@@ -69,6 +70,7 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
   traceThickness: number
   connMap?: ConnectivityMap
   solvedRoutes: HighDensityIntraNodeRoute[] = []
+  private readonly requirePhysicalCopper: boolean
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints
@@ -77,10 +79,12 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
     layerCount?: number
     viaDiameter?: number
     traceThickness?: number
+    requirePhysicalCopper?: boolean
   }) {
     super()
 
     this.nodeWithPortPoints = params.nodeWithPortPoints
+    this.requirePhysicalCopper = params.requirePhysicalCopper ?? false
     this.obstacles = createObjectsWithZLayers(
       params.obstacles ?? [],
       params.layerCount ?? 2,
@@ -225,8 +229,10 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends BaseSolver {
           return false
         }
         return (
-          pointInsideObstacle({ point: route.A, obstacle }) &&
-          pointInsideObstacle({ point: route.B, obstacle })
+          (this.requirePhysicalCopper ? pointInsideObstacleCopper(route.A, obstacle) :
+            pointInsideObstacle({ point: route.A, obstacle })) &&
+          (this.requirePhysicalCopper ? pointInsideObstacleCopper(route.B, obstacle) :
+            pointInsideObstacle({ point: route.B, obstacle }))
         )
       }) ?? null
     )

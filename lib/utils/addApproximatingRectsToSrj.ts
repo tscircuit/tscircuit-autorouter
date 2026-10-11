@@ -381,12 +381,22 @@ const getRotatedObstacleApproximationRectCount = (
   )
 }
 
-const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
+const convertObstacleToOldFormat = (obstacle: Obstacle, preserveCopperGeometry = false): Obstacle[] => {
+  // Every retained physical obstacle carries the annotation: plain rectangles
+  // also need their actual layer span checked when output infers a transition.
+  if (preserveCopperGeometry && !obstacle.copperGeometry) {
+    obstacle = { ...obstacle, copperGeometry: {
+      type: String(obstacle.type), center: { ...obstacle.center },
+      width: obstacle.width, height: obstacle.height,
+      ...(obstacle.ccwRotationDegrees !== undefined ? { ccwRotationDegrees: obstacle.ccwRotationDegrees } : {}),
+      ...(obstacle.shape ? { shape: obstacle.shape } : {}),
+    } }
+  }
   if ((obstacle as { type?: string }).type === "oval") {
     return convertObstacleToOldFormat({
       ...obstacle,
       type: "rect",
-    } as Obstacle)
+    } as Obstacle, preserveCopperGeometry)
   }
 
   const rotationDegrees = obstacle.ccwRotationDegrees
@@ -461,13 +471,14 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
 
 export const addApproximatingRectsToSrj = (
   srj: SimpleRouteJson,
+  options: { preserveCopperGeometry?: boolean } = {},
 ): SimpleRouteJson => {
   const obstaclesByRect = new Map<string, Obstacle>()
   const approximatedObstaclesBySource = new Map<string, Obstacle[]>()
   const originalObstaclesBySource = new Map<string, Obstacle>()
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
-    const convertedObstacle = convertObstacleToOldFormat(obstacle)
+    const convertedObstacle = convertObstacleToOldFormat(obstacle, options.preserveCopperGeometry)
     const sourceKey = getObstacleKey(obstacle, obstacleIndex)
     approximatedObstaclesBySource.set(sourceKey, convertedObstacle)
     originalObstaclesBySource.set(sourceKey, obstacle)

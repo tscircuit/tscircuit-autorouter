@@ -137,6 +137,15 @@ export interface SimpleRouteBus {
 }
 
 export interface Obstacle {
+  /** Actual copper retained when routing uses an axis-aligned approximation. */
+  copperGeometry?: {
+    type: string
+    center: { x: number; y: number }
+    width: number
+    height: number
+    ccwRotationDegrees?: number
+    shape?: "circle"
+  }
   obstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string

@@ -6,9 +6,10 @@ import { TinyIndexedSelectiveReripHyperGraphSolver } from "./TinyIndexedSelectiv
 import { TinyLandmarkHyperGraphSolver } from "./TinyLandmarkHyperGraphSolver"
 import { TinyLandmarkSelectiveReripHyperGraphSolver } from "./TinyLandmarkSelectiveReripHyperGraphSolver"
 import { TinyNegotiatedHyperGraphSolver } from "./TinyNegotiatedHyperGraphSolver"
+import { TinyGoalBallSelectiveReripHyperGraphSolver } from "./TinyGoalBallSelectiveReripHyperGraphSolver"
 import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 
-export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated"
+export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated" | "goal-balls"
 export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy; workerPool?: ParallelStageWorkerPool }
 type TinyPipeline = ReturnType<TinyHypergraphPortPointPathingSolver["createTinyPipeline"]>
 
@@ -44,7 +45,7 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     this.pathingStrategy = options.strategy ?? "indexed"
     this.workerPool = options.workerPool
     this.requiresAsyncExecution = this.pathingStrategy === "negotiated" ||
-      (this.pathingStrategy === "landmark" && this.workerPool !== undefined)
+      ((this.pathingStrategy === "landmark" || this.pathingStrategy === "goal-balls") && this.workerPool !== undefined)
     this.configureTinyPipeline(this.createdTinyPipeline, this.pathingStrategy)
   }
 
@@ -79,9 +80,39 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
         if (!selective) throw new Error("Negotiated Pipeline9 pathing requires selective rerip routing")
         solveGraphStep.solverClass = TinyNegotiatedHyperGraphSolver
         return
+      case "goal-balls":
+        if (!selective) throw new Error("Goal-ball Pipeline9 pathing requires selective rerip routing")
+        solveGraphStep.solverClass = TinyGoalBallSelectiveReripHyperGraphSolver
+        return
       default:
         throw new Error(`Unknown Pipeline9 pathing strategy: ${strategy}`)
     }
+  }
+
+  private prepareGoalBalls(pipeline: TinyPipeline): void {
+    const tiny = pipeline.getSolver<TinyGoalBallSelectiveReripHyperGraphSolver>("solveGraph")
+    if (!tiny) return
+    if (this.pendingEffects && this.pendingEffects.length > 0) return
+    const heuristic = tiny.goalBallHeuristic
+    const recordPreparation = (): void => {
+      pipeline.stats = { ...pipeline.stats, ...heuristic.stats }
+      this.pendingEffects = []
+    }
+    let promise: Promise<void> | undefined
+    if (!heuristic.landmarkHeuristic.ready) {
+      promise = heuristic.prepareLandmarks(this.workerPool)
+      if (!promise) recordPreparation()
+    } else if (tiny.needsCompletionGoalPreparation) {
+      if (this.workerPool) promise = heuristic.prepare(this.workerPool)
+      else { heuristic.prepareSync(); recordPreparation() }
+    }
+    if (!promise) return
+    this.pendingEffects = [{ name: "parallel-pathing-goal-balls", promise: promise.then(recordPreparation)
+      .catch((error: unknown): never => {
+        this.failed = true
+        this.error = error instanceof Error ? error.message : String(error)
+        throw error
+      }) }]
   }
 
   private prepareLandmarks(pipeline: TinyPipeline): void {
@@ -108,6 +139,13 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   }
 
   override _step(): void {
+    if (this.pathingStrategy === "goal-balls") {
+      this.prepareGoalBalls(this.createdTinyPipeline)
+      if (this.pendingEffects && this.pendingEffects.length > 0) return
+      super._step()
+      this.prepareGoalBalls(this.createdTinyPipeline)
+      return
+    }
     if (this.pathingStrategy === "negotiated") {
       const tiny = this.createdTinyPipeline.getSolver<TinyNegotiatedHyperGraphSolver>("solveGraph")
       if (tiny) {
@@ -133,7 +171,7 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   }
 
   override solve(): void {
-    if (this.requiresAsyncExecution) throw new Error("Parallel landmark pathing requires solveAsync() or awaiting pendingEffects")
+    if (this.requiresAsyncExecution) throw new Error("Parallel pathing requires solveAsync() or awaiting pendingEffects")
     super.solve()
   }
 

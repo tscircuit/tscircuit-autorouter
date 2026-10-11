@@ -92,7 +92,7 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect((merged.metadata.options as Record<string, unknown>).highDensityPolicy).toBe("ordered")
   expect(sources).toEqual(makeMergeSources())
 
-  for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated"]) {
+  for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated", "goal-balls"]) {
     const strategySources = makeMergeSources()
     for (const source of strategySources) {
       (source.report.metadata.options as Record<string, unknown>).pathingStrategy = pathingStrategy

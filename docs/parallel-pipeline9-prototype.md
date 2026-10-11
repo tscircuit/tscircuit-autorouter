@@ -54,8 +54,8 @@ and trace/via counts remain available as diagnostics. Select the corresponding
 benchmark mode with `--high-density-policy first-valid`.
 
 `pathingStrategy` defaults to `"indexed"`. The benchmark also accepts
-`"adaptive-bitset"`, `"cached-cost"`, and the opt-in `"landmark"` and
-`"negotiated"` strategies.
+`"adaptive-bitset"`, `"cached-cost"`, and the opt-in `"landmark"`,
+`"negotiated"`, and `"goal-balls"` strategies.
 Landmark pathing computes relaxed-graph distance tables in the shared pool
 and uses them to guide routing. It can change route choices even with ordered
 high-density routing. Use `--pathing-strategy landmark` to evaluate it with
@@ -63,6 +63,9 @@ the same explicit coverage and quality checks as other alternative routes.
 Negotiated pathing dispatches candidate searches through the shared pool
 while retaining coordinator quality checks and rip policies; select it with
 `--pathing-strategy negotiated`.
+Goal-balls pathing precomputes capped, net-aware distance bounds in the same
+pool; select it with `--pathing-strategy goal-balls`. Its route choices may
+change, so explicit physical coverage, DRC, and lint checks remain required.
 
 Alternative policies use a layer-aware point-pair tree and same-layer terminal
 snapping. This retains distinct opposite-layer pads at identical coordinates,
@@ -229,7 +232,8 @@ quality evidence cannot pass the gate.
 With ordered high-density routing and indexed, adaptive-bitset, or cached-cost
 pathing, the
 gate also requires matching SHA-256 hashes of the full simplified trace
-outputs and unchanged trace/via counts. In first-valid, landmark, or negotiated mode,
+outputs and unchanged trace/via counts. In first-valid, landmark, negotiated,
+or goal-balls mode,
 geometry and counts are diagnostic; legitimate alternative routes can pass
 when physical connection coverage and the quality comparisons pass. Reports
 record the policy, strategy, and whether exact geometry was required. Subset
@@ -260,6 +264,15 @@ relaxed DRC conversion selected the top pad's port alias and omitted the
 bottom requirement. Both earlier variants have that omission; the new
 coverage gate retains the bottom port and requires the candidate to connect it.
 
+The same audit found disconnected terminals in sample009 where a layer
+transition used a circular plated hole's bounding-box corner. Alternative
+preprocessing retains original copper shapes alongside routing rectangles.
+Physical routing and simplification adapters require transitions to touch
+that copper and preserve mandatory vias outside it. The sample009 functional
+regression checks all 72 required nets and rejects invalid plated-hole markers.
+These functional checks establish connectivity and DRC behavior; the paired
+benchmark still evaluates trace lint and performance independently.
+
 DRC uses the existing benchmark's `evaluateRelaxedDrc` evaluator and rule
 preset. Exact trace hashes provide a stronger equivalence check for this
 deterministic execution rewrite; they do not independently establish that
@@ -286,6 +299,26 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Pending the complete paired dataset run. Add its artifact/run reference,
-source SHAs, per-sample medians and outcomes, aggregate metrics, and quality
-comparison before making a performance claim.
+Two frozen exploratory snapshots have complete paired results for all 16
+samples, with one repetition per variant. Neither meets the target. Both use
+baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
+matched dependencies on four-core ARM Blacksmith runners.
+
+| Prototype | Policy / pathing | Arithmetic mean | Aggregate | Outcome |
+| --- | --- | ---: | ---: | --- |
+| `7a3111114` | ordered / indexed | 1.274× | 1.336× | All solved, identical geometry; legacy report lacks physical coverage evidence |
+| `489368291` | first-valid / negotiated | 1.113× | 0.761× | All solved; physical coverage and trace-lint regressions fail acceptance |
+
+The `489368291` result includes every sample, including the 852.229-second
+prototype run for sample006; no slow case is excluded. Raw artifacts are
+available from workflow runs
+[38113191891](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113191891),
+[38113193902](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113193902),
+[38113195288](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113195288),
+[38113196970](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113196970), and
+[38113199046](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38113199046).
+
+The next evaluation adds stage-level high-density competition, exact DRC
+memoization, completion goal bounds, and physical transition/terminal fixes.
+Its timings and quality gates remain unmeasured. A successful result must be
+repeated with three paired runs per variant before claiming the target.

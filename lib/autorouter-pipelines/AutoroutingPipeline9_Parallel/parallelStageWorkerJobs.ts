@@ -7,6 +7,7 @@ import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_Preload
 import type { ParallelRegionalB01CandidateResult, ParallelRegionalFallbackResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
 import { computeTinyLandmarkDistances } from "./TinyLandmarkHeuristic"
 import { executeNegotiatedPathingRouteJob } from "./TinyNegotiatedRouteSearch"
+import { executeParallelGoalBallJob } from "./parallelGoalBallWorkerJobs"
 
 function executeRegionalFallback(
   job: Extract<ParallelStageWorkerJob, { kind: "regionalFallbackSolve" }>,
@@ -56,6 +57,8 @@ export function executeParallelStageJob(
   job: ParallelStageWorkerJob,
 ): ParallelStageWorkerResult {
   switch (job.kind) {
+    case "pathingGoalBalls":
+      return executeParallelGoalBallJob(job)
     case "pathingNegotiatedRoute":
       return executeNegotiatedPathingRouteJob(job)
     case "pathingLandmark":

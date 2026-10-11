@@ -1,14 +1,15 @@
 import { MultiSimplifiedPathSolver, TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 import { ParallelMultiSimplifiedPathSolver } from "./ParallelMultiSimplifiedPathSolver"
+import { PhysicalTraceSimplificationSolver, type PhysicalSimplificationParams } from "./PhysicalTraceSimplificationSolver"
 
-type Params = ConstructorParameters<typeof TraceSimplificationSolver>[0] & {
+type Params = PhysicalSimplificationParams & {
   workerPool: ParallelStageWorkerPool
   workerCount: number
 }
 
 /** Keep all coordinated via operations and validation in the original solver. */
-export class ParallelTraceSimplificationSolver extends TraceSimplificationSolver {
+export class ParallelTraceSimplificationSolver extends PhysicalTraceSimplificationSolver {
   readonly workerPool: ParallelStageWorkerPool
   readonly workerCount: number
 

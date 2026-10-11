@@ -45,7 +45,7 @@ const main = async (): Promise<void> => {
   if (!outDir || (variant !== "baseline" && variant !== "parallel")) {
     throw new Error("Invalid benchmark child arguments")
   }
-  if (pathingArgument !== "indexed" && pathingArgument !== "adaptive-bitset" && pathingArgument !== "cached-cost" && pathingArgument !== "landmark" && pathingArgument !== "negotiated") {
+  if (pathingArgument !== "indexed" && pathingArgument !== "adaptive-bitset" && pathingArgument !== "cached-cost" && pathingArgument !== "landmark" && pathingArgument !== "negotiated" && pathingArgument !== "goal-balls") {
     throw new Error("Invalid benchmark child pathing strategy")
   }
   if (highDensityPolicyArgument !== "ordered" && highDensityPolicyArgument !== "first-valid") {

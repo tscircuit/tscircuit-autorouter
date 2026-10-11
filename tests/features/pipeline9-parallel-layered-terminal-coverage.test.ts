@@ -29,4 +29,4 @@ test("alternate Pipeline9 connects co-located opposite-layer SRJ18 sample011 pad
   } finally {
     pipeline.dispose()
   }
-}, 120_000)
+})

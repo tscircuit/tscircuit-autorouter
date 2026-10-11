@@ -30,7 +30,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       this.solved = true
       return
     }
-    this.simplifier = new TraceSimplificationSolver({
+    this.simplifier = this.createSimplifier({
       ...params.config,
       hdRoutes: structuredClone(this.bestRoutes),
     })
@@ -39,6 +39,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.simplifier.simplificationPipelineLoops = 2
     this.simplifier.MAX_SIMPLIFICATION_PIPELINE_LOOPS = 2 + this.extraPasses
     this.simplifier.MAX_ITERATIONS = this.MAX_ITERATIONS
+  }
+
+  protected createSimplifier(config: CleanupParams["config"]): TraceSimplificationSolver {
+    return new TraceSimplificationSolver(config)
   }
 
   override _step(): void {

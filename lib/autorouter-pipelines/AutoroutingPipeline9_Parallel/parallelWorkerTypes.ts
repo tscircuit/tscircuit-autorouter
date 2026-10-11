@@ -4,6 +4,8 @@ import type { Obstacle } from "../../types/srj-types"
 import type { ParallelStageWorkerJob } from "./parallelStageWorkerTypes"
 import type { MultiHeadHistoryCancellation, MultiHeadHistoryJob, MultiHeadHistoryRequest } from "./parallelMultiHeadHistoryTypes"
 import type { FirstValidHighDensityStats, ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
+import type { FirstValidA13CandidateCancellation, FirstValidA13CandidateJob, FirstValidA13CandidateRequest } from "./firstValidA13CandidateTypes"
+import type { FirstValidA13NodeJob } from "./parallelHighDensityFrontierTypes"
 
 export type Pipeline9ParallelHighDensityContext = {
   connectivityNetMap: Record<string, string[]>
@@ -24,6 +26,7 @@ export type Pipeline9ParallelHighDensityContext = {
   maxB01Rips?: number
   highDensityPolicy?: ParallelHighDensityPolicy
   firstValidClearance?: number
+  requirePhysicalCopper?: boolean
 }
 
 export type Pipeline9ParallelHighDensityNodeJob = {
@@ -32,25 +35,33 @@ export type Pipeline9ParallelHighDensityNodeJob = {
   context: Pipeline9ParallelHighDensityContext
   nodeWithPortPoints: NodeWithPortPoints
   nodePf: number | null
+  cancellationBuffer?: SharedArrayBuffer
+  disableIdleA13Candidate?: boolean
 }
 
 export type Pipeline9ParallelHighDensityNodeResult =
-  | { status: "solved"; routes: HighDensityIntraNodeRoute[]; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats }
-  | { status: "failed"; error: string; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats }
+  | { status: "solved"; routes: HighDensityIntraNodeRoute[]; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats; nodeIterations?: number }
+  | { status: "failed"; error: string; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats; nodeIterations?: number }
+  | { status: "cancelled"; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats; nodeIterations?: number }
+  | { status: "exception"; exception: { name: string; message: string; stack?: string }; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats; nodeIterations?: number }
 
 export type Pipeline9LocalWorkerJob =
   | Pipeline9ParallelHighDensityNodeJob
   | ParallelStageWorkerJob
   | MultiHeadHistoryJob
+  | FirstValidA13CandidateJob
+  | FirstValidA13NodeJob
   | { kind: "warmup" }
 
 export type Pipeline9LocalWorkerRequest = {
   taskId: number
-  job: Pipeline9LocalWorkerJob | Omit<Pipeline9ParallelHighDensityNodeJob, "context">
+  job: Pipeline9LocalWorkerJob | Omit<Pipeline9ParallelHighDensityNodeJob, "context"> | Omit<FirstValidA13NodeJob, "context">
 }
 
 export type Pipeline9LocalWorkerResponse =
   | MultiHeadHistoryRequest
   | MultiHeadHistoryCancellation
+  | FirstValidA13CandidateRequest
+  | FirstValidA13CandidateCancellation
   | { taskId: number; ok: true; result: unknown }
   | { taskId: number; ok: false; error: string }

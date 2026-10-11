@@ -5,6 +5,7 @@ import type { Pipeline9RegionalB01CandidateParams } from "../AutoroutingPipeline
 import type { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import type { TinyLandmarkGraph, TinyLandmarkDistances } from "./TinyLandmarkHeuristic"
 import type { NegotiatedPathingRouteJob, NegotiatedPathingRouteResult } from "./parallelNegotiatedPathingTypes"
+import type { ParallelGoalBallWorkerJob, ParallelGoalBallWorkerResult } from "./parallelGoalBallWorkerTypes"
 
 export type ParallelRegionalFallbackResult = {
   kind: "regionalFallbackSolve"
@@ -32,6 +33,7 @@ export type ParallelRegionalB01CandidateResult = {
 }
 
 export type ParallelStageWorkerJob =
+  | ParallelGoalBallWorkerJob
   | NegotiatedPathingRouteJob
   | { kind: "pathingLandmark"; graph: TinyLandmarkGraph; landmarkPortId: number }
   | {
@@ -66,6 +68,7 @@ export type ParallelStageWorkerJob =
     }
 
 export type ParallelStageWorkerResult =
+  | ParallelGoalBallWorkerResult
   | NegotiatedPathingRouteResult
   | ({ kind: "pathingLandmark" } & TinyLandmarkDistances)
   | ParallelRegionalFallbackResult

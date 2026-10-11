@@ -3,7 +3,7 @@ import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectionPointLayer, getConnectionPointLayers } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
@@ -19,6 +19,7 @@ import {
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
+  DISTANCE_TIE_TOLERANCE,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
@@ -44,8 +45,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  preserveTerminalLayers: boolean
+  private terminalLayersByConnectionName = new Map<string, Map<string, Set<number>>>()
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+
+  private snapEndpointToTerminal(islandEndpoint: Point3, terminals: Point3[], requireSameLayer?: boolean): Point3 {
+    const nearest = snapIslandEndpointToNearestTerminal({
+      islandEndpoint, terminals,
+      requireSameLayer: this.preserveTerminalLayers ? false : requireSameLayer,
+    })
+    if (!this.preserveTerminalLayers) return nearest
+    const sameLayer = snapIslandEndpointToNearestTerminal({ islandEndpoint, terminals, requireSameLayer: true })
+    // Coincident pads on distinct layers remain separate physical terminals.
+    return terminals.includes(sameLayer) &&
+      distance(islandEndpoint, sameLayer) <= distance(islandEndpoint, nearest) + DISTANCE_TIE_TOLERANCE
+      ? sameLayer : nearest
+  }
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -63,6 +79,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preserveTerminalLayers: this.preserveTerminalLayers,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -146,6 +163,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
     snapTerminalsOnSameLayer?: boolean
+    preserveTerminalLayers?: boolean
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -155,6 +173,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.preserveTerminalLayers = params.preserveTerminalLayers ?? false
+    if (this.preserveTerminalLayers) {
+      for (const connection of params.connections) {
+        const terminals = new Map<string, Set<number>>()
+        for (const point of connection.pointsToConnect) {
+          if (!point.pcb_port_id) continue
+          const layers = terminals.get(point.pcb_port_id) ?? new Set<number>()
+          for (const layer of getConnectionPointLayers(point)) layers.add(mapLayerNameToZ(layer, params.layerCount))
+          terminals.set(point.pcb_port_id, layers)
+        }
+        this.terminalLayersByConnectionName.set(connection.name, terminals)
+      }
+    }
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -272,16 +303,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-          requireSameLayer: params.snapTerminalsOnSameLayer,
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
-          requireSameLayer: params.snapTerminalsOnSameLayer,
-        })
+        start = this.snapEndpointToTerminal(start, [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
+        end = this.snapEndpointToTerminal(end, [globalStart, globalEnd], params.snapTerminalsOnSameLayer)
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -410,6 +433,20 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
+          if (this.preserveTerminalLayers) {
+            const route = this.activeSolver.mergedHdRoute
+            const terminals = this.terminalLayersByConnectionName.get(route.connectionName)
+            for (const [pcbPortId, point] of [
+              [route.startPcbPortId, route.route[0]],
+              [route.endPcbPortId, route.route.at(-1)],
+            ] as const) {
+              if (pcbPortId && (!point || !terminals?.get(pcbPortId)?.has(point.z))) {
+                this.failed = true
+                this.error = `Route stitch for "${route.connectionName}" does not preserve the layer of PCB terminal "${pcbPortId}"`
+                return
+              }
+            }
+          }
           this.clearanceValidator.addRoute(this.activeSolver.mergedHdRoute)
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
         }
@@ -451,6 +488,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preserveTerminalLayers: this.preserveTerminalLayers,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",

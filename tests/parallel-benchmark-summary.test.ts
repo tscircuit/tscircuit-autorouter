@@ -204,6 +204,7 @@ test("parallel benchmark target requires every sample, complete solves, matching
     { highDensityPolicy: "first-valid" as const },
     { pathingStrategy: "landmark" as const },
     { pathingStrategy: "negotiated" as const },
+    { pathingStrategy: "goal-balls" as const },
   ]
   for (const alternative of alternatives) {
     const alternativeSummary = summarizeParallelBenchmark(coveredRuns, { ...options, ...alternative })

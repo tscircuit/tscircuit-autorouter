@@ -10,6 +10,8 @@ import {
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
 import { mapZToLayerName } from "./mapZToLayerName"
+import { mapLayerNameToZ } from "./mapLayerNameToZ"
+import { routePointTouchesObstacleCopper } from "./routePointTouchesObstacleCopper"
 
 type Point = {
   x: number
@@ -48,27 +50,52 @@ const areSameXyPoint = (
   Math.abs(a.x - b.x) <= SAME_POINT_TOLERANCE &&
   Math.abs(a.y - b.y) <= SAME_POINT_TOLERANCE
 
-const pointInsideObstacle = (
+const pointTouchesObstacle = (
+  route: HdRouteWithOptionalJumpers,
+  pointIndex: number,
   point: Pick<Point, "x" | "y">,
   obstacle: Obstacle,
-) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
+) => obstacle.copperGeometry
+  ? routePointTouchesObstacleCopper(route, pointIndex, obstacle)
+  : pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? (obstacle.copperGeometry ? obstacle.zLayers?.length : undefined) ??
+    obstacle.layers?.length ?? 0) > 1
+
+const annotatedObstacleCoversTransition = (
+  obstacle: Obstacle,
+  start: Point,
+  end: Point,
+  layerCount: number,
+) => {
+  if (!obstacle.copperGeometry) return true
+  const zLayers = obstacle.__zLayers ?? obstacle.zLayers ??
+    obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
+  return zLayers.includes(start.z) && zLayers.includes(end.z)
+}
+
+const hasPhysicalCopperAnnotations = (opts: ConvertHdRouteToSimplifiedRouteOptions) =>
+  opts.connectedMultilayerObstacles?.some((obstacle) => obstacle.copperGeometry) ||
+  opts.obstacles?.some((obstacle) => obstacle.copperGeometry)
 
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
   start: Point,
   end: Point,
   opts: ConvertHdRouteToSimplifiedRouteOptions,
+  layerCount: number,
+  startPointIndex: number,
+  endPointIndex: number,
 ) => {
-  if (start.toNextSegmentType === "through_obstacle") return true
+  if (start.toNextSegmentType === "through_obstacle" && !hasPhysicalCopperAnnotations(opts)) return true
 
   if (opts.connectedMultilayerObstacles) {
     return opts.connectedMultilayerObstacles.some(
       (obstacle) =>
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+        annotatedObstacleCoversTransition(obstacle, start, end, layerCount) &&
+        pointTouchesObstacle(hdRoute, startPointIndex, start, obstacle) &&
+        pointTouchesObstacle(hdRoute, endPointIndex, end, obstacle),
     )
   }
 
@@ -76,8 +103,9 @@ const isThroughObstacleSegment = (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle) &&
+        annotatedObstacleCoversTransition(obstacle, start, end, layerCount) &&
+        pointTouchesObstacle(hdRoute, startPointIndex, start, obstacle) &&
+        pointTouchesObstacle(hdRoute, endPointIndex, end, obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
@@ -281,7 +309,7 @@ export const convertHdRouteToSimplifiedRoute = (
       const nextLayerName = mapZToLayerName(point.z, layerCount)
       if (
         previousPoint &&
-        isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
+        isThroughObstacleSegment(hdRoute, previousPoint, point, opts, layerCount, i - 1, i)
       ) {
         result.push({
           route_type: "through_obstacle",
@@ -304,6 +332,10 @@ export const convertHdRouteToSimplifiedRoute = (
             Math.abs(via.x - point.x) < 0.001 &&
             Math.abs(via.y - point.y) < 0.001,
         )
+        if (!viaExists && previousPoint?.toNextSegmentType === "through_obstacle" &&
+            hasPhysicalCopperAnnotations(opts)) {
+          throw new Error(`Physical route ${hdRoute.connectionName} has an invalid through-obstacle transition from ${currentZ} to ${point.z} without a via`)
+        }
 
         // Add a via if one exists
         if (viaExists) {

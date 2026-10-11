@@ -61,7 +61,7 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
     pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset",
     highDensityPolicy: (raw as Record<string, unknown>).highDensityPolicy ?? "ordered",
   } as SourceOptions
-  if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost" && options.pathingStrategy !== "landmark" && options.pathingStrategy !== "negotiated") {
+  if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost" && options.pathingStrategy !== "landmark" && options.pathingStrategy !== "negotiated" && options.pathingStrategy !== "goal-balls") {
     throw new Error(`Invalid pathingStrategy: ${source.sourcePath}`)
   }
   if (options.highDensityPolicy !== "ordered" && options.highDensityPolicy !== "first-valid") {

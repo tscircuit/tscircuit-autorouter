@@ -13,10 +13,10 @@ export const summarizeParallelBenchmark = (
   if (highDensityPolicy !== "ordered" && highDensityPolicy !== "first-valid") {
     throw new Error("Invalid high density policy")
   }
-  if (!["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated"].includes(pathingStrategy)) {
+  if (!["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated", "goal-balls"].includes(pathingStrategy)) {
     throw new Error("Invalid pathing strategy")
   }
-  const geometryRequired = highDensityPolicy === "ordered" && pathingStrategy !== "landmark" && pathingStrategy !== "negotiated"
+  const geometryRequired = highDensityPolicy === "ordered" && pathingStrategy !== "landmark" && pathingStrategy !== "negotiated" && pathingStrategy !== "goal-balls"
   for (const result of results) {
     if (
       result.status === "solved" &&

@@ -57,6 +57,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+  preserveTerminalLayers: boolean
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -77,6 +78,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preserveTerminalLayers?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -87,6 +89,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
+    this.preserveTerminalLayers = opts.preserveTerminalLayers ?? false
+    if (this.preserveTerminalLayers && canonicalHdRoutes.some((route) => route.route.length === 0)) {
+      throw new Error(`Cannot stitch an empty route fragment for "${opts.connectionName}"`)
+    }
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -269,13 +275,23 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         {
           x: this.start.x,
           y: this.start.y,
-          z: closestFirstRoutePoint.z,
+          z: this.preserveTerminalLayers ? this.start.z : closestFirstRoutePoint.z,
         },
       ],
       vias: [],
       jumpers: [],
       viaDiameter: firstRoute.viaDiameter,
       traceThickness: firstRoute.traceThickness,
+    }
+    if (this.preserveTerminalLayers && this.start.z !== closestFirstRoutePoint.z) {
+      if (this.allowedLayerTransitionPointKeys &&
+        !this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.start))) {
+        this.failed = true
+        this.error = `Layer transition at ${getXyPointKey(this.start)} is not allowed`
+        return
+      }
+      this.mergedHdRoute.route.push({ x: this.start.x, y: this.start.y, z: closestFirstRoutePoint.z })
+      this.mergedHdRoute.vias.push({ x: this.start.x, y: this.start.y })
     }
   }
 
@@ -312,7 +328,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   _step() {
     const endpoint = this.mergedHdRoute.route.at(-1)!
     const reachedTerminal =
-      this.mergedHdRoute.endPcbPortId !== undefined &&
+      (this.preserveTerminalLayers || this.mergedHdRoute.endPcbPortId !== undefined) &&
       endpoint.z === this.end.z &&
       distance(endpoint, this.end) < GEOMETRIC_TOLERANCE
     // A terminal-to-terminal path is complete here. Following leftover stubs
@@ -322,6 +338,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
+
+      if (this.preserveTerminalLayers && terminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) {
+        this.failed = true
+        this.error = `Terminal stitch for "${this.mergedHdRoute.connectionName}" cannot reach its declared endpoint`
+        return
+      }
 
       if (
         terminalDistance > GEOMETRIC_TOLERANCE &&
@@ -340,6 +362,21 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           y: this.end.y,
           z: lastMergedPoint.z,
         })
+      }
+
+      if (this.preserveTerminalLayers && lastMergedPoint.z !== this.end.z) {
+        if (this.allowedLayerTransitionPointKeys &&
+          !this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.end))) {
+          this.failed = true
+          this.error = `Layer transition at ${getXyPointKey(this.end)} is not allowed`
+          return
+        }
+        const currentEnd = this.mergedHdRoute.route.at(-1)!
+        if (currentEnd.x !== this.end.x || currentEnd.y !== this.end.y) {
+          this.mergedHdRoute.route.push({ x: this.end.x, y: this.end.y, z: lastMergedPoint.z })
+        }
+        this.mergedHdRoute.route.push({ x: this.end.x, y: this.end.y, z: this.end.z })
+        this.mergedHdRoute.vias.push({ x: this.end.x, y: this.end.y })
       }
 
       this.solved = true
@@ -431,6 +468,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       if (blockedByCollision) {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
+        return
+      }
+      if (this.preserveTerminalLayers) {
+        this.failed = true
+        this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" has unreachable route fragments`
         return
       }
       this.remainingHdRoutes = []

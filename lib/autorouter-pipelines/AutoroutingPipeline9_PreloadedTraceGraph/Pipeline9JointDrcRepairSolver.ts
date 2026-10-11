@@ -60,6 +60,9 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
+export type Pipeline9AutoroutingDrcEngine = Pick<AutoroutingDrcEngine,
+  "evaluate" | "evaluateLegacy" | "lastRunStats">
+
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
@@ -763,6 +766,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return new Pipeline9BoundedRegionalRepairSolver(params)
   }
 
+  protected createAutoroutingDrcEngine(
+    srj: ConstructorParameters<typeof AutoroutingDrcEngine>[0],
+    options: ConstructorParameters<typeof AutoroutingDrcEngine>[1],
+  ): Pipeline9AutoroutingDrcEngine {
+    // The coordinator retains candidate preparation and all reference guards.
+    // Opt-in prototypes may accelerate pure indexed geometry evaluation.
+    return new AutoroutingDrcEngine(srj, options)
+  }
+
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
     result: ReturnType<DrcEvaluator>,
@@ -1126,7 +1138,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const autoroutingDrcEngine = new AutoroutingDrcEngine(
+    const autoroutingDrcEngine = this.createAutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
         obstacles: params.originalSrj.obstacles,

@@ -1,7 +1,7 @@
 import type { BenchmarkStageTimingBreakdown } from "../benchmark/benchmark-types"
 
 export type BenchmarkVariant = "baseline" | "parallel"
-export type BenchmarkPathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated"
+export type BenchmarkPathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated" | "goal-balls"
 export type BenchmarkHighDensityPolicy = "ordered" | "first-valid"
 export type BenchmarkStatus = "solved" | "failed" | "timeout" | "crashed"
 

@@ -53,7 +53,7 @@ const parseOptions = (): Options => {
       if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
       options.parallelPathSimplification = value === "1"
     } else if (key === "--pathing-strategy") {
-      if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost" && value !== "landmark" && value !== "negotiated") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, cached-cost, landmark, or negotiated")
+      if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost" && value !== "landmark" && value !== "negotiated" && value !== "goal-balls") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, cached-cost, landmark, negotiated, or goal-balls")
       options.pathingStrategy = value
     } else if (key === "--high-density-policy") {
       if (value !== "ordered" && value !== "first-valid") throw new Error("--high-density-policy must be ordered or first-valid")

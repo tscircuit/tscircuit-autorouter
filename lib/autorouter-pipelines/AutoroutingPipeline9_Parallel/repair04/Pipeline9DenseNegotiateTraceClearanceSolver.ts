@@ -40,7 +40,11 @@ type Copper = SegmentDistanceGeometry & {
   minZ: number
   maxZ: number
   spanIndex: number
-  owner: string
+  sameOwner: boolean
+  wireRequired: number
+  viaWireRequired: number
+  viaDrillRequired: number
+  viaSharedRequired: number
   ownerIndex: number
   index: number
   cellX: number
@@ -434,6 +438,10 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
                     a.traceThickness ?? other.traceThickness,
                     b.traceThickness ?? other.traceThickness,
                   )) / 2
+            const viaDrillRequired =
+              (input.viaHoleDiameter ?? route.viaDiameter) / 2 +
+              (input.viaHoleDiameter ?? radius * 2) / 2 +
+              input.viaClearance
             let ownerIndex = ownerIndices.get(otherOwner)
             if (ownerIndex === undefined) {
               ownerIndex = ownerIndices.size
@@ -446,7 +454,13 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               ...prepareSegmentDistanceGeometry(a, b),
               ...getRepairCopperLayerSpan(input.srj, a, b),
               spanIndex: si,
-              owner: otherOwner,
+              sameOwner: otherOwner === selectedOwner,
+              // Geometry, route dimensions and clearances are immutable for
+              // this one search. Retain the original arithmetic order once.
+              wireRequired: route.traceThickness / 2 + input.traceClearance + radius,
+              viaWireRequired: route.viaDiameter / 2 + input.traceClearance + radius,
+              viaDrillRequired,
+              viaSharedRequired: Math.max(route.viaDiameter / 2 + input.viaClearance + radius, viaDrillRequired),
               ownerIndex,
               index: coppers.length,
               cellX: Math.floor(Math.min(a.x, b.x) - radius),
@@ -495,8 +509,10 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
           const hitPool: Array<{ copper: Copper; ratio: number }> = []
           const ownerCosts = new Float64Array(ownerIndices.size)
           const ownerCostQueries = new Uint32Array(ownerIndices.size)
+          const ownerFirstCopperIndices = new Int32Array(ownerIndices.size)
           const touchedOwners: number[] = []
           let ownerCostQueryId = 0
+          let queryBlocked = false
           const gridSize = Math.min(
             0.1,
             (route.traceThickness * (input.pathGridSizeScale ?? 1)) / 2,
@@ -521,6 +537,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
           const query = (
             a: RepairRoutePoint,
             b: RepairRoutePoint,
+            accumulateOwnerCosts = false,
           ): Array<{ copper: Copper; ratio: number }> => {
             const via = a.z !== b.z
             const minX = Math.min(a.x, b.x),
@@ -531,7 +548,10 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               (via ? route.viaDiameter : route.traceThickness) / 2 +
               Math.max(input.traceClearance, input.viaClearance)
             hits.length = 0
-            const span = getRepairCopperLayerSpan(input.srj, a, b)
+            queryBlocked = false
+            const firstCellX = Math.floor(minX - reach)
+            const firstCellY = Math.floor(minY - reach)
+            const span = via ? getRepairCopperLayerSpan(input.srj, a, b) : undefined
             const activeIndex = via ? copperIndex : copperByLayer.get(a.z)
             let edgeGeometryPrepared = false
             let candidates: number[] | undefined
@@ -577,29 +597,21 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               const copper = activeIndex!.copper[candidate]!
               const bothVias = via && copper.minZ !== copper.maxZ
               const sharedLayers =
-                copper.minZ <= span.maxZ && copper.maxZ >= span.minZ
+                !via || (copper.minZ <= span!.maxZ && copper.maxZ >= span!.minZ)
               if (!sharedLayers && !bothVias) continue
               if (copper.immutable && !bothVias) continue
               if (
-                copper.owner === selectedOwner &&
+                copper.sameOwner &&
                 (!bothVias || (a.x === copper.a.x && a.y === copper.a.y))
               )
                 continue
-              const copperDistance =
-                (via ? route.viaDiameter : route.traceThickness) / 2 +
-                (bothVias ? input.viaClearance : input.traceClearance) +
-                copper.radius
-              const drillDistance =
-                (input.viaHoleDiameter ?? route.viaDiameter) / 2 +
-                (input.viaHoleDiameter ?? copper.radius * 2) / 2 +
-                input.viaClearance
               // Drill spacing applies even when the connected copper spans do
               // not share layers. Same-net copper may overlap, distinct holes may not.
               const required = bothVias
-                ? sharedLayers && copper.owner !== selectedOwner
-                  ? Math.max(copperDistance, drillDistance)
-                  : drillDistance
-                : copperDistance
+                ? sharedLayers && !copper.sameOwner
+                  ? copper.viaSharedRequired
+                  : copper.viaDrillRequired
+                : via ? copper.viaWireRequired : copper.wireRequired
               // A cell may contain many distant segments. Their axis-aligned
               // separation is a lower bound on the exact distance; preserve the
               // existing narrow-phase calculation at and near the boundary.
@@ -617,6 +629,32 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               const distance = segmentToSegmentMinDistanceWithGeometry(edgeGeometry, copper)
               if (distance < required - REGION_EPSILON) {
                 const ratio = (required - distance) / (required * required)
+                if (accumulateOwnerCosts) {
+                  // A forbidden hit determines the complete edge cost. The
+                  // remaining narrow-phase work has no state or queue effects.
+                  if (copper.sameOwner || copper.immutable) {
+                    queryBlocked = true
+                    break
+                  }
+                  const ownerIndex = copper.ownerIndex
+                  const seen = ownerCostQueries[ownerIndex] === ownerCostQueryId
+                  ownerCosts[ownerIndex] = Math.max(
+                    seen ? ownerCosts[ownerIndex]! : 0,
+                    ratio * weights[copper.spanIndex]!,
+                  )
+                  if (!seen) {
+                    ownerCostQueries[ownerIndex] = ownerCostQueryId
+                    ownerFirstCopperIndices[ownerIndex] = copper.index
+                    touchedOwners.push(ownerIndex)
+                  } else {
+                    const firstCopper = coppers[ownerFirstCopperIndices[ownerIndex]!]!
+                    const x = Math.max(firstCellX, copper.cellX) - Math.max(firstCellX, firstCopper.cellX)
+                    const y = Math.max(firstCellY, copper.cellY) - Math.max(firstCellY, firstCopper.cellY)
+                    if (x < 0 || (x === 0 && (y < 0 || (y === 0 && copper.index < firstCopper.index))))
+                      ownerFirstCopperIndices[ownerIndex] = copper.index
+                  }
+                  continue
+                }
                 let hit = hitPool[hits.length]
                 if (!hit) {
                   hit = { copper, ratio }
@@ -630,9 +668,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
             }
             // Match the old integer-cell traversal order. This preserves floating
             // point accumulation and the order in which displaced spans are queued.
-            const firstCellX = Math.floor(minX - reach)
-            const firstCellY = Math.floor(minY - reach)
-            hits.sort((left, right): number => {
+            if (!accumulateOwnerCosts) hits.sort((left, right): number => {
               const x =
                 Math.max(firstCellX, left.copper.cellX) -
                 Math.max(firstCellX, right.copper.cellX)
@@ -665,20 +701,23 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               ownerCostQueryId = 1
             }
             touchedOwners.length = 0
-            for (const { copper, ratio } of query(a, b)) {
-              if (copper.owner === selectedOwner || copper.immutable)
-                return Infinity
-              const ownerIndex = copper.ownerIndex
-              const seen = ownerCostQueries[ownerIndex] === ownerCostQueryId
-              ownerCosts[ownerIndex] = Math.max(
-                seen ? ownerCosts[ownerIndex]! : 0,
-                ratio * weights[copper.spanIndex]!,
-              )
-              if (!seen) {
-                ownerCostQueries[ownerIndex] = ownerCostQueryId
-                touchedOwners.push(ownerIndex)
-              }
-            }
+            query(a, b, true)
+            if (queryBlocked) return Infinity
+            // Per-owner maxima are independent of hit order. Sum owners in the
+            // original first-hit order by sorting each owner's minimum copper
+            // key, rather than sorting every individual colliding segment.
+            const reach = (a.z !== b.z ? route.viaDiameter : route.traceThickness) / 2 +
+              Math.max(input.traceClearance, input.viaClearance)
+            const firstCellX = Math.floor(Math.min(a.x, b.x) - reach)
+            const firstCellY = Math.floor(Math.min(a.y, b.y) - reach)
+            touchedOwners.sort((leftOwner, rightOwner): number => {
+              const left = coppers[ownerFirstCopperIndices[leftOwner]!]!
+              const right = coppers[ownerFirstCopperIndices[rightOwner]!]!
+              const x = Math.max(firstCellX, left.cellX) - Math.max(firstCellX, right.cellX)
+              if (x !== 0) return x
+              const y = Math.max(firstCellY, left.cellY) - Math.max(firstCellY, right.cellY)
+              return y || left.index - right.index
+            })
             let total = 0
             for (const ownerIndex of touchedOwners)
               total += ownerCosts[ownerIndex]!

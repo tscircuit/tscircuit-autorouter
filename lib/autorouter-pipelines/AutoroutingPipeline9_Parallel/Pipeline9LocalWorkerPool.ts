@@ -4,6 +4,7 @@ import type {
   Pipeline9LocalWorkerResponse,
 } from "./parallelWorkerTypes"
 import type { MultiHeadHistoryDelivery, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
+import type { FirstValidA13CandidateDelivery, FirstValidA13CandidateGrant, FirstValidA13CandidateRequest, FirstValidA13CandidateResult } from "./firstValidA13CandidateTypes"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
 type QueuedTask = {
@@ -29,7 +30,10 @@ export class Pipeline9LocalWorkerPool {
   readonly workerCount: number
   readonly stats = { tasksStarted: 0, tasksCompleted: 0, maxActiveWorkers: 0,
     historyRequestsGranted: 0, historyRequestsDenied: 0, historyJobsStarted: 0,
-    historyCancellationSignals: 0, historyJobsStopped: 0, historyStepsCompleted: 0 }
+    historyCancellationSignals: 0, historyJobsStopped: 0, historyStepsCompleted: 0,
+    a13RequestsGranted: 0, a13RequestsDenied: 0, a13CandidatesStarted: 0,
+    a13CancellationSignals: 0, a13CandidatesStopped: 0, a13RoutingIterationsCompleted: 0,
+    a13NodeJobsCompleted: 0, a13NodeJobsStopped: 0, a13NodeRoutingIterationsCompleted: 0 }
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
   private readonly workers: WorkerSlot[] = []
@@ -37,7 +41,7 @@ export class Pipeline9LocalWorkerPool {
   private nextTaskId = 0
   private nextContextId = 0
   private terminalError: Error | null = null
-  private readonly historyCancellationByOwner = new Map<number, Set<Int32Array>>()
+  private readonly candidateCancellationByOwner = new Map<number, Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate">>()
 
   constructor(options: Pipeline9LocalWorkerPoolOptions = {}) {
     this.workerCount = options.workerCount ?? 4
@@ -71,6 +75,18 @@ export class Pipeline9LocalWorkerPool {
     await Promise.all(Array.from({ length: this.workerCount }, () => this.run({ kind: "warmup" })))
   }
 
+  /** Imports workers while the coordinator prepares topology on its own core. */
+  start(): void {
+    if (this.terminalError) throw this.terminalError
+    try {
+      while (this.workers.length < this.workerCount) this.createWorker().worker.unref?.()
+    } catch (error: unknown) {
+      const failure = error instanceof Error ? error : new Error(String(error))
+      this.fail(failure)
+      throw failure
+    }
+  }
+
   dispose(): void {
     this.fail(new Error("Pipeline9 local worker pool was disposed"))
   }
@@ -84,11 +100,12 @@ export class Pipeline9LocalWorkerPool {
       if ("kind" in response) {
         try {
           if (response.kind === "requestMultiHeadHistories") this.admitHistoryRequest(slot, response)
-          else if (response.kind === "cancelMultiHeadHistories") {
+          else if (response.kind === "requestFirstValidA13Candidate") this.admitA13Request(slot, response)
+          else if (response.kind === "cancelMultiHeadHistories" || response.kind === "cancelFirstValidA13Candidate") {
             if (!task || task.taskId !== response.taskId || task.job.kind !== "highDensityNode") {
               throw new Error("Multi-head cancellation has no active high-density owner")
             }
-            this.cancelOwnerHistories(response.taskId)
+            this.cancelOwnerCandidates(response.taskId)
           }
           else throw new Error("Unknown Pipeline9 worker control message")
         }
@@ -106,7 +123,24 @@ export class Pipeline9LocalWorkerPool {
           return
         }
       }
-      if (task.job.kind === "highDensityNode") this.cancelOwnerHistories(task.taskId)
+      if (response.ok && task.job.kind === "firstValidA13Candidate") {
+        try { this.recordA13Work(response.result) }
+        catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (response.ok && (task.job.kind === "highDensityA13Node" ||
+          (task.job.kind === "highDensityNode" && task.job.cancellationBuffer))) {
+        try {
+          if (task.job.kind === "highDensityA13Node") this.validateA13NodeResult(response.result)
+          else this.validateCompetitiveGenericResult(response.result)
+        } catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (task.job.kind === "highDensityNode") this.cancelOwnerCandidates(task.taskId)
       slot.task = null
       this.stats.tasksCompleted++
       if (response.ok) task.resolve(response.result)
@@ -151,27 +185,143 @@ export class Pipeline9LocalWorkerPool {
     if (jobs.length === 0) this.stats.historyRequestsDenied++
     else this.stats.historyRequestsGranted++
     for (const job of jobs) {
-      const cancellation = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
-      let cancellations = this.historyCancellationByOwner.get(request.taskId)
-      if (!cancellations) {
-        cancellations = new Set<Int32Array>()
-        this.historyCancellationByOwner.set(request.taskId, cancellations)
-      }
-      cancellations.add(cancellation)
+      const cancellation = this.registerCandidateCancellation(request.taskId, "multiHeadHistory")
       this.stats.historyJobsStarted++
       void this.run<MultiHeadHistoryResult>({ ...job, cancellationBuffer: cancellation.buffer as SharedArrayBuffer }).then(
         (result): void => {
-          this.removeHistoryCancellation(request.taskId, cancellation)
+          this.removeCandidateCancellation(request.taskId, cancellation)
           this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
             taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId, ok: true, result })
         },
         (error: unknown): void => {
-          this.removeHistoryCancellation(request.taskId, cancellation)
+          this.removeCandidateCancellation(request.taskId, cancellation)
           this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
             taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId,
             ok: false, error: error instanceof Error ? error.message : String(error) })
         },
       )
+    }
+  }
+
+  private admitA13Request(owner: WorkerSlot, request: FirstValidA13CandidateRequest): void {
+    if (!owner.task || owner.task.taskId !== request.taskId || owner.task.job.kind !== "highDensityNode" ||
+        owner.task.job.context.highDensityPolicy !== "first-valid" || request.job.kind !== "firstValidA13Candidate") {
+      throw new Error("First-valid A13 request has no eligible high-density owner")
+    }
+    const admitted = this.queue.length === 0 &&
+      this.workers.filter((slot) => slot.task !== null).length < this.workerCount
+    owner.worker.postMessage({ kind: "firstValidA13CandidateGrant", taskId: request.taskId,
+      requestId: request.requestId, admitted } satisfies FirstValidA13CandidateGrant)
+    if (!admitted) {
+      this.stats.a13RequestsDenied++
+      return
+    }
+    this.stats.a13RequestsGranted++
+    this.stats.a13CandidatesStarted++
+    const cancellation = this.registerCandidateCancellation(request.taskId, "firstValidA13Candidate")
+    void this.run<FirstValidA13CandidateResult>({ ...request.job,
+      cancellationBuffer: cancellation.buffer as SharedArrayBuffer }).then(
+      (result): void => {
+        this.removeCandidateCancellation(request.taskId, cancellation)
+        this.deliverA13(owner, { kind: "firstValidA13CandidateDelivery", taskId: request.taskId,
+          requestId: request.requestId, ok: true, result })
+      },
+      (error: unknown): void => {
+        this.removeCandidateCancellation(request.taskId, cancellation)
+        this.deliverA13(owner, { kind: "firstValidA13CandidateDelivery", taskId: request.taskId,
+          requestId: request.requestId, ok: false, error: error instanceof Error ? error.message : String(error) })
+      },
+    )
+  }
+
+  private registerCandidateCancellation(ownerTaskId: number, kind: "multiHeadHistory" | "firstValidA13Candidate"): Int32Array {
+    const cancellation = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
+    let cancellations = this.candidateCancellationByOwner.get(ownerTaskId)
+    if (!cancellations) {
+      cancellations = new Map<Int32Array, "multiHeadHistory" | "firstValidA13Candidate">()
+      this.candidateCancellationByOwner.set(ownerTaskId, cancellations)
+    }
+    cancellations.set(cancellation, kind)
+    return cancellation
+  }
+
+  private recordA13Work(result: unknown): void {
+    if (!result || typeof result !== "object" || !("kind" in result) || result.kind !== "firstValidA13Candidate" ||
+        !("status" in result) || !["solved", "failed", "cancelled", "exception"].includes(String(result.status)) ||
+        !("routingIterations" in result) || typeof result.routingIterations !== "number" ||
+        !Number.isFinite(result.routingIterations) || result.routingIterations < 0) {
+      throw new Error("A13 worker returned an invalid candidate result")
+    }
+    this.stats.a13RoutingIterationsCompleted += result.routingIterations
+    if (result.status === "cancelled") this.stats.a13CandidatesStopped++
+  }
+
+  private validateCompetitiveGenericResult(result: unknown): void {
+    if (!result || typeof result !== "object" || !("status" in result) || typeof result.status !== "string" ||
+        !["solved", "failed", "cancelled", "exception"].includes(result.status) || !("nodeStats" in result)) {
+      throw new Error("Generic HD worker returned an invalid competitive result")
+    }
+    this.validateNumericNodeStats(result.nodeStats)
+    if (result.status === "solved" && (!("routes" in result) || !Array.isArray(result.routes))) {
+      throw new Error("Generic HD worker returned a solved result without routes")
+    }
+    if (result.status === "failed" && (!("error" in result) || typeof result.error !== "string")) {
+      throw new Error("Generic HD worker returned a failed result without an error")
+    }
+    if (result.status === "exception") {
+      if (!("exception" in result)) throw new Error("Generic HD worker returned an exception result without its exception")
+      this.validateWorkerException(result.exception)
+    }
+  }
+
+  private validateA13NodeResult(result: unknown): void {
+    if (!result || typeof result !== "object" || !("kind" in result) || result.kind !== "highDensityA13Node" ||
+        !("status" in result) || typeof result.status !== "string" ||
+        !["solved", "failed", "cancelled", "rejected", "exception"].includes(result.status) ||
+        !("work" in result) || !result.work || typeof result.work !== "object") {
+      throw new Error("A13 node worker returned an invalid frontier result")
+    }
+    const work = result.work
+    if (!("iterations" in work) || typeof work.iterations !== "number" || !Number.isFinite(work.iterations) || work.iterations < 0 ||
+        !("maxIterations" in work) || typeof work.maxIterations !== "number" || !Number.isFinite(work.maxIterations) || work.maxIterations < 0 ||
+        !("routingIterations" in work) || typeof work.routingIterations !== "number" || !Number.isFinite(work.routingIterations) || work.routingIterations < 0 ||
+        !("sourceStats" in work) || !work.sourceStats || typeof work.sourceStats !== "object") {
+      throw new Error("A13 node worker returned invalid source work")
+    }
+    if (result.status === "solved") {
+      if (!("routes" in result) || !Array.isArray(result.routes) || !("nodeStats" in result)) {
+        throw new Error("A13 node worker returned an incomplete solved result")
+      }
+      this.validateNumericNodeStats(result.nodeStats)
+    } else if (result.status === "failed" && (!("error" in result) || typeof result.error !== "string")) {
+      throw new Error("A13 node worker returned a failed result without an error")
+    } else if (result.status === "rejected" && (!("reason" in result) || typeof result.reason !== "string")) {
+      throw new Error("A13 node worker returned a rejected result without a reason")
+    } else if (result.status === "exception") {
+      if (!("exception" in result)) throw new Error("A13 node worker returned an exception result without its exception")
+      this.validateWorkerException(result.exception)
+    }
+    this.stats.a13NodeJobsCompleted++
+    this.stats.a13NodeRoutingIterationsCompleted += work.routingIterations
+    if (result.status === "cancelled") this.stats.a13NodeJobsStopped++
+  }
+
+  private validateNumericNodeStats(stats: unknown): void {
+    if (!stats || typeof stats !== "object" || Array.isArray(stats)) {
+      throw new Error("HD worker returned invalid node statistics")
+    }
+    for (const [key, value] of Object.entries(stats)) {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        throw new Error(`HD worker returned nonnumeric node statistic ${key}`)
+      }
+    }
+  }
+
+  private validateWorkerException(exception: unknown): void {
+    if (!exception || typeof exception !== "object" || !("name" in exception) || typeof exception.name !== "string" ||
+        !("message" in exception) || typeof exception.message !== "string" ||
+        ("stack" in exception && exception.stack !== undefined && typeof exception.stack !== "string")) {
+      throw new Error("HD worker returned invalid exception metadata")
     }
   }
 
@@ -184,25 +334,36 @@ export class Pipeline9LocalWorkerPool {
     if ("cancelled" in result && result.cancelled === true) this.stats.historyJobsStopped++
   }
 
-  private removeHistoryCancellation(ownerTaskId: number, cancellation: Int32Array): void {
-    const cancellations = this.historyCancellationByOwner.get(ownerTaskId)
+  private removeCandidateCancellation(ownerTaskId: number, cancellation: Int32Array): void {
+    const cancellations = this.candidateCancellationByOwner.get(ownerTaskId)
     if (!cancellations) return
     cancellations.delete(cancellation)
     if (cancellations.size === 0) {
-      this.historyCancellationByOwner.delete(ownerTaskId)
+      this.candidateCancellationByOwner.delete(ownerTaskId)
     }
   }
 
-  private cancelOwnerHistories(ownerTaskId: number): void {
-    const cancellations = this.historyCancellationByOwner.get(ownerTaskId)
+  private cancelOwnerCandidates(ownerTaskId: number): void {
+    const cancellations = this.candidateCancellationByOwner.get(ownerTaskId)
     if (!cancellations) return
-    for (const cancellation of cancellations) {
-      if (Atomics.exchange(cancellation, 0, 1) === 0) this.stats.historyCancellationSignals++
+    for (const [cancellation, kind] of cancellations) {
+      if (Atomics.exchange(cancellation, 0, 1) !== 0) continue
+      if (kind === "multiHeadHistory") this.stats.historyCancellationSignals++
+      else this.stats.a13CancellationSignals++
     }
-    this.historyCancellationByOwner.delete(ownerTaskId)
+    this.candidateCancellationByOwner.delete(ownerTaskId)
   }
 
   private deliverHistory(owner: WorkerSlot, delivery: MultiHeadHistoryDelivery): void {
+    if (this.terminalError || owner.task?.taskId !== delivery.taskId) return
+    try {
+      owner.worker.postMessage(delivery)
+    } catch (error: unknown) {
+      this.fail(error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  private deliverA13(owner: WorkerSlot, delivery: FirstValidA13CandidateDelivery): void {
     if (this.terminalError || owner.task?.taskId !== delivery.taskId) return
     try {
       owner.worker.postMessage(delivery)
@@ -220,7 +381,7 @@ export class Pipeline9LocalWorkerPool {
       const task = this.queue.shift()!
       slot.task = task
       let job: Pipeline9LocalWorkerRequest["job"] = task.job
-      if (task.job.kind === "highDensityNode") {
+      if (task.job.kind === "highDensityNode" || task.job.kind === "highDensityA13Node") {
         if (slot.contextId === task.job.contextId) {
           const { context: _context, ...nodeJob } = task.job
           job = nodeJob
@@ -246,7 +407,7 @@ export class Pipeline9LocalWorkerPool {
   private fail(error: Error): void {
     if (this.terminalError) return
     this.terminalError = error
-    for (const ownerTaskId of this.historyCancellationByOwner.keys()) this.cancelOwnerHistories(ownerTaskId)
+    for (const ownerTaskId of this.candidateCancellationByOwner.keys()) this.cancelOwnerCandidates(ownerTaskId)
     for (const task of this.queue.splice(0)) task.reject(error)
     for (const slot of this.workers) {
       slot.task?.reject(error)
