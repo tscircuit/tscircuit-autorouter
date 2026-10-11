@@ -46,9 +46,13 @@ test("JSON cache keys distinguish scalar values and reuse equivalent cached rout
   expect(new Set(booleanKeys).size).toBe(3)
   for (const value of values) {
     expect(
-      key({ hyperParameters: { SHUFFLE_SEED: 0, VIA_PENALTY_FACTOR_2: value } }),
+      key({
+        hyperParameters: { SHUFFLE_SEED: 0, VIA_PENALTY_FACTOR_2: value },
+      }),
     ).toBe(
-      key({ hyperParameters: { VIA_PENALTY_FACTOR_2: value, SHUFFLE_SEED: 0 } }),
+      key({
+        hyperParameters: { VIA_PENALTY_FACTOR_2: value, SHUFFLE_SEED: 0 },
+      }),
     )
   }
   const optionalIds = [undefined, "u:", "n:NaN", "s:u:", "", "\ud800", "�"]
@@ -61,9 +65,9 @@ test("JSON cache keys distinguish scalar values and reuse equivalent cached rout
     }),
   )
   expect(new Set(optionalKeys).size).toBe(optionalIds.length)
-  expect(key({ nodeWithPortPoints: { ...node, availableZ: undefined } })).not.toBe(
-    key({ nodeWithPortPoints: { ...node, availableZ: [] } }),
-  )
+  expect(
+    key({ nodeWithPortPoints: { ...node, availableZ: undefined } }),
+  ).not.toBe(key({ nodeWithPortPoints: { ...node, availableZ: [] } }))
   expect(key({ connMap: new ConnectivityMap({}) })).not.toBe(key())
 
   // Portfolio selector flags extend the named hyperparameter interface.
