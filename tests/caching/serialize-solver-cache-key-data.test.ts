@@ -32,11 +32,14 @@ test("solver cache serialization retains object-hash keys for typed and shared v
   ]
   for (const value of values) {
     expect(serializeSolverCacheKeyData({ value })).toBe(
-      objectHash({ value }, {
-        algorithm: "passthrough",
-        respectType: false,
-        unorderedObjects: false,
-      }),
+      objectHash(
+        { value },
+        {
+          algorithm: "passthrough",
+          respectType: false,
+          unorderedObjects: false,
+        },
+      ),
     )
   }
 })

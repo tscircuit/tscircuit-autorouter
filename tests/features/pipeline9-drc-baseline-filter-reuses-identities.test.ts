@@ -40,12 +40,14 @@ test("Pipeline9 baseline filter keeps candidate aliases separate across evaluati
     ["section_10", "preloaded_a"],
   ])
 
-  expect(filter({ errors: candidateErrors, originalTraceIdByPreparedTraceId }))
-    .toEqual(candidateErrors.slice(2))
+  expect(
+    filter({ errors: candidateErrors, originalTraceIdByPreparedTraceId }),
+  ).toEqual(candidateErrors.slice(2))
 
   originalTraceIdByPreparedTraceId.set("section_10", "new_trace")
-  expect(filter({ errors: candidateErrors, originalTraceIdByPreparedTraceId }))
-    .toEqual(candidateErrors)
+  expect(
+    filter({ errors: candidateErrors, originalTraceIdByPreparedTraceId }),
+  ).toEqual(candidateErrors)
 
   expect(filter({ errors: candidateErrors })).toEqual(candidateErrors)
   expect(filter({ errors: [inheritedTraceError, inheritedViaError] })).toEqual([])

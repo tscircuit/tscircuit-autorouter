@@ -1,9 +1,18 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
-type HighDensitySolverA01Props = ConstructorParameters<typeof HighDensitySolverA01>[0]
+type HighDensitySolverA01Props = ConstructorParameters<
+  typeof HighDensitySolverA01
+>[0]
 
 type RippedNode = { id: number; prev: RippedNode | null }
-type ObjectNode = { z: number; row: number; col: number; g: number; parentIdx: number; ripped: RippedNode | null }
+type ObjectNode = {
+  z: number
+  row: number
+  col: number
+  g: number
+  parentIdx: number
+  ripped: RippedNode | null
+}
 type NumericNodeState = {
   nodeCount: number
   nodeZ: Float64Array
@@ -15,7 +24,14 @@ type NumericNodeState = {
   ripCount: number[]
   totalRipEvents: number
   baseSearchBudgetIters: number
-  appendSearchNode(z: number, row: number, col: number, g: number, parent: number, ripped: RippedNode | null): number
+  appendSearchNode(
+    z: number,
+    row: number,
+    col: number,
+    g: number,
+    parent: number,
+    ripped: RippedNode | null,
+  ): number
   resetSearchNodes(): void
 }
 
@@ -24,15 +40,27 @@ type NumericNodeState = {
 function useObjectNodeReference(solver: HighDensitySolverA01): void {
   const state = solver as unknown as NumericNodeState
   let nodes: ObjectNode[] = []
-  const fields = { nodeZ: "z", nodeRow: "row", nodeCol: "col", nodeG: "g", nodeParent: "parentIdx", nodeRipped: "ripped" } as const
+  const fields = {
+    nodeZ: "z",
+    nodeRow: "row",
+    nodeCol: "col",
+    nodeG: "g",
+    nodeParent: "parentIdx",
+    nodeRipped: "ripped",
+  } as const
   for (const [target, source] of Object.entries(fields)) {
     Object.defineProperty(solver, target, {
-      value: new Proxy({}, {
-        get(_target, key): unknown {
-          if (key === "length") return nodes.length
-          return typeof key === "string" ? nodes[Number(key)]?.[source as keyof ObjectNode] : undefined
+      value: new Proxy(
+        {},
+        {
+          get(_target, key): unknown {
+            if (key === "length") return nodes.length
+            return typeof key === "string"
+              ? nodes[Number(key)]?.[source as keyof ObjectNode]
+              : undefined
+          },
         },
-      }),
+      ),
       writable: true,
       configurable: true,
     })
@@ -49,7 +77,10 @@ function useObjectNodeReference(solver: HighDensitySolverA01): void {
   }
 }
 
-function createProps(seed: number, layers: number[]): HighDensitySolverA01Props {
+function createProps(
+  seed: number,
+  layers: number[],
+): HighDensitySolverA01Props {
   return {
     nodeWithPortPoints: {
       capacityMeshNodeId: "numeric-node-parity",
@@ -58,8 +89,20 @@ function createProps(seed: number, layers: number[]): HighDensitySolverA01Props 
       height: 3,
       availableZ: layers,
       portPoints: Array.from({ length: 4 }, (_, index) => [
-        { connectionName: `trace${index}`, rootConnectionName: index < 2 ? "shared" : `net${index}`, x: -1.5, y: -0.9 + index * 0.6, z: layers[index % layers.length]! },
-        { connectionName: `trace${index}`, rootConnectionName: index < 2 ? "shared" : `net${index}`, x: 1.5, y: 0.9 - index * 0.6, z: layers[(index + 1) % layers.length]! },
+        {
+          connectionName: `trace${index}`,
+          rootConnectionName: index < 2 ? "shared" : `net${index}`,
+          x: -1.5,
+          y: -0.9 + index * 0.6,
+          z: layers[index % layers.length]!,
+        },
+        {
+          connectionName: `trace${index}`,
+          rootConnectionName: index < 2 ? "shared" : `net${index}`,
+          x: 1.5,
+          y: 0.9 - index * 0.6,
+          z: layers[(index + 1) % layers.length]!,
+        },
       ]).flat(),
     },
     cellSizeMm: 0.1,
@@ -72,7 +115,11 @@ function createProps(seed: number, layers: number[]): HighDensitySolverA01Props 
 
 test("numeric A01 nodes preserve object search results and release bounded reusable storage", (): void => {
   let observedRip = false
-  for (const [seed, layers, limited] of [[1, [0, 1], false], [3, [0, 1, 2, 3], false], [1, [0, 1], true]] as const) {
+  for (const [seed, layers, limited] of [
+    [1, [0, 1], false],
+    [3, [0, 1, 2, 3], false],
+    [1, [0, 1], true],
+  ] as const) {
     const props = createProps(seed, [...layers])
     const numeric = new HighDensitySolverA01(props)
     const reference = new HighDensitySolverA01(props)
@@ -105,10 +152,21 @@ test("numeric A01 nodes preserve object search results and release bounded reusa
   const numeric = new HighDensitySolverA01(createProps(1, [0, 1]))
   const state = numeric as unknown as NumericNodeState
   const ripped: RippedNode = { id: 3, prev: { id: 7, prev: null } }
-  const values = [0, -0, NaN, Infinity, -Infinity, Number.MIN_VALUE, Math.SQRT2, 1e300]
+  const values = [
+    0,
+    -0,
+    NaN,
+    Infinity,
+    -Infinity,
+    Number.MIN_VALUE,
+    Math.SQRT2,
+    1e300,
+  ]
   for (let index = 0; index < 513; index++) {
     const value = values[index % values.length]!
-    expect(state.appendSearchNode(value, value, value, value, index - 1, ripped)).toBe(index)
+    expect(
+      state.appendSearchNode(value, value, value, value, index - 1, ripped),
+    ).toBe(index)
   }
   for (let index = 0; index < 513; index++) {
     const value = values[index % values.length]!
@@ -126,14 +184,22 @@ test("numeric A01 nodes preserve object search results and release bounded reusa
   expect(state.nodeG.buffer).toBe(retainedBuffer)
   expect(retainedRips.slice(0, 513).every((node) => node === null)).toBeTrue()
   for (const value of values) {
-    const index = state.appendSearchNode(value, value, value, value, value, null)
+    const index = state.appendSearchNode(
+      value,
+      value,
+      value,
+      value,
+      value,
+      null,
+    )
     expect(Object.is(state.nodeParent[index], value)).toBeTrue()
   }
   state.resetSearchNodes()
   expect(state.appendSearchNode(-0, NaN, Infinity, -0, -1, null)).toBe(0)
   expect(Object.is(state.nodeG[0], -0)).toBeTrue()
   expect(state.nodeParent[0]).toBe(-1)
-  for (let index = 1; index < 65_537; index++) state.appendSearchNode(0, index, 1, index / 7, index - 1, ripped)
+  for (let index = 1; index < 65_537; index++)
+    state.appendSearchNode(0, index, 1, index / 7, index - 1, ripped)
   expect(state.nodeG.length).toBeGreaterThan(65_536)
   expect(state.nodeParent[65_536]).toBe(65_535)
   expect(state.nodeG[65_536]).toBe(65_536 / 7)

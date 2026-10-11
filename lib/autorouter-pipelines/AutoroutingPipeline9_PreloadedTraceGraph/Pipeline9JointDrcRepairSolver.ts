@@ -1157,15 +1157,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrors)
     const filterReferenceErrorsWithCenters =
       createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrorsWithCenters)
-    const filterIndexedErrors =
-      createPipeline9DrcErrorsAgainstBaselineFilter(autoroutingBaselineDrc.errors)
+    const filterIndexedErrors = createPipeline9DrcErrorsAgainstBaselineFilter(
+      autoroutingBaselineDrc.errors,
+    )
     const filterIndexedErrorsWithCenters =
       createPipeline9DrcErrorsAgainstBaselineFilter(
         autoroutingBaselineDrc.errorsWithCenters,
       )
     // Projection passes can revisit an earlier geometry after rejecting a
     // different candidate. Retain bounded full-reference results as well.
-    const referenceDrcCandidateCache = new Map<string, ReturnType<DrcEvaluator>>()
+    const referenceDrcCandidateCache = new Map<
+      string,
+      ReturnType<DrcEvaluator>
+    >()
     // The checker retains private original polygons by exact geometry. An
     // ownership key scopes that bounded cache to this repair evaluator.
     const traceContinuityCacheKey = {}
@@ -1357,12 +1361,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
-      const evaluatedNewErrorsWithCenters =
-        filterReferenceErrorsWithCenters({
-          errors: evaluatedErrorsWithCenters,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
+      const evaluatedNewErrorsWithCenters = filterReferenceErrorsWithCenters({
+        errors: evaluatedErrorsWithCenters,
+        originalTraceIdByPreparedTraceId:
+          candidateDrcInput.originalTraceIdByEvaluationTraceId,
+      })
       return normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
@@ -1389,8 +1392,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (referenceDrcCandidateCache.size >= REFERENCE_DRC_CANDIDATE_CACHE_SIZE) {
-        const oldestCandidateKey = referenceDrcCandidateCache.keys().next().value
+      if (
+        referenceDrcCandidateCache.size >= REFERENCE_DRC_CANDIDATE_CACHE_SIZE
+      ) {
+        const oldestCandidateKey = referenceDrcCandidateCache
+          .keys()
+          .next().value
         if (oldestCandidateKey !== undefined) {
           referenceDrcCandidateCache.delete(oldestCandidateKey)
         }
@@ -1499,12 +1506,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
-      const evaluatedNewErrorsWithCenters =
-        filterIndexedErrorsWithCenters({
-          errors: evaluatedErrorsWithCenters,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
+      const evaluatedNewErrorsWithCenters = filterIndexedErrorsWithCenters({
+        errors: evaluatedErrorsWithCenters,
+        originalTraceIdByPreparedTraceId:
+          candidateDrcInput.originalTraceIdByEvaluationTraceId,
+      })
       if (evaluatedNewErrors.length === 0) {
         const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator({

@@ -11,14 +11,20 @@ test("Pipeline9 reference cache reuses revisited geometry and bounds retained ca
       connectionName: "horizontal",
       traceThickness: 0.1,
       viaDiameter: 0.3,
-      route: [{ x: -1, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
+      route: [
+        { x: -1, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+      ],
       vias: [],
     },
     {
       connectionName: "vertical",
       traceThickness: 0.1,
       viaDiameter: 0.3,
-      route: [{ x: 0, y: -1, z: 0 }, { x: 0, y: 1, z: 0 }],
+      route: [
+        { x: 0, y: -1, z: 0 },
+        { x: 0, y: 1, z: 0 },
+      ],
       vias: [],
     },
   ]
@@ -70,10 +76,13 @@ test("Pipeline9 reference cache reuses revisited geometry and bounds retained ca
   const mutated = evaluate({ traces: [], routes: changedRoutes })
   expect(mutated).not.toBe(second)
   expect(reference.referenceDrcValidationCount).toBe(validationCount + 1)
-  if (Array.isArray(mutated)) throw new Error("Expected reference errors with centers")
-  expect(mutated.errorsWithCenters!.find(
-    (error) => error.pcb_trace_error_id === "overlap_horizontal_0_vertical_0",
-  )).toMatchObject({ center: { x: 0.75, y: 0 } })
+  if (Array.isArray(mutated))
+    throw new Error("Expected reference errors with centers")
+  expect(
+    mutated.errorsWithCenters!.find(
+      (error) => error.pcb_trace_error_id === "overlap_horizontal_0_vertical_0",
+    ),
+  ).toMatchObject({ center: { x: 0.75, y: 0 } })
 
   // Sixteen distinct newer candidates must evict the initial geometry.
   for (let index = 0; index < 16; index++) {
@@ -84,5 +93,7 @@ test("Pipeline9 reference cache reuses revisited geometry and bounds retained ca
   const afterEviction = evaluate({ traces: [], routes })
   expect(afterEviction).not.toBe(first)
   expect(afterEviction).toEqual(first)
-  expect(evaluate({ traces: [], routes: structuredClone(routes) })).toBe(afterEviction)
+  expect(evaluate({ traces: [], routes: structuredClone(routes) })).toBe(
+    afterEviction,
+  )
 })

@@ -34,7 +34,15 @@ test("future cost preserves one-argument custom point selectors", (): void => {
     ],
     captureSearchDebug: false,
   })
-  const parent: Node = { x: -0.2, y: -0.2, z: 0, g: 1, h: 2, f: 3, parent: null }
+  const parent: Node = {
+    x: -0.2,
+    y: -0.2,
+    z: 0,
+    g: 1,
+    h: 2,
+    f: 3,
+    parent: null,
+  }
   const node: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent }
   for (const point of [
     { x: 0.3, y: 0.1, z: 0 },
@@ -42,21 +50,29 @@ test("future cost preserves one-argument custom point selectors", (): void => {
   ]) {
     solver.selectedPoint = point
     for (const isVia of [false, true]) {
-      const maxPenalty = solver.straightLineDistance * (
-        isVia
+      const maxPenalty =
+        solver.straightLineDistance *
+        (isVia
           ? solver.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
-          : solver.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+          : solver.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR)
+      const expectedPenalty =
+        maxPenalty *
+        Math.exp(
+          -(
+            distance(node, point) /
+            (solver.viaDiameter * solver.FUTURE_CONNECTION_PROXIMITY_VD)
+          ) * 5,
+        )
+      expect(solver.getFutureConnectionPenalty(node, isVia)).toBe(
+        expectedPenalty,
       )
-      const expectedPenalty = maxPenalty * Math.exp(
-        -(distance(node, point) /
-          (solver.viaDiameter * solver.FUTURE_CONNECTION_PROXIMITY_VD)) * 5,
-      )
-      expect(solver.getFutureConnectionPenalty(node, isVia)).toBe(expectedPenalty)
-      expect(solver.getFutureConnectionPenalty(
-        node,
-        isVia,
-        distance(node, solver.B),
-      )).toBe(expectedPenalty)
+      expect(
+        solver.getFutureConnectionPenalty(
+          node,
+          isVia,
+          distance(node, solver.B),
+        ),
+      ).toBe(expectedPenalty)
     }
     const expectedG = solver.computeG(node)
     const expectedH = solver.computeH(node)

@@ -80,9 +80,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheCoordinates[coordinateIndex + 3] ===
         viaPenaltyDistance
     ) {
-      const closestPoint = cachedPointIndex === -1
-        ? null
-        : this.futureConnectionPoints[cachedPointIndex]
+      const closestPoint =
+        cachedPointIndex === -1
+          ? null
+          : this.futureConnectionPoints[cachedPointIndex]
       if (closestPointDistance) {
         // Selection caches keep point references. Recompute the distance on a
         // cache hit so in-place point changes retain the existing behavior.

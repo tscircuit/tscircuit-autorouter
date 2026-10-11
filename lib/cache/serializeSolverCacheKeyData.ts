@@ -8,7 +8,9 @@ export type SolverCacheKeyValue =
   | { [key: string]: SolverCacheKeyValue }
 
 /** Matches object-hash's ordered, respectType:false encoding for solver data. */
-export function serializeSolverCacheKeyData(value: SolverCacheKeyValue): string {
+export function serializeSolverCacheKeyData(
+  value: SolverCacheKeyValue,
+): string {
   const parts: string[] = []
   const objectIndices = new Map<object, number>()
 

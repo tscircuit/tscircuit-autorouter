@@ -36,9 +36,7 @@ const getViaClearanceErrorIdentity = (
         )
       : []),
   ]
-    .map((traceId) =>
-      normalizePreparedTraceIds(traceId, preparedTraceAliases),
-    )
+    .map((traceId) => normalizePreparedTraceIds(traceId, preparedTraceAliases))
     .filter(
       (traceId, traceIndex, allTraceIds) =>
         allTraceIds.indexOf(traceId) === traceIndex,

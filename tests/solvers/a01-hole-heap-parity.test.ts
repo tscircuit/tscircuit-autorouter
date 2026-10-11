@@ -35,7 +35,8 @@ test("hole sifts preserve A01 heap storage, malformed priorities, routes, and it
   }
   const solver = new HighDensitySolverA01(params)
   solver.setup()
-  const HeapConstructor = (solver as unknown as { heap: HeapApi }).heap.constructor as new () => HeapApi
+  const HeapConstructor = (solver as unknown as { heap: HeapApi }).heap
+    .constructor as new () => HeapApi
   const heap = new HeapConstructor()
   const original = new FrozenA01MinHeap()
   let seed = 4817
@@ -43,7 +44,15 @@ test("hole sifts preserve A01 heap storage, malformed priorities, routes, and it
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
     return seed / 2 ** 32
   }
-  const special = [NaN, Infinity, -Infinity, 0, -0, Number.MIN_VALUE, Number.MAX_VALUE]
+  const special = [
+    NaN,
+    Infinity,
+    -Infinity,
+    0,
+    -0,
+    Number.MIN_VALUE,
+    Number.MAX_VALUE,
+  ]
   for (let operation = 0; operation < 2500; operation++) {
     if (operation % 137 === 0) {
       heap.clear()
@@ -51,9 +60,18 @@ test("hole sifts preserve A01 heap storage, malformed priorities, routes, and it
     } else if (heap.size > 0 && random() < 0.45) {
       expect(Object.is(heap.pop(), original.pop())).toBe(true)
     } else {
-      const f = operation % 3 === 0 ? special[operation % special.length]! : Math.floor(random() * 11) - 5
-      const seq = operation % 19 === 0 ? special[operation % special.length]! : operation % 7
-      const id = operation % 23 === 0 ? special[operation % special.length]! : operation % 17
+      const f =
+        operation % 3 === 0
+          ? special[operation % special.length]!
+          : Math.floor(random() * 11) - 5
+      const seq =
+        operation % 19 === 0
+          ? special[operation % special.length]!
+          : operation % 7
+      const id =
+        operation % 23 === 0
+          ? special[operation % special.length]!
+          : operation % 17
       heap.push(f, seq, id)
       original.push(f, seq, id)
     }
@@ -62,8 +80,16 @@ test("hole sifts preserve A01 heap storage, malformed priorities, routes, and it
     // accepting only an equivalent dequeue order.
     const actual = heap as unknown as HeapState
     const expected = original as unknown as HeapState
-    expect({ f: actual.f, seq: actual.seq, id: actual.id, n: actual.n }).toEqual({
-      f: expected.f, seq: expected.seq, id: expected.id, n: expected.n,
+    expect({
+      f: actual.f,
+      seq: actual.seq,
+      id: actual.id,
+      n: actual.n,
+    }).toEqual({
+      f: expected.f,
+      seq: expected.seq,
+      id: expected.id,
+      n: expected.n,
     })
   }
   while (heap.size > 0) expect(Object.is(heap.pop(), original.pop())).toBe(true)
@@ -88,9 +114,19 @@ test("hole sifts preserve A01 heap storage, malformed priorities, routes, and it
   ]
   for (const portPoints of cases) {
     const node = { ...params.nodeWithPortPoints, portPoints }
-    const optimized = new HighDensitySolverA01({ ...params, nodeWithPortPoints: node })
-    const reference = new FrozenHeapA01Solver({ ...params, nodeWithPortPoints: node })
-    for (let iteration = 0; iteration < 10_000 && !optimized.solved && !optimized.failed; iteration++) {
+    const optimized = new HighDensitySolverA01({
+      ...params,
+      nodeWithPortPoints: node,
+    })
+    const reference = new FrozenHeapA01Solver({
+      ...params,
+      nodeWithPortPoints: node,
+    })
+    for (
+      let iteration = 0;
+      iteration < 10_000 && !optimized.solved && !optimized.failed;
+      iteration++
+    ) {
       optimized.step()
       reference.step()
     }

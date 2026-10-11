@@ -48,9 +48,16 @@ function getExpectedViaOccupants(
     }
     const viaFromX = (col - fromCol) * state.outputCellStepX
     const viaFromY = (row - fromRow) * state.outputCellStepY
-    const projection = lengthSquared === 0
-      ? 0
-      : Math.max(0, Math.min(1, (viaFromX * segmentX + viaFromY * segmentY) / lengthSquared))
+    const projection =
+      lengthSquared === 0
+        ? 0
+        : Math.max(
+            0,
+            Math.min(
+              1,
+              (viaFromX * segmentX + viaFromY * segmentY) / lengthSquared,
+            ),
+          )
     const distanceX = viaFromX - segmentX * projection
     const distanceY = viaFromY - segmentY * projection
     if (distanceX * distanceX + distanceY * distanceY >= clearanceSquared) {
@@ -58,8 +65,13 @@ function getExpectedViaOccupants(
     }
     for (const owner of owners) {
       if (owner === activeConn) continue
-      const sameRoot = state.connIdToRootNet[owner] === state.connIdToRootNet[activeConn]
-      if (sameRoot && state.overlapFriendlyRootNets.has(state.connIdToRootNet[activeConn]!)) continue
+      const sameRoot =
+        state.connIdToRootNet[owner] === state.connIdToRootNet[activeConn]
+      if (
+        sameRoot &&
+        state.overlapFriendlyRootNets.has(state.connIdToRootNet[activeConn]!)
+      )
+        continue
       if (!occupants.includes(owner)) occupants.push(owner)
     }
   }
@@ -96,18 +108,38 @@ test("indexed trace-via clearance preserves ordered occupants after routing and 
           for (let dc = -1; dc <= 1; dc++) {
             const toRow = row + dr
             const toCol = col + dc
-            if (toRow < 0 || toCol < 0 || toRow >= state.rows || toCol >= state.cols) continue
+            if (
+              toRow < 0 ||
+              toCol < 0 ||
+              toRow >= state.rows ||
+              toCol >= state.cols
+            )
+              continue
             for (let connection = 0; connection < 3; connection++) {
-              state.fillTraceSegmentViaOccupants(row, col, toRow, toCol, connection)
+              state.fillTraceSegmentViaOccupants(
+                row,
+                col,
+                toRow,
+                toCol,
+                connection,
+              )
               expect(state._viaOccs).toEqual(
-                getExpectedViaOccupants(state, row, col, toRow, toCol, connection),
+                getExpectedViaOccupants(
+                  state,
+                  row,
+                  col,
+                  toRow,
+                  toCol,
+                  connection,
+                ),
               )
             }
           }
         }
       }
     }
-    for (const cell of Array.from(owners.keys()).slice(0, 15)) owners.delete(cell)
+    for (const cell of Array.from(owners.keys()).slice(0, 15))
+      owners.delete(cell)
     owners.set(revision + 4, new Set([2, 8, 7]))
     if (revision === 2) {
       owners.clear()

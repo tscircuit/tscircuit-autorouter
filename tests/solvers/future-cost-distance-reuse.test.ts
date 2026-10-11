@@ -13,8 +13,10 @@ class OriginalFuturePenaltySolver extends SingleHighDensityRouteSolver6_VertHorz
     const distanceRatio =
       pointDistance / (this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD)
     const maximumPenalty = isVia
-      ? this.straightLineDistance * this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
-      : this.straightLineDistance * this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+      ? this.straightLineDistance *
+        this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
+      : this.straightLineDistance *
+        this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
     return maximumPenalty * Math.exp(-distanceRatio * 5)
   }
 }
@@ -36,9 +38,19 @@ test("future distance reuse preserves costs and refreshes mutated cached point d
     futureConnections: [{ connectionName: "future", points }],
     captureSearchDebug: false,
   }
-  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options)
+  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+    options,
+  )
   const original = new OriginalFuturePenaltySolver(options)
-  const parent: Node = { x: -0.2, y: -0.2, z: 0, g: 1, h: 2, f: 3, parent: null }
+  const parent: Node = {
+    x: -0.2,
+    y: -0.2,
+    z: 0,
+    g: 1,
+    h: 2,
+    f: 3,
+    parent: null,
+  }
   const node: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent }
   const result = new Float64Array(1)
   const firstPoint = solver.getClosestFutureConnectionPoint(node, result)!

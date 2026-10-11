@@ -34,7 +34,122 @@ type ForceGeometry = {
   vias: ForceVia[]
 }
 
+type ForceWorkspace = {
+  netForces: NetForce[][]
+  geometry: ForceGeometry[]
+}
+
 export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNodeSolver {
+  private forceWorkspace: ForceWorkspace = { netForces: [], geometry: [] }
+
+  private prepareForceWorkspace(polyLines: PolyLine2[]): ForceWorkspace {
+    const { netForces, geometry } = this.forceWorkspace
+    // Discard removed lines and points rather than retaining past candidates.
+    netForces.length = polyLines.length
+    geometry.length = polyLines.length
+    for (let lineIndex = 0; lineIndex < polyLines.length; lineIndex++) {
+      const polyLine = polyLines[lineIndex]!
+      let forces = netForces[lineIndex]
+      if (!forces) {
+        forces = []
+        netForces[lineIndex] = forces
+      }
+      forces.length = polyLine.mPoints.length
+      for (let pointIndex = 0; pointIndex < forces.length; pointIndex++) {
+        const force = forces[pointIndex]
+        if (force) {
+          force.fx = 0
+          force.fy = 0
+        } else {
+          forces[pointIndex] = { fx: 0, fy: 0 }
+        }
+      }
+      let lineGeometry = geometry[lineIndex]
+      if (!lineGeometry) {
+        lineGeometry = { segments: [], vias: [] }
+        geometry[lineIndex] = lineGeometry
+      }
+      const { segments, vias } = lineGeometry
+      const lastPointIndex = polyLine.mPoints.length + 1
+      segments.length = lastPointIndex
+      let viaCount = 0
+      for (let pointIndex = 0; pointIndex <= lastPointIndex; pointIndex++) {
+        const point =
+          pointIndex === 0
+            ? polyLine.start
+            : pointIndex === lastPointIndex
+              ? polyLine.end
+              : polyLine.mPoints[pointIndex - 1]!
+        if (pointIndex < lastPointIndex) {
+          const nextPoint =
+            pointIndex + 1 === lastPointIndex
+              ? polyLine.end
+              : polyLine.mPoints[pointIndex]!
+          const deltaX = nextPoint.x - point.x
+          const deltaY = nextPoint.y - point.y
+          let segment = segments[pointIndex]
+          if (!segment) {
+            segment = {
+              p1: point,
+              p2: nextPoint,
+              deltaX,
+              deltaY,
+              lengthSquared: deltaX * deltaX + deltaY * deltaY,
+              layer: point.z2,
+              p1Idx: pointIndex,
+              p2Idx: pointIndex + 1,
+              p1Force: forces[pointIndex - 1],
+              p2Force: forces[pointIndex],
+              lastTargetLine: -1,
+              lastEndpointIndex: -1,
+              lastFx: 0,
+              lastFy: 0,
+              lastForceActive: false,
+            }
+            segments[pointIndex] = segment
+          } else {
+            segment.p1 = point
+            segment.p2 = nextPoint
+            segment.deltaX = deltaX
+            segment.deltaY = deltaY
+            segment.lengthSquared = deltaX * deltaX + deltaY * deltaY
+            segment.layer = point.z2
+            segment.p1Idx = pointIndex
+            segment.p2Idx = pointIndex + 1
+            segment.p1Force = forces[pointIndex - 1]
+            segment.p2Force = forces[pointIndex]
+            segment.lastTargetLine = -1
+            segment.lastEndpointIndex = -1
+            segment.lastFx = 0
+            segment.lastFy = 0
+            segment.lastForceActive = false
+          }
+        }
+        if (point.z1 !== point.z2) {
+          let via = vias[viaCount]
+          if (!via) {
+            via = {
+              point,
+              layers: [point.z1, point.z2],
+              index: pointIndex,
+              force: forces[pointIndex - 1],
+            }
+            vias[viaCount] = via
+          } else {
+            via.point = point
+            via.layers[0] = point.z1
+            via.layers[1] = point.z2
+            via.index = pointIndex
+            via.force = forces[pointIndex - 1]
+          }
+          viaCount++
+        }
+      }
+      vias.length = viaCount
+    }
+    return this.forceWorkspace
+  }
+
   override getSolverName(): string {
     return "MultiHeadPolyLineIntraNodeSolver2"
   }
@@ -140,14 +255,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const EPSILON = 1e-6 // To avoid division by zero
 
     // 1. Initialize net forces structure: netForces[lineIdx][mPointIdx] = {fx, fy}
-    const netForces: NetForce[][] = Array.from(
-      { length: numPolyLines },
-      (_, i) =>
-        Array.from({ length: polyLines[i].mPoints.length }, () => ({
-          fx: 0,
-          fy: 0,
-        })),
-    )
+    const { netForces, geometry } = this.prepareForceWorkspace(polyLines)
 
     // 2. Calculate forces between all pairs of polylines
 
@@ -224,45 +332,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     }
 
     // Points move only after all forces have been accumulated.
-    const geometry = polyLines.map((polyLine, lineIndex): ForceGeometry => {
-      const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segments = points.slice(0, -1).map((point, index): ForceSegment => {
-        const nextPoint = points[index + 1]!
-        const deltaX = nextPoint.x - point.x
-        const deltaY = nextPoint.y - point.y
-        return {
-          p1: point,
-          p2: nextPoint,
-          deltaX,
-          deltaY,
-          lengthSquared: deltaX * deltaX + deltaY * deltaY,
-          layer: point.z2,
-          p1Idx: index,
-          p2Idx: index + 1,
-          // Fixed start/end points have no net-force accumulator. References
-          // stay valid until this pass has finished summing every interaction.
-          p1Force: netForces[lineIndex]![index - 1],
-          p2Force: netForces[lineIndex]![index],
-          lastTargetLine: -1,
-          lastEndpointIndex: -1,
-          lastFx: 0,
-          lastFy: 0,
-          lastForceActive: false,
-        }
-      })
-      const vias = points.flatMap((point, index): ForceVia[] =>
-        point.z1 === point.z2
-          ? []
-          : [{
-              point,
-              layers: [point.z1, point.z2],
-              index,
-              force: netForces[lineIndex]![index - 1],
-            }],
-      )
-      return { segments, vias }
-    })
-
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
         const { segments: segments1, vias: vias1 } = geometry[i]!

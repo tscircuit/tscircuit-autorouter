@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { AutoroutingDrcEngine } from "high-density-repair03/lib/drc/AutoroutingDrcEngine"
-import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import type {
+  SimpleRouteJson,
+  SimplifiedPcbTraces,
+} from "high-density-repair03/types/srj-types"
 
 type WirePoint = Extract<
   SimplifiedPcbTraces[number]["route"][number],
@@ -72,6 +75,7 @@ test("spatial bounds preserve DRC contacts across layers, rotation and route mut
     const srj: SimpleRouteJson = {
       bounds: { minX: -5, minY: -5, maxX: 5, maxY: 5 },
       layerCount,
+      minTraceWidth: 0.1,
       allowBlindAndBuriedVias: caseIndex % 3 === 0,
       minViaDiameter: 0.3,
       connections: Array.from({ length: 7 }, (_, index) => ({
@@ -97,6 +101,8 @@ test("spatial bounds preserve DRC contacts across layers, rotation and route mut
     digest.update(JSON.stringify(engine.evaluateLegacy(traces)))
     for (const trace of traces) {
       for (const point of trace.route) {
+        if (point.route_type === "jumper")
+          throw new Error("Expected wire or via geometry in spatial fixture")
         point.x += random() * 0.1
         point.y += random() * 0.1
       }
@@ -106,6 +112,8 @@ test("spatial bounds preserve DRC contacts across layers, rotation and route mut
     for (const trace of traces) {
       trace.route.splice(2)
       for (const point of trace.route) {
+        if (point.route_type === "jumper")
+          throw new Error("Expected wire or via geometry in spatial fixture")
         point.x += 1000
         point.y += 1000
         if (point.route_type === "wire")
@@ -116,5 +124,7 @@ test("spatial bounds preserve DRC contacts across layers, rotation and route mut
     digest.update(JSON.stringify(engine.evaluateLegacy(traces)))
   }
   // Captured from repair03 e16df6c before adding per-item bounds rejection.
-  expect(digest.digest("hex")).toBe("a574d1315d4e755194b9410243c73fb8fb5d36e2fbf148c532a7ed17e58f4aa5")
+  expect(digest.digest("hex")).toBe(
+    "a574d1315d4e755194b9410243c73fb8fb5d36e2fbf148c532a7ed17e58f4aa5",
+  )
 })
