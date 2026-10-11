@@ -24,13 +24,37 @@ test("compact Core pcbPath preserves retained copper in native routing consumers
   expect(obstacles).toHaveLength(3)
   expect(obstacles[0]!.layers).toEqual(["top", "inner1", "inner2", "bottom"])
   const pipeline9 = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj)
-  const fixedRoutes = convertPreloadedTraceToHdRoutes(retained, 0, srj.layerCount, pipeline9.viaDiameter, pipeline9.connMap)
+  const fixedRoutes = convertPreloadedTraceToHdRoutes(
+    retained,
+    0,
+    srj.layerCount,
+    pipeline9.viaDiameter,
+    pipeline9.connMap,
+  )
   expect(fixedRoutes).toHaveLength(3)
-  expect(fixedRoutes.map((route) => [route.preloadedRoutePositionStart, route.preloadedRoutePositionEnd])).toEqual([[0, 1], [1, 1], [1, 2]])
+  expect(
+    fixedRoutes.map((route) => [
+      route.preloadedRoutePositionStart,
+      route.preloadedRoutePositionEnd,
+    ]),
+  ).toEqual([
+    [0, 1],
+    [1, 1],
+    [1, 2],
+  ])
   expect(fixedRoutes.map((route) => route.route)).toEqual([
-    [{ x: 0, y: -2, z: 0 }, { x: 0, y: 1, z: 0 }],
-    [{ x: 0, y: 1, z: 0 }, { x: 0, y: 1, z: 3 }],
-    [{ x: 0, y: 1, z: 3 }, { x: 2, y: 1, z: 3 }],
+    [
+      { x: 0, y: -2, z: 0 },
+      { x: 0, y: 1, z: 0 },
+    ],
+    [
+      { x: 0, y: 1, z: 0 },
+      { x: 0, y: 1, z: 3 },
+    ],
+    [
+      { x: 0, y: 1, z: 3 },
+      { x: 2, y: 1, z: 3 },
+    ],
   ])
   const pipeline4 = new AutoroutingPipelineSolver4(srj)
   pipeline4.solve()
@@ -39,26 +63,58 @@ test("compact Core pcbPath preserves retained copper in native routing consumers
   const traces = pipeline4.getOutputSimplifiedPcbTraces()
   expect(traces).toHaveLength(2)
   for (const connection of srj.connections) {
-    const trace = traces.find((trace) => trace.connection_name === connection.name)!
+    const trace = traces.find(
+      (trace) => trace.connection_name === connection.name,
+    )!
     for (const [index, endpoint] of connection.pointsToConnect.entries()) {
       const copperEndpoint = index === 0 ? trace.route[0]! : trace.route.at(-1)!
-      const pad = srj.obstacles.find((obstacle) => obstacle.circuitJsonMetadata?.pcb_port_id === endpoint.pcb_port_id)!
+      const pad = srj.obstacles.find(
+        (obstacle) =>
+          obstacle.circuitJsonMetadata?.pcb_port_id === endpoint.pcb_port_id,
+      )!
       expect(copperEndpoint.route_type).toBe("wire")
-      if (copperEndpoint.route_type !== "wire") throw new Error("Expected pad wire contact")
+      if (copperEndpoint.route_type !== "wire")
+        throw new Error("Expected pad wire contact")
       expect(copperEndpoint.layer).toBe(endpoint.layer!)
-      expect(Math.abs(copperEndpoint.x - pad.center.x)).toBeLessThanOrEqual(pad.width / 2)
-      expect(Math.abs(copperEndpoint.y - pad.center.y)).toBeLessThanOrEqual(pad.height / 2)
+      expect(Math.abs(copperEndpoint.x - pad.center.x)).toBeLessThanOrEqual(
+        pad.width / 2,
+      )
+      expect(Math.abs(copperEndpoint.y - pad.center.y)).toBeLessThanOrEqual(
+        pad.height / 2,
+      )
     }
   }
-  const routedCircuitJson = [...circuitJson, ...traces.map((trace) => ({ type: "pcb_trace" as const, pcb_trace_id: trace.pcb_trace_id, source_trace_id: trace.connection_name, route: trace.route }))] as CircuitJson
-  const errors = checkEachPcbTraceNonOverlapping(routedCircuitJson, { minClearance: 0.1 }) as PcbTraceError[]
+  const routedCircuitJson = [
+    ...circuitJson,
+    ...traces.map((trace) => ({
+      type: "pcb_trace" as const,
+      pcb_trace_id: trace.pcb_trace_id,
+      source_trace_id: trace.connection_name,
+      route: trace.route,
+    })),
+  ] as CircuitJson
+  const errors = checkEachPcbTraceNonOverlapping(routedCircuitJson, {
+    minClearance: 0.1,
+  }) as PcbTraceError[]
   expect(errors).toEqual([])
   expect(srj).toEqual(original)
-  const svg = getCompactViaCopperDiagnosticSvg({ srj, circuitJson, traces, obstacles, errors })
-  const snapshot = new URL("./__snapshots__/compact-via-copper.after.svg", import.meta.url)
+  const svg = getCompactViaCopperDiagnosticSvg({
+    srj,
+    circuitJson,
+    traces,
+    obstacles,
+    errors,
+  })
+  const snapshot = new URL(
+    "./__snapshots__/compact-via-copper.after.svg",
+    import.meta.url,
+  )
   if (process.env.UPDATE_COMPACT_VIA_SNAPSHOTS === "1") {
     writeFileSync(snapshot, svg)
-    writeFileSync(new URL("./__snapshots__/compact-via-copper.after.png", import.meta.url), new Uint8Array(new Resvg(svg).render().asPng()))
+    writeFileSync(
+      new URL("./__snapshots__/compact-via-copper.after.png", import.meta.url),
+      new Uint8Array(new Resvg(svg).render().asPng()),
+    )
   }
   expect(svg).toBe(readFileSync(snapshot, "utf8"))
 })
