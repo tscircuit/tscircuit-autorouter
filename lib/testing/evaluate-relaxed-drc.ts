@@ -1,4 +1,4 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbCopperPour } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
@@ -23,6 +23,8 @@ export interface EvaluateRelaxedDrcInput {
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
   connectivityMaps?: CircuitJsonConnectivityMaps
+  /** Finalized native pours, including their actual cutouts and disconnected islands. */
+  copperPours?: PcbCopperPour[]
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -59,6 +61,7 @@ export const evaluateRelaxedDrc = ({
   drcOptions,
   includeBoardClearance = false,
   connectivityMaps,
+  copperPours,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -72,6 +75,7 @@ export const evaluateRelaxedDrc = ({
     includeOriginalConnections: true,
     connectivityMaps,
   })
+  if (copperPours) circuitJson.push(...copperPours)
 
   if (includeBoardClearance) {
     circuitJson.push(

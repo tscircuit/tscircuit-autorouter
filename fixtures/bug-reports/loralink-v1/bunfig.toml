@@ -1,0 +1,5 @@
+[test]
+preload = ["./preload.ts"]
+
+[install.lockfile]
+save = false
