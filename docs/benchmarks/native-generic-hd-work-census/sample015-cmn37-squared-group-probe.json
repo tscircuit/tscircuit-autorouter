@@ -1,0 +1,31 @@
+{
+  "kind": "hypothetical-intrinsic-sqrt-group-pruning-work-probe",
+  "noTimingComparison": true,
+  "actualWorker": true,
+  "sourceCommit": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sample": 15,
+  "nodeId": "cmn_37",
+  "jobSha256": "06054a034f9c7ac8e78b547c2e3dd56874c90ccaaa6839daa74d4d5448d229a9",
+  "sourceHashes": {
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts": "b27d35044a0fc1a0b9a21dbee730f3922ca5c881f46424e363694c7c0621917a",
+    "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver.ts": "040b1e81eca1b038e7e437e88e8bbfc19a3423c4a9c0fff598cfa0cd6e6965d8",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/HighDensityRouteCostMemo.ts": "298a6ab570d526f85c174bba45b43056da58e6afcceb7cc7c8f1fb1cf40d5e96"
+  },
+  "fullFreshOriginalResponseEqual": true,
+  "everyOriginalSquareRootAndGetterStillExecuted": true,
+  "assumption": "The captured default job uses stable primitive numeric via penalty inside each original miss. This work probe retains every native calculation; it does not authorize a callback-free kernel or change the original256 cache.",
+  "counts": {
+    "closestRequests": 2108066,
+    "closestHits": 935281,
+    "closestMisses": 1172785,
+    "closestPointScans": 18357540,
+    "viaDistanceGetterCalls": 17497020,
+    "hypotheticalSkippedIntrinsicSqrt": 13256295,
+    "hypotheticalRequiredIntrinsicSqrt": 5101245
+  },
+  "hypotheticalUnsupportedSqrt": 0,
+  "hypotheticalSkippedShare": 0.7221171790991604,
+  "originalCensus": "docs/benchmarks/native-generic-hd-work-census/sample015-cmn37-proof.json",
+  "reproduce": "GENERIC_HD_CENSUS_ROOT=<immutable da7e source> GENERIC_HD_CENSUS_JOB=docs/benchmarks/native-a01-selected-worker-bridge/sample015-cmn37-job.json.gz GENERIC_HD_CENSUS_REFERENCE=<saved default worker result> GENERIC_HD_CENSUS_OUTPUT=<fresh directory> GENERIC_HD_CENSUS_SQUARED_GROUP_PROBE=1 bun scripts/parallel-benchmark/prototypes/native-generic-hd-work-census.ts",
+  "diagnosticSourceSha256": "ee8d3939cdee77b6b553d692fc9ab02fd2f2d9c4605140adda1e0dbe9606c72c"
+}

@@ -41,6 +41,29 @@ const patches:Record<string,[string,string][]>={
   ],
 }
 const sourceHashes:Record<string,string>={}
+const squaredGroupProbe=process.env.GENERIC_HD_CENSUS_SQUARED_GROUP_PROBE==="1"
+if(squaredGroupProbe) {
+  const routeFile="lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.ts"
+  patches[routeFile]!.push(
+    ['    let pointIndex = 0\n\n    for (const point', '    let pointIndex = 0\n    let planarGroupSquare=Infinity, viaGroupSquare=Infinity\n    let planarGroupValid=false, viaGroupValid=false\n\n    for (const point'],
+    ['      if (dist < minDist) {', `      // This diagnostic still executes every original sqrt and getter.
+      // Additional data-only point reads count hypothetical group pruning.
+      const probeDx=node.x-point.x, probeDy=node.y-point.y
+      const probeSquare=probeDx*probeDx+probeDy*probeDy
+      const probeVia=node.z!==point.z
+      const previousSquare=probeVia?viaGroupSquare:planarGroupSquare
+      const previousValid=probeVia?viaGroupValid:planarGroupValid
+      if(probeSquare===probeSquare && dist===dist) {
+        if(previousValid && probeSquare>=previousSquare) record(this,"hypotheticalSkippedIntrinsicSqrt")
+        else record(this,"hypotheticalRequiredIntrinsicSqrt")
+        if(!previousValid || probeSquare<previousSquare) {
+          if(probeVia) {viaGroupSquare=probeSquare;viaGroupValid=true}
+          else {planarGroupSquare=probeSquare;planarGroupValid=true}
+        }
+      } else record(this,"hypotheticalUnsupportedSqrt")
+      if (dist < minDist) {`],
+  )
+}
 for(const [path,replacements] of Object.entries(patches)) {
   const original=await Bun.file(`${source}/${path}`).text()
   sourceHashes[path]=createHash("sha256").update(original).digest("hex")
@@ -80,6 +103,7 @@ const native=await runWorker(source,"reference-worker",false)
 deepStrictEqual(result.response,native.response,"Instrumentation must preserve the complete actual native worker result")
 deepStrictEqual(JSON.parse(JSON.stringify(native.response)),await Bun.file(referencePath).json(),"Fresh original worker must also match the saved frozen profile result")
 const proof={noTimingComparison:true,actualWorker:true,nativeMethodWrappers:false,fullOriginalResultEqual:true,
+  squaredGroupProbe,hypotheticalProbeRetainsEveryOriginalSqrtAndGetter:squaredGroupProbe,
   jobSha256:createHash("sha256").update(bytes).digest("hex"),frozenSourceRoot:source,sourceHashes,census:result.census}
 await Bun.write(`${directory}/proof.json`,JSON.stringify(proof,null,2))
 console.log(JSON.stringify(proof,null,2))
