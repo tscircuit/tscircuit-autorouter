@@ -1,4 +1,6 @@
-import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
+import { canUseExpectedPortsMemo } from "../../../canUseExpectedPortsMemo"
+import { createExpectedPortsMemo } from "../../../createExpectedPortsMemo"
 import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { getTracePortLayerMismatches } from "../util/trace-port-layer-connectivity"
@@ -49,6 +51,18 @@ type TraceWireSegmentsByNetAndLayer = Map<
 
 const ENDPOINT_CONTACT_EPSILON = 1e-9
 const TRACE_SEGMENT_GEOMETRY_EPSILON = 1e-9
+const privatelyOwnedMemos = new WeakSet<ReferenceDrcPrimitiveMemo>()
+const privateMemoHas = WeakSet.prototype.has
+const privateMemoAdd = WeakSet.prototype.add
+const applyNative = Reflect.apply
+
+/** The cache is never exposed to an external callback or caller. */
+export function createPrivatelyMemoizedTraceContinuityChecker(): (circuitJson: AnyCircuitElement[]) => PcbTraceError[] {
+  const primitiveMemo = new ReferenceDrcPrimitiveMemo()
+  applyNative(privateMemoAdd, privatelyOwnedMemos, [primitiveMemo])
+  return (circuitJson: AnyCircuitElement[]): PcbTraceError[] =>
+    checkTracesAreContiguous(circuitJson, { primitiveMemo })
+}
 
 function routePointTouchesPad(point: PcbTraceRoutePoint, pad: PcbPad) {
   return (
@@ -291,6 +305,8 @@ function checkTracesAreContiguous(
     primitiveMemo?: ReferenceDrcPrimitiveMemo
   } = {},
 ): PcbTraceError[] {
+  const useExpectedPortMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo]) &&
+    pcbConnectivityMap === undefined && connMap === undefined && canUseExpectedPortsMemo(circuitJson)
   const errors: PcbTraceError[] = getTracePortLayerMismatches(circuitJson).map(
     ({ trace, point, index, port, padLayers }) => ({
       type: "pcb_trace_error",
@@ -314,6 +330,7 @@ function checkTracesAreContiguous(
   const sourceTraces = circuitJson.filter(
     (el) => el.type === "source_trace",
   ) as SourceTrace[]
+  const expectedPortMemo = useExpectedPortMemo ? createExpectedPortsMemo(pcbPorts) : undefined
   const pcbSmtPads = circuitJson.filter(
     (el) => el.type === "pcb_smtpad",
   ) as PcbSmtPad[]
@@ -458,7 +475,7 @@ function checkTracesAreContiguous(
     )
 
     const expectedPorts = sourceTrace
-      ? pcbPorts.filter((port) =>
+      ? expectedPortMemo ? expectedPortMemo.get(sourceTrace) : pcbPorts.filter((port) =>
           sourceTrace.connected_source_port_ids?.includes(port.source_port_id),
         )
       : []

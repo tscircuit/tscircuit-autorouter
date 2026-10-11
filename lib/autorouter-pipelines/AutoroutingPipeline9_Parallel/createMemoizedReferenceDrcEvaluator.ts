@@ -4,8 +4,8 @@ import {
   type EvaluateRelaxedDrcResult,
 } from "../../testing/evaluate-relaxed-drc"
 import { checkViaTraceClearanceWithLazyCenters } from "./authoritative-drc-fork/checkViaTraceClearanceWithLazyCenters"
-import { ReferenceDrcPrimitiveMemo } from "./authoritative-drc-fork/ReferenceDrcPrimitiveMemo"
-import { checkTracesAreContiguous } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
+import type { ReferenceDrcPrimitiveMemo } from "./authoritative-drc-fork/ReferenceDrcPrimitiveMemo"
+import { checkTracesAreContiguous, createPrivatelyMemoizedTraceContinuityChecker } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
 import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
 
 export type MemoizedReferenceDrcEvaluator = (
@@ -14,8 +14,12 @@ export type MemoizedReferenceDrcEvaluator = (
 
 /** Keeps the native full checks and graph while reusing exact pure predicates. */
 export function createMemoizedReferenceDrcEvaluator(
-  primitiveMemo = new ReferenceDrcPrimitiveMemo(),
+  primitiveMemo?: ReferenceDrcPrimitiveMemo,
 ): MemoizedReferenceDrcEvaluator {
+  const continuityChecker = primitiveMemo === undefined
+    ? createPrivatelyMemoizedTraceContinuityChecker()
+    : (circuitJson: Parameters<typeof checkTracesAreContiguous>[0]): ReturnType<typeof checkTracesAreContiguous> =>
+        checkTracesAreContiguous(circuitJson, { primitiveMemo })
   return (input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult =>
     evaluateRelaxedDrc({
       ...input,
@@ -25,7 +29,7 @@ export function createMemoizedReferenceDrcEvaluator(
           checkViaTraceClearanceWithLazyCenters(circuitJson, { ...options, enableAxisRejection: true, enableConnectivityMemo: true }),
         ...input.drcOptions,
         traceContinuityChecker: (circuitJson): ReturnType<typeof checkTracesAreContiguous> =>
-          checkTracesAreContiguous(circuitJson, { primitiveMemo }),
+          continuityChecker(circuitJson),
       },
     })
 }
