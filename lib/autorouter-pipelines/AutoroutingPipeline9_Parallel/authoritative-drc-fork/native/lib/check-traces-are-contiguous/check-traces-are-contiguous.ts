@@ -3,6 +3,7 @@ import { canUseExpectedPortsMemo } from "../../../canUseExpectedPortsMemo"
 import { createExpectedPortsMemo } from "../../../createExpectedPortsMemo"
 import { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
 import { getOrderedIndexedFullConnectivityMap } from "../../../getOrderedIndexedFullConnectivityMap"
+import type { ReferenceDrcTracePairFactExecutor } from "../../../prepareReferenceDrcTracePairFacts"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { getTracePortLayerMismatches } from "../util/trace-port-layer-connectivity"
 import { createIndexedPcbConnectivityMap } from "../util/create-indexed-pcb-connectivity-map"
@@ -74,6 +75,14 @@ export function createPrivatelyMemoizedTraceContinuityChecker(): (circuitJson: A
   applyNative(privateMemoAdd, privatelyOwnedMemos, [primitiveMemo])
   return (circuitJson: AnyCircuitElement[]): PcbTraceError[] =>
     checkTracesAreContiguous(circuitJson, { primitiveMemo })
+}
+
+/** Internal executor wiring still requires the complete native checker admission. */
+export function createPreparedPrivatelyMemoizedTraceContinuityChecker(executor: ReferenceDrcTracePairFactExecutor): (circuitJson: AnyCircuitElement[]) => PcbTraceError[] {
+  const primitiveMemo = new ReferenceDrcPrimitiveMemo()
+  applyNative(privateMemoAdd, privatelyOwnedMemos, [primitiveMemo])
+  return (circuitJson: AnyCircuitElement[]): PcbTraceError[] =>
+    checkTracesAreContiguous(circuitJson, { primitiveMemo, preparedFactExecutor: executor })
 }
 
 function routePointTouchesPad(point: PcbTraceRoutePoint, pad: PcbPad) {
@@ -311,10 +320,12 @@ function checkTracesAreContiguous(
     connMap,
     pcbConnectivityMap,
     primitiveMemo,
+    preparedFactExecutor,
   }: {
     connMap?: ConnectivityMap
     pcbConnectivityMap?: PcbConnectivityMap
     primitiveMemo?: ReferenceDrcPrimitiveMemo
+    preparedFactExecutor?: ReferenceDrcTracePairFactExecutor
   } = {},
 ): PcbTraceError[] {
   const privatelyOwnedMemo = primitiveMemo !== undefined && applyNative(privateMemoHas, privatelyOwnedMemos, [primitiveMemo])
@@ -363,7 +374,8 @@ function checkTracesAreContiguous(
   ) as PcbPlatedHole[]
 
   const padMap = new Map<PcbPortId, PcbPad[]>()
-  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo)
+  pcbConnectivityMap ??= createIndexedPcbConnectivityMap(circuitJson, primitiveMemo, scaledPolygonMemo,
+    useExpectedPortMemo ? preparedFactExecutor : undefined)
   let fullConnectivityMap: ConnectivityMap | undefined = connMap
   let traceWireSegmentsByNetAndLayer: TraceWireSegmentsByNetAndLayer | undefined
   const getFullConnectivityMap = () => {

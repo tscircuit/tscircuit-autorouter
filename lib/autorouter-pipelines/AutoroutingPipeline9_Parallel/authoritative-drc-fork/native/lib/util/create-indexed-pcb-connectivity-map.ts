@@ -1,5 +1,6 @@
 import type { ReferenceDrcPrimitiveMemo } from "../../../ReferenceDrcPrimitiveMemo"
 import type { ScaledConductorPolygonMemo } from "../../../ScaledConductorPolygonMemo"
+import { prepareReferenceDrcTracePairFacts, type ReferenceDrcTracePairFactExecutor } from "../../../prepareReferenceDrcTracePairFacts"
 import { findOrderedIndexedConnectedNetworks } from "../../../findOrderedIndexedConnectedNetworks"
 // Pinned from @tscircuit/checks 0.0.233 bundled source; see the authoritative-drc-fork LICENSE and PROVENANCE.md.
 import { createTracePortLayerConnectivity } from "./trace-port-layer-connectivity"
@@ -25,6 +26,7 @@ export function createIndexedPcbConnectivityMap(
   circuitJson: AnyCircuitElement[],
   primitiveMemo?: ReferenceDrcPrimitiveMemo,
   scaledPolygonMemo?: ScaledConductorPolygonMemo,
+  preparedFactExecutor?: ReferenceDrcTracePairFactExecutor,
 ): PcbConnectivityMap {
   // Construct empty to avoid the dependency's all-pairs scan. Keep its exact
   // intersection predicate and query methods, including cross-net contacts.
@@ -86,10 +88,13 @@ export function createIndexedPcbConnectivityMap(
   }
   const connections: string[][] = []
   const traceGeometryIds = primitiveMemo ? traces.map((trace) => primitiveMemo.intern(trace)) : []
+  const preparedPairs = prepareReferenceDrcTracePairFacts(primitiveMemo, traces, traceGeometryIds, candidates, preparedFactExecutor)
   // Preserve the original pair order for stable net IDs and diagnostics.
   for (const [i, neighbors] of candidates.entries()) {
     for (const j of [...neighbors].sort((a, b) => a - b)) {
-      if (primitiveMemo
+      if (preparedPairs
+        ? preparedPairs.consume(i, j, (): boolean => map._arePcbTracesConnected(traces[i], traces[j]))
+        : primitiveMemo
         ? primitiveMemo.getOrCompute("trace-pair", [traceGeometryIds[i], traceGeometryIds[j]],
             (): boolean => map._arePcbTracesConnected(traces[i], traces[j]))
         : map._arePcbTracesConnected(traces[i], traces[j])) {
@@ -97,6 +102,7 @@ export function createIndexedPcbConnectivityMap(
       }
     }
   }
+  preparedPairs?.finish()
   const layerConnectivity = createTracePortLayerConnectivity(circuitJson)
   const connectionsByPort = new Map<string, string[][]>()
   for (const trace of traces) {

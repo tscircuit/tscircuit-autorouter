@@ -1,0 +1,95 @@
+{
+  "kind": "Prepared exact Native trace-pair fact consumption; functional and operation proof only",
+  "integrationStatus": "Native-site seam only. Default private factory is unchanged. Fixed synchronous oracle verifies fact consumption; actual branded existing-worker transport activation is a separate integration. No local elapsed-time comparison or speed claim.",
+  "controlRevision": "0f90c53d3",
+  "candidateBaseRevision": "7410b399652efd0eb10bdfbc099fc541e1ab4ea0",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/prepareReferenceDrcTracePairFacts.ts": "71d743b6b17e0497770a365a1ef4ab30948f77e572dd56431365c3b959f3b8ba",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous.ts": "da47304093f98c868d15dd16d21665b8f7be43d08e792be8f1c5334d6455a2a6",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/native/lib/util/create-indexed-pcb-connectivity-map.ts": "df61c509c1d91b8697d2e19cb1946fef9addc8d98ad920cec2f7429ed9c92394",
+    "tests/solvers/reference-drc-prepared-trace-pair-consumption-parity.test.ts": "2242f98b4af18e9535870c35acd7804ec8ac1ca573bb039361b9930b971cf57e",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityKernel.ts": "d66bb352cd4e48fda3750b20aaeac06be94e04108091b592c3b626eab6c3588c",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityTypes.ts": "28c89edffd52dc4f9dcf05b4dbc39fbd95a7b5be86bf5517173a7bd0dec6feca",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/ReferenceDrcPrimitiveMemo.ts": "ea1e628e88a37d5d2a01f400841cb7f230ed975e8a83d2dcb43731219f92f829",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPrimitiveMissPlanning.ts": "47a354121359a6ae14455a90ac4ecd423210bc9bbc4666f672bb26ad98fc438f",
+    "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36",
+    "node_modules/circuit-json-to-connectivity-map/dist/index.js": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
+    "node_modules/circuit-json-to-connectivity-map/node_modules/@tscircuit/math-utils/dist/chunk-CHQOCSFB.js": "f1bc40143e971075a95244a32d0b7eda0ad50a49b3ff0e460f29dd8808bed4e0"
+  },
+  "preparationBoundary": [
+    "Original full graph construction, physical trace map and bounds, ordered candidate-pair construction, and every original trace interning call complete before preparation.",
+    "Actual privately owned checker WeakSet membership plus full existing Native/input/proxy admission is required; supplied memo/maps and callback-bearing input retain original execution. Genuine Native executor brand plus read-only capacity admission precede plan/snapshot work.",
+    "Only original predicted fresh misses are prepared. Shadow FIFO prediction changes no Native counters, identities, retained values, insertion or eviction order. Fully warm evaluations schedule no task.",
+    "Pinned circuit-json-to-connectivity-map 0.0.19 _arePcbTracesConnected reads route length/index, route_type, first-segment widths and x/y. Its actual pinned math-utils 0.0.9 leaf consumes only x/y. DTO values are copied verbatim, including hidden data fields and signed zero; relevant shared route/point identities are preserved within the isolated snapshot.",
+    "Original full objects, including all metadata and hidden fields, remain Native interner/cache keys. DTO objects are never published in graphs/errors/output and never substitute caller objects.",
+    "Original Native candidate loop consumes each hit/miss in its original order. Live plan checks precede original hit/miss/compute/insertion/FIFO updates. Original true rows append original trace IDs to original connections array.",
+    "Every result row is globally validated before first memo consumption, including unused malformed fields or exception metadata. Typed algorithm exception rows invoke the original main predicate at the original miss site; Native thrown identity is preserved. A failed exception reproduction is an invariant error.",
+    "Finish is only after complete successful pair consumption, before original port/via graph construction. No finally can overwrite a Native algorithm exception.",
+    "Synchronous unavailable is a strict before-dispatch decline. Admitted transport/protocol/infrastructure errors are fatal; production pool/worker ownership and maximum-four-core proof are delegated to separate transport tests."
+  ],
+  "verification": {
+    "commands": [
+      "bun test tests/solvers/reference-drc-prepared-trace-pair-consumption-parity.test.ts tests/solvers/reference-drc-primitive-miss-planning-parity.test.ts tests/solvers/parallel-reference-continuity-kernel-parity.test.ts --timeout 9999999",
+      "bunx tsc --noEmit"
+    ],
+    "consumerAssertions": 12119,
+    "isolatedKernelAssertions": 55383,
+    "privatePlannerAssertions": 675,
+    "combinedAssertions": 68177,
+    "typecheckExitCode": 0,
+    "all17SavedWholeNativeErrorsExact": true,
+    "all17InputMutationsExact": true,
+    "all17MemoCountersValuesIdentitiesAndNextIdExact": true,
+    "preparedEvaluations": 13,
+    "originalFreshTracePairRows": 12215,
+    "freshRowsPerEvaluation": [
+      0,
+      2166,
+      1922,
+      1923,
+      1509,
+      427,
+      1384,
+      63,
+      8,
+      1231,
+      0,
+      709,
+      168,
+      0,
+      694,
+      0,
+      11
+    ],
+    "fullyWarmEvaluationNumbers": [
+      11,
+      14,
+      16
+    ],
+    "controlledOracle": "Test copies the exact source modules into a temporary directory and substitutes only executor brand/capacity admission for its fixed pure synchronous oracle. Actual private-owner membership and complete Native checker input/method/intrinsic admission remain active. Separate unmodified production factory confirms arbitrary supplied executor is never called.",
+    "edgeCases": [
+      "hidden width/x/route/pcb_trace_id/route_type data",
+      "shared route and point aliases",
+      "negative zero",
+      "unbranded executor0calls",
+      "ordinary supplied memo0calls",
+      "before-dispatch unavailable exact Native caches",
+      "warm cache no task",
+      "geometry getter Native read-count parity",
+      "Native predicate mutation decline preserves raw thrown sentinel",
+      "structuredClone getter0reads",
+      "public import without structuredClone",
+      "globally malformed unused fact before first memo mutation",
+      "typed exception reproduces original main RangeError identity/miss counter/no insertion",
+      "false exception reproduction fails loudly"
+    ],
+    "independentReview": "review_parallel independently passed full17 consumer12115 assertions and cleared final source. Owner added4 direct original-site exception assertions without further source change. Combined production activation remains dependent on separate Native pool provenance/terminal-failure transport clearance."
+  },
+  "currentPrivateWorkAttribution": {
+    "reference": "docs/benchmarks/parallel-reference-continuity-kernel-proof.json currentPrivateOperationCensus",
+    "originalTracePairQueries": 32251,
+    "freshNativePairPredicates": 12215,
+    "freshNativeSegmentPredicateVisits": 6494619,
+    "interpretation": "Actual operation counts from authentic current-private captures, not local timing or a projected wall-speed measurement. DTO only prepares fresh trace-pair predicates; polygon and remaining continuity work are unchanged."
+  }
+}
