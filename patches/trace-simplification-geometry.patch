@@ -1,0 +1,80 @@
+diff --git a/lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts b/lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts
+index e0d32410..401dfc7d 100644
+--- a/lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts
++++ b/lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver.ts
+@@ -236,9 +236,9 @@ export class TraceSimplificationSolver extends BaseSolver {
+     return this.simplificationConfig.obstacles.find(
+       (obstacle) =>
+         isMultilayerObstacle(obstacle) &&
+-        this.isSameNetObstacle(route, obstacle) &&
+         pointInsideObstacle(start, obstacle) &&
+-        pointInsideObstacle(end, obstacle),
++        pointInsideObstacle(end, obstacle) &&
++        this.isSameNetObstacle(route, obstacle),
+     )
+   }
+ 
+@@ -249,8 +249,8 @@ export class TraceSimplificationSolver extends BaseSolver {
+     return this.simplificationConfig.obstacles.some(
+       (obstacle) =>
+         isMultilayerObstacle(obstacle) &&
+-        this.isSameNetObstacle(route, obstacle) &&
+-        pointInsideObstacle(via, obstacle),
++        pointInsideObstacle(via, obstacle) &&
++        this.isSameNetObstacle(route, obstacle),
+     )
+   }
+ 
+diff --git a/lib/utils/minimumDistanceBetweenSegments.ts b/lib/utils/minimumDistanceBetweenSegments.ts
+index dc3ce9ff..8f2167de 100644
+--- a/lib/utils/minimumDistanceBetweenSegments.ts
++++ b/lib/utils/minimumDistanceBetweenSegments.ts
+@@ -42,17 +42,19 @@ export function minimumDistanceBetweenSegments(
+  * @returns The minimum distance from point P to the line segment Q1Q2
+  */
+ function pointToSegmentDistance(P: Point, Q1: Point, Q2: Point): number {
+-  const v = { x: Q2.x - Q1.x, y: Q2.y - Q1.y }
+-  const w = { x: P.x - Q1.x, y: P.y - Q1.y }
++  const vx = Q2.x - Q1.x
++  const vy = Q2.y - Q1.y
++  const wx = P.x - Q1.x
++  const wy = P.y - Q1.y
+ 
+   // Calculate squared length of the segment
+-  const c1 = dotProduct(w, v)
++  const c1 = wx * vx + wy * vy
+   if (c1 <= 0) {
+     // Point is behind Q1
+     return distance(P, Q1)
+   }
+ 
+-  const c2 = dotProduct(v, v)
++  const c2 = vx * vx + vy * vy
+   if (c2 <= c1) {
+     // Point is beyond Q2
+     return distance(P, Q2)
+@@ -60,21 +62,9 @@ function pointToSegmentDistance(P: Point, Q1: Point, Q2: Point): number {
+ 
+   // Point projects onto the segment
+   const b = c1 / c2
+-  const Pb = {
+-    x: Q1.x + b * v.x,
+-    y: Q1.y + b * v.y,
+-  }
+-  return distance(P, Pb)
+-}
+-
+-/**
+- * Calculates the dot product of two vectors.
+- */
+-function dotProduct(
+-  v1: { x: number; y: number },
+-  v2: { x: number; y: number },
+-): number {
+-  return v1.x * v2.x + v1.y * v2.y
++  const dx = Q1.x + b * vx - P.x
++  const dy = Q1.y + b * vy - P.y
++  return Math.sqrt(dx * dx + dy * dy)
+ }
+ 
+ /**

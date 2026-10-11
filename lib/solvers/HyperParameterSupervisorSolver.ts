@@ -74,7 +74,7 @@ export class HyperParameterSupervisorSolver<
     return combinations
   }
 
-  initializeSolvers() {
+  initializeSolvers(stopAfterSolvedCandidate = false): void {
     const hyperParameterDefs = this.getHyperParameterDefs()
 
     const combinationDefs = this.getCombinationDefs() ?? [
@@ -97,6 +97,9 @@ export class HyperParameterSupervisorSolver<
           g,
           f: g,
         })
+        // Selection always prefers the first solved candidate over fitness.
+        // Portfolios can stop constructing candidates that cannot be selected.
+        if (stopAfterSolvedCandidate && solver.solved) return
       }
     }
   }

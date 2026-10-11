@@ -37,7 +37,7 @@
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
-    "@tscircuit/checks": "^0.0.233",
+    "@tscircuit/checks": "0.0.233",
     "@tscircuit/circuit-json-util": "^0.0.114",
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
@@ -114,5 +114,12 @@
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1",
     "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123"
+  },
+  "patchedDependencies": {
+    "@tscircuit/high-density-a01@github:tscircuit/high-density-a01#44005d6": "patches/high-density-a01-search-hotpaths.patch",
+    "@tscircuit/trace-simplification-solver@github:tscircuit/trace-simplification-solver#88556c5": "patches/trace-simplification-geometry.patch",
+    "high-density-repair03@https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/e16df6c48efed49406cf45df49fd933d3141973d": "patches/high-density-repair03-geometry-hotpaths.patch",
+    "tiny-hypergraph@github:tscircuit/tiny-hypergraph#474f522": "patches/tiny-hypergraph-outside-in-join-allocation.patch",
+    "@tscircuit/checks@0.0.233": "patches/checks-reference-drc-geometry.patch"
   }
 }

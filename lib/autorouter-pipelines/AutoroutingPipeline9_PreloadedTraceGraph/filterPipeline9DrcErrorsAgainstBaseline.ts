@@ -1,5 +1,7 @@
 type DrcError = Record<string, unknown>
 
+type PreparedTraceAliases = ReadonlyArray<readonly [string, string]>
+
 const DRC_ERROR_ID_KEYS = [
   "pcb_trace_error_id",
   "pcb_error_id",
@@ -13,13 +15,10 @@ const isMissingConnectionError = (error: DrcError): boolean =>
 
 const normalizePreparedTraceIds = (
   value: string,
-  originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
+  preparedTraceAliases: PreparedTraceAliases,
 ): string => {
   let normalized = value
-  const aliases = [...originalTraceIdByPreparedTraceId].sort(
-    ([left], [right]) => right.length - left.length,
-  )
-  for (const [preparedTraceId, originalTraceId] of aliases) {
+  for (const [preparedTraceId, originalTraceId] of preparedTraceAliases) {
     normalized = normalized.replaceAll(preparedTraceId, originalTraceId)
   }
   return normalized
@@ -27,7 +26,7 @@ const normalizePreparedTraceIds = (
 
 const getViaClearanceErrorIdentity = (
   error: DrcError,
-  originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
+  preparedTraceAliases: PreparedTraceAliases,
 ): string | undefined => {
   const traceIds = [
     ...(typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []),
@@ -38,7 +37,7 @@ const getViaClearanceErrorIdentity = (
       : []),
   ]
     .map((traceId) =>
-      normalizePreparedTraceIds(traceId, originalTraceIdByPreparedTraceId),
+      normalizePreparedTraceIds(traceId, preparedTraceAliases),
     )
     .filter(
       (traceId, traceIndex, allTraceIds) =>
@@ -70,16 +69,16 @@ const getViaClearanceErrorIdentity = (
 
 const getDrcErrorIdentity = (
   error: DrcError,
-  originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
+  preparedTraceAliases: PreparedTraceAliases,
 ): string | undefined => {
   const errorType = String(error.type ?? error.error_type ?? "unknown")
   if (errorType === "pcb_via_clearance_error") {
-    return getViaClearanceErrorIdentity(error, originalTraceIdByPreparedTraceId)
+    return getViaClearanceErrorIdentity(error, preparedTraceAliases)
   }
   for (const idKey of DRC_ERROR_ID_KEYS) {
     const errorId = error[idKey]
     if (typeof errorId === "string") {
-      return `${errorType}:${normalizePreparedTraceIds(errorId, originalTraceIdByPreparedTraceId)}`
+      return `${errorType}:${normalizePreparedTraceIds(errorId, preparedTraceAliases)}`
     }
   }
 
@@ -94,11 +93,47 @@ const getDrcErrorIdentity = (
       .map(([key, value]) => [
         key,
         typeof value === "string"
-          ? normalizePreparedTraceIds(value, originalTraceIdByPreparedTraceId)
+          ? normalizePreparedTraceIds(value, preparedTraceAliases)
           : value,
       ]),
   )
   return `${errorType}:${JSON.stringify(identityFields)}`
+}
+
+/** Prepares inherited identities once for all candidates in a repair search. */
+export const createPipeline9DrcErrorsAgainstBaselineFilter = (
+  baselineErrors: DrcError[],
+): (<TError extends DrcError>(options: {
+  errors: TError[]
+  originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+}) => TError[]) => {
+  const baselineErrorIdentities = new Set(
+    baselineErrors
+      // A missing connection describes unfinished routing, not an inherited
+      // geometric violation. Pipeline9 must continue to repair it even when
+      // the same finding exists before the candidate routes are added.
+      .filter((error) => !isMissingConnectionError(error))
+      .map((error) => getDrcErrorIdentity(error, [])),
+  )
+  baselineErrorIdentities.delete(undefined)
+
+  return <TError extends DrcError>({
+    errors,
+    originalTraceIdByPreparedTraceId = new Map(),
+  }: {
+    errors: TError[]
+    originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+  }): TError[] => {
+    // Longest aliases must be replaced first when section ids share prefixes.
+    // This order is constant across every identity field in the candidate.
+    const preparedTraceAliases = [...originalTraceIdByPreparedTraceId].sort(
+      ([left], [right]) => right.length - left.length,
+    )
+    return errors.filter((error) => {
+      const identity = getDrcErrorIdentity(error, preparedTraceAliases)
+      return identity === undefined || !baselineErrorIdentities.has(identity)
+    })
+  }
 }
 
 /** Removes DRC violations already present in the supplied prerouted board. */
@@ -107,26 +142,13 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
 >({
   errors,
   baselineErrors,
-  originalTraceIdByPreparedTraceId = new Map(),
+  originalTraceIdByPreparedTraceId,
 }: {
   errors: TError[]
   baselineErrors: DrcError[]
   originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
-}): TError[] => {
-  const baselineErrorIdentities = new Set(
-    baselineErrors
-      // A missing connection describes unfinished routing, not an inherited
-      // geometric violation. Pipeline9 must continue to repair it even when
-      // the same finding exists before the candidate routes are added.
-      .filter((error) => !isMissingConnectionError(error))
-      .map((error) => getDrcErrorIdentity(error, new Map())),
-  )
-  baselineErrorIdentities.delete(undefined)
-  return errors.filter((error) => {
-    const identity = getDrcErrorIdentity(
-      error,
-      originalTraceIdByPreparedTraceId,
-    )
-    return identity === undefined || !baselineErrorIdentities.has(identity)
+}): TError[] =>
+  createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrors)({
+    errors,
+    originalTraceIdByPreparedTraceId,
   })
-}

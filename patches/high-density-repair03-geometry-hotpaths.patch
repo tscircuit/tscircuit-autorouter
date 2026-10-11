@@ -1,0 +1,488 @@
+diff --git a/lib/drc/AutoroutingDrcEngine.ts b/lib/drc/AutoroutingDrcEngine.ts
+index 38d6fe1..918b88c 100644
+--- a/lib/drc/AutoroutingDrcEngine.ts
++++ b/lib/drc/AutoroutingDrcEngine.ts
+@@ -32,6 +32,13 @@ type Bounds = {
+   maxY: number
+ }
+ 
++type SpatialHashCell = {
++  cellX: number
++  cellY: number
++  generation: number
++  itemIds: number[]
++}
++
+ type WireRoutePoint = Extract<
+   SimplifiedPcbTrace["route"][number],
+   { route_type: "wire" }
+@@ -192,17 +199,59 @@ const getObstacleLocalBounds = (obstacle: StaticObstacle): Bounds => ({
+ })
+ 
+ class SpatialHash<T> {
+-  private readonly cells = new Map<number, Map<number, number[]>>()
++  private readonly cells = new Map<number, Map<number, SpatialHashCell>>()
+   private readonly itemIds = new Map<T, number>()
+   private readonly rowItems: T[] = []
++  private readonly rowBounds: Bounds[] = []
+   private visitedGenerations = new Uint32Array(0)
+   private queryGeneration = 0
++  private buildGeneration = 1
++  private activeCells: SpatialHashCell[] = []
++  private previousCells: SpatialHashCell[] = []
+ 
+   constructor(private readonly cellSize: number) {}
+ 
+-  private registerItem(item: T): number {
++  reset(): void {
++    this.itemIds.clear()
++    this.rowItems.length = 0
++    this.rowBounds.length = 0
++    const previousCells = this.previousCells
++    this.previousCells = this.activeCells
++    this.activeCells = previousCells
++    this.activeCells.length = 0
++    this.buildGeneration = (this.buildGeneration + 1) >>> 0
++    if (this.buildGeneration === 0) this.buildGeneration = 1
++  }
++
++  finishBuild(): boolean {
++    // Retain cell arrays only where consecutive candidates occupy the same
++    // cells. Removed layers and moved copper do not accumulate historical data.
++    for (const cell of this.previousCells) {
++      if (cell.generation === this.buildGeneration) continue
++      const column = this.cells.get(cell.cellX)!
++      column.delete(cell.cellY)
++      if (column.size === 0) this.cells.delete(cell.cellX)
++    }
++    this.previousCells.length = 0
++    if (this.visitedGenerations.length > Math.max(16, this.rowItems.length * 4)) {
++      this.visitedGenerations = new Uint32Array(
++        Math.max(16, this.rowItems.length * 2),
++      )
++    }
++    return this.rowItems.length > 0
++  }
++
++  private registerItem(item: T, bounds: Bounds): number {
++    const itemBounds = { ...bounds }
+     const existingId = this.itemIds.get(item)
+-    if (existingId !== undefined) return existingId
++    if (existingId !== undefined) {
++      const existingBounds = this.rowBounds[existingId]!
++      existingBounds.minX = Math.min(existingBounds.minX, itemBounds.minX)
++      existingBounds.minY = Math.min(existingBounds.minY, itemBounds.minY)
++      existingBounds.maxX = Math.max(existingBounds.maxX, itemBounds.maxX)
++      existingBounds.maxY = Math.max(existingBounds.maxY, itemBounds.maxY)
++      return existingId
++    }
+ 
+     const itemId = this.rowItems.length
+     if (itemId >= this.visitedGenerations.length) {
+@@ -217,6 +266,7 @@ class SpatialHash<T> {
+     this.itemIds.set(item, itemId)
+     // Set iteration canonicalizes primitive negative zero to positive zero.
+     this.rowItems.push(item === 0 ? (0 as T) : item)
++    this.rowBounds.push(itemBounds)
+     return itemId
+   }
+ 
+@@ -230,17 +280,22 @@ class SpatialHash<T> {
+     for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+       let column = this.cells.get(cellX)
+       if (!column && minCellY <= maxCellY) {
+-        column = new Map<number, number[]>()
++        column = new Map<number, SpatialHashCell>()
+         this.cells.set(cellX, column)
+       }
+       for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+-        const items = column!.get(cellY)
+-        if (itemId === undefined) itemId = this.registerItem(item)
+-        if (items) {
+-          items.push(itemId)
+-        } else {
+-          column!.set(cellY, [itemId])
++        let cell = column!.get(cellY)
++        if (!cell) {
++          cell = { cellX, cellY, generation: this.buildGeneration, itemIds: [] }
++          column!.set(cellY, cell)
++          this.activeCells.push(cell)
++        } else if (cell.generation !== this.buildGeneration) {
++          cell.generation = this.buildGeneration
++          cell.itemIds.length = 0
++          this.activeCells.push(cell)
+         }
++        if (itemId === undefined) itemId = this.registerItem(item, bounds)
++        cell.itemIds.push(itemId)
+       }
+     }
+   }
+@@ -269,11 +324,23 @@ class SpatialHash<T> {
+         continue
+       }
+       for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+-        const items = column?.get(cellY)
+-        if (!items) continue
+-        for (const itemId of items) {
++        const cell = column?.get(cellY)
++        if (!cell || cell.generation !== this.buildGeneration) continue
++        for (const itemId of cell.itemIds) {
+           if (this.visitedGenerations[itemId] === generation) continue
+           this.visitedGenerations[itemId] = generation
++          const itemBounds = this.rowBounds[itemId]!
++          // A shared grid cell is only a coarse candidate. Copper and clearance
++          // are already included in the inserted bounds, so strict separation
++          // cannot hide a violation and surviving items keep their cell order.
++          if (
++            itemBounds.maxX < bounds.minX ||
++            itemBounds.minX > bounds.maxX ||
++            itemBounds.maxY < bounds.minY ||
++            itemBounds.minY > bounds.maxY
++          ) {
++            continue
++          }
+           results.push(this.rowItems[itemId]!)
+         }
+       }
+@@ -438,6 +505,12 @@ export class AutoroutingDrcEngine {
+     SpatialHash<StaticObstacle>
+   >()
+ 
++  private readonly dynamicIndexesByLayer = new Map<
++    string,
++    SpatialHash<DynamicCollidable>
++  >()
++  private viaPairIndex?: SpatialHash<Via>
++
+   lastRunStats: AutoroutingDrcEngineRunStats = {
+     traceCount: 0,
+     segmentCount: 0,
+@@ -714,7 +787,8 @@ export class AutoroutingDrcEngine {
+     segments: TraceSegment[],
+     vias: Via[],
+   ): Map<string, SpatialHash<DynamicCollidable>> {
+-    const indexes = new Map<string, SpatialHash<DynamicCollidable>>()
++    const indexes = this.dynamicIndexesByLayer
++    for (const index of indexes.values()) index.reset()
+     const addToLayer = (
+       layer: string,
+       item: DynamicCollidable,
+@@ -737,6 +811,9 @@ export class AutoroutingDrcEngine {
+       }
+     }
+ 
++    for (const [layer, index] of indexes) {
++      if (!index.finishBuild()) indexes.delete(layer)
++    }
+     return indexes
+   }
+ 
+@@ -942,12 +1019,20 @@ export class AutoroutingDrcEngine {
+   }
+ 
+   private checkViaPairs(vias: Via[]): AutoroutingDrcError[] {
+-    if (vias.length < 2) return []
++    if (vias.length < 2) {
++      if (this.viaPairIndex) {
++        this.viaPairIndex.reset()
++        this.viaPairIndex.finishBuild()
++      }
++      return []
++    }
+     const errors: AutoroutingDrcError[] = []
+-    const index = new SpatialHash<Via>(this.cellSize)
++    const index = (this.viaPairIndex ??= new SpatialHash<Via>(this.cellSize))
++    index.reset()
+     for (const via of vias) {
+       index.insert(via, expandBounds(getViaBounds(via), this.viaClearance))
+     }
++    index.finishBuild()
+ 
+     for (const viaA of vias) {
+       for (const viaB of index.query(getViaBounds(viaA))) {
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts b/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts
+new file mode 100644
+index 0000000..c107e6f
+--- /dev/null
++++ b/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts
+@@ -0,0 +1,33 @@
++import type { Point } from "./internalTypes"
++import { COORDINATE_EPSILON } from "./solverConfig"
++
++export const broadForceBoundsAreSeparated = (
++  leftStart: Point,
++  leftEnd: Point,
++  rightStart: Point,
++  rightEnd: Point,
++  requiredDistance: number,
++): boolean => {
++  if (!Number.isFinite(requiredDistance) || requiredDistance < 0) return false
++  const margin = requiredDistance + COORDINATE_EPSILON
++  const separated =
++    Math.max(leftStart.x, leftEnd.x) < Math.min(rightStart.x, rightEnd.x) - margin ||
++    Math.min(leftStart.x, leftEnd.x) > Math.max(rightStart.x, rightEnd.x) + margin ||
++    Math.max(leftStart.y, leftEnd.y) < Math.min(rightStart.y, rightEnd.y) - margin ||
++    Math.min(leftStart.y, leftEnd.y) > Math.max(rightStart.y, rightEnd.y) + margin
++  if (!separated) return false
++
++  // Bounds only prove nonpenetration where projection arithmetic is stable.
++  // The coordinate limit also keeps rounding far below COORDINATE_EPSILON.
++  return Number.isFinite(leftStart.x) && Number.isFinite(leftStart.y) &&
++    Number.isFinite(leftEnd.x) && Number.isFinite(leftEnd.y) &&
++    Number.isFinite(rightStart.x) && Number.isFinite(rightStart.y) &&
++    Number.isFinite(rightEnd.x) && Number.isFinite(rightEnd.y) &&
++    Math.max(
++      Math.abs(leftStart.x), Math.abs(leftStart.y),
++      Math.abs(leftEnd.x), Math.abs(leftEnd.y),
++      Math.abs(rightStart.x), Math.abs(rightStart.y),
++      Math.abs(rightEnd.x), Math.abs(rightEnd.y),
++    ) <= 1e9
++}
++
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts b/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts
+new file mode 100644
+index 0000000..39c06e8
+--- /dev/null
++++ b/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts
+@@ -0,0 +1,136 @@
++import type { Bounds2D } from "./internalTypes"
++
++type PackedSpatialCell = {
++  readonly wordIndexes: readonly number[]
++  readonly wordMasks: readonly number[]
++}
++
++export type PackedSpatialIndex = {
++  readonly cells: ReadonlyMap<string, PackedSpatialCell>
++  readonly bits: Uint32Array
++  readonly wordGenerations: Uint32Array
++  readonly candidateCache: Map<string, readonly number[]>
++  cachedCandidateCount: number
++  generation: number
++}
++
++const MAX_CACHED_QUERY_RANGES = 256
++const MAX_CACHED_CANDIDATE_COUNT = 65_536
++
++export const createPackedSpatialIndex = <T>(
++  items: T[],
++  getBounds: (item: T) => Bounds2D,
++  cellSize: number,
++): PackedSpatialIndex => {
++  const cells = new Map<
++    string,
++    { wordIndexes: number[]; wordMasks: number[] }
++  >()
++  const wordCount = Math.ceil(items.length / 32)
++
++  for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
++    const item = items[itemIndex]
++    if (!item) continue
++    const bounds = getBounds(item)
++    const minCellX = Math.floor(bounds.minX / cellSize)
++    const maxCellX = Math.floor(bounds.maxX / cellSize)
++    const minCellY = Math.floor(bounds.minY / cellSize)
++    const maxCellY = Math.floor(bounds.maxY / cellSize)
++    const wordIndex = itemIndex >>> 5
++    const mask = 1 << (itemIndex & 31)
++
++    for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
++      for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
++        const key = `${cellX}:${cellY}`
++        let cell = cells.get(key)
++        if (!cell) {
++          cell = { wordIndexes: [], wordMasks: [] }
++          cells.set(key, cell)
++        }
++        const lastWord = cell.wordIndexes.length - 1
++        // Items arrive in ordinal order, so each word is appended only once.
++        if (lastWord >= 0 && cell.wordIndexes[lastWord] === wordIndex) {
++          cell.wordMasks[lastWord] = cell.wordMasks[lastWord]! | mask
++        } else {
++          cell.wordIndexes.push(wordIndex)
++          cell.wordMasks.push(mask)
++        }
++      }
++    }
++  }
++
++  return {
++    cells,
++    bits: new Uint32Array(wordCount),
++    wordGenerations: new Uint32Array(wordCount),
++    candidateCache: new Map(),
++    cachedCandidateCount: 0,
++    generation: 0,
++  }
++}
++
++export const getPackedSpatialCandidateIndexes = (
++  spatialIndex: PackedSpatialIndex,
++  bounds: Bounds2D,
++  cellSize: number,
++): readonly number[] => {
++  const minCellX = Math.floor(bounds.minX / cellSize)
++  const maxCellX = Math.floor(bounds.maxX / cellSize)
++  const minCellY = Math.floor(bounds.minY / cellSize)
++  const maxCellY = Math.floor(bounds.maxY / cellSize)
++  // Membership is fixed for this pass; callers only read the ordered arrays.
++  const queryKey = `${minCellX}:${maxCellX}:${minCellY}:${maxCellY}`
++  const cached = spatialIndex.candidateCache.get(queryKey)
++  if (cached) return cached
++
++  spatialIndex.generation += 1
++  if (spatialIndex.generation > 0xffffffff) {
++    spatialIndex.wordGenerations.fill(0)
++    spatialIndex.generation = 1
++  }
++  const generation = spatialIndex.generation
++  let minWordIndex = Infinity
++  let maxWordIndex = -1
++
++  for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
++    for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
++      const cell = spatialIndex.cells.get(`${cellX}:${cellY}`)
++      if (!cell) continue
++      for (let entry = 0; entry < cell.wordIndexes.length; entry += 1) {
++        const wordIndex = cell.wordIndexes[entry]!
++        if (spatialIndex.wordGenerations[wordIndex] !== generation) {
++          spatialIndex.wordGenerations[wordIndex] = generation
++          spatialIndex.bits[wordIndex] = 0
++        }
++        spatialIndex.bits[wordIndex] =
++          spatialIndex.bits[wordIndex]! | cell.wordMasks[entry]!
++        if (wordIndex < minWordIndex) minWordIndex = wordIndex
++        if (wordIndex > maxWordIndex) maxWordIndex = wordIndex
++      }
++    }
++  }
++
++  const candidateIndexes: number[] = []
++  for (
++    let wordIndex = minWordIndex;
++    wordIndex <= maxWordIndex;
++    wordIndex += 1
++  ) {
++    if (spatialIndex.wordGenerations[wordIndex] !== generation) continue
++    let bits = spatialIndex.bits[wordIndex]!
++    while (bits !== 0) {
++      const bitIndex = 31 - Math.clz32(bits & -bits)
++      candidateIndexes.push(wordIndex * 32 + bitIndex)
++      bits &= bits - 1
++    }
++  }
++  if (
++    spatialIndex.candidateCache.size < MAX_CACHED_QUERY_RANGES &&
++    spatialIndex.cachedCandidateCount + candidateIndexes.length <=
++      MAX_CACHED_CANDIDATE_COUNT
++  ) {
++    spatialIndex.candidateCache.set(queryKey, candidateIndexes)
++    spatialIndex.cachedCandidateCount += candidateIndexes.length
++  }
++  return candidateIndexes
++}
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+index 604d600..a11a116 100644
+--- a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+@@ -30,10 +30,14 @@ import {
+ import {
+   clampToBounds,
+   clampValue,
+-  createSpatialIndex,
+   expandBounds2d,
+-  getSpatialCandidateIndexes,
+ } from "./spatialIndex"
++import {
++  createPackedSpatialIndex as createSpatialIndex,
++  getPackedSpatialCandidateIndexes as getSpatialCandidateIndexes,
++  type PackedSpatialIndex,
++} from "./packedSpatialIndex"
++import { broadForceBoundsAreSeparated } from "./broadForceBoundsAreSeparated"
+ import type { DrcEvaluator, DrcSnapshot } from "./types"
+ import type {
+   Bounds2D,
+@@ -2642,15 +2646,23 @@ const pushViaSegmentPair = (
+   )
+     return false
+ 
+-  const projection = pointToSegmentProjection(via, segment)
+-  const separationX = via.x - projection.x
+-  const separationY = via.y - projection.y
+-  const distance = Math.hypot(separationX, separationY)
+   const requiredDistance =
+     via.radius +
+     segment.radius +
+     (RELAXED_DRC_OPTIONS.traceClearance ?? 0.1) +
+     CLEARANCE_SLACK
++  if (broadForceBoundsAreSeparated(
++    via,
++    via,
++    segment.start,
++    segment.end,
++    requiredDistance,
++  )) return false
++
++  const projection = pointToSegmentProjection(via, segment)
++  const separationX = via.x - projection.x
++  const separationY = via.y - projection.y
++  const distance = Math.hypot(separationX, separationY)
+   const penetration = requiredDistance - distance
+   if (penetration <= 0) return false
+ 
+@@ -2708,16 +2720,24 @@ const pushSegmentSegmentPair = (
+     return false
+   }
+ 
+-  const candidate = getClosestSegmentContact(left, right)
+-
+-  const separationX = candidate.leftPoint.x - candidate.rightPoint.x
+-  const separationY = candidate.leftPoint.y - candidate.rightPoint.y
+-  const distance = Math.hypot(separationX, separationY)
+   const requiredDistance =
+     left.radius +
+     right.radius +
+     (RELAXED_DRC_OPTIONS.traceClearance ?? 0.1) +
+     CLEARANCE_SLACK
++  if (broadForceBoundsAreSeparated(
++    left.start,
++    left.end,
++    right.start,
++    right.end,
++    requiredDistance,
++  )) return false
++
++  const candidate = getClosestSegmentContact(left, right)
++
++  const separationX = candidate.leftPoint.x - candidate.rightPoint.x
++  const separationY = candidate.leftPoint.y - candidate.rightPoint.y
++  const distance = Math.hypot(separationX, separationY)
+   const penetration = requiredDistance - distance
+   if (penetration <= 0) return false
+ 
+@@ -2821,6 +2841,14 @@ const getSegmentRectRepulsion = (
+ ) => {
+   const halfWidth = obstacle.width / 2
+   const halfHeight = obstacle.height / 2
++  if (broadForceBoundsAreSeparated(
++    segment.start,
++    segment.end,
++    { x: obstacle.center.x - halfWidth, y: obstacle.center.y - halfHeight },
++    { x: obstacle.center.x + halfWidth, y: obstacle.center.y + halfHeight },
++    requiredDistance,
++  )) return undefined
++
+   const obstacleCorners = [
+     {
+       x: obstacle.center.x - halfWidth,
+@@ -2908,8 +2936,8 @@ const pushMovablesAwayFromObstacles = (
+   routes: MutableRoute[],
+   vias: ViaNode[],
+   segments: Segment[],
+-  viaSpatialIndex: Map<string, number[]>,
+-  segmentSpatialIndex: Map<string, number[]>,
++  viaSpatialIndex: PackedSpatialIndex,
++  segmentSpatialIndex: PackedSpatialIndex,
+   spatialCellSize: number,
+   connMap?: ConnectivityMap,
+   netMatchers?: BroadNetMatchers,

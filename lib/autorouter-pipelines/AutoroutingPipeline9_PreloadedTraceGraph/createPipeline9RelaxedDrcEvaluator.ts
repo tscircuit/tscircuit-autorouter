@@ -19,6 +19,7 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
+  const traceContinuityCacheKey = {}
   const evaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
@@ -33,6 +34,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
       srjWithPointPairs: options.srjWithPointPairs,
+      drcOptions: { traceContinuityCacheKey },
       routedTraces: preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],
         mutatedPreloadedTraces: options.mutatedPreloadedTraces,

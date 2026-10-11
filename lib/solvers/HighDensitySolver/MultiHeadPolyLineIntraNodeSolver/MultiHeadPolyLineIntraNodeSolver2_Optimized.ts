@@ -2,6 +2,8 @@ import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
+type NetForce = { fx: number; fy: number }
+
 type ForceSegment = {
   p1: MHPoint2
   p2: MHPoint2
@@ -11,6 +13,8 @@ type ForceSegment = {
   layer: number
   p1Idx: number
   p2Idx: number
+  p1Force: NetForce | undefined
+  p2Force: NetForce | undefined
   lastTargetLine: number
   lastEndpointIndex: number
   lastFx: number
@@ -22,6 +26,7 @@ type ForceVia = {
   point: MHPoint2
   layers: number[]
   index: number
+  force: NetForce | undefined
 }
 
 type ForceGeometry = {
@@ -135,7 +140,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const EPSILON = 1e-6 // To avoid division by zero
 
     // 1. Initialize net forces structure: netForces[lineIdx][mPointIdx] = {fx, fy}
-    const netForces: Array<Array<{ fx: number; fy: number }>> = Array.from(
+    const netForces: NetForce[][] = Array.from(
       { length: numPolyLines },
       (_, i) =>
         Array.from({ length: polyLines[i].mPoints.length }, () => ({
@@ -143,24 +148,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           fy: 0,
         })),
     )
-
-    // Helper to add force directly to the netForces array for a given mPoint index
-    const addNetForce = (
-      lineIndex: number,
-      pointIndexInFullPath: number, // Index in [start, ...mPoints, end]
-      fx: number,
-      fy: number,
-    ) => {
-      // Only apply force if the target point is an mPoint (not start or end)
-      if (
-        pointIndexInFullPath > 0 &&
-        pointIndexInFullPath < polyLines[lineIndex].mPoints.length + 1
-      ) {
-        const mPointIndex = pointIndexInFullPath - 1
-        netForces[lineIndex][mPointIndex].fx += fx
-        netForces[lineIndex][mPointIndex].fy += fy
-      }
-    }
 
     // 2. Calculate forces between all pairs of polylines
 
@@ -170,9 +157,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       epIdx: number,
       otherSeg: ForceSegment,
       targetLine: number,
-      oppLine: number,
-      // srcIdOpp: string, // Not needed with addNetForce
-      // srcIdThis: string, // Not needed with addNetForce
+      targetForce: NetForce | undefined,
     ): void => {
       let fx: number
       let fy: number
@@ -223,14 +208,23 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       }
 
       // push this endpoint
-      addNetForce(targetLine, epIdx, fx, fy)
+      if (targetForce) {
+        targetForce.fx += fx
+        targetForce.fy += fy
+      }
       // equal & opposite distributed onto the two endpoints of the other seg
-      addNetForce(oppLine, otherSeg.p1Idx, -fx / 2, -fy / 2)
-      addNetForce(oppLine, otherSeg.p2Idx, -fx / 2, -fy / 2)
+      if (otherSeg.p1Force) {
+        otherSeg.p1Force.fx += -fx / 2
+        otherSeg.p1Force.fy += -fy / 2
+      }
+      if (otherSeg.p2Force) {
+        otherSeg.p2Force.fx += -fx / 2
+        otherSeg.p2Force.fy += -fy / 2
+      }
     }
 
     // Points move only after all forces have been accumulated.
-    const geometry = polyLines.map((polyLine): ForceGeometry => {
+    const geometry = polyLines.map((polyLine, lineIndex): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
       const segments = points.slice(0, -1).map((point, index): ForceSegment => {
         const nextPoint = points[index + 1]!
@@ -245,6 +239,10 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           layer: point.z2,
           p1Idx: index,
           p2Idx: index + 1,
+          // Fixed start/end points have no net-force accumulator. References
+          // stay valid until this pass has finished summing every interaction.
+          p1Force: netForces[lineIndex]![index - 1],
+          p2Force: netForces[lineIndex]![index],
           lastTargetLine: -1,
           lastEndpointIndex: -1,
           lastFx: 0,
@@ -255,7 +253,12 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2
           ? []
-          : [{ point, layers: [point.z1, point.z2], index }],
+          : [{
+              point,
+              layers: [point.z1, point.z2],
+              index,
+              force: netForces[lineIndex]![index - 1],
+            }],
       )
       return { segments, vias }
     })
@@ -272,11 +275,11 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           for (const seg2 of segments2) {
             if (seg1.layer === seg2.layer) {
               // endpoints of s1 against s2
-              endpointForce(seg1.p1, seg1.p1Idx, seg2, i, j)
-              endpointForce(seg1.p2, seg1.p2Idx, seg2, i, j)
+              endpointForce(seg1.p1, seg1.p1Idx, seg2, i, seg1.p1Force)
+              endpointForce(seg1.p2, seg1.p2Idx, seg2, i, seg1.p2Force)
               // endpoints of s2 against s1
-              endpointForce(seg2.p1, seg2.p1Idx, seg1, j, i)
-              endpointForce(seg2.p2, seg2.p2Idx, seg1, j, i)
+              endpointForce(seg2.p1, seg2.p1Idx, seg1, j, seg2.p1Force)
+              endpointForce(seg2.p2, seg2.p2Idx, seg1, j, seg2.p2Force)
             }
           }
         }
@@ -322,11 +325,20 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                 const fy_j_on_i = (dy / dist) * forceMag
 
                 // Force applied ONLY to the via (i) by the segment (j)
-                addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
+                if (via1.force) {
+                  via1.force.fx += fx_j_on_i
+                  via1.force.fy += fy_j_on_i
+                }
 
                 // Force from via1 (i) onto seg2 (j) - Apply opposite force to segment endpoints
-                addNetForce(j, seg2.p1Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
-                addNetForce(j, seg2.p2Idx, -fx_j_on_i / 2, -fy_j_on_i / 2)
+                if (seg2.p1Force) {
+                  seg2.p1Force.fx += -fx_j_on_i / 2
+                  seg2.p1Force.fy += -fy_j_on_i / 2
+                }
+                if (seg2.p2Force) {
+                  seg2.p2Force.fx += -fx_j_on_i / 2
+                  seg2.p2Force.fy += -fy_j_on_i / 2
+                }
               }
             }
           }
@@ -371,11 +383,20 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                 const fy_i_on_j = (dy / dist) * forceMag
 
                 // Force applied ONLY to the via (j) by the segment (i)
-                addNetForce(j, via2.index, fx_i_on_j, fy_i_on_j)
+                if (via2.force) {
+                  via2.force.fx += fx_i_on_j
+                  via2.force.fy += fy_i_on_j
+                }
 
                 // Force from via2 (j) onto seg1 (i) - Apply opposite force to segment endpoints
-                addNetForce(i, seg1.p1Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
-                addNetForce(i, seg1.p2Idx, -fx_i_on_j / 2, -fy_i_on_j / 2)
+                if (seg1.p1Force) {
+                  seg1.p1Force.fx += -fx_i_on_j / 2
+                  seg1.p1Force.fy += -fy_i_on_j / 2
+                }
+                if (seg1.p2Force) {
+                  seg1.p2Force.fx += -fx_i_on_j / 2
+                  seg1.p2Force.fy += -fy_i_on_j / 2
+                }
               }
             }
           }
@@ -417,9 +438,15 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
                 const fy_j_on_i = (dy / dist) * forceMag
 
                 // Apply force from via2 (j) onto via1 (i)
-                addNetForce(i, via1.index, fx_j_on_i, fy_j_on_i)
+                if (via1.force) {
+                  via1.force.fx += fx_j_on_i
+                  via1.force.fy += fy_j_on_i
+                }
                 // Apply force from via1 (i) onto via2 (j)
-                addNetForce(j, via2.index, -fx_j_on_i, -fy_j_on_i)
+                if (via2.force) {
+                  via2.force.fx += -fx_j_on_i
+                  via2.force.fy += -fy_j_on_i
+                }
               }
             }
           }
@@ -466,9 +493,15 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
             const fy_2_on_1 = (dy / dist) * forceMag
 
             // Apply force from via2 onto via1 (both on line i)
-            addNetForce(i, via1.index, fx_2_on_1, fy_2_on_1)
+            if (via1.force) {
+              via1.force.fx += fx_2_on_1
+              via1.force.fy += fy_2_on_1
+            }
             // Apply force from via1 onto via2 (both on line i) - opposite direction
-            addNetForce(i, via2.index, -fx_2_on_1, -fy_2_on_1)
+            if (via2.force) {
+              via2.force.fx += -fx_2_on_1
+              via2.force.fy += -fy_2_on_1
+            }
           }
         }
       }

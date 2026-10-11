@@ -40,7 +40,10 @@ import {
   type PreloadedHighDensityRoute,
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
-import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
+import {
+  createPipeline9DrcErrorsAgainstBaselineFilter,
+  filterPipeline9DrcErrorsAgainstBaseline,
+} from "./filterPipeline9DrcErrorsAgainstBaseline"
 import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
@@ -57,6 +60,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
+const REFERENCE_DRC_CANDIDATE_CACHE_SIZE = 16
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
@@ -1149,12 +1153,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    let referenceDrcCandidateCache:
-      | {
-          candidateKey: string
-          result: ReturnType<DrcEvaluator>
-        }
-      | undefined
+    const filterReferenceErrors =
+      createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrors)
+    const filterReferenceErrorsWithCenters =
+      createPipeline9DrcErrorsAgainstBaselineFilter(baselineErrorsWithCenters)
+    const filterIndexedErrors =
+      createPipeline9DrcErrorsAgainstBaselineFilter(autoroutingBaselineDrc.errors)
+    const filterIndexedErrorsWithCenters =
+      createPipeline9DrcErrorsAgainstBaselineFilter(
+        autoroutingBaselineDrc.errorsWithCenters,
+      )
+    // Projection passes can revisit an earlier geometry after rejecting a
+    // different candidate. Retain bounded full-reference results as well.
+    const referenceDrcCandidateCache = new Map<string, ReturnType<DrcEvaluator>>()
+    // The checker retains private original polygons by exact geometry. An
+    // ownership key scopes that bounded cache to this repair evaluator.
+    const traceContinuityCacheKey = {}
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1318,6 +1332,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           traceClearance,
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
+          traceContinuityCacheKey,
         },
       })
       const evaluatedTraceIds = new Set(
@@ -1337,16 +1352,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterReferenceErrors({
         errors: evaluatedErrors,
-        baselineErrors,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterReferenceErrorsWithCenters({
           errors: evaluatedErrorsWithCenters,
-          baselineErrors: baselineErrorsWithCenters,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
@@ -1368,16 +1381,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
-        return referenceDrcCandidateCache.result
-      }
+      const cachedResult = referenceDrcCandidateCache.get(candidateKey)
+      if (cachedResult !== undefined) return cachedResult
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
         traces: [],
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      referenceDrcCandidateCache = { candidateKey, result }
+      if (referenceDrcCandidateCache.size >= REFERENCE_DRC_CANDIDATE_CACHE_SIZE) {
+        const oldestCandidateKey = referenceDrcCandidateCache.keys().next().value
+        if (oldestCandidateKey !== undefined) {
+          referenceDrcCandidateCache.delete(oldestCandidateKey)
+        }
+      }
+      referenceDrcCandidateCache.set(candidateKey, result)
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
@@ -1476,21 +1494,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: viaCircuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      const evaluatedNewErrors = filterIndexedErrors({
         errors: evaluatedErrors,
-        baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
+        filterIndexedErrorsWithCenters({
           errors: evaluatedErrorsWithCenters,
-          baselineErrors:
-            autoroutingBaselineDrc.errorsWithCenters as unknown as Array<
-              Record<string, unknown>
-            >,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })

@@ -1,0 +1,621 @@
+diff --git a/lib/HighDensitySolverA01/HighDensitySolverA01.ts b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+index 17dffd6..505a256 100644
+--- a/lib/HighDensitySolverA01/HighDensitySolverA01.ts
++++ b/lib/HighDensitySolverA01/HighDensitySolverA01.ts
+@@ -27,17 +27,6 @@ function rippedContains(r: RippedNode | null, id: ConnId): boolean {
+   return false
+ }
+ 
+-// --- A* search node (stored in a pool) ---
+-interface SearchNode {
+-  z: number
+-  row: number
+-  col: number
+-  g: number
+-  f: number
+-  parentIdx: number // -1 = root
+-  ripped: RippedNode | null
+-}
+-
+ // --- Connection segment ---
+ interface ConnectionSeg {
+   connId: ConnId
+@@ -72,6 +61,12 @@ interface CircularGridOffsets {
+   length: number
+ }
+ 
++interface IndexedViaOwners {
++  row: number
++  col: number
++  owners: Set<ConnId>
++}
++
+ function createCircularGridOffsets(params: {
+   radiusMm: number
+   cellSizeMm: number
+@@ -118,25 +113,58 @@ class MinHeap {
+ 
+   push(f: number, seq: number, id: number) {
+     let i = this.n++
+-    this.f[i] = f
+-    this.seq[i] = seq
+-    this.id[i] = id
++    const priorities = this.f
++    const sequences = this.seq
++    const ids = this.id
+     while (i > 0) {
+       const p = (i - 1) >> 1
+-      if (this.less(p, i)) break
+-      this.swap(i, p)
++      const parentF = priorities[p]!
++      const parentSeq = sequences[p]!
++      if (parentF !== f ? parentF < f : parentSeq < seq) break
++      priorities[i] = parentF
++      sequences[i] = parentSeq
++      ids[i] = ids[p]!
+       i = p
+     }
++    priorities[i] = f
++    sequences[i] = seq
++    ids[i] = id
+   }
+ 
+   pop(): number {
+     const out = this.id[0]!
+     this.n--
+     if (this.n > 0) {
+-      this.f[0] = this.f[this.n]!
+-      this.seq[0] = this.seq[this.n]!
+-      this.id[0] = this.id[this.n]!
+-      this.siftDown(0)
++      const priorities = this.f
++      const sequences = this.seq
++      const ids = this.id
++      const lastF = priorities[this.n]!
++      const lastSeq = sequences[this.n]!
++      const lastId = ids[this.n]!
++      let i = 0
++      while (true) {
++        const l = i * 2 + 1
++        const r = l + 1
++        if (l >= this.n) break
++        let m = l
++        if (r < this.n) {
++          const leftF = priorities[l]!
++          const rightF = priorities[r]!
++          if (
++            !(leftF !== rightF ? leftF < rightF : sequences[l]! < sequences[r]!)
++          ) m = r
++        }
++        const childF = priorities[m]!
++        const childSeq = sequences[m]!
++        if (lastF !== childF ? lastF < childF : lastSeq < childSeq) break
++        priorities[i] = childF
++        sequences[i] = childSeq
++        ids[i] = ids[m]!
++        i = m
++      }
++      priorities[i] = lastF
++      sequences[i] = lastSeq
++      ids[i] = lastId
+     }
+     return out
+   }
+@@ -149,37 +177,6 @@ class MinHeap {
+     this.n = 0
+   }
+ 
+-  private siftDown(i: number) {
+-    while (true) {
+-      const l = i * 2 + 1
+-      const r = l + 1
+-      if (l >= this.n) return
+-      let m = l
+-      if (r < this.n && !this.less(l, r)) m = r
+-      if (this.less(i, m)) return
+-      this.swap(i, m)
+-      i = m
+-    }
+-  }
+-
+-  private less(i: number, j: number) {
+-    const fi = this.f[i]!
+-    const fj = this.f[j]!
+-    if (fi !== fj) return fi < fj
+-    return this.seq[i]! < this.seq[j]!
+-  }
+-
+-  private swap(i: number, j: number) {
+-    const tmpF = this.f[i]!
+-    this.f[i] = this.f[j]!
+-    this.f[j] = tmpF
+-    const tmpS = this.seq[i]!
+-    this.seq[i] = this.seq[j]!
+-    this.seq[j] = tmpS
+-    const tmpI = this.id[i]!
+-    this.id[i] = this.id[j]!
+-    this.id[j] = tmpI
+-  }
+ }
+ 
+ // --- Types ---
+@@ -225,6 +222,7 @@ export interface HighDensitySolverA01Props {
+ // Static direction offsets for 8-connected neighbor expansion
+ const DIRS_DR = [-1, -1, -1, 0, 0, 1, 1, 1] as const
+ const DIRS_DC = [-1, 0, 1, -1, 1, -1, 0, 1] as const
++const MAX_RETAINED_SEARCH_NODES = 65_536
+ 
+ export class HighDensitySolverA01 extends BaseSolver {
+   override getSolverName(): string {
+@@ -281,6 +279,9 @@ export class HighDensitySolverA01 extends BaseSolver {
+   private viaOccupantScanOffsetsDc!: Int32Array
+   private viaOccupantScanOffsetsLen!: number
+   private viaOwnersByCell!: Map<number, Set<ConnId>>
++  private viaOwnerEntryByCell!: Int32Array
++  private viaOwnerEntries: IndexedViaOwners[] = []
++  private nearbyViaOwnerEntries: number[] = []
+   private viaCenterIndicesByConn!: number[][]
+   private viaTraceClearanceMm!: number
+   private outputCellStepX!: number
+@@ -304,7 +305,13 @@ export class HighDensitySolverA01 extends BaseSolver {
+   private activeConnSeg: ConnectionSeg | null = null
+   private activeConnId: ConnId = -1
+   private crossLayerSearch = false
+-  private nodePool!: SearchNode[]
++  private nodeCount = 0
++  private nodeZ = new Float64Array(0)
++  private nodeRow = new Float64Array(0)
++  private nodeCol = new Float64Array(0)
++  private nodeG = new Float64Array(0)
++  private nodeParent = new Float64Array(0)
++  private nodeRipped: Array<RippedNode | null> = []
+   private heap!: MinHeap
+   private seqCounter = 0
+ 
+@@ -493,6 +500,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     this.viaOccupantScanOffsetsDr = viaOccupantScanOffsets.rowOffsets
+     this.viaOccupantScanOffsetsDc = viaOccupantScanOffsets.columnOffsets
+     this.viaOwnersByCell = new Map()
++    this.viaOwnerEntryByCell = new Int32Array(this.planeSize)
+     this.viaCenterIndicesByConn = []
+     this.viaTraceClearanceMm = this.viaDiameter / 2 + this.traceThickness / 2
+ 
+@@ -554,7 +562,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     // A* state
+     this.activeConnSeg = null
+     this.activeConnId = -1
+-    this.nodePool = []
++    this.resetSearchNodes()
+     this.heap = new MinHeap()
+     this.seqCounter = 0
+   }
+@@ -581,9 +589,10 @@ export class HighDensitySolverA01 extends BaseSolver {
+       // Occupancy and the active net stay fixed until this search finishes.
+       // Clear before another connection observes newly routed or ripped copper.
+       this.viaOccupantsByCell.clear()
++      this.indexTraceClearanceViaOwners()
+ 
+       // Reset A* state for this connection
+-      this.nodePool = []
++      this.resetSearchNodes()
+       this.heap.clear()
+       this.seqCounter = 0
+       this.searchIterations = 0
+@@ -599,16 +608,15 @@ export class HighDensitySolverA01 extends BaseSolver {
+         next.endCol,
+       )
+       const f = h * this.hyperParameters.greedyMultiplier
+-      this.nodePool.push({
+-        z: next.startZ,
+-        row: next.startRow,
+-        col: next.startCol,
+-        g: 0,
+-        f,
+-        parentIdx: -1,
+-        ripped: null,
+-      })
+-      this.heap.push(f, this.seqCounter++, 0)
++      const startNodeIdx = this.appendSearchNode(
++        next.startZ,
++        next.startRow,
++        next.startCol,
++        0,
++        -1,
++        null,
++      )
++      this.heap.push(f, this.seqCounter++, startNodeIdx)
+       return
+     }
+ 
+@@ -629,7 +637,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+       this.activeConnSeg = null
+       this.activeConnId = -1
+       this.heap.clear()
+-      this.nodePool = []
++      this.resetSearchNodes()
+       this.consecutiveSkips++
+       if (this.consecutiveSkips >= this.unsolvedSegs.length * 3) {
+         this.error = `Convergence failure: ${this.unsolvedSegs.length} connections stuck`
+@@ -647,8 +655,11 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+     // 3. Pop best node (O(log n))
+     const nodeIdx = this.heap.pop()
+-    const node = this.nodePool[nodeIdx]!
+-    const { z, row, col, g, ripped } = node
++    const z = this.nodeZ[nodeIdx]!
++    const row = this.nodeRow[nodeIdx]!
++    const col = this.nodeCol[nodeIdx]!
++    const g = this.nodeG[nodeIdx]!
++    const ripped = this.nodeRipped[nodeIdx]!
+ 
+     // 4. Skip if already visited (stamp check)
+     const cellIdx = (z * this.rows + row) * this.cols + col
+@@ -659,6 +670,7 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const seg = this.activeConnSeg
+     if (z === seg.endZ && row === seg.endRow && col === seg.endCol) {
+       this.finalizeRoute(nodeIdx)
++      this.resetSearchNodes()
+       this.activeConnSeg = null
+       this.activeConnId = -1
+       return
+@@ -692,16 +704,14 @@ export class HighDensitySolverA01 extends BaseSolver {
+         this.computeH(z, nr, nc, endZ, endRow, endCol) *
+           this.hyperParameters.greedyMultiplier
+ 
+-      const newNodeIdx = this.nodePool.length
+-      this.nodePool.push({
++      const newNodeIdx = this.appendSearchNode(
+         z,
+-        row: nr,
+-        col: nc,
+-        g: g2,
+-        f: f2,
+-        parentIdx: nodeIdx,
+-        ripped: this._moveRipped,
+-      })
++        nr,
++        nc,
++        g2,
++        nodeIdx,
++        this._moveRipped,
++      )
+       this.heap.push(f2, this.seqCounter++, newNodeIdx)
+     }
+ 
+@@ -736,21 +746,75 @@ export class HighDensitySolverA01 extends BaseSolver {
+           this.computeH(nz, row, col, endZ, endRow, endCol) *
+             this.hyperParameters.greedyMultiplier
+ 
+-        const newNodeIdx = this.nodePool.length
+-        this.nodePool.push({
+-          z: nz,
++        const newNodeIdx = this.appendSearchNode(
++          nz,
+           row,
+           col,
+-          g: g2,
+-          f: f2,
+-          parentIdx: nodeIdx,
+-          ripped: this._moveRipped,
+-        })
++          g2,
++          nodeIdx,
++          this._moveRipped,
++        )
+         this.heap.push(f2, this.seqCounter++, newNodeIdx)
+       }
+     }
+   }
+ 
++  private resetSearchNodes(): void {
++    // Numeric slots have no references. Release every live ripped chain before
++    // recycling node IDs for the next connection, while retaining capacity.
++    if (this.nodeG.length > MAX_RETAINED_SEARCH_NODES) {
++      // Large searches must not retain their peak allocation while portfolio
++      // candidates wait for the rest of the board to finish.
++      this.nodeZ = new Float64Array(0)
++      this.nodeRow = new Float64Array(0)
++      this.nodeCol = new Float64Array(0)
++      this.nodeG = new Float64Array(0)
++      this.nodeParent = new Float64Array(0)
++      this.nodeRipped = []
++    } else {
++      this.nodeRipped.fill(null, 0, this.nodeCount)
++    }
++    this.nodeCount = 0
++  }
++
++  private appendSearchNode(
++    z: number,
++    row: number,
++    col: number,
++    g: number,
++    parentIdx: number,
++    ripped: RippedNode | null,
++  ): number {
++    const index = this.nodeCount
++    if (index === this.nodeG.length) {
++      const capacity = Math.max(256, this.nodeG.length * 2)
++      const zValues = new Float64Array(capacity)
++      const rowValues = new Float64Array(capacity)
++      const colValues = new Float64Array(capacity)
++      const gValues = new Float64Array(capacity)
++      const parentValues = new Float64Array(capacity)
++      zValues.set(this.nodeZ)
++      rowValues.set(this.nodeRow)
++      colValues.set(this.nodeCol)
++      gValues.set(this.nodeG)
++      parentValues.set(this.nodeParent)
++      this.nodeZ = zValues
++      this.nodeRow = rowValues
++      this.nodeCol = colValues
++      this.nodeG = gValues
++      this.nodeParent = parentValues
++      this.nodeRipped.length = capacity
++    }
++    this.nodeZ[index] = z
++    this.nodeRow[index] = row
++    this.nodeCol[index] = col
++    this.nodeG[index] = g
++    this.nodeParent[index] = parentIdx
++    this.nodeRipped[index] = ripped
++    this.nodeCount = index + 1
++    return index
++  }
++
+   // --- Merged cost + rip computation (writes to _moveCost/_moveRipped) ---
+   protected getRipCost(connId: ConnId): number {
+     return (
+@@ -780,26 +844,23 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+       const toFlatIdx = (toZ * this.rows + toRow) * cols + toCol
+       const fixedOwner = this.portOwnerFlat[toFlatIdx]!
+-      const fixedSameRoot =
+-        this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
+-      const allowFixedOverlap =
+-        fixedSameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      const seg = this.activeConnSeg
+-      const isSegEnd =
+-        !!seg &&
+-        toZ === seg.endZ &&
+-        toRow === seg.endRow &&
+-        toCol === seg.endCol
+-      if (
+-        fixedOwner >= 0 &&
+-        fixedOwner !== activeConn &&
+-        !allowFixedOverlap &&
+-        !isSegEnd
+-      ) {
+-        this._moveCost = -1
+-        this._moveRipped = r
+-        return
++      if (fixedOwner >= 0 && fixedOwner !== activeConn) {
++        const fixedSameRoot =
++          this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
++        const allowFixedOverlap =
++          fixedSameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        const seg = this.activeConnSeg
++        const isSegEnd =
++          !!seg &&
++          toZ === seg.endZ &&
++          toRow === seg.endRow &&
++          toCol === seg.endCol
++        if (!allowFixedOverlap && !isSegEnd) {
++          this._moveCost = -1
++          this._moveRipped = r
++          return
++        }
+       }
+ 
+       // Via footprint occupants (reusable scratch array)
+@@ -822,40 +883,39 @@ export class HighDensitySolverA01 extends BaseSolver {
+ 
+       const flatIdx = (toZ * this.rows + toRow) * cols + toCol
+       const fixedOwner = this.portOwnerFlat[flatIdx]!
+-      const fixedSameRoot =
+-        this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
+-      const allowFixedOverlap =
+-        fixedSameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      const seg = this.activeConnSeg
+-      const isSegEnd =
+-        !!seg &&
+-        toZ === seg.endZ &&
+-        toRow === seg.endRow &&
+-        toCol === seg.endCol
+-      if (
+-        fixedOwner >= 0 &&
+-        fixedOwner !== activeConn &&
+-        !allowFixedOverlap &&
+-        !isSegEnd
+-      ) {
+-        this._moveCost = -1
+-        this._moveRipped = r
+-        return
++      if (fixedOwner >= 0 && fixedOwner !== activeConn) {
++        const fixedSameRoot =
++          this.connIdToRootNet[fixedOwner] === this.connIdToRootNet[activeConn]
++        const allowFixedOverlap =
++          fixedSameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        const seg = this.activeConnSeg
++        const isSegEnd =
++          !!seg &&
++          toZ === seg.endZ &&
++          toRow === seg.endRow &&
++          toCol === seg.endCol
++        if (!allowFixedOverlap && !isSegEnd) {
++          this._moveCost = -1
++          this._moveRipped = r
++          return
++        }
+       }
+ 
+       const occ = this.usedCellsFlat[flatIdx]!
+-      const sameRoot =
+-        this.connIdToRootNet[occ] === this.connIdToRootNet[activeConn]
+-      const allowSameRootOverlap =
+-        sameRoot &&
+-        this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-      if (occ !== -1 && occ !== activeConn && !allowSameRootOverlap) {
+-        if (!rippedContains(r, occ)) {
+-          cost += this.getRipCost(occ)
+-          r = { id: occ, prev: r }
++      if (occ !== -1 && occ !== activeConn) {
++        const sameRoot =
++          this.connIdToRootNet[occ] === this.connIdToRootNet[activeConn]
++        const allowSameRootOverlap =
++          sameRoot &&
++          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++        if (!allowSameRootOverlap) {
++          if (!rippedContains(r, occ)) {
++            cost += this.getRipCost(occ)
++            r = { id: occ, prev: r }
++          }
++          cost += this.hyperParameters.ripTracePenalty
+         }
+-        cost += this.hyperParameters.ripTracePenalty
+       }
+ 
+       // usedCellsFlat only records occupied grid points. A diagonal segment
+@@ -894,19 +954,17 @@ export class HighDensitySolverA01 extends BaseSolver {
+         const sqCols = this.cols - 1
+         const diagBase = ((toZ * (this.rows - 1) + sqRow) * sqCols + sqCol) * 2
+         const crossingOcc = this.usedDiagFlat[diagBase + crossingSlot]!
+-        const crossingSameRoot =
+-          this.connIdToRootNet[crossingOcc] === this.connIdToRootNet[activeConn]
+-        const allowCrossingOverlap =
+-          crossingSameRoot &&
+-          this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
+-        if (
+-          crossingOcc !== -1 &&
+-          crossingOcc !== activeConn &&
+-          !allowCrossingOverlap
+-        ) {
+-          this._moveCost = -1
+-          this._moveRipped = r
+-          return
++        if (crossingOcc !== -1 && crossingOcc !== activeConn) {
++          const crossingSameRoot =
++            this.connIdToRootNet[crossingOcc] === this.connIdToRootNet[activeConn]
++          const allowCrossingOverlap =
++            crossingSameRoot &&
++            this.overlapFriendlyRootNets.has(this.connIdToRootNet[activeConn]!)
++          if (!allowCrossingOverlap) {
++            this._moveCost = -1
++            this._moveRipped = r
++            return
++          }
+         }
+       }
+     }
+@@ -983,17 +1041,49 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const segmentLengthSquared = segmentX * segmentX + segmentY * segmentY
+     const clearanceSquared = this.viaTraceClearanceMm * this.viaTraceClearanceMm
+ 
+-    for (const [viaIndex, owners] of this.viaOwnersByCell) {
+-      const row = Math.floor(viaIndex / this.cols)
+-      const col = viaIndex - row * this.cols
+-      if (
+-        row < minRow - rowClearance ||
+-        row > maxRow + rowClearance ||
+-        col < minCol - colClearance ||
+-        col > maxCol + colClearance
+-      ) {
+-        continue
++    const nearbyEntries = this.nearbyViaOwnerEntries
++    nearbyEntries.length = 0
++    const firstRow = Math.max(0, Math.ceil(minRow - rowClearance))
++    const lastRow = Math.min(this.rows - 1, Math.floor(maxRow + rowClearance))
++    const firstCol = Math.max(0, Math.ceil(minCol - colClearance))
++    const lastCol = Math.min(this.cols - 1, Math.floor(maxCol + colClearance))
++    const footprintCellCount =
++      (lastRow - firstRow + 1) * (lastCol - firstCol + 1)
++    if (this.viaOwnerEntries.length <= footprintCellCount) {
++      // Sparse occupancy is cheaper to scan than the whole query footprint.
++      for (let index = 0; index < this.viaOwnerEntries.length; index++) {
++        const { row, col } = this.viaOwnerEntries[index]!
++        if (
++          row < minRow - rowClearance ||
++          row > maxRow + rowClearance ||
++          col < minCol - colClearance ||
++          col > maxCol + colClearance
++        ) {
++          continue
++        }
++        nearbyEntries.push(index)
++      }
++    } else {
++      for (let row = firstRow; row <= lastRow; row++) {
++        const rowBase = row * this.cols
++        for (let col = firstCol; col <= lastCol; col++) {
++          const encodedEntry = this.viaOwnerEntryByCell[rowBase + col]!
++          if (encodedEntry === 0) continue
++          const entry = encodedEntry - 1
++          // Preserve Map insertion order: it determines the rip-list order and
++          // the order of floating-point additions to the move cost.
++          let index = nearbyEntries.length
++          while (index > 0 && nearbyEntries[index - 1]! > entry) {
++            nearbyEntries[index] = nearbyEntries[index - 1]!
++            index--
++          }
++          nearbyEntries[index] = entry
++        }
+       }
++    }
++
++    for (const entry of nearbyEntries) {
++      const { row, col, owners } = this.viaOwnerEntries[entry]!
+ 
+       const viaFromX = (col - fromCol) * this.outputCellStepX
+       const viaFromY = (row - fromRow) * this.outputCellStepY
+@@ -1031,6 +1121,20 @@ export class HighDensitySolverA01 extends BaseSolver {
+     }
+   }
+ 
++  private indexTraceClearanceViaOwners(): void {
++    const cells = this.viaOwnerEntryByCell
++    for (const { row, col } of this.viaOwnerEntries) {
++      cells[row * this.cols + col] = 0
++    }
++    this.viaOwnerEntries.length = 0
++    for (const [cell, owners] of this.viaOwnersByCell) {
++      const row = Math.floor(cell / this.cols)
++      const col = cell - row * this.cols
++      this.viaOwnerEntries.push({ row, col, owners })
++      cells[cell] = this.viaOwnerEntries.length
++    }
++  }
++
+   private shouldSkipFixedPortHalo(flatIdx: number, connId: ConnId) {
+     const fixedOwner = this.portOwnerFlat[flatIdx]!
+     if (fixedOwner === connId) return false
+@@ -1217,9 +1321,12 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const cells: Array<{ z: number; row: number; col: number }> = []
+     let idx = goalNodeIdx
+     while (idx >= 0) {
+-      const n = this.nodePool[idx]!
+-      cells.push({ z: n.z, row: n.row, col: n.col })
+-      idx = n.parentIdx
++      cells.push({
++        z: this.nodeZ[idx]!,
++        row: this.nodeRow[idx]!,
++        col: this.nodeCol[idx]!,
++      })
++      idx = this.nodeParent[idx]!
+     }
+     cells.reverse()
+ 
+@@ -1251,9 +1358,8 @@ export class HighDensitySolverA01 extends BaseSolver {
+     const connId = this.activeConnId
+ 
+     // Collect ripped traces from goal node's persistent list
+-    const goalNode = this.nodePool[goalNodeIdx]!
+     const rippedIds: ConnId[] = []
+-    for (let cur = goalNode.ripped; cur; cur = cur.prev) {
++    for (let cur = this.nodeRipped[goalNodeIdx]; cur; cur = cur.prev) {
+       rippedIds.push(cur.id)
+     }
+ 
