@@ -47,11 +47,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T14:01:02.114Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T14:01:01Z",
       "databaseId": 38145474038,
       "headSha": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38145474038"
     },
     {
@@ -73,11 +73,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T14:01:04.479Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T14:01:04Z",
       "databaseId": 38145476957,
       "headSha": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38145476957"
     },
     {
@@ -99,11 +99,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T14:01:06.542Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T14:01:06Z",
       "databaseId": 38145479574,
       "headSha": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38145479574"
     },
     {
@@ -125,11 +125,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T14:01:08.281Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T14:01:08Z",
       "databaseId": 38145481962,
       "headSha": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38145481962"
     },
     {
@@ -151,11 +151,11 @@
         "0"
       ],
       "dispatchedAt": "2026-10-11T14:01:10.222Z",
-      "conclusion": "",
+      "conclusion": "success",
       "createdAt": "2026-10-11T14:01:09Z",
       "databaseId": 38145484349,
       "headSha": "752f8c03f20f6af8a350d3ad6a927e55d527b30e",
-      "status": "queued",
+      "status": "completed",
       "url": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38145484349"
     }
   ],
@@ -167,5 +167,18 @@
     "exactNativeGeometry": true,
     "originalCadQualityParity": true
   },
-  "status": "dispatched; all16 full-dataset outcomes required before comparison"
+  "status": "complete: all 16 samples and all 32 outcomes preserve Native geometry and original-CAD quality; 2x target unmet",
+  "results": {
+    "fullCoverage": true,
+    "allCompleted": true,
+    "exactGeometry": true,
+    "qualityPreserved": true,
+    "connectionCoveragePreserved": true,
+    "arithmeticMeanSpeedup": 1.259364439824797,
+    "aggregateSpeedup": 1.3984763924090797,
+    "geometricMeanSpeedup": 1.23971393417424,
+    "targetReached": false,
+    "completeReport": "docs/benchmarks/parallel-srj18-752f8c03f-complete.json",
+    "fullMergedReportSha256": "540a444e20eb14ba8d5b5b4b058b8a1f2e60967709f1f6b8e00bc123b72faec0"
+  }
 }

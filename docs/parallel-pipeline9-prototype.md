@@ -422,7 +422,7 @@ be distinguished from worker scheduling and serialization costs.
 
 ## Evaluation results
 
-Eighteen frozen exploratory snapshots have complete paired results for all 16
+Nineteen frozen exploratory snapshots have complete paired results for all 16
 samples, with one repetition per variant. None meets the target. All use
 baseline `65522c89c370d4b4f9f69e1a79af58de641752bc`, the pinned dataset and
 matched dependencies on four-core ARM Blacksmith runners.
@@ -447,6 +447,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `afae314d5` | ordered / indexed, force trials on coordinator | 1.239× | 1.391× | All solved, exact geometry and original-CAD quality parity; lookahead guard overhead, target remains unmet |
 | `24f2c48dd` | ordered / indexed, force trials on coordinator | 1.271× | 1.422× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
 | `05c72d631` | ordered / indexed, selected A01 bulk, sixteen-target lookahead | 0.795× | 0.735× | All solved and exact Native quality; A01 bulk regresses all16 high-density stages; target unmet |
+| `752f8c03f` | ordered / indexed, Native trace fact lanes, selected A01 bulk off | 1.259× | 1.398× | All solved, exact Native geometry and original-CAD quality parity; target unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -691,7 +692,11 @@ policy. The regressing selected A01 bulk driver is off. Exact Native trace
 facts use at most three idle default-pool workers plus main; sixteen-target
 lookahead remains enabled. ESM/DTS, TypeScript and source/built browser imports
 pass, and packaged sample001/sample015 retain exact Native geometry with four
-workers. All five Blacksmith groups are dispatched; complete outcomes are
-pending and no speedup is claimed for this revision yet. Checks, hashes,
-arguments and workflow IDs are in
+workers. All five Blacksmith groups completed all32 paired outcomes. Every sample solves
+with exact Native geometry, original-CAD quality and coverage parity, at most
+four active workers, 1.259× arithmetic mean speedup and 1.398× aggregate speedup.
+The target remains unmet. Every outcome, metadata field and worker statistic is
+preserved in
+[parallel-srj18-752f8c03f-complete.json](benchmarks/parallel-srj18-752f8c03f-complete.json).
+Checks, hashes, arguments and workflow IDs are in
 [parallel-srj18-752f8c03f-dispatch.json](benchmarks/parallel-srj18-752f8c03f-dispatch.json).
