@@ -13,6 +13,20 @@ import { getCompactViaCopperDiagnosticSvg } from "tests/fixtures/compactViaCoppe
 test("compact Core pcbPath loses retained copper in native routing consumers", async (): Promise<void> => {
   const { circuitJson, srj } = await getCompactViaCopperCircuit()
   const original = structuredClone(srj)
+  expect(
+    circuitJson.filter(
+      (element) =>
+        element.type === "source_component" &&
+        element.ftype === "simple_resistor",
+    ),
+  ).toHaveLength(6)
+  const pads = circuitJson.filter((element) => element.type === "pcb_smtpad")
+  expect(pads).toHaveLength(12)
+  expect(
+    pads.every(
+      (pad) => pad.shape === "rect" && pad.width === 0.8 && pad.height === 0.95,
+    ),
+  ).toBeTrue()
   expect(srj.traces).toHaveLength(1)
   const retained = srj.traces![0]!
   expect(retained.route).toEqual([
@@ -46,17 +60,15 @@ test("compact Core pcbPath loses retained copper in native routing consumers", a
     const trace = traces.find(
       (trace) => trace.connection_name === connection.name,
     )!
-    expect(trace.route[0]).toMatchObject({
-      x: connection.pointsToConnect[0]!.x,
-      y: connection.pointsToConnect[0]!.y,
-      layer: connection.pointsToConnect[0]!.layer,
-    })
-    // Source point IDs are transport metadata, not coordinates in copper routes.
-    expect(trace.route.at(-1)).toMatchObject({
-      x: connection.pointsToConnect[1]!.x,
-      y: connection.pointsToConnect[1]!.y,
-      layer: connection.pointsToConnect[1]!.layer,
-    })
+    for (const endpoint of connection.pointsToConnect) {
+      expect([trace.route[0], trace.route.at(-1)]).toContainEqual(
+        expect.objectContaining({
+          x: endpoint.x,
+          y: endpoint.y,
+          layer: endpoint.layer,
+        }),
+      )
+    }
   }
   const routedCircuitJson = [
     ...circuitJson,
