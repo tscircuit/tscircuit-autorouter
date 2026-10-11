@@ -23,6 +23,11 @@ export type NativeSyncReferenceTransportStats = {
   reservationsGranted: number; reservationsDeclined: number; workersReserved: number; workersRetired: number
   batchesCompleted: number; factRowsCompleted: number; mainFactRowsCompleted: number; protocolFailures: number
 }
+export type NativeSyncReferenceFactStats = {
+  reservationsGranted: number; reservationsDeclined: number; workersReserved: number; workersRetired: number
+  batchesCompleted: number; workerFactRowsCompleted: number; mainFactRowsCompleted: number; protocolFaults: number
+  maxFactWorkerLanes: number; mainFactLaneCount: number
+}
 export type NativeSyncReferenceFactExecutor = (batch: ParallelReferenceContinuityBatch) => ParallelReferenceContinuityBatchResult | undefined
 const getDescriptor = Object.getOwnPropertyDescriptor
 const getDescriptors = Object.getOwnPropertyDescriptors
@@ -62,6 +67,8 @@ const executorBindings = new NativeWeakMap<object, { pool: Pipeline9LocalWorkerP
 const bookFailures = new NativeWeakMap<object, Error>()
 const nativeTransportDeadlines = new NativeWeakMap<object, number>()
 const nativeBookGraphs = new NativeWeakMap<object, { slots: ReservationSlot[]; stats: NativeSyncReferenceTransportStats }>()
+const authoritativeFactStats = new NativeWeakMap<object, NativeSyncReferenceFactStats>()
+const countedFactFaults = new NativeWeakSet<object>()
 const nativeReservationRows = new NativeWeakMap<object, Worker>()
 const nativeArrayIsArray = Array.isArray
 const nativeArrayPrototype = Array.prototype
@@ -99,6 +106,32 @@ function invariant(condition: unknown, message: string): asserts condition {
   if (!condition) throw new NativeSyncReferenceInfrastructureError(message)
 }
 
+function factStatsForBook(book: object): NativeSyncReferenceFactStats {
+  const stats = apply(nativeWeakMapGet, authoritativeFactStats, [book]) as NativeSyncReferenceFactStats | undefined
+  if (!stats) {
+    throw new NativeSyncReferenceInfrastructureError("Reference fact counters lost their private book ownership")
+  }
+  return stats
+}
+
+function recordFactProtocolFault(book: object, reservation: NativeSyncReferenceReservation): void {
+  if (apply(nativeWeakSetHas, countedFactFaults, [reservation])) return
+  const stats = factStatsForBook(book)
+  apply(nativeWeakSetAdd, countedFactFaults, [reservation])
+  stats.protocolFaults++
+}
+
+/** A copied private ledger survives disposal without reading public control or stats fields. */
+export function snapshotNativeSyncReferenceBookStats(book: unknown): NativeSyncReferenceFactStats | undefined {
+  if ((typeof book !== "object" || book === null) && typeof book !== "function") return undefined
+  const stats = apply(nativeWeakMapGet, authoritativeFactStats, [book]) as NativeSyncReferenceFactStats | undefined
+  if (!stats) return undefined
+  return { reservationsGranted: stats.reservationsGranted, reservationsDeclined: stats.reservationsDeclined,
+    workersReserved: stats.workersReserved, workersRetired: stats.workersRetired, batchesCompleted: stats.batchesCompleted,
+    workerFactRowsCompleted: stats.workerFactRowsCompleted, mainFactRowsCompleted: stats.mainFactRowsCompleted,
+    protocolFaults: stats.protocolFaults, maxFactWorkerLanes: stats.maxFactWorkerLanes, mainFactLaneCount: stats.mainFactLaneCount }
+}
+
 /** Ledger has no callbacks: synchronous work cannot await ordinary task retirement. */
 export class NativeSyncReferenceReservationBook {
   private readonly slots: ReservationSlot[] = []
@@ -113,6 +146,9 @@ export class NativeSyncReferenceReservationBook {
   constructor() {
     apply(nativeWeakSetAdd, nativeBooks, [this])
     apply(nativeWeakMapSet, nativeBookGraphs, [this, { slots: this.slots, stats: this.stats }])
+    apply(nativeWeakMapSet, authoritativeFactStats, [this, { reservationsGranted: 0, reservationsDeclined: 0,
+      workersReserved: 0, workersRetired: 0, batchesCompleted: 0, workerFactRowsCompleted: 0,
+      mainFactRowsCompleted: 0, protocolFaults: 0, maxFactWorkerLanes: 0, mainFactLaneCount: 0 }])
   }
 
   register(worker: Worker): void {
@@ -147,15 +183,20 @@ export class NativeSyncReferenceReservationBook {
     if (!runtime || !NativeShared || this.activeReservation || this.queued > 0 ||
       apply(nativeArraySome, this.slots, [(slot: ReservationSlot): boolean => slot.state === "active" || slot.state === "reserved" || slot.state === "dead"])) {
       this.stats.reservationsDeclined++
+      factStatsForBook(this).reservationsDeclined++
       return undefined
     }
     const selected = apply(nativeArraySlice, apply(nativeArrayFilter, this.slots, [(slot: ReservationSlot): boolean => slot.state === "idle"]), [0, maximum]) as ReservationSlot[]
-    if (selected.length === 0) { this.stats.reservationsDeclined++; return undefined }
+    if (selected.length === 0) { this.stats.reservationsDeclined++; factStatsForBook(this).reservationsDeclined++; return undefined }
     for (let index = 0; index < selected.length; index++) selected[index]!.state = "reserved"
     const reservation = { reservationId: ++this.nextReservationId, workers: apply(nativeArrayMap, selected, [(slot: ReservationSlot): Worker => slot.worker]) as Worker[] }
     this.activeReservation = reservation
     this.stats.reservationsGranted++
     this.stats.workersReserved += selected.length
+    const facts = factStatsForBook(this)
+    facts.reservationsGranted++
+    facts.workersReserved += selected.length
+    if (selected.length > facts.maxFactWorkerLanes) facts.maxFactWorkerLanes = selected.length
     return reservation
   }
 
@@ -167,6 +208,7 @@ export class NativeSyncReferenceReservationBook {
       invariant(slot?.state === "reserved", "Reference reservation lost worker ownership")
       slot.state = "idle"
       this.stats.workersRetired++
+      factStatsForBook(this).workersRetired++
     }
     this.activeReservation = undefined
   }
@@ -188,7 +230,7 @@ export class NativeSyncReferenceReservationBook {
     this.stats.protocolFailures++
     for (let index = 0; index < this.slots.length; index++) {
       const slot = this.slots[index]!
-      if (slot.state === "reserved") this.stats.workersRetired++
+      if (slot.state === "reserved") { this.stats.workersRetired++; factStatsForBook(this).workersRetired++ }
       slot.state = "dead"
       if (workerTerminate) apply(workerTerminate, slot.worker, [])
     }
@@ -229,7 +271,9 @@ export class NativeSyncReferenceBatchTransport {
         catch (error: unknown) { apply(native.portClose, channel.port2, []); throw error }
       }
       if (mainBatch) {
+        factStatsForBook(this.book).mainFactLaneCount = 1
         const result = executeParallelReferenceContinuityBatch(mainBatch)
+        assertParallelReferenceContinuityBatchResult(result, mainBatch)
         results.push(result)
         this.book.stats.mainFactRowsCompleted += result.facts.length
       }
@@ -255,6 +299,7 @@ export class NativeSyncReferenceBatchTransport {
       return results
     } catch (error: unknown) {
       const failure = error instanceof Error ? error : new NativeSyncReferenceInfrastructureError("Reference transport threw a non-error value")
+      recordFactProtocolFault(this.book, reservation)
       this.book.fail(failure)
       throw failure
     } finally {
@@ -388,13 +433,27 @@ function partitionFactTasks(batch: ParallelReferenceContinuityBatch, laneCount: 
   const assigned: { position: number; weight: number }[][] = []
   const weights: number[] = []
   const ordered: { position: number; weight: number }[] = []
+  const polygonEdges: number[] = []
+  if (batch.context.geometryPolygons) {
+    for (let index = 0; index < batch.context.geometryPolygons.length; index++) {
+      const polygon = batch.context.geometryPolygons[index]!
+      let edges = 0
+      for (let face = 0; face < polygon.faces.length; face++) edges += polygon.faces[face]!.length
+      apply(nativeArrayPush, polygonEdges, [edges])
+    }
+  }
   for (let lane = 0; lane < laneCount; lane++) { assigned.push([]); weights.push(0) }
   for (let position = 0; position < batch.tasks.length; position++) {
     const task = batch.tasks[position]!
-    const weight = task.kind === "port-connectivity"
-      ? maximum(1, batch.context.componentOffsets[task.componentIndex + 1]! - batch.context.componentOffsets[task.componentIndex]!)
-      : maximum(1, (batch.context.geometryTraces![task.leftTraceIndex]!.route.length - 1) *
+    let weight: number
+    if (task.kind === "port-connectivity") {
+      weight = maximum(1, batch.context.componentOffsets[task.componentIndex + 1]! - batch.context.componentOffsets[task.componentIndex]!)
+    } else if (task.kind === "native-trace-pair-miss") {
+      weight = maximum(1, (batch.context.geometryTraces![task.leftTraceIndex]!.route.length - 1) *
         (batch.context.geometryTraces![task.rightTraceIndex]!.route.length - 1))
+    } else {
+      weight = maximum(1, polygonEdges[task.leftPolygonIndex]! * polygonEdges[task.rightPolygonIndex]!)
+    }
     apply(nativeArrayPush, ordered, [{ position, weight }])
   }
   apply(nativeArraySort, ordered, [(left: { position: number; weight: number }, right: { position: number; weight: number }): number =>
@@ -461,9 +520,14 @@ export function createNativeSyncReferenceFactExecutor(pool: Pipeline9LocalWorker
       }
       const result: ParallelReferenceContinuityBatchResult = { kind: "referenceContinuityFacts", snapshotId: batch.context.snapshotId, facts }
       assertParallelReferenceContinuityBatchResult(result, batch)
+      const stats = factStatsForBook(book)
+      stats.batchesCompleted++
+      stats.mainFactRowsCompleted += groups[groups.length - 1]!.tasks.length
+      stats.workerFactRowsCompleted += batch.tasks.length - groups[groups.length - 1]!.tasks.length
       return result
     } catch (error: unknown) {
       const failure = error instanceof Error ? error : new NativeSyncReferenceInfrastructureError("Reference executor threw a non-error value")
+      recordFactProtocolFault(book, reservation)
       book.fail(failure)
       failNativeSyncReferencePool(pool, failure)
       throw failure

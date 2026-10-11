@@ -1,0 +1,150 @@
+{
+  "kind": "native-polygon-facts-synchronous-transport-and-private-stats-functional-proof",
+  "baseRevision": "94b1af647ca853b69a1cf45d6eaa0bd3be473e3f",
+  "performanceClaim": false,
+  "localWallTimingComparison": false,
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/NativeSyncReferenceBatchTransport.ts": "d9890d8c06fd41e921793982e2dac115358ac80a77bde2f9628f40e45346d3da",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/Pipeline9LocalWorkerPool.ts": "10003f4fdb55c88d9a6fcaad500b920e8fdac9ce43d056a371737821f5da947b",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/nativeSyncReferenceProtocol.ts": "ee26220c47c6f512e5570b35647444a95d1ae3526ff197904d14b44133402f83",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityTypes.ts": "3eb5870a61d1a6ffd05288e231ae882f6f87ffe889ea834c442eafbb0cd536a6",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/parallelReferenceContinuityKernel.ts": "0246148be4ddcca89bd47de8c4639c778e18d26f8f2ae069cdffa1d3c117016f",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/referenceDrcPolygonFacts.ts": "42031bb3fee310fe6588b1cbac0af4939b19fc0487964d2e0b08f7a2fd3bddcc",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/authoritative-drc-fork/prepareReferenceDrcPolygonFacts.ts": "65e88c8577164a122b358f2e5c06ae93513cf15f16713d09980567042b58995d"
+  },
+  "fixture": {
+    "path": "tests/fixtures/reference-drc-srj18/sample015-native-reference.json.gz",
+    "sha256": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
+  },
+  "schema": {
+    "name": "reference-continuity-facts/v2:ordinal-snapshot-port-trace-polygon-kind-row-value-visits-exception",
+    "sha256": "bf84c29a41ee3a6b7477bd9c3a7ca7fbb656f855aee113c0aed868c1da9e96e7",
+    "staleV1Rejected": true
+  },
+  "native17": {
+    "allOriginalErrorsExact": true,
+    "allPostCircuitOutputExact": true,
+    "rowsByRecord": [
+      0,
+      4837,
+      3557,
+      4053,
+      2341,
+      2600,
+      2265,
+      403,
+      1650,
+      1810,
+      0,
+      2051,
+      208,
+      0,
+      1094,
+      0,
+      1247
+    ],
+    "factRows": 28116,
+    "tracePairFactRows": 12215,
+    "polygonFactRows": 15901,
+    "batches": 26,
+    "workersReserved": 78,
+    "workersRetired": 78,
+    "protocolFaults": 0,
+    "maximumFactWorkerLanes": 3,
+    "mainFactLaneCount": 1,
+    "subsequentOrdinaryDispatch": true,
+    "warmRecordsScheduleNoRows": [
+      1,
+      11,
+      14,
+      16
+    ]
+  },
+  "scheduling": {
+    "traceWeight": "max(1,(left.route.length-1)*(right.route.length-1))",
+    "polygonWeight": "max(1,leftFaceEdgeCount*rightFaceEdgeCount)",
+    "membershipWeight": "max(1,originalComponentTraceCount)",
+    "weightPurpose": "Lane assignment only; pure native task and original consumption order unchanged"
+  },
+  "protocol": {
+    "allRowsValidatedBeforeConsumption": true,
+    "unusedExceptionMetadataOwnDataValidated": true,
+    "polygonConsumedVisitsExactlyOne": true,
+    "constructorFailureIsInfrastructure": true,
+    "postAdmissionFailureRetiresAllReservedWorkersAndFailsOrdinaryPool": true,
+    "predicateExceptionFactsRemainOrderedOriginalMainMissReexecution": true,
+    "callerGetterObservations": 0
+  },
+  "privateStats": {
+    "provenance": "Private exact Native reservation-book counters; copied through actual default Pool prototype method",
+    "method": "Pipeline9LocalWorkerPool.prototype.getNativeReferenceFactStats",
+    "rowsCountedOnlyAfterGlobalValidation": true,
+    "faultDeduplication": "Private reservation identity WeakSet",
+    "ordinaryDisposeIsProtocolFault": false,
+    "mainFactLaneCount": "Observed maximum 0 or 1",
+    "negativeAdmissions": [
+      "custom pool",
+      "subclass pool",
+      "Proxy receiver",
+      "own getter",
+      "own data-method shadow",
+      "modified prototype getter"
+    ],
+    "publicCounterGetterReads": 0,
+    "snapshotMutationChangesLedger": false
+  },
+  "packaged001": {
+    "geometryHash": "a4c788251b5f5829d22c487487090a9a898a7cffee5fe96ca767440478b8c049",
+    "before": {
+      "reservationsGranted": 2,
+      "reservationsDeclined": 0,
+      "workersReserved": 6,
+      "workersRetired": 6,
+      "batchesCompleted": 2,
+      "workerFactRowsCompleted": 827,
+      "mainFactRowsCompleted": 276,
+      "protocolFaults": 0,
+      "maxFactWorkerLanes": 3,
+      "mainFactLaneCount": 1
+    },
+    "after": {
+      "reservationsGranted": 2,
+      "reservationsDeclined": 0,
+      "workersReserved": 6,
+      "workersRetired": 6,
+      "batchesCompleted": 2,
+      "workerFactRowsCompleted": 827,
+      "mainFactRowsCompleted": 276,
+      "protocolFaults": 0,
+      "maxFactWorkerLanes": 3,
+      "mainFactLaneCount": 1
+    },
+    "ownGetterReads": 0,
+    "actualBuiltPrototype": true,
+    "noSourcePrivateImports": true
+  },
+  "packaged001ReplaySource": "import { createHash } from \"node:crypto\"\nimport { readFileSync, writeFileSync } from \"node:fs\"\nimport stringify from \"/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter/node_modules/fast-json-stable-stringify/index.js\"\nconst repo = \"/Users/seve/Documents/Codex/2026-10-10/new-chat-3/work/tscircuit-autorouter\"\nconst module = await import(`${repo}/dist/index.js`)\nconst Pool = module.Pipeline9LocalWorkerPool\nconst snapshotDescriptor = Object.getOwnPropertyDescriptor(Pool.prototype, \"getNativeReferenceFactStats\")!\nconst snapshot = snapshotDescriptor.value\nconst input = JSON.parse(readFileSync(`${repo}/node_modules/dataset-srj18/samples/sample001.json`, \"utf8\"))\nconst solver = new module.AutoroutingPipelineSolver9_Parallel(input, {effort:1,cacheProvider:null,workerCount:4,pathingStrategy:\"indexed\",enableParallelDrcTrials:false,enableParallelPathSimplification:true})\nlet geometryHash: string\nlet before: Record<string,number>\ntry {\n  await solver.solveAsync()\n  if (!solver.solved || solver.failed) throw new Error(solver.error ?? \"Packaged solver failed\")\n  geometryHash = createHash(\"sha256\").update(stringify(solver.getOutputSimplifiedPcbTraces())!).digest(\"hex\")\n  if (geometryHash !== \"a4c788251b5f5829d22c487487090a9a898a7cffee5fe96ca767440478b8c049\") throw new Error(\"Packaged geometry mismatch\")\n  before = Reflect.apply(snapshot, solver.workerPool, [])\n  if (before.batchesCompleted < 1 || before.workerFactRowsCompleted < 1 || before.mainFactRowsCompleted < 1 || before.protocolFaults !== 0 || before.maxFactWorkerLanes > 3 || before.mainFactLaneCount !== 1 || before.workersReserved !== before.workersRetired) throw new Error(\"Invalid packaged private counters\")\n} finally { await solver.dispose() }\nconst after = Reflect.apply(snapshot, solver.workerPool, [])\nif (JSON.stringify(before!) !== JSON.stringify(after)) throw new Error(\"Disposal changed fact counts\")\nlet reads = 0\nObject.defineProperty(solver.workerPool, \"getNativeReferenceFactStats\", {get():never {reads++;throw new Error(\"observer\")},configurable:true})\nif (Reflect.apply(snapshot, solver.workerPool, []) !== undefined || reads !== 0) throw new Error(\"Snapshot observed own getter\")\nwriteFileSync(\"/tmp/native-fact-packaged-001-proof.json\",JSON.stringify({geometryHash:geometryHash!,before:before!,after,ownGetterReads:reads,actualBuiltPrototype:true,noSourcePrivateImports:true},null,2)+\"\\n\")\nconsole.log(JSON.stringify({geometryHash:geometryHash!,facts:after}))\n",
+  "validation": {
+    "focusedTransportFiles": 6,
+    "bunAssertions": 325,
+    "typescript": "passed",
+    "esmAndDtsBuild": "passed",
+    "sabAbsentBuiltPublicImport": {
+      "passed": true,
+      "exportCount": 50
+    },
+    "command": "bun test --timeout 9999999 tests/solvers/native-sync-reference-seventeen-pass-parity.test.ts tests/solvers/native-sync-reference-polygon-transport.test.ts tests/solvers/native-sync-reference-private-fact-stats.test.ts tests/solvers/native-sync-reference-default-pool-provenance.test.ts tests/solvers/native-sync-reference-inactive-pool-observers.test.ts tests/solvers/native-sync-reference-transport.test.ts"
+  },
+  "independentReview": {
+    "cleared": true,
+    "actualWorkerSuites": 4,
+    "bunAssertions": 175,
+    "scope": [
+      "polygon protocol/schema/weighting",
+      "private counters and disposal",
+      "all seventeen Native executions",
+      "inactive ordinary observers",
+      "constructor/protocol faults"
+    ]
+  }
+}

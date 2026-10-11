@@ -3,8 +3,8 @@ import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initiali
 import type { ParallelReferenceContinuityBatch, ParallelReferenceContinuityBatchResult } from "./parallelReferenceContinuityTypes"
 
 /** Versioned fields, native fact semantics and original ordered row layout. */
-export const nativeSyncReferenceSchema = "reference-continuity-facts/v1:ordinal-snapshot-kind-row-value-visits-exception"
-export const nativeSyncReferenceSchemaHash = "6431708c6cb7a3a7412f4f5c7fa34a64f7bb93e6d0d2b80e561ad9a553fef304"
+export const nativeSyncReferenceSchema = "reference-continuity-facts/v2:ordinal-snapshot-port-trace-polygon-kind-row-value-visits-exception"
+export const nativeSyncReferenceSchemaHash = "bf84c29a41ee3a6b7477bd9c3a7ca7fbb656f855aee113c0aed868c1da9e96e7"
 export type NativeSyncReferenceIdentity = {
   schema: typeof nativeSyncReferenceSchema
   schemaHash: typeof nativeSyncReferenceSchemaHash
@@ -117,14 +117,13 @@ export function assertParallelReferenceContinuityBatchResult(
     invariant(ownValue(fact, "rowIndex") === task.rowIndex && ownValue(fact, "kind") === task.kind, "Reference row/task order mismatch")
     const visits = ownValue(fact, "consumedVisits")
     whole(visits, 0, 4_000_000, "consumedVisits")
-    if (task.kind === "native-trace-pair-miss") invariant(visits === 1, "Native geometry fact must execute exactly one predicate")
-    else {
+    if (task.kind === "port-connectivity") {
       const componentLength = batch.context.componentOffsets[task.componentIndex + 1]! - batch.context.componentOffsets[task.componentIndex]!
       invariant(visits <= componentLength, "Reference membership visits exceed original component")
-    }
+    } else invariant(visits === 1, "Native geometry fact must execute exactly one predicate")
     const factStatus = ownValue(fact, "status")
     if (factStatus === "exception") {
-      invariant(task.kind === "native-trace-pair-miss", "Membership fact cannot report an algorithm exception")
+      invariant(task.kind === "native-trace-pair-miss" || task.kind === "native-polygon-contact-miss", "Membership fact cannot report an algorithm exception")
       assertException(ownValue(fact, "exception"))
     } else {
       invariant(factStatus === "evaluated" && typeof ownValue(fact, "value") === "boolean", "Malformed native boolean fact")

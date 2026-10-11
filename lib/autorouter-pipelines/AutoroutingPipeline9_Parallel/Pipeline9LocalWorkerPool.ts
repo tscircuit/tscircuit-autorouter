@@ -12,7 +12,8 @@ import { Pipeline9SharedContextCodec, type Pipeline9SharedContextFamily, type Pi
 import type { GridHistoryDelivery, GridHistoryGrant, GridHistoryRequest, GridHistoryResult } from "./parallelGridHistoryTypes"
 import { assertGridHistoryJob, assertGridHistoryResult } from "./executeGridHistoryJob"
 import { assertParallelPathLookaheadJob, assertParallelPathLookaheadResult } from "./ParallelPathLookaheadExecutor"
-import { NativeSyncReferenceReservationBook, NativeSyncReferenceBatchTransport, initializeNativeSyncReferenceTransport, hasNativeSyncReferenceTransportContract, canMaintainNativeSyncReferenceLedger } from "./NativeSyncReferenceBatchTransport"
+import { NativeSyncReferenceReservationBook, NativeSyncReferenceBatchTransport, initializeNativeSyncReferenceTransport, hasNativeSyncReferenceTransportContract, canMaintainNativeSyncReferenceLedger,
+  snapshotNativeSyncReferenceBookStats, type NativeSyncReferenceFactStats } from "./NativeSyncReferenceBatchTransport"
 import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
 
 type WorkerWithLifecycle = Worker & { ref?: () => void; unref?: () => void }
@@ -139,6 +140,13 @@ export class Pipeline9LocalWorkerPool {
     if (this.terminalError) throw this.terminalError
     this.nextContextId++
     return this.nextContextId
+  }
+
+  /** Default owned pools expose a copied private fact ledger, including after disposal. */
+  getNativeReferenceFactStats(): NativeSyncReferenceFactStats | undefined {
+    const binding = nativeApply(nativeWeakMapGet, nativeSyncReferencePools, [this]) as NativeSyncReferencePoolBinding | undefined
+    if (!binding || !canUseNativePathLookaheadPool(this)) return undefined
+    return snapshotNativeSyncReferenceBookStats(binding.book)
   }
 
   run<T>(job: Pipeline9LocalWorkerJob): Promise<T> {
