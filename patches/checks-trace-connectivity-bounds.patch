@@ -1,0 +1,67 @@
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2514,6 +2514,46 @@
+ }
+ 
+ // lib/util/create-indexed-pcb-connectivity-map.ts
++import { doesLineIntersectLine as doesLineIntersectLineForConnectivity, doSegmentsIntersect as doConnectivitySegmentsIntersect } from "@tscircuit/math-utils";
++// The coarse trace index can admit many widely separated wire segments.
++// Keep unusual numerical inputs in the exact test instead of rejecting them.
++function getTraceConnectivitySegments(trace) {
++  const segments = [];
++  for (let i = 0; i < trace.route.length - 1; i++) {
++    const start = trace.route[i];
++    const end = trace.route[i + 1];
++    if (start.route_type !== "wire" || end.route_type !== "wire") continue;
++    const dx = end.x - start.x;
++    const dy = end.y - start.y;
++    const lengthSquared = dx * dx + dy * dy;
++    const hasStableProjection = (start.x === end.x && start.y === end.y) || (Number.isFinite(lengthSquared) && lengthSquared > 0);
++    const radius = start.width / 2 + 1e-6;
++    segments.push({
++      start,
++      end,
++      minX: Math.min(start.x, end.x) - radius,
++      minY: Math.min(start.y, end.y) - radius,
++      maxX: Math.max(start.x, end.x) + radius,
++      maxY: Math.max(start.y, end.y) + radius,
++      canPruneGeometry: Number.isFinite(start.x) && Number.isFinite(start.y) && Number.isFinite(end.x) && Number.isFinite(end.y) && Math.abs(start.x) <= 1e9 && Math.abs(start.y) <= 1e9 && Math.abs(end.x) <= 1e9 && Math.abs(end.y) <= 1e9 && Number.isFinite(start.width) && start.width >= 0 && start.width <= 1e9 && hasStableProjection
++    });
++  }
++  return segments;
++}
++function areTraceConnectivitySegmentsConnected(segmentsA, segmentsB) {
++  for (const a of segmentsA) {
++    for (const b of segmentsB) {
++      // Preserve the original orientation calculation, including cancellation
++      // that can classify disjoint collinear segments as intersecting.
++      if (a.canPruneGeometry && b.canPruneGeometry && (a.maxX < b.minX || a.minX > b.maxX || a.maxY < b.minY || a.minY > b.maxY) && !doConnectivitySegmentsIntersect(a.start, a.end, b.start, b.end)) continue;
++      if (doesLineIntersectLineForConnectivity([a.start, a.end], [b.start, b.end], {
++        lineThickness: (a.start.width + b.start.width) / 2
++      })) return true;
++    }
++  }
++  return false;
++}
++
+ function createIndexedPcbConnectivityMap(circuitJson) {
+   const map = new PcbConnectivityMap();
+   map.circuitJson = circuitJson;
+@@ -2553,6 +2593,7 @@
+       boundsByLayer.set(layer, entries);
+     }
+   }
++  const traceSegments = traces.map(getTraceConnectivitySegments);
+   const candidates = traces.map(() => /* @__PURE__ */ new Set());
+   for (const bounds of boundsByLayer.values()) {
+     const index = new Flatbush3(bounds.length);
+@@ -2568,7 +2609,7 @@
+   const connections = [];
+   for (const [i, neighbors] of candidates.entries()) {
+     for (const j of [...neighbors].sort((a, b) => a - b)) {
+-      if (map._arePcbTracesConnected(traces[i], traces[j])) {
++      if (areTraceConnectivitySegmentsConnected(traceSegments[i], traceSegments[j])) {
+         connections.push([traces[i].pcb_trace_id, traces[j].pcb_trace_id]);
+       }
+     }
