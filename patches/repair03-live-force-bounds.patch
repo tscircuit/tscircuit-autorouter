@@ -1,0 +1,122 @@
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+@@ -34,6 +34,7 @@
+   expandBounds2d,
+   getSpatialCandidateIndexes,
+ } from "./spatialIndex"
++import { broadForceBoundsAreSeparated } from "./broadForceBoundsAreSeparated"
+ import type { DrcEvaluator, DrcSnapshot } from "./types"
+ import type {
+   Bounds2D,
+@@ -2642,15 +2643,23 @@
+   )
+     return false
+ 
+-  const projection = pointToSegmentProjection(via, segment)
+-  const separationX = via.x - projection.x
+-  const separationY = via.y - projection.y
+-  const distance = Math.hypot(separationX, separationY)
+   const requiredDistance =
+     via.radius +
+     segment.radius +
+     (RELAXED_DRC_OPTIONS.traceClearance ?? 0.1) +
+     CLEARANCE_SLACK
++  if (broadForceBoundsAreSeparated(
++    via,
++    via,
++    segment.start,
++    segment.end,
++    requiredDistance,
++  )) return false
++
++  const projection = pointToSegmentProjection(via, segment)
++  const separationX = via.x - projection.x
++  const separationY = via.y - projection.y
++  const distance = Math.hypot(separationX, separationY)
+   const penetration = requiredDistance - distance
+   if (penetration <= 0) return false
+ 
+@@ -2708,16 +2717,24 @@
+     return false
+   }
+ 
+-  const candidate = getClosestSegmentContact(left, right)
+-
+-  const separationX = candidate.leftPoint.x - candidate.rightPoint.x
+-  const separationY = candidate.leftPoint.y - candidate.rightPoint.y
+-  const distance = Math.hypot(separationX, separationY)
+   const requiredDistance =
+     left.radius +
+     right.radius +
+     (RELAXED_DRC_OPTIONS.traceClearance ?? 0.1) +
+     CLEARANCE_SLACK
++  if (broadForceBoundsAreSeparated(
++    left.start,
++    left.end,
++    right.start,
++    right.end,
++    requiredDistance,
++  )) return false
++
++  const candidate = getClosestSegmentContact(left, right)
++
++  const separationX = candidate.leftPoint.x - candidate.rightPoint.x
++  const separationY = candidate.leftPoint.y - candidate.rightPoint.y
++  const distance = Math.hypot(separationX, separationY)
+   const penetration = requiredDistance - distance
+   if (penetration <= 0) return false
+ 
+@@ -2821,6 +2838,14 @@
+ ) => {
+   const halfWidth = obstacle.width / 2
+   const halfHeight = obstacle.height / 2
++  if (broadForceBoundsAreSeparated(
++    segment.start,
++    segment.end,
++    { x: obstacle.center.x - halfWidth, y: obstacle.center.y - halfHeight },
++    { x: obstacle.center.x + halfWidth, y: obstacle.center.y + halfHeight },
++    requiredDistance,
++  )) return undefined
++
+   const obstacleCorners = [
+     {
+       x: obstacle.center.x - halfWidth,
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts b/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts
+new file mode 100644
+--- /dev/null
++++ b/lib/solvers/GlobalDrcForceImproveSolver/broadForceBoundsAreSeparated.ts
+@@ -0,0 +1,33 @@
++import type { Point } from "./internalTypes"
++import { COORDINATE_EPSILON } from "./solverConfig"
++
++export const broadForceBoundsAreSeparated = (
++  leftStart: Point,
++  leftEnd: Point,
++  rightStart: Point,
++  rightEnd: Point,
++  requiredDistance: number,
++): boolean => {
++  if (!Number.isFinite(requiredDistance) || requiredDistance < 0) return false
++  const margin = requiredDistance + COORDINATE_EPSILON
++  const separated =
++    Math.max(leftStart.x, leftEnd.x) < Math.min(rightStart.x, rightEnd.x) - margin ||
++    Math.min(leftStart.x, leftEnd.x) > Math.max(rightStart.x, rightEnd.x) + margin ||
++    Math.max(leftStart.y, leftEnd.y) < Math.min(rightStart.y, rightEnd.y) - margin ||
++    Math.min(leftStart.y, leftEnd.y) > Math.max(rightStart.y, rightEnd.y) + margin
++  if (!separated) return false
++
++  // Bounds only prove nonpenetration where projection arithmetic is stable.
++  // The coordinate limit also keeps rounding far below COORDINATE_EPSILON.
++  return Number.isFinite(leftStart.x) && Number.isFinite(leftStart.y) &&
++    Number.isFinite(leftEnd.x) && Number.isFinite(leftEnd.y) &&
++    Number.isFinite(rightStart.x) && Number.isFinite(rightStart.y) &&
++    Number.isFinite(rightEnd.x) && Number.isFinite(rightEnd.y) &&
++    Math.max(
++      Math.abs(leftStart.x), Math.abs(leftStart.y),
++      Math.abs(leftEnd.x), Math.abs(leftEnd.y),
++      Math.abs(rightStart.x), Math.abs(rightStart.y),
++      Math.abs(rightEnd.x), Math.abs(rightEnd.y),
++    ) <= 1e9
++}
++
