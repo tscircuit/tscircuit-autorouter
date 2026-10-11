@@ -416,7 +416,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override initializeSolvers() {
-    super.initializeSolvers()
+    super.initializeSolvers(true)
+    // Constructor-solved routes already belong to the earliest winner. No
+    // search budget or external grid setup can affect that selection.
+    if (this.supervisedSolvers?.some(({ solver }) => solver.solved)) return
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
     }
