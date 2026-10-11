@@ -4,6 +4,7 @@ export type NativeSourceAlias = { outputPath: readonly string[]; sourcePath: rea
 export type NativeSourceAliasProvenance = readonly NativeSourceAlias[]
 type Path = { parent: Path | undefined; key: string; depth: number }
 type Pending = { value: unknown; path: Path | undefined }
+type ValidationPending = { value: unknown; depth: number }
 type Budget = { objects: number; properties: number; pathParts: number; characters: number }
 type Substitution = { parent: object; key: string; descriptor: PropertyDescriptor; target: object; previous: object }
 type OutputAliasRow = { outputPath: string[]; sourcePath: string[]; previous: object } & (
@@ -168,9 +169,39 @@ function resolvePath(root: unknown, path: readonly string[], replaced?: WeakSet<
   return value
 }
 
+/** Validation needs the same first-seen identity and depth checks as capture,
+ * while the discarded output index needs no linked identity paths. */
+function validatePlainGraph(root: unknown, inspector: ReferenceDrcProxyInspector, budget: Budget): void {
+  const index = new WeakMap<object, undefined>()
+  const pending: ValidationPending[] = [{ value: root, depth: 0 }]
+  while (pending.length !== 0) {
+    const item = pending[pending.length - 1]!
+    pending.length--
+    const value = item.value
+    if (value === null || value === undefined || typeof value === "string" || typeof value === "boolean") continue
+    if (typeof value === "number" && isFinite(value)) continue
+    if (typeof value !== "object") throw new Error("Native source alias provenance requires finite plain data")
+    if (inspector(value)) throw new Error("Native source alias provenance rejects Proxy objects")
+    if (apply(weakMapHas, index, [value])) continue
+    assertPlainObject(value, inspector, budget)
+    apply(weakMapSet, index, [value, undefined])
+    const keys = ownKeys(value)
+    budget.properties += keys.length
+    if (budget.properties > MAX_PROPERTIES) throw new Error("Native source alias provenance exceeds its property bound")
+    for (let cursor = keys.length - 1; cursor >= 0; cursor--) {
+      const key = keys[cursor]!
+      if (typeof key !== "string") throw new Error("Native source alias provenance rejects symbol properties")
+      const descriptor = ownData(value, key)
+      const depth = item.depth + 1
+      if (depth > MAX_DEPTH) throw new Error("Native source alias provenance exceeds its path depth bound")
+      pending[pending.length] = { value: descriptor.value, depth }
+    }
+  }
+}
+
 function prepareOutputAliases(output: unknown, provenance: unknown, inspector: ReferenceDrcProxyInspector,
   budget: Budget): OutputAliasRow[] {
-  walkPlainGraph(output, inspector, budget)
+  validatePlainGraph(output, inspector, budget)
   if (typeof provenance !== "object" || provenance === null || inspector(provenance) || !arrayIsArray(provenance)) {
     throw new Error("Invalid native source alias provenance")
   }
