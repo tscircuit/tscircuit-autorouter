@@ -56,6 +56,8 @@ export interface GetDrcErrorsOptions {
   includeTypedTraceClearance?: boolean
   /** Optional exact continuity implementation; invoked at the native check site. */
   traceContinuityChecker?: typeof checkTracesAreContiguous
+  /** Optional exact via/trace implementation; invoked at the native check site. */
+  viaTraceChecker?: typeof checkViaTraceClearance
 }
 
 const createDrcConnectivityMap = (
@@ -89,7 +91,7 @@ export const getDrcErrors = (
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
   const viaTraceErrors = includeTypedTraceClearance
-    ? checkViaTraceClearance(circuitJson, {
+    ? (options.viaTraceChecker ?? checkViaTraceClearance)(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })

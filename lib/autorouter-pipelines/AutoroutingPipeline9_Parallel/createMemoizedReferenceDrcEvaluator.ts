@@ -3,6 +3,7 @@ import {
   type EvaluateRelaxedDrcInput,
   type EvaluateRelaxedDrcResult,
 } from "../../testing/evaluate-relaxed-drc"
+import { checkViaTraceClearanceWithLazyCenters } from "./authoritative-drc-fork/checkViaTraceClearanceWithLazyCenters"
 import { ReferenceDrcPrimitiveMemo } from "./authoritative-drc-fork/ReferenceDrcPrimitiveMemo"
 import { checkTracesAreContiguous } from "./authoritative-drc-fork/native/lib/check-traces-are-contiguous/check-traces-are-contiguous"
 import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
@@ -20,6 +21,7 @@ export function createMemoizedReferenceDrcEvaluator(
       ...input,
       connectivityMapFactory: input.connectivityMapFactory ?? getParallelConnectivityMap,
       drcOptions: {
+        viaTraceChecker: checkViaTraceClearanceWithLazyCenters,
         ...input.drcOptions,
         traceContinuityChecker: (circuitJson): ReturnType<typeof checkTracesAreContiguous> =>
           checkTracesAreContiguous(circuitJson, { primitiveMemo }),

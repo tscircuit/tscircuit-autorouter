@@ -21,6 +21,8 @@ import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
 import type { EvaluateRelaxedDrcInput, EvaluateRelaxedDrcResult } from "../../testing/evaluate-relaxed-drc"
 import { createMemoizedReferenceDrcEvaluator, type MemoizedReferenceDrcEvaluator } from "./createMemoizedReferenceDrcEvaluator"
 
+import { initializeReferenceDrcRuntime } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
+
 const referenceDrcEvaluators = new WeakMap<object, MemoizedReferenceDrcEvaluator>()
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
@@ -199,6 +201,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async stepAsync(): Promise<void> {
     if (this.solved || this.failed) return
     try {
+      await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       this.step()
@@ -213,6 +216,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
   async solveAsync(): Promise<void> {
     const startTime = performance.now()
     try {
+      await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (!this.solved && !this.failed) {
@@ -247,6 +251,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
 
   async solveUntilPhaseAsync(phase: string): Promise<void> {
     try {
+      await initializeReferenceDrcRuntime()
       await this.workerPool.initializeContextTransport()
       if (this.currentPipelineStepIndex === 0) this.workerPool.start()
       while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
