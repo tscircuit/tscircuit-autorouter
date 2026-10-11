@@ -140,6 +140,25 @@ expensive nodes first while harvesting results in the original order. Shared
 board context is sent once to each worker for that routing context rather
 than retransmitted with every node.
 
+An owned Bun pool serializes eligible immutable board contexts once into
+shared bytes. Each worker deserializes its own object graph; cross-message
+aliases and unsupported context shapes retain native message transport.
+Caller-supplied pools keep their configured transport. The four-worker clone
+tests cover object and buffer aliases, cycles, sparse arrays, numeric values,
+mutable snapshots and protocol failures.
+
+Native pathing caches four exact numeric region-cost tuples per region, with
+live geometry and policy validation. Complete sample001/006/016 routing states,
+route attempts, statistics and iteration limits match native controls. The
+triangular distance cache is disabled by default after its measured regression;
+it remains available through an explicit solver diagnostic option.
+
+Reference DRC retains the complete native checks and rebuilds the full physical
+connectivity graph on every call. Exact snapshots reuse only successful pure
+geometry predicates and endpoint contact lists. An actual sample015 oracle
+covers 17 full reference evaluations, ordered errors, mutations and restores.
+The native serial pipeline continues to use the original checker by default.
+
 Worker grid searches use typed priority queues and reuse rejected candidate
 storage while retaining accepted nodes, parent identity, native tie order,
 costs, and expansion limits. Indexed Tiny searches and blocker completion

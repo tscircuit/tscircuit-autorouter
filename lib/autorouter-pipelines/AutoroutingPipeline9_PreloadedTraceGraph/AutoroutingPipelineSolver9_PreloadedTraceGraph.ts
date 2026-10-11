@@ -1,5 +1,5 @@
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { evaluateRelaxedDrc, type EvaluateRelaxedDrcInput, type EvaluateRelaxedDrcResult } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -932,7 +932,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               }
             },
             isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateRelaxedDrc({
+              cms.evaluateReferenceDrc({
                 inputSrj,
                 srjWithPointPairs: cms.srjWithPointPairs!,
                 routedTraces: convert(routes),
@@ -1128,6 +1128,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // may replace construction while publishing the same native map data.
     const connectivityMap = getConnectivityMapFromSimpleRouteJson(srj)
     return connectivityMap
+  }
+
+  protected evaluateReferenceDrc(input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult {
+    // Cleanup keeps the complete native checker and its publication boundary.
+    // Parallel implementations can reuse pure geometry work across candidates.
+    const result = evaluateRelaxedDrc(input)
+    return result
   }
 
   currentPipelineStepIndex = 0

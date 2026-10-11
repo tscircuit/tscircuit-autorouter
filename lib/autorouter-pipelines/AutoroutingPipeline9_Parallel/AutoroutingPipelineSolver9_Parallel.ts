@@ -18,6 +18,10 @@ import { Pipeline9MemoizedGlobalDrcForceImproveSolver } from "./Pipeline9Memoize
 import type { ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 import { Pipeline9LayerAwareNetToPointPairsSolver } from "./Pipeline9LayerAwareNetToPointPairsSolver"
 import { getParallelConnectivityMap } from "./getParallelConnectivityMap"
+import type { EvaluateRelaxedDrcInput, EvaluateRelaxedDrcResult } from "../../testing/evaluate-relaxed-drc"
+import { createMemoizedReferenceDrcEvaluator, type MemoizedReferenceDrcEvaluator } from "./createMemoizedReferenceDrcEvaluator"
+
+const referenceDrcEvaluators = new WeakMap<object, MemoizedReferenceDrcEvaluator>()
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
   workerCount?: number
@@ -42,6 +46,17 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     // Construction has no pool state and retains every native alias and net ID.
     const connectivityMap = getParallelConnectivityMap(srj)
     return connectivityMap
+  }
+
+  protected override evaluateReferenceDrc(input: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult {
+    // A module WeakMap also remains valid when a native constructor invokes the
+    // virtual method before subclass fields initialize.
+    let evaluate = referenceDrcEvaluators.get(this)
+    if (!evaluate) {
+      evaluate = createMemoizedReferenceDrcEvaluator()
+      referenceDrcEvaluators.set(this, evaluate)
+    }
+    return evaluate(input)
   }
 
   constructor(srj: SimpleRouteJson, opts: AutoroutingPipelineSolver9ParallelOptions = {}) {

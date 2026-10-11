@@ -14,6 +14,8 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
+  type EvaluateRelaxedDrcInput,
+  type EvaluateRelaxedDrcResult,
 } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
@@ -667,6 +669,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
+  protected evaluateReferenceDrc(
+    input: EvaluateRelaxedDrcInput,
+  ): EvaluateRelaxedDrcResult {
+    return evaluateRelaxedDrc(input)
+  }
+
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -866,7 +874,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
       RELAXED_DRC_OPTIONS.viaClearance ??
       0.1
-    const baselineDrc = evaluateRelaxedDrc({
+    const baselineDrc = this.evaluateReferenceDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -888,7 +896,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
+    const currentDrcResult = this.evaluateReferenceDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -1391,7 +1399,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const candidateDrcInput =
         preparedCandidateDrcInput ?? prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
+      const evaluatedDrc = this.evaluateReferenceDrc({
         includeBoardClearance: true,
         connectivityMaps,
         inputSrj: params.originalSrj,

@@ -54,6 +54,8 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /** Optional exact continuity implementation; invoked at the native check site. */
+  traceContinuityChecker?: typeof checkTracesAreContiguous
 }
 
 const createDrcConnectivityMap = (
@@ -117,7 +119,7 @@ export const getDrcErrors = (
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
-      : checkTracesAreContiguous(circuitJson)),
+      : (options.traceContinuityChecker ?? checkTracesAreContiguous)(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...holeTraceErrors,

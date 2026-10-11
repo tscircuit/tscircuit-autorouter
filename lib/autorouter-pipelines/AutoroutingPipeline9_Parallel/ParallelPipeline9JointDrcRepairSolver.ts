@@ -1,3 +1,5 @@
+import { createMemoizedReferenceDrcEvaluator, type MemoizedReferenceDrcEvaluator } from "./createMemoizedReferenceDrcEvaluator"
+import type { EvaluateRelaxedDrcInput, EvaluateRelaxedDrcResult } from "../../testing/evaluate-relaxed-drc"
 import { getPendingEffectsFromSolverTree } from "../../solvers/getPendingEffectsFromSolverTree"
 import { Pipeline9JointDrcRepairSolver, type Pipeline9AutoroutingDrcEngine } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { AutoroutingDrcEngine, type GlobalDrcBranchPortfolioSolver } from "high-density-repair03/lib"
@@ -19,7 +21,21 @@ type Params = ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0] & {
   enableParallelDrcTrials?: boolean
 }
 
+// Base construction invokes the evaluator before subclass fields initialize.
+const referenceEvaluators = new WeakMap<Pipeline9JointDrcRepairSolver, MemoizedReferenceDrcEvaluator>()
+
 export class ParallelPipeline9JointDrcRepairSolver extends Pipeline9JointDrcRepairSolver {
+  protected override evaluateReferenceDrc(
+    input: EvaluateRelaxedDrcInput,
+  ): EvaluateRelaxedDrcResult {
+    let evaluate = referenceEvaluators.get(this)
+    if (!evaluate) {
+      evaluate = createMemoizedReferenceDrcEvaluator()
+      referenceEvaluators.set(this, evaluate)
+    }
+    return evaluate(input)
+  }
+
   readonly workerPool: ParallelStageWorkerPool
   private preparedTrialEvaluation?: Pipeline9PreparedIndexedDrcEvaluation
   private preparedTrialException?: { candidateKey: string; error: Error }
