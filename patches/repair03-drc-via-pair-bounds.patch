@@ -1,0 +1,111 @@
+diff --git a/lib/drc/AutoroutingDrcEngine.ts b/lib/drc/AutoroutingDrcEngine.ts
+index 38d6fe1..07c7d5a 100644
+--- a/lib/drc/AutoroutingDrcEngine.ts
++++ b/lib/drc/AutoroutingDrcEngine.ts
+@@ -191,18 +191,54 @@ const getObstacleLocalBounds = (obstacle: StaticObstacle): Bounds => ({
+   maxY: obstacle.height / 2,
+ })
+ 
++// Circle distance is stable in this range; the DRC epsilon exceeds coordinate
++// rounding. Unsafe/coercible geometry retains the entire original via scan.
++const canFilterViaPairBounds = (vias: Via[], clearance: number): boolean => {
++  if (!Number.isFinite(clearance) || clearance < 0 || clearance > 1e9) {
++    return false
++  }
++  for (const via of vias) {
++    if (
++      !Number.isFinite(via.x) ||
++      !Number.isFinite(via.y) ||
++      !Number.isFinite(via.diameter) ||
++      Math.abs(via.x) > 1e9 ||
++      Math.abs(via.y) > 1e9 ||
++      via.diameter < 0 ||
++      via.diameter > 1e9
++    ) {
++      return false
++    }
++  }
++  return true
++}
++
+ class SpatialHash<T> {
+   private readonly cells = new Map<number, Map<number, number[]>>()
+   private readonly itemIds = new Map<T, number>()
+   private readonly rowItems: T[] = []
++  private readonly rowBounds?: Bounds[]
+   private visitedGenerations = new Uint32Array(0)
+   private queryGeneration = 0
+ 
+-  constructor(private readonly cellSize: number) {}
++  constructor(private readonly cellSize: number, filterBounds = false) {
++    if (filterBounds) this.rowBounds = []
++  }
+ 
+-  private registerItem(item: T): number {
++  private registerItem(item: T, bounds: Bounds): number {
++    const rowBounds = this.rowBounds
++    const itemBounds = rowBounds ? { ...bounds } : undefined
+     const existingId = this.itemIds.get(item)
+-    if (existingId !== undefined) return existingId
++    if (existingId !== undefined) {
++      if (rowBounds) {
++        const previous = rowBounds[existingId]!
++        previous.minX = Math.min(previous.minX, itemBounds!.minX)
++        previous.minY = Math.min(previous.minY, itemBounds!.minY)
++        previous.maxX = Math.max(previous.maxX, itemBounds!.maxX)
++        previous.maxY = Math.max(previous.maxY, itemBounds!.maxY)
++      }
++      return existingId
++    }
+ 
+     const itemId = this.rowItems.length
+     if (itemId >= this.visitedGenerations.length) {
+@@ -217,6 +253,7 @@ class SpatialHash<T> {
+     this.itemIds.set(item, itemId)
+     // Set iteration canonicalizes primitive negative zero to positive zero.
+     this.rowItems.push(item === 0 ? (0 as T) : item)
++    if (rowBounds) rowBounds.push(itemBounds!)
+     return itemId
+   }
+ 
+@@ -235,7 +272,7 @@ class SpatialHash<T> {
+       }
+       for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+         const items = column!.get(cellY)
+-        if (itemId === undefined) itemId = this.registerItem(item)
++        if (itemId === undefined) itemId = this.registerItem(item, bounds)
+         if (items) {
+           items.push(itemId)
+         } else {
+@@ -274,6 +311,17 @@ class SpatialHash<T> {
+         for (const itemId of items) {
+           if (this.visitedGenerations[itemId] === generation) continue
+           this.visitedGenerations[itemId] = generation
++          if (this.rowBounds) {
++            const itemBounds = this.rowBounds[itemId]!
++            if (
++              itemBounds.maxX < bounds.minX ||
++              itemBounds.minX > bounds.maxX ||
++              itemBounds.maxY < bounds.minY ||
++              itemBounds.minY > bounds.maxY
++            ) {
++              continue
++            }
++          }
+           results.push(this.rowItems[itemId]!)
+         }
+       }
+@@ -944,7 +992,12 @@ export class AutoroutingDrcEngine {
+   private checkViaPairs(vias: Via[]): AutoroutingDrcError[] {
+     if (vias.length < 2) return []
+     const errors: AutoroutingDrcError[] = []
+-    const index = new SpatialHash<Via>(this.cellSize)
++    // Connectivity is queried only after a close circle gap is established.
++    // This mode therefore skips neither callbacks nor legacy segment quirks.
++    const index = new SpatialHash<Via>(
++      this.cellSize,
++      canFilterViaPairBounds(vias, this.viaClearance),
++    )
+     for (const via of vias) {
+       index.insert(via, expandBounds(getViaBounds(via), this.viaClearance))
+     }
