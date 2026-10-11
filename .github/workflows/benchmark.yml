@@ -1518,7 +1518,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 360
     env:
-      PARALLEL_BENCHMARK_BASELINE_SHA: 65522c89c
+      PARALLEL_BENCHMARK_BASELINE_SHA: 65522c89c370d4b4f9f69e1a79af58de641752bc
     steps:
       - name: Checkout prototype
         uses: actions/checkout@v4
@@ -1530,7 +1530,7 @@ jobs:
       - name: Checkout immutable baseline
         uses: actions/checkout@v4
         with:
-          ref: 65522c89c
+          ref: 65522c89c370d4b4f9f69e1a79af58de641752bc
           path: baseline
           persist-credentials: false
 
@@ -1546,14 +1546,18 @@ jobs:
       - name: Bundle immutable baseline against the same dependencies
         run: |
           ln -s "$GITHUB_WORKSPACE/prototype/node_modules" baseline/node_modules
+          printf 'PARALLEL_BENCHMARK_BASELINE_SHA=%s\n' "$(git -C baseline rev-parse HEAD)" >> "$GITHUB_ENV"
+          printf 'PARALLEL_BENCHMARK_PROTOTYPE_SHA=%s\n' "$(git -C prototype rev-parse HEAD)" >> "$GITHUB_ENV"
           cd baseline
-          bun build ./lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts --target=bun --packages=external --outfile "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/baseline.js"
+          bun "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/buildBaseline.ts" "$GITHUB_WORKSPACE/baseline" "$GITHUB_WORKSPACE/prototype/scripts/parallel-benchmark/baseline.js"
 
       - name: Run paired SRJ18 benchmark on four CPUs
         working-directory: prototype
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
         run: |
+          mkdir -p parallel-benchmark-results
+          bun pm ls --all > parallel-benchmark-results/installed-dependencies.txt
           node <<'NODE'
           const fs = require('node:fs')
           const { spawnSync } = require('node:child_process')

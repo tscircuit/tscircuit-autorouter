@@ -75,6 +75,7 @@ const runSample = async (
     const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
+    const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []
     let timedOut = false
     let stderr = ""
     const start = performance.now()
@@ -92,6 +93,7 @@ const runSample = async (
       if (message.kind === "result") result = message.result
       else {
         latestProgress = message
+        progressUpdates.push(message)
         console.log(`[progress] ${sampleName} ${variant} ${(message.elapsedTimeMs / 1000).toFixed(1)}s ${message.phaseName ?? "complete"}`)
       }
     })
@@ -118,6 +120,7 @@ const runSample = async (
       }
       void Promise.all([
         writeFile(path.join(runDir, "stderr.log"), stderr),
+        writeFile(path.join(runDir, "progress.json"), JSON.stringify(progressUpdates, null, 2)),
         writeFile(path.join(runDir, "result.json"), JSON.stringify(finalResult, null, 2)),
       ]).then(() => {
         console.log(`[done] ${sampleName} repeat=${repeat} ${variant} ${finalResult.status} ${(finalResult.elapsedTimeMs / 1000).toFixed(3)}s DRC=${finalResult.quality?.drcErrorCount ?? "n/a"}`)
@@ -136,13 +139,13 @@ const main = async (): Promise<void> => {
   }
   const require = createRequire(import.meta.url)
   const datasetRoot = path.dirname(require.resolve("dataset-srj18"))
-  const datasetHashes = Object.fromEntries(await Promise.all(expectedSamples.map(async (sampleName) => [sampleName, createHash("sha256").update(await readFile(path.join(datasetRoot, "samples", `${sampleName}.json`))).digest("hex")])))
+  const datasetHashes = Object.fromEntries(await Promise.all(expectedSamples.map(async (sampleName) => [sampleName, createHash("sha256").update(new Uint8Array(await readFile(path.join(datasetRoot, "samples", `${sampleName}.json`)))).digest("hex")])))
   const metadata = {
     options,
     dataset: "srj18",
     datasetDependency: JSON.parse(await readFile("package.json", "utf8")).devDependencies["dataset-srj18"],
     datasetHashes,
-    revision: process.env.GITHUB_SHA,
+    revision: process.env.PARALLEL_BENCHMARK_PROTOTYPE_SHA ?? process.env.GITHUB_SHA,
     baselineRevision: process.env.PARALLEL_BENCHMARK_BASELINE_SHA,
     baselineModule: process.env.PARALLEL_BENCHMARK_BASELINE_MODULE,
     runner: process.env.RUNNER_NAME ?? os.hostname(),
