@@ -21,7 +21,7 @@ function nativeFields(solver: Grid, names: readonly string[]): object {
   return fields
 }
 
-async function runOracle(): Promise<object> {
+async function runOracle(experimentalArena: boolean): Promise<object> {
   await initializeWorkerNativeGridRuntime()
   const dispatcher: GridHistoryDispatcher = async (): Promise<Map<number, Promise<GridHistoryResult>>> => new Map()
   registerWorkerNativeGridKernelDispatcher(dispatcher)
@@ -51,7 +51,7 @@ async function runOracle(): Promise<object> {
     strictEqual(Object.hasOwn(scenario < 6 ? heap : owner, scenario < 6 ? "push" : "computeH"), true)
     deepStrictEqual(nativeFields(owner, names), nativeFields(native, names))
     while (!native.solved && !native.failed) {
-      const quantum = beginWorkerNativeGridKernelQuantum(portfolio, contract, owner, dispatcher)
+      const quantum = beginWorkerNativeGridKernelQuantum(portfolio, contract, owner, dispatcher, experimentalArena)
       strictEqual(quantum !== null, true, "authentic worker quantum must be admitted")
       strictEqual(isWorkerNativeGridKernelQuantumActive(owner), true)
       try {
@@ -74,10 +74,12 @@ async function runOracle(): Promise<object> {
       strictEqual(native.iterations, scenario === 5 ? 157_175 : 160_000)
       a01Steps += native.iterations
       const arena = getParallelNativeA01HeapArenaDiagnostics(owner as ReplayHighDensityA01Solver)
-      strictEqual(arena !== null, true, "authentic selected worker must use the actual heap arena")
-      arenaBatches += arena!.batches
-      arenaHydratedRows += arena!.hydratedRows
-      arenaFlushedRows += arena!.flushedRows
+      strictEqual(arena !== null, experimentalArena, "arena must require the explicit genuine-worker experiment")
+      if (arena) {
+        arenaBatches += arena.batches
+        arenaHydratedRows += arena.hydratedRows
+        arenaFlushedRows += arena.flushedRows
+      }
     } else { strictEqual(native.iterations, 75_624); a03Steps += native.iterations }
     nativeSteps += native.iterations
   }
@@ -95,7 +97,7 @@ async function runOracle(): Promise<object> {
       getterCalls++
       throw new Error("instrumented native Math.min")
     } })
-    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena), null)
     strictEqual(getterCalls, 0)
     strictEqual(isWorkerNativeGridKernelQuantumActive(blocked), false)
   } finally { Object.defineProperty(Math, "min", mathDescriptor) }
@@ -111,7 +113,7 @@ async function runOracle(): Promise<object> {
         metadataGetterCalls++
         throw new Error("inherited worker descriptor metadata observer")
       } } as PropertyDescriptor)
-      quantumWasRejected = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher) === null
+      quantumWasRejected = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena) === null
     } finally { nativeDelete(Object.prototype, name) }
     strictEqual(quantumWasRejected, true)
     strictEqual(metadataGetterCalls, 0)
@@ -123,7 +125,9 @@ async function runOracle(): Promise<object> {
       wasmGetterCalls++
       throw new Error("instrumented WebAssembly.Module getter")
     } })
-    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    const quantum = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena)
+    try { strictEqual(quantum === null, experimentalArena) }
+    finally { finishWorkerNativeGridKernelQuantum(quantum) }
     strictEqual(wasmGetterCalls, 0)
   } finally { Object.defineProperty(WebAssembly, "Module", moduleDescriptor) }
   const arenaDescriptor = Object.getOwnPropertyDescriptor(NativeA01HeapArena.prototype, "begin")!
@@ -133,7 +137,9 @@ async function runOracle(): Promise<object> {
       arenaGetterCalls++
       throw new Error("instrumented heap arena begin getter")
     } })
-    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    const quantum = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena)
+    try { strictEqual(quantum === null, experimentalArena) }
+    finally { finishWorkerNativeGridKernelQuantum(quantum) }
     strictEqual(arenaGetterCalls, 0)
   } finally { Object.defineProperty(NativeA01HeapArena.prototype, "begin", arenaDescriptor) }
   const replay = Object.getOwnPropertyDescriptor(blocked, "replay")!.value
@@ -141,10 +147,10 @@ async function runOracle(): Promise<object> {
   const applyDescriptor = Object.getOwnPropertyDescriptor(replayPrototype, "applyStep")!
   try {
     Object.defineProperty(replayPrototype, "applyStep", { ...applyDescriptor, value: (): boolean => false })
-    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+    strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena), null)
   } finally { Object.defineProperty(replayPrototype, "applyStep", applyDescriptor) }
   Object.defineProperty(replay, "historyRequest", { configurable: true, value: Promise.resolve() })
-  strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher), null)
+  strictEqual(beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena), null)
   delete replay.historyRequest
   const blockedHeap = Object.getOwnPropertyDescriptor(blocked, "heap")!.value
   const typedName = Object.keys(blockedHeap).find((name): boolean =>
@@ -158,7 +164,7 @@ async function runOracle(): Promise<object> {
     proxyTraps++
     return Object.getOwnPropertyDescriptor(target, name)
   } })
-  const rejectedStorage = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher)
+  const rejectedStorage = beginWorkerNativeGridKernelQuantum(portfolio, contract, blocked, dispatcher, experimentalArena)
   finishWorkerNativeGridKernelQuantum(rejectedStorage)
   strictEqual(proxyTraps, 0)
   strictEqual(Object.hasOwn(blocked, "computeH"), false)
@@ -168,6 +174,7 @@ async function runOracle(): Promise<object> {
     lateObserversRejected: true, storageProxyTraps: proxyTraps }
 }
 
-runOracle().then((result): void => postMessage({ result }), (error: unknown): void => {
-  postMessage({ error: error instanceof Error ? error.stack : String(error) })
-})
+onmessage = (event: MessageEvent<{ experimentalArena: boolean }>): void => {
+  runOracle(event.data.experimentalArena === true).then((result): void => postMessage({ result }),
+    (error: unknown): void => postMessage({ error: String(error) }))
+}

@@ -119,7 +119,7 @@ function hasCallbackFreeNativeReplay(owner: NativeGridOwner): boolean {
 /** Scope only the already selected grid loop, before fitness/onSolve/output. */
 export function beginWorkerNativeGridKernelQuantum(portfolio: object,
   contract: WorkerNativeGridPortfolioContract, owner: NativeGridOwner,
-  dispatcher?: GridHistoryDispatcher): WorkerNativeGridQuantum | null {
+  dispatcher?: GridHistoryDispatcher, experimentalArena = false): WorkerNativeGridQuantum | null {
   if (!dispatcher || !hasWorkerDispatcher(dispatcher) || !hasOwnedOwner(owner) ||
     isWorkerNativeGridProxy(portfolio) || isWorkerNativeGridProxy(owner) || !hasNativeDescriptorMetadata() ||
     !matchesSnapshots(contract, portfolio) ||
@@ -129,7 +129,7 @@ export function beginWorkerNativeGridKernelQuantum(portfolio: object,
     const descriptor = nativeOwnerDescriptor(portfolio, ownNames[index]!)!
     if (!nativeOwnerHasOwn(descriptor, "value")) return null
   }
-  const intrinsicQuantum = beginNativeGridIntrinsicQuantum()
+  const intrinsicQuantum = beginNativeGridIntrinsicQuantum(experimentalArena)
   if (!intrinsicQuantum) return null
   const owners: NativeGridOwner[] = []
   const quantum: WorkerNativeGridQuantum = { owners, intrinsicQuantum }

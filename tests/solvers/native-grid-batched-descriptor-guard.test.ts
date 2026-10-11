@@ -19,7 +19,7 @@ const metadataNames = ["value", "get", "set", "writable", "enumerable", "configu
 
 test("batched intrinsic guards retain complete property contracts and reject inherited metadata, proxy and reflection observers", (): void => {
   let checked = 0, getterCalls = 0, proxyTraps = 0
-  strictEqual(hasNativeGridKernelIntrinsics(), true)
+  strictEqual(hasNativeGridKernelIntrinsics(undefined, true), true)
   const node = { capacityMeshNodeId: "metadata_guard", center: { x: 0, y: 0 },
     width: 1, height: 1, availableZ: [0], portPoints: [] }
   const a01 = new HighDensitySolverA01({ nodeWithPortPoints: node, cellSizeMm: 0.1, viaDiameter: 0.3 })
@@ -38,13 +38,13 @@ test("batched intrinsic guards retain complete property contracts and reject inh
       try {
         define(target, name, { __proto__: null, configurable: true, enumerable: saved.enumerable,
           get(): never { getterCalls++; throw new Error("guard invoked a late getter") } } as PropertyDescriptor)
-        strictEqual(hasNativeGridKernelIntrinsics(), false)
+        strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
         checked++
       } finally { define(target, name, saved) }
       if ("value" in saved) {
         try {
           define(target, name, { ...saved, value: { changedDescriptor: true } })
-          strictEqual(hasNativeGridKernelIntrinsics(), false)
+          strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
           checked++
         } finally { define(target, name, saved) }
       }
@@ -52,7 +52,7 @@ test("batched intrinsic guards retain complete property contracts and reject inh
     const extra = Symbol("unexpectedIntrinsicProperty")
     try {
       define(target, extra, { configurable: true, value: undefined })
-      strictEqual(hasNativeGridKernelIntrinsics(), false)
+      strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
       checked++
     } finally { remove(target, extra) }
   }
@@ -63,7 +63,7 @@ test("batched intrinsic guards retain complete property contracts and reject inh
       ownKeys(): never { proxyTraps++; throw new Error("guard reflected proxy keys") },
       getOwnPropertyDescriptor(): never { proxyTraps++; throw new Error("guard reflected proxy descriptor") },
     }) })
-    strictEqual(hasNativeGridKernelIntrinsics(), false)
+    strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
     checked++
   } finally { define(globalThis, "Math", math) }
   for (const name of metadataNames) {
@@ -71,7 +71,7 @@ test("batched intrinsic guards retain complete property contracts and reject inh
       define(Object.prototype, name, { __proto__: null, configurable: true,
         get(): never { getterCalls++; throw new Error("inherited metadata observer") } } as PropertyDescriptor)
       strictEqual(hasNativeDescriptorMetadata(), false)
-      strictEqual(hasNativeGridKernelIntrinsics(), false)
+      strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
       strictEqual(matchesNativeOwnerKernelContract(a01, a01Contract, HighDensitySolverA01.prototype, a01Descriptors), false)
       strictEqual(NativeA01HistoryEquivalence.capture(a01), null)
       // Direct setup helpers decline before any optional metadata read.
@@ -85,7 +85,7 @@ test("batched intrinsic guards retain complete property contracts and reject inh
   try {
     remove(Math, "abs")
     define(Math, "unexpectedAbs", abs)
-    strictEqual(hasNativeGridKernelIntrinsics(), false)
+    strictEqual(hasNativeGridKernelIntrinsics(undefined, true), false)
     checked++
   } finally { remove(Math, "unexpectedAbs"); define(Math, "abs", abs) }
   for (const name of metadataNames) {
@@ -96,5 +96,5 @@ test("batched intrinsic guards retain complete property contracts and reject inh
   expect(checked).toBeGreaterThan(470)
   expect(getterCalls).toBe(0)
   expect(proxyTraps).toBe(0)
-  expect(hasNativeGridKernelIntrinsics()).toBe(true)
+  expect(hasNativeGridKernelIntrinsics(undefined, true)).toBe(true)
 })
