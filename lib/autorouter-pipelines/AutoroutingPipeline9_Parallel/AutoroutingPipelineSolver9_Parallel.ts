@@ -6,6 +6,8 @@ import { Pipeline9ParallelHighDensitySolver } from "./Pipeline9ParallelHighDensi
 import { ParallelHighDensityForceImproveSolver } from "./ParallelHighDensityForceImproveSolver"
 import { ParallelHighDensityRepairSolver } from "./ParallelHighDensityRepairSolver"
 import { ParallelTraceSimplificationSolver } from "./ParallelTraceSimplificationSolver"
+import { ParallelPortPointPathingSolver } from "./ParallelPortPointPathingSolver"
+import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointDrcRepairSolver"
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
   workerCount?: number
@@ -23,6 +25,12 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     super(srj, opts)
     this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount })
     this.ownsWorkerPool = opts.workerPool === undefined
+    const pathingIndex = this.pipelineDef.findIndex((step) => step.solverName === "portPointPathingSolver")
+    const pathingStep = this.pipelineDef[pathingIndex]
+    if (!pathingStep) throw new Error("Pipeline9 portPointPathingSolver step is missing")
+    this.pipelineDef[pathingIndex] = {
+      ...pathingStep, solverClass: ParallelPortPointPathingSolver as any,
+    } as any
     const stepIndex = this.pipelineDef.findIndex((step) => step.solverName === "highDensityRouteSolver")
     const originalStep = this.pipelineDef[stepIndex]
     if (!originalStep) throw new Error("Pipeline9 highDensityRouteSolver step is missing")
@@ -37,6 +45,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     for (const [solverName, solverClass] of [
       ["highDensityForceImproveSolver", ParallelHighDensityForceImproveSolver],
       ["highDensityRepairSolver", ParallelHighDensityRepairSolver],
+      ["pipeline9JointDrcRepairSolver", ParallelPipeline9JointDrcRepairSolver],
     ] as const) {
       const stageIndex = this.pipelineDef.findIndex((step) => step.solverName === solverName)
       const originalStage = this.pipelineDef[stageIndex]
@@ -100,6 +109,7 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
           !(this.activeSubSolver instanceof Pipeline9ParallelHighDensitySolver) &&
           !(this.activeSubSolver instanceof ParallelHighDensityForceImproveSolver) &&
           !(this.activeSubSolver instanceof ParallelHighDensityRepairSolver) &&
+          !(this.activeSubSolver instanceof ParallelPipeline9JointDrcRepairSolver) &&
           !(this.activeSubSolver instanceof ParallelTraceSimplificationSolver)) {
           this.activeSubSolver.solve()
           this.step()

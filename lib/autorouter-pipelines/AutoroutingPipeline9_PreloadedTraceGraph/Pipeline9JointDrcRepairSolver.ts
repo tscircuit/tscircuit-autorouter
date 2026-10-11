@@ -721,7 +721,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         if (!this.regionalB01Params) {
           throw new Error("Pipeline9 regional B01 stage is missing its input")
         }
-        this.regionalB01RepairSolver = new Pipeline9RegionalB01RepairSolver(
+        this.regionalB01RepairSolver = this.createRegionalB01RepairSolver(
           this.regionalB01Params,
         )
         return this.regionalB01RepairSolver
@@ -738,7 +738,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         }
         this.boundedRegionalRepairStartedAt = performance.now()
         this.boundedRegionalRepairSolver =
-          new Pipeline9BoundedRegionalRepairSolver(this.boundedRegionalParams)
+          this.createBoundedRegionalRepairSolver(this.boundedRegionalParams)
         return this.boundedRegionalRepairSolver
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
@@ -746,6 +746,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
+
+  protected createRegionalB01RepairSolver(
+    params: ConstructorParameters<typeof Pipeline9RegionalB01RepairSolver>[0],
+  ): Pipeline9RegionalB01RepairSolver {
+    // Parallel prototypes replace candidate execution without changing this stage's
+    // preparation, final validation, publication, or bounded regional repair policy.
+    return new Pipeline9RegionalB01RepairSolver(params)
+  }
+
+  protected createBoundedRegionalRepairSolver(
+    params: ConstructorParameters<typeof Pipeline9BoundedRegionalRepairSolver>[0],
+  ): Pipeline9BoundedRegionalRepairSolver {
+    // The stage coordinator still owns work allowances and publication. Local
+    // prototypes can accelerate path search through a compatible child solver.
+    return new Pipeline9BoundedRegionalRepairSolver(params)
+  }
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,

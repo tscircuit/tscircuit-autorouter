@@ -6,6 +6,7 @@ import {
   NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
+  type NegotiatedClearanceInput,
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
@@ -31,6 +32,10 @@ type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
 type FixedViolations = ReturnType<typeof getFixedObstacleViolations>
 type RepairAllowance = ReturnType<typeof getPipeline9BoundedRepairAllowance>
+type NegotiationSolver = Pick<
+  NegotiateTraceClearanceSolver,
+  keyof NegotiateTraceClearanceSolver
+>
 
 type InitialContext = {
   boundaryMargin: number
@@ -89,7 +94,7 @@ type BoundedRepairState =
   | {
       phase: "negotiate"
       negotiation: NegotiationContext
-      solver: NegotiateTraceClearanceSolver
+      solver: NegotiationSolver
     }
   | {
       phase: "splice-region"
@@ -160,6 +165,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     // Child solvers reserve their finite iteration bounds as each stage starts.
     this.MAX_ITERATIONS = this.budget.maxRegions * 16 + 32
+  }
+
+  protected createNegotiationSolver(
+    input: NegotiatedClearanceInput,
+  ): NegotiationSolver {
+    return new NegotiateTraceClearanceSolver(input)
   }
 
   private updateProgress(): void {
@@ -486,7 +497,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : allowance.maxCandidateAttempts),
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
-    const solver = new NegotiateTraceClearanceSolver({
+    const solver = this.createNegotiationSolver({
       srj: region.srj,
       routes: region.routes,
       bounds: region.mutableBounds,

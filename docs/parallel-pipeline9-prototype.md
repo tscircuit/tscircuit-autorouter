@@ -108,8 +108,8 @@ exceptions propagate through the asynchronous solver and mark it failed.
 
 ## Reproducing the Blacksmith evaluation
 
-Repository policy requires benchmark runs on Blacksmith. The custom job is
-part of the existing `.github/workflows/benchmark.yml` workflow and runs on
+Repository policy reserves Blacksmith for benchmark runs. This evaluation's
+custom job is part of the existing `.github/workflows/benchmark.yml` workflow and runs on
 `blacksmith-4vcpu-ubuntu-2404-arm`. Dispatch it against a branch that contains
 the prototype and harness:
 
@@ -129,6 +129,25 @@ For a partial development check, add `--samples` followed by a comma-separated
 list such as `1,4,16`. Baseline-only and partial runs cannot satisfy the full
 acceptance gate.
 
+Independent sample subsets can run on separate four-core ARM Blacksmith
+runners to reduce evaluation turnaround. Each sample's baseline and prototype
+runs, including all repetitions, must remain together in one source job.
+Dispatch every subset at the same prototype SHA and with identical settings,
+then merge the downloaded reports:
+
+```sh
+bun scripts/parallel-benchmark/mergeReports.ts \
+  --out-dir parallel-benchmark-merged \
+  group1/report.json group2/report.json group3/report.json \
+  group4/report.json group5/report.json
+```
+
+The merger rejects duplicate runs and incompatible revisions, dataset hashes,
+settings, runtimes, runner models, or CPU budgets. When an installed dependency
+hash is available for any source, it must be available and identical for every
+source. The merged report retains source metadata and recalculates the same
+all-16 acceptance gate; it does not exclude missing or failed samples.
+
 The job finds four CPUs from its allowed CPU list and launches the controller
 under `taskset`. Child processes and worker threads inherit that affinity.
 The coordinator and all workers therefore share the same four-CPU budget;
@@ -136,10 +155,10 @@ The coordinator and all workers therefore share the same four-CPU budget;
 
 The immutable serial baseline is commit
 `65522c89c370d4b4f9f69e1a79af58de641752bc`. The job checks it out separately and
-bundles its repository sources against the same installed dependencies used
-by the prototype. `scripts/parallel-benchmark/buildBaseline.ts` externalizes
-dependency packages explicitly and rejects remaining external `lib/*`
-imports, preventing those imports from resolving to rewritten sources.
+builds it with its original `bun run build` command and tsup/Terser settings,
+against the same installed dependencies used by the prototype. Both variants
+execute their packaged output so packaging differences do not distort the
+comparison.
 
 SRJ18 is pinned by the dependency specifier to
 `100e8957ce789b5b288e14c476dc83f4efc5214b`. The harness asserts exactly
@@ -150,8 +169,10 @@ Both variants receive independently cloned inputs from that same dataset.
 
 The default evaluation uses three paired repetitions at effort 1. It routes
 one board at a time, alternating baseline/prototype order across samples and
-repetitions. Each variant runs in a separate child process. In-memory solver
-caching is disabled with `cacheProvider: null`.
+repetitions. Each variant runs in a fresh child process with pipeline-level
+caching disabled by `cacheProvider: null`. The original intra-node caches
+remain available within each board. Worker caches reset when a new board
+context arrives, so persistent pools do not replay previously routed boards.
 
 Cold wall time includes solver construction, routing, internal worker
 creation/imports, and owned-pool disposal. It excludes the child process's

@@ -381,6 +381,17 @@ function createSourceTraces(
   sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
+  const sourceTraceById = new Map<string, AnyCircuitElement>()
+  const routeByConnectionName = new Map<unknown, (typeof hdRoutes)[number]>()
+  for (const route of hdRoutes) {
+    const connectionName =
+      (route as any).connection_name ?? (route as any).connectionName
+    // The previous find() selected the first route when names are repeated.
+    if (!routeByConnectionName.has(connectionName)) {
+      routeByConnectionName.set(connectionName, route)
+    }
+  }
+  const endpointObstaclesByX = new Map<number, Map<number, Obstacle[]>>()
   const connections =
     sourceSrj === srj
       ? srj.connections
@@ -425,11 +436,7 @@ function createSourceTraces(
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
+    const hdRoute = routeByConnectionName.get(connection.name)
     if (hdRoute) {
       const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
         if ("route_type" in segment && segment.route_type === "jumper") {
@@ -447,19 +454,29 @@ function createSourceTraces(
       ]
 
       for (const endpoint of endpoints) {
-        for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
-            obstaclesContainingEndpoints.push(obstacle)
+        let obstaclesByY = endpointObstaclesByX.get(endpoint.x)
+        if (!obstaclesByY) {
+          obstaclesByY = new Map()
+          endpointObstaclesByX.set(endpoint.x, obstaclesByY)
+        }
+        let matchingObstacles = obstaclesByY.get(endpoint.y)
+        if (!matchingObstacles) {
+          matchingObstacles = []
+          for (const obstacle of obstacles) {
+            if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+              matchingObstacles.push(obstacle)
+            }
           }
+          obstaclesByY.set(endpoint.y, matchingObstacles)
+        }
+        for (const obstacle of matchingObstacles) {
+          obstaclesContainingEndpoints.push(obstacle)
         }
       }
     }
 
     // Check if this source_trace already exists
-    const existingSourceTrace = sourceTraces.find(
-      (st) =>
-        st.type === "source_trace" && st.source_trace_id === netConnectionName,
-    )
+    const existingSourceTrace = sourceTraceById.get(netConnectionName)
 
     if (existingSourceTrace) {
       // Add these port IDs to the existing source_trace
@@ -481,14 +498,16 @@ function createSourceTraces(
       ]
     } else {
       // Create a new source_trace for this connection
-      sourceTraces.push({
+      const sourceTrace: AnyCircuitElement = {
         type: "source_trace",
         source_trace_id: netConnectionName,
         connected_source_port_ids: connectedPortIds,
         connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
           obstaclesContainingEndpoints,
         ).concat(connectedPointIds),
-      })
+      }
+      sourceTraces.push(sourceTrace)
+      sourceTraceById.set(netConnectionName, sourceTrace)
     }
   })
 
@@ -533,11 +552,7 @@ function createSourceTraces(
         (connection
           ? getCircuitJsonSourceTraceId(connection)
           : (trace.connection_name as CircuitJsonSourceTraceId))
-      const existingSourceTrace = sourceTraces.find(
-        (sourceTrace) =>
-          sourceTrace.type === "source_trace" &&
-          sourceTrace.source_trace_id === sourceTraceId,
-      )
+      const existingSourceTrace = sourceTraceById.get(sourceTraceId)
       if (existingSourceTrace?.type === "source_trace") {
         existingSourceTrace.connected_source_port_ids = [
           ...new Set([
@@ -553,12 +568,14 @@ function createSourceTraces(
         ]
         continue
       }
-      sourceTraces.push({
+      const sourceTrace: AnyCircuitElement = {
         type: "source_trace",
         source_trace_id: sourceTraceId,
         connected_source_port_ids: connectedSourcePortIds,
         connected_source_net_ids: connectedSourceNetIds,
-      })
+      }
+      sourceTraces.push(sourceTrace)
+      sourceTraceById.set(sourceTraceId, sourceTrace)
     }
   }
 

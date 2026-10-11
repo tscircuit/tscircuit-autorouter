@@ -46,6 +46,13 @@ type RegionalB01RepairPhase =
   | "validate-safe-layer"
   | "done"
 
+export type Pipeline9RegionalB01CandidateParams = Parameters<
+  typeof preparePipeline9RegionalB01Candidate
+>[0]
+export type Pipeline9RegionalB01CandidateOutput = ReturnType<
+  typeof getPipeline9RegionalB01CandidateOutput
+>
+
 /** Routes one regional candidate at a time through explicit child solver stages. */
 export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   readonly params: Pipeline9RegionalB01RepairParams
@@ -77,6 +84,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
   private b01Candidate?: Pipeline9RegionalB01CandidateProblem
   private regularCandidate?: Pipeline9RegularRegionalCandidateProblem
   private safeTraceLayerSolver?: GlobalDrcForceImproveSolver
+  protected b01SearchSequence = 0
 
   constructor(params: Pipeline9RegionalB01RepairParams) {
     super()
@@ -176,6 +184,7 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.traceIndex = 0
     this.regionIndex = 0
     this.stopB01SearchForError = false
+    this.b01SearchSequence++
     this.phase = "prepare-b01"
   }
 
@@ -224,19 +233,25 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     const regionSize = PIPELINE9_REGIONAL_B01_REGION_SIZES[this.regionIndex]!
     this.regionIndex++
     this.candidateSearchCount++
-    this.b01Candidate = preparePipeline9RegionalB01Candidate({
+    this.startB01Candidate({
       ...this.params,
       routes: this.currentRoutes,
       routeIndex,
       center,
       regionSize,
     })
+  }
+
+  protected startB01Candidate(
+    params: Pipeline9RegionalB01CandidateParams,
+  ): void {
+    this.b01Candidate = preparePipeline9RegionalB01Candidate(params)
     if (!this.b01Candidate) return
     this.startChildSolver(this.b01Candidate.solver)
     this.phase = "route-b01"
   }
 
-  private stepB01Candidate(): void {
+  protected stepB01Candidate(): void {
     const candidate = this.b01Candidate
     if (!candidate) throw new Error("Regional B01 has no active candidate")
     candidate.solver.step()
@@ -245,11 +260,17 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
     this.phase = "validate-b01"
   }
 
-  private validateB01Candidate(): void {
+  protected validateB01Candidate(): void {
     const problem = this.b01Candidate
     if (!problem) throw new Error("Regional B01 has no completed candidate")
     const candidate = getPipeline9RegionalB01CandidateOutput(problem)
     this.b01Candidate = undefined
+    this.acceptB01CandidateOutput(candidate)
+  }
+
+  protected acceptB01CandidateOutput(
+    candidate: Pipeline9RegionalB01CandidateOutput,
+  ): void {
     if (candidate) {
       this.attemptedCandidateCount++
       if (candidate.usedFallback) this.fallbackCandidateCount++
@@ -264,6 +285,23 @@ export class Pipeline9RegionalB01RepairSolver extends BaseSolver {
       if (this.bestErrors.length === 0) this.stopB01SearchForError = true
     }
     this.phase = "prepare-b01"
+  }
+
+  protected getUpcomingB01Candidates(
+    first: Pipeline9RegionalB01CandidateParams,
+  ): Pipeline9RegionalB01CandidateParams[] {
+    const candidates = [first]
+    const remainingBudget = this.candidateSearchBudget - this.candidateSearchCount
+    for (let traceIndex = this.traceIndex; traceIndex < this.traceIds.length; traceIndex++) {
+      const routeIndex = this.routeIndexByTraceId.get(this.traceIds[traceIndex]!)
+      if (routeIndex === undefined) continue
+      const firstRegionIndex = traceIndex === this.traceIndex ? this.regionIndex : 0
+      for (let regionIndex = firstRegionIndex; regionIndex < PIPELINE9_REGIONAL_B01_REGION_SIZES.length; regionIndex++) {
+        if (candidates.length > remainingBudget) return candidates
+        candidates.push({ ...first, routeIndex, regionSize: PIPELINE9_REGIONAL_B01_REGION_SIZES[regionIndex]! })
+      }
+    }
+    return candidates
   }
 
   private prepareRegularCandidate(): void {

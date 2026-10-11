@@ -1131,7 +1131,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+      this.createTinyPipeline(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
@@ -1421,6 +1421,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  protected createTinyPipeline(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ): TinyHyperGraphSectionPipelineWithTerminalNetIds {
+    return new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+      inputProblem,
+      useSelectiveReripRouting,
+    )
+  }
+
   _step() {
     this.tinyPipelineSolver.step()
 
@@ -1440,7 +1450,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (this.shouldEvaluateAlternative(this.primaryCandidateSummary)) {
         this.alternativeCandidateEvaluated = true
         this.alternativeTinyPipelineSolver =
-          new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+          this.createTinyPipeline(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
           )
