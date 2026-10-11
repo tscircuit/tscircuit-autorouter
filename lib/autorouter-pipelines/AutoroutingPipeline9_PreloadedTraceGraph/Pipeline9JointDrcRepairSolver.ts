@@ -57,6 +57,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
+const REFERENCE_DRC_CANDIDATE_CACHE_SIZE = 16
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
@@ -1149,12 +1150,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    let referenceDrcCandidateCache:
-      | {
-          candidateKey: string
-          result: ReturnType<DrcEvaluator>
-        }
-      | undefined
+    // Projection passes can revisit an earlier geometry after rejecting a
+    // different candidate. Retain bounded full-reference results as well.
+    const referenceDrcCandidateCache = new Map<
+      string,
+      ReturnType<DrcEvaluator>
+    >()
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1368,16 +1369,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
-        return referenceDrcCandidateCache.result
-      }
+      const cachedResult = referenceDrcCandidateCache.get(candidateKey)
+      if (cachedResult !== undefined) return cachedResult
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
         traces: [],
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      referenceDrcCandidateCache = { candidateKey, result }
+      if (
+        referenceDrcCandidateCache.size >= REFERENCE_DRC_CANDIDATE_CACHE_SIZE
+      ) {
+        const oldestCandidateKey = referenceDrcCandidateCache
+          .keys()
+          .next().value
+        if (oldestCandidateKey !== undefined) {
+          referenceDrcCandidateCache.delete(oldestCandidateKey)
+        }
+      }
+      referenceDrcCandidateCache.set(candidateKey, result)
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
