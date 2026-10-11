@@ -1,0 +1,118 @@
+diff --git a/lib/drc/AutoroutingDrcEngine.ts b/lib/drc/AutoroutingDrcEngine.ts
+index 38d6fe1..e5dd0cf 100644
+--- a/lib/drc/AutoroutingDrcEngine.ts
++++ b/lib/drc/AutoroutingDrcEngine.ts
+@@ -1,7 +1,9 @@
+ import {
++  doSegmentsIntersect,
+   getBoundsFromPoints,
+   getSegmentIntersection,
+   pointToSegmentClosestPoint,
++  pointToSegmentDistance,
+   segmentToBoundsMinDistance,
+   segmentToCircleMinDistance,
+   segmentToSegmentMinDistance,
+@@ -47,6 +49,7 @@ type TraceSegment = {
+   width: number
+   layer: string
+   pcbPortIds: string[]
++  distanceBounds?: Bounds
+ }
+ 
+ type Via = {
+@@ -191,6 +194,53 @@ const getObstacleLocalBounds = (obstacle: StaticObstacle): Bounds => ({
+   maxY: obstacle.height / 2,
+ })
+ 
++const isBoundedTracePoint = (point: Point): boolean =>
++  Number.isFinite(point.x) &&
++  Number.isFinite(point.y) &&
++  Math.abs(point.x) <= 1e9 &&
++  Math.abs(point.y) <= 1e9
++
++const getTracePairDistance = (
++  segmentA: TraceSegment,
++  segmentB: TraceSegment,
++  clearance: number,
++): number => {
++  const boundsA = segmentA.distanceBounds
++  const boundsB = segmentB.distanceBounds
++  const a = segmentA.start
++  const b = segmentA.end
++  const u = segmentB.start
++  const v = segmentB.end
++  if (
++    !boundsA ||
++    !boundsB ||
++    !Number.isFinite(clearance) ||
++    clearance < 0 ||
++    clearance > 1e9
++  ) {
++    return segmentToSegmentMinDistance(a, b, u, v)
++  }
++  if (a.x === b.x && a.y === b.y) return pointToSegmentDistance(a, u, v)
++  if (u.x === v.x && u.y === v.y) return pointToSegmentDistance(u, a, b)
++  if (doSegmentsIntersect(a, b, u, v)) return 0
++  const separation = clearance + DRC_EPSILON
++  if (
++    boundsA.minX - boundsB.maxX > separation ||
++    boundsB.minX - boundsA.maxX > separation ||
++    boundsA.minY - boundsB.maxY > separation ||
++    boundsB.minY - boundsA.maxY > separation
++  ) {
++    return Infinity
++  }
++  const distances = [
++    pointToSegmentDistance(a, u, v),
++    pointToSegmentDistance(b, u, v),
++    pointToSegmentDistance(u, a, b),
++    pointToSegmentDistance(v, a, b),
++  ]
++  return Math.min(...distances)
++}
++
+ class SpatialHash<T> {
+   private readonly cells = new Map<number, Map<number, number[]>>()
+   private readonly itemIds = new Map<T, number>()
+@@ -680,6 +730,7 @@ export class AutoroutingDrcEngine {
+           width: getWireWidth(start, end),
+           layer: start.layer,
+           pcbPortIds,
++          distanceBounds: undefined,
+         })
+       }
+ 
+@@ -729,7 +780,18 @@ export class AutoroutingDrcEngine {
+     }
+ 
+     for (const segment of segments) {
+-      addToLayer(segment.layer, segment, getSegmentBounds(segment))
++      const layer = segment.layer
++      const bounds = getSegmentBounds(segment)
++      if (
++        Number.isFinite(segment.width) &&
++        segment.width >= 0 &&
++        segment.width <= 1e9 &&
++        isBoundedTracePoint(segment.start) &&
++        isBoundedTracePoint(segment.end)
++      ) {
++        segment.distanceBounds = bounds
++      }
++      addToLayer(layer, segment, bounds)
+     }
+     for (const via of vias) {
+       for (const layer of via.layers) {
+@@ -754,12 +816,7 @@ export class AutoroutingDrcEngine {
+     this.lastRunStats.exactCheckCount += 1
+ 
+     const gap =
+-      segmentToSegmentMinDistance(
+-        segmentA.start,
+-        segmentA.end,
+-        segmentB.start,
+-        segmentB.end,
+-      ) -
++      getTracePairDistance(segmentA, segmentB, this.traceClearance) -
+       segmentA.width / 2 -
+       segmentB.width / 2
+     if (gap > this.traceClearance - DRC_EPSILON) return undefined
