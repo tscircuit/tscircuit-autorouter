@@ -1,4 +1,4 @@
-import type { MultiHeadHistoryDelivery, MultiHeadHistoryDispatcher, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
+import type { MultiHeadHistoryCancellation, MultiHeadHistoryDelivery, MultiHeadHistoryDispatcher, MultiHeadHistoryGrant, MultiHeadHistoryRequest, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
 
 type CandidateDelivery = { promise: Promise<MultiHeadHistoryResult>; resolve: (result: MultiHeadHistoryResult) => void; reject: (error: Error) => void }
 type HistoryRequestState = {
@@ -11,14 +11,22 @@ export class MultiHeadHistoryWorkerClient {
   private nextRequestId = 0
   private readonly requests = new Map<number, HistoryRequestState>()
   private readonly taskId: number
-  private readonly postMessage: (request: MultiHeadHistoryRequest) => void
+  private readonly postMessage: (request: MultiHeadHistoryRequest | MultiHeadHistoryCancellation) => void
 
   constructor(
     taskId: number,
-    postMessage: (request: MultiHeadHistoryRequest) => void,
+    postMessage: (request: MultiHeadHistoryRequest | MultiHeadHistoryCancellation) => void,
   ) {
     this.taskId = taskId
     this.postMessage = postMessage
+  }
+
+  readonly cancelUnusedHistories = (): void => {
+    if (this.requests.size === 0) return
+    this.postMessage({
+      kind: "cancelMultiHeadHistories",
+      taskId: this.taskId,
+    })
   }
 
   readonly dispatch: MultiHeadHistoryDispatcher = async (jobs) => {

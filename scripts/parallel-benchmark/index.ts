@@ -7,7 +7,7 @@ import path from "node:path"
 import { createInterface } from "node:readline"
 import { loadScenarios } from "../benchmark/scenarios"
 import { summarizeParallelBenchmark } from "./parallelBenchmarkSummary"
-import type { BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
+import type { BenchmarkHighDensityPolicy, BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
 
 type Options = {
   repetitions: number
@@ -16,6 +16,7 @@ type Options = {
   workerCount: number
   parallelPathSimplification: boolean
   pathingStrategy: BenchmarkPathingStrategy
+  highDensityPolicy: BenchmarkHighDensityPolicy
   targetSpeedup: number
   variants: BenchmarkVariant[]
   sampleNumbers: number[]
@@ -30,6 +31,7 @@ const parseOptions = (): Options => {
     workerCount: 4,
     parallelPathSimplification: true,
     pathingStrategy: "indexed",
+    highDensityPolicy: "ordered",
     targetSpeedup: 2,
     variants: ["baseline", "parallel"],
     sampleNumbers: Array.from({ length: 16 }, (_, index) => index + 1),
@@ -51,8 +53,11 @@ const parseOptions = (): Options => {
       if (value !== "0" && value !== "1") throw new Error("--parallel-path-simplification must be 0 or 1")
       options.parallelPathSimplification = value === "1"
     } else if (key === "--pathing-strategy") {
-      if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, or cached-cost")
+      if (value !== "indexed" && value !== "adaptive-bitset" && value !== "cached-cost" && value !== "landmark" && value !== "negotiated") throw new Error("--pathing-strategy must be indexed, adaptive-bitset, cached-cost, landmark, or negotiated")
       options.pathingStrategy = value
+    } else if (key === "--high-density-policy") {
+      if (value !== "ordered" && value !== "first-valid") throw new Error("--high-density-policy must be ordered or first-valid")
+      options.highDensityPolicy = value
     } else {
       const numeric = Number(value)
       if (!Number.isFinite(numeric) || numeric <= 0) throw new Error(`Invalid ${key}: ${value}`)
@@ -82,7 +87,7 @@ const runSample = async (
   const scriptPath = path.join(import.meta.dir, "parallelBenchmarkChild.ts")
   console.log(`[start] ${sampleName} repeat=${repeat} ${variant}`)
   return await new Promise<ParallelBenchmarkResult>((resolve, reject) => {
-    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy], { stdio: ["ignore", "pipe", "pipe"] })
+    const child = spawn(process.execPath, [scriptPath, String(sampleNumber), variant, String(repeat), String(options.effort), String(options.workerCount), runDir, options.parallelPathSimplification ? "1" : "0", options.pathingStrategy, options.highDensityPolicy], { stdio: ["ignore", "pipe", "pipe"] })
     let result: ParallelBenchmarkResult | undefined
     let latestProgress: Extract<ParallelBenchmarkChildMessage, { kind: "progress" }> | undefined
     const progressUpdates: Array<Extract<ParallelBenchmarkChildMessage, { kind: "progress" }>> = []
@@ -184,18 +189,19 @@ const main = async (): Promise<void> => {
       const order = (repeat + sampleNumber) % 2 === 0 ? options.variants : [...options.variants].reverse()
       for (const variant of order) {
         results.push(await runSample(sampleNumber, repeat, variant, options))
-        const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup })
+        const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy })
         await writeFile(path.join(options.outDir, "checkpoint.json"), JSON.stringify({ metadata, results, summary }, null, 2))
       }
     }
   }
-  const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup })
+  const summary = summarizeParallelBenchmark(results, { expectedSamples, repetitions: options.repetitions, timeoutMs: options.timeoutMs, targetSpeedup: options.targetSpeedup, highDensityPolicy: options.highDensityPolicy, pathingStrategy: options.pathingStrategy })
   await writeFile(path.join(options.outDir, "report.json"), JSON.stringify({ metadata, results, summary }, null, 2))
   const text = [
     `SRJ18 paired benchmark: ${results.length} runs`,
     `Arithmetic mean speedup: ${summary.arithmeticMeanSpeedup.toFixed(3)}x`,
     `Aggregate speedup: ${summary.aggregateSpeedup.toFixed(3)}x`,
     `Geometric mean speedup: ${summary.geometricMeanSpeedup.toFixed(3)}x`,
+    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}`,
     `Full coverage: ${summary.fullCoverage}; all solved: ${summary.allCompleted}; exact geometry: ${summary.exactGeometry}; quality preserved: ${summary.qualityPreserved}`,
     `Target reached: ${summary.targetReached}`,
     "",

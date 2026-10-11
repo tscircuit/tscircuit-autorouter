@@ -25,13 +25,33 @@ export class ReplayMultiHeadPolyLineSolver extends MultiHeadPolyLineIntraNodeSol
     const settled = this.settledHistory
     if (!settled) throw new Error("Multi-head history request settled without a result")
     if (settled.kind === "error") throw settled.error
-    const initial = settled.history.initial
+    this.validateInitialHistory(settled.history)
+    this.history = settled.history
+  }
+
+  private validateInitialHistory(history: MultiHeadHistoryResult): void {
+    const initial = history.initial
     if (initial.iterations !== 0 || initial.maxIterations !== this.MAX_ITERATIONS ||
         initial.solved !== this.solved || initial.failed !== this.failed ||
         initial.error !== this.error || !Object.is(initial.progress, this.progress)) {
       throw new Error("Multi-head history does not match its initial solver state")
     }
-    this.history = settled.history
+  }
+
+  materializeCompletedHistory(history: MultiHeadHistoryResult): void {
+    if (!this.history) this.validateInitialHistory(history)
+    const terminal = history.steps.at(-1) ?? history.initial
+    if (!terminal.solved || terminal.failed || terminal.exception) {
+      throw new Error("Competitive multi-head winner is not a successfully solved history")
+    }
+    this.history = history
+    this.iterations = terminal.iterations
+    this.MAX_ITERATIONS = terminal.maxIterations
+    this.solved = terminal.solved
+    this.failed = terminal.failed
+    this.error = terminal.error
+    this.progress = terminal.progress
+    this.solvedRoutes = history.solvedRoutes
   }
 
   override _step(): void {

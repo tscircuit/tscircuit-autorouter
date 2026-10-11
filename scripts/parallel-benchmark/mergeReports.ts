@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import stableStringify from "fast-json-stable-stringify"
 import { summarizeParallelBenchmark } from "./parallelBenchmarkSummary"
-import type { BenchmarkPathingStrategy, ParallelBenchmarkResult, ParallelBenchmarkSummary } from "./parallelBenchmarkTypes"
+import type { BenchmarkHighDensityPolicy, BenchmarkPathingStrategy, ParallelBenchmarkResult, ParallelBenchmarkSummary } from "./parallelBenchmarkTypes"
 
 export type ParallelBenchmarkReportSource = {
   sourcePath: string
@@ -38,6 +38,7 @@ type SourceOptions = Record<string, unknown> & {
   workerCount: number
   parallelPathSimplification: boolean
   pathingStrategy: BenchmarkPathingStrategy
+  highDensityPolicy: BenchmarkHighDensityPolicy
   targetSpeedup: number
   variants: string[]
   sampleNumbers: number[]
@@ -55,9 +56,16 @@ const getSourceOptions = (source: ParallelBenchmarkReportSource): SourceOptions 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`Missing benchmark options: ${source.sourcePath}`)
   }
-  const options = { ...raw, pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset" } as SourceOptions
-  if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost") {
+  const options = {
+    ...raw,
+    pathingStrategy: (raw as Record<string, unknown>).pathingStrategy ?? "adaptive-bitset",
+    highDensityPolicy: (raw as Record<string, unknown>).highDensityPolicy ?? "ordered",
+  } as SourceOptions
+  if (options.pathingStrategy !== "indexed" && options.pathingStrategy !== "adaptive-bitset" && options.pathingStrategy !== "cached-cost" && options.pathingStrategy !== "landmark" && options.pathingStrategy !== "negotiated") {
     throw new Error(`Invalid pathingStrategy: ${source.sourcePath}`)
+  }
+  if (options.highDensityPolicy !== "ordered" && options.highDensityPolicy !== "first-valid") {
+    throw new Error(`Invalid highDensityPolicy: ${source.sourcePath}`)
   }
   for (const key of ["repetitions", "timeoutMs", "effort", "workerCount", "targetSpeedup"] as const) {
     if (typeof options[key] !== "number" || !Number.isFinite(options[key]) || options[key] <= 0) {
@@ -155,6 +163,8 @@ export const mergeParallelBenchmarkReports = (
     repetitions: referenceOptions.repetitions,
     timeoutMs: referenceOptions.timeoutMs,
     targetSpeedup: referenceOptions.targetSpeedup,
+    highDensityPolicy: referenceOptions.highDensityPolicy,
+    pathingStrategy: referenceOptions.pathingStrategy,
   })
   return {
     metadata: {
@@ -214,6 +224,7 @@ const main = async (): Promise<void> => {
     `Baseline revision: ${merged.metadata.baselineRevision}`,
     `Sources: ${merged.sources.length}; runs: ${merged.results.length}; installed dependencies verified: ${merged.metadata.installedDependenciesVerified}`,
     `Arithmetic mean speedup: ${summary.arithmeticMeanSpeedup.toFixed(3)}×; aggregate: ${summary.aggregateSpeedup.toFixed(3)}×; geometric mean: ${summary.geometricMeanSpeedup.toFixed(3)}×.`,
+    `High density policy: ${summary.highDensityPolicy}; pathing strategy: ${summary.pathingStrategy}; geometry required: ${summary.geometryRequired}; connection coverage preserved: ${summary.connectionCoveragePreserved}.`,
     `Full coverage: ${summary.fullCoverage}; all solved: ${summary.allCompleted}; exact geometry: ${summary.exactGeometry}; quality preserved: ${summary.qualityPreserved}; target reached: ${summary.targetReached}.`,
     "",
     "| Sample | Baseline median (s) | Parallel median (s) | Speedup | Solved base/parallel | Geometry | Quality |",

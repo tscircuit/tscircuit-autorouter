@@ -17,7 +17,11 @@ export function executeMultiHeadHistoryJob(job: MultiHeadHistoryJob): MultiHeadH
   })
   const initial = snapshotMultiHead(solver)
   const steps: MultiHeadStepSnapshot[] = []
+  const cancellation = job.cancellationBuffer ? new Int32Array(job.cancellationBuffer) : undefined
   while (!solver.solved && !solver.failed) {
+    if (cancellation && Atomics.load(cancellation, 0) !== 0) {
+      return { kind: "multiHeadHistory", initial, steps, solvedRoutes: [], cancelled: true }
+    }
     let exception: MultiHeadStepSnapshot["exception"]
     try {
       solver.step()

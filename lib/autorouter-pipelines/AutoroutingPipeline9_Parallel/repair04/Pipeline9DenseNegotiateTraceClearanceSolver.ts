@@ -11,7 +11,8 @@ import type {
 } from "@tscircuit/repair04"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { Pipeline9DenseClearancePathSolver as FindClearancePathSolver } from "./Pipeline9DenseClearancePathSolver"
-import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
+import { prepareSegmentDistanceGeometry, segmentToSegmentMinDistanceWithGeometry,
+  updateSegmentDistanceGeometry, type SegmentDistanceGeometry } from "./segmentToSegmentMinDistanceWithGeometry"
 import Flatbush from "flatbush"
 import type {
   HighDensityRoute,
@@ -28,7 +29,7 @@ type Span = {
   mutable: boolean
   route: HighDensityRoute
 }
-type Copper = {
+type Copper = SegmentDistanceGeometry & {
   a: RepairRoutePoint
   b: RepairRoutePoint
   radius: number
@@ -442,10 +443,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
               a,
               b,
               radius,
-              minX: Math.min(a.x, b.x),
-              maxX: Math.max(a.x, b.x),
-              minY: Math.min(a.y, b.y),
-              maxY: Math.max(a.y, b.y),
+              ...prepareSegmentDistanceGeometry(a, b),
               ...getRepairCopperLayerSpan(input.srj, a, b),
               spanIndex: si,
               owner: otherOwner,
@@ -518,6 +516,8 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
             x: NaN, y: NaN, z: NaN,
             minX: 0, maxX: 0, minY: 0, maxY: 0,
           }
+          const edgeGeometry: SegmentDistanceGeometry = { aX: 0, aY: 0, bX: 0, bY: 0,
+            dx: 0, dy: 0, l2: 0, minX: 0, minY: 0, maxX: 0, maxY: 0 }
           const query = (
             a: RepairRoutePoint,
             b: RepairRoutePoint,
@@ -533,6 +533,7 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
             hits.length = 0
             const span = getRepairCopperLayerSpan(input.srj, a, b)
             const activeIndex = via ? copperIndex : copperByLayer.get(a.z)
+            let edgeGeometryPrepared = false
             let candidates: number[] | undefined
             if (!via) {
               if (
@@ -609,12 +610,11 @@ export class Pipeline9DenseNegotiateTraceClearanceSolver extends BaseSolver {
                 maxY + required + REGION_EPSILON < copper.minY
               )
                 continue
-              const distance = segmentToSegmentMinDistance(
-                a,
-                b,
-                copper.a,
-                copper.b,
-              )
+              if (!edgeGeometryPrepared) {
+                updateSegmentDistanceGeometry(edgeGeometry, a, b)
+                edgeGeometryPrepared = true
+              }
+              const distance = segmentToSegmentMinDistanceWithGeometry(edgeGeometry, copper)
               if (distance < required - REGION_EPSILON) {
                 const ratio = (required - distance) / (required * required)
                 let hit = hitPool[hits.length]

@@ -16,6 +16,7 @@ type WorkerSlot = {
   worker: WorkerWithLifecycle
   task: QueuedTask | null
   contextId: number | null
+  pathingGraphId: number | null
 }
 export type Pipeline9LocalWorkerPoolOptions = {
   workerCount?: number
@@ -27,7 +28,8 @@ export type Pipeline9LocalWorkerPoolOptions = {
 export class Pipeline9LocalWorkerPool {
   readonly workerCount: number
   readonly stats = { tasksStarted: 0, tasksCompleted: 0, maxActiveWorkers: 0,
-    historyRequestsGranted: 0, historyRequestsDenied: 0, historyJobsStarted: 0 }
+    historyRequestsGranted: 0, historyRequestsDenied: 0, historyJobsStarted: 0,
+    historyCancellationSignals: 0, historyJobsStopped: 0, historyStepsCompleted: 0 }
   private readonly workerUrl: URL
   private readonly workerFactory: (url: URL) => Worker
   private readonly workers: WorkerSlot[] = []
@@ -35,6 +37,7 @@ export class Pipeline9LocalWorkerPool {
   private nextTaskId = 0
   private nextContextId = 0
   private terminalError: Error | null = null
+  private readonly historyCancellationByOwner = new Map<number, Set<Int32Array>>()
 
   constructor(options: Pipeline9LocalWorkerPoolOptions = {}) {
     this.workerCount = options.workerCount ?? 4
@@ -74,12 +77,21 @@ export class Pipeline9LocalWorkerPool {
 
   private createWorker(): WorkerSlot {
     const worker = this.workerFactory(this.workerUrl) as WorkerWithLifecycle
-    const slot: WorkerSlot = { worker, task: null, contextId: null }
+    const slot: WorkerSlot = { worker, task: null, contextId: null, pathingGraphId: null }
     worker.onmessage = (event: MessageEvent<Pipeline9LocalWorkerResponse>): void => {
       const response = event.data
       const task = slot.task
       if ("kind" in response) {
-        try { this.admitHistoryRequest(slot, response) }
+        try {
+          if (response.kind === "requestMultiHeadHistories") this.admitHistoryRequest(slot, response)
+          else if (response.kind === "cancelMultiHeadHistories") {
+            if (!task || task.taskId !== response.taskId || task.job.kind !== "highDensityNode") {
+              throw new Error("Multi-head cancellation has no active high-density owner")
+            }
+            this.cancelOwnerHistories(response.taskId)
+          }
+          else throw new Error("Unknown Pipeline9 worker control message")
+        }
         catch (error: unknown) { this.fail(error instanceof Error ? error : new Error(String(error))) }
         return
       }
@@ -87,6 +99,14 @@ export class Pipeline9LocalWorkerPool {
         this.fail(new Error(`Pipeline9 worker returned unexpected task ${response.taskId}`))
         return
       }
+      if (response.ok && task.job.kind === "multiHeadHistory") {
+        try { this.recordHistoryWork(response.result) }
+        catch (error: unknown) {
+          this.fail(error instanceof Error ? error : new Error(String(error)))
+          return
+        }
+      }
+      if (task.job.kind === "highDensityNode") this.cancelOwnerHistories(task.taskId)
       slot.task = null
       this.stats.tasksCompleted++
       if (response.ok) task.resolve(response.result)
@@ -131,15 +151,55 @@ export class Pipeline9LocalWorkerPool {
     if (jobs.length === 0) this.stats.historyRequestsDenied++
     else this.stats.historyRequestsGranted++
     for (const job of jobs) {
+      const cancellation = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT))
+      let cancellations = this.historyCancellationByOwner.get(request.taskId)
+      if (!cancellations) {
+        cancellations = new Set<Int32Array>()
+        this.historyCancellationByOwner.set(request.taskId, cancellations)
+      }
+      cancellations.add(cancellation)
       this.stats.historyJobsStarted++
-      void this.run<MultiHeadHistoryResult>(job).then(
-        (result): void => this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
-          taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId, ok: true, result }),
-        (error: unknown): void => this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
-          taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId,
-          ok: false, error: error instanceof Error ? error.message : String(error) }),
+      void this.run<MultiHeadHistoryResult>({ ...job, cancellationBuffer: cancellation.buffer as SharedArrayBuffer }).then(
+        (result): void => {
+          this.removeHistoryCancellation(request.taskId, cancellation)
+          this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
+            taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId, ok: true, result })
+        },
+        (error: unknown): void => {
+          this.removeHistoryCancellation(request.taskId, cancellation)
+          this.deliverHistory(owner, { kind: "multiHeadHistoryDelivery",
+            taskId: request.taskId, requestId: request.requestId, candidateId: job.candidateId,
+            ok: false, error: error instanceof Error ? error.message : String(error) })
+        },
       )
     }
+  }
+
+  private recordHistoryWork(result: unknown): void {
+    if (!result || typeof result !== "object" || !("kind" in result) ||
+        result.kind !== "multiHeadHistory" || !("steps" in result) || !Array.isArray(result.steps)) {
+      throw new Error("Multi-head worker returned an invalid history result")
+    }
+    this.stats.historyStepsCompleted += result.steps.length
+    if ("cancelled" in result && result.cancelled === true) this.stats.historyJobsStopped++
+  }
+
+  private removeHistoryCancellation(ownerTaskId: number, cancellation: Int32Array): void {
+    const cancellations = this.historyCancellationByOwner.get(ownerTaskId)
+    if (!cancellations) return
+    cancellations.delete(cancellation)
+    if (cancellations.size === 0) {
+      this.historyCancellationByOwner.delete(ownerTaskId)
+    }
+  }
+
+  private cancelOwnerHistories(ownerTaskId: number): void {
+    const cancellations = this.historyCancellationByOwner.get(ownerTaskId)
+    if (!cancellations) return
+    for (const cancellation of cancellations) {
+      if (Atomics.exchange(cancellation, 0, 1) === 0) this.stats.historyCancellationSignals++
+    }
+    this.historyCancellationByOwner.delete(ownerTaskId)
   }
 
   private deliverHistory(owner: WorkerSlot, delivery: MultiHeadHistoryDelivery): void {
@@ -166,6 +226,15 @@ export class Pipeline9LocalWorkerPool {
           job = nodeJob
         } else slot.contextId = task.job.contextId
       }
+      if (task.job.kind === "pathingNegotiatedRoute") {
+        if (slot.pathingGraphId === task.job.graphId) {
+          const { graph: _graph, ...routeJob } = task.job
+          job = routeJob
+        } else {
+          if (!task.job.graph) throw new Error(`Negotiated pathing worker needs graph ${task.job.graphId}`)
+          slot.pathingGraphId = task.job.graphId
+        }
+      }
       slot.worker.ref?.()
       this.stats.tasksStarted++
       this.stats.maxActiveWorkers = Math.max(this.stats.maxActiveWorkers,
@@ -177,6 +246,7 @@ export class Pipeline9LocalWorkerPool {
   private fail(error: Error): void {
     if (this.terminalError) return
     this.terminalError = error
+    for (const ownerTaskId of this.historyCancellationByOwner.keys()) this.cancelOwnerHistories(ownerTaskId)
     for (const task of this.queue.splice(0)) task.reject(error)
     for (const slot of this.workers) {
       slot.task?.reject(error)

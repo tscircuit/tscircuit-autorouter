@@ -89,12 +89,19 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   expect(merged.summary.aggregateSpeedup).toBeCloseTo(2.5)
   expect(merged.metadata.installedDependenciesVerified).toBe(true)
   expect((merged.metadata.options as Record<string, unknown>).pathingStrategy).toBe("adaptive-bitset")
+  expect((merged.metadata.options as Record<string, unknown>).highDensityPolicy).toBe("ordered")
   expect(sources).toEqual(makeMergeSources())
 
-  for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost"]) {
+  for (const pathingStrategy of ["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated"]) {
     const strategySources = makeMergeSources()
     for (const source of strategySources) {
       (source.report.metadata.options as Record<string, unknown>).pathingStrategy = pathingStrategy
+      for (const result of source.report.results) {
+        result.quality!.connectionCoverage = {
+          requiredNetCount: 2, requiredPairCount: 3, coveredNetCount: 2,
+          uncoveredNetCount: 0, missingPortCount: 0, singletonNetCount: 1, errorCount: 0,
+        }
+      }
     }
     const strategyReport = mergeParallelBenchmarkReports(strategySources)
     expect((strategyReport.metadata.options as Record<string, unknown>).pathingStrategy).toBe(pathingStrategy)
@@ -109,6 +116,15 @@ test("parallel benchmark reports merge only comparable complete same-runner samp
   const invalidStrategy = makeMergeSources()
   Object.assign(invalidStrategy[0]!.report.metadata.options as Record<string, unknown>, { pathingStrategy: "unknown" })
   expect(() => mergeParallelBenchmarkReports(invalidStrategy)).toThrow("Invalid pathingStrategy")
+  const equivalentLegacyPolicy = makeMergeSources()
+  Object.assign(equivalentLegacyPolicy[0]!.report.metadata.options as Record<string, unknown>, { highDensityPolicy: "ordered" })
+  expect(mergeParallelBenchmarkReports(equivalentLegacyPolicy).summary.targetReached).toBe(true)
+  const mismatchedPolicy = makeMergeSources()
+  Object.assign(mismatchedPolicy[0]!.report.metadata.options as Record<string, unknown>, { highDensityPolicy: "first-valid" })
+  expect(() => mergeParallelBenchmarkReports(mismatchedPolicy)).toThrow("Incompatible benchmark options")
+  const invalidPolicy = makeMergeSources()
+  Object.assign(invalidPolicy[0]!.report.metadata.options as Record<string, unknown>, { highDensityPolicy: "invalid" })
+  expect(() => mergeParallelBenchmarkReports(invalidPolicy)).toThrow("Invalid highDensityPolicy")
 
   const reorderedSources = makeMergeSources()
   reorderedSources[1]!.report.metadata.runtime = { node: "24.3.0", bun: "1.3.10" }

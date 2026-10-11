@@ -5,6 +5,8 @@ import { restoreWorkerConnectivityMap } from "./restoreWorkerConnectivityMap"
 import { getPipeline9RegionalB01CandidateOutput, preparePipeline9RegionalB01Candidate } from "../AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import type { ParallelRegionalB01CandidateResult, ParallelRegionalFallbackResult, ParallelStageWorkerJob, ParallelStageWorkerResult } from "./parallelStageWorkerTypes"
+import { computeTinyLandmarkDistances } from "./TinyLandmarkHeuristic"
+import { executeNegotiatedPathingRouteJob } from "./TinyNegotiatedRouteSearch"
 
 function executeRegionalFallback(
   job: Extract<ParallelStageWorkerJob, { kind: "regionalFallbackSolve" }>,
@@ -54,6 +56,10 @@ export function executeParallelStageJob(
   job: ParallelStageWorkerJob,
 ): ParallelStageWorkerResult {
   switch (job.kind) {
+    case "pathingNegotiatedRoute":
+      return executeNegotiatedPathingRouteJob(job)
+    case "pathingLandmark":
+      return { kind: job.kind, ...computeTinyLandmarkDistances(job.graph, job.landmarkPortId) }
     case "regionalFallbackSolve":
       return executeRegionalFallback(job)
     case "regionalB01Candidate":

@@ -17,6 +17,7 @@ export type MultiHeadHistoryJob = {
   params: Omit<ConstructorParameters<typeof MultiHeadPolyLineIntraNodeSolver3>[0], "connMap">
   connectivityNetMap: Record<string, string[]>
   connectivityIdToNetMap: Record<string, string>
+  cancellationBuffer?: SharedArrayBuffer
 }
 
 export type MultiHeadHistoryResult = {
@@ -24,6 +25,7 @@ export type MultiHeadHistoryResult = {
   initial: MultiHeadStepSnapshot
   steps: MultiHeadStepSnapshot[]
   solvedRoutes: HighDensityIntraNodeRoute[]
+  cancelled?: boolean
 }
 
 export type MultiHeadHistoryDispatcher = (
@@ -35,6 +37,11 @@ export type MultiHeadHistoryRequest = {
   taskId: number
   requestId: number
   jobs: MultiHeadHistoryJob[]
+}
+
+export type MultiHeadHistoryCancellation = {
+  kind: "cancelMultiHeadHistories"
+  taskId: number
 }
 
 export type MultiHeadHistoryGrant = {

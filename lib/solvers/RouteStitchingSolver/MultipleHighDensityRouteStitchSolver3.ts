@@ -145,6 +145,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    snapTerminalsOnSameLayer?: boolean
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -274,10 +275,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: [globalStart, globalEnd],
+          requireSameLayer: params.snapTerminalsOnSameLayer,
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
           terminals: [globalStart, globalEnd],
+          requireSameLayer: params.snapTerminalsOnSameLayer,
         })
       } else {
         start = {

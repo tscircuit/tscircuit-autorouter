@@ -4,10 +4,11 @@ import path from "node:path"
 import stableStringify from "fast-json-stable-stringify"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
+import { evaluateConnectionCoverage } from "./parallelBenchmarkConnectionCoverage"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../lib/types/srj-types"
 import { extractBenchmarkStageTiming, type PipelineStageTimingSource } from "../benchmark/benchmark-stage-timing"
 import { loadScenarioBySampleNumber } from "../benchmark/scenarios"
-import type { BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
+import type { BenchmarkHighDensityPolicy, BenchmarkPathingStrategy, BenchmarkVariant, ParallelBenchmarkChildMessage, ParallelBenchmarkResult } from "./parallelBenchmarkTypes"
 
 type Solver = PipelineStageTimingSource & {
   solved: boolean
@@ -27,7 +28,7 @@ type Solver = PipelineStageTimingSource & {
 
 type SolverConstructor = new (
   scenario: SimpleRouteJson,
-  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean; pathingStrategy?: BenchmarkPathingStrategy },
+  options: { effort: number; cacheProvider: null; workerCount?: number; enableParallelPathSimplification?: boolean; pathingStrategy?: BenchmarkPathingStrategy; highDensityPolicy?: BenchmarkHighDensityPolicy },
 ) => Solver
 
 const emit = (message: ParallelBenchmarkChildMessage): void => {
@@ -35,7 +36,7 @@ const emit = (message: ParallelBenchmarkChildMessage): void => {
 }
 
 const main = async (): Promise<void> => {
-  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument, pathingArgument = "indexed"] = process.argv.slice(2)
+  const [sampleArgument, variantArgument, repeatArgument, effortArgument, workerArgument, outDir, simplificationArgument, pathingArgument = "indexed", highDensityPolicyArgument = "ordered"] = process.argv.slice(2)
   const sampleNumber = Number(sampleArgument)
   const variant = variantArgument as BenchmarkVariant
   const repeat = Number(repeatArgument)
@@ -44,8 +45,11 @@ const main = async (): Promise<void> => {
   if (!outDir || (variant !== "baseline" && variant !== "parallel")) {
     throw new Error("Invalid benchmark child arguments")
   }
-  if (pathingArgument !== "indexed" && pathingArgument !== "adaptive-bitset" && pathingArgument !== "cached-cost") {
+  if (pathingArgument !== "indexed" && pathingArgument !== "adaptive-bitset" && pathingArgument !== "cached-cost" && pathingArgument !== "landmark" && pathingArgument !== "negotiated") {
     throw new Error("Invalid benchmark child pathing strategy")
+  }
+  if (highDensityPolicyArgument !== "ordered" && highDensityPolicyArgument !== "first-valid") {
+    throw new Error("Invalid benchmark child high density policy")
   }
   const { scenarioName, scenario } = await loadScenarioBySampleNumber("srj18", sampleNumber, effort)
   const solverName = variant === "baseline"
@@ -85,6 +89,7 @@ const main = async (): Promise<void> => {
         workerCount,
         enableParallelPathSimplification: simplificationArgument !== "0",
         pathingStrategy: pathingArgument,
+        highDensityPolicy: highDensityPolicyArgument,
       } : {}),
     })
     progress()
@@ -141,11 +146,12 @@ const main = async (): Promise<void> => {
     const output = solver.getOutputSimpleRouteJson()
     result.geometryHash = createHash("sha256").update(stableStringify(traces)).digest("hex")
     result.outputHash = createHash("sha256").update(stableStringify(output)).digest("hex")
-    const { errors } = evaluateRelaxedDrc({
+    const { errors, circuitJson } = evaluateRelaxedDrc({
       inputSrj: scenario,
       srjWithPointPairs: solver.srjWithPointPairs ?? scenario,
       routedTraces: traces,
     })
+    const connectionCoverage = evaluateConnectionCoverage(scenario, circuitJson)
     const traceLintIssues = runTraceLinting(output).getOutput()
     const traceLintIssueCounts: Record<string, number> = {}
     for (const issue of traceLintIssues) {
@@ -156,10 +162,11 @@ const main = async (): Promise<void> => {
       viaCount: traces.reduce((sum, trace) => sum + trace.route.filter((point) => point.route_type === "via").length, 0),
       drcErrorCount: errors.length,
       traceLintIssueCounts,
+      connectionCoverage: connectionCoverage.summary,
     }
     await mkdir(outDir, { recursive: true })
     await writeFile(path.join(outDir, "routed-srj.json"), JSON.stringify(output))
-    await writeFile(path.join(outDir, "quality.json"), JSON.stringify({ ...result.quality, errors, traceLintIssues }, null, 2))
+    await writeFile(path.join(outDir, "quality.json"), JSON.stringify({ ...result.quality, errors, traceLintIssues, connectionCoverageDetails: connectionCoverage }, null, 2))
   }
   await mkdir(outDir, { recursive: true })
   await writeFile(path.join(outDir, "result.json"), JSON.stringify(result, null, 2))

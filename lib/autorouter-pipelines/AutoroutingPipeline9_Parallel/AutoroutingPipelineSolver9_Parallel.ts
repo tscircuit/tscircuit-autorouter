@@ -8,6 +8,8 @@ import { ParallelHighDensityRepairSolver } from "./ParallelHighDensityRepairSolv
 import { ParallelTraceSimplificationSolver } from "./ParallelTraceSimplificationSolver"
 import { ParallelPortPointPathingSolver, type Pipeline9PathingStrategy } from "./ParallelPortPointPathingSolver"
 import { ParallelPipeline9JointDrcRepairSolver } from "./ParallelPipeline9JointDrcRepairSolver"
+import type { ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
+import { Pipeline9LayerAwareNetToPointPairsSolver } from "./Pipeline9LayerAwareNetToPointPairsSolver"
 
 export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolverOptions & {
   workerCount?: number
@@ -15,6 +17,7 @@ export type AutoroutingPipelineSolver9ParallelOptions = AutoroutingPipelineSolve
   /** Supply a persistent pool to reuse worker imports across boards. */
   workerPool?: Pipeline9LocalWorkerPool
   enableParallelPathSimplification?: boolean
+  highDensityPolicy?: ParallelHighDensityPolicy
 }
 
 /** Opt-in Pipeline9 prototype using at most four local routing workers. */
@@ -24,15 +27,33 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
 
   constructor(srj: SimpleRouteJson, opts: AutoroutingPipelineSolver9ParallelOptions = {}) {
     super(srj, opts)
+    if (opts.highDensityPolicy !== undefined && opts.highDensityPolicy !== "ordered" && opts.highDensityPolicy !== "first-valid") {
+      throw new Error(`Invalid parallel high-density policy: ${opts.highDensityPolicy}`)
+    }
     this.workerPool = opts.workerPool ?? new Pipeline9LocalWorkerPool({ workerCount: opts.workerCount })
     this.ownsWorkerPool = opts.workerPool === undefined
+    if (opts.highDensityPolicy === "first-valid" || opts.pathingStrategy === "landmark" || opts.pathingStrategy === "negotiated") {
+      const pairsIndex = this.pipelineDef.findIndex((step) => step.solverName === "netToPointPairsSolver")
+      const pairsStep = this.pipelineDef[pairsIndex]
+      if (!pairsStep) throw new Error("Pipeline9 netToPointPairsSolver step is missing")
+      this.pipelineDef[pairsIndex] = { ...pairsStep, solverClass: Pipeline9LayerAwareNetToPointPairsSolver as any } as any
+      const stitchIndex = this.pipelineDef.findIndex((step) => step.solverName === "highDensityStitchSolver")
+      const stitchStep = this.pipelineDef[stitchIndex]
+      if (!stitchStep) throw new Error("Pipeline9 highDensityStitchSolver step is missing")
+      this.pipelineDef[stitchIndex] = { ...stitchStep,
+        getConstructorParams: (cms: AutoroutingPipelineSolver9_PreloadedTraceGraph): any[] => {
+          const params = stitchStep.getConstructorParams(cms)
+          return [{ ...params[0], snapTerminalsOnSameLayer: true }]
+        },
+      } as any
+    }
     const pathingIndex = this.pipelineDef.findIndex((step) => step.solverName === "portPointPathingSolver")
     const pathingStep = this.pipelineDef[pathingIndex]
     if (!pathingStep) throw new Error("Pipeline9 portPointPathingSolver step is missing")
     this.pipelineDef[pathingIndex] = {
       ...pathingStep, solverClass: ParallelPortPointPathingSolver as any,
       getConstructorParams: (cms: AutoroutingPipelineSolver9_PreloadedTraceGraph): any[] => [
-        ...pathingStep.getConstructorParams(cms), { strategy: opts.pathingStrategy ?? "indexed" },
+        ...pathingStep.getConstructorParams(cms), { strategy: opts.pathingStrategy ?? "indexed", workerPool: this.workerPool },
       ],
     } as any
     const stepIndex = this.pipelineDef.findIndex((step) => step.solverName === "highDensityRouteSolver")
@@ -43,7 +64,9 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
       ...originalStep, solverClass: Pipeline9ParallelHighDensitySolver as any,
       getConstructorParams: (solver: AutoroutingPipelineSolver9_Parallel) => {
         const [params] = getOriginalParams(solver)
-        return [{ ...params, workerPool: solver.workerPool }]
+        return [{ ...params, workerPool: solver.workerPool, highDensityPolicy: opts.highDensityPolicy ?? "ordered",
+          firstValidClearance: Math.max(0.1, solver.srj.minTraceToPadEdgeClearance ?? 0.1,
+            solver.srj.minViaEdgeToPadEdgeClearance ?? 0.1) }]
       },
     } as any
     for (const [solverName, solverClass] of [
@@ -107,6 +130,11 @@ export class AutoroutingPipelineSolver9_Parallel extends AutoroutingPipelineSolv
     const startTime = performance.now()
     try {
       while (!this.solved && !this.failed) {
+        if (this.activeSubSolver instanceof ParallelPortPointPathingSolver && this.activeSubSolver.requiresAsyncExecution) {
+          await this.activeSubSolver.solveAsync()
+          this.step()
+          continue
+        }
         // Serial stages retain their own step budget and progress updates; the
         // coordinator only needs to commit the stage once it finishes.
         if (this.activeSubSolver &&

@@ -2,7 +2,7 @@
 
 `AutoroutingPipelineSolver9_Parallel` is an opt-in asynchronous Pipeline 9
 implementation. It dispatches independent routing work to a local worker pool
-and commits results in the serial solver's order. The existing
+and, by default, commits results in the serial solver's order. The existing
 `AutoroutingPipelineSolver` export continues to use the serial Pipeline 9.
 
 The full paired SRJ18 evaluation is in progress. This document does not claim
@@ -46,6 +46,28 @@ async function routeBoard(srj: SimpleRouteJson): Promise<SimpleRouteJson> {
 The benchmark candidate enables it by default; use
 `--parallel-path-simplification 0` to evaluate the routing and repair changes
 without that stage.
+
+`highDensityPolicy` defaults to `"ordered"`. The opt-in `"first-valid"`
+policy accepts a completed, locally valid high-density candidate before
+earlier candidates finish. It may produce different routes; geometry hashes
+and trace/via counts remain available as diagnostics. Select the corresponding
+benchmark mode with `--high-density-policy first-valid`.
+
+`pathingStrategy` defaults to `"indexed"`. The benchmark also accepts
+`"adaptive-bitset"`, `"cached-cost"`, and the opt-in `"landmark"` and
+`"negotiated"` strategies.
+Landmark pathing computes relaxed-graph distance tables in the shared pool
+and uses them to guide routing. It can change route choices even with ordered
+high-density routing. Use `--pathing-strategy landmark` to evaluate it with
+the same explicit coverage and quality checks as other alternative routes.
+Negotiated pathing dispatches candidate searches through the shared pool
+while retaining coordinator quality checks and rip policies; select it with
+`--pathing-strategy negotiated`.
+
+Alternative policies use a layer-aware point-pair tree and same-layer terminal
+snapping. This retains distinct opposite-layer pads at identical coordinates,
+which the original XY-only tree can omit. The output must physically connect
+every original net terminal; metadata alone does not establish connectivity.
 
 A caller can reuse worker imports across boards by providing a pool. The
 caller owns a supplied pool, so `solver.dispose()` leaves that pool alive.
@@ -94,6 +116,8 @@ creates and disposes a fresh owned pool for every prototype invocation.
 | High-density force improvement | Node's assigned routes | Original sample order and route indexes |
 | High-density repair | Node repair sample | Original fixed-neighbor snapshots and route metadata |
 | Optional path simplification | Geometrically independent interaction components | Original route indexes, via operations, validation, and simplification loop budgets |
+| Opt-in negotiated pathing | Up to four route searches against immutable occupancy | Stable commits, live conflict checks, rescheduling, and shared original expansion budgets |
+| Opt-in landmark preparation | Relaxed-graph distance table | Original graph reservations and routing quality checks |
 
 The pool is shared between these stages within a board. It queues jobs and
 keeps at most `workerCount` jobs active. High-density routing starts likely
@@ -101,8 +125,9 @@ expensive nodes first while harvesting results in the original order. Shared
 board context is sent once to each worker for that routing context rather
 than retransmitted with every node.
 
-Port-point pathing, topology, coordinated via changes, joint DRC work, and
-other stages retain their serial execution. High-density routing with fixed
+Topology, coordinated via changes, and joint DRC commits retain their serial
+execution. Ordered port-point pathing also retains its original coordinator;
+negotiated search is opt-in. High-density routing with fixed
 preloaded routes also keeps its existing sequential mutation path. Worker
 exceptions propagate through the asynchronous solver and mark it failed.
 
@@ -196,11 +221,44 @@ prototype time across repetitions. It reports three different metrics:
 - Geometric mean speedup: the geometric mean of the 16 per-sample ratios.
 
 The `targetReached` flag requires every baseline and prototype repetition for
-all 16 samples to complete successfully. It also requires matching SHA-256
-hashes of the full simplified trace outputs, unchanged trace and via counts,
-and no per-sample DRC or per-type trace-lint regression. Both arithmetic mean
-and aggregate speedup must be at least 2×. Missing samples, duplicate runs,
-failed routes, timeouts, and missing quality evidence cannot pass the gate.
+all 16 samples to complete successfully, with no per-sample DRC or per-type
+trace-lint regression. Both arithmetic mean and aggregate speedup must be at
+least 2×. Missing samples, duplicate runs, failed routes, timeouts, and missing
+quality evidence cannot pass the gate.
+
+With ordered high-density routing and indexed, adaptive-bitset, or cached-cost
+pathing, the
+gate also requires matching SHA-256 hashes of the full simplified trace
+outputs and unchanged trace/via counts. In first-valid, landmark, or negotiated mode,
+geometry and counts are diagnostic; legitimate alternative routes can pass
+when physical connection coverage and the quality comparisons pass. Reports
+record the policy, strategy, and whether exact geometry was required. Subset
+reports with different policies or strategies cannot merge.
+
+New reports validate original logical root-net requirements explicitly,
+including preloaded copper. The coverage evaluator groups original endpoint
+aliases and builds physical components from individual wire strokes, vias,
+and pad geometry using the existing geometry helpers and a spatial index.
+Ordinary wire strokes use their starting width; rotated pads use their actual
+polygons. Conductors join only through actual contact on a shared layer;
+vias and plated-hole barrels supply their declared layer span. Trace or port
+metadata does not join disconnected copper. Every required net must have a
+physical component contacted by all its original terminals, with no uncovered
+nets or missing port identities. Multiple allowed layers remain alternative
+contacts and do not create a barrel. Pad-less terminals can contact wire
+interiors at their original coordinates. Shared-pad aliases retain those
+coordinates and layers, so a net alias cannot substitute a distant pad.
+Singleton nets without a second endpoint are reported separately. Trace lint currently checks odd
+angles; it is not the connection coverage check. Legacy ordered reports lack
+coverage fields and retain their original exact-geometry comparison; they
+cannot provide coverage evidence for alternative-route modes.
+
+A validation-only audit of the earlier `dd922d3` outputs exposed a missing
+bottom connection in sample011: `pcb_port_395` shares coordinates with top
+`pcb_port_75`, but the two SMT pads occupy different layers. The original
+relaxed DRC conversion selected the top pad's port alias and omitted the
+bottom requirement. Both earlier variants have that omission; the new
+coverage gate retains the bottom port and requires the candidate to connect it.
 
 DRC uses the existing benchmark's `evaluateRelaxedDrc` evaluator and rule
 preset. Exact trace hashes provide a stronger equivalence check for this

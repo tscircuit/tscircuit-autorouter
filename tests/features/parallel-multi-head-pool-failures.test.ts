@@ -5,7 +5,7 @@ import type { Pipeline9LocalWorkerRequest, Pipeline9LocalWorkerResponse, Pipelin
 import { createNetworkedNode } from "tests/fixtures/pipeline9-networked-fixtures"
 
 type PoolMessage = Pipeline9LocalWorkerRequest | MultiHeadHistoryGrant | MultiHeadHistoryDelivery
-type FailureKind = "dispose" | "history-response" | "grant-post" | "history-startup"
+type FailureKind = "dispose" | "history-response" | "invalid-history" | "grant-post" | "history-startup"
 
 class FailureWorker {
   onmessage: ((event: MessageEvent<Pipeline9LocalWorkerResponse>) => void) | null = null
@@ -56,8 +56,8 @@ function latestTask(worker: FailureWorker): Pipeline9LocalWorkerRequest {
   return task
 }
 
-test("history startup, grant, worker failures and disposal reject all owners and queued work", async (): Promise<void> => {
-  const failures: FailureKind[] = ["dispose", "history-response", "grant-post", "history-startup"]
+test("history startup, grant, malformed responses, worker failures and disposal reject all owners and queued work", async (): Promise<void> => {
+  const failures: FailureKind[] = ["dispose", "history-response", "invalid-history", "grant-post", "history-startup"]
   for (const failure of failures) {
     const workers: FailureWorker[] = []
     const expectedError = new Error(`deliberate ${failure} failure`)
@@ -86,6 +86,9 @@ test("history startup, grant, worker failures and disposal reject all owners and
       if (failure === "history-response") {
         workers[2]!.emit({ taskId: latestTask(workers[2]!).taskId, ok: false, error: expectedError.message })
       }
+      if (failure === "invalid-history") {
+        workers[2]!.emit({ taskId: latestTask(workers[2]!).taskId, ok: true, result: null })
+      }
       const outcomes = await Promise.all([...ownerOutcomes, queuedOutcome])
       expect(outcomes.every((outcome) => outcome.status === "rejected")).toBe(true)
       const errors = outcomes.map((outcome) => (outcome as { status: "rejected"; error: unknown }).error)
@@ -93,7 +96,8 @@ test("history startup, grant, worker failures and disposal reject all owners and
       expect(errors[1]).toBe(errors[0])
       expect(errors[2]).toBe(errors[0])
       if (failure === "grant-post" || failure === "history-startup") expect(errors[0]).toBe(expectedError)
-      else expect(errors[0]).toMatchObject({ message: failure === "dispose" ? "Pipeline9 local worker pool was disposed" : expectedError.message })
+      else expect(errors[0]).toMatchObject({ message: failure === "dispose" ? "Pipeline9 local worker pool was disposed"
+        : failure === "invalid-history" ? "Multi-head worker returned an invalid history result" : expectedError.message })
       await expect(pool.run({ kind: "warmup" })).rejects.toBe(errors[0])
       expect(() => pool.createContextId()).toThrow(errors[0] as Error)
       expect(workers.every((worker) => worker.terminated)).toBe(true)

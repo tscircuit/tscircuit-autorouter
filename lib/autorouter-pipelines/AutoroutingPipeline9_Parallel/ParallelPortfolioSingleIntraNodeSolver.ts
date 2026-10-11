@@ -1,7 +1,9 @@
 import { PortfolioSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
 import { ReplayMultiHeadPolyLineSolver } from "./ReplayMultiHeadPolyLineSolver"
-import type { MultiHeadHistoryDispatcher, MultiHeadHistoryJob } from "./parallelMultiHeadHistoryTypes"
+import type { MultiHeadHistoryDispatcher, MultiHeadHistoryJob, MultiHeadHistoryResult } from "./parallelMultiHeadHistoryTypes"
+import type { FirstValidHighDensityStats, ParallelHighDensityPolicy, ParallelHighDensityPolicyOptions } from "./parallelHighDensityPolicyTypes"
+import { validateFirstValidHighDensityRoutes } from "./validateFirstValidHighDensityRoutes"
 
 export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntraNodeSolver {
   private readonly dispatcher: MultiHeadHistoryDispatcher
@@ -9,13 +11,32 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
   private readonly admittedCandidates = new Set<number>()
   private requestedAtExpansion = false
   private requestedAtSelection = false
+  private readonly policy: ParallelHighDensityPolicy
+  private readonly policyStats: FirstValidHighDensityStats
+  private readonly startedAt = performance.now()
+  private lastCompetitiveRequestAt = -Infinity
+  private readonly completedHistories: Array<{ candidateId: number; history: MultiHeadHistoryResult }> = []
+  private nextHistoryDelivery!: Promise<void>
+  private signalHistoryDelivery!: () => void
+  private readonly onAcceptedCandidate?: () => void
+  private readonly competitiveClearance: number
 
   constructor(
     params: ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
     dispatcher: MultiHeadHistoryDispatcher,
+    options: ParallelHighDensityPolicyOptions = { policy: "ordered" },
   ) {
     super(params)
     this.dispatcher = dispatcher
+    this.policy = options.policy
+    this.onAcceptedCandidate = options.onAcceptedCandidate
+    this.competitiveClearance = options.clearance ?? 0.1
+    this.policyStats = options.stats ?? { eligiblePortfolioCount: 0, acceptedCandidateCount: 0,
+      rejectedCandidateCount: 0, rejectionReasons: {}, winners: [] }
+    if (this.policy === "first-valid") {
+      this.policyStats.eligiblePortfolioCount++
+      this.resetHistoryDeliverySignal()
+    }
   }
 
   override generateSolver(hyperParameters: Record<string, any>): IntraNodeRouteSolver {
@@ -37,6 +58,10 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
       // Its dynamic limit is affine in that parent iteration, one above this one.
       this.MAX_ITERATIONS++
       this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
+    }
+    if (this.policy === "first-valid") {
+      await this.prepareCompetitiveStep()
+      return
     }
     const selected = this.getSupervisedSolverWithBestFitness()?.solver
     const requestAtExpansion = this.adaptiveSearchExpanded && !this.requestedAtExpansion
@@ -67,6 +92,91 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
       if (!solver) throw new Error(`Multi-head grant names unknown candidate ${id}`)
       solver.setHistoryRequest(request)
       this.admittedCandidates.add(id)
+      if (this.policy === "first-valid") {
+        void request.then((history): void => {
+          this.completedHistories.push({ candidateId: id, history })
+          this.signalHistoryDelivery()
+          this.resetHistoryDeliverySignal()
+        }, (): void => {
+          // The replay solver observes this rejection and throws if scheduled.
+          // An unused speculative candidate never decides the winning policy.
+        })
+      }
+    }
+  }
+
+  private resetHistoryDeliverySignal(): void {
+    let signal!: () => void
+    const delivery = new Promise<void>((resolve) => {
+      signal = resolve
+    })
+    this.signalHistoryDelivery = signal
+    this.nextHistoryDelivery = delivery
+  }
+
+  private acceptCompletedCompetitiveCandidate(): boolean {
+    while (this.completedHistories.length > 0) {
+      const completed = this.completedHistories.shift()!
+      const terminal = completed.history.steps.at(-1) ?? completed.history.initial
+      if (!terminal.solved || terminal.failed || terminal.exception) continue
+      const solver = this.historyCandidates.get(completed.candidateId)
+      const routeSolver = solver as unknown as IntraNodeRouteSolver
+      const supervised = this.supervisedSolvers?.find((candidate) => candidate.solver === routeSolver)
+      if (!solver || !supervised) throw new Error("Completed competitive history has no supervised candidate")
+      solver.materializeCompletedHistory(completed.history)
+      const previousRoutes = this.solvedRoutes
+      this.onSolve({ ...supervised, solver: routeSolver })
+      const validation = validateFirstValidHighDensityRoutes({
+        routes: this.solvedRoutes, node: this.nodeWithPortPoints, connMap: this.connMap,
+        traceWidth: this.constructorParams.traceWidth ?? 0.15,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        obstacleMargin: this.competitiveClearance,
+        layerCount: this.constructorParams.layerCount ?? 2,
+        obstacles: this.constructorParams.obstacles ?? [],
+        boardGeometry: this.constructorParams.boardGeometry,
+      })
+      if (!validation.valid) {
+        this.solvedRoutes = previousRoutes
+        solver.solved = false
+        solver.failed = true
+        solver.error = `Competitive multi-head candidate rejected: ${validation.reason}`
+        this.policyStats.rejectedCandidateCount++
+        this.policyStats.rejectionReasons[validation.reason] = (this.policyStats.rejectionReasons[validation.reason] ?? 0) + 1
+        continue
+      }
+      this.winningSolver = routeSolver
+      this.activeSubSolver = routeSolver
+      this.solved = true
+      this.failed = false
+      this.error = null
+      supervised.g = this.computeG(routeSolver)
+      supervised.h = this.computeH(routeSolver)
+      supervised.f = this.computeF(supervised.g, supervised.h)
+      this.policyStats.acceptedCandidateCount++
+      this.policyStats.winners.push({ nodeId: this.nodeWithPortPoints.capacityMeshNodeId,
+        candidateId: completed.candidateId, candidateIterations: solver.iterations,
+        elapsedTimeMs: performance.now() - this.startedAt })
+      this.onAcceptedCandidate?.()
+      return true
+    }
+    return false
+  }
+
+  private async prepareCompetitiveStep(): Promise<void> {
+    if (this.acceptCompletedCompetitiveCandidate()) return
+    const selected = this.getSupervisedSolverWithBestFitness()?.solver
+    const now = performance.now()
+    if (now - this.lastCompetitiveRequestAt >= 50) {
+      this.lastCompetitiveRequestAt = now
+      await this.requestHistories(selected instanceof ReplayMultiHeadPolyLineSolver ? selected : undefined)
+      if (this.acceptCompletedCompetitiveCandidate()) return
+    }
+    if (!(selected instanceof ReplayMultiHeadPolyLineSolver)) return
+    let prepared = false
+    const preparation = selected.prepareForNextStep().then((): void => { prepared = true })
+    while (!prepared && !this.solved) {
+      await Promise.race([preparation, this.nextHistoryDelivery])
+      if (this.acceptCompletedCompetitiveCandidate()) return
     }
   }
 }

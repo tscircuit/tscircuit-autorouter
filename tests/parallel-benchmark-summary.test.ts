@@ -186,4 +186,49 @@ test("parallel benchmark target requires every sample, complete solves, matching
   expect(repeated.targetReached).toBe(true)
   expect(repeated.arithmeticMeanSpeedup).toBeCloseTo(2.5)
   expect(repeated.aggregateSpeedup).toBeCloseTo(2.5)
+
+  const coveredRuns = successfulRuns.map((run): RunResult => ({
+    ...run,
+    geometryHash: run.variant === "parallel" ? "alternative-geometry" : run.geometryHash,
+    quality: {
+      ...run.quality!,
+      traceCount: run.variant === "parallel" ? 9 : 10,
+      viaCount: run.variant === "parallel" ? 3 : 2,
+      connectionCoverage: {
+        requiredNetCount: 2, requiredPairCount: 3, coveredNetCount: 2,
+        uncoveredNetCount: 0, missingPortCount: 0, singletonNetCount: 1, errorCount: 0,
+      },
+    },
+  }))
+  const alternatives = [
+    { highDensityPolicy: "first-valid" as const },
+    { pathingStrategy: "landmark" as const },
+    { pathingStrategy: "negotiated" as const },
+  ]
+  for (const alternative of alternatives) {
+    const alternativeSummary = summarizeParallelBenchmark(coveredRuns, { ...options, ...alternative })
+    expect(alternativeSummary.targetReached).toBe(true)
+    expect(alternativeSummary.exactGeometry).toBe(false)
+    expect(alternativeSummary.geometryRequired).toBe(false)
+    expect(alternativeSummary.connectionCoveragePreserved).toBe(true)
+    expect(summarizeParallelBenchmark(successfulRuns, { ...options, ...alternative }).targetReached).toBe(false)
+    for (const coverageRegression of [
+      { requiredNetCount: 3 }, { requiredPairCount: 4 }, { coveredNetCount: 1 },
+      { uncoveredNetCount: 1 }, { missingPortCount: 1 }, { errorCount: 1 },
+      { requiredNetCount: -1 }, { singletonNetCount: Number.NaN },
+    ]) {
+      const failedCoverage = coveredRuns.map((run): RunResult => run.variant === "parallel" ? {
+        ...run,
+        quality: { ...run.quality!, connectionCoverage: { ...run.quality!.connectionCoverage!, ...coverageRegression } },
+      } : run)
+      const summary = summarizeParallelBenchmark(failedCoverage, { ...options, ...alternative })
+      expect(summary.connectionCoveragePreserved).toBe(false)
+      expect(summary.targetReached).toBe(false)
+    }
+    const extraDrc = coveredRuns.map((run): RunResult => run.variant === "parallel" ? {
+      ...run, quality: { ...run.quality!, drcErrorCount: 1 },
+    } : run)
+    expect(summarizeParallelBenchmark(extraDrc, { ...options, ...alternative }).targetReached).toBe(false)
+  }
+  expect(summarizeParallelBenchmark(coveredRuns, options).targetReached).toBe(false)
 })

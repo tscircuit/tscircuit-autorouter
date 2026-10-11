@@ -61,6 +61,8 @@ type SegmentPair = {
   contact: Contact | null
   weights: [Vertex, number][]
   required: number
+  separated: boolean
+  separationDistanceSquared: number
 }
 type PadContact = {
   segment: Segment
@@ -154,6 +156,7 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
   private preparedPairCount = 0
   private projectedConstraintCount = 0
   private segmentIndex?: Flatbush
+  private canRejectSeparatedPairs = false
   private pairCandidateOuterIndex = -1
   private pairCandidates: number[] = []
   private pairCandidateCursor = 0
@@ -318,6 +321,16 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
       index.finish()
       this.segmentIndex = index
     }
+    // Projection clips against these bounds and each original point +/- 0.25.
+    // In this finite domain, the outward epsilon below dominates the rounding
+    // in both the AABB distance and the original interpolated contact points.
+    // Keep the original contact calculation for other coordinate domains.
+    this.canRejectSeparatedPairs = this.segmentIndex !== undefined &&
+      [...vertices.values()].every((vertex): boolean =>
+        Object.values(vertex.bounds).every((value): boolean =>
+          Number.isFinite(value) && Math.abs(value) <= 10_000 + MAX_DISPLACEMENT,
+        ),
+      )
     const padCount = segments.length * input.srj.obstacles.length
     this.MAX_ITERATIONS =
       this.iterations +
@@ -380,11 +393,15 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
       if (areExpandedBoundsSeparated(a.initialBounds, b.initialBounds, reach))
         continue
       if (segmentToSegmentMinDistance(a.a, a.b, b.a, b.b) <= reach) {
+        const required = a.radius + b.radius +
+          (a.via && b.via ? this.viaClearance : this.traceClearance)
+        const separationDistance = required + REGION_EPSILON * 4
         this.pairs.push({
           a, b, revisions: [-1, -1, -1, -1], contact: null,
           weights: [[a.a, 0], [a.b, 0], [b.a, 0], [b.b, 0]],
-          required: a.radius + b.radius +
-            (a.via && b.via ? this.viaClearance : this.traceClearance),
+          required,
+          separated: false,
+          separationDistanceSquared: separationDistance * separationDistance,
         })
       }
     }
@@ -879,12 +896,31 @@ export class Pipeline9IndexedRelaxTraceClearanceSolver extends BaseSolver {
       b.a.revision !== revisions[2] ||
       b.b.revision !== revisions[3]
     ) {
-      pair.contact = getContact(a.a, a.b, b.a, b.b)
+      pair.separated = false
+      if (this.canRejectSeparatedPairs) {
+        const gapX = Math.max(
+          0,
+          Math.min(a.a.x, a.b.x) - Math.max(b.a.x, b.b.x),
+          Math.min(b.a.x, b.b.x) - Math.max(a.a.x, a.b.x),
+        )
+        const gapY = Math.max(
+          0,
+          Math.min(a.a.y, a.b.y) - Math.max(b.a.y, b.b.y),
+          Math.min(b.a.y, b.b.y) - Math.max(a.a.y, a.b.y),
+        )
+        // Every point on either segment lies within its current AABB. A lower
+        // bound separated by the rounding margin needs no clearance displacement.
+        // Cache that proof for these revisions without replacing a past contact.
+        pair.separated = gapX * gapX + gapY * gapY >
+          pair.separationDistanceSquared
+      }
+      if (!pair.separated) pair.contact = getContact(a.a, a.b, b.a, b.b)
       revisions[0] = a.a.revision
       revisions[1] = a.b.revision
       revisions[2] = b.a.revision
       revisions[3] = b.b.revision
     }
+    if (pair.separated) return
     const contact = pair.contact!
     const required = pair.required
     if (contact.distance >= required) return

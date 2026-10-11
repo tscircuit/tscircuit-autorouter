@@ -3,6 +3,8 @@ import type { MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-
 import type { HighDensityRoute, NodeWithPortPoints } from "../../types/high-density-types"
 import type { Pipeline9RegionalB01CandidateParams } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalB01RepairSolver"
 import type { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
+import type { TinyLandmarkGraph, TinyLandmarkDistances } from "./TinyLandmarkHeuristic"
+import type { NegotiatedPathingRouteJob, NegotiatedPathingRouteResult } from "./parallelNegotiatedPathingTypes"
 
 export type ParallelRegionalFallbackResult = {
   kind: "regionalFallbackSolve"
@@ -30,6 +32,8 @@ export type ParallelRegionalB01CandidateResult = {
 }
 
 export type ParallelStageWorkerJob =
+  | NegotiatedPathingRouteJob
+  | { kind: "pathingLandmark"; graph: TinyLandmarkGraph; landmarkPortId: number }
   | {
       kind: "regionalFallbackSolve"
       params: Omit<ConstructorParameters<typeof Pipeline9RegionalFallbackSolver>[0], "connMap">
@@ -62,6 +66,8 @@ export type ParallelStageWorkerJob =
     }
 
 export type ParallelStageWorkerResult =
+  | NegotiatedPathingRouteResult
+  | ({ kind: "pathingLandmark" } & TinyLandmarkDistances)
   | ParallelRegionalFallbackResult
   | ParallelRegionalB01CandidateResult
   | { kind: "forceImproveNode"; routes: HighDensityRoute[] }

@@ -3,9 +3,13 @@ import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathi
 import { TinyBitsetHyperGraphSolver } from "./TinyBitsetHyperGraphSolver"
 import { TinyBitsetSelectiveReripHyperGraphSolver } from "./TinyBitsetSelectiveReripHyperGraphSolver"
 import { TinyIndexedSelectiveReripHyperGraphSolver } from "./TinyIndexedSelectiveReripHyperGraphSolver"
+import { TinyLandmarkHyperGraphSolver } from "./TinyLandmarkHyperGraphSolver"
+import { TinyLandmarkSelectiveReripHyperGraphSolver } from "./TinyLandmarkSelectiveReripHyperGraphSolver"
+import { TinyNegotiatedHyperGraphSolver } from "./TinyNegotiatedHyperGraphSolver"
+import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 
-export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost"
-export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy }
+export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated"
+export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy; workerPool?: ParallelStageWorkerPool }
 type TinyPipeline = ReturnType<TinyHypergraphPortPointPathingSolver["createTinyPipeline"]>
 
 class CachedCostHyperGraphSolver extends TinyBitsetHyperGraphSolver {
@@ -29,6 +33,8 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   // A declare-only capture survives that call; configure it before routing begins.
   declare private createdTinyPipeline: TinyPipeline
   private pathingStrategy?: Pipeline9PathingStrategy
+  private readonly workerPool?: ParallelStageWorkerPool
+  readonly requiresAsyncExecution: boolean
 
   constructor(
     params: ConstructorParameters<typeof TinyHypergraphPortPointPathingSolver>[0],
@@ -36,6 +42,9 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   ) {
     super(params)
     this.pathingStrategy = options.strategy ?? "indexed"
+    this.workerPool = options.workerPool
+    this.requiresAsyncExecution = this.pathingStrategy === "negotiated" ||
+      (this.pathingStrategy === "landmark" && this.workerPool !== undefined)
     this.configureTinyPipeline(this.createdTinyPipeline, this.pathingStrategy)
   }
 
@@ -63,8 +72,77 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
       case "cached-cost":
         solveGraphStep.solverClass = selective ? CachedCostSelectiveHyperGraphSolver : CachedCostHyperGraphSolver
         return
+      case "landmark":
+        solveGraphStep.solverClass = selective ? TinyLandmarkSelectiveReripHyperGraphSolver : TinyLandmarkHyperGraphSolver
+        return
+      case "negotiated":
+        if (!selective) throw new Error("Negotiated Pipeline9 pathing requires selective rerip routing")
+        solveGraphStep.solverClass = TinyNegotiatedHyperGraphSolver
+        return
       default:
         throw new Error(`Unknown Pipeline9 pathing strategy: ${strategy}`)
+    }
+  }
+
+  private prepareLandmarks(pipeline: TinyPipeline): void {
+    const tiny = pipeline.getSolver<TinyLandmarkHyperGraphSolver | TinyLandmarkSelectiveReripHyperGraphSolver>("solveGraph")
+    if (!tiny) return
+    const heuristic = tiny.landmarkHeuristic
+    if (heuristic.ready) return
+    const recordPreparation = (): void => {
+      pipeline.stats = { ...pipeline.stats, ...heuristic.stats }
+      this.pendingEffects = []
+    }
+    if (!this.workerPool) {
+      heuristic.prepareSync()
+      recordPreparation()
+      return
+    }
+    if (this.pendingEffects && this.pendingEffects.length > 0) return
+    const promise = heuristic.prepare(this.workerPool).then(recordPreparation).catch((error: unknown): never => {
+      this.failed = true
+      this.error = error instanceof Error ? error.message : String(error)
+      throw error
+    })
+    this.pendingEffects = [{ name: "parallel-pathing-landmarks", promise }]
+  }
+
+  override _step(): void {
+    if (this.pathingStrategy === "negotiated") {
+      const tiny = this.createdTinyPipeline.getSolver<TinyNegotiatedHyperGraphSolver>("solveGraph")
+      if (tiny) {
+        if (!this.workerPool) throw new Error("Negotiated Pipeline9 pathing requires a worker pool")
+        tiny.configureWorkerPool(this.workerPool)
+        if (tiny.pendingEffects.length > 0) { this.pendingEffects = tiny.pendingEffects; return }
+      }
+      super._step()
+      const activeTiny = this.createdTinyPipeline.getSolver<TinyNegotiatedHyperGraphSolver>("solveGraph")
+      this.pendingEffects = activeTiny?.pendingEffects ?? []
+      return
+    }
+    if (this.pathingStrategy !== "landmark") {
+      super._step()
+      return
+    }
+    this.prepareLandmarks(this.createdTinyPipeline)
+    if (this.pendingEffects && this.pendingEffects.length > 0) return
+    super._step()
+    // The section pipeline constructs its child on one step and starts routing
+    // on the next. Publish the preparation effect before that first route step.
+    this.prepareLandmarks(this.createdTinyPipeline)
+  }
+
+  override solve(): void {
+    if (this.requiresAsyncExecution) throw new Error("Parallel landmark pathing requires solveAsync() or awaiting pendingEffects")
+    super.solve()
+  }
+
+  async solveAsync(): Promise<void> {
+    while (!this.solved && !this.failed) {
+      this.step()
+      if (this.pendingEffects && this.pendingEffects.length > 0) {
+        await Promise.all(this.pendingEffects.map((effect) => effect.promise))
+      }
     }
   }
 }

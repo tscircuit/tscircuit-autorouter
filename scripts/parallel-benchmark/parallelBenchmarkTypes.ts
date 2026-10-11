@@ -1,7 +1,8 @@
 import type { BenchmarkStageTimingBreakdown } from "../benchmark/benchmark-types"
 
 export type BenchmarkVariant = "baseline" | "parallel"
-export type BenchmarkPathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost"
+export type BenchmarkPathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated"
+export type BenchmarkHighDensityPolicy = "ordered" | "first-valid"
 export type BenchmarkStatus = "solved" | "failed" | "timeout" | "crashed"
 
 export type ParallelBenchmarkQuality = {
@@ -9,6 +10,15 @@ export type ParallelBenchmarkQuality = {
   viaCount: number
   drcErrorCount: number
   traceLintIssueCounts: Record<string, number>
+  connectionCoverage?: {
+    requiredNetCount: number
+    requiredPairCount: number
+    coveredNetCount: number
+    uncoveredNetCount: number
+    missingPortCount: number
+    singletonNetCount: number
+    errorCount: number
+  }
 }
 
 export type ParallelBenchmarkResult = {
@@ -42,6 +52,8 @@ export type ParallelBenchmarkSummaryOptions = {
   repetitions: number
   timeoutMs: number
   targetSpeedup: number
+  highDensityPolicy?: BenchmarkHighDensityPolicy
+  pathingStrategy?: BenchmarkPathingStrategy
 }
 
 export type ParallelBenchmarkSampleSummary = {
@@ -53,6 +65,7 @@ export type ParallelBenchmarkSampleSummary = {
   parallelSolved: number
   exactGeometry: boolean
   qualityPreserved: boolean
+  connectionCoveragePreserved: boolean
 }
 
 export type ParallelBenchmarkSummary = {
@@ -60,6 +73,10 @@ export type ParallelBenchmarkSummary = {
   allCompleted: boolean
   exactGeometry: boolean
   qualityPreserved: boolean
+  connectionCoveragePreserved: boolean
+  highDensityPolicy: BenchmarkHighDensityPolicy
+  pathingStrategy: BenchmarkPathingStrategy
+  geometryRequired: boolean
   arithmeticMeanSpeedup: number
   aggregateSpeedup: number
   geometricMeanSpeedup: number

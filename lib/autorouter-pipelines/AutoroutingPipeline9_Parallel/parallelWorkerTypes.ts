@@ -2,7 +2,8 @@ import type { HighDensityBoardGeometry } from "../../types/high-density-board-ge
 import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import type { ParallelStageWorkerJob } from "./parallelStageWorkerTypes"
-import type { MultiHeadHistoryJob, MultiHeadHistoryRequest } from "./parallelMultiHeadHistoryTypes"
+import type { MultiHeadHistoryCancellation, MultiHeadHistoryJob, MultiHeadHistoryRequest } from "./parallelMultiHeadHistoryTypes"
+import type { FirstValidHighDensityStats, ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 
 export type Pipeline9ParallelHighDensityContext = {
   connectivityNetMap: Record<string, string[]>
@@ -21,6 +22,8 @@ export type Pipeline9ParallelHighDensityContext = {
   includeBoardObstacles: boolean
   enableRegionalFallback: boolean
   maxB01Rips?: number
+  highDensityPolicy?: ParallelHighDensityPolicy
+  firstValidClearance?: number
 }
 
 export type Pipeline9ParallelHighDensityNodeJob = {
@@ -32,8 +35,8 @@ export type Pipeline9ParallelHighDensityNodeJob = {
 }
 
 export type Pipeline9ParallelHighDensityNodeResult =
-  | { status: "solved"; routes: HighDensityIntraNodeRoute[]; nodeStats: Record<string, number> }
-  | { status: "failed"; error: string; nodeStats: Record<string, number> }
+  | { status: "solved"; routes: HighDensityIntraNodeRoute[]; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats }
+  | { status: "failed"; error: string; nodeStats: Record<string, number>; firstValidStats?: FirstValidHighDensityStats }
 
 export type Pipeline9LocalWorkerJob =
   | Pipeline9ParallelHighDensityNodeJob
@@ -48,5 +51,6 @@ export type Pipeline9LocalWorkerRequest = {
 
 export type Pipeline9LocalWorkerResponse =
   | MultiHeadHistoryRequest
+  | MultiHeadHistoryCancellation
   | { taskId: number; ok: true; result: unknown }
   | { taskId: number; ok: false; error: string }

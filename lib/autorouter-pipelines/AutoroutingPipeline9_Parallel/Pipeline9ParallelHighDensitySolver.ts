@@ -2,12 +2,15 @@ import type { NodeWithPortPoints } from "../../types/high-density-types"
 import { Pipeline9HighDensitySolver, type Pipeline9HighDensitySolverParams } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { Pipeline9LocalWorkerPool } from "./Pipeline9LocalWorkerPool"
 import type { Pipeline9ParallelHighDensityContext, Pipeline9ParallelHighDensityNodeResult } from "./parallelWorkerTypes"
+import type { FirstValidHighDensityStats, ParallelHighDensityPolicy } from "./parallelHighDensityPolicyTypes"
 
 type SettledNodeResult =
   | { kind: "result"; result: Pipeline9ParallelHighDensityNodeResult }
   | { kind: "exception"; error: Error }
 export type Pipeline9ParallelHighDensitySolverParams = Pipeline9HighDensitySolverParams & {
   workerPool: Pipeline9LocalWorkerPool
+  highDensityPolicy?: ParallelHighDensityPolicy
+  firstValidClearance?: number
 }
 
 /** Dispatch independent nodes together and commit in the serial pipeline order. */
@@ -17,10 +20,20 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
   private waitingForNode: NodeWithPortPoints | null = null
   private readonly requests = new Map<NodeWithPortPoints, Promise<void>>()
   private readonly results = new Map<NodeWithPortPoints, SettledNodeResult>()
+  private readonly highDensityPolicy: ParallelHighDensityPolicy
+  private readonly firstValidStats?: FirstValidHighDensityStats
+  private readonly firstValidClearance: number
 
-  constructor({ workerPool, ...params }: Pipeline9ParallelHighDensitySolverParams) {
+  constructor({ workerPool, highDensityPolicy = "ordered", firstValidClearance = 0.1, ...params }: Pipeline9ParallelHighDensitySolverParams) {
     super(params)
     this.workerPool = workerPool
+    this.highDensityPolicy = highDensityPolicy
+    this.firstValidClearance = firstValidClearance
+    if (highDensityPolicy === "first-valid") {
+      this.firstValidStats = { eligiblePortfolioCount: 0, acceptedCandidateCount: 0,
+        rejectedCandidateCount: 0, rejectionReasons: {}, winners: [] }
+      this.stats.firstValidHighDensityStats = this.firstValidStats
+    }
     this.pendingEffects = []
     this.stats.parallelNodeCount = 0
     this.stats.parallelNodesCompleted = 0
@@ -51,6 +64,8 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
       includeBoardObstacles: this.includeBoardObstacles,
       enableRegionalFallback: this.enableRegionalFallback,
       maxB01Rips: this.maxB01Rips,
+      highDensityPolicy: this.highDensityPolicy,
+      firstValidClearance: this.firstValidClearance,
     }
     // Longest likely jobs start first; result order remains unchanged.
     const nodes = [...this.unsolvedNodePortPoints].sort((a, b) =>
@@ -91,6 +106,7 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
     this.requests.delete(node)
     this.results.delete(node)
     if (settled.kind === "exception") throw settled.error
+    this.mergeFirstValidStats(settled.result)
     this.activeNode = node
     for (const [key, value] of Object.entries(settled.result.nodeStats)) {
       if (key === "nodeCount" || key === "solvedNodeCount" || key === "fixedObstacleCount") continue
@@ -104,6 +120,23 @@ export class Pipeline9ParallelHighDensitySolver extends Pipeline9HighDensitySolv
       return
     }
     this.finishActiveNode(settled.result.routes)
+  }
+
+  private mergeFirstValidStats(result: Pipeline9ParallelHighDensityNodeResult): void {
+    if (this.highDensityPolicy === "ordered") {
+      if (result.firstValidStats) throw new Error("Ordered HD worker returned competitive policy statistics")
+      return
+    }
+    const aggregate = this.firstValidStats
+    const nodeStats = result.firstValidStats
+    if (!aggregate || !nodeStats) throw new Error("Competitive HD worker omitted its policy statistics")
+    aggregate.eligiblePortfolioCount += nodeStats.eligiblePortfolioCount
+    aggregate.acceptedCandidateCount += nodeStats.acceptedCandidateCount
+    aggregate.rejectedCandidateCount += nodeStats.rejectedCandidateCount
+    aggregate.winners.push(...nodeStats.winners)
+    for (const [reason, count] of Object.entries(nodeStats.rejectionReasons)) {
+      aggregate.rejectionReasons[reason] = (aggregate.rejectionReasons[reason] ?? 0) + count
+    }
   }
 
   override _step(): void {

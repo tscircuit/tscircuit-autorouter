@@ -8,6 +8,15 @@ export const summarizeParallelBenchmark = (
   results: ParallelBenchmarkResult[],
   options: ParallelBenchmarkSummaryOptions,
 ): ParallelBenchmarkSummary => {
+  const highDensityPolicy = options.highDensityPolicy ?? "ordered"
+  const pathingStrategy = options.pathingStrategy ?? "indexed"
+  if (highDensityPolicy !== "ordered" && highDensityPolicy !== "first-valid") {
+    throw new Error("Invalid high density policy")
+  }
+  if (!["indexed", "adaptive-bitset", "cached-cost", "landmark", "negotiated"].includes(pathingStrategy)) {
+    throw new Error("Invalid pathing strategy")
+  }
+  const geometryRequired = highDensityPolicy === "ordered" && pathingStrategy !== "landmark" && pathingStrategy !== "negotiated"
   for (const result of results) {
     if (
       result.status === "solved" &&
@@ -62,6 +71,26 @@ export const summarizeParallelBenchmark = (
         pair.baseline?.geometryHash !== undefined &&
         pair.baseline.geometryHash === pair.parallel?.geometryHash,
     )
+    const connectionCoveragePreserved = pairs.every((pair) => {
+      const a = pair.baseline?.quality?.connectionCoverage
+      const b = pair.parallel?.quality?.connectionCoverage
+      // Legacy ordered reports did not collect coverage. Exact parity retains
+      // their original gate; changed-geometry runs require explicit validation.
+      if (!a && !b) return geometryRequired && exactGeometry
+      if (!a || !b) return false
+      const countFields = [
+        "requiredNetCount", "requiredPairCount", "coveredNetCount", "uncoveredNetCount",
+        "missingPortCount", "singletonNetCount", "errorCount",
+      ] as const
+      if ([a, b].some((coverage) => countFields.some((field) =>
+        !Number.isInteger(coverage[field]) || coverage[field] < 0,
+      ))) return false
+      return a.requiredNetCount === b.requiredNetCount &&
+        a.requiredPairCount === b.requiredPairCount &&
+        b.coveredNetCount === b.requiredNetCount &&
+        b.uncoveredNetCount === 0 && b.missingPortCount === 0 &&
+        b.errorCount === 0 && b.errorCount <= a.errorCount
+    })
     const qualityPreserved = pairs.every((pair) => {
       const a = pair.baseline?.quality
       const b = pair.parallel?.quality
@@ -71,8 +100,7 @@ export const summarizeParallelBenchmark = (
         ...Object.keys(b.traceLintIssueCounts),
       ])
       return (
-        a.traceCount === b.traceCount &&
-        a.viaCount === b.viaCount &&
+        (!geometryRequired || (a.traceCount === b.traceCount && a.viaCount === b.viaCount)) &&
         b.drcErrorCount <= a.drcErrorCount &&
         [...lintTypes].every(
           (type) =>
@@ -89,12 +117,14 @@ export const summarizeParallelBenchmark = (
       baselineSolved: baseline.filter((result) => result.status === "solved").length,
       parallelSolved: parallel.filter((result) => result.status === "solved").length,
       exactGeometry,
-      qualityPreserved,
+      qualityPreserved: qualityPreserved && connectionCoveragePreserved,
+      connectionCoveragePreserved,
     }
   })
   const allCompleted = fullCoverage && results.every((result) => result.status === "solved")
   const exactGeometry = fullCoverage && perSample.every((sample) => sample.exactGeometry)
   const qualityPreserved = fullCoverage && perSample.every((sample) => sample.qualityPreserved)
+  const connectionCoveragePreserved = fullCoverage && perSample.every((sample) => sample.connectionCoveragePreserved)
   const arithmeticMeanSpeedup =
     perSample.reduce((sum, sample) => sum + sample.speedup, 0) / perSample.length
   const aggregateSpeedup =
@@ -109,11 +139,15 @@ export const summarizeParallelBenchmark = (
     allCompleted,
     exactGeometry,
     qualityPreserved,
+    connectionCoveragePreserved,
+    highDensityPolicy,
+    pathingStrategy,
+    geometryRequired,
     arithmeticMeanSpeedup,
     aggregateSpeedup,
     geometricMeanSpeedup,
     targetReached:
-      allCompleted && exactGeometry && qualityPreserved &&
+      allCompleted && (!geometryRequired || exactGeometry) && qualityPreserved &&
       arithmeticMeanSpeedup >= options.targetSpeedup &&
       aggregateSpeedup >= options.targetSpeedup,
     perSample,
