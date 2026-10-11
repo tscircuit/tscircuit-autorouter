@@ -709,20 +709,48 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
-          z: node.z,
-          g: node.g,
-          h: node.h,
-          f: node.f,
-          parent: node,
+        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
+        const neighborZ = node.z
+        const neighborG = node.g
+        const neighborH = node.h
+        const neighborF = node.f
+        const getNodeKey = this.getNodeKey
+        let neighbor: Node | undefined
+        let neighborKey: number
+        if (getNodeKey === nativeGetNodeKey) {
+          // Explored grid points do not need a candidate object. Keep the
+          // original field reads and key arithmetic before checking the set.
+          const xIndex =
+            Math.round(neighborX / this.cellStep) - this.gridMinXIndex
+          const yIndex =
+            Math.round(neighborY / this.cellStep) - this.gridMinYIndex
+          neighborKey =
+            (neighborZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
+        } else {
+          neighbor = {
+            x: neighborX,
+            y: neighborY,
+            z: neighborZ,
+            g: neighborG,
+            h: neighborH,
+            f: neighborF,
+            parent: node,
+          }
+          neighborKey = Reflect.apply(getNodeKey, this, [neighbor])
         }
-
-        const neighborKey = this.getNodeKey(neighbor)
 
         if (this.exploredNodes.has(neighborKey)) {
           continue
+        }
+        neighbor ??= {
+          x: neighborX,
+          y: neighborY,
+          z: neighborZ,
+          g: neighborG,
+          h: neighborH,
+          f: neighborF,
+          parent: node,
         }
 
         if (!queriedPlanarNeighbors) {
@@ -1107,6 +1135,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return graphics
   }
 }
+
+const nativeGetNodeKey = SingleHighDensityRouteSolver.prototype.getNodeKey
 
 type IndexedObstacleSegment = {
   z: number
