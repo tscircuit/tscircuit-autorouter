@@ -8,10 +8,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 type ObstaclePatternInput = {
   connMap: ConnectivityMap
   multilayerObstacles: Obstacle[]
-  sameNetObstaclesByConnection: Map<
-    string,
-    Map<string | undefined, Obstacle[]>
-  >
+  sameNetObstaclesByConnection: Map<string, Map<string | undefined, Obstacle[]>>
   connectivitySnapshot: Array<[string, string]>
   obstacleConnectionSnapshots: string[][]
 }
@@ -34,16 +31,21 @@ function pointInsideObstacle(
 export class CachedTraceSimplificationSolver extends TraceSimplificationSolver {
   // The base constructor dispatches to the marker below. A declaration avoids
   // overwriting its lazily initialized cache when derived fields initialize.
-  declare private obstaclePatternInput?: ObstaclePatternInput
+  private declare obstaclePatternInput?: ObstaclePatternInput
 
   private initializeObstaclePatternInput(): ObstaclePatternInput {
     // The pinned dependency stores this private normalized configuration before
     // its first virtual marker call. Reuse that geometry for every marker pass.
-    const config = (this as unknown as {
-      simplificationConfig: ConstructorParameters<typeof TraceSimplificationSolver>[0]
-    }).simplificationConfig
+    const config = (
+      this as unknown as {
+        simplificationConfig: ConstructorParameters<
+          typeof TraceSimplificationSolver
+        >[0]
+      }
+    ).simplificationConfig
     const multilayerObstacles = config.obstacles.filter(
-      (obstacle) => (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
+      (obstacle) =>
+        (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
     )
     const input: ObstaclePatternInput = {
       connMap: config.connMap,
@@ -139,7 +141,8 @@ export class CachedTraceSimplificationSolver extends TraceSimplificationSolver {
   override markThroughObstacleSegments(
     routes: ReadonlyArray<HighDensityRoute>,
   ): HighDensityRoute[] {
-    const input = this.obstaclePatternInput ?? this.initializeObstaclePatternInput()
+    const input =
+      this.obstaclePatternInput ?? this.initializeObstaclePatternInput()
     this.invalidateChangedObstaclePatterns(input)
     return routes.map((route) => {
       let obstacles: ReadonlyArray<Obstacle> | undefined

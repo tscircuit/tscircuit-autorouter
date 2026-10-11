@@ -30,7 +30,10 @@ test("simplification obstacle patterns refresh after connectivity merges and con
     connectionName: "route",
     traceThickness: 0.15,
     viaDiameter: 0.3,
-    route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }],
+    route: [
+      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0, z: 1 },
+    ],
     vias: [{ x: 0, y: 0 }],
   }
   const params = {

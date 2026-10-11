@@ -60,7 +60,11 @@ test("cached simplification obstacle patterns preserve marking, metadata order, 
       { x: 5, y: 5, z: 0 },
       { x: 20, y: 20, z: 0 },
     ],
-    vias: [{ x: 0, y: 0 }, { x: 5, y: 5 }, { x: 20, y: 20 }],
+    vias: [
+      { x: 0, y: 0 },
+      { x: 5, y: 5 },
+      { x: 20, y: 20 },
+    ],
   }
   const params = {
     hdRoutes: [route],
@@ -88,7 +92,9 @@ test("cached simplification obstacle patterns preserve marking, metadata order, 
     expect(expected[0].vias).toEqual([{ x: 20, y: 20 }])
 
     const afterWarming = connectivity.mock.calls.length
-    const repeated = cached.markThroughObstacleSegments([structuredClone(route)])
+    const repeated = cached.markThroughObstacleSegments([
+      structuredClone(route),
+    ])
     expect(repeated).toEqual(expected)
     expect(connectivity.mock.calls.length).toBe(afterWarming)
 
@@ -104,7 +110,11 @@ test("cached simplification obstacle patterns preserve marking, metadata order, 
     expect(cached.markThroughObstacleSegments([changedRoot])).toEqual(
       reference.markThroughObstacleSegments([changedRoot]),
     )
-    const changedConnection = { ...route, connectionName: "other", rootConnectionName: undefined }
+    const changedConnection = {
+      ...route,
+      connectionName: "other",
+      rootConnectionName: undefined,
+    }
     expect(cached.markThroughObstacleSegments([changedConnection])).toEqual(
       reference.markThroughObstacleSegments([changedConnection]),
     )
@@ -119,7 +129,9 @@ test("cached simplification obstacle patterns preserve marking, metadata order, 
     const beforePlanar = connectivity.mock.calls.length
     const markedPlanar = cached.markThroughObstacleSegments([planarRoute])
     expect(connectivity.mock.calls.length).toBe(beforePlanar)
-    expect(markedPlanar).toEqual(reference.markThroughObstacleSegments([planarRoute]))
+    expect(markedPlanar).toEqual(
+      reference.markThroughObstacleSegments([planarRoute]),
+    )
   } finally {
     connectivity.mockRestore()
   }
