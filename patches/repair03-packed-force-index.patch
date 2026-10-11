@@ -1,0 +1,171 @@
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+@@ -30,10 +30,13 @@
+ import {
+   clampToBounds,
+   clampValue,
+-  createSpatialIndex,
+   expandBounds2d,
+-  getSpatialCandidateIndexes,
+ } from "./spatialIndex"
++import {
++  createPackedSpatialIndex as createSpatialIndex,
++  getPackedSpatialCandidateIndexes as getSpatialCandidateIndexes,
++  type PackedSpatialIndex,
++} from "./packedSpatialIndex"
+ import type { DrcEvaluator, DrcSnapshot } from "./types"
+ import type {
+   Bounds2D,
+@@ -2908,8 +2911,8 @@
+   routes: MutableRoute[],
+   vias: ViaNode[],
+   segments: Segment[],
+-  viaSpatialIndex: Map<string, number[]>,
+-  segmentSpatialIndex: Map<string, number[]>,
++  viaSpatialIndex: PackedSpatialIndex,
++  segmentSpatialIndex: PackedSpatialIndex,
+   spatialCellSize: number,
+   connMap?: ConnectivityMap,
+   netMatchers?: BroadNetMatchers,
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts b/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts
+new file mode 100644
+--- /dev/null
++++ b/lib/solvers/GlobalDrcForceImproveSolver/packedSpatialIndex.ts
+@@ -0,0 +1,136 @@
++import type { Bounds2D } from "./internalTypes"
++
++type PackedSpatialCell = {
++  readonly wordIndexes: readonly number[]
++  readonly wordMasks: readonly number[]
++}
++
++export type PackedSpatialIndex = {
++  readonly cells: ReadonlyMap<string, PackedSpatialCell>
++  readonly bits: Uint32Array
++  readonly wordGenerations: Uint32Array
++  readonly candidateCache: Map<string, readonly number[]>
++  cachedCandidateCount: number
++  generation: number
++}
++
++const MAX_CACHED_QUERY_RANGES = 256
++const MAX_CACHED_CANDIDATE_COUNT = 65_536
++
++export const createPackedSpatialIndex = <T>(
++  items: T[],
++  getBounds: (item: T) => Bounds2D,
++  cellSize: number,
++): PackedSpatialIndex => {
++  const cells = new Map<
++    string,
++    { wordIndexes: number[]; wordMasks: number[] }
++  >()
++  const wordCount = Math.ceil(items.length / 32)
++
++  for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
++    const item = items[itemIndex]
++    if (!item) continue
++    const bounds = getBounds(item)
++    const minCellX = Math.floor(bounds.minX / cellSize)
++    const maxCellX = Math.floor(bounds.maxX / cellSize)
++    const minCellY = Math.floor(bounds.minY / cellSize)
++    const maxCellY = Math.floor(bounds.maxY / cellSize)
++    const wordIndex = itemIndex >>> 5
++    const mask = 1 << (itemIndex & 31)
++
++    for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
++      for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
++        const key = `${cellX}:${cellY}`
++        let cell = cells.get(key)
++        if (!cell) {
++          cell = { wordIndexes: [], wordMasks: [] }
++          cells.set(key, cell)
++        }
++        const lastWord = cell.wordIndexes.length - 1
++        // Items arrive in ordinal order, so each word is appended only once.
++        if (lastWord >= 0 && cell.wordIndexes[lastWord] === wordIndex) {
++          cell.wordMasks[lastWord] = cell.wordMasks[lastWord]! | mask
++        } else {
++          cell.wordIndexes.push(wordIndex)
++          cell.wordMasks.push(mask)
++        }
++      }
++    }
++  }
++
++  return {
++    cells,
++    bits: new Uint32Array(wordCount),
++    wordGenerations: new Uint32Array(wordCount),
++    candidateCache: new Map(),
++    cachedCandidateCount: 0,
++    generation: 0,
++  }
++}
++
++export const getPackedSpatialCandidateIndexes = (
++  spatialIndex: PackedSpatialIndex,
++  bounds: Bounds2D,
++  cellSize: number,
++): readonly number[] => {
++  const minCellX = Math.floor(bounds.minX / cellSize)
++  const maxCellX = Math.floor(bounds.maxX / cellSize)
++  const minCellY = Math.floor(bounds.minY / cellSize)
++  const maxCellY = Math.floor(bounds.maxY / cellSize)
++  // Membership is fixed for this pass; callers only read the ordered arrays.
++  const queryKey = `${minCellX}:${maxCellX}:${minCellY}:${maxCellY}`
++  const cached = spatialIndex.candidateCache.get(queryKey)
++  if (cached) return cached
++
++  spatialIndex.generation += 1
++  if (spatialIndex.generation > 0xffffffff) {
++    spatialIndex.wordGenerations.fill(0)
++    spatialIndex.generation = 1
++  }
++  const generation = spatialIndex.generation
++  let minWordIndex = Infinity
++  let maxWordIndex = -1
++
++  for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
++    for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
++      const cell = spatialIndex.cells.get(`${cellX}:${cellY}`)
++      if (!cell) continue
++      for (let entry = 0; entry < cell.wordIndexes.length; entry += 1) {
++        const wordIndex = cell.wordIndexes[entry]!
++        if (spatialIndex.wordGenerations[wordIndex] !== generation) {
++          spatialIndex.wordGenerations[wordIndex] = generation
++          spatialIndex.bits[wordIndex] = 0
++        }
++        spatialIndex.bits[wordIndex] =
++          spatialIndex.bits[wordIndex]! | cell.wordMasks[entry]!
++        if (wordIndex < minWordIndex) minWordIndex = wordIndex
++        if (wordIndex > maxWordIndex) maxWordIndex = wordIndex
++      }
++    }
++  }
++
++  const candidateIndexes: number[] = []
++  for (
++    let wordIndex = minWordIndex;
++    wordIndex <= maxWordIndex;
++    wordIndex += 1
++  ) {
++    if (spatialIndex.wordGenerations[wordIndex] !== generation) continue
++    let bits = spatialIndex.bits[wordIndex]!
++    while (bits !== 0) {
++      const bitIndex = 31 - Math.clz32(bits & -bits)
++      candidateIndexes.push(wordIndex * 32 + bitIndex)
++      bits &= bits - 1
++    }
++  }
++  if (
++    spatialIndex.candidateCache.size < MAX_CACHED_QUERY_RANGES &&
++    spatialIndex.cachedCandidateCount + candidateIndexes.length <=
++      MAX_CACHED_CANDIDATE_COUNT
++  ) {
++    spatialIndex.candidateCache.set(queryKey, candidateIndexes)
++    spatialIndex.cachedCandidateCount += candidateIndexes.length
++  }
++  return candidateIndexes
++}
