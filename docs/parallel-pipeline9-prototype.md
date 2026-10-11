@@ -446,6 +446,7 @@ matched dependencies on four-core ARM Blacksmith runners.
 | `9f87cb73b` | ordered / indexed, force trials on coordinator | 1.287× | 1.451× | All solved, exact geometry and original-CAD quality parity; high-density regression, target remains unmet |
 | `afae314d5` | ordered / indexed, force trials on coordinator | 1.239× | 1.391× | All solved, exact geometry and original-CAD quality parity; lookahead guard overhead, target remains unmet |
 | `24f2c48dd` | ordered / indexed, force trials on coordinator | 1.271× | 1.422× | All solved, exact geometry and original-CAD quality parity; target remains unmet |
+| `05c72d631` | ordered / indexed, selected A01 bulk, sixteen-target lookahead | 0.795× | 0.735× | All solved and exact Native quality; A01 bulk regresses all16 high-density stages; target unmet |
 
 The `da83da029` evaluation includes all 32 paired outcomes, with cold worker
 startup and disposal included. Every sample preserves its native output and
@@ -656,12 +657,16 @@ by the next full-dataset comparison. Exact counters, source hashes and
 mutation/cap cancellation checks are in
 [parallel-path-lookahead-sixteen-window-proof.json](benchmarks/parallel-path-lookahead-sixteen-window-proof.json).
 
-Snapshot `05c72d631` is frozen for the eighteenth comparison of all16
-samples at the same baseline, dataset and four-core budget. It activates
-the reviewed selected-owner A01 bulk search and sixteen-target lookahead.
-ESM/DTS, TypeScript and source/built browser imports pass; packaged sample001
-and sample015 retain exact native geometry with at most four active workers.
-All five Blacksmith groups are dispatched. Complete outcomes are pending;
-this revision has no elapsed-time acceptance claim yet. Exact arguments,
-preflight hashes and workflow IDs are in
+Snapshot `05c72d631` completed the eighteenth full comparison. Every sample
+solves with exact native geometry and original-CAD quality and coverage
+parity, using at most four workers. Arithmetic mean speedup is 0.795× and
+aggregate speedup is 0.735×. The selected A01 bulk driver regresses every
+high-density stage: sample015 takes 162.7 seconds and sample014 309.1 seconds
+in that stage. The larger lookahead window reduces sample015 simplification
+to 7.14 seconds. The next revision disables the selected bulk driver by
+default while retaining its isolated state-parity proofs; guarded parallel
+reference DRC integration continues. The 2× target remains unmet. All32
+outcomes, original metadata and every worker statistic are preserved in
+[parallel-srj18-05c72d631-complete.json](benchmarks/parallel-srj18-05c72d631-complete.json).
+Exact checks, arguments and completed workflow IDs are in
 [parallel-srj18-05c72d631-dispatch.json](benchmarks/parallel-srj18-05c72d631-dispatch.json).
