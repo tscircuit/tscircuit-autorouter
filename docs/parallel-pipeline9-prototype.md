@@ -684,3 +684,14 @@ the genuine owned pool. Actual sample001 preserves Native geometry while
 exercising worker and main fact lanes. These checks establish functional
 parity; full-dataset elapsed-time acceptance is still pending. See
 [reference-drc-native-pipeline-integration-proof.json](benchmarks/reference-drc-native-pipeline-integration-proof.json).
+
+Snapshot `752f8c03f` is frozen for the nineteenth comparison of all16
+samples with the same baseline, dataset, four-core budget and ordered/indexed
+policy. The regressing selected A01 bulk driver is off. Exact Native trace
+facts use at most three idle default-pool workers plus main; sixteen-target
+lookahead remains enabled. ESM/DTS, TypeScript and source/built browser imports
+pass, and packaged sample001/sample015 retain exact Native geometry with four
+workers. All five Blacksmith groups are dispatched; complete outcomes are
+pending and no speedup is claimed for this revision yet. Checks, hashes,
+arguments and workflow IDs are in
+[parallel-srj18-752f8c03f-dispatch.json](benchmarks/parallel-srj18-752f8c03f-dispatch.json).
