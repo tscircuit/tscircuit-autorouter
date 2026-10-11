@@ -22,6 +22,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private readonly closestFuturePointDistance = new Float64Array(1)
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -48,7 +49,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
-  getClosestFutureConnectionPoint(node: Node) {
+  getClosestFutureConnectionPoint(
+    node: Node,
+    closestPointDistance?: Float64Array,
+  ): (typeof this.futureConnectionPoints)[number] | null {
     if (
       this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
       this.cachedFutureConnectionPointCount !==
@@ -76,21 +80,32 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheCoordinates[coordinateIndex + 3] ===
         viaPenaltyDistance
     ) {
-      return cachedPointIndex === -1
-        ? null
-        : this.futureConnectionPoints[cachedPointIndex]
+      const closestPoint =
+        cachedPointIndex === -1
+          ? null
+          : this.futureConnectionPoints[cachedPointIndex]
+      if (closestPointDistance) {
+        // Selection caches keep point references. Recompute the distance on a
+        // cache hit so in-place point changes retain the existing behavior.
+        closestPointDistance[0] = closestPoint
+          ? distance(node, closestPoint)
+          : Infinity
+      }
+      return closestPoint
     }
     let minDist = Infinity
+    let minPointDistance = Infinity
     let closestPoint = null
     let closestPointIndex = -1
     let pointIndex = 0
 
     for (const point of this.futureConnectionPoints) {
+      const pointDistance = distance(node, point)
       const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+        pointDistance + (node.z !== point.z ? this.viaPenaltyDistance : 0)
       if (dist < minDist) {
         minDist = dist
+        minPointDistance = pointDistance
         closestPoint = point
         closestPointIndex = pointIndex
       }
@@ -107,6 +122,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         viaPenaltyDistance
       this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
     }
+    if (closestPointDistance) closestPointDistance[0] = minPointDistance
     return closestPoint
   }
 
@@ -195,12 +211,21 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return 1 - Math.exp((-goalDist / this.straightLineDistance) * 5)
   }
 
-  getFutureConnectionPenalty(node: Node, isVia: boolean) {
+  getFutureConnectionPenalty(node: Node, isVia: boolean): number {
     let futureConnectionPenalty = 0
-    const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
+    const pointSelector = this.getClosestFutureConnectionPoint
+    const usesDefaultPointSelector =
+      pointSelector === nativeClosestFutureConnectionPoint
+    const closestFuturePoint = usesDefaultPointSelector
+      ? pointSelector.call(this, node, this.closestFuturePointDistance)
+      : pointSelector.call(this, node)
     const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
-      const distToFuturePoint = distance(node, closestFuturePoint)
+      // Custom selectors can return a point without filling the optional
+      // distance output, so retain their original point-based cost calculation.
+      const distToFuturePoint = usesDefaultPointSelector
+        ? this.closestFuturePointDistance[0]
+        : distance(node, closestFuturePoint)
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
       const distRatio = distToFuturePoint / maxDist
@@ -286,6 +311,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     node.f = this.computeF(node.g, node.h)
   }
 }
+
+const nativeClosestFutureConnectionPoint =
+  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
+    .getClosestFutureConnectionPoint
 
 type FutureConnectionSegment = {
   connectionName: string
