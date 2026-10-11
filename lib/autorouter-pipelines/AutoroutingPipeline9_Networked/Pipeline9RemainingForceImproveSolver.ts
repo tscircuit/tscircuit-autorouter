@@ -42,7 +42,9 @@ export class Pipeline9RemainingForceImproveSolver extends HighDensityForceImprov
     this.completeHdRoutes = params.hdRoutes
     this.remainingRouteIndexes = remainingRouteIndexes
     for (const sampleEntry of this.sampleEntries) {
-      if (this.forceImprovedRegionIds.has(sampleEntry.node.capacityMeshNodeId)) {
+      if (
+        this.forceImprovedRegionIds.has(sampleEntry.node.capacityMeshNodeId)
+      ) {
         throw new Error(
           `Pipeline9 remaining force-improvement routes were assigned to already improved node "${sampleEntry.node.capacityMeshNodeId}"`,
         )
@@ -56,7 +58,9 @@ export class Pipeline9RemainingForceImproveSolver extends HighDensityForceImprov
     return "Pipeline9RemainingForceImproveSolver"
   }
 
-  override getConstructorParams(): readonly [Pipeline9RemainingForceImproveSolverConstructorParams] {
+  override getConstructorParams(): readonly [
+    Pipeline9RemainingForceImproveSolverConstructorParams,
+  ] {
     return [
       {
         ...super.getConstructorParams()[0],

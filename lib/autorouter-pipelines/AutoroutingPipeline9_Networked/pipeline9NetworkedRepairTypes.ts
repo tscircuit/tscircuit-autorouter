@@ -3,7 +3,8 @@ import type {
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
 
-export const PIPELINE9_NETWORKED_REPAIR_POLICY = "high_density_repair_v1" as const
+export const PIPELINE9_NETWORKED_REPAIR_POLICY =
+  "high_density_repair_v1" as const
 
 /** A frozen node repair sample, including nearby fixed copper and obstacles. */
 export type Pipeline9NetworkedHighDensityRepairInput = {

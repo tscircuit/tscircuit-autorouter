@@ -471,7 +471,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
     this.routes.push(
-      ...(restoreTerminalPcbPortIds && this.preserveTerminalPcbPortIds && this.activeNode
+      ...(restoreTerminalPcbPortIds &&
+      this.preserveTerminalPcbPortIds &&
+      this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
         : solvedRoutes),
     )

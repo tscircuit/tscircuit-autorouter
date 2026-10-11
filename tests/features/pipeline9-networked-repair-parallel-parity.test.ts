@@ -5,13 +5,17 @@ import { Pipeline9NetworkedHighDensityRepairSolver } from "lib/autorouter-pipeli
 import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
 import type { Pipeline9NetworkedHighDensityRepairInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedRepairTypes"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
-import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import { createDeferred } from "tests/fixtures/pipeline9-networked-fixtures"
 
 const waitFor = async (condition: () => boolean): Promise<void> => {
   const deadline = performance.now() + 5_000
   while (!condition()) {
-    if (performance.now() > deadline) throw new Error("Repair requests did not settle")
+    if (performance.now() > deadline)
+      throw new Error("Repair requests did not settle")
     await new Promise((resolve) => setTimeout(resolve, 0))
   }
 }
@@ -47,7 +51,10 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
     connectionName: "fixed-neighbor",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: -1, y: 0.85, z: 0 }, { x: 5, y: 0.85, z: 0 }],
+    route: [
+      { x: -1, y: 0.85, z: 0 },
+      { x: 5, y: 0.85, z: 0 },
+    ],
     vias: [],
   }
   routes.push(unassignedRoute)
@@ -63,7 +70,10 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
     regionId: trivialNode.capacityMeshNodeId,
     startPcbPortId: "trivial-start",
     endPcbPortId: "trivial-end",
-    route: [{ x: 9, y: 0, z: 0 }, { x: 11, y: 0, z: 0 }],
+    route: [
+      { x: 9, y: 0, z: 0 },
+      { x: 11, y: 0, z: 0 },
+    ],
   }
   const params = {
     nodeWithPortPoints: [nodes[0], trivialNode, ...nodes.slice(1)],
@@ -81,11 +91,21 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
     })),
   }
   const local = new Pipeline4HighDensityRepairSolver(params)
-  const originalSamples = JSON.parse(JSON.stringify(local.sampleEntries.map(({ sample }) => sample)))
-  const remoteSamples = originalSamples.filter((sample: { nodeWithPortPoints: { capacityMeshNodeId: string } }) => sample.nodeWithPortPoints.capacityMeshNodeId !== trivialNode.capacityMeshNodeId)
+  const originalSamples = JSON.parse(
+    JSON.stringify(local.sampleEntries.map(({ sample }) => sample)),
+  )
+  const remoteSamples = originalSamples.filter(
+    (sample: { nodeWithPortPoints: { capacityMeshNodeId: string } }) =>
+      sample.nodeWithPortPoints.capacityMeshNodeId !==
+      trivialNode.capacityMeshNodeId,
+  )
   local.solve()
   expect(local.getOutput()[0].route).not.toEqual(routes[0].route)
-  expect(remoteSamples.every((sample: { fixedHdRoutes: unknown[] }) => sample.fixedHdRoutes.length > 0)).toBeTrue()
+  expect(
+    remoteSamples.every(
+      (sample: { fixedHdRoutes: unknown[] }) => sample.fixedHdRoutes.length > 0,
+    ),
+  ).toBeTrue()
 
   const releases = nodes.map(() => createDeferred<void>())
   const received: Pipeline9NetworkedHighDensityRepairInput[] = []
@@ -96,22 +116,38 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
     async fetch(request): Promise<Response> {
       const body = await request.json()
       if (new URL(request.url).pathname === "/solve-batch") {
-        return new Response(body.items.map(({ requestId }: { requestId: string }) => JSON.stringify({
-          requestId,
-          ok: false,
-          code: "CACHE_MISS",
-          autorouterVersion: AUTOROUTER_VERSION,
-          cacheVersion: body.cacheVersion,
-          message: "cold repair cache",
-        })).join("\n") + "\n")
+        return new Response(
+          body.items
+            .map(({ requestId }: { requestId: string }) =>
+              JSON.stringify({
+                requestId,
+                ok: false,
+                code: "CACHE_MISS",
+                autorouterVersion: AUTOROUTER_VERSION,
+                cacheVersion: body.cacheVersion,
+                message: "cold repair cache",
+              }),
+            )
+            .join("\n") + "\n",
+        )
       }
       const input = body.input as Pipeline9NetworkedHighDensityRepairInput
       received.push(input)
-      const nodeIndex = nodes.findIndex((node) => node.capacityMeshNodeId === input.sample.nodeWithPortPoints!.capacityMeshNodeId)
+      const nodeIndex = nodes.findIndex(
+        (node) =>
+          node.capacityMeshNodeId ===
+          input.sample.nodeWithPortPoints!.capacityMeshNodeId,
+      )
       await releases[nodeIndex].promise
       const output = solvePipeline9NetworkedHighDensityNode(input)
       completed.push(nodes[nodeIndex].capacityMeshNodeId)
-      return Response.json({ ok: true, autorouterVersion: AUTOROUTER_VERSION, cacheVersion: body.cacheVersion, source: "solver", ...output })
+      return Response.json({
+        ok: true,
+        autorouterVersion: AUTOROUTER_VERSION,
+        cacheVersion: body.cacheVersion,
+        source: "solver",
+        ...output,
+      })
     },
   })
   const remote = new Pipeline9NetworkedHighDensityRepairSolver({
@@ -128,16 +164,22 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
       hdCache2CacheVersion: "repair-parity",
       requestTimeoutMs: 5_000,
     })
-    const recreated = new Pipeline9NetworkedHighDensityRepairSolver(...remote.getConstructorParams())
+    const recreated = new Pipeline9NetworkedHighDensityRepairSolver(
+      ...remote.getConstructorParams(),
+    )
     expect(recreated.sampleEntries).toEqual(remote.sampleEntries)
     remote.step()
     await waitFor(() => received.length === nodes.length)
     // Concurrent HTTP requests may arrive in any order; each node must still
     // receive its exact frozen sample.
     for (const { sample } of received) {
-      expect(sample).toEqual(remoteSamples.find((expected: Pipeline9NetworkedHighDensityRepairInput["sample"]) =>
-        expected.nodeWithPortPoints!.capacityMeshNodeId === sample.nodeWithPortPoints!.capacityMeshNodeId,
-      ))
+      expect(sample).toEqual(
+        remoteSamples.find(
+          (expected: Pipeline9NetworkedHighDensityRepairInput["sample"]) =>
+            expected.nodeWithPortPoints!.capacityMeshNodeId ===
+            sample.nodeWithPortPoints!.capacityMeshNodeId,
+        ),
+      )
     }
     for (const index of [2, 1, 0]) {
       releases[index].resolve()
@@ -159,10 +201,16 @@ test("parallel repair preserves frozen neighbors, board rules and positional ter
       remoteRepairResultsApplied: 3,
       remoteTransportFallbacks: 0,
       nodeClearanceCandidateCount: local.stats.nodeClearanceCandidateCount,
-      nodeClearanceInitialConflictCount: local.stats.nodeClearanceInitialConflictCount,
-      nodeClearanceFinalConflictCount: local.stats.nodeClearanceFinalConflictCount,
+      nodeClearanceInitialConflictCount:
+        local.stats.nodeClearanceInitialConflictCount,
+      nodeClearanceFinalConflictCount:
+        local.stats.nodeClearanceFinalConflictCount,
     })
-    expect(routes[0].route).toEqual([{ x: -1, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }])
+    expect(routes[0].route).toEqual([
+      { x: -1, y: 0, z: 0 },
+      { x: 0, y: 0, z: 0 },
+      { x: 1, y: 0, z: 0 },
+    ])
   } finally {
     for (const release of releases) release.resolve()
     await remote.waitForAllRemoteRequests()

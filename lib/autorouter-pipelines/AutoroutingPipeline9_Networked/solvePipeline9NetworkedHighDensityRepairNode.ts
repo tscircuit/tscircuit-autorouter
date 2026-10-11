@@ -10,7 +10,9 @@ export function solvePipeline9NetworkedHighDensityRepairNode(
   input: Pipeline9NetworkedHighDensityRepairInput,
 ): Pipeline9NetworkedHighDensityRepairOutput {
   if (input.solvePolicy !== PIPELINE9_NETWORKED_REPAIR_POLICY) {
-    throw new Error(`Unsupported Pipeline9 repair policy ${String(input.solvePolicy)}`)
+    throw new Error(
+      `Unsupported Pipeline9 repair policy ${String(input.solvePolicy)}`,
+    )
   }
   const solver = new HighDensityRepairSolver({
     sample: input.sample,
@@ -30,12 +32,15 @@ export function solvePipeline9NetworkedHighDensityRepairNode(
     solutionStage: "repair",
     repairedRoutes: solver.getOutput().repairedRoutes,
     clearanceStats: {
-      nodeClearanceInitialConflictCount:
-        Number(solver.stats.nodeClearanceInitialConflictCount ?? 0),
-      nodeClearanceFinalConflictCount:
-        Number(solver.stats.nodeClearanceFinalConflictCount ?? 0),
-      nodeClearanceCandidateCount:
-        Number(solver.stats.nodeClearanceCandidateCount ?? 0),
+      nodeClearanceInitialConflictCount: Number(
+        solver.stats.nodeClearanceInitialConflictCount ?? 0,
+      ),
+      nodeClearanceFinalConflictCount: Number(
+        solver.stats.nodeClearanceFinalConflictCount ?? 0,
+      ),
+      nodeClearanceCandidateCount: Number(
+        solver.stats.nodeClearanceCandidateCount ?? 0,
+      ),
     },
   }
 }

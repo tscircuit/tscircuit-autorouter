@@ -97,7 +97,10 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
     this.autorouterVersion = autorouterVersion
     this.forceImprove = forceImprove
-      ? { ...forceImprove, preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds }
+      ? {
+          ...forceImprove,
+          preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+        }
       : undefined
     this.hdCache2ServerUrl = hdCache2ServerUrl ?? DEFAULT_HD_CACHE2_SERVER_URL
     this.hdCache2CacheVersion = hdCache2CacheVersion
@@ -195,10 +198,13 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
-      ...(this.forceImprove && isPipeline9NodeForceImprovementEligible({
+      ...(this.forceImprove &&
+      isPipeline9NodeForceImprovementEligible({
         nodeWithPortPoints: node,
         viaDiameter: this.viaDiameter,
-      }) ? { forceImprove: this.forceImprove } : {}),
+      })
+        ? { forceImprove: this.forceImprove }
+        : {}),
     }
   }
 
@@ -382,7 +388,10 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     }
     // Force improvement rounds terminal coordinates. IDs were attached before
     // that work remotely, just as they are before the original board stage.
-    this.finishActiveNode(result.response.routes, !result.response.forceImproved)
+    this.finishActiveNode(
+      result.response.routes,
+      !result.response.forceImproved,
+    )
   }
 
   /**

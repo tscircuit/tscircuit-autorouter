@@ -42,7 +42,8 @@ export type HdCache2FallbackReason =
   | "version_mismatch"
 
 export type HdCache2SolveResult<
-  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+  TOutput extends
+    Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
 > =
   | {
       kind: "remote"
@@ -74,13 +75,14 @@ export type HdCache2ClientOptions = {
   cacheVersion?: string
 }
 
-type PendingSolve = Pipeline9NetworkedSolveBatchItem<Pipeline9NetworkedInput> & {
-  serializedItem: string | null
-  promise: Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>
-  resolve: (result: HdCache2SolveResult<Pipeline9NetworkedOutput>) => void
-  settled: boolean
-  singleSolveStarted: boolean
-}
+type PendingSolve =
+  Pipeline9NetworkedSolveBatchItem<Pipeline9NetworkedInput> & {
+    serializedItem: string | null
+    promise: Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>
+    resolve: (result: HdCache2SolveResult<Pipeline9NetworkedOutput>) => void
+    settled: boolean
+    singleSolveStarted: boolean
+  }
 
 type PreparedBatch = {
   body: string
@@ -126,9 +128,11 @@ const ORDINARY_VIA_POSITION_TOLERANCE_MM = 1e-6
 const REGIONAL_VIA_POSITION_TOLERANCE_MM = 0.001
 const FORCE_COORDINATE_ROUNDING_TOLERANCE_MM = 0.0005
 
-const forceImprovedCoordinatesMatch = (left: number, right: number): boolean => {
-  const numericTolerance =
-    1e-9 * Math.max(1, Math.abs(left), Math.abs(right))
+const forceImprovedCoordinatesMatch = (
+  left: number,
+  right: number,
+): boolean => {
+  const numericTolerance = 1e-9 * Math.max(1, Math.abs(left), Math.abs(right))
   const maximumDifference =
     FORCE_COORDINATE_ROUNDING_TOLERANCE_MM + numericTolerance
   return Math.abs(left - right) <= maximumDifference
@@ -188,9 +192,14 @@ const hasValidRemoteLayerTransitions = (
       if (!changesLayer) return false
       // The force improver derives a via at every co-located transition,
       // including the copper already provided by a plated-hole obstacle.
-      if (forceImproved && Math.hypot(start.x - end.x, start.y - end.y) <= viaPositionTolerance) {
+      if (
+        forceImproved &&
+        Math.hypot(start.x - end.x, start.y - end.y) <= viaPositionTolerance
+      ) {
         for (const [viaIndex, via] of route.vias.entries()) {
-          if (Math.hypot(via.x - start.x, via.y - start.y) <= viaPositionTolerance) {
+          if (
+            Math.hypot(via.x - start.x, via.y - start.y) <= viaPositionTolerance
+          ) {
             usedViaIndexes.add(viaIndex)
           }
         }
@@ -493,15 +502,19 @@ const isValidRemoteRoutes = (
         [routePoints.at(-1)!, route.endPcbPortId],
       ] as const) {
         const candidates = portPointsByConnectionName.get(route.connectionName)!
-        const matchesTerminal = candidates.some((portPoint) =>
-          forceImprovedCoordinatesMatch(point.x as number, portPoint.x) &&
-          forceImprovedCoordinatesMatch(point.y as number, portPoint.y) &&
-          point.z === portPoint.z &&
-          portPoint.pcb_port_id === pcbPortId,
+        const matchesTerminal = candidates.some(
+          (portPoint) =>
+            forceImprovedCoordinatesMatch(point.x as number, portPoint.x) &&
+            forceImprovedCoordinatesMatch(point.y as number, portPoint.y) &&
+            point.z === portPoint.z &&
+            portPoint.pcb_port_id === pcbPortId,
         )
         // Regional endpoints can already be rounded before terminal IDs are
         // attached, matching the local pipeline's existing exact-match policy.
-        if (!matchesTerminal && (solutionStage === "ordinary" || pcbPortId !== undefined)) {
+        if (
+          !matchesTerminal &&
+          (solutionStage === "ordinary" || pcbPortId !== undefined)
+        ) {
           return false
         }
       }
@@ -596,7 +609,11 @@ const isValidRemoteRepairResult = (
     "nodeClearanceCandidateCount",
   ]) {
     const count = (stats as Record<string, unknown>)[key]
-    if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) {
+    if (
+      typeof count !== "number" ||
+      !Number.isSafeInteger(count) ||
+      count < 0
+    ) {
       return false
     }
   }
@@ -636,13 +653,30 @@ const isValidRemoteRepairResult = (
     ...route.vias!,
   ])
   const margin = input.repairMargin
-  const minX = Math.min(node.center.x - node.width / 2, ...originalPoints.map((point) => point.x)) - margin
-  const maxX = Math.max(node.center.x + node.width / 2, ...originalPoints.map((point) => point.x)) + margin
-  const minY = Math.min(node.center.y - node.height / 2, ...originalPoints.map((point) => point.y)) - margin
-  const maxY = Math.max(node.center.y + node.height / 2, ...originalPoints.map((point) => point.y)) + margin
+  const minX =
+    Math.min(
+      node.center.x - node.width / 2,
+      ...originalPoints.map((point) => point.x),
+    ) - margin
+  const maxX =
+    Math.max(
+      node.center.x + node.width / 2,
+      ...originalPoints.map((point) => point.x),
+    ) + margin
+  const minY =
+    Math.min(
+      node.center.y - node.height / 2,
+      ...originalPoints.map((point) => point.y),
+    ) - margin
+  const maxY =
+    Math.max(
+      node.center.y + node.height / 2,
+      ...originalPoints.map((point) => point.y),
+    ) + margin
 
   for (const [index, value] of response.repairedRoutes.entries()) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return false
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return false
     const route = value as Record<string, unknown>
     const original = originals[index]!
     if (
@@ -657,7 +691,8 @@ const isValidRemoteRepairResult = (
       typeof route.viaDiameter !== "number" ||
       !Number.isFinite(route.viaDiameter) ||
       route.viaDiameter <= 0 ||
-      JSON.stringify(route.connectedPadSides) !== JSON.stringify(original.connectedPadSides) ||
+      JSON.stringify(route.connectedPadSides) !==
+        JSON.stringify(original.connectedPadSides) ||
       !Array.isArray(route.route) ||
       route.route.length < 2 ||
       !Array.isArray(route.vias)
@@ -666,15 +701,18 @@ const isValidRemoteRepairResult = (
     }
     const points = route.route as Array<Record<string, unknown>>
     for (const point of points) {
-      if (!point || typeof point !== "object" || Array.isArray(point)) return false
+      if (!point || typeof point !== "object" || Array.isArray(point))
+        return false
       const z = point.z === undefined ? 0 : point.z
       if (
         typeof point.x !== "number" ||
         !Number.isFinite(point.x) ||
         typeof point.y !== "number" ||
         !Number.isFinite(point.y) ||
-        point.x < minX || point.x > maxX ||
-        point.y < minY || point.y > maxY ||
+        point.x < minX ||
+        point.x > maxX ||
+        point.y < minY ||
+        point.y > maxY ||
         typeof z !== "number" ||
         !Number.isInteger(z) ||
         z < 0 ||
@@ -696,15 +734,18 @@ const isValidRemoteRepairResult = (
       }
     }
     for (const value of route.vias) {
-      if (!value || typeof value !== "object" || Array.isArray(value)) return false
+      if (!value || typeof value !== "object" || Array.isArray(value))
+        return false
       const via = value as Record<string, unknown>
       if (
         typeof via.x !== "number" ||
         !Number.isFinite(via.x) ||
         typeof via.y !== "number" ||
         !Number.isFinite(via.y) ||
-        via.x < minX || via.x > maxX ||
-        via.y < minY || via.y > maxY ||
+        via.x < minX ||
+        via.x > maxX ||
+        via.y < minY ||
+        via.y > maxY ||
         (via.diameter !== undefined && via.diameter !== original.viaDiameter)
       ) {
         return false
@@ -797,10 +838,14 @@ export class HdCache2Client {
     requestId: string,
     input: Pipeline9NetworkedInput,
   ): PendingSolve {
-    let resolve!: (result: HdCache2SolveResult<Pipeline9NetworkedOutput>) => void
-    const promise = new Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>((resolvePromise) => {
-      resolve = resolvePromise
-    })
+    let resolve!: (
+      result: HdCache2SolveResult<Pipeline9NetworkedOutput>,
+    ) => void
+    const promise = new Promise<HdCache2SolveResult<Pipeline9NetworkedOutput>>(
+      (resolvePromise) => {
+        resolve = resolvePromise
+      },
+    )
     const pending: PendingSolve = {
       requestId,
       input,
@@ -847,7 +892,10 @@ export class HdCache2Client {
   private parseSuccessfulResponse(
     value: unknown,
     input: Pipeline9NetworkedInput,
-  ): Extract<Pipeline9NetworkedSolveResponse<Pipeline9NetworkedOutput>, { ok: true }> {
+  ): Extract<
+    Pipeline9NetworkedSolveResponse<Pipeline9NetworkedOutput>,
+    { ok: true }
+  > {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       throw new HdCache2RequestError(
         "invalid_response",
@@ -889,7 +937,10 @@ export class HdCache2Client {
           "hd-cache2 returned an invalid repair result",
         )
       }
-      return response as Extract<Pipeline9NetworkedSolveResponse<Pipeline9NetworkedHighDensityRepairOutput>, { ok: true }>
+      return response as Extract<
+        Pipeline9NetworkedSolveResponse<Pipeline9NetworkedHighDensityRepairOutput>,
+        { ok: true }
+      >
     }
     if (
       response.solutionStage !== "ordinary" &&

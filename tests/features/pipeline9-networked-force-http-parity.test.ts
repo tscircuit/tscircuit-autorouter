@@ -5,10 +5,17 @@ import { Pipeline9NetworkedHighDensitySolver } from "lib/autorouter-pipelines/Au
 import { forceImprovePipeline9HighDensityNodeRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/forceImprovePipeline9HighDensityNodeRoutes"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
-import { createNetworkedNode, solveNetworkedHighDensitySolver } from "tests/fixtures/pipeline9-networked-fixtures"
+import {
+  createNetworkedNode,
+  solveNetworkedHighDensitySolver,
+} from "tests/fixtures/pipeline9-networked-fixtures"
 
 test("remote force results preserve fractional terminals and reject unproved post-processing", async (): Promise<void> => {
-  const node = createNetworkedNode({ nodeId: "fractional", connectionName: "signal", xOffset: 0.123456 })
+  const node = createNetworkedNode({
+    nodeId: "fractional",
+    connectionName: "signal",
+    xOffset: 0.123456,
+  })
   const params = {
     nodePortPoints: [node],
     fixedHdRoutes: [],
@@ -58,7 +65,9 @@ test("remote force results preserve fractional terminals and reject unproved pos
         expect(remote.stats.remoteTransportFallbacks).toBe(1)
         expect(remote.routes).toEqual(local.routes)
       } else {
-        expect(remote.forceImprovedRegionIds.has(node.capacityMeshNodeId)).toBeTrue()
+        expect(
+          remote.forceImprovedRegionIds.has(node.capacityMeshNodeId),
+        ).toBeTrue()
         expect(remote.stats.remoteTransportFallbacks).toBe(0)
         expect(remote.routes).toEqual(expected)
         expect(remote.routes[0]!.startPcbPortId).toBe("fractional_start")

@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
 import { HdCache2Client } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY, type Pipeline9NetworkedHighDensityNodeInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
+import {
+  PIPELINE9_NETWORKED_SOLVE_POLICY,
+  type Pipeline9NetworkedHighDensityNodeInput,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 
 test("force-improved plated-hole transitions remain valid remote results", async (): Promise<void> => {
@@ -25,14 +28,16 @@ test("force-improved plated-hole transitions remain valid remote results", async
     traceWidth: 0.15,
     obstacleMargin: 0.15,
     effort: 1,
-    obstacles: [{
-      type: "rect",
-      center: { x: 0, y: 0 },
-      width: 2,
-      height: 2,
-      layers: ["top", "bottom"],
-      connectedTo: ["signal"],
-    }],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 0, y: 0 },
+        width: 2,
+        height: 2,
+        layers: ["top", "bottom"],
+        connectedTo: ["signal"],
+      },
+    ],
     regionalObstacles: [],
     layerCount: 2,
     nodePf: 0.1,
@@ -51,7 +56,9 @@ test("force-improved plated-hole transitions remain valid remote results", async
       throw new Error("Expected a solved force-improved result")
     }
     expect(result!.response.forceImproved).toBeTrue()
-    expect(result!.response.routes[0]!.route[0]!.toNextSegmentType).toBe("through_obstacle")
+    expect(result!.response.routes[0]!.route[0]!.toNextSegmentType).toBe(
+      "through_obstacle",
+    )
     expect(result!.response.routes[0]!.vias).toEqual([{ x: 0, y: 0 }])
     expect(result!.response.routes[0]!.startPcbPortId).toBe("start")
     expect(result!.response.routes[0]!.endPcbPortId).toBe("end")

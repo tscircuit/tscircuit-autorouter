@@ -23,16 +23,20 @@ export function isPipeline9NodeForceImprovementEligible({
   ]
   for (const [index, portPoint] of portPoints.entries()) {
     if (
-      portPoint.x >= minX && portPoint.x <= maxX &&
-      portPoint.y >= minY && portPoint.y <= maxY
-    ) continue
+      portPoint.x >= minX &&
+      portPoint.x <= maxX &&
+      portPoint.y >= minY &&
+      portPoint.y <= maxY
+    )
+      continue
     for (const candidate of portPoints.slice(index + 1)) {
       if (
         candidate.connectionName === portPoint.connectionName &&
         candidate.x === portPoint.x &&
         candidate.y === portPoint.y &&
         candidate.z !== portPoint.z
-      ) return false
+      )
+        return false
     }
   }
   return true

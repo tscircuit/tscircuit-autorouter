@@ -8,15 +8,21 @@ test("a remote terminal repair failure stops before applying the sample", async 
     hostname: "127.0.0.1",
     async fetch(request): Promise<Response> {
       const body = await request.json()
-      return new Response(body.items.map(({ requestId }: { requestId: string }) => JSON.stringify({
-        requestId,
-        ok: true,
-        autorouterVersion: AUTOROUTER_VERSION,
-        source: "solver",
-        solutionStage: "repair",
-        status: "failed",
-        error: "repair failed for node",
-      })).join("\n") + "\n")
+      return new Response(
+        body.items
+          .map(({ requestId }: { requestId: string }) =>
+            JSON.stringify({
+              requestId,
+              ok: true,
+              autorouterVersion: AUTOROUTER_VERSION,
+              source: "solver",
+              solutionStage: "repair",
+              status: "failed",
+              error: "repair failed for node",
+            }),
+          )
+          .join("\n") + "\n",
+      )
     },
   })
   const route = {
@@ -24,13 +30,33 @@ test("a remote terminal repair failure stops before applying the sample", async 
     connectionName: "trace",
     traceThickness: 0.15,
     viaDiameter: 0.3,
-    route: [{ x: -1, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
+    route: [
+      { x: -1, y: 0, z: 0 },
+      { x: 1, y: 0, z: 0 },
+    ],
     vias: [],
   }
   const solver = new Pipeline9NetworkedHighDensityRepairSolver({
-    nodeWithPortPoints: [{ capacityMeshNodeId: "node", center: { x: 0, y: 0 }, width: 2, height: 2, portPoints: [] }],
+    nodeWithPortPoints: [
+      {
+        capacityMeshNodeId: "node",
+        center: { x: 0, y: 0 },
+        width: 2,
+        height: 2,
+        portPoints: [],
+      },
+    ],
     hdRoutes: [route],
-    obstacles: [{ type: "rect", center: { x: 0, y: 0.8 }, width: 0.1, height: 0.1, layers: ["top"], connectedTo: [] }],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 0, y: 0.8 },
+        width: 0.1,
+        height: 0.1,
+        layers: ["top"],
+        connectedTo: [],
+      },
+    ],
     autorouterVersion: AUTOROUTER_VERSION,
     hdCache2ServerUrl: server.url.toString(),
   })

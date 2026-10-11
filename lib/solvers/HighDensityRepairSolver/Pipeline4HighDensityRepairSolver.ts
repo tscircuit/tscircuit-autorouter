@@ -437,16 +437,15 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
       const clearanceStats = {
-        nodeClearanceInitialConflictCount:
-          Number(
-            this.activeSubSolver.stats.nodeClearanceInitialConflictCount ?? 0,
-          ),
-        nodeClearanceFinalConflictCount:
-          Number(
-            this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
-          ),
-        nodeClearanceCandidateCount:
-          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
+        nodeClearanceInitialConflictCount: Number(
+          this.activeSubSolver.stats.nodeClearanceInitialConflictCount ?? 0,
+        ),
+        nodeClearanceFinalConflictCount: Number(
+          this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
+        ),
+        nodeClearanceCandidateCount: Number(
+          this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0,
+        ),
       }
       this.activeSubSolver = null
       this.finishRepairSample(repairedRoutes, clearanceStats)
@@ -468,7 +467,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   ): void {
     const sampleEntry = this.sampleEntries[this.activeSampleIndex]
     if (!sampleEntry) {
-      throw new Error(`High density repair sample ${this.activeSampleIndex} is missing`)
+      throw new Error(
+        `High density repair sample ${this.activeSampleIndex} is missing`,
+      )
     }
     for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
       const routeIndex = sampleEntry.routeIndexes[i]

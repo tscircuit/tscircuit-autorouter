@@ -91,7 +91,9 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     const forceStep = this.pipelineDef[forceStepIndex]
     const repairStep = this.pipelineDef[repairStepIndex]
     if (!forceStep || !repairStep) {
-      throw new Error("Pipeline9 high-density post-processing steps are missing")
+      throw new Error(
+        "Pipeline9 high-density post-processing steps are missing",
+      )
     }
     const getRepairConstructorParams = repairStep.getConstructorParams
     this.pipelineDef[forceStepIndex] = {
@@ -99,17 +101,21 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
       solverClass: Pipeline9RemainingForceImproveSolver as any,
       getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
         const highDensitySolver = solver.highDensityRouteSolver
-        if (!(highDensitySolver instanceof Pipeline9NetworkedHighDensitySolver)) {
+        if (
+          !(highDensitySolver instanceof Pipeline9NetworkedHighDensitySolver)
+        ) {
           throw new Error("Pipeline9 networked high-density solver is missing")
         }
-        return [{
-          nodeWithPortPoints: solver.highDensityNodePortPoints!,
-          hdRoutes: highDensitySolver.routes,
-          colorMap: solver.colorMap,
-          totalStepsPerNode: 20,
-          nodeAssignmentMargin: solver.srj.defaultObstacleMargin ?? 0.2,
-          forceImprovedRegionIds: highDensitySolver.forceImprovedRegionIds,
-        }]
+        return [
+          {
+            nodeWithPortPoints: solver.highDensityNodePortPoints!,
+            hdRoutes: highDensitySolver.routes,
+            colorMap: solver.colorMap,
+            totalStepsPerNode: 20,
+            nodeAssignmentMargin: solver.srj.defaultObstacleMargin ?? 0.2,
+            forceImprovedRegionIds: highDensitySolver.forceImprovedRegionIds,
+          },
+        ]
       },
     } as any
     this.pipelineDef[repairStepIndex] = {
@@ -117,12 +123,14 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
       solverClass: Pipeline9NetworkedHighDensityRepairSolver as any,
       getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
         const [params] = getRepairConstructorParams(solver)
-        return [{
-          ...params,
-          autorouterVersion: AUTOROUTER_VERSION,
-          hdCache2ServerUrl: solver.hdCache2ServerUrl,
-          hdCache2CacheVersion: solver.hdCache2CacheVersion,
-        }]
+        return [
+          {
+            ...params,
+            autorouterVersion: AUTOROUTER_VERSION,
+            hdCache2ServerUrl: solver.hdCache2ServerUrl,
+            hdCache2CacheVersion: solver.hdCache2CacheVersion,
+          },
+        ]
       },
     } as any
   }

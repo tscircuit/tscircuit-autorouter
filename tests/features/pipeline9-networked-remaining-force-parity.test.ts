@@ -34,7 +34,11 @@ test("remaining force improvement keeps remote routes and preserves interleaved 
     nodeAssignmentMargin: 0.15,
     preserveTerminalPcbPortIds: false,
   })
-  const mixedRoutes = [improvedNodeA[0]!, originalNodeRoutes[1]!, improvedNodeA[1]!]
+  const mixedRoutes = [
+    improvedNodeA[0]!,
+    originalNodeRoutes[1]!,
+    improvedNodeA[1]!,
+  ]
   const remainingForce = new Pipeline9RemainingForceImproveSolver({
     ...params,
     hdRoutes: mixedRoutes,
@@ -61,11 +65,15 @@ test("remaining force improvement keeps remote routes and preserves interleaved 
   expect(allRemote.stats.sampleCount).toBe(0)
   expect(allRemote.stats.preImprovedRouteCount).toBe(3)
   expect(allRemote.getOutput()).toEqual(output)
-  expect(() =>
-    new Pipeline9RemainingForceImproveSolver({
-      ...params,
-      hdRoutes: [improvedNodeA[0]!, { ...originalNodeRoutes[2]!, regionId: undefined }],
-      forceImprovedRegionIds: new Set(["node_a"]),
-    }),
+  expect(
+    () =>
+      new Pipeline9RemainingForceImproveSolver({
+        ...params,
+        hdRoutes: [
+          improvedNodeA[0]!,
+          { ...originalNodeRoutes[2]!, regionId: undefined },
+        ],
+        forceImprovedRegionIds: new Set(["node_a"]),
+      }),
   ).toThrow('assigned to already improved node "node_a"')
 })

@@ -46,20 +46,30 @@ test("networked force and repair waves preserve final Pipeline9 routes and DRC",
   try {
     await remote.solveAsync()
     expect(remote.solved, remote.error ?? "").toBeTrue()
-    const highDensity = remote.highDensityRouteSolver as Pipeline9NetworkedHighDensitySolver
-    const force = remote.highDensityForceImproveSolver as Pipeline9RemainingForceImproveSolver
-    const repair = remote.highDensityRepairSolver as Pipeline9NetworkedHighDensityRepairSolver
+    const highDensity =
+      remote.highDensityRouteSolver as Pipeline9NetworkedHighDensitySolver
+    const force =
+      remote.highDensityForceImproveSolver as Pipeline9RemainingForceImproveSolver
+    const repair =
+      remote.highDensityRepairSolver as Pipeline9NetworkedHighDensityRepairSolver
     expect(highDensity.forceImprovedRegionIds.size).toBeGreaterThan(0)
     expect(highDensity.stats.remoteTransportFallbacks).toBe(0)
     expect(force.stats.sampleCount).toBe(0)
-    expect(repair.stats.remoteRepairResultsApplied + (repair.stats.localTrivialRepairCount ?? 0)).toBe(repair.sampleEntries.length)
+    expect(
+      repair.stats.remoteRepairResultsApplied +
+        (repair.stats.localTrivialRepairCount ?? 0),
+    ).toBe(repair.sampleEntries.length)
     expect(repair.stats.remoteTransportFallbacks).toBe(0)
-    expect(remote.getOutputSimplifiedPcbTraces()).toEqual(local.getOutputSimplifiedPcbTraces())
-    expect(evaluateRelaxedDrc({
-      inputSrj: scenario,
-      srjWithPointPairs: remote.srjWithPointPairs!,
-      routedTraces: remote.getOutputSimplifiedPcbTraces(),
-    }).errors).toEqual([])
+    expect(remote.getOutputSimplifiedPcbTraces()).toEqual(
+      local.getOutputSimplifiedPcbTraces(),
+    )
+    expect(
+      evaluateRelaxedDrc({
+        inputSrj: scenario,
+        srjWithPointPairs: remote.srjWithPointPairs!,
+        routedTraces: remote.getOutputSimplifiedPcbTraces(),
+      }).errors,
+    ).toEqual([])
   } finally {
     await server.close()
   }

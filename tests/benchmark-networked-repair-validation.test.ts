@@ -80,22 +80,32 @@ test("hot benchmark validation drains repair requests and rejects a repair cache
       remoteTransportFallbacks: 0,
     },
   })
-  await expect(validateNetworkedBenchmark(task, {
-    ...solver,
-    highDensityRepairSolver: undefined,
-  })).resolves.toBeUndefined()
+  await expect(
+    validateNetworkedBenchmark(task, {
+      ...solver,
+      highDensityRepairSolver: undefined,
+    }),
+  ).resolves.toBeUndefined()
 
   routeStats.remoteTransportFallbacks = 1
   routeStats.remoteFallbackReasonCounts = { invalid_response: 1 }
   repairStats.remoteTransportFallbacks = 2
-  repairStats.remoteFallbackReasonCounts = { invalid_response: 1, logical_timeout: 1 }
-  expect(getRoutingBenchmarkMetrics(solver).networkedHighDensity).toMatchObject({
-    remoteTransportFallbacks: 3,
-    remoteFallbackReasonCounts: { invalid_response: 2, logical_timeout: 1 },
-  })
+  repairStats.remoteFallbackReasonCounts = {
+    invalid_response: 1,
+    logical_timeout: 1,
+  }
+  expect(getRoutingBenchmarkMetrics(solver).networkedHighDensity).toMatchObject(
+    {
+      remoteTransportFallbacks: 3,
+      remoteFallbackReasonCounts: { invalid_response: 2, logical_timeout: 1 },
+    },
+  )
 
   const waitsBeforeOrdinaryTask = waits.length
-  await validateNetworkedBenchmark({ ...task, networkedCachePass: undefined }, solver)
+  await validateNetworkedBenchmark(
+    { ...task, networkedCachePass: undefined },
+    solver,
+  )
   expect(waits).toHaveLength(waitsBeforeOrdinaryTask)
   const ordinaryMetrics = getRoutingBenchmarkMetrics({
     ...solver,

@@ -13,7 +13,13 @@ test("force validation accepts rounding and projected vias while retaining conne
     { x: 4.4675, y: 0, z: 0, connectionName: "signal", pcb_port_id: "a" },
     { x: 6.5, y: 0, z: 1, connectionName: "signal", pcb_port_id: "b" },
     { x: 5.2, y: 1, z: 0, connectionName: "signal", pcb_port_id: "c" },
-    { x: -0.33250000000000013, y: 1, z: 0, connectionName: "signal", pcb_port_id: "d" },
+    {
+      x: -0.33250000000000013,
+      y: 1,
+      z: 0,
+      connectionName: "signal",
+      pcb_port_id: "d",
+    },
     { x: 3.0001, y: 1.5, z: 0, connectionName: "collapsed", pcb_port_id: "e" },
     { x: 3.0002, y: 1.5, z: 0, connectionName: "collapsed", pcb_port_id: "f" },
   ]
@@ -27,7 +33,11 @@ test("force validation accepts rounding and projected vias while retaining conne
       height: 4,
       availableZ: [0, 1],
       portPoints: ports,
-      portPointsInPairs: [[ports[0]!, ports[2]!], [ports[1]!, ports[3]!], [ports[4]!, ports[5]!]],
+      portPointsInPairs: [
+        [ports[0]!, ports[2]!],
+        [ports[1]!, ports[3]!],
+        [ports[4]!, ports[5]!],
+      ],
     },
     connectivityNetMap: { signal: ["signal"], collapsed: ["collapsed"] },
     colorMap: {},
@@ -73,7 +83,11 @@ test("force validation accepts rounding and projected vias while retaining conne
       viaDiameter: 0.3,
       startPcbPortId: "c",
       endPcbPortId: "d",
-      route: [{ x: 5.2, y: 1, z: 0 }, { x: 5.2, y: 0, z: 0 }, { x: -0.332, y: 1, z: 0 }],
+      route: [
+        { x: 5.2, y: 1, z: 0 },
+        { x: 5.2, y: 0, z: 0 },
+        { x: -0.332, y: 1, z: 0 },
+      ],
       vias: [],
     },
     {
@@ -83,7 +97,10 @@ test("force validation accepts rounding and projected vias while retaining conne
       viaDiameter: 0.3,
       startPcbPortId: "e",
       endPcbPortId: "f",
-      route: [{ x: 3, y: 1.5, z: 0 }, { x: 3, y: 1.5, z: 0 }],
+      route: [
+        { x: 3, y: 1.5, z: 0 },
+        { x: 3, y: 1.5, z: 0 },
+      ],
       vias: [],
     },
   ]
@@ -104,12 +121,17 @@ test("force validation accepts rounding and projected vias while retaining conne
   ): Promise<void> => {
     responseRoutes = changedRoutes
     const client = new HdCache2Client(AUTOROUTER_VERSION, server.url)
-    const [result] = await Promise.all(client.solveMany([{
-      ...input,
-      forceImprove: forced ? input.forceImprove : undefined,
-    }]))
+    const [result] = await Promise.all(
+      client.solveMany([
+        {
+          ...input,
+          forceImprove: forced ? input.forceImprove : undefined,
+        },
+      ]),
+    )
     expect(result!.kind).toBe(expectedKind)
-    if (result!.kind === "local-fallback") expect(result!.reason).toBe("invalid_response")
+    if (result!.kind === "local-fallback")
+      expect(result!.reason).toBe("invalid_response")
   }
   try {
     await check(true, routes, "remote")

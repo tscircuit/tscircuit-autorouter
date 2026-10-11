@@ -77,7 +77,8 @@ export type Pipeline9NetworkedOutput =
   | Pipeline9NetworkedHighDensityRepairOutput
 
 export type Pipeline9NetworkedSolveRequest<
-  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+  TInput extends
+    Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
 > = {
   autorouterVersion: string
   /** Optional cache namespace used to isolate benchmark runs. */
@@ -86,14 +87,16 @@ export type Pipeline9NetworkedSolveRequest<
 }
 
 export type Pipeline9NetworkedSolveBatchItem<
-  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+  TInput extends
+    Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
 > = {
   requestId: string
   input: TInput
 }
 
 export type Pipeline9NetworkedSolveBatchRequest<
-  TInput extends Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
+  TInput extends
+    Pipeline9NetworkedInput = Pipeline9NetworkedHighDensityNodeInput,
 > = {
   autorouterVersion: string
   /** Optional cache namespace used to isolate benchmark runs. */
@@ -102,7 +105,8 @@ export type Pipeline9NetworkedSolveBatchRequest<
 }
 
 export type Pipeline9NetworkedSolveResponse<
-  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+  TOutput extends
+    Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
 > =
   | ({
       ok: true
@@ -128,7 +132,8 @@ export type Pipeline9NetworkedSolveBatchCacheMiss = {
 
 /** One independently consumable NDJSON line returned by POST /solve-batch. */
 export type Pipeline9NetworkedSolveBatchResult<
-  TOutput extends Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
+  TOutput extends
+    Pipeline9NetworkedOutput = Pipeline9NetworkedHighDensityNodeOutput,
 > =
   | ({ requestId: string } & Pipeline9NetworkedSolveResponse<TOutput>)
   | Pipeline9NetworkedSolveBatchCacheMiss
