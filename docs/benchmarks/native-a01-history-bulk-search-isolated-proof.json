@@ -1,0 +1,63 @@
+{
+  "kind": "isolated-physical-history-functional-proof",
+  "noTimingComparison": true,
+  "actualWorker": true,
+  "steps": 957175,
+  "checkpoints": 9572,
+  "frontiers": 11951,
+  "pureSteps": 954765,
+  "batches": 10746,
+  "atomicLoads": 957175,
+  "events": 2410,
+  "negativeCases": 14,
+  "cancellationCases": 7,
+  "defaultHistoryUntouched": true,
+  "ordinaryReplayCapabilityUsed": false,
+  "noLeaseAfterRun": true,
+  "scope": "Isolated genuine physical-history worker A01 prototype; production history execution unchanged.",
+  "originalNativeSource": "@tscircuit/high-density-a01 0.0.36, pinned 44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34, MIT",
+  "preservedBoundaries": [
+    "Independent private history task and registered original WorkerA01 owner; no ordinary Replay capability",
+    "One captured native Atomics load before every original logical step attempt, including native events; no duplicate event load",
+    "Full fresh method/storage/writable-domain/builtin admission before each bounded C run",
+    "Complete native private state and old object/array/rip/cache identities after each frontier/checkpoint",
+    "Flush and release before cancellation, bridge errors and native start/goal/budget/empty/cap events",
+    "Retirement forbids further work, and no capability or active helper crosses an await"
+  ],
+  "rawCases": {
+    "deterministicCancellationAndFrontiers": 45,
+    "postCheckCancellationRaces": 5,
+    "bridgeSentinelAfterChangedSteps": 16,
+    "terminalChecks": 0,
+    "startPreCancellationChecks": 1
+  },
+  "commands": [
+    "NATIVE_A01_HISTORY_BULK_SEARCH_WASM_CLANG=/opt/homebrew/opt/llvm/bin/clang bun scripts/build-native-a01-history-bulk-search-wasm-kernel.ts",
+    "bun test --timeout 9999999 tests/solvers/native-a01-history-bulk-search-raw-cancellation-parity.test.ts",
+    "HISTORY_BULK_A01_PROOF_PATH=/tmp/native-a01-history-bulk-search-authentic-proof.json bun test --timeout 9999999 tests/solvers/native-a01-history-bulk-search-authentic-worker-parity.test.ts",
+    "bunx tsc --noEmit",
+    "bun run build"
+  ],
+  "browser": {
+    "publicEntryBundleAndLoad": true,
+    "publicExports": 50,
+    "isolatedPrototypeBundleAndLoad": true,
+    "nodeGlobals": false,
+    "uninitializedRuntimeDeclines": true
+  },
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-history-bulk-search/historySearchKernel.c": "9045da2e2d32a5754fa9e68800bd74be4181f44e761db1b2ed54024b2f22eb9f",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-history-bulk-search/historySearchKernelBytes.ts": "cc9a9fb49bcc48c8a0b0298000732534d454005232cbe4f6d0801469bb2de9d9",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-history-bulk-search/NativeA01HistoryBulkSearchKernel.ts": "2e048319d6b544c02bdd8345896b6404d0263f448ac5fd767b56c2a9452bd203",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-history-bulk-search/workerNativeA01HistoryBulkPrototype.ts": "fb6b8e49cd63992e9170f96d20a125a39b531e547c0e361db2c0c9111aaad0e1",
+    "scripts/build-native-a01-history-bulk-search-wasm-kernel.ts": "758a80267d7c8a3b436f93d000638267a0d77c1e79024a940628cf29f28a8224",
+    "tests/fixtures/parallel-history-bulk-a01/worker.ts": "63931838320281a0017633e3020441ed977b6fcc2fe34fa0e9a9ff0c3884ea28",
+    "tests/solvers/native-a01-history-bulk-search-raw-cancellation-parity.test.ts": "d4c5cd99d4e70cbac2eafeb03d47da0b417b0025e6cae8608e6ac1671f3b6d6d",
+    "tests/solvers/native-a01-history-bulk-search-authentic-worker-parity.test.ts": "3bfaa4620c095e086506c28c9137131ec00009068c7b87b23bce0da45cf8056e"
+  },
+  "remainingGaps": [
+    "Production executeGridHistoryJob cancellation, checkpoint-recording, error and retirement integration remains separate and inactive",
+    "Whole-board native parity and Blacksmith all-sample measurement required before any performance claim"
+  ],
+  "interpretation": "Functional state/work proof only. No local walltime or speedup comparison."
+}
