@@ -21,7 +21,89 @@ function nativeFields(solver:HighDensitySolverA01,names:readonly string[]):objec
   return fields
 }
 
-async function runOracle():Promise<object> {
+function runProductionObserverCases(portfolio:ParallelPortfolioSingleIntraNodeSolver,
+  dispatcher:GridHistoryDispatcher):number {
+  const cases=["solved-getter","failed-getter","step-data","step-getter","computeProgress-data","step-rebind"]
+  let checked=0
+  for(let caseIndex=0;caseIndex<cases.length;caseIndex++) {
+    const kind=cases[caseIndex]!,params={nodeWithPortPoints:structuredClone(cmn45) as NodeWithPortPoints,cellSizeMm:.1,
+      viaDiameter:.3,traceThickness:.1,viaMinDistFromBorder:.15,traceMargin:.1,effort:1,hyperParameters:{shuffleSeed:0}}
+    const native=new HighDensitySolverA01(structuredClone(params)),owner=new ReplayHighDensityA01Solver(structuredClone(params))
+    registerWorkerNativeGridOwner(owner,dispatcher);native.setup();owner.setup();native.step();owner.step()
+    const solvers=[native,owner],reads=[0,0],callbacks=[0,0]
+    const nativeSelected={solver:native,hyperParameters:native.hyperParameters,g:0,h:0,f:0}
+    const selected={solver:owner,hyperParameters:owner.hyperParameters,g:0,h:0,f:0}
+    const records=[nativeSelected,selected],replacements=[0,0]
+    for(let solverIndex=0;solverIndex<solvers.length;solverIndex++) {
+      const solver=solvers[solverIndex]!,index=solverIndex
+      if(kind.endsWith("getter")&&kind!=="step-getter") {
+        const name=kind.startsWith("solved")?"solved":"failed"
+        Object.defineProperty(solver,name,{configurable:true,enumerable:true,get():boolean {
+          strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false);reads[index]++;return false
+        }})
+      } else {
+        const name=kind.startsWith("step")?"step":"computeProgress"
+        const original=(solver as unknown as Record<string,Function>)[name]!
+        const forwarding=():unknown=>{
+          callbacks[index]++;strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false)
+          if(kind==="step-rebind") records[index]!.solver={step():void{replacements[index]++}} as HighDensitySolverA01&ReplayHighDensityA01Solver
+          return name==="computeProgress"?1:Reflect.apply(original,solver,[])
+        }
+        if(kind==="step-getter") Object.defineProperty(solver,name,{configurable:true,get():Function {reads[index]++;return forwarding}})
+        else Object.defineProperty(solver,name,{configurable:true,value:forwarding})
+      }
+    }
+    for(let index=0;index<portfolio.MIN_SUBSTEPS;index++) nativeSelected.solver.step()
+    const controller=portfolio as unknown as {runSupervisedSubsteps(candidate:typeof selected):void}
+    controller.runSupervisedSubsteps(selected)
+    strictEqual(reads[1],reads[0]);strictEqual(callbacks[1],callbacks[0])
+    strictEqual(replacements[1],replacements[0])
+    strictEqual(owner.iterations,native.iterations);strictEqual(getWorkerNativeA01BulkSearchPrototypeDiagnostics(owner),null)
+    if(kind==="solved-getter") strictEqual(reads[0],400)
+    if(kind.startsWith("step")) strictEqual(callbacks[0],kind==="step-rebind"?1:100)
+    if(kind==="step-rebind") strictEqual(replacements[0],99)
+    strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false);checked++
+  }
+  const params={nodeWithPortPoints:structuredClone(cmn45) as NodeWithPortPoints,cellSizeMm:.1,
+    viaDiameter:.3,traceThickness:.1,viaMinDistFromBorder:.15,traceMargin:.1,effort:1}
+  const owner=new ReplayHighDensityA01Solver(params)
+  registerWorkerNativeGridOwner(owner,dispatcher);owner.setup();owner.step()
+  const original=Object.getOwnPropertyDescriptor(ReplayHighDensityA01Solver,Symbol.hasInstance)
+  const nativeHasInstance=Function.prototype[Symbol.hasInstance]
+  let instanceChecks=0
+  try {
+    Object.defineProperty(ReplayHighDensityA01Solver,Symbol.hasInstance,{configurable:true,value(candidate:unknown):boolean {
+      instanceChecks++;return Reflect.apply(nativeHasInstance,ReplayHighDensityA01Solver,[candidate])
+    }})
+    const selected={solver:owner,hyperParameters:owner.hyperParameters,g:0,h:0,f:0}
+    const controller=portfolio as unknown as {runSupervisedSubsteps(candidate:typeof selected):void}
+    controller.runSupervisedSubsteps(selected)
+    strictEqual(instanceChecks,1);strictEqual(owner.iterations,101);checked++
+  } finally {
+    if(original) Object.defineProperty(ReplayHighDensityA01Solver,Symbol.hasInstance,original)
+    else Reflect.deleteProperty(ReplayHighDensityA01Solver,Symbol.hasInstance)
+  }
+  const nativeOriginal=Object.getOwnPropertyDescriptor(HighDensitySolverA01,Symbol.hasInstance)
+  const otherOwner=new ReplayHighDensityA01Solver(structuredClone(params))
+  registerWorkerNativeGridOwner(otherOwner,dispatcher);otherOwner.setup();otherOwner.step()
+  instanceChecks=0
+  try {
+    Object.defineProperty(HighDensitySolverA01,Symbol.hasInstance,{configurable:true,value(this:Function,candidate:unknown):boolean {
+      instanceChecks++;return Reflect.apply(nativeHasInstance,this,[candidate])
+    }})
+    const selected={solver:otherOwner,hyperParameters:otherOwner.hyperParameters,g:0,h:0,f:0}
+    const controller=portfolio as unknown as {runSupervisedSubsteps(candidate:typeof selected):void}
+    controller.runSupervisedSubsteps(selected)
+    strictEqual(instanceChecks,3);strictEqual(otherOwner.iterations,101)
+    strictEqual(getWorkerNativeA01BulkSearchPrototypeDiagnostics(otherOwner),null);checked++
+  } finally {
+    if(nativeOriginal) Object.defineProperty(HighDensitySolverA01,Symbol.hasInstance,nativeOriginal)
+    else Reflect.deleteProperty(HighDensitySolverA01,Symbol.hasInstance)
+  }
+  return checked
+}
+
+async function runOracle(productionLoop:boolean):Promise<object> {
   await initializeWorkerNativeGridRuntime()
   const dispatcher:GridHistoryDispatcher=async():Promise<Map<number,Promise<GridHistoryResult>>>=>new Map()
   registerWorkerNativeGridKernelDispatcher(dispatcher)
@@ -29,6 +111,7 @@ async function runOracle():Promise<object> {
     viaDiameter:.3,traceWidth:.1},async():Promise<Map<number,Promise<MultiHeadHistoryResult>>>=>new Map(),
     {policy:"ordered",gridHistoryDispatcher:dispatcher})
   const contract=captureWorkerNativeGridPortfolioContract(ParallelPortfolioSingleIntraNodeSolver.prototype)
+  const productionObservers=productionLoop?runProductionObserverCases(portfolio,dispatcher):0
   let checkpoints=0,frontiers=0,steps=0,bulkSteps=0,batches=0,heapPops=0,heapPushes=0,lateObservers=0
   const declineCases=["computeH-before","computeH-after","getRipCost","_step","heap-getter","counter-readonly","heap-row-readonly","node-getter","counter-getter"]
   for(const kind of declineCases) {
@@ -96,6 +179,18 @@ async function runOracle():Promise<object> {
       } finally {Object.defineProperty(NativeA01BulkSearchKernel.prototype,"runActiveSearch",method);finishWorkerNativeGridKernelQuantum(quantum)}
     }
     while(!native.solved&&!native.failed) {
+      if(productionLoop) {
+        for(let index=0;index<100;index++) native.step()
+        const selected={solver:owner,hyperParameters:owner.hyperParameters,g:0,h:0,f:0}
+        const controller=portfolio as unknown as {runSupervisedSubsteps(candidate:typeof selected):void}
+        controller.runSupervisedSubsteps(selected)
+        strictEqual(isWorkerNativeGridKernelQuantumActive(owner),false)
+        strictEqual(runWorkerNativeA01BulkSearchPrototype(owner,100),null)
+        deepStrictEqual(nativeFields(owner,names),nativeFields(native,names));deepStrictEqual(owner.getOutput(),native.getOutput())
+        strictEqual(heap.f,arrays[0]);strictEqual(heap.seq,arrays[1]);strictEqual(heap.id,arrays[2])
+        checkpoints++
+        continue
+      }
       let quantum=beginWorkerNativeGridKernelQuantum(portfolio,contract,owner,dispatcher)
       strictEqual(quantum!==null,true);strictEqual(isWorkerNativeGridKernelQuantumActive(owner),true)
       try {
@@ -134,9 +229,9 @@ async function runOracle():Promise<object> {
     batches+=diagnostics.batches;heapPops+=diagnostics.heapPops;heapPushes+=diagnostics.heapPushes
   }
   return {actualWorker:true,steps,checkpoints,frontiers,bulkSteps,batches,heapPops,heapPushes,
-    lateObservers,noDefaultActivation:true,noLeaseAfterQuantum:true}
+    lateObservers,productionObservers,productionLoop,noDefaultActivation:!productionLoop,noLeaseAfterQuantum:true}
 }
-onmessage=():void=>{
-  runOracle().then((result):void=>postMessage({result}),
+onmessage=(event:MessageEvent<{productionLoop?:boolean}>):void=>{
+  runOracle(event.data.productionLoop===true).then((result):void=>postMessage({result}),
     (error:unknown):void=>postMessage({error:String(error)}))
 }

@@ -4,7 +4,7 @@ import { isWorkerNativeGridProxy } from "./workerNativeGridRuntime"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
 import { hasNativeOwnerNumericPolicy, hasOriginalNativeOwnerNames, matchesNativeOwnerKernelContract,
   nativeOwnerDescriptor, nativeOwnerPrototype, nativeOwnerHasOwn, nativeOwnerDefine, nativeOwnerDelete,
-  nativeOwnerGet, nativeOwnerApply, nativeOwnerIsArray, type NativeOwnerKernelContract } from "./nativeOwnerKernelContract"
+  nativeOwnerGet, nativeOwnerApply, nativeOwnerIsArray, nativeOwnerIs, type NativeOwnerKernelContract } from "./nativeOwnerKernelContract"
 import { canUseNativeGridHeapArena, hasNativeGridKernelIntrinsics, type NativeGridIntrinsicQuantum } from "./nativeGridKernelIntrinsics"
 import { captureNativeGridOwnerStorage, hasNativeGridOwnerStorage, type NativeGridOwnerStorage } from "./nativeGridOwnerStorage"
 import { NativeA01HeapArena } from "./native-a01-heap-arena/NativeA01HeapArena"
@@ -18,8 +18,66 @@ type HeapKernelState = {
   heap: NativeHeap; arrays: readonly number[][]; active: boolean; contract: NativeOwnerKernelContract; storage: NativeGridOwnerStorage
   arena?: NativeA01HeapArena; arenaActive: boolean
 }
+type InheritedOwnerSnapshot = {
+  prototype: object; parent: object | null; names: readonly PropertyKey[]; descriptors: readonly PropertyDescriptor[]
+}
 const nativePrototype = HighDensitySolverA01.prototype
 const nativeDescriptors = Object.getOwnPropertyDescriptors(nativePrototype)
+const inheritedOwnerNames = Object.getOwnPropertyNames, inheritedOwnerSymbols = Object.getOwnPropertySymbols
+const inheritedOwnerSnapshots = captureInheritedOwnerSnapshots()
+const nativeConstructorParent = nativeOwnerPrototype(HighDensitySolverA01)
+const nativeConstructorNames: PropertyKey[] = inheritedOwnerNames(HighDensitySolverA01)
+const nativeConstructorSymbols = inheritedOwnerSymbols(HighDensitySolverA01)
+for (let index = 0; index < nativeConstructorSymbols.length; index++) nativeConstructorNames[nativeConstructorNames.length] = nativeConstructorSymbols[index]!
+const nativeConstructorDescriptors: PropertyDescriptor[] = []
+for (let index = 0; index < nativeConstructorNames.length; index++) nativeConstructorDescriptors[index] = nativeOwnerDescriptor(HighDensitySolverA01, nativeConstructorNames[index]!)!
+
+function captureInheritedOwnerSnapshots(): readonly InheritedOwnerSnapshot[] {
+  const snapshots: InheritedOwnerSnapshot[] = []
+  let prototype = nativeOwnerPrototype(nativePrototype)
+  while (prototype) {
+    const names: PropertyKey[] = inheritedOwnerNames(prototype), symbols = inheritedOwnerSymbols(prototype)
+    for (let index = 0; index < symbols.length; index++) names[names.length] = symbols[index]!
+    const descriptors: PropertyDescriptor[] = []
+    for (let index = 0; index < names.length; index++) descriptors[index] = nativeOwnerDescriptor(prototype, names[index]!)!
+    const parent = nativeOwnerPrototype(prototype)
+    snapshots[snapshots.length] = { prototype, parent, names, descriptors }
+    prototype = parent
+  }
+  return snapshots
+}
+
+/** Bulk consumes Base.step too, so inherited methods and owner shadows matter. */
+function hasNativeInheritedOwnerContract(owner: HighDensitySolverA01): boolean {
+  // Base.step conditionally calls this otherwise-absent hook after every step.
+  if (nativeOwnerHasOwn(owner, "computeProgress") ||
+    nativeOwnerPrototype(nativePrototype) !== inheritedOwnerSnapshots[0]!.prototype) return false
+  for (let level = 0; level < inheritedOwnerSnapshots.length; level++) {
+    const snapshot = inheritedOwnerSnapshots[level]!
+    if (nativeOwnerPrototype(snapshot.prototype) !== snapshot.parent ||
+      inheritedOwnerNames(snapshot.prototype).length + inheritedOwnerSymbols(snapshot.prototype).length !== snapshot.names.length) return false
+    for (let index = 0; index < snapshot.names.length; index++) {
+      const name = snapshot.names[index]!, original = snapshot.descriptors[index]!
+      const current = nativeOwnerDescriptor(snapshot.prototype, name)
+      if (!current || !nativeOwnerIs(current.value, original.value) || current.get !== original.get || current.set !== original.set ||
+        current.writable !== original.writable || current.enumerable !== original.enumerable || current.configurable !== original.configurable ||
+        (name !== "constructor" && nativeOwnerHasOwn(owner, name))) return false
+    }
+  }
+  return true
+}
+
+/** Additional event scopes must not introduce a replaced hasInstance observer. */
+function hasNativeConstructorContract(): boolean {
+  if (nativeOwnerPrototype(HighDensitySolverA01) !== nativeConstructorParent ||
+    inheritedOwnerNames(HighDensitySolverA01).length + inheritedOwnerSymbols(HighDensitySolverA01).length !== nativeConstructorNames.length) return false
+  for (let index = 0; index < nativeConstructorNames.length; index++) {
+    const current = nativeOwnerDescriptor(HighDensitySolverA01, nativeConstructorNames[index]!), original = nativeConstructorDescriptors[index]!
+    if (!current || !nativeOwnerIs(current.value, original.value) || current.get !== original.get || current.set !== original.set ||
+      current.writable !== original.writable || current.enumerable !== original.enumerable || current.configurable !== original.configurable) return false
+  }
+  return true
+}
 // Native A01 creates its private heap during setup. This one-cell startup probe
 // creates no candidate search or callback; actual owner setup remains singular.
 const probe = new HighDensitySolverA01({ nodeWithPortPoints: {
@@ -209,5 +267,6 @@ export function hasParallelNativeA01HeapEligibility(owner: HighDensitySolverA01)
   if (!state || !state.active || state.arenaActive || !hasNativeDescriptorMetadata()) return false
   return hasNativeGridKernelIntrinsics() && hasNativeHeapState(state) && hasNativeGridOwnerStorage(owner, state.storage) &&
     hasNativeOwnerNumericPolicy(owner) && hasOriginalNativeOwnerNames(state.contract, nativePrototype, nativeDescriptors) &&
-    matchesNativeOwnerKernelContract(owner, state.contract, nativePrototype, nativeDescriptors)
+    matchesNativeOwnerKernelContract(owner, state.contract, nativePrototype, nativeDescriptors) &&
+    hasNativeInheritedOwnerContract(owner) && hasNativeConstructorContract()
 }

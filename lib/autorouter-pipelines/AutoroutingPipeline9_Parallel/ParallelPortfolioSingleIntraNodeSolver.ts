@@ -14,10 +14,13 @@ import { ReplayHighDensityA01Solver } from "./ReplayHighDensityA01Solver"
 import { ReplayHighDensityA03Solver } from "./ReplayHighDensityA03Solver"
 import type { GridHistoryDispatcher, GridHistoryJob } from "./parallelGridHistoryTypes"
 import { beginWorkerNativeGridKernelQuantum, captureWorkerNativeGridPortfolioContract,
-  finishWorkerNativeGridKernelQuantum, registerWorkerNativeGridOwner } from "./workerNativeGridKernelQuantum"
+  finishWorkerNativeGridKernelQuantum, registerWorkerNativeGridOwner,
+  isWorkerOwnedNativeGridOwner } from "./workerNativeGridKernelQuantum"
 import type { SupervisedSolver } from "../../solvers/HyperParameterSupervisorSolver"
 import type { HighDensitySolverA13WithDrcValidation } from "../../solvers/HyperHighDensitySolver/HighDensitySolverA13WithDrcValidation"
 import { createParallelNativeA13SearchInstaller } from "./createParallelNativeA13SearchInstaller"
+import { runWorkerNativeA01BulkSubsteps } from "./native-a01-bulk-search/runWorkerNativeA01BulkSubsteps"
+import { nativeOwnerPrototype } from "./nativeOwnerKernelContract"
 
 type ReplayGridSolver = ReplayHighDensityA01Solver | ReplayHighDensityA03Solver
 
@@ -124,6 +127,9 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
       super.runSupervisedSubsteps(supervisedSolver)
       return
     }
+    if (isWorkerOwnedNativeGridOwner(solver) && nativeOwnerPrototype(solver) === ReplayHighDensityA01Solver.prototype &&
+      runWorkerNativeA01BulkSubsteps(this, nativeGridQuantumContract, solver as unknown as ReplayHighDensityA01Solver,
+        supervisedSolver, this.gridDispatcher)) return
     const quantum = beginWorkerNativeGridKernelQuantum(this, nativeGridQuantumContract,
       solver, this.gridDispatcher)
     try {

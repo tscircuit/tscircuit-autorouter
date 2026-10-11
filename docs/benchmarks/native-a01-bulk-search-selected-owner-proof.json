@@ -1,0 +1,73 @@
+{
+  "kind": "production-selected-loop-functional-proof",
+  "noTimingComparison": true,
+  "actualWorker": true,
+  "steps": 957175,
+  "checkpoints": 9572,
+  "frontiers": 0,
+  "bulkSteps": 954765,
+  "batches": 10746,
+  "heapPops": 954765,
+  "heapPushes": 1062783,
+  "lateObservers": 11,
+  "productionObservers": 8,
+  "productionLoop": true,
+  "noDefaultActivation": false,
+  "noLeaseAfterQuantum": true,
+  "scope": "Genuine selected ordinary-worker A01 only; physical history executor and public/custom/direct solvers retain original native driver.",
+  "originalNativeSource": "@tscircuit/high-density-a01 0.0.36, pinned 44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34, MIT",
+  "isolatedPrototypeCommit": "707d02a8f",
+  "preservedBoundaries": [
+    "Original selected100 native logical steps and original caps",
+    "Full independent native method/storage/writable admission before every C run",
+    "Flush and release all helpers before native start/goal/budget/empty/cap/error event",
+    "Fresh admission after a native event; original dynamic supervised record and MIN_SUBSTEPS continuation",
+    "No capability across awaits or supervisor fitness/onSolve/output observations"
+  ],
+  "observerCases": [
+    "solved getter400 reads",
+    "failed getter native read count",
+    "own step forwarding100 callbacks",
+    "own step getter100 lookups/callbacks",
+    "optional computeProgress100 callbacks",
+    "selected record rebind99 remaining callbacks",
+    "Replay hasInstance1 original call",
+    "NativeA01 hasInstance3 original calls and no C admission"
+  ],
+  "wholeBoardVerification": {
+    "samples": [
+      1,
+      5
+    ],
+    "nodes": [
+      583,
+      538
+    ],
+    "workerLimit": 4,
+    "nativeRouteGeometry": true,
+    "originalNodeIterationsCapsAndCounters": true,
+    "deferredStepAndOutputErrors": true,
+    "scheduleAndAdaptiveExpansion": true,
+    "expectCallsAcrossFiveTests": 23042
+  },
+  "commands": [
+    "BULK_A01_PRODUCTION_PROOF_PATH=/tmp/native-a01-bulk-search-production-proof.json bun test --timeout 9999999 tests/solvers/native-a01-bulk-search-production-supervisor-parity.test.ts",
+    "bun test --timeout 9999999 tests/features/parallel-grid-history-portfolio-schedule.test.ts tests/features/parallel-grid-history-exceptions.test.ts tests/features/parallel-grid-history-output-exceptions.test.ts tests/features/parallel-grid-history-srj18-stage-parity.test.ts",
+    "bunx tsc --noEmit",
+    "bun run build"
+  ],
+  "browserPublicEntry": {
+    "browserTargetBundleAndVmLoad": true,
+    "exports": 50,
+    "nodeGlobals": false,
+    "staticNodeImports": false
+  },
+  "sourceSha256": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPortfolioSingleIntraNodeSolver.ts": "f39acb4fff6d63f655b5cad948bfbfc10522a61e18244b9c2f4a523c7d584b08",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/installParallelNativeA01Heap.ts": "dcbf232cddeaa750e7de89084285d6fb1820e1f1733e57ed4cb5b6eada29b0d9",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/native-a01-bulk-search/runWorkerNativeA01BulkSubsteps.ts": "a4f5b2779d1b6d7da66a7a5f2d0fa990cfa4611cc45ac276e05d9aa2a0f6026d",
+    "tests/fixtures/parallel-owner-bulk-a01/worker.ts": "96aea9747dab5f60deb93019b2b7d492373f08f38c4e442dd037d9a37a78ea0b",
+    "tests/solvers/native-a01-bulk-search-production-supervisor-parity.test.ts": "b2c2cb14f0f7be7c41be66886919ffc29784f7a3f32dbcb855e6df5b931e236f"
+  },
+  "interpretation": "Functional state/work proof only; no walltime or speedup claim. Full dataset Blacksmith measurement remains required."
+}
