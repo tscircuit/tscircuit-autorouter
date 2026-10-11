@@ -387,7 +387,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       !this.deduplicateA01InitialOrders ||
       !(solver instanceof HighDensitySolverA01) ||
       Object.getPrototypeOf(solver) !== HighDensitySolverA01.prototype ||
-      Object.getPrototypeOf(this) !== PortfolioSingleIntraNodeSolver.prototype ||
+      Object.getPrototypeOf(this) !==
+        PortfolioSingleIntraNodeSolver.prototype ||
       Object.hasOwn(this, "generateSolver") ||
       Object.getOwnPropertyDescriptor(
         PortfolioSingleIntraNodeSolver.prototype,
@@ -764,4 +765,5 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 }
 
-const nativeGenerateSolver = PortfolioSingleIntraNodeSolver.prototype.generateSolver
+const nativeGenerateSolver =
+  PortfolioSingleIntraNodeSolver.prototype.generateSolver

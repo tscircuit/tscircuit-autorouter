@@ -19,14 +19,16 @@ function createNode(): NodeWithPortPoints {
 }
 
 function expand(portfolio: PortfolioSingleIntraNodeSolver): void {
-  ;(portfolio as unknown as { expandAdaptiveSearch(): void }).expandAdaptiveSearch()
+  ;(
+    portfolio as unknown as { expandAdaptiveSearch(): void }
+  ).expandAdaptiveSearch()
 }
 
 function getA01Solvers(
   portfolio: PortfolioSingleIntraNodeSolver,
 ): HighDensitySolverA01[] {
-  return portfolio.supervisedSolvers!
-    .map(({ solver }) => solver)
+  return portfolio
+    .supervisedSolvers!.map(({ solver }) => solver)
     .filter(
       (solver): solver is typeof solver & HighDensitySolverA01 =>
         solver instanceof HighDensitySolverA01,
@@ -56,7 +58,9 @@ test("adaptive A01 keeps distinct initial orders after the first queue mutates",
     expand(portfolio)
     expect(setupSeeds).toEqual([0, 1, 2, 3, 4, 5])
     expect(
-      getA01Solvers(portfolio).map((solver) => solver.hyperParameters.shuffleSeed),
+      getA01Solvers(portfolio).map(
+        (solver) => solver.hyperParameters.shuffleSeed,
+      ),
     ).toEqual([0, 1, 2, 5])
     expect(portfolio.stats.candidateWorkAtExpansion).toBe(first.iterations)
 
@@ -85,7 +89,9 @@ test("adaptive A01 keeps distinct initial orders after the first queue mutates",
           work + Math.ceil((solver.MAX_ITERATIONS + 1) / control.MIN_SUBSTEPS),
         0,
       )
-    expect(control.MAX_ITERATIONS - portfolio.MAX_ITERATIONS).toBe(duplicateWork)
+    expect(control.MAX_ITERATIONS - portfolio.MAX_ITERATIONS).toBe(
+      duplicateWork,
+    )
     expect(control.stats.candidateWorkAtExpansion).toBe(first.iterations)
 
     // Reinitialization captures the new problem instead of using old signatures.
@@ -120,10 +126,13 @@ test("adaptive A01 keeps distinct initial orders after the first queue mutates",
     const aliasFirst = getA01Solvers(aliasPortfolio)[0]!
     expect(aliasFirst.unsolvedConnections).toHaveLength(4)
     expect(
-      new Set(aliasFirst.unsolvedConnections.map((segment) => segment.connId)).size,
+      new Set(aliasFirst.unsolvedConnections.map((segment) => segment.connId))
+        .size,
     ).toBe(1)
     const pointIds = (
-      aliasPortfolio as unknown as { initialA01PointIds: WeakMap<object, number> }
+      aliasPortfolio as unknown as {
+        initialA01PointIds: WeakMap<object, number>
+      }
     ).initialA01PointIds
     expect(pointIds.has(aliases.portPoints[0]!)).toBe(true)
     expect(pointIds.has(aliases.portPoints[2]!)).toBe(true)
