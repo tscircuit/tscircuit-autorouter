@@ -95,14 +95,26 @@ export const convertPreloadedTraceToHdRoutes = (
     const nextPoint = trace.route[pointIndex + 1]
     let layer: string
     let width: number
-    if (point.route_type === "wire" && nextPoint?.route_type === "wire" && point.layer === nextPoint.layer) {
+    if (
+      point.route_type === "wire" &&
+      nextPoint?.route_type === "wire" &&
+      point.layer === nextPoint.layer
+    ) {
       layer = point.layer
       width = Math.max(point.width, nextPoint.width)
-    } else if (point.route_type === "wire" && nextPoint?.route_type === "via" && point.layer === nextPoint.from_layer) {
+    } else if (
+      point.route_type === "wire" &&
+      nextPoint?.route_type === "via" &&
+      point.layer === nextPoint.from_layer
+    ) {
       if (point.x === nextPoint.x && point.y === nextPoint.y) continue
       layer = point.layer
       width = point.width
-    } else if (point.route_type === "via" && nextPoint?.route_type === "wire" && point.to_layer === nextPoint.layer) {
+    } else if (
+      point.route_type === "via" &&
+      nextPoint?.route_type === "wire" &&
+      point.to_layer === nextPoint.layer
+    ) {
       if (point.x === nextPoint.x && point.y === nextPoint.y) continue
       layer = nextPoint.layer
       width = nextPoint.width

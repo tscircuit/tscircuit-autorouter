@@ -137,13 +137,25 @@ export const getObstaclesFromSrjTraces = (
 
       let layer: string
       let width: number
-      if (isWireRoutePoint(routePoint) && isWireRoutePoint(nextRoutePoint) && routePoint.layer === nextRoutePoint.layer) {
+      if (
+        isWireRoutePoint(routePoint) &&
+        isWireRoutePoint(nextRoutePoint) &&
+        routePoint.layer === nextRoutePoint.layer
+      ) {
         layer = routePoint.layer
         width = routePoint.width
-      } else if (isWireRoutePoint(routePoint) && isViaRoutePoint(nextRoutePoint) && routePoint.layer === nextRoutePoint.from_layer) {
+      } else if (
+        isWireRoutePoint(routePoint) &&
+        isViaRoutePoint(nextRoutePoint) &&
+        routePoint.layer === nextRoutePoint.from_layer
+      ) {
         layer = routePoint.layer
         width = routePoint.width
-      } else if (isViaRoutePoint(routePoint) && isWireRoutePoint(nextRoutePoint) && routePoint.to_layer === nextRoutePoint.layer) {
+      } else if (
+        isViaRoutePoint(routePoint) &&
+        isWireRoutePoint(nextRoutePoint) &&
+        routePoint.to_layer === nextRoutePoint.layer
+      ) {
         layer = nextRoutePoint.layer
         width = nextRoutePoint.width
       } else {
