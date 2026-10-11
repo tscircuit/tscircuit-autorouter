@@ -201,6 +201,15 @@ proves execution and parity; speed is measured only by the frozen Blacksmith
 comparison. Source, compiler, and functional counts are documented in
 [parallel-native-a13-kernel-proof.json](benchmarks/parallel-native-a13-kernel-proof.json).
 
+Private reference continuity checks expand each original physical component
+once during their local traversal. Every trace still processes its original
+touched-pad adjacency, and final membership, native source aliases, error
+order, and cache state are unchanged. All 17 saved checks and 22 edge cases
+match native results; returned component-member visits fall from 2,782,044 to
+7,376 in the operation census. This is work evidence, not a wall-time claim.
+The guarded scope and complete parity proof are in
+[reference-drc-component-once-proof.json](benchmarks/reference-drc-component-once-proof.json).
+
 Default worker path simplification also prepares a bounded window of four
 future routes. Publication stays in the original route order and uses the
 actual native parent and child owners. A candidate is accepted only when
