@@ -22,7 +22,7 @@ export function createMemoizedReferenceDrcEvaluator(
       connectivityMapFactory: input.connectivityMapFactory ?? getParallelConnectivityMap,
       drcOptions: {
         viaTraceChecker: (circuitJson, options): ReturnType<typeof checkViaTraceClearanceWithLazyCenters> =>
-          checkViaTraceClearanceWithLazyCenters(circuitJson, { ...options, enableAxisRejection: true }),
+          checkViaTraceClearanceWithLazyCenters(circuitJson, { ...options, enableAxisRejection: true, enableConnectivityMemo: true }),
         ...input.drcOptions,
         traceContinuityChecker: (circuitJson): ReturnType<typeof checkTracesAreContiguous> =>
           checkTracesAreContiguous(circuitJson, { primitiveMemo }),

@@ -18,15 +18,18 @@ export type LazyViaTraceCenterDiagnostics = {
   gapCalls: number
   centerCalls: number
   axisRejected?: number
+  connectivityQueries?: number
+  connectivityHits?: number
 }
 
 export function checkViaTraceClearanceWithLazyCenters(
   circuitJson: AnyCircuitElement[],
-  { connMap, minClearance, diagnostics, enableAxisRejection = false }: {
+  { connMap, minClearance, diagnostics, enableAxisRejection = false, enableConnectivityMemo = false }: {
     connMap?: ConnectivityMap
     minClearance?: number
     diagnostics?: LazyViaTraceCenterDiagnostics
     enableAxisRejection?: boolean
+    enableConnectivityMemo?: boolean
   } = {},
 ): PcbViaTraceClearanceError[] {
   if (!canUseLazyViaTraceCenters(circuitJson, connMap, minClearance)) {
@@ -43,12 +46,38 @@ export function checkViaTraceClearanceWithLazyCenters(
   const axisBounds = enableAxisRejection ? segments.map(getViaTraceAxisBounds) : undefined
   const errors = new Map<string, { error: PcbViaTraceClearanceError; gap: number }>()
   const overlappingPairIds = new Set<string>()
+  // No graph or geometry can change inside this synchronous descriptor-verified
+  // native call. Cache successful native decisions only, at their first query site.
+  const connectivityByVia = enableConnectivityMemo ? new Map<string, Map<string, boolean>>() : undefined
   for (const via of vias) {
+    let connectedByTrace: Map<string, boolean> | undefined
+    if (connectivityByVia) {
+      connectedByTrace = connectivityByVia.get(via.pcb_via_id)
+      if (!connectedByTrace) {
+        connectedByTrace = new Map<string, boolean>()
+        connectivityByVia.set(via.pcb_via_id, connectedByTrace)
+      }
+    }
+    let previousTraceId: string | undefined
+    let previousConnected = false
     const axisQuery = enableAxisRejection ? getViaTraceAxisQuery(via, minClearance!) : undefined
     for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
       const segment = segments[segmentIndex]!
       if (!getLayersOfPcbElement(via).includes(segment.layer)) continue
-      if (connMap.areIdsConnected(segment.pcb_trace_id, via.pcb_via_id)) continue
+      let connected: boolean | undefined
+      if (connectedByTrace) {
+        // Native segment lists usually contain consecutive segments of one
+        // trace. Reuse that same pair without another string-map lookup.
+        connected = segment.pcb_trace_id === previousTraceId ? previousConnected : connectedByTrace.get(segment.pcb_trace_id)
+      }
+      if (connected === undefined) {
+        connected = connMap.areIdsConnected(segment.pcb_trace_id, via.pcb_via_id)
+        connectedByTrace?.set(segment.pcb_trace_id, connected)
+        if (diagnostics) diagnostics.connectivityQueries = (diagnostics.connectivityQueries ?? 0) + 1
+      } else if (diagnostics) diagnostics.connectivityHits = (diagnostics.connectivityHits ?? 0) + 1
+      previousTraceId = segment.pcb_trace_id
+      previousConnected = connected
+      if (connected) continue
       const bounds = axisBounds?.[segmentIndex]
       if (bounds && axisQuery && isViaTraceAxisSeparated(bounds, axisQuery)) {
         if (diagnostics) diagnostics.axisRejected = (diagnostics.axisRejected ?? 0) + 1
