@@ -1150,8 +1150,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    // Projection passes can revisit an earlier geometry after rejecting a
-    // different candidate. Retain bounded full-reference results as well.
+    // Preloaded conversion can call the supplied connectivity map on each
+    // miss. Preserve one-entry behavior for those inputs.
+    const referenceDrcCandidateCacheSize =
+      (params.originalSrj.traces?.length ?? 0) === 0 &&
+      this.inputUpdatedPreloadedTraces.length === 0
+        ? REFERENCE_DRC_CANDIDATE_CACHE_SIZE
+        : 1
     const referenceDrcCandidateCache = new Map<
       string,
       ReturnType<DrcEvaluator>
@@ -1377,9 +1382,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      if (
-        referenceDrcCandidateCache.size >= REFERENCE_DRC_CANDIDATE_CACHE_SIZE
-      ) {
+      if (referenceDrcCandidateCache.size >= referenceDrcCandidateCacheSize) {
         const oldestCandidateKey = referenceDrcCandidateCache
           .keys()
           .next().value
