@@ -21,6 +21,7 @@ import type { HighDensitySolverA13WithDrcValidation } from "../../solvers/HyperH
 import { createParallelNativeA13SearchInstaller } from "./createParallelNativeA13SearchInstaller"
 import { runWorkerNativeA01BulkSubsteps } from "./native-a01-bulk-search/runWorkerNativeA01BulkSubsteps"
 import { nativeOwnerPrototype } from "./nativeOwnerKernelContract"
+import { canPrepareWorkerPortfolioSynchronously } from "./workerSynchronousPortfolioPreparation"
 
 type ReplayGridSolver = ReplayHighDensityA01Solver | ReplayHighDensityA03Solver
 
@@ -137,6 +138,11 @@ export class ParallelPortfolioSingleIntraNodeSolver extends PortfolioSingleIntra
     } finally {
       finishWorkerNativeGridKernelQuantum(quantum)
     }
+  }
+
+  /** Isolated private-worker readiness; the public async path remains literal. */
+  tryPrepareForNextStepSynchronously(): boolean {
+    return canPrepareWorkerPortfolioSynchronously(this, nativeGridQuantumContract)
   }
 
   async prepareForNextStep(): Promise<void> {
