@@ -43,6 +43,9 @@ const nativeObjectIs = Object.is
 const nativeWeakMapGet = WeakMap.prototype.get
 const nativeWeakMapSet = WeakMap.prototype.set
 const nativeWindowCapacities = new WeakMap<ParallelPathLookaheadCoordinator, number>()
+const nativeWeakSetAdd = WeakSet.prototype.add
+const nativeWeakSetHas = WeakSet.prototype.has
+const nativeCohortOwners = new WeakSet<ParallelPathLookaheadCoordinator>()
 type NativeRunBinding = { owner: MultiSimplifiedPathSolver; eligibility: ParallelPathLookaheadEligibility;
   pool: ParallelStageWorkerPool }
 const nativeRunBindings = new WeakMap<Params["run"], NativeRunBinding>()
@@ -77,6 +80,7 @@ export class ParallelPathLookaheadCoordinator {
     certificateNativeQueryErrors: 0, eligibilityNativeRoutes: 0, maximumLookahead: 0,
     eligibilityChecks: 0, awaitStateChecks: 0, awaitStateDeclines: 0,
     scopeCaptureDeclines: 0,
+    prefixCloneCalls: 0, prefixRowsCloned: 0, deferredWindowRefills: 0,
     physicalOwnerNativeStepCalls: 0, certifiedNativeParentStepCalls: 0, finalNativeStepCalls: 0,
   }
   private readonly context: ParallelPathWaveContext
@@ -117,7 +121,10 @@ export class ParallelPathLookaheadCoordinator {
       const binding = nativeApply(nativeWeakMapGet, nativeRunBindings, [runField.value]) as NativeRunBinding | undefined
       if (binding && binding.owner === original && binding.eligibility === eligibilityField.value && binding.pool === poolField.value) {
         const capacity = getNativeParallelPathLookaheadWindowCapacity(original, eligibilityField.value)
-        if (capacity !== undefined) windowCapacity = capacity
+        if (capacity !== undefined) {
+          windowCapacity = capacity
+          nativeApply(nativeWeakSetAdd, nativeCohortOwners, [this])
+        }
       }
     }
     nativeApply(nativeWeakMapSet, nativeWindowCapacities, [this, windowCapacity])
@@ -272,7 +279,16 @@ export class ParallelPathLookaheadCoordinator {
       windowCapacity > 64 || windowCapacity % 1 !== 0) {
       throw new Error("Native lookahead owner is missing its private window capacity")
     }
+    // A privately owned cohort keeps one complete cloned prefix until all its
+    // ordered routes have been consumed. Every refill starts from fresh Native
+    // copper; custom callbacks retain their original rolling window.
+    if (nativeApply(nativeWeakSetHas, nativeCohortOwners, [this]) && this.pending.size > 0) {
+      this.stats.deferredWindowRefills++
+      return
+    }
     const end = Math.min(this.native.unsimplifiedHdRoutes.length, prefix + windowCapacity)
+    this.stats.prefixCloneCalls++
+    this.stats.prefixRowsCloned += this.native.simplifiedHdRoutes.length
     const updates = nativeStructuredClone!(this.native.simplifiedHdRoutes.map((route, index) => ({ index, route })))
     while (!this.stopped && this.nextIndex < end) {
       const index = this.nextIndex++

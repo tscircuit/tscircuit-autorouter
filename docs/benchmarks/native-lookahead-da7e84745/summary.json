@@ -1,0 +1,1232 @@
+{
+  "kind": "unmodified-native-lookahead-coordinator-cpu-attribution",
+  "noTimingComparison": true,
+  "sourceRevision": "da7e84745f2d024a390783c5dca718d6528429be",
+  "sourceHashes": {
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelMultiSimplifiedPathSolver.ts": "b3daf62364f4c6608fd0f09801d0e78aaf5dfc7da01cabc420ea1d57fc0b7fe7",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPathLookaheadCoordinator.ts": "ef1e39bfc567d118968e313deb0e957fbf558834ca230147a75d1b76a23f4da8",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/createParallelPathLookaheadEligibility.ts": "873e8afe4a3dad145a15177bc817bea283cfd3749b0ad926e272c60df309466a",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPathQueryCertifier.ts": "8834f786e9942f0caa6bf52b04f8773537aa9d71da718a4fda240f6b1eb6cf14",
+    "lib/autorouter-pipelines/AutoroutingPipeline9_Parallel/ParallelPathLookaheadExecutor.ts": "afcc460b18e772b8031c8cdeff60e90ae0b12f4b0e5bf6ecd8d4af0fb8d32770"
+  },
+  "fixtureSha256": "6144d7f811a4ec3b595225712c09234937b6fd7f25273702e2f0f9cba9eb7ed0",
+  "profileScope": "one async span across all six actual four-worker phases; preparation, control solves and assertions excluded; worker CPU excluded",
+  "samples": 2049,
+  "hotSpots": [
+    {
+      "name": "",
+      "selfSamples": 69,
+      "inclusiveSamples": 2049,
+      "inclusiveShare": 1
+    },
+    {
+      "name": "processTicksAndRejections",
+      "selfSamples": 0,
+      "inclusiveSamples": 1998,
+      "inclusiveShare": 0.9751098096632503
+    },
+    {
+      "name": "asyncFunctionResume",
+      "selfSamples": 0,
+      "inclusiveSamples": 1949,
+      "inclusiveShare": 0.9511957052220595
+    },
+    {
+      "name": "solve",
+      "selfSamples": 0,
+      "inclusiveSamples": 1873,
+      "inclusiveShare": 0.9141044411908248
+    },
+    {
+      "name": "promiseReactionJobWithoutPromise",
+      "selfSamples": 0,
+      "inclusiveSamples": 1714,
+      "inclusiveShare": 0.8365056124938994
+    },
+    {
+      "name": "dispatchWindow",
+      "selfSamples": 0,
+      "inclusiveSamples": 705,
+      "inclusiveShare": 0.3440702781844802
+    },
+    {
+      "name": "structuredClone",
+      "selfSamples": 679,
+      "inclusiveSamples": 679,
+      "inclusiveShare": 0.3313811615422157
+    },
+    {
+      "name": "_step",
+      "selfSamples": 4,
+      "inclusiveSamples": 513,
+      "inclusiveShare": 0.25036603221083453
+    },
+    {
+      "name": "step",
+      "selfSamples": 0,
+      "inclusiveSamples": 513,
+      "inclusiveShare": 0.25036603221083453
+    },
+    {
+      "name": "nativeStep",
+      "selfSamples": 0,
+      "inclusiveSamples": 439,
+      "inclusiveShare": 0.21425085407515862
+    },
+    {
+      "name": "stepNative",
+      "selfSamples": 0,
+      "inclusiveSamples": 439,
+      "inclusiveShare": 0.21425085407515862
+    },
+    {
+      "name": "bound stepNative",
+      "selfSamples": 0,
+      "inclusiveSamples": 439,
+      "inclusiveShare": 0.21425085407515862
+    },
+    {
+      "name": "SingleSimplifiedPathSolver5",
+      "selfSamples": 1,
+      "inclusiveSamples": 436,
+      "inclusiveShare": 0.2127867252318204
+    },
+    {
+      "name": "matchesContract",
+      "selfSamples": 133,
+      "inclusiveSamples": 359,
+      "inclusiveShare": 0.17520741825280625
+    },
+    {
+      "name": "promiseReactionJob",
+      "selfSamples": 0,
+      "inclusiveSamples": 283,
+      "inclusiveShare": 0.1381161542215715
+    },
+    {
+      "name": "flatIntoArrayWithCallback",
+      "selfSamples": 0,
+      "inclusiveSamples": 281,
+      "inclusiveShare": 0.1371400683260127
+    },
+    {
+      "name": "runNativeRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 270,
+      "inclusiveShare": 0.13177159590043924
+    },
+    {
+      "name": "certify",
+      "selfSamples": 59,
+      "inclusiveSamples": 265,
+      "inclusiveShare": 0.12933138116154222
+    },
+    {
+      "name": "segmentToBoundsMinDistance",
+      "selfSamples": 101,
+      "inclusiveSamples": 222,
+      "inclusiveShare": 0.10834553440702782
+    },
+    {
+      "name": "captureScope",
+      "selfSamples": 3,
+      "inclusiveSamples": 214,
+      "inclusiveShare": 0.10444119082479258
+    },
+    {
+      "name": "getOwnPropertyDescriptors",
+      "selfSamples": 201,
+      "inclusiveSamples": 201,
+      "inclusiveShare": 0.09809663250366032
+    },
+    {
+      "name": "isEligible",
+      "selfSamples": 0,
+      "inclusiveSamples": 200,
+      "inclusiveShare": 0.09760858955588092
+    },
+    {
+      "name": "publishCertifiedRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 181,
+      "inclusiveShare": 0.08833577354807223
+    },
+    {
+      "name": "check",
+      "selfSamples": 2,
+      "inclusiveSamples": 167,
+      "inclusiveShare": 0.08150317227916057
+    },
+    {
+      "name": "doSegmentsIntersect",
+      "selfSamples": 81,
+      "inclusiveSamples": 139,
+      "inclusiveShare": 0.06783796974133724
+    },
+    {
+      "name": "find45DegreePath",
+      "selfSamples": 2,
+      "inclusiveSamples": 130,
+      "inclusiveShare": 0.0634455832113226
+    },
+    {
+      "name": "isValidPathSegment",
+      "selfSamples": 10,
+      "inclusiveSamples": 128,
+      "inclusiveShare": 0.06246949731576379
+    },
+    {
+      "name": "isValidPath",
+      "selfSamples": 0,
+      "inclusiveSamples": 128,
+      "inclusiveShare": 0.06246949731576379
+    },
+    {
+      "name": "SegmentTree",
+      "selfSamples": 84,
+      "inclusiveSamples": 116,
+      "inclusiveShare": 0.056612981942410934
+    },
+    {
+      "name": "dispatch",
+      "selfSamples": 3,
+      "inclusiveSamples": 81,
+      "inclusiveShare": 0.03953147877013177
+    },
+    {
+      "name": "promiseReactionJobWithoutPromiseUnwrapAsyncContext",
+      "selfSamples": 0,
+      "inclusiveSamples": 76,
+      "inclusiveShare": 0.03709126403123475
+    },
+    {
+      "name": "some",
+      "selfSamples": 13,
+      "inclusiveSamples": 76,
+      "inclusiveShare": 0.03709126403123475
+    },
+    {
+      "name": "solveAsync",
+      "selfSamples": 0,
+      "inclusiveSamples": 75,
+      "inclusiveShare": 0.036603221083455345
+    },
+    {
+      "name": "eligibility",
+      "selfSamples": 0,
+      "inclusiveSamples": 67,
+      "inclusiveShare": 0.03269887750122011
+    },
+    {
+      "name": "collect",
+      "selfSamples": 42,
+      "inclusiveSamples": 62,
+      "inclusiveShare": 0.030258662762323085
+    },
+    {
+      "name": "captureAwaitGraph",
+      "selfSamples": 17,
+      "inclusiveSamples": 57,
+      "inclusiveShare": 0.027818448023426062
+    },
+    {
+      "name": "prepareOutputAliases",
+      "selfSamples": 1,
+      "inclusiveSamples": 57,
+      "inclusiveShare": 0.027818448023426062
+    },
+    {
+      "name": "assertParallelPathLookaheadResult",
+      "selfSamples": 1,
+      "inclusiveSamples": 55,
+      "inclusiveShare": 0.026842362127867253
+    },
+    {
+      "name": "assertNativeSourceAliasOutput",
+      "selfSamples": 0,
+      "inclusiveSamples": 54,
+      "inclusiveShare": 0.02635431918008785
+    },
+    {
+      "name": "matchesAwaitGraph",
+      "selfSamples": 8,
+      "inclusiveSamples": 51,
+      "inclusiveShare": 0.024890190336749635
+    },
+    {
+      "name": "orientation",
+      "selfSamples": 51,
+      "inclusiveSamples": 51,
+      "inclusiveShare": 0.024890190336749635
+    },
+    {
+      "name": "walkPlainGraph",
+      "selfSamples": 23,
+      "inclusiveSamples": 49,
+      "inclusiveShare": 0.023914104441190825
+    },
+    {
+      "name": "captureAwaitState",
+      "selfSamples": 0,
+      "inclusiveSamples": 48,
+      "inclusiveShare": 0.02342606149341142
+    },
+    {
+      "name": "Promise",
+      "selfSamples": 0,
+      "inclusiveSamples": 46,
+      "inclusiveShare": 0.02244997559785261
+    },
+    {
+      "name": "run",
+      "selfSamples": 0,
+      "inclusiveSamples": 46,
+      "inclusiveShare": 0.02244997559785261
+    },
+    {
+      "name": "nativeDescriptorMatches",
+      "selfSamples": 20,
+      "inclusiveSamples": 46,
+      "inclusiveShare": 0.02244997559785261
+    },
+    {
+      "name": "getSegmentsThatCouldIntersect",
+      "selfSamples": 44,
+      "inclusiveSamples": 44,
+      "inclusiveShare": 0.021473889702293802
+    },
+    {
+      "name": "launchCertifiedLookahead",
+      "selfSamples": 0,
+      "inclusiveSamples": 41,
+      "inclusiveShare": 0.02000976085895559
+    },
+    {
+      "name": "filter",
+      "selfSamples": 6,
+      "inclusiveSamples": 40,
+      "inclusiveShare": 0.019521717911176184
+    },
+    {
+      "name": "getReference",
+      "selfSamples": 0,
+      "inclusiveSamples": 37,
+      "inclusiveShare": 0.01805758906783797
+    },
+    {
+      "name": "captureParallelPathPrototypeContract",
+      "selfSamples": 7,
+      "inclusiveSamples": 36,
+      "inclusiveShare": 0.017569546120058566
+    },
+    {
+      "name": "doesSegmentCrossPolygonBoundary",
+      "selfSamples": 2,
+      "inclusiveSamples": 35,
+      "inclusiveShare": 0.01708150317227916
+    },
+    {
+      "name": "getOwnPropertyDescriptor",
+      "selfSamples": 34,
+      "inclusiveSamples": 34,
+      "inclusiveShare": 0.016593460224499756
+    },
+    {
+      "name": "scopedPrerequisites",
+      "selfSamples": 0,
+      "inclusiveSamples": 33,
+      "inclusiveShare": 0.016105417276720352
+    },
+    {
+      "name": "getSegmentKey",
+      "selfSamples": 32,
+      "inclusiveSamples": 32,
+      "inclusiveShare": 0.015617374328940947
+    },
+    {
+      "name": "minimumDistanceBetweenSegments",
+      "selfSamples": 18,
+      "inclusiveSamples": 31,
+      "inclusiveShare": 0.015129331381161543
+    },
+    {
+      "name": "getPrimitiveView",
+      "selfSamples": 16,
+      "inclusiveSamples": 31,
+      "inclusiveShare": 0.015129331381161543
+    },
+    {
+      "name": "hasOwnProperty",
+      "selfSamples": 28,
+      "inclusiveSamples": 28,
+      "inclusiveShare": 0.013665202537823329
+    },
+    {
+      "name": "areIdsConnected",
+      "selfSamples": 1,
+      "inclusiveSamples": 26,
+      "inclusiveShare": 0.01268911664226452
+    },
+    {
+      "name": "ParallelPathLookaheadCoordinator",
+      "selfSamples": 1,
+      "inclusiveSamples": 25,
+      "inclusiveShare": 0.012201073694485115
+    },
+    {
+      "name": "getNetConnectedToId",
+      "selfSamples": 25,
+      "inclusiveSamples": 25,
+      "inclusiveShare": 0.012201073694485115
+    },
+    {
+      "name": "isOrdinaryPoint",
+      "selfSamples": 22,
+      "inclusiveSamples": 22,
+      "inclusiveShare": 0.010736944851146901
+    },
+    {
+      "name": "collectContextObjects",
+      "selfSamples": 10,
+      "inclusiveSamples": 21,
+      "inclusiveShare": 0.010248901903367497
+    },
+    {
+      "name": "ownData",
+      "selfSamples": 3,
+      "inclusiveSamples": 21,
+      "inclusiveShare": 0.010248901903367497
+    },
+    {
+      "name": "postMessage",
+      "selfSamples": 19,
+      "inclusiveSamples": 19,
+      "inclusiveShare": 0.009272816007808687
+    },
+    {
+      "name": "min",
+      "selfSamples": 18,
+      "inclusiveSamples": 18,
+      "inclusiveShare": 0.008784773060029283
+    },
+    {
+      "name": "isSameNetRoute",
+      "selfSamples": 3,
+      "inclusiveSamples": 17,
+      "inclusiveShare": 0.008296730112249878
+    },
+    {
+      "name": "serialize",
+      "selfSamples": 16,
+      "inclusiveSamples": 16,
+      "inclusiveShare": 0.007808687164470474
+    },
+    {
+      "name": "canMaintainNativeSyncReferenceLedger",
+      "selfSamples": 6,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.007320644216691069
+    },
+    {
+      "name": "pointKey",
+      "selfSamples": 15,
+      "inclusiveSamples": 15,
+      "inclusiveShare": 0.007320644216691069
+    },
+    {
+      "name": "prerequisites",
+      "selfSamples": 0,
+      "inclusiveSamples": 14,
+      "inclusiveShare": 0.006832601268911664
+    },
+    {
+      "name": "getCandidateRoutes",
+      "selfSamples": 0,
+      "inclusiveSamples": 13,
+      "inclusiveShare": 0.00634455832113226
+    },
+    {
+      "name": "rehydrateNativeSourceAliases",
+      "selfSamples": 0,
+      "inclusiveSamples": 12,
+      "inclusiveShare": 0.005856515373352855
+    },
+    {
+      "name": "hasNativeObservationContract",
+      "selfSamples": 0,
+      "inclusiveSamples": 11,
+      "inclusiveShare": 0.005368472425573451
+    },
+    {
+      "name": "isPointInOrOnPolygon",
+      "selfSamples": 10,
+      "inclusiveSamples": 10,
+      "inclusiveShare": 0.004880429477794046
+    },
+    {
+      "name": "add",
+      "selfSamples": 9,
+      "inclusiveSamples": 9,
+      "inclusiveShare": 0.004392386530014641
+    },
+    {
+      "name": "profile",
+      "selfSamples": 1,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "(module)",
+      "selfSamples": 0,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "evaluate",
+      "selfSamples": 0,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "asyncModuleEvaluation",
+      "selfSamples": 0,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "extendPath",
+      "selfSamples": 8,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "completeDescriptor",
+      "selfSamples": 7,
+      "inclusiveSamples": 8,
+      "inclusiveShare": 0.003904343582235237
+    },
+    {
+      "name": "onSegment",
+      "selfSamples": 7,
+      "inclusiveSamples": 7,
+      "inclusiveShare": 0.003416300634455832
+    },
+    {
+      "name": "sort",
+      "selfSamples": 3,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.0029282576866764276
+    },
+    {
+      "name": "search",
+      "selfSamples": 5,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.0029282576866764276
+    },
+    {
+      "name": "assertParallelPathLookaheadJob",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.0029282576866764276
+    },
+    {
+      "name": "set",
+      "selfSamples": 6,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.0029282576866764276
+    },
+    {
+      "name": "matchesPrototype",
+      "selfSamples": 1,
+      "inclusiveSamples": 6,
+      "inclusiveShare": 0.0029282576866764276
+    },
+    {
+      "name": "roundOutward",
+      "selfSamples": 5,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.002440214738897023
+    },
+    {
+      "name": "expandBoundsOutward",
+      "selfSamples": 0,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.002440214738897023
+    },
+    {
+      "name": "flatIntoArray",
+      "selfSamples": 5,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.002440214738897023
+    },
+    {
+      "name": "validatePath",
+      "selfSamples": 3,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.002440214738897023
+    },
+    {
+      "name": "get",
+      "selfSamples": 5,
+      "inclusiveSamples": 5,
+      "inclusiveShare": 0.002440214738897023
+    },
+    {
+      "name": "has",
+      "selfSamples": 4,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0019521717911176184
+    },
+    {
+      "name": "getCandidateObstacles",
+      "selfSamples": 0,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0019521717911176184
+    },
+    {
+      "name": "map",
+      "selfSamples": 1,
+      "inclusiveSamples": 4,
+      "inclusiveShare": 0.0019521717911176184
+    },
+    {
+      "name": "replaceRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 3,
+      "inclusiveShare": 0.0014641288433382138
+    },
+    {
+      "name": "assertPlainObject",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "apply",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "captureTypedView",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "resolvePath",
+      "selfSamples": 1,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "values",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "PathSimplificationGeometryIndex",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "isOrdinaryParallelPathRoute",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "remove",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "keys",
+      "selfSamples": 2,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "getIndexedRoute",
+      "selfSamples": 0,
+      "inclusiveSamples": 2,
+      "inclusiveShare": 0.0009760858955588092
+    },
+    {
+      "name": "distance",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "publishDiagnostics",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "settle",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "contains",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "getChangedValues",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "SingleSimplifiedPathSolver",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "pointToSegmentDistance",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "copyDataProperties",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "cloneObject",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "promiseResolveThenableJobWithDerivedPromise",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "promiseResolveThenableJobWithoutPromiseFast",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "isProxy",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "computePathSegments",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "hasOwn",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "ownDescriptorValue",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "canUseNativePathLookaheadPool",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "ownIterable",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "pathLifecycleAll",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "getPrototypeOf",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "delete",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "ownDataField",
+      "selfSamples": 0,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    },
+    {
+      "name": "resolve",
+      "selfSamples": 1,
+      "inclusiveSamples": 1,
+      "inclusiveShare": 0.0004880429477794046
+    }
+  ],
+  "rows": [
+    {
+      "sample": 1,
+      "phase": 1,
+      "nativeGeometryHash": "86b0ee4128bf5999deae6f7830d932a1d331755440b23a438a0639d94733b5fe",
+      "nativeIterations": 3460,
+      "nativeRouteCount": 205,
+      "stats": {
+        "interactionComponentCount": 1,
+        "parallelBatchCount": 1,
+        "nativePathSteps": 3460,
+        "lookaheadSpeculativeJobs": 205,
+        "lookaheadSpeculativeNativeSteps": 3529,
+        "lookaheadSpeculativeNativeQueries": 6838,
+        "lookaheadSpeculativeObstacleWitnessTests": 22323,
+        "lookaheadCertifiedRoutes": 158,
+        "lookaheadOrderedReruns": 47,
+        "lookaheadOrderedRerunNativeSteps": 1689,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 408,
+        "lookaheadNativeFilterSegments": 22851,
+        "lookaheadNativeFilterVias": 836,
+        "lookaheadLineBucketTests": 350191,
+        "lookaheadLineDistanceTests": 4893,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 5,
+        "lookaheadAwaitStateChecks": 5,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 2007,
+        "lookaheadCertifiedNativeParentStepCalls": 316,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 101122,
+        "lookaheadGuardOwnKeyReads": 121797,
+        "lookaheadGuardDescriptorReads": 676712,
+        "lookaheadGuardDescriptorBuiltinCalls": 122706,
+        "lookaheadGuardDescriptorMetadataFieldReads": 2706848,
+        "lookaheadGuardDescriptorOwnFieldChecks": 676712,
+        "lookaheadGuardPrototypeReads": 138598,
+        "lookaheadGuardSnapshotObjects": 12134,
+        "lookaheadGuardSnapshotProperties": 64839,
+        "lookaheadGuardAwaitCaptures": 5,
+        "lookaheadGuardAwaitChecks": 5,
+        "lookaheadGuardAwaitSnapshotObjects": 5511,
+        "lookaheadGuardAwaitSnapshotProperties": 38698,
+        "lookaheadGuardAwaitMapEntriesCaptured": 40,
+        "lookaheadGuardAwaitMapEntriesCompared": 40,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 100720,
+        "lookaheadGuardAwaitBufferBytesCompared": 130936,
+        "lookaheadGuardAwaitBufferGetterCalls": 240,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 992,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 34040,
+        "lookaheadGuardAwaitReceiverBrandChecks": 18,
+        "lookaheadGuardScopeCaptures": 4,
+        "lookaheadGuardScopeChecks": 4,
+        "lookaheadGuardScopeObjects": 28332,
+        "lookaheadGuardScopeProperties": 146614,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 1854,
+        "lookaheadGuardScopeControlOriginalObjects": 854
+      }
+    },
+    {
+      "sample": 6,
+      "phase": 1,
+      "nativeGeometryHash": "a492fa6a89065127a339ec0b4fb52388aadba883c26cee5f3eb3cdf1c1ac9caf",
+      "nativeIterations": 5221,
+      "nativeRouteCount": 255,
+      "stats": {
+        "interactionComponentCount": 4,
+        "parallelBatchCount": 4,
+        "nativePathSteps": 5221,
+        "lookaheadSpeculativeJobs": 255,
+        "lookaheadSpeculativeNativeSteps": 5241,
+        "lookaheadSpeculativeNativeQueries": 10055,
+        "lookaheadSpeculativeObstacleWitnessTests": 30433,
+        "lookaheadCertifiedRoutes": 200,
+        "lookaheadOrderedReruns": 55,
+        "lookaheadOrderedRerunNativeSteps": 2099,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 508,
+        "lookaheadNativeFilterSegments": 65097,
+        "lookaheadNativeFilterVias": 2143,
+        "lookaheadLineBucketTests": 434501,
+        "lookaheadLineDistanceTests": 8179,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 5,
+        "lookaheadAwaitStateChecks": 5,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 2501,
+        "lookaheadCertifiedNativeParentStepCalls": 400,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 169515,
+        "lookaheadGuardOwnKeyReads": 203094,
+        "lookaheadGuardDescriptorReads": 1387727,
+        "lookaheadGuardDescriptorBuiltinCalls": 204003,
+        "lookaheadGuardDescriptorMetadataFieldReads": 5550908,
+        "lookaheadGuardDescriptorOwnFieldChecks": 1387727,
+        "lookaheadGuardPrototypeReads": 230357,
+        "lookaheadGuardSnapshotObjects": 19787,
+        "lookaheadGuardSnapshotProperties": 137090,
+        "lookaheadGuardAwaitCaptures": 5,
+        "lookaheadGuardAwaitChecks": 5,
+        "lookaheadGuardAwaitSnapshotObjects": 12436,
+        "lookaheadGuardAwaitSnapshotProperties": 96827,
+        "lookaheadGuardAwaitMapEntriesCaptured": 522,
+        "lookaheadGuardAwaitMapEntriesCompared": 522,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 179260,
+        "lookaheadGuardAwaitBufferBytesCompared": 233038,
+        "lookaheadGuardAwaitBufferGetterCalls": 240,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 1822,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 60605,
+        "lookaheadGuardAwaitReceiverBrandChecks": 18,
+        "lookaheadGuardScopeCaptures": 4,
+        "lookaheadGuardScopeChecks": 4,
+        "lookaheadGuardScopeObjects": 45149,
+        "lookaheadGuardScopeProperties": 302436,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 2304,
+        "lookaheadGuardScopeControlOriginalObjects": 4970
+      }
+    },
+    {
+      "sample": 14,
+      "phase": 1,
+      "nativeGeometryHash": "71b64966e91d79c53ab02277217bc77560526786c23314dd4927ae951b4b6f9c",
+      "nativeIterations": 5725,
+      "nativeRouteCount": 238,
+      "stats": {
+        "interactionComponentCount": 1,
+        "parallelBatchCount": 1,
+        "nativePathSteps": 5725,
+        "lookaheadSpeculativeJobs": 238,
+        "lookaheadSpeculativeNativeSteps": 5785,
+        "lookaheadSpeculativeNativeQueries": 11014,
+        "lookaheadSpeculativeObstacleWitnessTests": 48574,
+        "lookaheadCertifiedRoutes": 159,
+        "lookaheadOrderedReruns": 79,
+        "lookaheadOrderedRerunNativeSteps": 3168,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 474,
+        "lookaheadNativeFilterSegments": 42318,
+        "lookaheadNativeFilterVias": 1401,
+        "lookaheadLineBucketTests": 370465,
+        "lookaheadLineDistanceTests": 8192,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 5,
+        "lookaheadAwaitStateChecks": 5,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 3488,
+        "lookaheadCertifiedNativeParentStepCalls": 318,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 211045,
+        "lookaheadGuardOwnKeyReads": 268058,
+        "lookaheadGuardDescriptorReads": 1502251,
+        "lookaheadGuardDescriptorBuiltinCalls": 268967,
+        "lookaheadGuardDescriptorMetadataFieldReads": 6009004,
+        "lookaheadGuardDescriptorOwnFieldChecks": 1502251,
+        "lookaheadGuardPrototypeReads": 318450,
+        "lookaheadGuardSnapshotObjects": 19465,
+        "lookaheadGuardSnapshotProperties": 115183,
+        "lookaheadGuardAwaitCaptures": 5,
+        "lookaheadGuardAwaitChecks": 5,
+        "lookaheadGuardAwaitSnapshotObjects": 31575,
+        "lookaheadGuardAwaitSnapshotProperties": 150949,
+        "lookaheadGuardAwaitMapEntriesCaptured": 3002,
+        "lookaheadGuardAwaitMapEntriesCompared": 3002,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 134720,
+        "lookaheadGuardAwaitBufferBytesCompared": 175136,
+        "lookaheadGuardAwaitBufferGetterCalls": 240,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 11094,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 45540,
+        "lookaheadGuardAwaitReceiverBrandChecks": 18,
+        "lookaheadGuardScopeCaptures": 4,
+        "lookaheadGuardScopeChecks": 4,
+        "lookaheadGuardScopeObjects": 59619,
+        "lookaheadGuardScopeProperties": 346394,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 2151,
+        "lookaheadGuardScopeControlOriginalObjects": 658
+      }
+    },
+    {
+      "sample": 15,
+      "phase": 1,
+      "nativeGeometryHash": "6af90f61e2e028368938f2f73c9c273f74224498220801aae3ad78e44375f805",
+      "nativeIterations": 7243,
+      "nativeRouteCount": 461,
+      "stats": {
+        "interactionComponentCount": 1,
+        "parallelBatchCount": 1,
+        "nativePathSteps": 7243,
+        "lookaheadSpeculativeJobs": 461,
+        "lookaheadSpeculativeNativeSteps": 7267,
+        "lookaheadSpeculativeNativeQueries": 13009,
+        "lookaheadSpeculativeObstacleWitnessTests": 46810,
+        "lookaheadCertifiedRoutes": 414,
+        "lookaheadOrderedReruns": 47,
+        "lookaheadOrderedRerunNativeSteps": 2052,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 920,
+        "lookaheadNativeFilterSegments": 30735,
+        "lookaheadNativeFilterVias": 1216,
+        "lookaheadLineBucketTests": 263265,
+        "lookaheadLineDistanceTests": 8243,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 9,
+        "lookaheadAwaitStateChecks": 9,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 2882,
+        "lookaheadCertifiedNativeParentStepCalls": 828,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 317405,
+        "lookaheadGuardOwnKeyReads": 393562,
+        "lookaheadGuardDescriptorReads": 2908960,
+        "lookaheadGuardDescriptorBuiltinCalls": 395151,
+        "lookaheadGuardDescriptorMetadataFieldReads": 11635840,
+        "lookaheadGuardDescriptorOwnFieldChecks": 2908960,
+        "lookaheadGuardPrototypeReads": 454007,
+        "lookaheadGuardSnapshotObjects": 24400,
+        "lookaheadGuardSnapshotProperties": 201139,
+        "lookaheadGuardAwaitCaptures": 9,
+        "lookaheadGuardAwaitChecks": 9,
+        "lookaheadGuardAwaitSnapshotObjects": 41673,
+        "lookaheadGuardAwaitSnapshotProperties": 243174,
+        "lookaheadGuardAwaitMapEntriesCaptured": 1310,
+        "lookaheadGuardAwaitMapEntriesCompared": 1310,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 390600,
+        "lookaheadGuardAwaitBufferBytesCompared": 455700,
+        "lookaheadGuardAwaitBufferGetterCalls": 408,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 6224,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 124410,
+        "lookaheadGuardAwaitReceiverBrandChecks": 26,
+        "lookaheadGuardScopeCaptures": 8,
+        "lookaheadGuardScopeChecks": 8,
+        "lookaheadGuardScopeObjects": 96935,
+        "lookaheadGuardScopeProperties": 744364,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 7854,
+        "lookaheadGuardScopeControlOriginalObjects": 5646
+      }
+    },
+    {
+      "sample": 5,
+      "phase": 1,
+      "nativeGeometryHash": "ea9677fe68f7590bfbbfea88a4233b9fd5e73d812340b1a5b126df7b9b66506c",
+      "nativeIterations": 2938,
+      "nativeRouteCount": 172,
+      "stats": {
+        "interactionComponentCount": 1,
+        "parallelBatchCount": 1,
+        "nativePathSteps": 2938,
+        "lookaheadSpeculativeJobs": 172,
+        "lookaheadSpeculativeNativeSteps": 2932,
+        "lookaheadSpeculativeNativeQueries": 5709,
+        "lookaheadSpeculativeObstacleWitnessTests": 24068,
+        "lookaheadCertifiedRoutes": 128,
+        "lookaheadOrderedReruns": 44,
+        "lookaheadOrderedRerunNativeSteps": 1570,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 342,
+        "lookaheadNativeFilterSegments": 15410,
+        "lookaheadNativeFilterVias": 798,
+        "lookaheadLineBucketTests": 252042,
+        "lookaheadLineDistanceTests": 3577,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 4,
+        "lookaheadAwaitStateChecks": 4,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 1828,
+        "lookaheadCertifiedNativeParentStepCalls": 256,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 74928,
+        "lookaheadGuardOwnKeyReads": 90240,
+        "lookaheadGuardDescriptorReads": 504251,
+        "lookaheadGuardDescriptorBuiltinCalls": 90979,
+        "lookaheadGuardDescriptorMetadataFieldReads": 2017004,
+        "lookaheadGuardDescriptorOwnFieldChecks": 504251,
+        "lookaheadGuardPrototypeReads": 103635,
+        "lookaheadGuardSnapshotObjects": 9718,
+        "lookaheadGuardSnapshotProperties": 52735,
+        "lookaheadGuardAwaitCaptures": 4,
+        "lookaheadGuardAwaitChecks": 4,
+        "lookaheadGuardAwaitSnapshotObjects": 4183,
+        "lookaheadGuardAwaitSnapshotProperties": 28591,
+        "lookaheadGuardAwaitMapEntriesCaptured": 108,
+        "lookaheadGuardAwaitMapEntriesCompared": 108,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 76224,
+        "lookaheadGuardAwaitBufferBytesCompared": 104808,
+        "lookaheadGuardAwaitBufferGetterCalls": 198,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 1175,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 26600,
+        "lookaheadGuardAwaitReceiverBrandChecks": 16,
+        "lookaheadGuardScopeCaptures": 3,
+        "lookaheadGuardScopeChecks": 3,
+        "lookaheadGuardScopeObjects": 19955,
+        "lookaheadGuardScopeProperties": 103464,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 1211,
+        "lookaheadGuardScopeControlOriginalObjects": 514
+      }
+    },
+    {
+      "sample": 5,
+      "phase": 2,
+      "nativeGeometryHash": "48e6b398dafd8822a83603957b97fb05c4b18e80a801e66e4ef7fda293f52d1c",
+      "nativeIterations": 2611,
+      "nativeRouteCount": 172,
+      "stats": {
+        "interactionComponentCount": 1,
+        "parallelBatchCount": 1,
+        "nativePathSteps": 2611,
+        "lookaheadSpeculativeJobs": 172,
+        "lookaheadSpeculativeNativeSteps": 2662,
+        "lookaheadSpeculativeNativeQueries": 5130,
+        "lookaheadSpeculativeObstacleWitnessTests": 21017,
+        "lookaheadCertifiedRoutes": 138,
+        "lookaheadOrderedReruns": 34,
+        "lookaheadOrderedRerunNativeSteps": 1124,
+        "lookaheadCancelledJobs": 0,
+        "lookaheadCancellationSignals": 0,
+        "lookaheadNativeFilterConstructors": 342,
+        "lookaheadNativeFilterSegments": 6368,
+        "lookaheadNativeFilterVias": 714,
+        "lookaheadLineBucketTests": 80065,
+        "lookaheadLineDistanceTests": 2432,
+        "lookaheadViaDistanceTests": 0,
+        "lookaheadCertificateNativeQueryErrors": 0,
+        "lookaheadEligibilityNativeRoutes": 0,
+        "lookaheadMaximumLookahead": 64,
+        "lookaheadEligibilityChecks": 4,
+        "lookaheadAwaitStateChecks": 4,
+        "lookaheadAwaitStateDeclines": 0,
+        "lookaheadScopeCaptureDeclines": 0,
+        "lookaheadPhysicalOwnerNativeStepCalls": 1402,
+        "lookaheadCertifiedNativeParentStepCalls": 276,
+        "lookaheadFinalNativeStepCalls": 1,
+        "lookaheadGuardChecks": 2,
+        "lookaheadGuardObjectChecks": 39438,
+        "lookaheadGuardOwnKeyReads": 48864,
+        "lookaheadGuardDescriptorReads": 337132,
+        "lookaheadGuardDescriptorBuiltinCalls": 49603,
+        "lookaheadGuardDescriptorMetadataFieldReads": 1348528,
+        "lookaheadGuardDescriptorOwnFieldChecks": 337132,
+        "lookaheadGuardPrototypeReads": 56521,
+        "lookaheadGuardSnapshotObjects": 4457,
+        "lookaheadGuardSnapshotProperties": 31690,
+        "lookaheadGuardAwaitCaptures": 4,
+        "lookaheadGuardAwaitChecks": 4,
+        "lookaheadGuardAwaitSnapshotObjects": 3525,
+        "lookaheadGuardAwaitSnapshotProperties": 25251,
+        "lookaheadGuardAwaitMapEntriesCaptured": 214,
+        "lookaheadGuardAwaitMapEntriesCompared": 214,
+        "lookaheadGuardAwaitSetValuesCaptured": 0,
+        "lookaheadGuardAwaitSetValuesCompared": 0,
+        "lookaheadGuardAwaitBufferBytesCopied": 76224,
+        "lookaheadGuardAwaitBufferBytesCompared": 104808,
+        "lookaheadGuardAwaitBufferGetterCalls": 198,
+        "lookaheadGuardAwaitCoveredObjectsSkipped": 771,
+        "lookaheadGuardAwaitTypedIndexDescriptorsSkipped": 26600,
+        "lookaheadGuardAwaitReceiverBrandChecks": 16,
+        "lookaheadGuardScopeCaptures": 3,
+        "lookaheadGuardScopeChecks": 3,
+        "lookaheadGuardScopeObjects": 10521,
+        "lookaheadGuardScopeProperties": 65624,
+        "lookaheadGuardScopeIndexSourceEdgesSkipped": 1211,
+        "lookaheadGuardScopeControlOriginalObjects": 333
+      }
+    }
+  ],
+  "workerPoolStats": {
+    "tasksStarted": 1507,
+    "tasksCompleted": 1507,
+    "maxActiveWorkers": 4,
+    "historyRequestsGranted": 0,
+    "historyRequestsDenied": 0,
+    "historyJobsStarted": 0,
+    "historyCancellationSignals": 0,
+    "historyJobsStopped": 0,
+    "historyStepsCompleted": 0,
+    "a13RequestsGranted": 0,
+    "a13RequestsDenied": 0,
+    "a13CandidatesStarted": 0,
+    "a13CancellationSignals": 0,
+    "a13CandidatesStopped": 0,
+    "a13RoutingIterationsCompleted": 0,
+    "a13NodeJobsCompleted": 0,
+    "a13NodeJobsStopped": 0,
+    "a13NodeRoutingIterationsCompleted": 0,
+    "contextSerializationCalls": 6,
+    "contextSerializedBytes": 7113508,
+    "sharedContextMessages": 24,
+    "contextAliasNativeMessages": 0,
+    "contextShapeNativeMessages": 0,
+    "gridHistoryRequestsGranted": 0,
+    "gridHistoryRequestsDenied": 0,
+    "gridHistoryJobsStarted": 0,
+    "gridHistoryCancellationSignals": 0,
+    "gridHistoryJobsStopped": 0,
+    "gridHistoryComputedIterations": 0,
+    "gridHistoryPrefixIterationsRecomputed": 0,
+    "gridHistoryCheckpointsCompleted": 0,
+    "gridHistoryLogicalIterationsReplayed": 0,
+    "gridHistoryEquivalentLogicalIterationsReplayed": 0,
+    "gridHistoryEquivalentCandidatesAdmitted": 0,
+    "gridHistoryRequestsSkippedForNoIdleWorker": 0
+  }
+}

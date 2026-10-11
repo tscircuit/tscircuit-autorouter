@@ -14,7 +14,7 @@ const ownerContract = captureParallelPathPrototypeContract(MultiSimplifiedPathSo
 
 function makeOwner(): MultiSimplifiedPathSolver {
   const routes: HighDensityRoute[] = []
-  for (let index = 0; index < 128; index++) {
+  for (let index = 0; index < 130; index++) {
     const y = index * 0.37
     routes.push({ connectionName: `window-${index}`, traceThickness: 0.15, viaDiameter: 0.3,
       route: [{ x: -2, y, z: index % 2 }, { x: -1, y: y + 0.4, z: index % 2 },
@@ -81,6 +81,8 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
     expectedCustom.solve()
     expect(state(customOwner)).toEqual(state(expectedCustom))
     expect(custom.stats.maximumLookahead).toBe(4)
+    expect(custom.stats.prefixCloneCalls).toBe(130)
+    expect(custom.stats.deferredWindowRefills).toBe(0)
 
     const expected = makeOwner()
     expected.solve()
@@ -92,8 +94,11 @@ test("only exact native owner, helper, worker pool and minted run widen pending 
     await native.solve()
     expect(state(nativeOwner)).toEqual(state(expected))
     expect(native.stats.maximumLookahead).toBe(64)
-    expect(native.stats.certifiedRoutes + native.stats.orderedReruns).toBe(128)
-    expect(native.stats.speculativeJobs).toBe(128)
+    expect(native.stats.certifiedRoutes + native.stats.orderedReruns).toBe(130)
+    expect(native.stats.speculativeJobs).toBe(130)
+    expect(native.stats.prefixCloneCalls).toBe(3)
+    expect(native.stats.prefixRowsCloned).toBe(192)
+    expect(native.stats.deferredWindowRefills).toBe(127)
     expect(pool.stats.maxActiveWorkers).toBe(4)
 
     // A pending-source mutation withdraws the entire window before publication.

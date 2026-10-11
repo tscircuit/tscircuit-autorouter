@@ -729,3 +729,17 @@ All five Blacksmith groups are dispatched for all sixteen samples; performance
 acceptance remains pending. Frozen hashes, arguments, preflight and workflow IDs
 are in
 [parallel-srj18-da7e84745-dispatch.json](benchmarks/parallel-srj18-da7e84745-dispatch.json).
+
+The reviewed fixed-cohort follow-up refills the same sixty-four-target Native
+window after its pending routes have been consumed in order. Only the private
+minted run/owner/helper/default-pool binding enables it; custom callbacks keep
+rolling windows. The existing full-prefix clone preserves cross-route aliases
+within each cohort. Six complete Native phase controls retain 1,503 routes and
+27,198 logical steps; prefix clones fall from 1,503 to 26, cloned prefix rows
+from 216,940 to 3,328, ordered reruns from 306 to 225, and rerun steps from
+11,702 to 8,921. This is operation-count evidence, with elapsed-time acceptance
+pending. Actual four-worker tests also cover shared endpoint and nested metadata
+aliases, a final two-route cohort, and cap/source/index mutation while the second
+cohort is pending. Frozen main-thread CPU attribution and exact source/control
+hashes are in
+[parallel-path-lookahead-fixed-cohort-proof.json](benchmarks/parallel-path-lookahead-fixed-cohort-proof.json).
