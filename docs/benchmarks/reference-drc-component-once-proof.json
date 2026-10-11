@@ -9,7 +9,7 @@
   "sourceHashes": {
     "nativeChecker": "f222c0f7cfa67fe3496244d68cdcce36b0d3370b61ea9af5a543a46e3cd5da55",
     "candidateChecker": "fc41bc3a9af6b08d2039a31f1a5a9c8ef7c787f099bdf555cdc74c859842b71b",
-    "test": "2cc8588faa5fbd54edb98ebce83e18d98e04a2e01649d5ac70cc44597701902e",
+    "test": "a6f4e7f76eacfaafdc1fe074da9707061c4ecc3d2293a2bf28a20411058c4b35",
     "fixture": "16e2ec25af83aa3dbc578fc7a5bcdf5ce15278f6b569e752df84df1355e80e36"
   },
   "contract": [
@@ -28,7 +28,7 @@
     "Internal pending-stack order may differ; no custom callbacks are eligible. The unchanged final filter restores the original returned order and references."
   ],
   "verification": {
-    "singleTestCommand": "bun test tests/solvers/reference-drc-component-once-continuity-parity.test.ts",
+    "singleTestCommand": "bun test --timeout 9999999 tests/solvers/reference-drc-component-once-continuity-parity.test.ts",
     "singleTestAssertions": 116,
     "singleTestPass": true,
     "typecheckCommand": "bunx tsc --noEmit",

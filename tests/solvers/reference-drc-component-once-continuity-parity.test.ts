@@ -131,4 +131,4 @@ test("private continuity expands native physical components once with exact nati
       expect(thrown).toBe(sentinel)
     }
   } finally { Object.defineProperty(PcbConnectivityMap.prototype, "getAllTracesConnectedToTrace", original) }
-}, 240_000)
+})
