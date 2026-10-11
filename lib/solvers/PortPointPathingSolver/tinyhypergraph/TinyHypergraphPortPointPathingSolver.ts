@@ -40,7 +40,6 @@ import {
   DuplicateCongestedPortSolverWithIndependentRoutes,
   type IndependentRouteSegment,
 } from "./DuplicateCongestedPortSolverWithIndependentRoutes"
-import { initializeTinyHypergraphRouteOrder } from "./initializeTinyHypergraphRouteOrder"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -1025,15 +1024,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
       if (
-        solver instanceof TinyHyperGraphSolver &&
+        solver instanceof SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments &&
         this.useSelectiveReripRouting &&
         solver.PARTIAL_RIP_ENABLED &&
         this.independentRouteSegments
       ) {
-        initializeTinyHypergraphRouteOrder(
-          solver,
-          this.independentRouteSegments,
-        )
+        solver.setInitialBackboneSegments(this.independentRouteSegments)
       }
     }
 
@@ -1406,6 +1402,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       initialRouteOrderingChangedPositionCount: solveGraphStats.initialRouteOrderingChangedPositionCount,
       initialRouteOrderingMaxConflictDegree: solveGraphStats.initialRouteOrderingMaxConflictDegree,
       initialRouteOrderingMaxPriority: solveGraphStats.initialRouteOrderingMaxPriority,
+      initialColdSeedRouteCount: solveGraphStats.initialColdSeedRouteCount,
+      initialColdSeedNetCount: solveGraphStats.initialColdSeedNetCount,
+      initialColdSeedAssignmentCount: solveGraphStats.initialColdSeedAssignmentCount,
+      initialColdSeedPendingRouteCount: solveGraphStats.initialColdSeedPendingRouteCount,
+      initialColdSeedEstimatedVias: solveGraphStats.initialColdSeedEstimatedVias,
+      initialColdSeedRegionCost: solveGraphStats.initialColdSeedRegionCost,
+      initialColdSeedMaxRegionCost: solveGraphStats.initialColdSeedMaxRegionCost,
+      initialColdSeedElapsedMs: solveGraphStats.initialColdSeedElapsedMs,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,

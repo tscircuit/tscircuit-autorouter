@@ -57,9 +57,11 @@ export class DuplicateCongestedPortSolverWithIndependentRoutes extends Duplicate
       }
       routeSolver.solve()
       if (!routeSolver.solved || routeSolver.failed) {
-        throw new Error(
-          `Connection "${connectionId}" could not be solved independently: ${routeSolver.error ?? "unknown error"}`,
-        )
+        // Preserve the original prepass's ordinary failure report. Missing
+        // serialized identifiers remain solver invariants that throw below.
+        this.failed = true
+        this.error = `Route ${routeId} could not be solved independently: ${routeSolver.error ?? "unknown error"}`
+        return
       }
 
       const usedPortIds = new Set<number>()
