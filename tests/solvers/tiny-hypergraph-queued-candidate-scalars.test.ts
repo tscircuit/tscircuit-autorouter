@@ -106,7 +106,10 @@ test("tiny hypergraph heap preserves immutable queued candidates, tie order, clo
     nonincident.hopId,
   ]).toEqual([4, 2, -300])
   expect(
-    Array.from({ length: 3 }, (): number | undefined => compact.dequeue()?.portId),
+    Array.from(
+      { length: 3 },
+      (): number | undefined => compact.dequeue()?.portId,
+    ),
   ).toEqual([2, 0, 1])
   expect(compact.isClosedHop(2, 99)).toBe(true)
   expect(compact.isClosedHopId(4)).toBe(true)
