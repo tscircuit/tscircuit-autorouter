@@ -20,7 +20,8 @@ type Params = {
   nativeStep?: () => void
   enclosingNativeStep?: boolean
   isEligible: () => boolean
-  captureAwaitState?: () => (() => boolean) | undefined
+  captureScope?: (indexes: readonly number[]) => (() => boolean) | undefined
+  captureAwaitState?: (scope?: () => boolean) => (() => boolean) | undefined
   nativeEligibility?: ParallelPathLookaheadEligibility
   nativeWorkerPool?: ParallelStageWorkerPool
 }
@@ -39,6 +40,9 @@ const nativeGetDescriptors = Object.getOwnPropertyDescriptors
 const nativeOwnKeys = Reflect.ownKeys
 const nativeGetPrototype = Object.getPrototypeOf
 const nativeObjectIs = Object.is
+const structuredCloneDescriptor = nativeGetDescriptors(globalThis).structuredClone
+const nativeStructuredClone = structuredCloneDescriptor && hasOwn(structuredCloneDescriptor, "value") &&
+  typeof structuredCloneDescriptor.value === "function" ? structuredCloneDescriptor.value as typeof structuredClone : undefined
 
 function ownNumber(source: object, key: string): number | undefined {
   const descriptor = getOwnDescriptor(source, key)
@@ -56,6 +60,7 @@ export class ParallelPathLookaheadCoordinator {
     lineBucketTests: 0, lineDistanceTests: 0, viaDistanceTests: 0,
     certificateNativeQueryErrors: 0, eligibilityNativeRoutes: 0, maximumLookahead: 0,
     eligibilityChecks: 0, awaitStateChecks: 0, awaitStateDeclines: 0,
+    scopeCaptureDeclines: 0,
     physicalOwnerNativeStepCalls: 0, certifiedNativeParentStepCalls: 0, finalNativeStepCalls: 0,
   }
   private readonly context: ParallelPathWaveContext
@@ -71,6 +76,7 @@ export class ParallelPathLookaheadCoordinator {
 
   constructor(private readonly params: Params) {
     if (!NativeSharedArrayBuffer) throw new Error("Lookahead requires shared atomic cancellation")
+    if (!nativeStructuredClone) throw new Error("Lookahead requires native owned context cloning")
     if (!Number.isInteger(params.workerCount) || params.workerCount < 2 || params.workerCount > 4 ||
       params.original.currentUnsimplifiedHdRouteIndex !== 0 || params.original.simplifiedHdRoutes.length !== 0 ||
       params.original.activeSubSolver) throw new Error("Lookahead requires a fresh native phase and two to four workers")
@@ -82,17 +88,22 @@ export class ParallelPathLookaheadCoordinator {
     this.stats.physicalOwnerNativeStepCalls = params.enclosingNativeStep ? 1 : 0
     this.native = params.original
     const original = this.native
-    this.context = { connectivityNetMap: original.connMap.netMap,
+    // Clone once in the admitted synchronous span. A later worker-context or
+    // prefix serializer may run after yielding; it must never traverse live
+    // caller input that is outside that job's selected read scope.
+    this.context = nativeStructuredClone({ connectivityNetMap: original.connMap.netMap,
       connectivityIdToNetMap: original.connMap.idToNetMap,
       params: { unsimplifiedHdRoutes: original.unsimplifiedHdRoutes, otherHdRoutes: original.otherHdRoutes,
         obstacles: original.obstacles, colorMap: original.colorMap, outline: original.outline,
         minBoardEdgeClearance: original.minBoardEdgeClearance, defaultViaDiameter: original.defaultViaDiameter,
-        useTraceWidthAwareClearance: original.useTraceWidthAwareClearance, enableVertexShortcuts: original.enableVertexShortcuts } }
+        useTraceWidthAwareClearance: original.useTraceWidthAwareClearance, enableVertexShortcuts: original.enableVertexShortcuts } })
     // The owner's index is mutated by real native publication. A separate index
     // preserves the exact original copper used by the speculative certificate.
-    const initialIndex = new PathSimplificationGeometryIndex(original.unsimplifiedHdRoutes,
-      original.otherHdRoutes, original.obstacles)
-    this.certifier = new ParallelPathQueryCertifier(original, original, initialIndex)
+    const initial = this.context.params
+    const initialIndex = new PathSimplificationGeometryIndex(initial.unsimplifiedHdRoutes,
+      initial.otherHdRoutes!, initial.obstacles)
+    this.certifier = new ParallelPathQueryCertifier({ unsimplifiedHdRoutes: initial.unsimplifiedHdRoutes,
+      useTraceWidthAwareClearance: initial.useTraceWidthAwareClearance!, enableVertexShortcuts: initial.enableVertexShortcuts! }, original, initialIndex)
     this.infrastructureFailure = pathLifecycleFailure((reject): void => { this.rejectInfrastructure = reject })
     void pathLifecycleThen(this.infrastructureFailure, (): void => {}, (): void => {})
   }
@@ -145,7 +156,13 @@ export class ParallelPathLookaheadCoordinator {
         if (!pending) throw new Error(`Missing lookahead job for route ${index}`)
         let candidate = pending.ready
         if (!candidate) {
-          expectedAwaitState = this.params.captureAwaitState?.()
+          const scope = this.params.captureScope?.([...this.pending.keys()])
+          if (this.params.captureScope && !scope) {
+            this.stats.scopeCaptureDeclines++
+            eligibleSpan = false
+            continue
+          }
+          expectedAwaitState = this.params.captureAwaitState?.(scope)
           if (this.params.captureAwaitState && !expectedAwaitState) {
             eligibleSpan = false
             continue
@@ -218,11 +235,12 @@ export class ParallelPathLookaheadCoordinator {
 
   private dispatchWindow(prefix: number): void {
     const end = Math.min(this.native.unsimplifiedHdRoutes.length, prefix + this.params.workerCount)
+    const updates = nativeStructuredClone!(this.native.simplifiedHdRoutes.map((route, index) => ({ index, route })))
     while (!this.stopped && this.nextIndex < end) {
       const index = this.nextIndex++
       const job: ParallelPathLookaheadJob = { kind: "simplifyPathLookahead", contextId: this.params.contextId,
         context: this.context, index, committedPrefix: prefix,
-        updates: this.native.simplifiedHdRoutes.map((route, peer) => ({ index: peer, route })),
+        updates,
         cancellationBuffer: new NativeSharedArrayBuffer!(NativeInt32Array.BYTES_PER_ELEMENT),
         nativePhaseStepLimit: Math.max(0, Math.floor(this.native.MAX_ITERATIONS - this.native.iterations)) }
       this.stats.speculativeJobs++

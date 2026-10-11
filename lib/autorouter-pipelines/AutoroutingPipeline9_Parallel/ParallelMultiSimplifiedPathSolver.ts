@@ -24,6 +24,12 @@ const nativeStepOwners = new WeakSet<ParallelMultiSimplifiedPathSolver>()
 const nativeWeakSetHas = WeakSet.prototype.has
 const nativeWeakSetAdd = WeakSet.prototype.add
 const nativeWeakSetDelete = WeakSet.prototype.delete
+const nativeWeakMapGet = WeakMap.prototype.get
+const nativeWeakMapSet = WeakMap.prototype.set
+const nativeLookaheadFactories = new WeakMap<ParallelMultiSimplifiedPathSolver, {
+  captureScope: ParallelPathLookaheadEligibility["captureScope"]
+  captureAwaitState: ParallelPathLookaheadEligibility["captureAwaitState"]
+}>()
 const nativeApply = Reflect.apply
 const NativePromise = Promise
 const nativeGetDescriptor = Object.getOwnPropertyDescriptor
@@ -41,6 +47,7 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
   readonly workerPool: ParallelStageWorkerPool
   readonly batches: number[][]
   private launched = false
+  private nativeOnly = false
   readonly preserveLeadingLayerTransitions: boolean
   readonly hasParallelWork: boolean
   readonly dependencies: ParallelPathDependencies
@@ -60,6 +67,15 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
     if (useCertifiedLookahead && workerCount > 1 && !this.preserveLeadingLayerTransitions &&
       this.unsimplifiedHdRoutes.length > 1 && canUseNativePathLookaheadPool(workerPool)) {
       this.lookaheadEligibility = createParallelPathLookaheadEligibility(this, nativeParallelPathContract)
+      // These are freshly constructed private closures. Save them before the
+      // caller can install an observable property on the returned function.
+      if (this.lookaheadEligibility) nativeApply(nativeWeakMapSet, nativeLookaheadFactories, [this, {
+        captureScope: this.lookaheadEligibility.captureScope,
+        captureAwaitState: this.lookaheadEligibility.captureAwaitState,
+      }])
+      // An input outside the owned-clone domain retains native object aliases;
+      // sending it through the older DAG would still lose those clone fields.
+      if (!this.lookaheadEligibility) this.nativeOnly = true
     }
     this.hasParallelWork = workerCount > 1 && (this.dependencies.maximumReadyCount > 1 || Boolean(this.lookaheadEligibility))
     this.stats = { interactionComponentCount: groups.interactionComponentCount, parallelBatchCount: this.batches.length }
@@ -72,7 +88,7 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
   }
 
   override solve(): void {
-    if (this.hasParallelWork) throw new Error("Parallel path simplification requires awaiting pendingEffects or solveAsync()")
+    if (this.hasParallelWork && !this.nativeOnly) throw new Error("Parallel path simplification requires awaiting pendingEffects or solveAsync()")
     super.solve()
   }
 
@@ -89,13 +105,21 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
       super._step()
       return
     }
-    if (!this.hasParallelWork) {
+    if (!this.hasParallelWork || this.nativeOnly) {
       super._step()
       return
     }
     if (this.launched) return
-    if (this.lookaheadEligibility && canUseNativePathLookaheadPool(this.workerPool) && this.lookaheadEligibility() && hasNativeParallelPathLookaheadCoordinator()) {
-      this.launchCertifiedLookahead()
+    if (this.lookaheadEligibility) {
+      if (canUseNativePathLookaheadPool(this.workerPool) && this.lookaheadEligibility() && hasNativeParallelPathLookaheadCoordinator()) {
+        this.launchCertifiedLookahead()
+        return
+      }
+      // Upfront capability withdrawal retains the actual owner and hooks.
+      // The legacy DAG has independent native children and cannot observe an
+      // overridden method on this original index or current native instance.
+      this.nativeOnly = true
+      super._step()
       return
     }
     this.launched = true
@@ -187,12 +211,18 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
     this.launched = true
     const stats = this.stats
     const eligibility = this.lookaheadEligibility!
+    const factories = nativeApply(nativeWeakMapGet, nativeLookaheadFactories, [this]) as {
+      captureScope: ParallelPathLookaheadEligibility["captureScope"]
+      captureAwaitState: ParallelPathLookaheadEligibility["captureAwaitState"]
+    } | undefined
+    if (!factories) throw new Error("Native lookahead owner is missing its private factories")
     const workerPool = this.workerPool
     const coordinator = new ParallelPathLookaheadCoordinator({ original: this, contextId: this.contextId,
       workerCount: this.workerCount, enclosingNativeStep: true,
       run: (job): Promise<ParallelPathLookaheadResult> => workerPool.run<ParallelPathLookaheadResult>(job),
       isEligible: (): boolean => canUseNativePathLookaheadPool(workerPool) && eligibility() && hasNativeParallelPathLookaheadCoordinator(),
-      captureAwaitState: (): (() => boolean) | undefined => eligibility.captureAwaitState(),
+      captureScope: factories.captureScope,
+      captureAwaitState: factories.captureAwaitState,
       nativeEligibility: eligibility, nativeWorkerPool: workerPool,
       nativeStep: (): void => {
         nativeApply(nativeWeakSetAdd, nativeStepOwners, [this])
@@ -255,7 +285,7 @@ export class ParallelMultiSimplifiedPathSolver extends MultiSimplifiedPathSolver
       const pending = nativeGetDescriptor(this, "pendingEffects")
       if (pending && nativeHasOwn(pending, "value") && pending.writable) this.pendingEffects = []
     }
-    const initialAwaitState = eligibility.captureAwaitState() ?? ((): boolean => false)
+    const initialAwaitState = factories.captureAwaitState() ?? ((): boolean => false)
     // Finish the enclosing original Base.step cap/progress boundary before any
     // coordinator continuation, even when an initial custom state declines.
     const continuation = pathLifecycleThen(pathLifecycleResolve(), (): Promise<void> => {

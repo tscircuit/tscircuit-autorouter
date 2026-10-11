@@ -5,6 +5,7 @@ import type { HighDensityRoute } from "../../types/high-density-types"
 import type { ParallelPathCertificateStats, ParallelPathQueryCertificate, ParallelPathQueryFootprint, ParallelPathQueryPoint } from "./parallelPathLookaheadTypes"
 
 type GeometryIndex = NonNullable<ConstructorParameters<typeof SingleSimplifiedPathSolver5>[0]["geometryQuery"]>["index"]
+type OriginalPhase = Pick<MultiSimplifiedPathSolver, "unsimplifiedHdRoutes" | "useTraceWidthAwareClearance" | "enableVertexShortcuts">
 type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 type Line = { start: ParallelPathQueryPoint; end: ParallelPathQueryPoint; buckets: Bounds }
 type Via = { x: number; y: number; diameter: number }
@@ -62,7 +63,7 @@ export class ParallelPathQueryCertifier {
   private readonly currentIndex: GeometryIndex
 
   constructor(
-    private readonly original: MultiSimplifiedPathSolver,
+    private readonly original: OriginalPhase,
     private readonly current: MultiSimplifiedPathSolver,
     initialGeometryIndex?: GeometryIndex,
   ) {

@@ -41,14 +41,16 @@ test("initial native Base.step finishes caps/progress before continuation and pr
       expect(parallel.iterations).toBe(1)
       expect(parallel.currentUnsimplifiedHdRouteIndex).toBe(native.currentUnsimplifiedHdRouteIndex)
       expect(parallel.failed).toBe(native.failed)
-      const effect = parallel.pendingEffects![0]!.promise
+      const effect = parallel.pendingEffects![0]?.promise
       native.solve()
-      try { await effect } catch { expect(native.failed).toBe(true) }
+      if (effect) {
+        try { await effect } catch { expect(native.failed).toBe(true) }
+      } else parallel.solve()
       expect(parallelEvents).toEqual(nativeEvents)
       expect(parallel.iterations).toBe(native.iterations)
       expect(parallel.progress).toBe(native.progress)
       expect(parallel.activeSubSolver?.iterations).toBe(native.activeSubSolver?.iterations)
-      expect(parallel.stats.lookaheadSpeculativeJobs).toBe(0)
+      expect(pool.stats.tasksStarted).toBe(0)
     } finally { pool.dispose() }
   }
   for (const [owner, key] of [[Promise, "resolve"], [Promise.prototype, "then"], [Promise.prototype, "catch"]] as const) {
