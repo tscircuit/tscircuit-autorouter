@@ -2,6 +2,7 @@ import { TinyHyperGraphSolver, type Candidate, type TinyHyperGraphProblem, type 
 import { TinyRegionCostMemo } from "../TinyRegionCostMemo"
 import { PackedIndexedCandidateHeap } from "../PackedIndexedCandidateHeap"
 import { neighborKernelBytes } from "./neighborKernelBytes"
+import { canTrustTinyNativeScopeChild, isTinyNativeFallbackRun, registerTinyScopedChild, type TinyNativeSynchronousScope } from "./TinyNativeSynchronousScope"
 
 const getDescriptor = Object.getOwnPropertyDescriptor
 const getPrototype = Object.getPrototypeOf
@@ -36,7 +37,7 @@ const MAX_BYTES = 512 * 1024 * 1024
 let compiledModule: WebAssembly.Module | undefined
 
 type MethodTable = ReadonlyArray<readonly [string, unknown]>
-type Provenance = { methods: MethodTable }
+type Provenance = { methods: MethodTable; scope?: TinyNativeSynchronousScope; excluded?: boolean }
 const ownedInputs = new WeakMap<TinyHyperGraphTopology, WeakMap<TinyHyperGraphProblem, Provenance>>()
 
 /** Inspect eligibility without invoking a public method or policy getter. */
@@ -69,10 +70,24 @@ export function captureTinyKernelFactoryMethods(prototype: object): MethodTable 
 /** Only the pipeline's native solveGraph parameter factory calls this hook. */
 export function registerOwnedTinyKernelInput(
   topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, methods: MethodTable,
+  scope?: TinyNativeSynchronousScope,
+  excluded = false,
 ): void {
   let problems = ownedInputs.get(topology)
   if (!problems) { problems = new WeakMap(); ownedInputs.set(topology, problems) }
-  problems.set(problem, { methods })
+  problems.set(problem, { methods, scope, excluded })
+}
+
+/** Resume an already constructed owned child inside a fresh closed solve. */
+export function attachOwnedTinyKernelScope(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem,
+  scope: TinyNativeSynchronousScope): void {
+  const provenance = ownedInputs.get(topology)?.get(problem)
+  if (provenance) provenance.scope = scope
+}
+
+export function excludeOwnedTinyKernelInput(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem): void {
+  const provenance = ownedInputs.get(topology)?.get(problem)
+  if (provenance) provenance.excluded = true
 }
 
 type KernelExports = {
@@ -121,6 +136,7 @@ export class TinyOrderedNeighborKernel {
   private lastSearchGeneration = -1
   private currentBestGeneration: number
   private disabled = false
+  private validatedScope?: TinyNativeSynchronousScope
 
   constructor(private readonly input: KernelInput, private readonly provenance: Provenance) {
     const { owner, ports, nextRegions, hops, offsets } = input
@@ -182,6 +198,7 @@ export class TinyOrderedNeighborKernel {
     this.positions = i32(13); this.distances = f64(14)
     this.batch = { positions: this.positions, distances: this.distances, count: 0 }
     this.diagnostics.bytes = cursor
+    if (provenance.scope) registerTinyScopedChild(provenance.scope, owner)
   }
 
   /** Mirror the native setter only; the source arrays remain authoritative. */
@@ -272,7 +289,20 @@ export class TinyOrderedNeighborKernel {
 
   scan(candidate: Candidate, searchGeneration: number, state: TinyHyperGraphSolver["state"],
     sourceX: number, sourceY: number): TinyOrderedNeighborBatch | undefined {
-    if (!this.eligible(state)) return undefined
+    if (isTinyNativeFallbackRun() || this.provenance.excluded || (this.provenance.scope?.paused && !this.provenance.scope.finished)) {
+      this.reject("unverified synchronous owner")
+      return undefined
+    }
+    const scope = this.provenance.scope
+    if (scope?.open) {
+      if (this.validatedScope !== scope) {
+        if (!this.eligible(state)) return undefined
+        if (canTrustTinyNativeScopeChild(scope, this.input.owner)) this.validatedScope = scope
+        else { this.reject("unverified synchronous child"); return undefined }
+      }
+      if (this.validatedScope === scope) scope.diagnostics.trustedBatches++
+      else if (!this.eligible(state)) return undefined
+    } else if (!this.eligible(state)) return undefined
     this.ensureBestGeneration(state.candidateBestCostGeneration)
     if (searchGeneration !== this.lastSearchGeneration || state.portAssignment !== this.assignedReference) {
       nativeApply(nativeTypedSet, this.assigned, [state.portAssignment])
@@ -302,7 +332,7 @@ export class TinyOrderedNeighborKernel {
 export function createTinyOrderedNeighborKernel(input: KernelInput): TinyOrderedNeighborKernel | undefined {
   const { owner, offsets, ports, nextRegions, hops } = input
   const provenance = ownedInputs.get(owner.topology)?.get(owner.problem)
-  if (!provenance || typeof WebAssembly === "undefined") return undefined
+  if (!provenance || provenance.excluded || isTinyNativeFallbackRun() || typeof WebAssembly === "undefined") return undefined
   const { topology, problem, state } = owner
   if (!(topology.portX instanceof Float64Array) || !(topology.portY instanceof Float64Array) ||
     !(problem.portSectionMask instanceof Int8Array) || !(problem.regionNetId instanceof Int32Array) ||

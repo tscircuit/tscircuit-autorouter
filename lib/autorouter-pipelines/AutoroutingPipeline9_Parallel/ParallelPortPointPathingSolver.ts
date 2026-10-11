@@ -1,5 +1,5 @@
 import { TinyHyperGraphSolver, type TinyHyperGraphSectionPipelineInput, type TinyHyperGraphTopology, type TinyHyperGraphProblem, type TinyHyperGraphSolverOptions } from "tiny-hypergraph/lib/index"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { TinyHypergraphPortPointPathingSolver, TinyHyperGraphSectionPipelineWithTerminalNetIds } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { TinyBitsetHyperGraphSolver } from "./TinyBitsetHyperGraphSolver"
 import { TinyBitsetSelectiveReripHyperGraphSolver } from "./TinyBitsetSelectiveReripHyperGraphSolver"
 import { TinyIndexedSelectiveReripHyperGraphSolver } from "./TinyIndexedSelectiveReripHyperGraphSolver"
@@ -9,9 +9,26 @@ import { TinyNegotiatedHyperGraphSolver } from "./TinyNegotiatedHyperGraphSolver
 import { TinyGoalBallSelectiveReripHyperGraphSolver } from "./TinyGoalBallSelectiveReripHyperGraphSolver"
 import type { ParallelStageWorkerPool } from "./parallelStageWorkerTypes"
 import { ParallelDuplicateCongestedPortSolver } from "./ParallelDuplicateCongestedPortSolver"
-import { captureTinyKernelFactoryMethods, registerOwnedTinyKernelInput } from "./pathingWasm/createTinyOrderedNeighborKernel"
+import { TinyOrderedNeighborKernel, attachOwnedTinyKernelScope, captureTinyKernelFactoryMethods, excludeOwnedTinyKernelInput, registerOwnedTinyKernelInput } from "./pathingWasm/createTinyOrderedNeighborKernel"
+import { beginTinyNativeSynchronousScope, captureTinyNativePrototypeContract, endTinyNativeSynchronousScope,
+  getTinyNativeSynchronousScope, getTinyNativeRunExclusion, setTinyNativeRunExclusion,
+  enterTinyNativeFallbackRun, leaveTinyNativeFallbackRun,
+  pauseTinyNativeSynchronousScope, registerTinyNativeScopePipeline, registerTinyNativeScopeRoot } from "./pathingWasm/TinyNativeSynchronousScope"
+import { getReferenceDrcProxyInspector } from "./authoritative-drc-fork/initializeReferenceDrcRuntime"
+import { CongestionAwareFinalRouteSolver } from "./tiny-hypergraph-fork/SelectiveReripTinyHyperGraphSolver"
+import { TinyRegionCostMemo } from "./TinyRegionCostMemo"
+import { TinyActiveIncidenceIndex } from "./TinyActiveIncidenceIndex"
+import { PackedIndexedCandidateHeap } from "./PackedIndexedCandidateHeap"
 
 const indexedKernelMethods = captureTinyKernelFactoryMethods(TinyIndexedSelectiveReripHyperGraphSolver.prototype)
+const nativePipelineContract = captureTinyNativePrototypeContract(TinyHyperGraphSectionPipelineWithTerminalNetIds.prototype)
+const nativeKernelContract = captureTinyNativePrototypeContract(TinyOrderedNeighborKernel.prototype)
+const nativeChildContracts = [captureTinyNativePrototypeContract(TinyIndexedSelectiveReripHyperGraphSolver.prototype),
+  captureTinyNativePrototypeContract(CongestionAwareFinalRouteSolver.prototype)]
+const nativeDataContracts = [captureTinyNativePrototypeContract(TinyRegionCostMemo.prototype),
+  captureTinyNativePrototypeContract(TinyActiveIncidenceIndex.prototype),
+  captureTinyNativePrototypeContract(PackedIndexedCandidateHeap.prototype)]
+const nativeDescriptor = Object.getOwnPropertyDescriptor
 
 export type Pipeline9PathingStrategy = "indexed" | "adaptive-bitset" | "cached-cost" | "landmark" | "negotiated" | "goal-balls"
 export type Pipeline9PathingOptions = { strategy?: Pipeline9PathingStrategy; workerPool?: ParallelStageWorkerPool }
@@ -52,6 +69,8 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     this.requiresAsyncExecution = this.pathingStrategy === "negotiated" ||
       ((this.pathingStrategy === "landmark" || this.pathingStrategy === "goal-balls") && this.workerPool !== undefined)
     this.configureTinyPipeline(this.createdTinyPipeline, this.pathingStrategy)
+    registerTinyNativeScopeRoot(this, nativeStageContract, nativePipelineContract, nativeChildContracts, nativeDataContracts, nativeKernelContract)
+    registerTinyNativeScopePipeline(this, this.createdTinyPipeline)
   }
 
   protected override createTinyPipeline(
@@ -60,7 +79,10 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
   ): TinyPipeline {
     const pipeline = super.createTinyPipeline(inputProblem, useSelectiveReripRouting)
     this.createdTinyPipeline = pipeline
-    if (this.pathingStrategy !== undefined) this.configureTinyPipeline(pipeline, this.pathingStrategy)
+    if (this.pathingStrategy !== undefined) {
+      this.configureTinyPipeline(pipeline, this.pathingStrategy)
+      registerTinyNativeScopePipeline(this, pipeline)
+    }
     return pipeline
   }
 
@@ -82,7 +104,9 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
           const nativeGetConstructorParams = solveGraphStep.getConstructorParams
           solveGraphStep.getConstructorParams = (pipeline) => {
             const params = nativeGetConstructorParams(pipeline)
-            registerOwnedTinyKernelInput(params[0], params[1], indexedKernelMethods)
+            const scope = getTinyNativeSynchronousScope(this)
+            registerOwnedTinyKernelInput(params[0], params[1], indexedKernelMethods, scope,
+              getTinyNativeRunExclusion(this) || scope?.open === false)
             return params
           }
           this.kernelFactories.add(solveGraphStep)
@@ -176,7 +200,16 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
       return
     }
     if (this.pathingStrategy !== "landmark") {
+      const scope = getTinyNativeSynchronousScope(this)
+      if (scope?.open) {
+        const child = this.createdTinyPipeline.getSolver<TinyHyperGraphSolver>("solveGraph")
+        if (child?.solved || child?.failed) pauseTinyNativeSynchronousScope(scope)
+      }
       super._step()
+      if (scope?.open) {
+        const child = this.createdTinyPipeline.getSolver<TinyHyperGraphSolver>("solveGraph")
+        if (child?.solved || child?.failed) pauseTinyNativeSynchronousScope(scope)
+      }
       return
     }
     this.prepareLandmarks(this.createdTinyPipeline)
@@ -189,7 +222,34 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
 
   override solve(): void {
     if (this.requiresAsyncExecution) throw new Error("Parallel pathing requires solveAsync() or awaiting pendingEffects")
-    super.solve()
+    const isProxy = getReferenceDrcProxyInspector()
+    const proxyRoot = isProxy?.(this) === true
+    const indexed = isProxy && !proxyRoot && nativeDescriptor(this, "pathingStrategy")?.value === "indexed"
+    const scope = indexed ? beginTinyNativeSynchronousScope(this) : undefined
+    const previousExclusion = getTinyNativeRunExclusion(this)
+    const excluded = isProxy !== undefined && !scope
+    setTinyNativeRunExclusion(this, excluded)
+    const fallback = excluded || proxyRoot
+    if (fallback) enterTinyNativeFallbackRun()
+    try {
+      // A declined scope must not add a getSolver call, trigger a shadowed
+      // getter, or reflect through a Proxy. Read only existing plain fields.
+      const pipeline = !proxyRoot && (scope || excluded) ? nativeDescriptor(this, "createdTinyPipeline")?.value : undefined
+      const child = pipeline && (!isProxy || !isProxy(pipeline)) ? nativeDescriptor(pipeline, "solveGraph")?.value : undefined
+      if (child) {
+        if (scope) attachOwnedTinyKernelScope(child.topology, child.problem, scope)
+        else if (excluded && isProxy && !isProxy(child)) {
+          const topology = nativeDescriptor(child, "topology")?.value
+          const problem = nativeDescriptor(child, "problem")?.value
+          if (topology && problem) excludeOwnedTinyKernelInput(topology, problem)
+        }
+      }
+      super.solve()
+    } finally {
+      endTinyNativeSynchronousScope(this, scope)
+      if (fallback) leaveTinyNativeFallbackRun()
+      setTinyNativeRunExclusion(this, previousExclusion)
+    }
   }
 
   async solveAsync(): Promise<void> {
@@ -201,3 +261,6 @@ export class ParallelPortPointPathingSolver extends TinyHypergraphPortPointPathi
     }
   }
 }
+
+// Capture before callers can alter the stage or any of its parent methods.
+const nativeStageContract = captureTinyNativePrototypeContract(ParallelPortPointPathingSolver.prototype)

@@ -9,6 +9,7 @@ import {
   type TinyHyperGraphTopology,
 } from "tiny-hypergraph/lib/core"
 import { OutsideInPartialRipTinyHyperGraphSolver } from "./OutsideInPartialRipTinyHyperGraphSolver"
+import { pauseTinyNativeScopeForChild } from "../pathingWasm/TinyNativeSynchronousScope"
 import {
   type DistinctOwnerBlockerSearchResult,
 } from "tiny-hypergraph/lib/find-distinct-owner-blocker-path"
@@ -205,8 +206,10 @@ export class SelectiveReripTinyHyperGraphSolver extends OutsideInPartialRipTinyH
     options: TinyHyperGraphSolverOptions,
     attempt: number,
   ): TinyHyperGraphSolver {
-    if (attempt >= 0)
+    if (attempt >= 0) {
+      pauseTinyNativeScopeForChild(this)
       return super.createGreedyFinalRouteSolver(options, attempt)
+    }
     // Finishing a congested board still needs route costs and blocker rerips.
     // Zero-cost greedy paths can complete the graph but overwhelm detailed routing.
     const solver = new CongestionAwareFinalRouteSolver(

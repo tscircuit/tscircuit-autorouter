@@ -9,6 +9,7 @@ import { TinyTriangularDistanceIndex } from "./TinyTriangularDistanceIndex"
 import { TinyRegionCostMemo, type TinyRegionCostMethod } from "./TinyRegionCostMemo"
 import { canRejectTinyDistanceByBase } from "./TinyConservativeAxisDistanceBound"
 import { createTinyOrderedNeighborKernel, type TinyOrderedNeighborKernel } from "./pathingWasm/createTinyOrderedNeighborKernel"
+import { registerTinyNativeCostBinding } from "./pathingWasm/TinyNativeSynchronousScope"
 
 const nativeSqrt = Math.sqrt
 
@@ -82,6 +83,7 @@ export class PackedDistanceAwareTinyHyperGraphSolver extends DistanceAwareTinyHy
     this.enableConservativeDistanceBound = options?.enableConservativeDistanceBound === true
     if (this.computeRegionCostForRegion === PackedDistanceAwareTinyHyperGraphSolver.prototype.computeRegionCostForRegion) {
       this.regionCostMemo = new TinyRegionCostMemo(this, nativeRegionCost.bind(this))
+      registerTinyNativeCostBinding(this.regionCostMemo)
     }
   }
 
