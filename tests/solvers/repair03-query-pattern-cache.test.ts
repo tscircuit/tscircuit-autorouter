@@ -243,9 +243,9 @@ test("query DRC patterns preserve ordered results and logical stats across candi
     expect(disabled.evaluate(traces)).toEqual(reference.evaluate(traces))
     expect(disabled.lastRunStats).toEqual(reference.lastRunStats)
     expect((disabled as unknown as CacheInternals).queryPatternUnits).toBe(0)
-    expect(
-      (disabled as unknown as CacheInternals).primitivePatternUnits,
-    ).toBe(0)
+    expect((disabled as unknown as CacheInternals).primitivePatternUnits).toBe(
+      0,
+    )
 
     for (const traceClearance of [0, 0.05, 0.5]) {
       const context = {
