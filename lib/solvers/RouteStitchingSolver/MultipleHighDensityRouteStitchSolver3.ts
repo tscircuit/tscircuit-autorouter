@@ -25,11 +25,44 @@ import {
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
 }
 
 type ConnectionName = string
+type PcbPortId = string
+type StitchTerminal = Point3 & { pcb_port_id?: PcbPortId }
+
+function keepTerminalTagsForRouteEndpoints({
+  hdRoutes,
+  start,
+  end,
+}: {
+  hdRoutes: HighDensityIntraNodeRoute[]
+  start: StitchTerminal
+  end: StitchTerminal
+}): HighDensityIntraNodeRoute[] {
+  const endpointPcbPortIds = new Set<PcbPortId>()
+  if (start.pcb_port_id) endpointPcbPortIds.add(start.pcb_port_id)
+  if (end.pcb_port_id) endpointPcbPortIds.add(end.pcb_port_id)
+
+  return hdRoutes.map((route) => {
+    const routeWithEndpointTags = { ...route }
+    if (
+      routeWithEndpointTags.startPcbPortId &&
+      !endpointPcbPortIds.has(routeWithEndpointTags.startPcbPortId)
+    ) {
+      delete routeWithEndpointTags.startPcbPortId
+    }
+    if (
+      routeWithEndpointTags.endPcbPortId &&
+      !endpointPcbPortIds.has(routeWithEndpointTags.endPcbPortId)
+    ) {
+      delete routeWithEndpointTags.endPcbPortId
+    }
+    return routeWithEndpointTags
+  })
+}
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -50,12 +83,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   private canStitchBetweenTerminals(params: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: StitchTerminal
+    end: StitchTerminal
   }) {
+    const hdRoutes = keepTerminalTagsForRouteEndpoints(params)
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
-      hdRoutes: params.hdRoutes,
+      hdRoutes,
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
@@ -133,7 +167,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return keepTerminalTagsForRouteEndpoints({
+      hdRoutes: pathRoutes,
+      start: params.start,
+      end: params.end,
+    })
   }
 
   constructor(params: {
