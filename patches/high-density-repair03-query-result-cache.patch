@@ -350,3 +350,200 @@ diff --git a/lib/drc/AutoroutingDrcEngine.ts b/lib/drc/AutoroutingDrcEngine.ts
        }
      }
  
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
+@@ -185,6 +185,7 @@
+   readonly viaHoleDiameter?: number
+   readonly configuredMaxIterations?: number
+   readonly enableBroadFallback: boolean
++  readonly enableBroadProposalCache: boolean
+   readonly enableLargeBoardBroadFallback: boolean
+   readonly enableTargetedErrorSweep: boolean
+   readonly enablePostSolveClearanceRelaxation: boolean
+@@ -224,6 +225,20 @@
+     count: number
+   }
+   private inputSnapshot?: DrcSnapshot
++  private static readonly nativeGetSnapshot =
++    GlobalDrcForceImproveSolver.prototype.getSnapshot
++  private readonly canCacheBroadProposals: boolean
++  private broadProposalCache?: {
++    bestRoutes: HighDensityRoute[]
++    srj: SimpleRouteJson
++    connMap?: ConnectivityMap
++    effort: number
++    allowSameNetViaPairs: boolean
++    proposals: [
++      HighDensityRoute[] | null | undefined,
++      HighDensityRoute[] | null | undefined,
++    ]
++  }
+ 
+   constructor(params: GlobalDrcForceImproveSolverParams) {
+     super()
+@@ -234,8 +249,9 @@
+     this.effort = params.effort ?? 1
+     this.drcEvaluator = params.drcEvaluator
+     this.referenceDrcEvaluator = params.referenceDrcEvaluator
++    const suppliedAutoroutingDrcEngine = params.autoroutingDrcEngine
+     this.autoroutingDrcEngine =
+-      params.autoroutingDrcEngine ??
++      suppliedAutoroutingDrcEngine ??
+       (params.drcEvaluator
+         ? undefined
+         : new AutoroutingDrcEngine(params.srj, {
+@@ -275,6 +291,12 @@
+     }
+     this.MAX_ITERATIONS =
+       this.configuredMaxIterations ?? getBaseMaxIterations(this.effort)
++    this.enableBroadProposalCache = params.enableBroadProposalCache ?? false
++    this.canCacheBroadProposals =
++      this.enableBroadProposalCache &&
++      this.drcEvaluator === undefined &&
++      this.referenceDrcEvaluator === undefined &&
++      suppliedAutoroutingDrcEngine === undefined
+   }
+ 
+   override getConstructorParams() {
+@@ -290,6 +312,7 @@
+         viaHoleDiameter: this.viaHoleDiameter,
+         maxIterations: this.configuredMaxIterations,
+         enableBroadFallback: this.enableBroadFallback,
++        enableBroadProposalCache: this.enableBroadProposalCache,
+         enableLargeBoardBroadFallback: this.enableLargeBoardBroadFallback,
+         enableTargetedErrorSweep: this.enableTargetedErrorSweep,
+         enablePostSolveClearanceRelaxation:
+@@ -332,6 +355,7 @@
+   }
+ 
+   private finishAtLegacyCleanCheckpoint() {
++    this.broadProposalCache = undefined
+     const checkpoint = this.legacyCleanCheckpoint
+     if (!checkpoint) return false
+     this.outputHdRoutes = checkpoint.routes
+@@ -368,6 +392,69 @@
+     )
+   }
+ 
++  private getBroadCandidateRoutes(
++    bestRoutes: HighDensityRoute[],
++    passMultiplier: number,
++  ): HighDensityRoute[] {
++    if (
++      !this.canCacheBroadProposals ||
++      this.getSnapshot !== GlobalDrcForceImproveSolver.nativeGetSnapshot ||
++      this.drcEvaluator !== undefined ||
++      this.referenceDrcEvaluator !== undefined ||
++      (passMultiplier !== 1 && passMultiplier !== 2)
++    ) {
++      return applyBroadRepulsionForces(
++        this.srj,
++        bestRoutes,
++        this.effort,
++        passMultiplier,
++        this.connMap,
++        this.drcEvaluator === undefined,
++        false,
++      )
++    }
++
++    const srj = this.srj
++    const effort = this.effort
++    const connMap = this.connMap
++    const allowSameNetViaPairs = this.drcEvaluator === undefined
++    let cache = this.broadProposalCache
++    if (
++      !cache ||
++      cache.bestRoutes !== bestRoutes ||
++      cache.srj !== srj ||
++      cache.connMap !== connMap ||
++      !Object.is(cache.effort, effort) ||
++      cache.allowSameNetViaPairs !== allowSameNetViaPairs
++    ) {
++      cache = this.broadProposalCache = {
++        bestRoutes,
++        srj,
++        connMap,
++        effort,
++        allowSameNetViaPairs,
++        proposals: [undefined, undefined],
++      }
++    }
++    const index = passMultiplier === 1 ? 0 : 1
++    const cached = cache.proposals[index]
++    if (cached !== undefined) {
++      return cached === null ? bestRoutes : cloneRoutes(cached)
++    }
++    const proposal = applyBroadRepulsionForces(
++      srj,
++      bestRoutes,
++      effort,
++      passMultiplier,
++      connMap,
++      allowSameNetViaPairs,
++      false,
++    )
++    // Snapshot evaluation receives its own proposal, never the saved template.
++    cache.proposals[index] = proposal === bestRoutes ? null : cloneRoutes(proposal)
++    return proposal
++  }
++
+   private getReferenceDrcSnapshot(routes: HighDensityRoute[]) {
+     const evaluatorInput = {
+       traces: [],
+@@ -408,6 +495,7 @@
+     routes: HighDensityRoute[],
+     snapshot: DrcSnapshot,
+   ) {
++    this.broadProposalCache = undefined
+     const traceRelaxedRoutes = this.enablePostSolveClearanceRelaxation
+       ? applyTraceToPadClearanceRelaxation(this.srj, routes, this.connMap)
+       : routes
+@@ -1454,17 +1542,9 @@
+       attemptedPeriodicLargeBoardBroadFallback =
+         shouldTryPeriodicLargeBoardBroadFallback
+       for (const passMultiplier of [1, EXTENDED_BROAD_FORCE_PASS_MULTIPLIER]) {
+-        const broadCandidateRoutes = applyBroadRepulsionForces(
+-          this.srj,
++        const broadCandidateRoutes = this.getBroadCandidateRoutes(
+           bestRoutes,
+-          this.effort,
+           passMultiplier,
+-          this.connMap,
+-          this.drcEvaluator === undefined,
+-          // This is a speculative candidate and is DRC-evaluated immediately.
+-          // Final cleanup here can perturb branch selection and trigger another
+-          // expensive broad attempt; direct/final broad outputs still clean up.
+-          false,
+         )
+         if (broadCandidateRoutes === bestRoutes) continue
+         const broadCandidateSnapshot = this.getSnapshot(broadCandidateRoutes)
+@@ -1506,6 +1586,9 @@
+ 
+     this.outputHdRoutes = bestRoutes
+     this.outputSnapshot = bestSnapshot
++    if (this.broadProposalCache?.bestRoutes !== bestRoutes) {
++      this.broadProposalCache = undefined
++    }
+     this.stalledIterations = acceptedCandidate ? 0 : this.stalledIterations + 1
+     if (!tracePairDetourAttemptedThisStep) {
+       this.updateDrcCountPlateauState(bestSnapshot)
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/types.ts b/lib/solvers/GlobalDrcForceImproveSolver/types.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/types.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/types.ts
+@@ -66,6 +66,14 @@
+    * candidate after targeted candidates fail. Defaults to true.
+    */
+   enableBroadFallback?: boolean
++  /**
++   * Reuse deterministic broad proposals while the accepted route array is
++   * unchanged. Defaults to false. Opt in only with ordinary, immutable route
++   * metadata, SRJ and connectivity for this solver's lifetime; callers must
++   * not mutate accepted route geometry in place. Custom evaluators, engines
++   * and snapshot overrides retain uncached behavior.
++   */
++  enableBroadProposalCache?: boolean
+   enableLargeBoardBroadFallback?: boolean
+   enableTargetedErrorSweep?: boolean
+   enablePostSolveClearanceRelaxation?: boolean
