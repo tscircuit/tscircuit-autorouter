@@ -13,4 +13,4 @@ test("LM251772EVM-PD minimal variant stitches shared-root terminals", () => {
     danglingTraceMessages: [],
     nonContiguousTraceMessages: [],
   })
-}, 30_000)
+})
