@@ -25,34 +25,58 @@ export const findDependencyPatchChanges = (
   // Disable rename detection so moving a patch cannot bypass the policy.
   // Deletions are allowed, as are existing patches that remain unchanged.
   const changedFiles = git([
-    "diff", "--no-ext-diff", "--no-renames", "--name-only",
-    "--diff-filter=ACMT", "-z", baseSha, headSha, "--",
-  ]).split("\0").filter(Boolean)
+    "diff",
+    "--no-ext-diff",
+    "--no-renames",
+    "--name-only",
+    "--diff-filter=ACMT",
+    "-z",
+    baseSha,
+    headSha,
+    "--",
+  ])
+    .split("\0")
+    .filter(Boolean)
   const baseFiles = new Set(
     git(["ls-tree", "-r", "--name-only", "-z", baseSha])
-      .split("\0").filter(Boolean),
+      .split("\0")
+      .filter(Boolean),
   )
   const findings: string[] = []
 
   for (const file of changedFiles) {
-    if (/\.patch$/i.test(file) || /(^|\/)(patches|\.yarn\/patches)\//.test(file)) {
+    if (
+      /\.patch$/i.test(file) ||
+      /(^|\/)(patches|\.yarn\/patches)\//.test(file)
+    ) {
       findings.push(`${file}: added or modified patch file`)
     }
     if (!/(^|\/)package\.json$/.test(file)) continue
 
-    const head: PackageManifest = JSON.parse(git(["show", `${headSha}:${file}`]))
+    const head: PackageManifest = JSON.parse(
+      git(["show", `${headSha}:${file}`]),
+    )
     const base: PackageManifest = baseFiles.has(file)
       ? JSON.parse(git(["show", `${baseSha}:${file}`]))
       : {}
     const patchMaps = [
-      ["patchedDependencies", base.patchedDependencies, head.patchedDependencies],
-      ["pnpm.patchedDependencies", base.pnpm?.patchedDependencies, head.pnpm?.patchedDependencies],
+      [
+        "patchedDependencies",
+        base.patchedDependencies,
+        head.patchedDependencies,
+      ],
+      [
+        "pnpm.patchedDependencies",
+        base.pnpm?.patchedDependencies,
+        head.pnpm?.patchedDependencies,
+      ],
     ] as const
     for (const [field, before, after] of patchMaps) {
       if (!after) continue
       for (const [dependency, patch] of Object.entries(after)) {
         if (
-          !before || !Object.hasOwn(before, dependency) ||
+          !before ||
+          !Object.hasOwn(before, dependency) ||
           JSON.stringify(before[dependency]) !== JSON.stringify(patch)
         ) {
           findings.push(`${file}: ${field}[${dependency}] was added or changed`)
@@ -72,7 +96,9 @@ const main = (): void => {
   }
   const findings = findDependencyPatchChanges(baseSha, headSha)
   if (findings.length > 0) {
-    console.error(`::error title=Dependency patches are not allowed::${POLICY_MESSAGE}`)
+    console.error(
+      `::error title=Dependency patches are not allowed::${POLICY_MESSAGE}`,
+    )
     for (const finding of findings) console.error(finding)
     process.exit(1)
   }
