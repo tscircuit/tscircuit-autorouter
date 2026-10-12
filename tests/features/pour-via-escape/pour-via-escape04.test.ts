@@ -41,6 +41,22 @@ test("pour-via-escape04.json", () => {
     }).errors,
   ).toHaveLength(0)
 
+  const longSignalRoute = solver.exactGeometryDrcForceImproveSolver!
+    .getOutput()
+    .find((route) => route.startPcbPortId === "pcb_port_17")!
+  const minimumStraightRunLength = 8
+  expect(
+    longSignalRoute.route.some((point, index) => {
+      const previous = longSignalRoute.route[index - 1]
+      if (!previous) return false
+      return (
+        point.z === previous.z &&
+        point.y === previous.y &&
+        Math.abs(point.x - previous.x) > minimumStraightRunLength
+      )
+    }),
+  ).toBe(true)
+
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

@@ -25,7 +25,7 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
   expect(pipeline.failed).toBe(false)
 
   const srj = pipeline.srjWithPointPairs as SimpleRouteJson
-  const inputRoutes = pipeline.globalDrcForceImproveSolver!.getOutput()
+  const inputRoutes = pipeline.repairedTraceSimplificationSolver!.simplifiedHdRoutes
   const conversionOptions = {
     connections: pipeline.netToPointPairsSolver?.newConnections ?? [],
     originalConnections: pipeline.originalSrj.connections,
