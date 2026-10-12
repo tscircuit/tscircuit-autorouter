@@ -65,7 +65,8 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver, MultiSimplifiedPathSolver } from "@tscircuit/trace-simplification-solver"
+import { RepairedTraceSimplificationSolver } from "lib/solvers/RepairedTraceSimplificationSolver"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
@@ -232,7 +233,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  repairedTraceSimplificationSolver?: MultiSimplifiedPathSolver
+  repairedTraceSimplificationSolver?: RepairedTraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -631,7 +632,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
-          enableVertexShortcuts: true,
           useTraceWidthAwareClearance: true,
           iterations: 2,
         },
@@ -669,7 +669,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "repairedTraceSimplificationSolver",
-      MultiSimplifiedPathSolver,
+      RepairedTraceSimplificationSolver,
       (cms) => [
         {
           unsimplifiedHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
@@ -677,10 +677,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           colorMap: cms.colorMap,
           outline: cms.srj.outline,
-          defaultViaDiameter: cms.viaDiameter,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           useTraceWidthAwareClearance: true,
-          enableVertexShortcuts: true,
         },
       ],
     ),
