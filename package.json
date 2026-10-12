@@ -70,7 +70,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "bun-match-svg": "^0.0.14",
     "circuit-json-to-connectivity-map": "https://pkg.pr.new/tscircuit/circuit-json-to-connectivity-map@14dfa66",
-    "circuit-json": "^0.0.506",
+    "circuit-json": "^0.0.525",
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
@@ -104,7 +104,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/64bc8a1d5a1af753f1043092ffa9ec820ed14d4e",
-    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/4a1600e6f2c12f3c197a6991bea998c7bacd605f",
+    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/79c9b022a678b1f0289059962bf49f253310a5dc",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
