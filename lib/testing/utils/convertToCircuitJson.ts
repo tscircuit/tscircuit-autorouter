@@ -1,3 +1,4 @@
+import { cju } from "@tscircuit/circuit-json-util"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
@@ -448,6 +449,8 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
+          // A pour's bounds do not establish logical net membership.
+          if (obstacle.isCopperPour) continue
           if (pointToBoxDistance(endpoint, obstacle) <= 0) {
             obstaclesContainingEndpoints.push(obstacle)
           }
@@ -1044,6 +1047,55 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   }
 }
 
+function addCopperPours(
+  circuitJson: AnyCircuitElement[],
+  srj: SimpleRouteJson,
+): void {
+  const pours = srj.obstacles.filter((obstacle) => obstacle.isCopperPour)
+  if (pours.length === 0) return
+
+  const db = cju(circuitJson)
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  for (const pour of pours) {
+    const netId = pour.connectedTo
+      .map((id) => connMap.getNetConnectedToId(id))
+      .find((id) => id !== undefined)
+    if (!netId) continue
+
+    if (!db.source_net.get(netId)) {
+      circuitJson.push({
+        type: "source_net",
+        source_net_id: netId,
+        name: netId,
+        member_source_group_ids: [],
+      })
+    }
+    for (const connection of srj.connections) {
+      if (connMap.getNetConnectedToId(connection.name) !== netId) continue
+      const sourceTrace = db.source_trace.get(
+        getCircuitJsonSourceTraceId(connection),
+      )
+      if (!sourceTrace) continue
+      if (!sourceTrace.connected_source_net_ids.includes(netId)) {
+        sourceTrace.connected_source_net_ids.push(netId)
+      }
+    }
+    for (const layer of pour.layers) {
+      if (!isLayerName(layer)) continue
+      db.pcb_copper_pour.insert({
+        shape: "rect",
+        layer,
+        source_net_id: netId,
+        center: pour.center,
+        width: pour.width,
+        height: pour.height,
+        rotation: pour.ccwRotationDegrees,
+        covered_with_solder_mask: true,
+      })
+    }
+  }
+}
+
 export function convertToCircuitJson(
   srjWithPointPairs: SimpleRouteJson,
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
@@ -1094,6 +1146,7 @@ export function convertToCircuitJson(
 
   // Add PCB pads / plated holes represented by SRJ obstacles
   circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
+  addCopperPours(circuitJson, originalSrj ?? srjWithPointPairs)
 
   // Extract and add vias as independent pcb_via elements
   circuitJson.push(
