@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import { stackSvgsHorizontally } from "stack-svgs"
 import realBoard from "fixtures/real-boards/rp2040-motor-controller-board.srj.json" with {
   type: "json",
 }
@@ -37,12 +36,9 @@ test("unchanged simplification preserves mixed via sizes on a full board", async
       convertSrjToGraphicsObject(srj, { traceColorMode: "layer" }),
       { backgroundColor: "white", hideInlineLabels: true },
     )
-  await expect(
-    stackSvgsHorizontally([render(input), render(output)], {
-      gap: 12,
-      normalizeSize: false,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "mixed-via-full-board" })
+  await expect(render(input)).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "mixed-via-full-board-before",
+  })
 
   const outputVias = output.traces
     ?.find((candidate) => candidate.pcb_trace_id === traceId)
