@@ -721,6 +721,38 @@ export class EscapeViaLocationSolver extends BaseSolver {
         sourceLayer,
         connectionNetIds,
       })
+    // Adjacent pads can share a clear drill instead of adding another barrier.
+    for (const escapeVia of this.createdEscapeVias) {
+      if (this.ogSrj.allowBlindAndBuriedVias === true) continue
+      const targetZ = mapLayerNameToZ(
+        escapeVia.targetLayer,
+        this.ogSrj.layerCount,
+      )
+      if (Math.abs(targetZ - sourceZ) === this.ogSrj.layerCount - 1) continue
+      if (escapeVia.connectionName !== connection.name) continue
+      if (escapeVia.sourceLayer !== sourceLayer) continue
+      if (!sourceObstacle) continue
+      const viaSourcePoint =
+        connection.pointsToConnect[escapeVia.sourcePointIndex]
+      if (!viaSourcePoint)
+        throw new Error("Escape via lost its source terminal")
+      if (isPointInRect(viaSourcePoint, sourceObstacle)) continue
+      if (
+        distance(point, escapeVia) >
+        this.requiredViaToViaClearance + this.escapeOffset
+      )
+        continue
+      if (
+        !this.hasClearEscapePath({
+          sourcePoint: point,
+          candidate: escapeVia,
+          sourceLayer,
+          sourceObstacle,
+        })
+      )
+        continue
+      return { ...escapeVia, score: Number.POSITIVE_INFINITY }
+    }
     const candidates = this.getCandidatePositions(point, sourceObstacle)
 
     let bestCandidate: EscapeViaCandidate | null = null
