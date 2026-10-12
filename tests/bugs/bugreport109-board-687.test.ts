@@ -15,18 +15,25 @@ test("bugreport109-board-687", async (): Promise<void> => {
 
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
+  // Native routing produces different geometry on Linux and macOS.
+  let snapshotPath = import.meta.path
+  let expectedDrcCount = 7
+  if (process.platform === "linux") {
+    snapshotPath = import.meta.path.replace(".test.ts", "-linux.test.ts")
+    expectedDrcCount = 9
+  }
   expect(
     evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces: solver.getOutputSimplifiedPcbTraces(),
     }).errors,
-  ).toHaveLength(7)
+  ).toHaveLength(expectedDrcCount)
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces: solver.getOutputSimplifiedPcbTraces(),
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  ).toMatchSvgSnapshot(snapshotPath)
 })
