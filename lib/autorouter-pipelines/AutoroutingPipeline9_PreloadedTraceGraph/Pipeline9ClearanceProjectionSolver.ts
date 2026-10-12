@@ -178,7 +178,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           routes: state.candidate,
         }).length > 0
       ) {
-        this.state = { phase: "finished", output: params.routes }
+        this.state = {
+          phase: "finished",
+          output:
+            params.previousRoutes === undefined
+              ? params.routes
+              : originalCanonicalRoutes,
+        }
         this.solved = true
         return
       }
@@ -198,7 +204,11 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       : candidateErrors.length < errors.length
     this.state = {
       phase: "finished",
-      output: canPublish ? state.candidate : params.routes,
+      output: canPublish
+        ? state.candidate
+        : params.previousRoutes === undefined
+          ? params.routes
+          : originalCanonicalRoutes,
     }
     this.solved = true
   }

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
+import { canonicalizePipeline9HdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/canonicalizePipeline9HdRoutes"
 import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -99,13 +100,21 @@ const renderTransition = (route: HighDensityRoute): string => {
     lines: route.route.slice(1).map((point, index) => {
       const previous = route.route[index]!
       const isLayerTransition = previous.z !== point.z
+      const isDisplacedLayerTransition =
+        isLayerTransition && (previous.x !== point.x || previous.y !== point.y)
       return {
         points: [previous, point],
-        strokeColor: isLayerTransition ? "#ef4444" : "#22c55e",
+        strokeColor: isDisplacedLayerTransition
+          ? "#ef4444"
+          : isLayerTransition
+            ? "#a855f7"
+            : "#22c55e",
         strokeWidth: 0.00003,
-        label: isLayerTransition
+        label: isDisplacedLayerTransition
           ? "layer transition endpoints differ"
-          : `z${point.z} planar lead`,
+          : isLayerTransition
+            ? "co-located layer transition"
+            : `z${point.z} planar lead`,
       }
     }),
     circles: route.route.slice(1).flatMap((point, index) => {
@@ -131,10 +140,11 @@ const renderTransition = (route: HighDensityRoute): string => {
   })
 }
 
-test("PMP22650 projection fallback exposes displaced J34.5 via endpoint", async () => {
+test("PMP22650 projection fallback preserves exact J34.5 via continuity", async () => {
   const solver = new Pipeline9ClearanceProjectionSolver({
     originalSrj,
     routes,
+    previousRoutes: canonicalizePipeline9HdRoutes(routes),
     drcEvaluator: () => [
       {
         type: "pcb_trace_error",
@@ -146,13 +156,21 @@ test("PMP22650 projection fallback exposes displaced J34.5 via endpoint", async 
 
   expect(solver.failed).toBe(false)
   const outputRoute = solver.getOutput()[0]!
-  expect(outputRoute.route).toEqual(routes[0]!.route)
   expect(
-    Math.hypot(
-      outputRoute.route[0]!.x - outputRoute.route[1]!.x,
-      outputRoute.route[0]!.y - outputRoute.route[1]!.y,
-    ),
-  ).toBeGreaterThan(0)
+    outputRoute.route.filter((point, index) => {
+      const previous = outputRoute.route[index - 1]
+      return (
+        previous !== undefined &&
+        previous.z !== point.z &&
+        (previous.x !== point.x || previous.y !== point.y)
+      )
+    }),
+  ).toHaveLength(0)
+  expect(outputRoute.route).toEqual([
+    routes[0]!.route[0],
+    { ...port, z: 3 },
+    routes[0]!.route[1],
+  ])
   await expect(renderTransition(outputRoute)).toMatchSvgSnapshot(
     import.meta.path,
   )
