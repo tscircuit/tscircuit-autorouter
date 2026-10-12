@@ -44,6 +44,16 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   return reversed
 }
 
+const getRouteEndpointForPcbPort = (
+  route: HighDensityIntraNodeRoute,
+  pcbPortId: string | undefined,
+): RoutePoint | undefined => {
+  if (pcbPortId === undefined) return undefined
+  if (route.startPcbPortId === pcbPortId) return route.route[0]
+  if (route.endPcbPortId === pcbPortId) return route.route.at(-1)
+  return undefined
+}
+
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "SingleHighDensityRouteStitchSolver3"
@@ -180,46 +190,67 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
-    let bestDist = Infinity
-    let firstRoute = canonicalHdRoutes[0]
-    let orientation: "start-to-end" | "end-to-start" = "start-to-end"
+    const startTerminalRoute = canonicalHdRoutes.find((route) =>
+      getRouteEndpointForPcbPort(route, opts.start.pcb_port_id),
+    )
+    const endTerminalRoute = canonicalHdRoutes.find((route) =>
+      getRouteEndpointForPcbPort(route, opts.end.pcb_port_id),
+    )
+    let firstRoute =
+      startTerminalRoute ?? endTerminalRoute ?? canonicalHdRoutes[0]
+    let orientation: "start-to-end" | "end-to-start" = startTerminalRoute
+      ? "start-to-end"
+      : endTerminalRoute
+        ? "end-to-start"
+        : "start-to-end"
+    let closestFirstRoutePoint = getRouteEndpointForPcbPort(
+      firstRoute,
+      startTerminalRoute
+        ? opts.start.pcb_port_id
+        : endTerminalRoute
+          ? opts.end.pcb_port_id
+          : undefined,
+    )
 
-    for (const route of canonicalHdRoutes) {
-      const firstPoint = route.route[0]
-      const lastPoint = route.route[route.route.length - 1]
+    if (!closestFirstRoutePoint) {
+      let bestDist = Infinity
+      for (const route of canonicalHdRoutes) {
+        const firstPoint = route.route[0]
+        const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+        const distStartToFirst = distance(opts.start, firstPoint)
+        const distStartToLast = distance(opts.start, lastPoint)
+        const distEndToFirst = distance(opts.end, firstPoint)
+        const distEndToLast = distance(opts.end, lastPoint)
 
-      const minDist = Math.min(
-        distStartToFirst,
-        distStartToLast,
-        distEndToFirst,
-        distEndToLast,
-      )
+        const minDist = Math.min(
+          distStartToFirst,
+          distStartToLast,
+          distEndToFirst,
+          distEndToLast,
+        )
 
-      if (
-        minDist < bestDist - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(minDist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
-          compareRoutes(route, firstRoute!) < 0)
-      ) {
-        bestDist = minDist
-        firstRoute = route
         if (
-          Math.min(distEndToFirst, distEndToLast) <
-            Math.min(distStartToFirst, distStartToLast) -
-              DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(
-            Math.min(distEndToFirst, distEndToLast) -
-              Math.min(distStartToFirst, distStartToLast),
-          ) <= DISTANCE_TIE_TOLERANCE &&
-            comparePoints(opts.end, opts.start) < 0)
+          minDist < bestDist - DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(minDist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
+            compareRoutes(route, firstRoute) < 0)
         ) {
-          orientation = "end-to-start"
-        } else {
-          orientation = "start-to-end"
+          bestDist = minDist
+          firstRoute = route
+          if (
+            Math.min(distEndToFirst, distEndToLast) <
+              Math.min(distStartToFirst, distStartToLast) -
+                DISTANCE_TIE_TOLERANCE ||
+            (Math.abs(
+              Math.min(distEndToFirst, distEndToLast) -
+                Math.min(distStartToFirst, distStartToLast),
+            ) <= DISTANCE_TIE_TOLERANCE &&
+              comparePoints(opts.end, opts.start) < 0)
+          ) {
+            orientation = "end-to-start"
+          } else {
+            orientation = "start-to-end"
+          }
         }
       }
     }
@@ -234,19 +265,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
-        ? firstRouteFirstPoint
-        : firstRouteLastPoint
+    if (!closestFirstRoutePoint) {
+      const distToFirst = distance(this.start, firstRouteFirstPoint)
+      const distToLast = distance(this.start, firstRouteLastPoint)
+      closestFirstRoutePoint =
+        distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
+          comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+          ? firstRouteFirstPoint
+          : firstRouteLastPoint
+    }
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
     if (
+      opts.preserveTerminalPcbPortIds &&
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
