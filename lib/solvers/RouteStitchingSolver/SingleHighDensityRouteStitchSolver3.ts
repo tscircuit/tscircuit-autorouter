@@ -19,6 +19,10 @@ const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
+type TaggedRouteEndpoint = {
+  route: HighDensityIntraNodeRoute
+  point: RoutePoint
+}
 export type StitchClearanceMode = "require_clear" | "prefer_clear"
 export {
   MAX_STITCH_GAP_DISTANCE_3,
@@ -42,6 +46,24 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   }
 
   return reversed
+}
+
+const getRouteEndpointForPcbPortId = (
+  hdRoutes: HighDensityIntraNodeRoute[],
+  pcbPortId: StitchTerminal["pcb_port_id"],
+): TaggedRouteEndpoint | undefined => {
+  if (!pcbPortId) return undefined
+
+  for (const route of hdRoutes) {
+    if (route.startPcbPortId === pcbPortId) {
+      return { route, point: route.route[0]! }
+    }
+    if (route.endPcbPortId === pcbPortId) {
+      return { route, point: route.route[route.route.length - 1]! }
+    }
+  }
+
+  return undefined
 }
 
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -224,6 +246,20 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
+    const startRouteEndpoint = opts.preserveTerminalPcbPortIds
+      ? getRouteEndpointForPcbPortId(canonicalHdRoutes, opts.start.pcb_port_id)
+      : undefined
+    const endRouteEndpoint = opts.preserveTerminalPcbPortIds
+      ? getRouteEndpointForPcbPortId(canonicalHdRoutes, opts.end.pcb_port_id)
+      : undefined
+    if (startRouteEndpoint) {
+      firstRoute = startRouteEndpoint.route
+      orientation = "start-to-end"
+    } else if (endRouteEndpoint) {
+      firstRoute = endRouteEndpoint.route
+      orientation = "end-to-start"
+    }
+
     if (orientation === "start-to-end") {
       this.start = opts.start
       this.end = opts.end
@@ -236,17 +272,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
+    const taggedFirstRouteEndpoint = opts.preserveTerminalPcbPortIds
+      ? getRouteEndpointForPcbPortId([firstRoute], this.start.pcb_port_id)
+      : undefined
     const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
+      taggedFirstRouteEndpoint?.point ??
+      (distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
         ? firstRouteFirstPoint
-        : firstRouteLastPoint
+        : firstRouteLastPoint)
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
     if (
+      opts.preserveTerminalPcbPortIds &&
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
