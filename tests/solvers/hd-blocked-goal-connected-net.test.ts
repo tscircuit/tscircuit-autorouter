@@ -1,8 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import {
-  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver,
-} from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver } from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("allows a connected route to share the goal", () => {
   const routes: Array<RouteSolver["solvedPath"]> = []

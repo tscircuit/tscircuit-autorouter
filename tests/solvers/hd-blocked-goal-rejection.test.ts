@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver,
-} from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver } from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("rejects an unreachable goal before exploring either layer", () => {
   const solver = new RouteSolver({

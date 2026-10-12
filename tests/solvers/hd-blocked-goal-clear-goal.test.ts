@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver,
-} from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver } from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("preserves the route when the goal clears a same-layer obstacle", () => {
   const routes: Array<RouteSolver["solvedPath"]> = []

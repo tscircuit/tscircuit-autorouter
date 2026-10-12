@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
-import {
-  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver,
-} from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as RouteSolver } from "../../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("keeps the existing search when goal rejection is not enabled", () => {
   const solver = new RouteSolver({
