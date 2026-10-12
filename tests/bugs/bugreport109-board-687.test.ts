@@ -21,7 +21,7 @@ test("bugreport109-board-687", async (): Promise<void> => {
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces: solver.getOutputSimplifiedPcbTraces(),
     }).errors,
-  ).toHaveLength(7)
+  ).toHaveLength(2)
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: srj,

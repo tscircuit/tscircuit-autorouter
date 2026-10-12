@@ -164,8 +164,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
   } {
     const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-    const minZ = Math.min(sourceZ, targetZ)
-    const maxZ = Math.max(sourceZ, targetZ)
+    let minZ = 0
+    let maxZ = this.ogSrj.layerCount - 1
+    if (this.ogSrj.allowBlindAndBuriedVias === true) {
+      minZ = Math.min(sourceZ, targetZ)
+      maxZ = Math.max(sourceZ, targetZ)
+    }
     const zLayers = Array.from(
       { length: maxZ - minZ + 1 },
       (_, index) => minZ + index,
@@ -598,8 +602,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
     targetZ: number
   }): number {
     const { candidate, connectionNetIds, sourceZ, targetZ } = params
-    const spanMinZ = Math.min(sourceZ, targetZ)
-    const spanMaxZ = Math.max(sourceZ, targetZ)
+    let spanMinZ = 0
+    let spanMaxZ = this.ogSrj.layerCount - 1
+    if (this.ogSrj.allowBlindAndBuriedVias === true) {
+      spanMinZ = Math.min(sourceZ, targetZ)
+      spanMaxZ = Math.max(sourceZ, targetZ)
+    }
     let minClearance = Number.POSITIVE_INFINITY
 
     for (const obstacle of this.ogSrj.obstacles) {
