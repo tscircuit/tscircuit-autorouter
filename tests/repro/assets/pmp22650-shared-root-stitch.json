@@ -1,0 +1,164 @@
+{
+  "connections": [
+    {
+      "name": "source_net_altium_pcb_385_mst158",
+      "nominalTraceWidth": 0.254,
+      "width": 0.254,
+      "pointsToConnect": [
+        {
+          "x": 146.20239999999998,
+          "y": 81.26100079999999,
+          "layer": "top",
+          "pointId": "pcb_port_altium_6973",
+          "pcb_port_id": "pcb_port_altium_6973",
+          "port_selector": "C164.1"
+        },
+        {
+          "x": 146.3294,
+          "y": 84.92179866,
+          "layer": "top",
+          "pointId": "pcb_port_altium_6969",
+          "pcb_port_id": "pcb_port_altium_6969",
+          "port_selector": "C162.2"
+        }
+      ],
+      "__rootConnectionNames": ["source_net_altium_pcb_385"]
+    },
+    {
+      "name": "source_net_altium_pcb_385_mst171",
+      "nominalTraceWidth": 0.254,
+      "width": 0.254,
+      "pointsToConnect": [
+        {
+          "x": 144.71139968,
+          "y": 84.9249,
+          "layer": "top",
+          "pointId": "pcb_port_altium_6346",
+          "pcb_port_id": "pcb_port_altium_6346",
+          "port_selector": "U36.15"
+        },
+        {
+          "x": 148.90185612,
+          "y": 84.68371176,
+          "layer": "top",
+          "pointId": "pcb_port_altium_6439",
+          "pcb_port_id": "pcb_port_altium_6439",
+          "port_selector": "J27.2"
+        }
+      ],
+      "__rootConnectionNames": ["source_net_altium_pcb_385"]
+    }
+  ],
+  "hdRoutes": [
+    {
+      "connectionName": "source_net_altium_pcb_385_mst171",
+      "rootConnectionName": "source_net_altium_pcb_385",
+      "endPcbPortId": "pcb_port_altium_6439",
+      "regionId": "cmn_3184",
+      "traceThickness": 0.15239999999999998,
+      "viaDiameter": 0.2032,
+      "route": [
+        { "x": 148.394, "y": 85.116, "z": 0 },
+        { "x": 148.902, "y": 84.684, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_385_mst171",
+      "rootConnectionName": "source_net_altium_pcb_385",
+      "regionId": "new-cmn_3184-5852",
+      "traceThickness": 0.15239999999999998,
+      "viaDiameter": 0.2032,
+      "route": [
+        { "x": 146.939, "y": 83.16, "z": 0 },
+        { "x": 147.071, "y": 83.265, "z": 0 },
+        { "x": 147.181, "y": 83.371, "z": 0 },
+        { "x": 147.291, "y": 83.476, "z": 0 },
+        { "x": 147.401, "y": 83.581, "z": 0 },
+        { "x": 147.511, "y": 83.686, "z": 0 },
+        { "x": 147.621, "y": 83.792, "z": 0 },
+        { "x": 147.729, "y": 83.899, "z": 0 },
+        { "x": 147.836, "y": 84.006, "z": 0 },
+        { "x": 147.939, "y": 84.115, "z": 0 },
+        { "x": 148.037, "y": 84.226, "z": 0 },
+        { "x": 148.125, "y": 84.336, "z": 0 },
+        { "x": 148.197, "y": 84.444, "z": 0 },
+        { "x": 148.246, "y": 84.545, "z": 0 },
+        { "x": 148.272, "y": 84.642, "z": 0 },
+        { "x": 148.288, "y": 84.739, "z": 0 },
+        { "x": 148.301, "y": 84.837, "z": 0 },
+        { "x": 148.325, "y": 84.936, "z": 0 },
+        { "x": 148.394, "y": 85.052, "z": 0 },
+        { "x": 148.394, "y": 85.116, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_385_mst158",
+      "rootConnectionName": "source_net_altium_pcb_385",
+      "regionId": "new-cmn_3184-5852",
+      "traceThickness": 0.15239999999999998,
+      "viaDiameter": 0.2032,
+      "route": [
+        { "x": 146.939, "y": 83.16, "z": 0 },
+        { "x": 146.85, "y": 83.265, "z": 0 },
+        { "x": 146.864, "y": 83.385, "z": 0 },
+        { "x": 146.9333637395567, "y": 83.62996997215124, "z": 0 },
+        { "x": 146.9333637395567, "y": 83.62996997215124, "z": 1 },
+        { "x": 146.821, "y": 83.609, "z": 1 },
+        { "x": 146.776, "y": 83.706, "z": 1 },
+        { "x": 146.77079880132052, "y": 83.802, "z": 1 },
+        { "x": 146.76979880132052, "y": 83.901, "z": 1 },
+        { "x": 146.748, "y": 84.003, "z": 1 },
+        { "x": 146.736, "y": 84.107, "z": 1 },
+        { "x": 146.735, "y": 84.211, "z": 1 },
+        { "x": 146.736, "y": 84.315, "z": 1 },
+        { "x": 146.738, "y": 84.418, "z": 1 },
+        { "x": 146.743, "y": 84.518, "z": 1 },
+        { "x": 146.753, "y": 84.613, "z": 1 },
+        { "x": 146.772, "y": 84.694, "z": 1 },
+        { "x": 146.7310004, "y": 84.71587612572998, "z": 1 },
+        { "x": 146.7310004, "y": 84.71587612572998, "z": 0 },
+        { "x": 146.74, "y": 84.841, "z": 0 },
+        { "x": 146.629, "y": 84.774, "z": 0 }
+      ],
+      "vias": [
+        { "x": 146.9333637395567, "y": 83.62996997215124 },
+        { "x": 146.7310004, "y": 84.71587612572998 }
+      ]
+    },
+    {
+      "connectionName": "source_net_altium_pcb_385_mst158",
+      "rootConnectionName": "source_net_altium_pcb_385",
+      "endPcbPortId": "pcb_port_altium_6969",
+      "regionId": "cmn_3644",
+      "traceThickness": 0.15239999999999998,
+      "viaDiameter": 0.2032,
+      "route": [
+        { "x": 146.629, "y": 84.774, "z": 0 },
+        { "x": 146.479, "y": 84.865, "z": 0 },
+        { "x": 146.329, "y": 84.922, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_385_mst171",
+      "rootConnectionName": "source_net_altium_pcb_385",
+      "startPcbPortId": "pcb_port_altium_6346",
+      "regionId": "topology_merge_40108",
+      "traceThickness": 0.15239999999999998,
+      "viaDiameter": 0.2032,
+      "route": [
+        { "x": 144.711, "y": 84.925, "z": 0 },
+        { "x": 144.826, "y": 84.993, "z": 0 },
+        { "x": 144.94, "y": 84.991, "z": 0 },
+        { "x": 145.054, "y": 84.99, "z": 0 },
+        { "x": 145.168, "y": 84.99, "z": 0 },
+        { "x": 145.283, "y": 84.991, "z": 0 },
+        { "x": 145.397, "y": 84.993, "z": 0 },
+        { "x": 145.511, "y": 84.95, "z": 0 }
+      ],
+      "vias": []
+    }
+  ]
+}
