@@ -3,12 +3,19 @@ import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
+import {
+  getConnectionPointLayer,
+  type RootConnectionName,
+} from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
+import {
+  type ConnectionNamesByPcbPortId,
+  removeVerifiedInternalTerminalTags,
+} from "./removeVerifiedInternalTerminalTags"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
@@ -33,37 +40,6 @@ type ConnectionName = string
 type PcbPortId = string
 type StitchTerminal = Point3 & { pcb_port_id?: PcbPortId }
 
-function keepTerminalTagsForRouteEndpoints({
-  hdRoutes,
-  start,
-  end,
-}: {
-  hdRoutes: HighDensityIntraNodeRoute[]
-  start: StitchTerminal
-  end: StitchTerminal
-}): HighDensityIntraNodeRoute[] {
-  const endpointPcbPortIds = new Set<PcbPortId>()
-  if (start.pcb_port_id) endpointPcbPortIds.add(start.pcb_port_id)
-  if (end.pcb_port_id) endpointPcbPortIds.add(end.pcb_port_id)
-
-  return hdRoutes.map((route) => {
-    const routeWithEndpointTags = { ...route }
-    if (
-      routeWithEndpointTags.startPcbPortId &&
-      !endpointPcbPortIds.has(routeWithEndpointTags.startPcbPortId)
-    ) {
-      delete routeWithEndpointTags.startPcbPortId
-    }
-    if (
-      routeWithEndpointTags.endPcbPortId &&
-      !endpointPcbPortIds.has(routeWithEndpointTags.endPcbPortId)
-    ) {
-      delete routeWithEndpointTags.endPcbPortId
-    }
-    return routeWithEndpointTags
-  })
-}
-
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "MultipleHighDensityRouteStitchSolver3"
@@ -79,14 +55,24 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+  private connections: SimpleRouteConnection[]
 
   private canStitchBetweenTerminals(params: {
+    bridgeConnectionNamesByPcbPortId?: ConnectionNamesByPcbPortId
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
     start: StitchTerminal
     end: StitchTerminal
   }) {
-    const hdRoutes = keepTerminalTagsForRouteEndpoints(params)
+    const hdRoutes = params.bridgeConnectionNamesByPcbPortId
+      ? removeVerifiedInternalTerminalTags({
+          bridgeConnectionNamesByPcbPortId:
+            params.bridgeConnectionNamesByPcbPortId,
+          hdRoutes: params.hdRoutes,
+          start: params.start,
+          end: params.end,
+        })
+      : params.hdRoutes
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes,
@@ -148,6 +134,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
       return null
     }
+    const bridgeConnectionNamesByPcbPortId =
+      this.getBridgeConnectionNamesByPcbPortId({
+        connectionName: params.connectionName,
+        rootConnectionName,
+      })
 
     const pathRoutes = selectRoutesAlongEndpointPath({
       connectionName: params.connectionName,
@@ -156,7 +147,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       end: params.end,
       endpointIndex: this.endpointIndex,
       canStitchBetweenTerminals: (selection) =>
-        this.canStitchBetweenTerminals(selection),
+        this.canStitchBetweenTerminals({
+          ...selection,
+          bridgeConnectionNamesByPcbPortId,
+        }),
     })
 
     const includesSharedRootBridge = pathRoutes.some(
@@ -167,11 +161,41 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return keepTerminalTagsForRouteEndpoints({
+    return removeVerifiedInternalTerminalTags({
+      bridgeConnectionNamesByPcbPortId,
       hdRoutes: pathRoutes,
       start: params.start,
       end: params.end,
     })
+  }
+
+  private getBridgeConnectionNamesByPcbPortId({
+    connectionName,
+    rootConnectionName,
+  }: {
+    connectionName: ConnectionName
+    rootConnectionName: RootConnectionName
+  }): ConnectionNamesByPcbPortId {
+    const bridgeConnectionNamesByPcbPortId =
+      new Map<PcbPortId, Set<ConnectionName>>()
+    for (const connection of this.connections) {
+      if (
+        connection.name === connectionName ||
+        !connection.__rootConnectionNames?.includes(rootConnectionName)
+      ) {
+        continue
+      }
+      for (const point of connection.pointsToConnect) {
+        const pcbPortId = point.pcb_port_id
+        if (!pcbPortId) continue
+        const connectionNames =
+          bridgeConnectionNamesByPcbPortId.get(pcbPortId) ??
+          new Set<ConnectionName>()
+        connectionNames.add(connection.name)
+        bridgeConnectionNamesByPcbPortId.set(pcbPortId, connectionNames)
+      }
+    }
+    return bridgeConnectionNamesByPcbPortId
   }
 
   constructor(params: {
@@ -185,6 +209,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     preferSameLayerTerminalEndpoints?: boolean
   }) {
     super()
+    this.connections = params.connections
     this.endpointIndex = new EndpointClusterIndex(
       params.preferSameLayerTerminalEndpoints,
     )
