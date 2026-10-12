@@ -1,0 +1,58 @@
+diff --git a/dist/chunk-EFLPMB4J.js b/dist/chunk-EFLPMB4J.js
+--- a/dist/chunk-EFLPMB4J.js
++++ b/dist/chunk-EFLPMB4J.js
+@@ -40,23 +40,20 @@ function segmentsDistance(a1, a2, b1, b2) {
+   if (doSegmentsIntersect(a1, a2, b1, b2)) {
+     return 0;
+   }
+-  const distances = [
+-    pointToSegmentDistance(a1, b1, b2),
+-    pointToSegmentDistance(a2, b1, b2),
+-    pointToSegmentDistance(b1, a1, a2),
+-    pointToSegmentDistance(b2, a1, a2)
+-  ];
+-  return Math.min(...distances);
++  return Math.min(
++    Math.min(pointToSegmentDistance(a1, b1, b2), pointToSegmentDistance(a2, b1, b2)),
++    Math.min(pointToSegmentDistance(b1, a1, a2), pointToSegmentDistance(b2, a1, a2))
++  );
+ }
+ function pointToSegmentDistance(p, v, w) {
+-  const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
++  const segmentX = w.x - v.x;
++  const segmentY = w.y - v.y;
++  const l2 = segmentX ** 2 + segmentY ** 2;
+   if (l2 === 0) return distance(p, v);
+-  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
++  let t = ((p.x - v.x) * segmentX + (p.y - v.y) * segmentY) / l2;
+   t = Math.max(0, Math.min(1, t));
+-  const projection = {
+-    x: v.x + t * (w.x - v.x),
+-    y: v.y + t * (w.y - v.y)
+-  };
+-  return distance(p, projection);
++  const distanceX = p.x - (v.x + t * segmentX);
++  const distanceY = p.y - (v.y + t * segmentY);
++  return Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+ }
+ function distance(p1, p2) {
+diff --git a/dist/chunk-Y7G4VXR7.js b/dist/chunk-Y7G4VXR7.js
+--- a/dist/chunk-Y7G4VXR7.js
++++ b/dist/chunk-Y7G4VXR7.js
+@@ -18,12 +18,9 @@ function segmentToSegmentMinDistance(a, b, u, v) {
+   if (doSegmentsIntersect(a, b, u, v)) {
+     return 0;
+   }
+-  const distances = [
+-    pointToSegmentDistance(a, u, v),
+-    pointToSegmentDistance(b, u, v),
+-    pointToSegmentDistance(u, a, b),
+-    pointToSegmentDistance(v, a, b)
+-  ];
+-  return Math.min(...distances);
++  return Math.min(
++    Math.min(pointToSegmentDistance(a, u, v), pointToSegmentDistance(b, u, v)),
++    Math.min(pointToSegmentDistance(u, a, b), pointToSegmentDistance(v, a, b))
++  );
+ }
+ function segmentToBoundsMinDistance(a, b, bounds) {
