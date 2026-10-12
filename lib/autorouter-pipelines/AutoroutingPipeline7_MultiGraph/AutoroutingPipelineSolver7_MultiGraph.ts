@@ -630,6 +630,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
+          enableVertexShortcuts: true,
           iterations: 2,
         },
       ],
