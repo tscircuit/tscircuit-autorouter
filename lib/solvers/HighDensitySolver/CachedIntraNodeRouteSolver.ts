@@ -24,7 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
+// Version 6 replaces typed object serialization with tagged JSON.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -177,13 +178,22 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    // Buffer the typed serialization before hashing so the crypto implementation
-    // receives one payload instead of thousands of small updates per candidate.
-    const serializedKeyData = objectHash(keyData, {
-      algorithm: "passthrough",
-      respectType: false,
-      unorderedObjects: false,
-    })
+    // Tags retain special numbers and optional values without string collisions.
+    const serializedKeyData = JSON.stringify(
+      keyData,
+      (_key: string, value: unknown): unknown => {
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          return `n:${value.toString()}`
+        }
+        if (
+          typeof value === "string" &&
+          (value === "u:" || value.startsWith("n:") || value.startsWith("s:"))
+        ) {
+          return `s:${value}`
+        }
+        return value === undefined ? "u:" : value
+      },
+    )
     const cacheKey = `intranode-solver:${objectHash(serializedKeyData)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
