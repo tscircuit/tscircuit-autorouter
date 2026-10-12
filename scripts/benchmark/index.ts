@@ -4,7 +4,12 @@ import {
   formatTraceLintTable,
 } from "./trace-lint-metrics.js"
 
-import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
+import {
+  type ChildProcessWithoutNullStreams,
+  spawn,
+  spawnSync,
+} from "node:child_process"
+import { randomUUID } from "node:crypto"
 import { appendFile, readFile, writeFile } from "node:fs/promises"
 import * as path from "node:path"
 import * as readline from "node:readline"
@@ -33,10 +38,23 @@ import {
   loadScenarios,
   parseDatasetName,
 } from "./scenarios"
+import { AUTOROUTER_VERSION } from "../../lib"
+import {
+  planLocalHighDensityClusterResources,
+  readLocalCpuTopology,
+} from "./localHighDensityClusterResources"
+import {
+  startLocalHighDensityCluster,
+  type LocalHighDensityCluster,
+  type LocalHighDensityClusterStats,
+} from "./startLocalHighDensityCluster"
+import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
 
 type BenchmarkOptions = {
   solverName?: string
   networkedColdHot: boolean
+  networkedRemote: boolean
+  concurrencyWasSet: boolean
   scenarioLimit?: number
   sampleNumbers?: number[]
   concurrency: number
@@ -59,6 +77,7 @@ type WorkerSlot = {
   stdoutReader: readline.Interface
   stderrReader: readline.Interface
   currentTask: WorkerTaskAssignment | null
+  cpuIds?: number[]
 }
 
 type WorkerExecutionResult = {
@@ -73,6 +92,12 @@ type BenchmarkSnapshotWriter = {
 
 type RunBenchmarkTasksOptions = {
   onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
+  cpuLanes?: number[][]
+  signal?: AbortSignal
+}
+
+type NetworkedColdHotValidationOptions = {
+  allowValidationRejections?: boolean
 }
 
 const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
@@ -730,6 +755,8 @@ export const parseArgs = (
     excludeAssignable: false,
     datasetName: "dataset01",
     networkedColdHot: false,
+    networkedRemote: false,
+    concurrencyWasSet: false,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -743,6 +770,10 @@ export const parseArgs = (
       options.networkedColdHot = true
       continue
     }
+    if (arg === "--networked-remote") {
+      options.networkedRemote = true
+      continue
+    }
     if (arg === "--scenario-limit") {
       options.scenarioLimit = Number.parseInt(args[i + 1], 10)
       i += 1
@@ -750,10 +781,9 @@ export const parseArgs = (
     }
     if (arg === "--concurrency") {
       const rawConcurrency = args[i + 1]
+      options.concurrencyWasSet = rawConcurrency !== "auto"
       options.concurrency =
-        rawConcurrency === "auto"
-          ? defaultConcurrency
-          : Number.parseInt(rawConcurrency, 10)
+        rawConcurrency === "auto" ? defaultConcurrency : Number(rawConcurrency)
       i += 1
       continue
     }
@@ -797,7 +827,14 @@ export const parseArgs = (
     throw new Error(`Unknown argument: ${arg}`)
   }
 
-  if (!Number.isFinite(options.concurrency) || options.concurrency < 1) {
+  if (options.solverName === NETWORKED_PIPELINE9_SOLVER_NAME) {
+    options.networkedColdHot = true
+    if (!args.includes("--dataset")) options.datasetName = "srj18"
+  } else if (options.networkedRemote) {
+    throw new Error("--networked-remote requires Pipeline9_Networked")
+  }
+
+  if (!Number.isSafeInteger(options.concurrency) || options.concurrency < 1) {
     throw new Error("--concurrency must be a positive integer")
   }
 
@@ -1051,15 +1088,27 @@ const formatFailureSummary = (failureSummary: FailureSummary[]) => {
     .join("\n")
 }
 
-const createChildProcess = () =>
-  spawn(process.execPath, ["scripts/benchmark/benchmark.child.ts"], {
+const createChildProcess = (
+  cpuIds?: number[],
+): ChildProcessWithoutNullStreams => {
+  const command = cpuIds ? "taskset" : process.execPath
+  const args = cpuIds
+    ? [
+        "--cpu-list",
+        cpuIds.join(","),
+        process.execPath,
+        "scripts/benchmark/benchmark.child.ts",
+      ]
+    : ["scripts/benchmark/benchmark.child.ts"]
+  return spawn(command, args, {
     cwd: process.cwd(),
     stdio: ["pipe", "pipe", "pipe"],
     env: process.env,
   })
+}
 
-const createWorkerSlot = (id: number): WorkerSlot => {
-  const child = createChildProcess()
+const createWorkerSlot = (id: number, cpuIds?: number[]): WorkerSlot => {
+  const child = createChildProcess(cpuIds)
   child.stdout.setEncoding("utf8")
   child.stderr.setEncoding("utf8")
 
@@ -1075,6 +1124,7 @@ const createWorkerSlot = (id: number): WorkerSlot => {
       crlfDelay: Infinity,
     }),
     currentTask: null,
+    cpuIds,
   }
 }
 
@@ -1134,9 +1184,10 @@ const replaceWorker = async (slot: WorkerSlot) => {
     stdoutReader: slot.stdoutReader,
     stderrReader: slot.stderrReader,
     currentTask: slot.currentTask,
+    cpuIds: slot.cpuIds,
   }
   slot.currentTask = null
-  const nextWorker = createWorkerSlot(slot.id)
+  const nextWorker = createWorkerSlot(slot.id, slot.cpuIds)
   slot.child = nextWorker.child
   slot.stdoutReader = nextWorker.stdoutReader
   slot.stderrReader = nextWorker.stderrReader
@@ -1246,6 +1297,7 @@ const executeTaskOnWorker = (
   slot: WorkerSlot,
   request: WorkerTaskMessage,
   sampleTimeoutMs?: number,
+  signal?: AbortSignal,
 ): Promise<WorkerExecutionResult> => {
   return new Promise((resolve) => {
     const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
@@ -1265,6 +1317,7 @@ const executeTaskOnWorker = (
       slot.stderrReader.removeListener("line", onStderrLine)
       slot.child.removeListener("error", onError)
       slot.child.removeListener("exit", onExit)
+      signal?.removeEventListener("abort", onAbort)
       resolve({
         result: { ...result, sampleTimeoutMs: taskTimeoutMs },
         restartWorker,
@@ -1326,6 +1379,17 @@ const executeTaskOnWorker = (
       )
     }
 
+    const onAbort = (): void => {
+      finish(
+        createFailedResult(
+          request.task,
+          getElapsedTimeMs(),
+          "Benchmark execution aborted",
+        ),
+        true,
+      )
+    }
+
     const timeout = setTimeout(() => {
       const latestProgress = slot.currentTask?.latestProgress
       finish(
@@ -1350,6 +1414,11 @@ const executeTaskOnWorker = (
     slot.stderrReader.on("line", onStderrLine)
     slot.child.once("error", onError)
     slot.child.once("exit", onExit)
+    signal?.addEventListener("abort", onAbort, { once: true })
+    if (signal?.aborted) {
+      onAbort()
+      return
+    }
 
     try {
       slot.child.stdin.write(`${JSON.stringify(request)}\n`)
@@ -1366,18 +1435,27 @@ const executeTaskOnWorker = (
   })
 }
 
-const runBenchmarkTasks = async (
+export const runBenchmarkTasks = async (
   tasks: BenchmarkTask[],
   concurrency: number,
   sampleTimeoutMs?: number,
   options: RunBenchmarkTasksOptions = {},
-) => {
+): Promise<WorkerResult[]> => {
+  const executionAbort = new AbortController()
+  const signal = options.signal
+    ? AbortSignal.any([options.signal, executionAbort.signal])
+    : executionAbort.signal
   const workerCount = Math.min(concurrency, tasks.length)
   const heartbeatIntervalMs = getHeartbeatIntervalMs()
   const queue = tasks.map((task, index) => ({
     taskId: index + 1,
     task,
   }))
+  const laneQueues = options.cpuLanes
+    ? Array.from({ length: workerCount }, (_, laneId) =>
+        queue.filter((_, index) => index % workerCount === laneId),
+      )
+    : undefined
   const results = new Array<WorkerResult>(queue.length)
   let completedTaskCount = 0
   const progress = new Map<
@@ -1403,10 +1481,10 @@ const runBenchmarkTasks = async (
   }
 
   const workers = Array.from({ length: workerCount }, (_, index) =>
-    createWorkerSlot(index + 1),
+    createWorkerSlot(index + 1, options.cpuLanes?.[index]),
   )
 
-  const logHeartbeat = () => {
+  const logHeartbeat = (): void => {
     const activeWorkers = workers
       .filter((worker) => worker.currentTask)
       .map((worker) => {
@@ -1423,8 +1501,14 @@ const runBenchmarkTasks = async (
       })
       .filter(Boolean)
 
+    const queuedTaskCount = laneQueues
+      ? laneQueues.reduce(
+          (count, laneQueue): number => count + laneQueue.length,
+          0,
+        )
+      : queue.length
     console.log(
-      `[benchmark] heartbeat ${completedTaskCount}/${tasks.length} complete, ${queue.length} queued, ${activeWorkers.length} running`,
+      `[benchmark] heartbeat ${completedTaskCount}/${tasks.length} complete, ${queuedTaskCount} queued, ${activeWorkers.length} running`,
     )
 
     if (activeWorkers.length > 0) {
@@ -1437,9 +1521,11 @@ const runBenchmarkTasks = async (
       ? setInterval(logHeartbeat, heartbeatIntervalMs)
       : null
 
-  const runWorkerLoop = async (slot: WorkerSlot) => {
-    while (queue.length > 0) {
-      const request = queue.shift()
+  const runWorkerLoop = async (slot: WorkerSlot): Promise<void> => {
+    const workerQueue = laneQueues?.[slot.id - 1] ?? queue
+    while (workerQueue.length > 0) {
+      signal.throwIfAborted()
+      const request = workerQueue.shift()
       if (!request) {
         return
       }
@@ -1448,10 +1534,13 @@ const runBenchmarkTasks = async (
         slot,
         request,
         sampleTimeoutMs,
+        signal,
       )
+      signal.throwIfAborted()
       if (workerResult.benchmarkSnapshot) {
         await options.onBenchmarkSnapshot?.(workerResult.benchmarkSnapshot)
       }
+      signal.throwIfAborted()
       let result: WorkerResult = workerResult
       if (workerResult.benchmarkSnapshot) {
         const { imageSvg, ...benchmarkSnapshot } =
@@ -1497,14 +1586,49 @@ const runBenchmarkTasks = async (
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
         )
       }
-      if (queue.length > 0) {
+      if (options.cpuLanes && (result.didTimeout || restartWorker)) {
+        throw new Error(
+          `Local cluster sample ${result.scenarioName} did not finish safely; refusing to overlap outstanding work with the next sample`,
+        )
+      }
+      if (workerQueue.length > 0) {
+        signal.throwIfAborted()
         await replaceWorker(slot)
       }
     }
   }
 
+  const workerLoops = workers.map((worker) => runWorkerLoop(worker))
   try {
-    await Promise.all(workers.map((worker) => runWorkerLoop(worker)))
+    await Promise.all(workerLoops)
+  } catch (error) {
+    executionAbort.abort(error)
+    await Promise.allSettled(workerLoops)
+    if (options.cpuLanes) {
+      await writeFile(
+        "benchmark-interrupted.json",
+        JSON.stringify(
+          {
+            error: error instanceof Error ? error.message : String(error),
+            completedResults: results.filter(Boolean),
+            activeSamples: workers.flatMap((worker) =>
+              worker.currentTask
+                ? [
+                    {
+                      laneId: worker.id - 1,
+                      task: worker.currentTask.request.task,
+                      progress: worker.currentTask.latestProgress,
+                    },
+                  ]
+                : [],
+            ),
+          },
+          null,
+          2,
+        ),
+      )
+    }
+    throw error
   } finally {
     if (heartbeat) {
       clearInterval(heartbeat)
@@ -1582,6 +1706,19 @@ export const summarizeSolverResults = (
             (sum, metrics) => sum + metrics.remoteTransportFallbacks,
             0,
           ),
+          ...(networkMetrics.some(
+            (metrics): boolean =>
+              metrics.remoteFallbackReasonCounts !== undefined,
+          )
+            ? {
+                validationRejections: networkMetrics.reduce(
+                  (sum, metrics): number =>
+                    sum +
+                    countDeterministicNetworkedValidationRejections(metrics),
+                  0,
+                ),
+              }
+            : {}),
         }
 
   return {
@@ -1614,6 +1751,7 @@ export const summarizeSolverResults = (
 
 export const validateNetworkedColdPassReadyForHot = (
   results: WorkerResult[],
+  options: NetworkedColdHotValidationOptions = {},
 ): void => {
   const coldResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
@@ -1623,7 +1761,10 @@ export const validateNetworkedColdPassReadyForHot = (
   }
   const incompleteColdResults = coldResults.filter(
     (result) =>
-      result.didTimeout || !result.routingMetrics?.networkedHighDensity,
+      result.didTimeout ||
+      !result.routingMetrics?.networkedHighDensity ||
+      result.routingMetrics.networkedHighDensity.remoteRequestsCompleted !==
+        result.routingMetrics.networkedHighDensity.remoteRequestsStarted,
   )
   if (incompleteColdResults.length > 0) {
     throw new Error(
@@ -1637,9 +1778,19 @@ export const validateNetworkedColdPassReadyForHot = (
     (sum, metrics) => sum + metrics.remoteTransportFallbacks,
     0,
   )
-  if (localFallbacks > 0) {
+  const validationRejections = coldMetrics.map((metrics): number =>
+    options.allowValidationRejections
+      ? countDeterministicNetworkedValidationRejections(metrics)
+      : 0,
+  )
+  if (
+    coldMetrics.some(
+      (metrics, index): boolean =>
+        metrics.remoteTransportFallbacks !== validationRejections[index],
+    )
+  ) {
     throw new Error(
-      `Pipeline9_Networked cold pass used ${localFallbacks} local transport fallback(s)`,
+      `Pipeline9_Networked cold pass used ${localFallbacks} local transport fallback(s); rejected reason counts: ${JSON.stringify(coldMetrics.map((metrics) => metrics.remoteFallbackReasonCounts))}`,
     )
   }
 
@@ -1651,7 +1802,25 @@ export const validateNetworkedColdPassReadyForHot = (
     (sum, metrics) => sum + metrics.remoteSolverResults,
     0,
   )
-  if (coldRequests > 0 && coldSolverResults === 0) {
+  const coldValidationRejections = validationRejections.reduce(
+    (sum, count): number => sum + count,
+    0,
+  )
+  if (options.allowValidationRejections) {
+    for (const [index, metrics] of coldMetrics.entries()) {
+      if (
+        metrics.remoteSolverResults +
+          metrics.remoteCacheHits +
+          validationRejections[index] !==
+        metrics.remoteRequestsStarted
+      ) {
+        throw new Error(
+          `Pipeline9_Networked cold sample ${coldResults[index].scenarioName} returned ${metrics.remoteSolverResults} accepted solver result(s) and ${validationRejections[index]} validation rejection(s) for ${metrics.remoteRequestsStarted} request(s) (${metrics.remoteCacheHits} accepted cache hit(s))`,
+        )
+      }
+    }
+  }
+  if (coldRequests > 0 && coldSolverResults + coldValidationRejections === 0) {
     throw new Error(
       "Pipeline9_Networked cold pass did not produce any remote solver results",
     )
@@ -1660,17 +1829,22 @@ export const validateNetworkedColdPassReadyForHot = (
 
 export const validateNetworkedColdHotResults = (
   results: WorkerResult[],
+  options: NetworkedColdHotValidationOptions = {},
 ): void => {
-  validateNetworkedColdPassReadyForHot(results)
-  const coldResultCount = results.filter(
+  validateNetworkedColdPassReadyForHot(results, options)
+  const coldResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
-  ).length
+  )
+  const coldResultCount = coldResults.length
   const hotResults = results.filter(
     (result) => result.solverName === NETWORKED_PIPELINE9_HOT_NAME,
   )
   const incompleteHotResults = hotResults.filter(
     (result) =>
-      result.didTimeout || !result.routingMetrics?.networkedHighDensity,
+      result.didTimeout ||
+      !result.routingMetrics?.networkedHighDensity ||
+      result.routingMetrics.networkedHighDensity.remoteRequestsCompleted !==
+        result.routingMetrics.networkedHighDensity.remoteRequestsStarted,
   )
   if (
     hotResults.length !== coldResultCount ||
@@ -1687,9 +1861,19 @@ export const validateNetworkedColdHotResults = (
     (sum, metrics) => sum + metrics.remoteTransportFallbacks,
     0,
   )
-  if (localFallbacks > 0) {
+  const validationRejections = hotMetrics.map((metrics): number =>
+    options.allowValidationRejections
+      ? countDeterministicNetworkedValidationRejections(metrics)
+      : 0,
+  )
+  if (
+    hotMetrics.some(
+      (metrics, index): boolean =>
+        metrics.remoteTransportFallbacks !== validationRejections[index],
+    )
+  ) {
     throw new Error(
-      `Pipeline9_Networked hot pass used ${localFallbacks} local transport fallback(s)`,
+      `Pipeline9_Networked hot pass used ${localFallbacks} local transport fallback(s); rejected reason counts: ${JSON.stringify(hotMetrics.map((metrics) => metrics.remoteFallbackReasonCounts))}`,
     )
   }
 
@@ -1701,25 +1885,104 @@ export const validateNetworkedColdHotResults = (
     (sum, metrics) => sum + metrics.remoteCacheHits,
     0,
   )
-  if (hotRequests !== hotCacheHits) {
+  const hotValidationRejections = validationRejections.reduce(
+    (sum, count): number => sum + count,
+    0,
+  )
+  if (hotRequests !== hotCacheHits + hotValidationRejections) {
     throw new Error(
-      `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits`,
+      `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits and ${hotValidationRejections} validation rejection(s)`,
     )
+  }
+  if (
+    hotMetrics.some(
+      (metrics): boolean =>
+        metrics.remoteBatchCacheMisses > 0 ||
+        metrics.remoteSingleRequestsStarted > 0 ||
+        metrics.remoteSolverResults > 0,
+    )
+  ) {
+    throw new Error(
+      "Pipeline9_Networked hot pass computed work instead of using only exact cache hits",
+    )
+  }
+  if (options.allowValidationRejections) {
+    const coldBySample = new Map(
+      coldResults.map((result) => [
+        JSON.stringify([result.scenarioName, result.sampleNumber]),
+        result,
+      ]),
+    )
+    const visitedSamples = new Set<string>()
+    if (coldBySample.size !== coldResults.length) {
+      throw new Error("Pipeline9_Networked cold pass repeated a sample")
+    }
+    for (const hotResult of hotResults) {
+      const sampleKey = JSON.stringify([
+        hotResult.scenarioName,
+        hotResult.sampleNumber,
+      ])
+      const coldResult = coldBySample.get(sampleKey)
+      const hot = hotResult.routingMetrics!.networkedHighDensity!
+      if (!coldResult || visitedSamples.has(sampleKey)) {
+        throw new Error(
+          `Pipeline9_Networked hot pass did not match a unique cold sample ${hotResult.scenarioName} (${hotResult.sampleNumber})`,
+        )
+      }
+      visitedSamples.add(sampleKey)
+      const cold = coldResult.routingMetrics!.networkedHighDensity!
+      const coldRejected = countDeterministicNetworkedValidationRejections(cold)
+      const hotRejected = countDeterministicNetworkedValidationRejections(hot)
+      if (hot.remoteCacheHits + hotRejected !== hot.remoteRequestsStarted) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} did not account for every cached result`,
+        )
+      }
+      if (
+        cold.remoteRequestsStarted !== hot.remoteRequestsStarted ||
+        coldRejected !== hotRejected
+      ) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} changed request or validation rejection counts: cold ${cold.remoteRequestsStarted} request(s), ${coldRejected} rejection(s); hot ${hot.remoteRequestsStarted} request(s), ${hotRejected} rejection(s)`,
+        )
+      }
+      if (
+        coldResult.didSolve !== hotResult.didSolve ||
+        coldResult.relaxedDrcPassed !== hotResult.relaxedDrcPassed ||
+        coldResult.viaCount !== hotResult.viaCount ||
+        coldResult.drcErrorCount !== hotResult.drcErrorCount
+      ) {
+        throw new Error(
+          `Pipeline9_Networked hot sample ${hotResult.scenarioName} changed routing result: cold ${JSON.stringify({ didSolve: coldResult.didSolve, relaxedDrcPassed: coldResult.relaxedDrcPassed, viaCount: coldResult.viaCount, drcErrorCount: coldResult.drcErrorCount })}; hot ${JSON.stringify({ didSolve: hotResult.didSolve, relaxedDrcPassed: hotResult.relaxedDrcPassed, viaCount: hotResult.viaCount, drcErrorCount: hotResult.drcErrorCount })}`,
+        )
+      }
+    }
   }
 }
 
 const main = async () => {
+  const options = parseArgs()
   const {
     solverName,
     networkedColdHot,
     scenarioLimit,
     sampleNumbers,
-    concurrency,
+    networkedRemote,
     effort,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
-  } = parseArgs()
+  } = options
+  let concurrency = options.concurrency
+  const useLocalCluster =
+    solverName === NETWORKED_PIPELINE9_SOLVER_NAME && !networkedRemote
+  const resourcePlan = useLocalCluster
+    ? planLocalHighDensityClusterResources({
+        topology: readLocalCpuTopology(),
+        concurrency: options.concurrencyWasSet ? concurrency : undefined,
+      })
+    : undefined
+  if (resourcePlan) concurrency = resourcePlan.laneCount
   const availableSolvers = await loadSolverNames(excludeAssignable)
   const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME]
 
@@ -1831,21 +2094,114 @@ const main = async () => {
     concurrency,
     Math.min(concurrency, Math.max(...taskGroups.map((group) => group.length))),
   )
+  if (resourcePlan) {
+    concurrency = Math.min(concurrency, scenarios.length)
+    runtime.workerCount = concurrency
+    runtime.localHighDensityCluster = {
+      serversPerLane: 8,
+      laneCount: concurrency,
+      effectiveCpuCount: resourcePlan.effectiveCpuCount,
+      laneCpuIds: resourcePlan.lanes
+        .slice(0, concurrency)
+        .map((lane) => lane.coordinatorCpuIds),
+      sampleAssignment: "fixed_round_robin",
+      cacheIsolation: "per_sample",
+      passStats: [],
+    }
+    const cpuIds = resourcePlan.lanes
+      .slice(0, concurrency)
+      .flatMap((lane) => lane.coordinatorCpuIds)
+    const affinity = spawnSync(
+      "taskset",
+      [
+        "--all-tasks",
+        "--pid",
+        "--cpu-list",
+        cpuIds.join(","),
+        String(process.pid),
+      ],
+      { encoding: "utf8" },
+    )
+    if (affinity.status !== 0) {
+      throw new Error(
+        `Cannot pin the local benchmark controller: ${affinity.error?.message ?? affinity.stderr}`,
+      )
+    }
+  }
 
   console.log(
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
   console.log(`[benchmark] runtime ${JSON.stringify(runtime)}`)
 
-  const snapshotWriter = await createBenchmarkSnapshotWriter(
-    BENCHMARK_SNAPSHOTS_HTML_PATH,
-  )
   const networkedCachePropagationDelayMs = networkedColdHot
-    ? parseNetworkedCachePropagationDelayMs()
+    ? useLocalCluster
+      ? 0
+      : parseNetworkedCachePropagationDelayMs()
     : 0
   const results: WorkerResult[] = []
+  const clusters: LocalHighDensityCluster[] = []
+  let coldClusterStats: LocalHighDensityClusterStats[] | undefined
+  const runAbort = new AbortController()
+  const onInterrupt = (): void => {
+    if (!runAbort.signal.aborted) {
+      runAbort.abort(new Error("Benchmark interrupted by SIGINT"))
+      process.exitCode = 130
+    }
+  }
+  const onTerminate = (): void => {
+    if (!runAbort.signal.aborted) {
+      runAbort.abort(new Error("Benchmark interrupted by SIGTERM"))
+      process.exitCode = 143
+    }
+  }
+  process.once("SIGINT", onInterrupt)
+  process.once("SIGTERM", onTerminate)
+  let snapshotWriter: BenchmarkSnapshotWriter | undefined
   try {
+    if (resourcePlan) {
+      for (const lane of resourcePlan.lanes.slice(0, concurrency)) {
+        const cluster = await startLocalHighDensityCluster({
+          autorouterVersion: AUTOROUTER_VERSION,
+          serverCpuIds: lane.serverCpuIds,
+          signal: runAbort.signal,
+        })
+        clusters.push(cluster)
+        void cluster.fault.catch((error: unknown): void => {
+          if (!runAbort.signal.aborted) {
+            runAbort.abort(error)
+          }
+        })
+      }
+    }
+    const runNamespace = randomUUID()
+    for (const taskGroup of taskGroups) {
+      for (const [index, task] of taskGroup.entries()) {
+        if (resourcePlan) {
+          task.networkedServer = {
+            backend: "local",
+            url: clusters[index % concurrency]!.url,
+            cacheVersion: `${runNamespace}-sample-${index + 1}`,
+            requestTimeoutMs: getTaskTimeoutMs(task, sampleTimeoutMs),
+          }
+        } else if (networkedRemote) {
+          const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
+          const url = process.env.HD_CACHE2_SERVER_URL
+          if (!cacheVersion || !url) {
+            throw new Error(
+              "--networked-remote requires HD_CACHE2_CACHE_VERSION and HD_CACHE2_SERVER_URL",
+            )
+          }
+          task.networkedServer = { url, cacheVersion, backend: "remote" }
+        }
+      }
+    }
+    snapshotWriter = await createBenchmarkSnapshotWriter(
+      BENCHMARK_SNAPSHOTS_HTML_PATH,
+    )
     for (const [groupIndex, taskGroup] of taskGroups.entries()) {
+      runAbort.signal.throwIfAborted()
+      for (const cluster of clusters) cluster.assertHealthy()
       if (networkedColdHot) {
         console.log(
           `[benchmark] Starting Pipeline9_Networked ${groupIndex === 0 ? "cold" : "hot"} pass`,
@@ -1854,10 +2210,62 @@ const main = async () => {
       results.push(
         ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
           onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
+          cpuLanes: resourcePlan?.lanes
+            .slice(0, concurrency)
+            .map((lane) => lane.coordinatorCpuIds),
+          signal: runAbort.signal,
         })),
       )
+      if (useLocalCluster && networkedColdHot) {
+        const laneStats = await Promise.all(
+          clusters.map((cluster) => cluster.getStats()),
+        )
+        const pass = groupIndex === 0 ? "cold" : "hot"
+        runtime.localHighDensityCluster!.passStats!.push({
+          pass,
+          lanes: laneStats,
+        })
+        console.log(
+          `[benchmark] local ${pass} server stats ${JSON.stringify(laneStats)}`,
+        )
+        if (groupIndex === 0) {
+          coldClusterStats = laneStats
+        } else {
+          if (
+            !coldClusterStats ||
+            coldClusterStats.length !== laneStats.length
+          ) {
+            throw new Error(
+              "Local high-density hot pass has no matching cold server statistics",
+            )
+          }
+          for (const [lane, stats] of laneStats.entries()) {
+            const cold = coldClusterStats[lane]
+            if (stats.servers.length !== cold.servers.length) {
+              throw new Error(
+                "Local high-density server count changed before the hot pass",
+              )
+            }
+            for (const [index, server] of stats.servers.entries()) {
+              const previous = cold.servers[index]
+              if (
+                server.pid !== previous.pid ||
+                server.cpuId !== previous.cpuId ||
+                server.stats.jobsComputed !== previous.stats.jobsComputed ||
+                server.stats.solveRequests !== previous.stats.solveRequests
+              ) {
+                throw new Error(
+                  `Local high-density hot pass changed server identity or computed new work in lane ${lane + 1}, server ${index + 1}`,
+                )
+              }
+            }
+          }
+        }
+      }
       if (networkedColdHot && groupIndex === 0) {
-        validateNetworkedColdPassReadyForHot(results)
+        validateNetworkedColdPassReadyForHot(results, {
+          allowValidationRejections: useLocalCluster,
+        })
         if (networkedCachePropagationDelayMs > 0) {
           console.log(
             `[benchmark] Waiting ${networkedCachePropagationDelayMs}ms for Workers KV propagation before the hot pass`,
@@ -1868,10 +2276,39 @@ const main = async () => {
         }
       }
     }
+    if (networkedColdHot) {
+      validateNetworkedColdHotResults(results, {
+        allowValidationRejections: useLocalCluster,
+      })
+    }
+  } catch (error) {
+    if (resourcePlan) {
+      await writeFile(
+        "benchmark-failure.json",
+        JSON.stringify(
+          {
+            error: error instanceof Error ? error.message : String(error),
+            runtime,
+            completedPassResults: results,
+          },
+          null,
+          2,
+        ),
+      )
+    }
+    throw error
   } finally {
-    await snapshotWriter.finish()
+    try {
+      await snapshotWriter?.finish()
+    } finally {
+      try {
+        await Promise.all(clusters.map((cluster) => cluster.stop()))
+      } finally {
+        process.removeListener("SIGINT", onInterrupt)
+        process.removeListener("SIGTERM", onTerminate)
+      }
+    }
   }
-  if (networkedColdHot) validateNetworkedColdHotResults(results)
   const rows = solverRuns.map((solverRun) =>
     summarizeSolverResults(
       solverRun.displayName,
@@ -1938,6 +2375,7 @@ if (import.meta.main) {
   main().catch((error) => {
     const message = error instanceof Error ? error.message : String(error)
     console.error(`Benchmark failed: ${message}`)
-    process.exit(1)
+    process.exitCode ??= 1
+    process.exit()
   })
 }

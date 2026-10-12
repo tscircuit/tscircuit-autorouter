@@ -257,6 +257,20 @@ export const renderSameMachineBenchmarkResults = ({
         `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(baseAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(baseAverage, prAverage)} |`,
       )
     }
+    if (
+      prSummary.solverName === "Pipeline9_Networked Cold" ||
+      prSummary.solverName === "Pipeline9_Networked Hot"
+    ) {
+      const baseCache = baseSummary.networkCache
+      const prCache = prSummary.networkCache
+      lines.push(
+        `| ${solver} | HD requests | ${baseCache?.remoteRequests ?? "n/a"} | ${prCache?.remoteRequests ?? "n/a"} | ${formatCountDelta(baseCache?.remoteRequests ?? null, prCache?.remoteRequests ?? null)} |`,
+        `| ${solver} | HD cache hits | ${baseCache ? `${baseCache.cacheHits}/${baseCache.remoteRequests}` : "n/a"} | ${prCache ? `${prCache.cacheHits}/${prCache.remoteRequests}` : "n/a"} | ${formatCountDelta(baseCache?.cacheHits ?? null, prCache?.cacheHits ?? null)} |`,
+        `| ${solver} | HD solver results | ${baseCache?.solverResults ?? "n/a"} | ${prCache?.solverResults ?? "n/a"} | ${formatCountDelta(baseCache?.solverResults ?? null, prCache?.solverResults ?? null)} |`,
+        `| ${solver} | HD local fallbacks | ${baseCache?.localFallbacks ?? "n/a"} | ${prCache?.localFallbacks ?? "n/a"} | ${formatCountDelta(baseCache?.localFallbacks ?? null, prCache?.localFallbacks ?? null)} |`,
+        `| ${solver} | HD validation retries | ${baseCache?.validationRejections ?? "n/a"} | ${prCache?.validationRejections ?? "n/a"} | ${formatCountDelta(baseCache?.validationRejections ?? null, prCache?.validationRejections ?? null)} |`,
+      )
+    }
   }
 
   const improvementCount = changedOutcomes.filter(
@@ -270,6 +284,16 @@ export const renderSameMachineBenchmarkResults = ({
 
   lines.push(
     "Style errors are averaged per completed sample with recorded lint counts for that type; historical/unlinted results are n/a. Angled traces counts violating segments.",
+    ...(prReport.summary.some(
+      (summary) =>
+        ["Pipeline9_Networked Cold", "Pipeline9_Networked Hot"].includes(
+          summary.solverName,
+        ) && summary.networkCache,
+    )
+      ? [
+          "HD validation retries are geometry results rejected by the existing client and rerouted locally; their cost remains in timings. Cache hits and solver results count accepted responses.",
+        ]
+      : []),
     ...renderBenchmarkStageTimings(baseReport, "Base"),
     ...renderBenchmarkStageTimings(prReport, "PR"),
   )
