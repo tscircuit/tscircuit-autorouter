@@ -28,8 +28,10 @@ import {
   TinyHyperGraphSolver,
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  type TinyHyperGraphProblem,
   type TinyHyperGraphSolverOptions,
 } from "tiny-hypergraph/lib/index"
+import type { PortId, RouteId } from "tiny-hypergraph/lib/types"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
@@ -81,6 +83,22 @@ type PreloadedTraceSegmentBaseline = ReadonlyMap<
   PreloadedTraceConnectionId,
   ReadonlySet<string>
 >
+
+export const getRouteTerminalPcbPortId = ({
+  problem,
+  routeId,
+  portId,
+  pcbPortId,
+}: {
+  problem: Pick<TinyHyperGraphProblem, "routeStartPort" | "routeEndPort">
+  routeId: RouteId
+  portId: PortId
+  pcbPortId?: string
+}): string | undefined =>
+  portId === problem.routeStartPort[routeId] ||
+  portId === problem.routeEndPort[routeId]
+    ? pcbPortId
+    : undefined
 
 type TinyBounds = {
   minX: number
@@ -1589,6 +1607,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const pcbPortId = getRouteTerminalPcbPortId({
+      problem: solvedTinySolver.problem,
+      routeId,
+      portId,
+      pcbPortId: portMetadata?.pcb_port_id,
+    })
 
     return {
       portPointId: String(
@@ -1602,8 +1626,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connectionName,
       rootConnectionName,
       ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
+      typeof pcbPortId === "string"
+        ? { pcb_port_id: pcbPortId }
         : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
