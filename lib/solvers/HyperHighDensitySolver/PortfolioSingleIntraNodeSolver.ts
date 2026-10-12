@@ -538,7 +538,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA13) {
       return 1 - this.getCandidateProgress(solver)
     }
-    if (this.adaptiveSearchExpanded) {
+    if (solver instanceof HighDensitySolverA01 || this.adaptiveSearchExpanded) {
       return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)
