@@ -102,7 +102,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       // Future geometry stays fixed during the route search, as for the existing
       // segment cache. Replacing or resizing the point set rebuilds the index.
       if (!this.futurePointIndex) {
-        this.futurePointIndex = new FuturePointIndex(this.futureConnectionPoints)
+        this.futurePointIndex = new FuturePointIndex(
+          this.futureConnectionPoints,
+        )
       }
       closestPointIndex = this.futurePointIndex.findClosestIndex(
         node,
