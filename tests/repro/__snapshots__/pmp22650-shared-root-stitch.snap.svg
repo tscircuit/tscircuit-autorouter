@@ -1,0 +1,44 @@
+<svg width="900" height="600" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#0d1117"/><g><polyline data-points="148.394,85.116 148.902,84.684" data-type="line" data-label="source_net_altium_pcb_385_mst171" points="664.1375282256886,40 732.6615372579035,98.27238563369792" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="20.557202709665884"/></g><g><polyline data-points="146.939,83.16 147.071,83.265 147.181,83.371 147.291,83.476 147.401,83.581 147.511,83.686 147.621,83.792 147.729,83.899 147.836,84.006 147.939,84.115 148.037,84.226 148.125,84.336 148.197,84.444 148.246,84.545 148.272,84.642 148.288,84.739 148.301,84.837 148.325,84.936 148.394,85.052 148.394,85.116" data-type="line" data-label="source_net_altium_pcb_385_mst171" points="467.87289605662954,303.84441273035736 485.6783472224852,289.6809856666114 500.5162231940303,275.38266882130665 515.3540991655718,261.21924175755885 530.191975137117,247.05581469381286 545.0298511086585,232.89238763006506 559.8677270802036,218.59407078476033 574.4358234886276,204.16086415789505 588.8690301154929,189.72765753103158 602.7626776161196,175.024671341047 615.981876208949,160.0519055879431 627.8521769861836,145.21402961639978 637.5642412584675,130.64593320797576 644.1738405548822,117.02206527046656 647.6809748754276,103.93775645919777 649.839211380382,90.85344764792535 651.592778540653,77.634249055096 654.8301332980809,64.2801606807061 664.1375282256886,48.632946019806695 664.1375282256886,40" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="20.557202709665884"/></g><g><polyline data-points="146.939,83.16 146.85,83.265 146.864,83.385 146.9333637395567,83.62996997215124 146.9333637395567,83.62996997215124 146.821,83.609 146.776,83.706 146.77079880132052,83.802 146.76979880132052,83.901 146.748,84.003 146.736,84.107 146.735,84.211 146.736,84.315 146.738,84.418 146.743,84.518 146.753,84.613 146.772,84.694 146.7310004,84.71587612572998 146.7310004,84.71587612572998 146.74,84.841 146.629,84.774" data-type="line" data-label="source_net_altium_pcb_385_mst158" points="467.87289605662954,303.84441273035736 455.86770549783614,289.6809856666114 457.7561624396694,273.49421187947155 467.11262211662324,240.4502658473575 467.11262211662324,240.4502658473575 451.95590183261083,243.27890081014812 445.8858616624384,230.1945919988775 445.18427310871266,217.24517296916565 445.0493833271539,203.89108459477757 442.1089477787682,190.13232687570962 440.49027040005603,176.10378959352238 440.3553806184973,162.07525231133695 440.49027040005603,148.0467150291497 440.7600499631735,134.1530675285212 441.43449887097086,120.66408937257256 442.78339668656554,107.84956012442126 445.34630253619616,96.92348781810324 439.8158754481701,93.97262199701981 439.8158754481701,93.97262199701981 441.02982952629463,77.09468992885922 426.05706377319075,86.13230529334396" fill="none" stroke="#f97316" stroke-linejoin="round" stroke-width="20.557202709665884"/></g><g><polyline data-points="146.629,84.774 146.479,84.865 146.329,84.922" data-type="line" data-label="source_net_altium_pcb_385_mst158" points="426.05706377319075,86.13230529334396 405.8235965392705,73.85733517143126 385.59012930534664,66.1686176225412" fill="none" stroke="#f97316" stroke-linejoin="round" stroke-width="20.557202709665884"/></g><g><polyline data-points="144.711,84.925 144.826,84.993 144.94,84.991 145.054,84.99 145.168,84.99 145.283,84.991 145.397,84.993 145.511,84.95" data-type="line" data-label="source_net_altium_pcb_385_mst171" points="167.33846274209645,65.76394827786316 182.8507876214353,56.59144313181787 198.2282227192154,56.86122269493535 213.60565781699916,56.99611247649591 228.98309291477926,56.99611247649591 244.4954177941181,56.86122269493535 259.87285289190186,56.59144313181787 275.25028798968196,62.39170373887464" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="20.557202709665884"/></g><g><circle data-type="point" data-label="pcb_port_altium_6973" data-x="146.20239999999998" data-y="81.26100079999999" cx="368.5130829599111" cy="560" r="3" fill="#f97316"/></g><g><circle data-type="point" data-label="pcb_port_altium_6969" data-x="146.3294" data-y="84.92179866" cx="385.64408521796577" cy="66.19577633116023" r="3" fill="#f97316"/></g><g><circle data-type="point" data-label="pcb_port_altium_6346" data-x="144.71139968" data-y="84.9249" cx="167.3923754899879" cy="65.77743725601795" r="3" fill="#2563eb"/></g><g><circle data-type="point" data-label="pcb_port_altium_6439" data-x="148.90185612" data-y="84.68371176" cx="732.6421293161329" cy="98.31126626433615" r="3" fill="#2563eb"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="900" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '900');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":134.88978155948743,"c":0,"e":-19352.69671651289,"b":0,"d":-134.88978155948743,"f":11521.278647217332};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
