@@ -70,7 +70,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "bun-match-svg": "^0.0.14",
     "circuit-json-to-connectivity-map": "https://pkg.pr.new/tscircuit/circuit-json-to-connectivity-map@14dfa66",
-    "circuit-json": "^0.0.506",
+    "circuit-json": "^0.0.525",
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
