@@ -100,6 +100,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   debug_nodePathToParentIntersectsObstacle: Set<number>
 
   debugEnabled: boolean
+  rejectBlockedGoal: boolean
 
   initialNodeGridOffset: { x: number; y: number }
 
@@ -122,6 +123,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    rejectBlockedGoal?: boolean
   }) {
     super()
     this.bounds = opts.bounds
@@ -155,6 +157,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.debugEnabled = opts.captureSearchDebug ?? true
+    this.rejectBlockedGoal = opts.rejectBlockedGoal ?? false
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -874,6 +877,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   _step() {
+    if (
+      this.rejectBlockedGoal &&
+      this.iterations === 1 &&
+      this.obstacleSegments.length > 0
+    ) {
+      // Every successful final segment includes B. If even the point at B
+      // violates its clearance check, exploring cannot produce a valid finish.
+      const goal: Node = { ...this.B, g: 0, h: 0, f: 0, parent: null }
+      if (this.doesPathToParentIntersectObstacle({ ...goal, parent: goal })) {
+        this.failed = true
+        this.error = "Goal lies inside existing route clearance"
+        return
+      }
+    }
+
     let currentNode = this.candidates.dequeue()
     let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
 

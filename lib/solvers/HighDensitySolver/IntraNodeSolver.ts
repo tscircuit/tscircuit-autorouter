@@ -83,6 +83,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
   connMap?: ConnectivityMap
+  rejectBlockedGoal: boolean
 
   // Legacy compat
   get failedSolvers() {
@@ -103,6 +104,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    rejectBlockedGoal?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
@@ -119,6 +121,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.rejectBlockedGoal = params.rejectBlockedGoal ?? false
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -256,6 +259,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      rejectBlockedGoal: this.rejectBlockedGoal,
     }
   }
 
