@@ -180,7 +180,16 @@ export const selectIslandEndpoints = (params: {
  * Pulls an island endpoint onto an actual terminal only when the endpoint is
  * already close enough to be considered the same stitch target.
  */
-export const snapIslandEndpointToNearestTerminal = (params: {
+const snapIslandEndpointToTerminal = (params: {
+  islandEndpoint: Point3
+  terminal: Point3
+}): Point3 =>
+  distance(params.islandEndpoint, params.terminal) <=
+  MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    ? params.terminal
+    : params.islandEndpoint
+
+const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
 }) => {
@@ -203,6 +212,43 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
+}
+
+/** Keep distinct point-to-point terminals distinct when both are within one snap radius. */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: Point3 & { pcb_port_id?: string }
+  end: Point3 & { pcb_port_id?: string }
+  globalStart: Point3 & { pcb_port_id?: string }
+  globalEnd: Point3 & { pcb_port_id?: string }
+}): { start: Point3; end: Point3 } => {
+  const terminals = [params.globalStart, params.globalEnd]
+  const start = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals,
+  })
+  const end = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals,
+  })
+  if (
+    start !== end ||
+    params.globalStart.pcb_port_id === undefined ||
+    params.globalEnd.pcb_port_id === undefined ||
+    params.globalStart.pcb_port_id === params.globalEnd.pcb_port_id
+  ) {
+    return { start, end }
+  }
+
+  return {
+    start: snapIslandEndpointToTerminal({
+      islandEndpoint: params.start,
+      terminal: params.globalStart,
+    }),
+    end: snapIslandEndpointToTerminal({
+      islandEndpoint: params.end,
+      terminal: params.globalEnd,
+    }),
+  }
 }
 
 /**

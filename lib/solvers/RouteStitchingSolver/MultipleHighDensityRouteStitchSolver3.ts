@@ -15,7 +15,7 @@ import {
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
-  snapIslandEndpointToNearestTerminal,
+  snapIslandEndpointsToDistinctTerminals,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
@@ -62,7 +62,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
-      preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      // This is a geometric probe. A shared-root bridge can legitimately carry
+      // terminal metadata from a sibling point-to-point connection.
+      preserveTerminalPcbPortIds: false,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -133,7 +135,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return pathRoutes.map((route) =>
+      route.connectionName === params.connectionName
+        ? route
+        : {
+            ...route,
+            startPcbPortId: undefined,
+            endPcbPortId: undefined,
+          },
+    )
   }
 
   constructor(params: {
@@ -270,15 +280,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
-
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
-        })
+        ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
+          start,
+          end,
+          globalStart,
+          globalEnd,
+        }))
       } else {
         start = {
           ...connection.pointsToConnect[0],
