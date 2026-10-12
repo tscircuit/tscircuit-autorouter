@@ -1,6 +1,7 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { FuturePointIndex, type FuturePoint } from "./FuturePointIndex"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
@@ -12,7 +13,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
-  futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+  futureConnectionPoints: FuturePoint[]
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
   private readonly closestFuturePointCacheCoordinates = new Float64Array(
     CLOSEST_FUTURE_POINT_CACHE_SLOTS * 4,
@@ -22,6 +23,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private futurePointIndex?: FuturePointIndex
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -48,13 +50,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
-  getClosestFutureConnectionPoint(node: Node) {
+  getClosestFutureConnectionPoint(node: Node): FuturePoint | null {
     if (
       this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
       this.cachedFutureConnectionPointCount !==
         this.futureConnectionPoints.length
     ) {
       this.closestFuturePointCacheIndices.fill(-2)
+      this.futurePointIndex = undefined
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
       this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
     }
@@ -80,25 +83,39 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         ? null
         : this.futureConnectionPoints[cachedPointIndex]
     }
-    let minDist = Infinity
-    let closestPoint = null
     let closestPointIndex = -1
-    let pointIndex = 0
-
-    for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
-      if (dist < minDist) {
-        minDist = dist
-        closestPoint = point
-        closestPointIndex = pointIndex
+    if (this.futureConnectionPoints.length <= 2) {
+      // A binary spatial split cannot help an empty set or a single pair.
+      // Keep their original scan without constructing or traversing a tree.
+      let minimumDistance = Infinity
+      let index = 0
+      for (const point of this.futureConnectionPoints) {
+        const candidateDistance =
+          distance(node, point) + (node.z !== point.z ? viaPenaltyDistance : 0)
+        if (candidateDistance < minimumDistance) {
+          minimumDistance = candidateDistance
+          closestPointIndex = index
+        }
+        index++
       }
-      pointIndex++
+    } else {
+      // Future geometry stays fixed during the route search, as for the existing
+      // segment cache. Replacing or resizing the point set rebuilds the index.
+      if (!this.futurePointIndex) {
+        this.futurePointIndex = new FuturePointIndex(this.futureConnectionPoints)
+      }
+      closestPointIndex = this.futurePointIndex.findClosestIndex(
+        node,
+        viaPenaltyDistance,
+      )
     }
+    const closestPoint =
+      closestPointIndex === -1
+        ? null
+        : this.futureConnectionPoints[closestPointIndex]
 
     // A fixed workspace avoids retaining every explored coordinate in large
-    // portfolio searches. Colliding slots simply perform the original scan.
+    // portfolio searches. Colliding slots repeat the exact spatial query.
     if (cacheSlot >= 0) {
       this.closestFuturePointCacheCoordinates[coordinateIndex] = node.x
       this.closestFuturePointCacheCoordinates[coordinateIndex + 1] = node.y

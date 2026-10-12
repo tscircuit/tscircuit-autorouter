@@ -91,12 +91,17 @@ test("closest future-point memo preserves exact references, ties, layer penaltie
       )
     }
     expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[0])
-    expect(scans.mock.calls.length).toBeGreaterThan(600)
+    expect(scans).toHaveBeenCalledTimes(1)
   } finally {
     scans.mockRestore()
   }
   solver.futureConnectionPoints = []
   expect(solver.getClosestFutureConnectionPoint(node)).toBeNull()
   solver.futureConnectionPoints = [points[1]]
+  expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[1])
+  const closerPoint = { x: 0.01, y: 0, z: 0 }
+  solver.futureConnectionPoints.push(closerPoint)
+  expect(solver.getClosestFutureConnectionPoint(node)).toBe(closerPoint)
+  solver.futureConnectionPoints.pop()
   expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[1])
 })
