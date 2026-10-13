@@ -21,7 +21,10 @@ import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSh
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
-import { redistributePortPointsAroundFixedCopper, type FixedCopperPortConstraints } from "./redistributePortPointsAroundFixedCopper"
+import {
+  redistributePortPointsAroundFixedCopper,
+  type FixedCopperPortConstraints,
+} from "./redistributePortPointsAroundFixedCopper"
 
 export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
@@ -177,10 +180,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey,
+    this.mapOfOwnerPairToPortPoints.set(
+      ownerPairKey,
       this.input.fixedCopper
         ? redistributePortPointsAroundFixedCopper({
-            sharedEdge, portPoints: redistributed, originalPortPoints: family,
+            sharedEdge,
+            portPoints: redistributed,
+            originalPortPoints: family,
             constraints: this.input.fixedCopper,
           })
         : redistributed,

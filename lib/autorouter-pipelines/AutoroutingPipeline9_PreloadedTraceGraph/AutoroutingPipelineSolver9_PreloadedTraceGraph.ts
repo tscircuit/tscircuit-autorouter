@@ -89,7 +89,10 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
-import { Pipeline9HighDensitySolver, PRELOADED_TRACE_CLEARANCE } from "./Pipeline9HighDensitySolver"
+import {
+  Pipeline9HighDensitySolver,
+  PRELOADED_TRACE_CLEARANCE,
+} from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -582,9 +585,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           fixedCopper: {
             routes: removeChangedSectionsFromFixedHdRoutes({
               traces: cms.originalSrj.traces ?? [],
-              fixedHdRoutes: (cms.originalSrj.traces ?? []).flatMap((trace, index) =>
-                convertPreloadedTraceToHdRoutes(trace, index,
-                  cms.originalSrj.layerCount, cms.viaDiameter, cms.connMap),
+              fixedHdRoutes: (cms.originalSrj.traces ?? []).flatMap(
+                (trace, index) =>
+                  convertPreloadedTraceToHdRoutes(
+                    trace,
+                    index,
+                    cms.originalSrj.layerCount,
+                    cms.viaDiameter,
+                    cms.connMap,
+                  ),
               ),
               sections: cms.getChangedPreloadedTraceSections(),
             }),

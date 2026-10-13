@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
-import { checkEachPcbPortConnectedToPcbTraces, checkSourceTracesHavePcbTraces, checkViaPadClearance } from "@tscircuit/checks"
+import {
+  checkEachPcbPortConnectedToPcbTraces,
+  checkSourceTracesHavePcbTraces,
+  checkViaPadClearance,
+} from "@tscircuit/checks"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -11,7 +15,9 @@ test("Game Boy routes VBUS around the preserved Pico copper", (): void => {
   // impossible component length limits were relaxed before capturing routing.
   const input = structuredClone(capturedInput) as SimpleRouteJson
   const original = structuredClone(input)
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { effort: 1 })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+    effort: 1,
+  })
   solver.solve()
   expect(solver.error).toBeNull()
   expect(solver.solved).toBeTrue()
@@ -30,16 +36,22 @@ test("Game Boy routes VBUS around the preserved Pico copper", (): void => {
   // The captured Pico already has one foreign-net via too close to R_LED.
   // Include that rule explicitly: the generic routing DRC omits via-pad gaps.
   const baseline = evaluateRelaxedDrc({
-    inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: [],
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: [],
   })
   const viaPadGaps = [baseline, drc].map(({ circuitJson }) => {
     const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-    connMap.addConnections(circuitJson.flatMap((element) =>
-      element.type === "pcb_via" && element.pcb_trace_id
-        ? [[element.pcb_via_id, element.pcb_trace_id]] : [],
-    ))
+    connMap.addConnections(
+      circuitJson.flatMap((element) =>
+        element.type === "pcb_via" && element.pcb_trace_id
+          ? [[element.pcb_via_id, element.pcb_trace_id]]
+          : [],
+      ),
+    )
     return checkViaPadClearance(circuitJson, { connMap }).map((error) => ({
-      center: error.center, actual_clearance: error.actual_clearance,
+      center: error.center,
+      actual_clearance: error.actual_clearance,
     }))
   })
   expect(viaPadGaps[0]).toHaveLength(1)
