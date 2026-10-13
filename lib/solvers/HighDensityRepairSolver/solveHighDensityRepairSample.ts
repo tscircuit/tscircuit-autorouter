@@ -6,6 +6,8 @@ export type HighDensityRepairSampleInput = {
 }
 
 export type HighDensityRepairSampleResult = {
+  /** Solver steps used to preserve the sequential stage's iteration budget. */
+  iterations: number
   repairedRoutes: HdRoute[]
   stats: {
     nodeClearanceInitialConflictCount: number
@@ -39,6 +41,7 @@ export function solveHighDensityRepairSample(
     throw new Error(solver.error ?? "High density repair sample did not solve")
   }
   return {
+    iterations: solver.iterations,
     repairedRoutes: solver.getOutput().repairedRoutes,
     stats: {
       nodeClearanceInitialConflictCount: Number(solver.stats.nodeClearanceInitialConflictCount ?? 0),

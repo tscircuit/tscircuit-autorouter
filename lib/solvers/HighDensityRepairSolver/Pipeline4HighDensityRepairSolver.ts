@@ -230,6 +230,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
   readonly parallelRepair?: ParallelHighDensityRepairOptions
   private nextDispatchIndex = 0
+  private sequentialRepairIterations = 0
   private readonly dispatchedSamples = new Map<number, DispatchedRepairSample>()
   private readonly pendingSampleEffects = new Map<number, PendingEffect>()
 
@@ -506,7 +507,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.error = `High density repair failed for node ${entry.node.capacityMeshNodeId}: ${task.result.error}`
       return
     }
-    const { repairedRoutes, stats } = task.result.value
+    const { repairedRoutes, stats, iterations } = task.result.value
+    if (!Number.isSafeInteger(iterations) || iterations < 0) {
+      throw new Error("Repair executor must return a nonnegative solver iteration count")
+    }
+    // Sequential repair spends a step constructing each solver, then at least
+    // one step consuming it, including a solver already solved at construction.
+    const sequentialIterations = this.sequentialRepairIterations + Math.max(2, iterations + 1)
+    if (sequentialIterations > this.MAX_ITERATIONS + 1) {
+      this.failed = true
+      this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
+      return
+    }
+    this.sequentialRepairIterations = sequentialIterations
     for (let i = 0; i < entry.routeIndexes.length; i++) {
       const routeIndex = entry.routeIndexes[i]
       const original = this.originalHdRoutes[routeIndex]
@@ -526,7 +539,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.activeSampleIndex += 1
     this.stats.repairedNodeCount = this.activeSampleIndex
     this.stats.repairedRouteCount = this.repairedRoutesByIndex.size
-    if (this.activeSampleIndex === this.sampleEntries.length) this.solved = true
+    if (this.activeSampleIndex === this.sampleEntries.length) {
+      this.solved = true
+    } else if (sequentialIterations > this.MAX_ITERATIONS) {
+      this.failed = true
+      this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
+    }
   }
 
   override _step() {

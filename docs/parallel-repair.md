@@ -33,6 +33,9 @@ Use `solveAsync()`, `stepAsync()`, or `solveUntilPhaseAsync()` when parallel rep
 is enabled. The synchronous solve methods reject this configuration. Applications
 with their own stepping loop can await the pending effects on the active solver.
 Executor failures fail the repair stage at that node; they are not retried locally.
+The helper returns its solver iteration count so parallel execution also respects
+the sequential stage's iteration budget and retains the same partial output on
+budget exhaustion.
 
 The `Pipeline4HighDensityRepairSolver` stage also accepts `parallelRepair` directly
 and provides `solveAsync()`. The board-wide repair stages retain their existing
