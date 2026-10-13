@@ -37,10 +37,10 @@ test("reuses segment clearance while still finding late detours", () => {
   }
   const hdRouteSHI = new HighDensityRouteSpatialIndex([route, blockingRoute])
   const originalGetConflicts =
-    hdRouteSHI.getConflictingRoutesForSegment.bind(hdRouteSHI)
+    hdRouteSHI.hasConflictingRoutesForSegment.bind(hdRouteSHI)
   let detourGenerationStarted = false
   let segmentClearanceQueries = 0
-  hdRouteSHI.getConflictingRoutesForSegment = (...args) => {
+  hdRouteSHI.hasConflictingRoutesForSegment = (...args) => {
     if (detourGenerationStarted) segmentClearanceQueries++
     return originalGetConflicts(...args)
   }
