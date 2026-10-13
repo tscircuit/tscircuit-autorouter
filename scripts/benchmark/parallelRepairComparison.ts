@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { writeFile } from "node:fs/promises"
 import { availableParallelism, cpus } from "node:os"
 import { isDeepStrictEqual } from "node:util"
+import packageJson from "../../package.json"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
 import { Pipeline4HighDensityRepairSolver } from "../../lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type { SimpleRouteJson } from "../../lib/types"
@@ -146,7 +147,15 @@ async function main(): Promise<void> {
   if (effectiveCpus < maxWorkers + 1) {
     throw new Error(`Need ${maxWorkers + 1} effective CPUs (workers plus coordinator), found ${effectiveCpus}`)
   }
-  const runtime = { bunVersion: Bun.version, cpuModel: cpus()[0].model, availableParallelism: availableParallelism(), effectiveCpus, ...topology }
+  const runtime = {
+    bunVersion: Bun.version,
+    cpuModel: cpus()[0].model,
+    availableParallelism: availableParallelism(),
+    effectiveCpus,
+    sequentialRepairRevision: packageJson.devDependencies["high-density-repair02"],
+    parallelRepairRevision: packageJson.devDependencies["high-density-repair02-parallel"],
+    ...topology,
+  }
   console.log(`CPU resources: ${JSON.stringify(runtime)}`)
   const scenarios = await loadScenarios(options.dataset, { scenarioLimit: options.limit, effort: 1 })
   const startup = performance.now()
@@ -254,6 +263,7 @@ async function main(): Promise<void> {
       `Dataset: ${options.dataset}. ${samples.length} solved samples; ${skipped.length} failed samples excluded from timing. ${options.repeats} repetitions, rotating run order.`, "",
       `${effectiveCpus} effective CPUs; CPU affinity ${expectedAffinity}; cgroup quota ${topology.quotaCpuCount ?? "unlimited"}. One board at a time; worker threads inherit the runner affinity.`, "",
       `Persistent ${maxWorkers}-worker pool startup: ${poolStartupMs.toFixed(1)}ms, excluded from warm timings. Times sum the per-sample medians. Dispatch and serialization are included. Repair solve time excludes stage construction; the other timing column includes it.`, "",
+      "Workers use the optimized exact repair kernel and omit unused solver diagnostics and live visualization. The one-worker control includes those changes; comparison with multiple workers measures the additional concurrency benefit.", "",
       table, "",
       options.repairOnly
         ? "Every measured run matched the sequential repair output SHA-256, solve status, and repair statistics. Worker startup must be added when creating a fresh pool for a single board."
