@@ -12,6 +12,7 @@ import {
   compactTopologyMergingRegions,
   doesBoundsContainPoint,
   getCanonicalCoordinates,
+  getHorizontalMergeBucketKey,
   getLayerTopologiesForCoveredNodes,
   restoreAuthoritativeTargetRegions,
 } from "./topology-merging-regions"
@@ -38,7 +39,15 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
-  private readonly atomicRegions: TopologyMergingRegion[] = []
+  private readonly horizontalRegionRunsByBucket = new Map<
+    string,
+    TopologyMergingRegion[]
+  >()
+  private readonly lastHorizontalRegionByBucket = new Map<
+    string,
+    TopologyMergingRegion
+  >()
+  private atomicRegionCount = 0
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
 
@@ -76,12 +85,16 @@ export class TopologyMergingSolver extends BaseSolver {
       this.processCurrentXSlab()
       this.currentXIndex += 1
       this.stats.processedXSlabCount = this.currentXIndex
-      this.stats.atomicRegionCount = this.atomicRegions.length
+      this.stats.atomicRegionCount = this.atomicRegionCount
       return
     }
 
+    const horizontallyCompactedRegions = [
+      ...this.horizontalRegionRunsByBucket.values(),
+    ].flat()
+    this.stats.horizontalRegionRunCount = horizontallyCompactedRegions.length
     const topologyRegions = restoreAuthoritativeTargetRegions({
-      regions: this.atomicRegions,
+      regions: horizontallyCompactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
     const compactedRegions = compactTopologyMergingRegions(topologyRegions)
@@ -121,7 +134,7 @@ export class TopologyMergingSolver extends BaseSolver {
     const nodes = this.solved
       ? this.outputNodes
       : createTopologyMergingOutputNodes({
-          regions: this.atomicRegions,
+          regions: [...this.horizontalRegionRunsByBucket.values()].flat(),
           preparedNodeBySourceKey: this.preparedNodeBySourceKey,
           nodeGroups: this.inputProblem.nodeGroups,
           provenance: this.outputProvenance,
@@ -200,7 +213,7 @@ export class TopologyMergingSolver extends BaseSolver {
         layerCount: this.inputProblem.layerCount,
       })
       for (const layerTopology of layerTopologies) {
-        this.atomicRegions.push({
+        this.addAtomicRegion({
           bounds: { minX, maxX, minY, maxY },
           availableZ: layerTopology.availableZ,
           sourceKeys: layerTopology.sourceKeys,
@@ -209,5 +222,33 @@ export class TopologyMergingSolver extends BaseSolver {
         })
       }
     }
+  }
+
+  private addAtomicRegion(region: TopologyMergingRegion): void {
+    this.atomicRegionCount += 1
+    const bucketKey = getHorizontalMergeBucketKey(region)
+    const lastRegion = this.lastHorizontalRegionByBucket.get(bucketKey)
+    if (
+      lastRegion &&
+      Math.abs(lastRegion.bounds.maxX - region.bounds.minX) <=
+        TOPOLOGY_MERGING_EPSILON
+    ) {
+      lastRegion.bounds.maxX = region.bounds.maxX
+      return
+    }
+
+    const regionRun = {
+      ...region,
+      bounds: { ...region.bounds },
+      availableZ: [...region.availableZ],
+      sourceKeys: [...region.sourceKeys],
+    }
+    const bucketRuns = this.horizontalRegionRunsByBucket.get(bucketKey)
+    if (bucketRuns) {
+      bucketRuns.push(regionRun)
+    } else {
+      this.horizontalRegionRunsByBucket.set(bucketKey, [regionRun])
+    }
+    this.lastHorizontalRegionByBucket.set(bucketKey, regionRun)
   }
 }
