@@ -305,17 +305,29 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
   )
 
   const srj = createSrjFromNodeWithPortPoints(node)
-  const drc = getDrcErrors(
-    convertToCircuitJson(srj, routes, { minTraceWidth: srj.minTraceWidth }),
+  const circuitJson = convertToCircuitJson(srj, routes, {
+    minTraceWidth: srj.minTraceWidth,
+  })
+  const traceIds = circuitJson
+    .filter((element) => element.type === "pcb_trace")
+    .map((trace) => trace.pcb_trace_id)
+  const tracePairErrorIds = new Set(
+    traceIds.flatMap((first) =>
+      traceIds
+        .filter((second) => second !== first)
+        .map((second) => `overlap_${first}_${second}`),
+    ),
   )
+  const drc = getDrcErrors(circuitJson)
 
   expect(drc.errors.length).toBeGreaterThan(0)
   expect(
     drc.errors.some(
       (error) =>
-        "message" in error &&
+        error.type === "pcb_trace_error" &&
+        tracePairErrorIds.has(error.pcb_trace_error_id) &&
         typeof error.message === "string" &&
-        error.message.includes("is too close to trace"),
+        error.message.includes("is too close to unnamed trace"),
     ),
   ).toBe(true)
 }, 60_000)
