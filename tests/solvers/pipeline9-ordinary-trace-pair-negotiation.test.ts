@@ -5,10 +5,13 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("negotiates ordinary trace-pair errors without spending a B01 search allowance", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 4)
-  const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario, {
-    effort: 1,
-    cacheProvider: null,
-  })
+  const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    scenario,
+    {
+      effort: 1,
+      cacheProvider: null,
+    },
+  )
   pipeline.solve()
   expect(pipeline.solved).toBe(true)
   expect(pipeline.failed).toBe(false)
