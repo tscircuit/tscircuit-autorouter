@@ -1,0 +1,40 @@
+{
+  "layerCount": 2,
+  "minTraceWidth": 0.15,
+  "defaultObstacleMargin": 0.15,
+  "bounds": { "minX": 0, "minY": 0, "maxX": 10, "maxY": 10 },
+  "obstacles": [
+    {
+      "type": "rect",
+      "center": { "x": 5, "y": 5 },
+      "width": 2,
+      "height": 2,
+      "layers": ["top", "bottom"],
+      "connectedTo": []
+    },
+    { "type": "rect", "center": { "x": 1, "y": 1 }, "width": 0.6, "height": 0.6,
+      "layers": ["top"], "connectedTo": ["net1", "p1"] },
+    { "type": "rect", "center": { "x": 9, "y": 9 }, "width": 0.6, "height": 0.6,
+      "layers": ["top"], "connectedTo": ["net1", "p2"] },
+    { "type": "rect", "center": { "x": 1, "y": 9 }, "width": 0.6, "height": 0.6,
+      "layers": ["top"], "connectedTo": ["net2", "p3"] },
+    { "type": "rect", "center": { "x": 9, "y": 1 }, "width": 0.6, "height": 0.6,
+      "layers": ["top"], "connectedTo": ["net2", "p4"] }
+  ],
+  "connections": [
+    {
+      "name": "net1",
+      "pointsToConnect": [
+        { "x": 1, "y": 1, "layer": "top", "pcb_port_id": "p1" },
+        { "x": 9, "y": 9, "layer": "top", "pcb_port_id": "p2" }
+      ]
+    },
+    {
+      "name": "net2",
+      "pointsToConnect": [
+        { "x": 1, "y": 9, "layer": "top", "pcb_port_id": "p3" },
+        { "x": 9, "y": 1, "layer": "top", "pcb_port_id": "p4" }
+      ]
+    }
+  ]
+}

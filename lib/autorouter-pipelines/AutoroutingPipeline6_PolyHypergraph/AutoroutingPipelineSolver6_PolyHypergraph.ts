@@ -48,6 +48,7 @@ interface CapacityMeshSolverOptions {
   equivalentAreaExpansionFactor?: number
   minProjectedRectDimension?: number
   polyConcavityTolerance?: number
+  polyRegionShape?: "convex" | "octagonal"
   polyPortSpacing?: number
   polyPortMarginFromSegmentEndpoint?: number
 }
@@ -183,6 +184,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs!,
+          regionShape: cms.opts.polyRegionShape,
           effort: Math.min(1, cms.effort),
           concavityTolerance: cms.opts.polyConcavityTolerance,
           portSpacing: cms.opts.polyPortSpacing,
