@@ -1,3 +1,5 @@
+import type { ParallelHighDensityRepairOptions } from "../../solvers/HighDensityRepairSolver/solveHighDensityRepairSample"
+import { getPendingEffectsFromSolverTree } from "../../solvers/getPendingEffectsFromSolverTree"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -104,6 +106,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  parallelRepair?: ParallelHighDensityRepairOptions
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -673,6 +676,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
+          parallelRepair: cms.opts.parallelRepair,
           connMap: cms.connMap,
         },
       ],
@@ -1181,7 +1185,38 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
+  override solve(): void {
+    if (this.opts.parallelRepair) {
+      throw new Error("Parallel repair requires solveAsync() or stepAsync()")
+    }
+    super.solve()
+  }
+
+  async stepAsync(): Promise<void> {
+    if (this.solved || this.failed) return
+    this.step()
+    const effects = getPendingEffectsFromSolverTree(this)
+    if (effects.length > 0) {
+      await Promise.race(effects.map((effect) => effect.promise))
+    }
+  }
+
+  async solveAsync(): Promise<void> {
+    const startTime = Date.now()
+    while (!this.solved && !this.failed) await this.stepAsync()
+    this.timeToSolve = Date.now() - startTime
+  }
+
+  async solveUntilPhaseAsync(phase: string): Promise<void> {
+    while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
+      await this.stepAsync()
+    }
+  }
+
   solveUntilPhase(phase: string) {
+    if (this.opts.parallelRepair) {
+      throw new Error("Parallel repair requires solveUntilPhaseAsync()")
+    }
     while (this.getCurrentPhase() !== phase) {
       this.step()
     }

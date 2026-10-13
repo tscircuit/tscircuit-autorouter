@@ -18,10 +18,23 @@ import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnec
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectedPadSides } from "./getConnectedPadSides"
 
+import type {
+  HighDensityRepairSampleResult,
+  ParallelHighDensityRepairOptions,
+} from "./solveHighDensityRepairSample"
+import { getPendingEffectsFromSolverTree } from "../getPendingEffectsFromSolverTree"
+
 type RepairSampleEntry = {
   node: NodeWithPortPoints
   routeIndexes: number[]
   sample: DatasetSample
+}
+
+type DispatchedRepairSample = {
+  promise: Promise<void>
+  result?:
+    | { ok: true; value: HighDensityRepairSampleResult }
+    | { ok: false; error: string }
 }
 
 const DEFAULT_REPAIR_MARGIN = 0.2
@@ -215,6 +228,10 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly colorMap: Record<string, string>
   readonly connMap?: ConnectivityMap
 
+  readonly parallelRepair?: ParallelHighDensityRepairOptions
+  private nextDispatchIndex = 0
+  private readonly dispatchedSamples = new Map<number, DispatchedRepairSample>()
+
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
   override activeSubSolver: HighDensityRepairSolver | null = null
@@ -224,12 +241,20 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     nodeWithPortPoints: NodeWithPortPoints[]
     hdRoutes: HighDensityRoute[]
     obstacles: Obstacle[]
+    parallelRepair?: ParallelHighDensityRepairOptions
     repairMargin?: number
     minimumTraceWidth?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
+    this.parallelRepair = params.parallelRepair
+    if (this.parallelRepair) {
+      const concurrency = this.parallelRepair.concurrency ?? 4
+      if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+        throw new Error("Parallel repair concurrency must be a positive integer")
+      }
+    }
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
@@ -400,6 +425,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         nodeWithPortPoints: this.sampleEntries.map((entry) => entry.node),
         hdRoutes: this.originalHdRoutes,
         obstacles: this.originalObstacles,
+        parallelRepair: this.parallelRepair,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
         colorMap: this.colorMap,
@@ -408,7 +434,100 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     ] as const
   }
 
+  override solve(): void {
+    if (this.parallelRepair) {
+      throw new Error("Parallel repair requires solveAsync() or async stepping")
+    }
+    super.solve()
+  }
+
+  async solveAsync(): Promise<void> {
+    const startTime = Date.now()
+    while (!this.solved && !this.failed) {
+      this.step()
+      const effects = getPendingEffectsFromSolverTree(this)
+      await Promise.all(effects.map((effect) => effect.promise))
+    }
+    this.timeToSolve = Date.now() - startTime
+  }
+
+  private stepParallelRepair(): void {
+    const options = this.parallelRepair!
+    const concurrency = options.concurrency ?? 4
+    while (
+      this.nextDispatchIndex < this.sampleEntries.length &&
+      this.dispatchedSamples.size < concurrency
+    ) {
+      const index = this.nextDispatchIndex++
+      const entry = this.sampleEntries[index]
+      const task: DispatchedRepairSample = {
+        promise: Promise.resolve(),
+      }
+      // Isolate executors from the original geometry and from other samples.
+      task.promise = Promise.resolve()
+        .then(() => options.executor({
+          sample: structuredClone(entry.sample),
+          margin: this.repairMargin,
+        }))
+        .then((value) => {
+          task.result = { ok: true, value }
+        }, (error: unknown) => {
+          task.result = {
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        })
+      this.dispatchedSamples.set(index, task)
+    }
+
+    const entry = this.sampleEntries[this.activeSampleIndex]
+    if (!entry) {
+      this.solved = true
+      this.pendingEffects = []
+      return
+    }
+    const task = this.dispatchedSamples.get(this.activeSampleIndex)!
+    if (!task.result) {
+      this.pendingEffects = [{
+        name: `repair:${entry.node.capacityMeshNodeId}`,
+        promise: task.promise,
+      }]
+      return
+    }
+    this.pendingEffects = []
+    if (!task.result.ok) {
+      this.failed = true
+      this.error = `High density repair failed for node ${entry.node.capacityMeshNodeId}: ${task.result.error}`
+      return
+    }
+    const { repairedRoutes, stats } = task.result.value
+    for (let i = 0; i < entry.routeIndexes.length; i++) {
+      const routeIndex = entry.routeIndexes[i]
+      const original = this.originalHdRoutes[routeIndex]
+      this.repairedRoutesByIndex.set(
+        routeIndex,
+        repairedRoutes[i] ? fromRepairRoute(repairedRoutes[i], original) : original,
+      )
+    }
+    for (const key of [
+      "nodeClearanceInitialConflictCount",
+      "nodeClearanceFinalConflictCount",
+      "nodeClearanceCandidateCount",
+    ] as const) {
+      this.stats[key] = Number(this.stats[key] ?? 0) + stats[key]
+    }
+    this.dispatchedSamples.delete(this.activeSampleIndex)
+    this.activeSampleIndex += 1
+    this.stats.repairedNodeCount = this.activeSampleIndex
+    this.stats.repairedRouteCount = this.repairedRoutesByIndex.size
+    if (this.activeSampleIndex === this.sampleEntries.length) this.solved = true
+  }
+
   override _step() {
+    if (this.parallelRepair) {
+      this.stepParallelRepair()
+      return
+    }
     const sampleEntry = this.sampleEntries[this.activeSampleIndex]
 
     if (!sampleEntry) {
