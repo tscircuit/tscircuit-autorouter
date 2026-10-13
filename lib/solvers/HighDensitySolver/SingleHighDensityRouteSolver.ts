@@ -2,6 +2,7 @@ import { distance, doSegmentsIntersect } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
+import { GridNodeSet } from "lib/data-structures/GridNodeSet"
 import {
   Node,
   SingleRouteCandidatePriorityQueue,
@@ -59,7 +60,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  exploredNodes: Set<number>
+  exploredNodes: Set<number> | GridNodeSet
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
   gridMinXIndex: number
@@ -874,6 +875,20 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   _step() {
+    if (this.iterations === 1 && this.exploredNodes instanceof Set) {
+      const gridNodeCount =
+        this.gridWidth * this.gridHeight * (Math.max(...this.availableZ) + 1)
+      if (
+        Number.isSafeInteger(gridNodeCount) &&
+        gridNodeCount > 0 &&
+        gridNodeCount <= 8_000_000
+      ) {
+        this.exploredNodes = new GridNodeSet(
+          gridNodeCount,
+          this.exploredNodes,
+        )
+      }
+    }
     let currentNode = this.candidates.dequeue()
     let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
 
