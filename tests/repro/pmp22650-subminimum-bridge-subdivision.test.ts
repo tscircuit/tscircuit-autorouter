@@ -49,7 +49,7 @@ const getBridgeCrossSectionGraphics = (
     {
       x: pmp22650Bridge.center.x,
       y: -0.2,
-      text: `cross-section after subdivision: ${outputNodes.length} nodes`,
+      text: `cross-section after subdivision: ${outputNodes.length} node${outputNodes.length === 1 ? "" : "s"}`,
       fontSize: 0.16,
       anchorSide: "bottom_center",
     },
@@ -66,10 +66,10 @@ test("reproduces PMP22650 sub-minimum bridge subdivision", () => {
 
   solver.solve()
 
-  expect(solver.outputNodes).toHaveLength(306)
+  expect(solver.outputNodes).toHaveLength(1)
   expect(
     solver.outputNodes.every(
-      (node) => node.width * node.height < minimumNodeArea,
+      (node) => node.width * node.height >= minimumNodeArea,
     ),
   ).toBe(true)
   expect(
