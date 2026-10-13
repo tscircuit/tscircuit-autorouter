@@ -124,7 +124,7 @@ const boundaryDetail = (
   }
 }
 
-test("real Game Boy data reproduces VBUS crossing placement on preserved GND", async (): Promise<void> => {
+test("real Game Boy boundary crossing clears preserved GND", async (): Promise<void> => {
   // Full outer-board SRJ from abse/gameboy 1.0.16, captured with tscircuit
   // 0.0.2837 after routing Pico. No synthetic geometry is added to the input.
   const input = structuredClone(capturedInput) as SimpleRouteJson
@@ -170,7 +170,7 @@ test("real Game Boy data reproduces VBUS crossing placement on preserved GND", a
       ),
     )
   expect(crossingAfter.connectionName).toBe("source_net_11")
-  expect(copperGap(crossingAfter)).toBeLessThan(0.15)
+  expect(copperGap(crossingAfter)).toBeGreaterThanOrEqual(0.15)
   expect(input).toEqual(original)
 
   // Contrast the crossing marker with the physical top-layer copper.
@@ -261,6 +261,7 @@ test("real Game Boy data reproduces VBUS crossing placement on preserved GND", a
     )
   }
   solver.solve()
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toContain("No path found for source_net_11")
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
+  expect(solver.error).toBeNull()
 })

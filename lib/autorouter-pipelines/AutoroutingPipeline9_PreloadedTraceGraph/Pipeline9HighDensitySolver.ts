@@ -63,7 +63,7 @@ type NodeBounds = {
   maxY: number
 }
 
-const PRELOADED_TRACE_CLEARANCE = 0.15
+export const PRELOADED_TRACE_CLEARANCE = 0.15
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
