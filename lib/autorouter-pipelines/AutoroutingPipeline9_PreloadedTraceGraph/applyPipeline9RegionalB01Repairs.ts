@@ -1,3 +1,4 @@
+import { getNewViaPadViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
@@ -20,6 +21,7 @@ import {
   type FixedRouteSection,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
@@ -67,6 +69,7 @@ export type FixedRouteCopperSpatialIndex = {
 }
 
 export type Pipeline9RegionalB01CandidateProblem = {
+  srj: SimpleRouteJson
   solver: Pipeline9HighDensitySolver
   routes: HighDensityRoute[]
   movableRoute: PreloadedHighDensityRoute
@@ -462,10 +465,11 @@ export const preparePipeline9RegionalB01Candidate = ({
     enableRegionalFallback: false,
     maxB01Rips: 120,
   })
-  return { solver, routes, movableRoute, movableSection, routeIndex }
+  return { srj, solver, routes, movableRoute, movableSection, routeIndex }
 }
 
 export const getPipeline9RegionalB01CandidateOutput = ({
+  srj,
   solver,
   routes,
   movableRoute,
@@ -480,15 +484,26 @@ export const getPipeline9RegionalB01CandidateOutput = ({
   )
   if (!replacement) return undefined
 
+  const candidateRoutes = routes.map((route, candidateRouteIndex) => {
+    if (candidateRouteIndex !== routeIndex) return route
+    return {
+      ...spliceFixedRouteSection(movableSection, replacement),
+      connectionName: route.connectionName,
+    }
+  })
+  // Preserve legacy SRJs without a declared via-in-pad placement policy.
+  if (
+    srj.allowViaInPad === false &&
+    getNewViaPadViolations({
+      srj: { ...srj, traces: undefined },
+      previousRoutes: canonicalizePipeline9HdRoutes(routes),
+      routes: canonicalizePipeline9HdRoutes(candidateRoutes),
+    }).length > 0
+  ) {
+    return undefined
+  }
   return {
-    routes: routes.map((route, candidateRouteIndex) =>
-      candidateRouteIndex === routeIndex
-        ? {
-            ...spliceFixedRouteSection(movableSection, replacement),
-            connectionName: route.connectionName,
-          }
-        : route,
-    ),
+    routes: candidateRoutes,
     usedFallback: Number(solver.stats.fallbackNodeCount ?? 0) > 0,
   }
 }
