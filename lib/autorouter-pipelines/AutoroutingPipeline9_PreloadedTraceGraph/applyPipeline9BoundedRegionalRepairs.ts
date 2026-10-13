@@ -9,7 +9,10 @@ export type Pipeline9BoundedRegionalRepairResult = {
   acceptedRegionCount: number
   candidateAttemptCount: number
   pathSearchNodeCount: number
+  /** Exact full-board checks used to accept or publish geometry. */
   referenceValidationCount: number
+  /** Candidate checks used only to guide clearance projection. */
+  projectionEvaluationCount: number
   initialDrcIssueCount: number | undefined
   finalDrcIssueCount: number | undefined
   publishedDrcIssueCount: number | undefined
@@ -78,7 +81,10 @@ export type Pipeline9BoundedRegionalRepairParams = {
   connMap?: ConnectivityMap
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
+  /** Exact full-board DRC remains authoritative for accepted output. */
   drcEvaluator: DrcEvaluator
+  /** Optional faster evaluator used only inside guarded projections. */
+  projectionDrcEvaluator?: DrcEvaluator
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget
 }

@@ -1811,6 +1811,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
+      projectionDrcEvaluator: this.drcEvaluator!,
       budget: regionalRepairBudget,
     }
   }
@@ -1848,6 +1849,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         boundedRegionalRepairResult.pathSearchNodeCount,
       boundedRegionalRepairReferenceValidationCount:
         boundedRegionalRepairResult.referenceValidationCount,
+      boundedRegionalRepairProjectionEvaluationCount:
+        boundedRegionalRepairResult.projectionEvaluationCount,
       boundedRegionalRepairRepaired: boundedRegionalRepairResult.repaired,
       boundedRegionalRepairPublishedDrcIssueCount:
         boundedRegionalRepairResult.publishedDrcIssueCount,
