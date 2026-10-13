@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.977",
+  "version": "0.0.978",
   "type": "module",
   "repository": {
     "type": "git",
@@ -59,7 +59,7 @@
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
     "@tscircuit/solver-utils": "^0.0.16",
-    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#eedca73152742be9daa98f92f9fd01e33a51f0c0",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
@@ -69,8 +69,8 @@
     "@vercel/node": "^5.1.7",
     "@vitejs/plugin-react": "^4.3.4",
     "bun-match-svg": "^0.0.14",
-    "circuit-json-to-connectivity-map": "^0.0.19",
-    "circuit-json": "^0.0.506",
+    "circuit-json-to-connectivity-map": "^0.0.34",
+    "circuit-json": "^0.0.525",
     "circuit-to-svg": "^0.0.220",
     "clsx": "^2.1.1",
     "dataset-srj11-45-degree": "git+https://github.com/tscircuit/dataset-srj11-45-degree.git#c49dd43c38f85fa2777c7d67393df413ca8d5a75",
