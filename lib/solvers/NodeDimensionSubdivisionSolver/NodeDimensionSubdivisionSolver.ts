@@ -32,6 +32,8 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       Number.isFinite(this.maxNodeDimension) && this.maxNodeDimension > 0
     const hasRatioLimit =
       Number.isFinite(this.maxNodeRatio) && this.maxNodeRatio > 0
+    const hasMinAreaLimit =
+      Number.isFinite(this.minNodeArea) && this.minNodeArea > 0
 
     let cols = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.width / this.maxNodeDimension))
@@ -53,11 +55,17 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
           break
         }
 
-        if (childWidth >= childHeight) {
-          cols++
-        } else {
-          rows++
+        const nextCols = childWidth >= childHeight ? cols + 1 : cols
+        const nextRows = childWidth >= childHeight ? rows : rows + 1
+        if (
+          hasMinAreaLimit &&
+          (node.width * node.height) / (nextCols * nextRows) < this.minNodeArea
+        ) {
+          break
         }
+
+        cols = nextCols
+        rows = nextRows
       }
     }
 
