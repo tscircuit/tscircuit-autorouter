@@ -1,0 +1,87 @@
+
+> universal-rc-receiver@1.0.0 build
+> tsci build index.circuit.tsx --site --pcb-png --pcb-svgs --schematic-svgs --disable-parts-engine
+
+Building 1 file(s)...
+Building index.circuit.tsx...
+Generating circuit JSON...
+trace: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)
+Autorouting phase 1/1 "receiver" has been running for 10.0s; enabling phase diagnostics. Re-run with --autorouter-debug for full autorouter logs from the start.
+Autorouting <board#876 /> phase 1/1 "receiver" long-running start: connections=44, obstacles=202, previous_traces=0, router=tscircuit, solver=AutoroutingPipelineSolver9_PreloadedTraceGraph, cache=miss, cache_id=12cad7cd/9512534e
+  connections: net.GND, net.V5_LOGIC, net.V3V3, net.VDDA, net.V_SERVO, net.HSE_IN, net.HSE_OUT, net.NRST, net.BOOT0, net.RF_NSS, net.RF_SCK, net.RF_MISO, net.RF_MOSI, net.RF_RESET, net.RF_BUSY, net.RF_DIO1, net.SER_TX, net.SER_RX, net.RC_OUT, net.BIND, net.LED, net.LED_A, net.SWDIO, net.SWCLK, net.PWM_ENABLE, net.PWM_OE_N, net.PWM_RAW1, net.PWM_RAW2, net.PWM_RAW3, net.PWM_RAW4, net.PWM_RAW5, net.PWM_RAW6, net.PWM_BUF1, net.PWM_BUF2, net.PWM_BUF3, net.PWM_BUF4, net.PWM_BUF5, net.PWM_BUF6, net.PWM1, net.PWM2, net.PWM3, net.PWM4, net.PWM5, net.PWM6
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=highDensityRouteSolver steps=37 progress=55% iterations_per_second=14008 elapsed=10.0s
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=highDensityRouteSolver steps=38 progress=55% iterations_per_second=5388 elapsed=10.3s
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=pipeline9JointDrcRepairSolver steps=70 progress=87% iterations_per_second=10196 elapsed=20.4s
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=powerTraceExpansionSolver steps=107 progress=96% iterations_per_second=151652 elapsed=30.5s
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=powerTraceExpansionSolver steps=145 progress=98% iterations_per_second=269316 elapsed=40.6s
+  phase 1/1 "receiver" progress: solver=AutoroutingPipelineSolver9_PreloadedTraceGraph solver_phase=powerTraceExpansionSolver steps=183 progress=100% iterations_per_second=335112 elapsed=50.7s
+  phase 1/1 "receiver" done: routed_traces=144, jumpers=0, errors=0, elapsed=51.2s
+Could not save autorouting paths for subcircuit_source_group_0: PCB port selector is not unique: .Q1 > port.pin3
+Circuit JSON written to dist/index/circuit.json
+The "Q" prefix is being used with a <chip />, try using it with a <transistor />
+Q1 has no pin with requires_power=true
+Q1 has no pin with requires_ground=true
+All pins on Q1 are underspecified (no pinAttributes set)
+PCB trace uses 2 vias, exceeding the 0 maximum
+PCB trace uses 2 vias, exceeding the 0 maximum
+PCB trace .U4 > .pin5 to net.PWM_RAW2 is too close to .U4 > .pin1 to net.PWM_OE_N (gap: 0.172mm)
+Pad C_MCU1.pin2 and trace .U1 > .pin1 to net.V3V3 are too close (clearance: 0.167mm, minimum: 0.2mm)
+Pad R_PWM1.pin2 and trace .J_PWM1 > .pin3 to net.GND are too close (clearance: 0.115mm, minimum: 0.2mm)
+Pad X1.pin1 and trace .J_PWM3 > .pin3 to net.GND are too close (clearance: 0.18mm, minimum: 0.2mm)
+Pad X1.pin3 and trace .J_PWM4 > .pin3 to net.GND are too close (clearance: 0.193mm, minimum: 0.2mm)
+Pad X1.pin3 and trace .C_X1 > .pin2 to net.GND are too close (clearance: 0.185mm, minimum: 0.2mm)
+Via unnamed via and trace .U1 > .pin5 to net.PWM_RAW1 are too close (clearance: 0.128mm, minimum: 0.2mm)
+Via unnamed via and trace .J_PWM3 > .pin3 to net.GND are too close (clearance: 0.099mm, minimum: 0.2mm)
+Via unnamed via and trace .U4 > .pin5 to net.PWM_RAW2 are too close (clearance: 0.132mm, minimum: 0.2mm)
+Via unnamed via and trace .U4 > .pin11 to net.PWM_BUF4 are too close (clearance: 0.051mm, minimum: 0.2mm)
+Via unnamed via and trace .U1 > .pin1 to net.V3V3 are too close (clearance: 0.043mm, minimum: 0.2mm)
+Via unnamed via and trace .U1 > .pin30 to net.PWM_RAW6 are too close (clearance: 0.125mm, minimum: 0.2mm)
+Via unnamed via and trace .U1 > .pin3 to net.HSE_OUT are too close (clearance: 0.067mm, minimum: 0.2mm)
+Via unnamed via and trace .C_BUF1 > .pin1 to net.V5_LOGIC are too close (clearance: 0.032mm, minimum: 0.2mm)
+Via unnamed via and trace .C_X1 > .pin2 to net.GND are too close (clearance: 0.077mm, minimum: 0.2mm)
+Via unnamed via and trace .U4 > .pin11 to net.PWM_BUF4 are too close (clearance: 0.096mm, minimum: 0.2mm)
+Via unnamed via and trace .U1 > .pin2 to net.HSE_IN are too close (clearance: 0.011mm, minimum: 0.2mm)
+Via unnamed via and pad X1.pin2 are too close (clearance: 0mm, minimum: 0.1mm)
+Vias unnamed via and unnamed via from different nets are too close together (gap: 0.062mm)
+Vias unnamed via and unnamed via from different nets are too close together (gap: -0.091mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.400mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.360mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.000mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.400mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Trace too close to board edge (0.305mm < 0.575mm required, margin: 0.5mm)
+Via hole at (-1.48mm, -13.12mm) overlaps SMD pad R_PWM3.pin2 at (-1.24mm, -12.80mm)
+Via hole at (-10.82mm, -10.50mm) overlaps SMD pad U4.1A at (-10.80mm, -10.80mm)
+Via hole at (-0.37mm, -10.84mm) overlaps SMD pad X1.pin1 at (-1.10mm, -11.35mm)
+Generating preview images...
+[index] Generating PCB SVG...
+[index] Written pcb.svg
+[index] Generating PCB PNG...
+[index] Written pcb.png
+[index] Generating schematic SVG...
+[index] Written schematic.svg
+Generating 3D preview images for all site builds...
+[index] Generating 3D PNG...
+[index] Written 3d.png
+
+Build complete
+  Circuits  0 passed 1 failed
+  Options   site, pcb-png, pcb-svgs, schematic-svgs
+  Output    dist
+
+⚠ Build completed with errors
+Build exiting with code 1: circuit build errors occurred

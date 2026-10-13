@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560">
+<rect width="960" height="560" fill="#111b22"/><g font-family="Arial,sans-serif" fill="#e8eff2">
+<text x="34" y="44" font-size="25">Native autorouter puts a drill inside an SMD land</text>
+<text x="34" y="76" font-size="17" fill="#b2c4ce">Receiver U4 · 74AHCT125 input 1A · allowViaInPad: false</text>
+<g transform="translate(250,314) scale(180,-180)"><rect x="-.2" y="-.85" width=".4" height="1.7" fill="#dda663" stroke="#f4d0a1" stroke-width=".01"/>
+<circle cx="-.023934" cy=".300621" r=".25" fill="#fa8269" fill-opacity=".5" stroke="#fa8269" stroke-width=".015"/><circle cx="-.023934" cy=".300621" r=".125" fill="#111b22" stroke="#ff564f" stroke-width=".025"/>
+<path d="M-.023934,.300621 L-1.0,1.05" stroke="#ef8070" stroke-width=".05" fill="none"/></g>
+<path d="M294,260 L440,225" stroke="#ff685b" stroke-width="2"/><text x="465" y="224" font-size="21" fill="#ff8074">Ø0.25 mm drill through solder land</text>
+<text x="465" y="259" font-size="17">Pad: 0.4 × 1.7 mm</text><text x="465" y="289" font-size="17">Via land: Ø0.5 mm</text>
+<text x="465" y="335" font-size="16" fill="#b2c4ce">Same net: not an electrical short.</text><text x="465" y="365" font-size="16" fill="#b2c4ce">The open drill can wick solder from the IC lead.</text><text x="465" y="395" font-size="16" fill="#b2c4ce">Native DRC rejects this routing result.</text>
+<text x="34" y="512" font-size="15" fill="#b2c4ce">Geometry copied from the preserved native circuit JSON; enlarged for clarity.</text><text x="34" y="538" font-size="15" fill="#b2c4ce">This is the failing attempt. The reviewed receiver layout reroutes this connection.</text></g></svg>
