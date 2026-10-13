@@ -60,7 +60,25 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  exploredNodes: Set<number>
+  private exploredNodeStorage: Set<number> | GridNodeSet
+  private exploredNodesExposed = false
+
+  get exploredNodes(): Set<number> {
+    // Keep an observed native Set live for caller iteration and mutation.
+    this.exploredNodesExposed = true
+    if (this.exploredNodeStorage instanceof GridNodeSet) {
+      this.exploredNodeStorage = new Set(this.exploredNodeStorage)
+    }
+    return this.exploredNodeStorage
+  }
+
+  set exploredNodes(value: Set<number>) {
+    this.exploredNodesExposed = true
+    if (this.exploredNodeStorage === value) {
+      return
+    }
+    this.exploredNodeStorage = value
+  }
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
   gridMinXIndex: number
@@ -151,7 +169,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new Set()
+    this.exploredNodeStorage = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
@@ -722,7 +740,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
         const neighborKey = this.getNodeKey(neighbor)
 
-        if (this.exploredNodes.has(neighborKey)) {
+        if (this.exploredNodeStorage.has(neighborKey)) {
           continue
         }
 
@@ -746,12 +764,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodesTooCloseToObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          this.exploredNodeStorage.add(neighborKey)
           continue
         }
 
         if (this.isNodeTooCloseToEdge(neighbor, false)) {
-          this.exploredNodes.add(neighborKey)
+          this.exploredNodeStorage.add(neighborKey)
           continue
         }
 
@@ -761,7 +779,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          this.exploredNodeStorage.add(neighborKey)
           continue
         }
 
@@ -786,7 +804,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
+        !this.exploredNodeStorage.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
@@ -875,7 +893,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   _step() {
-    if (this.iterations === 1 && this.exploredNodes instanceof Set) {
+    if (
+      this.iterations === 1 &&
+      !this.exploredNodesExposed &&
+      this.exploredNodeStorage instanceof Set
+    ) {
       const gridNodeCount =
         this.gridWidth * this.gridHeight * (Math.max(...this.availableZ) + 1)
       if (
@@ -883,7 +905,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         gridNodeCount > 0 &&
         gridNodeCount <= 8_000_000
       ) {
-        this.exploredNodes = new GridNodeSet(gridNodeCount, this.exploredNodes)
+        this.exploredNodeStorage = new GridNodeSet(
+          gridNodeCount,
+          this.exploredNodeStorage,
+        )
       }
     }
     let currentNode = this.candidates.dequeue()
@@ -892,7 +917,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     while (
       currentNode &&
       currentNodeKey &&
-      this.exploredNodes.has(currentNodeKey)
+      this.exploredNodeStorage.has(currentNodeKey)
     ) {
       currentNode = this.candidates.dequeue()
       currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
@@ -903,7 +928,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.error = "Ran out of candidate nodes to explore"
       return
     }
-    this.exploredNodes.add(currentNodeKey)
+    this.exploredNodeStorage.add(currentNodeKey)
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
         key: currentNodeKey,

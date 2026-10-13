@@ -1,12 +1,13 @@
-/** Cache bounded grid membership while retaining the complete Set interface. */
-export class GridNodeSet extends Set<number> {
+/** Compact membership and insertion order for internal grid searches. */
+export class GridNodeSet implements Iterable<number> {
   private readonly bits: Uint8Array
+  private readonly insertionOrder: number[] = []
+  private readonly sparse = new Set<number>()
 
   constructor(
     private readonly nodeCount: number,
     initialValues: ReadonlySet<number> = new Set(),
   ) {
-    super()
     if (
       !Number.isSafeInteger(nodeCount) ||
       nodeCount <= 0 ||
@@ -18,32 +19,28 @@ export class GridNodeSet extends Set<number> {
     for (const key of initialValues) this.add(key)
   }
 
-  override has(key: number): boolean {
+  has(key: number): boolean {
     if (Number.isInteger(key) && key >= 0 && key < this.nodeCount) {
       return (this.bits[key >>> 3]! & (1 << (key & 7))) !== 0
     }
-    return super.has(key)
+    return this.sparse.has(key)
   }
 
-  override add(key: number): this {
+  add(key: number): this {
+    if (this.has(key)) return this
     if (Number.isInteger(key) && key >= 0 && key < this.nodeCount) {
       this.bits[key >>> 3]! |= 1 << (key & 7)
+    } else {
+      this.sparse.add(key)
     }
-    super.add(key)
+    this.insertionOrder.push(key === 0 ? 0 : key)
     return this
   }
 
-  override delete(key: number): boolean {
-    if (Number.isInteger(key) && key >= 0 && key < this.nodeCount) {
-      this.bits[key >>> 3]! &= ~(1 << (key & 7))
+  *[Symbol.iterator](): IterableIterator<number> {
+    // Materialization must preserve the native Set's exact insertion order.
+    for (const key of this.insertionOrder) {
+      yield key
     }
-    return super.delete(key)
-  }
-
-  override clear(): void {
-    this.bits.fill(0)
-    // Set owns insertion order, iteration, and the sparse numeric keys.
-    // Clear both representations so later additions begin a fresh search.
-    super.clear()
   }
 }
