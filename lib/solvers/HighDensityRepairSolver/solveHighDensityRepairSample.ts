@@ -1,4 +1,5 @@
-import { HighDensityRepairSolver, type DatasetSample, type HdRoute } from "high-density-repair02"
+import type { DatasetSample, HdRoute } from "high-density-repair02"
+import { buildRepairFrames } from "high-density-repair02/lib/high-density-repair-solver/steps/buildRepairFrames"
 
 export type HighDensityRepairSampleInput = {
   sample: DatasetSample
@@ -31,22 +32,22 @@ export type ParallelHighDensityRepairOptions = {
 export function solveHighDensityRepairSample(
   input: HighDensityRepairSampleInput,
 ): HighDensityRepairSampleResult {
-  const solver = new HighDensityRepairSolver({
-    repairBoundaryDiagonals: false,
-    sample: input.sample,
-    margin: input.margin,
-  })
-  solver.solve()
-  if (solver.failed || !solver.solved) {
-    throw new Error(solver.error ?? "High density repair sample did not solve")
+  // This is the same function called by HighDensityRepairSolver._setup().
+  // Its wrapper additionally enumerates trace violations for visualization,
+  // which neither changes the repair nor contributes to the stage's stats.
+  const result = buildRepairFrames(input.sample, input.margin, false, false)
+  if (result.frames.length !== 1) {
+    throw new Error("Node repair without progress capture must produce exactly one frame")
   }
+  const stats = result.clearanceRepairStats
   return {
-    iterations: solver.iterations,
-    repairedRoutes: solver.getOutput().repairedRoutes,
+    // The sequential wrapper consumes this single frame in one solver step.
+    iterations: 1,
+    repairedRoutes: result.repairedRoutes,
     stats: {
-      nodeClearanceInitialConflictCount: Number(solver.stats.nodeClearanceInitialConflictCount ?? 0),
-      nodeClearanceFinalConflictCount: Number(solver.stats.nodeClearanceFinalConflictCount ?? 0),
-      nodeClearanceCandidateCount: Number(solver.stats.nodeClearanceCandidateCount ?? 0),
+      nodeClearanceInitialConflictCount: Number(stats?.nodeClearanceInitialConflictCount ?? 0),
+      nodeClearanceFinalConflictCount: Number(stats?.nodeClearanceFinalConflictCount ?? 0),
+      nodeClearanceCandidateCount: Number(stats?.nodeClearanceCandidateCount ?? 0),
     },
   }
 }
