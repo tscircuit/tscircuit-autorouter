@@ -131,6 +131,7 @@ jobs:
             parallel-repair-results.json
             parallel-repair-results.md
             parallel-repair-samples-*.json
+            parallel-repair-cpu-*
           if-no-files-found: warn
 
       - name: Post repair comparison to PR

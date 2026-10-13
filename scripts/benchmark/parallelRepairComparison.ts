@@ -17,6 +17,7 @@ type ComparisonOptions = {
   repeats: number
   workerCounts: number[]
   repairOnly: boolean
+  profileNode?: string
 }
 
 type RepairParams = ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0]
@@ -51,6 +52,8 @@ function parseOptions(args: string[]): ComparisonOptions {
       if (!Number.isSafeInteger(count) || count < 1) throw new Error(`${flag} must be a positive integer`)
       if (flag === "--limit") options.limit = count
       else options.repeats = count
+    } else if (flag === "--profile-node") {
+      options.profileNode = value
     } else if (flag === "--repair-only") {
       if (value !== "true" && value !== "false") throw new Error("--repair-only requires true or false")
       options.repairOnly = value === "true"
@@ -203,6 +206,15 @@ async function main(): Promise<void> {
         ;[repairParams] = stage.getConstructorParams(pipeline) as [RepairParams]
         const prepared = new Pipeline4HighDensityRepairSolver(repairParams)
         await writeFile(`parallel-repair-samples-${sampleNumber}.json`, JSON.stringify(prepared.sampleEntries.map((entry) => ({ sample: entry.sample, margin: prepared.repairMargin }))))
+        if (options.profileNode && prepared.sampleEntries.some((entry): boolean => entry.node.capacityMeshNodeId === options.profileNode)) {
+          const profile = Bun.spawn([
+            process.execPath, "--cpu-prof", "--cpu-prof-md",
+            "--cpu-prof-dir", ".", "--cpu-prof-name", `parallel-repair-cpu-${sampleNumber}.cpuprofile`,
+            "scripts/benchmark/profileHighDensityRepairSample.ts",
+            `parallel-repair-samples-${sampleNumber}.json`, options.profileNode,
+          ], { stdout: "inherit", stderr: "inherit" })
+          if (await profile.exited !== 0) throw new Error("Repair CPU profiler failed")
+        }
         console.log(`Prepared repair inputs in ${preparationTimes.at(-1)!.elapsedMs.toFixed(1)}ms`)
       }
       let expected: Awaited<ReturnType<typeof runPipeline>> | undefined
