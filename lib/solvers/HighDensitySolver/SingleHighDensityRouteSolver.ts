@@ -60,7 +60,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  exploredNodes: Set<number> | GridNodeSet
+  exploredNodes: Set<number>
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
   gridMinXIndex: number
