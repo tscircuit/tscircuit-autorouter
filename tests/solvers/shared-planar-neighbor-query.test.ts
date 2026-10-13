@@ -8,11 +8,43 @@ class PerNeighborQuerySolver extends SingleHighDensityRouteSolver {
   override getPlanarNeighborObstacleQuery(): undefined {
     return undefined
   }
+
+  override isNodeTooCloseToObstacle(
+    node: Node,
+    margin?: number,
+    isVia?: boolean,
+    query?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
+  ): boolean {
+    return super.isNodeTooCloseToObstacle(
+      node,
+      margin,
+      isVia,
+      isVia ? undefined : query,
+    )
+  }
 }
 
 class PerNeighborFutureQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
   override getPlanarNeighborObstacleQuery(): undefined {
     return undefined
+  }
+
+  override isNodeTooCloseToObstacle(
+    node: Node,
+    margin?: number,
+    isVia?: boolean,
+    query?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
+  ): boolean {
+    return super.isNodeTooCloseToObstacle(
+      node,
+      margin,
+      isVia,
+      isVia ? undefined : query,
+    )
   }
 }
 
@@ -46,7 +78,7 @@ function createObstacles(centerX: number): HighDensityIntraNodeRoute[] {
   return routes
 }
 
-test("shared planar broadphase preserves per-neighbor decisions and query bounds", (): void => {
+test("shared planar and via broadphases preserve per-neighbor decisions and query bounds", (): void => {
   let comparedNeighborhoods = 0
   for (const [SharedSolver, ReferenceSolver] of [
     [SingleHighDensityRouteSolver, PerNeighborQuerySolver],
