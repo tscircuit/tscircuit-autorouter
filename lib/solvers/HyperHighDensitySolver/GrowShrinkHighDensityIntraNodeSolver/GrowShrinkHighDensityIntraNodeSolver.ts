@@ -23,6 +23,7 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
+    validateCandidatesBeforeGrowth?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -201,8 +202,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
+    const {
+      growShrinkSolutionValidator,
+      validateCandidatesBeforeGrowth,
+      ...portfolioParams
+    } = this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       enableNegotiatedSearch:
@@ -212,6 +216,22 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      ...(growShrinkSolutionValidator && validateCandidatesBeforeGrowth
+        ? {
+            candidateSolutionValidator: (routes): boolean =>
+              growShrinkSolutionValidator(
+                this.scaleFactor === 1
+                  ? routes
+                  : routes.map((route) =>
+                      scaleRoute(
+                        route,
+                        this.nodeWithPortPoints.center,
+                        1 / this.scaleFactor,
+                      ),
+                    ),
+              ),
+          }
+        : {}),
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =

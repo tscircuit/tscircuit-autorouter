@@ -114,6 +114,26 @@ export class CachedPortfolioSingleIntraNodeSolver
       },
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
       portPoints: normalizedPortPoints,
+      ...(node.useExplicitPortPointPairs === true
+        ? {
+            useExplicitPortPointPairs: true,
+            portPointsInPairs: node.portPointsInPairs?.map(
+              ([start, end]): PortPoint[] =>
+                [start, end].map(
+                  (point): PortPoint => ({
+                    connectionName: point.connectionName,
+                    rootConnectionName: point.rootConnectionName,
+                    portPointId: point.portPointId,
+                    prevPortPointId: point.prevPortPointId,
+                    nextPortPointId: point.nextPortPointId,
+                    x: roundCoord(point.x - center.x),
+                    y: roundCoord(point.y - center.y),
+                    z: point.z,
+                  }),
+                ),
+            ),
+          }
+        : {}),
     }
 
     const normalizedRelevantConnMap: string[][] = []
@@ -195,23 +215,28 @@ export class CachedPortfolioSingleIntraNodeSolver
       return false
     }
 
+    let cachedSolution: CachedSolvedPortfolioSingleIntraNode | null | undefined
     try {
-      const cachedSolution = this.cacheProvider.getCachedSolutionSync(
-        this.cacheKey,
-      )
-
-      if (cachedSolution !== undefined && cachedSolution !== null) {
-        // console.log(`Cache hit for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
-        this.applyCachedSolution(
-          cachedSolution as CachedSolvedPortfolioSingleIntraNode,
-        )
-        return true // Cache hit and applied
-      } else {
-        // console.log(`Cache miss for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
-      }
+      cachedSolution = this.cacheProvider.getCachedSolutionSync(this.cacheKey)
     } catch (error) {
       console.error("Error attempting to use cache:", error)
-      // Decide how to handle cache read errors, e.g., treat as miss
+      return false
+    }
+
+    if (cachedSolution !== undefined && cachedSolution !== null) {
+      // Validate the actual proposal without changing keys or disabling safe
+      // cache hits. Invalid cached geometry leaves the existing portfolio live.
+      if (
+        cachedSolution.success &&
+        this.constructorParams.candidateSolutionValidator &&
+        !this.constructorParams.candidateSolutionValidator(
+          cachedSolution.solvedRoutes,
+        )
+      ) {
+        return false
+      }
+      this.applyCachedSolution(cachedSolution)
+      return true
     }
 
     return false // Cache miss or error

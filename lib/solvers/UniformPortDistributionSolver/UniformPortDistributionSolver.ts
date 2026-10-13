@@ -30,6 +30,10 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  validatePortPointPlacement?: (
+    proposed: readonly PortPointWithOwnerPair[],
+    original: readonly PortPointWithOwnerPair[],
+  ) => boolean
 }
 
 /**
@@ -175,6 +179,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
 
+    if (
+      this.input.validatePortPointPlacement &&
+      !this.input.validatePortPointPlacement(redistributed, family)
+    ) {
+      return
+    }
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }
 

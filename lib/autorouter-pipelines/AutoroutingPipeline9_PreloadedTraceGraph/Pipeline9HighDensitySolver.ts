@@ -6,6 +6,7 @@ import {
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
+import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -20,6 +21,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import { createPipeline9RegionalCandidateAdmission } from "./createPipeline9RegionalCandidateAdmission"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -39,6 +41,7 @@ export type Pipeline9HighDensitySolverParams = {
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
+  copperAdmissionSrj?: SimpleRouteJson
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
   allowBlindAndBuriedVias?: boolean
@@ -51,6 +54,7 @@ export type Pipeline9HighDensitySolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   preserveTerminalPcbPortIds?: boolean
+  physicalViaMode?: boolean
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
@@ -324,6 +328,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  physicalViaMode?: boolean
 }
 
 /**
@@ -343,8 +348,29 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+  physicalViaMode = false,
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const holeObstacles = obstacles.filter((obstacle) => obstacle.isNonPlatedHole)
+  const declaredHoleClearance = boardGeometry?.minTraceToHoleEdgeClearance
+  if (
+    declaredHoleClearance !== undefined &&
+    (!Number.isFinite(declaredHoleClearance) || declaredHoleClearance < 0)
+  ) {
+    throw new Error("Declared hole clearance must be finite and nonnegative")
+  }
+  const validateHoles =
+    holeObstacles.length > 0 &&
+    ((physicalViaMode && layerCount === 2) ||
+      declaredHoleClearance !== undefined)
+  const holeValidationSrj: Omit<SimpleRouteJson, "traces"> = {
+    layerCount,
+    bounds: boardGeometry?.bounds ?? getNodeBounds(nodeWithPortPoints, 0),
+    minTraceWidth: traceWidth,
+    minTraceToHoleEdgeClearance: boardGeometry?.minTraceToHoleEdgeClearance,
+    obstacles: holeObstacles,
+    connections: [],
+  }
+  return new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -365,8 +391,23 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    ...(validateHoles
+      ? {
+          validateCandidatesBeforeGrowth: true,
+          growShrinkSolutionValidator: (
+            routes: HighDensityIntraNodeRoute[],
+          ): boolean =>
+            // GrowShrink restores XY before this callback, but keeps physical
+            // widths and via diameters in that original coordinate space.
+            getFixedObstacleViolations({
+              srj: holeValidationSrj,
+              routes,
+            }).length === 0,
+        }
+      : {}),
     captureSearchDebug: false,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -378,6 +419,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
+  readonly copperAdmissionSrj?: SimpleRouteJson
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
@@ -388,6 +430,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
+  readonly physicalViaMode: boolean
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
@@ -405,6 +448,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackFixedObstacleRoutes: PreloadedHighDensityRoute[] = []
   activeFallbackPromotedFixedRouteConnectionNames = new Set<string>()
   activeFallbackReason: string | null = null
+  activeRegionalCandidateAdmission?: (routes: readonly HighDensityRoute[], checkMovableCopper?: boolean) => boolean
   activeNode: NodeWithPortPoints | null = null
 
   constructor(params: Pipeline9HighDensitySolverParams) {
@@ -413,6 +457,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
+    this.copperAdmissionSrj = params.copperAdmissionSrj
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
@@ -426,6 +471,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ? new Map(params.nodePfById)
         : new Map(Object.entries(params.nodePfById ?? {}))
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.physicalViaMode = params.physicalViaMode ?? false
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
@@ -480,6 +526,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeFallbackFixedObstacleRoutes = []
     this.activeFallbackPromotedFixedRouteConnectionNames.clear()
     this.activeFallbackReason = null
+    this.activeRegionalCandidateAdmission = undefined
     this.activeNode = null
   }
 
@@ -497,6 +544,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      physicalViaMode: this.physicalViaMode,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -558,6 +606,26 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
+    this.activeRegionalCandidateAdmission = createPipeline9RegionalCandidateAdmission({
+      srj: this.copperAdmissionSrj ?? {
+        layerCount: this.layerCount,
+        allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+        minTraceWidth: this.traceWidth,
+        minViaDiameter: this.viaDiameter,
+        minTraceToPadEdgeClearance: this.obstacleMargin,
+        minViaEdgeToPadEdgeClearance: this.viaToPadClearance,
+        minTraceToHoleEdgeClearance: this.boardGeometry?.minTraceToHoleEdgeClearance,
+        bounds: this.boardGeometry?.bounds ?? getNodeBounds(this.activeNode, 0),
+        obstacles: this.obstacles,
+        connections: [],
+      },
+      connMap: this.connMap,
+      currentFixedRoutes: this.getUpdatedFixedHdRoutes(),
+      acceptedRoutes: this.routes,
+      sections: this.activeFallbackFixedRouteSections,
+      sourceMutationMasks: this.preloadedTraceMutationMasks,
+      publishedTraceIndexes: new Set([...this.fixedRouteReplacements.values()].map((route): number => route.preloadedTraceIndex)),
+    })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
@@ -569,6 +637,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
       boardObstacles: this.obstacles,
+      candidateAdmission: (routes): boolean => this.activeRegionalCandidateAdmission!(routes, false),
+      finalCandidateAdmission: this.activeRegionalCandidateAdmission,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -595,6 +665,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
 
     this.recordRegionalCandidateRejections()
+    if (!this.activeRegionalCandidateAdmission) throw new Error("Regional publication is missing its copper admission context")
+    if (!this.activeRegionalCandidateAdmission(this.activeFallbackSolver.getOutput())) {
+      this.error = "Pipeline9 regional splice would publish a new or worsened copper violation"
+      this.failed = true
+      return
+    }
 
     const newRoutes: HighDensityIntraNodeRoute[] = []
     const replacementRoutesByConnectionName = new Map<

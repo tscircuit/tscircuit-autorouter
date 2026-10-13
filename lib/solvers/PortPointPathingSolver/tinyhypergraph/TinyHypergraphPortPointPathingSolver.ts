@@ -35,6 +35,7 @@ import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
+import { selectConnectionPointRegion } from "../hgportpointpathingsolver/select-connection-point-region"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -187,6 +188,7 @@ type TinyPortMetadata = {
   y?: number
   z?: number
   pcb_port_id?: string
+  terminalConnectionId?: string
   prevPortPointId?: string
   nextPortPointId?: string
   distToCentermostPortOnZ?: number
@@ -301,6 +303,13 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  viaCostOptions: Pick<
+    TinyHyperGraphSolverOptions,
+    | "CROSS_LAYER_INTERSECTION_COST_FACTOR"
+    | "VIA_COST"
+    | "TRACE_DENSITY_COST_FACTOR"
+    | "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO"
+  > = {},
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -318,6 +327,7 @@ const getTinyHyperGraphPipelineInput = (
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...viaCostOptions,
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -329,10 +339,10 @@ const getTinyHyperGraphPipelineInput = (
             OUTSIDE_IN_ROUTING: false,
           }),
     },
-    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-      effort,
-      minViaPadDiameter,
-    ),
+    sectionSolverOptions: {
+      ...getTinyHyperGraphSectionSolverOptions(effort, minViaPadDiameter),
+      ...viaCostOptions,
+    },
   }
 }
 
@@ -499,6 +509,14 @@ const buildSerializedTinyGraph = (
   )
 
   const solvedRoutes: SerializedTinySolvedRoute[] = []
+  const usePhysicalViaCosts =
+    params.flags.USE_PHYSICAL_VIA_COSTS === true &&
+    params.layerCount === 2 &&
+    params.hasPreloadedTraces !== true &&
+    getSerializedPreloadedTraceStats({ regions, ports, connections })
+      .preloadedPortCount === 0
+  const allowConnectedTerminalLayerChoices =
+    params.flags.ENABLE_CONNECTED_TERMINAL_LAYER_CHOICES ?? usePhysicalViaCosts
   for (const connection of params.connections) {
     const routeMetadata: RouteMetadata = {
       connectionId: connection.connectionId,
@@ -579,6 +597,9 @@ const buildSerializedTinyGraph = (
         z: startZ,
         distToCentermostPortOnZ: 0,
         _tinyTerminal: true,
+        ...(usePhysicalViaCosts
+          ? { terminalConnectionId: connection.connectionId }
+          : {}),
         ...(params.preserveTerminalPcbPortIds && startPoint?.pcb_port_id
           ? { pcb_port_id: startPoint.pcb_port_id }
           : {}),
@@ -596,6 +617,9 @@ const buildSerializedTinyGraph = (
         z: endZ,
         distToCentermostPortOnZ: 0,
         _tinyTerminal: true,
+        ...(usePhysicalViaCosts
+          ? { terminalConnectionId: connection.connectionId }
+          : {}),
         ...(params.preserveTerminalPcbPortIds && endPoint?.pcb_port_id
           ? { pcb_port_id: endPoint.pcb_port_id }
           : {}),
@@ -608,6 +632,109 @@ const buildSerializedTinyGraph = (
     const endRegion = serializedRegionById.get(connection.endRegion.regionId)
     startRegion?.pointIds.push(startTerminalPortId)
     endRegion?.pointIds.push(endTerminalPortId)
+
+    // A plated pad already connects its declared copper layers. Keep a stable
+    // endpoint identity while allowing the global path to contact any of those
+    // layers without creating a via outside the pad.
+    for (const endpoint of [
+      {
+        point: startPoint,
+        region: startRegion,
+        terminalRegionId: startTerminalRegionId,
+        terminalPortId: startTerminalPortId,
+        z: startZ,
+      },
+      {
+        point: endPoint,
+        region: endRegion,
+        terminalRegionId: endTerminalRegionId,
+        terminalPortId: endTerminalPortId,
+        z: endZ,
+      },
+    ]) {
+      if (
+        !allowConnectedTerminalLayerChoices ||
+        !endpoint.point ||
+        !endpoint.region
+      )
+        continue
+      const declaredLayers = getConnectionPointLayers(endpoint.point).map(
+        (layer) => mapLayerNameToZ(layer, params.layerCount),
+      )
+      const copperLayers = endpoint.point.pcb_port_id
+        ? params.terminalLayerIndicesByPcbPortId?.get(
+            endpoint.point.pcb_port_id,
+          )
+        : undefined
+      const pointLayers = copperLayers ? [...copperLayers] : declaredLayers
+      if (pointLayers.length <= 1) continue
+      const {
+        layer: _layer,
+        layers: _layers,
+        ...pointMetadata
+      } = endpoint.point as typeof endpoint.point & {
+        layer?: string
+        layers?: string[]
+      }
+      const endpointGraph = {
+        ...params.graph,
+        regions: params.graph.regions.filter((region) => {
+          const netId = regionNetIdByRegionId.get(region.regionId)
+          return netId === undefined || netId === -1 || netId === routeNetIndex
+        }),
+      }
+      const regionByZ = new Map<number, (typeof regions)[number]>()
+      for (const z of pointLayers) {
+        const region = selectConnectionPointRegion({
+          graph: endpointGraph,
+          point: {
+            ...pointMetadata,
+            layer: mapZToLayerName(z, params.layerCount),
+          },
+          layerCount: params.layerCount,
+        })
+        if (region) regionByZ.set(z, serializedRegionById.get(region.regionId)!)
+      }
+      const connectedZ = [...regionByZ.keys()]
+      if (connectedZ.length <= 1) continue
+
+      const terminalRegion = regions.find(
+        (region) => region.regionId === endpoint.terminalRegionId,
+      )!
+      const terminalPort = ports.find(
+        (port) => port.portId === endpoint.terminalPortId,
+      )!
+      const capRegionId = `${endpoint.terminalRegionId}:endpoint`
+      terminalRegion.d.availableZ = connectedZ
+      terminalRegion.d.connectedZ = connectedZ
+      terminalPort.region1Id = endpoint.terminalRegionId
+      terminalPort.region2Id = capRegionId
+      regions.push({
+        regionId: capRegionId,
+        pointIds: [endpoint.terminalPortId],
+        d: {
+          ...terminalRegion.d,
+          capacityMeshNodeId: capRegionId,
+          availableZ: [endpoint.z],
+          connectedZ: [endpoint.z],
+        },
+      })
+      endpoint.region.pointIds = endpoint.region.pointIds.filter(
+        (portId) => portId !== endpoint.terminalPortId,
+      )
+      for (const z of connectedZ) {
+        const portId = `${endpoint.terminalPortId}:z${z}`
+        const physicalRegion = regionByZ.get(z)!
+        ports.push({
+          portId,
+          region1Id: physicalRegion.regionId,
+          region2Id: endpoint.terminalRegionId,
+          d: { ...terminalPort.d, portId, z },
+        })
+        terminalRegion.pointIds.push(portId)
+        physicalRegion.pointIds.push(portId)
+      }
+    }
 
     solvedRoutes.push({
       connection: {
@@ -1049,6 +1176,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
+  /** Actual routing eligibility, including serialized existing copper. */
+  readonly physicalViaMode: boolean
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
@@ -1070,12 +1199,35 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    params.prepareSerializedGraph?.(serializedGraph)
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
+    const physicalViaMode =
+      params.flags.USE_PHYSICAL_VIA_COSTS === true &&
+      params.layerCount === 2 &&
+      params.hasPreloadedTraces !== true &&
+      !hasPreloadedTraceOccupancy
+    this.physicalViaMode = physicalViaMode
+    const viaCostOptions: Pick<
+      TinyHyperGraphSolverOptions,
+      | "CROSS_LAYER_INTERSECTION_COST_FACTOR"
+      | "VIA_COST"
+      | "TRACE_DENSITY_COST_FACTOR"
+      | "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO"
+    > = physicalViaMode
+      ? {
+          // Separate-layer intersections still consume regional capacity.
+          // Keep total pressure bounded when selecting physical topology.
+          CROSS_LAYER_INTERSECTION_COST_FACTOR: 1,
+          VIA_COST: 0.6,
+          TRACE_DENSITY_COST_FACTOR: 10,
+          PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: Number.POSITIVE_INFINITY,
+        }
+      : {}
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
@@ -1123,6 +1275,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
+    params.prepareSerializedGraph?.(graphForTiny)
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -1132,6 +1285,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      viaCostOptions,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
@@ -1140,6 +1294,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
+      !physicalViaMode &&
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
       connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
     ) {
@@ -1277,7 +1432,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const segments = solvedTinySolver.state.regionSegments[regionId]
       segmentCount += segments.length
       for (const [, fromPortId, toPortId] of segments) {
-        if (
+        if (this.physicalViaMode) {
+          layerChangeCount += solvedTinySolver.getEntryExitLayerChanges(
+            regionId,
+            fromPortId,
+            toPortId,
+          )
+        } else if (
           solvedTinySolver.topology.portZ[fromPortId] !==
           solvedTinySolver.topology.portZ[toPortId]
         ) {
@@ -1307,6 +1468,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         portPoints: portPointsInPairs.flat(),
         portPointsInPairs,
         availableZ: originalRegion.d.availableZ,
+        ...(this.physicalViaMode ? { useExplicitPortPointPairs: true } : {}),
       }
       const crossings = getIntraNodeCrossingsUsingCircle(solvedNode)
       const nodePf = calculateNodeProbabilityOfFailure(
@@ -1605,6 +1767,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connectionName,
       rootConnectionName,
       ...(this.params.preserveTerminalPcbPortIds &&
+      (!this.physicalViaMode ||
+        portMetadata?.terminalConnectionId === routeMetadata?.connectionId) &&
       typeof portMetadata?.pcb_port_id === "string"
         ? { pcb_port_id: portMetadata.pcb_port_id }
         : {}),
@@ -1679,6 +1843,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         portPoints,
         portPointsInPairs,
         availableZ: originalRegion.d.availableZ,
+        ...(this.physicalViaMode ? { useExplicitPortPointPairs: true } : {}),
       })
     }
 

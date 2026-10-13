@@ -55,8 +55,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
+  readonly validateTerminalContacts: boolean
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+
+  isTerminalLayerAllowed(terminal: StitchTerminal, z: number): boolean {
+    if (
+      !this.validateTerminalContacts ||
+      !terminal.pcb_port_id ||
+      !this.terminalLayerIndicesByPcbPortId
+    ) {
+      return z === terminal.z
+    }
+    const layers = this.terminalLayerIndicesByPcbPortId.get(
+      terminal.pcb_port_id,
+    )
+    if (!layers || layers.size === 0) {
+      throw new Error(
+        `Missing physical layers for terminal "${terminal.pcb_port_id}"`,
+      )
+    }
+    return layers.has(z)
+  }
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -65,6 +86,78 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       end,
       traceThickness: this.mergedHdRoute.traceThickness,
     })
+  }
+
+  private canStitchPoints(
+    start: Point3,
+    end: Point3,
+    maximumGap: number,
+  ): boolean {
+    const gap = distance(start, end)
+    if (start.z !== end.z) {
+      return (
+        gap < GEOMETRIC_TOLERANCE &&
+        (!this.allowedLayerTransitionPointKeys ||
+          this.allowedLayerTransitionPointKeys.has(getXyPointKey(end)))
+      )
+    }
+    return (
+      gap < GEOMETRIC_TOLERANCE ||
+      (gap <= maximumGap &&
+        (this.stitchClearanceMode === "prefer_clear" ||
+          this.isPlanarStitchClear(start, end)))
+    )
+  }
+
+  private canReachTerminalAfterRoute(
+    excludedRouteIndex: number,
+    endpoint: RoutePoint,
+  ): boolean {
+    // Untagged island tasks may intentionally stop at a disconnected stub.
+    // Opted-in terminal validation requires a path to the actual PCB contact.
+    if (
+      !this.validateTerminalContacts ||
+      this.mergedHdRoute.endPcbPortId === undefined
+    )
+      return true
+    const queue: Point3[] = [endpoint]
+    const visitedRouteExits = new Set<number>()
+    for (let queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      const point = queue[queueIndex]!
+      if (
+        this.isTerminalLayerAllowed(this.end, point.z) &&
+        this.canStitchPoints(
+          point,
+          { ...this.end, z: point.z },
+          MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+        )
+      ) {
+        return true
+      }
+      for (let index = 0; index < this.remainingHdRoutes.length; index++) {
+        if (index === excludedRouteIndex) continue
+        const route = this.remainingHdRoutes[index]!
+        const first = route.route[0]!
+        const last = route.route.at(-1)!
+        const reachesFirst =
+          !visitedRouteExits.has(index * 2 + 1) &&
+          this.canStitchPoints(point, first, MAX_STITCH_GAP_DISTANCE_3)
+        const reachesLast =
+          !visitedRouteExits.has(index * 2) &&
+          this.canStitchPoints(point, last, MAX_STITCH_GAP_DISTANCE_3)
+        // Reaching one end does not rule out reaching the other through a
+        // branch. Each orientation has a different exit in the route graph.
+        if (reachesFirst) {
+          visitedRouteExits.add(index * 2 + 1)
+          queue.push(last)
+        }
+        if (reachesLast) {
+          visitedRouteExits.add(index * 2)
+          queue.push(first)
+        }
+      }
+    }
+    return false
   }
 
   constructor(opts: {
@@ -76,6 +169,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultTraceThickness?: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
+    terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
+    /** Enforce owned terminal reachability; default false preserves legacy paths. */
+    validateTerminalContacts?: boolean
     preserveTerminalPcbPortIds?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
@@ -85,6 +181,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
+    this.terminalLayerIndicesByPcbPortId = opts.terminalLayerIndicesByPcbPortId
+    this.validateTerminalContacts = opts.validateTerminalContacts ?? false
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
 
@@ -269,7 +367,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         {
           x: this.start.x,
           y: this.start.y,
-          z: closestFirstRoutePoint.z,
+          z:
+            !this.validateTerminalContacts ||
+            !opts.preserveTerminalPcbPortIds ||
+            this.isTerminalLayerAllowed(this.start, closestFirstRoutePoint.z)
+              ? closestFirstRoutePoint.z
+              : this.start.z,
         },
       ],
       vias: [],
@@ -309,40 +412,63 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     return { firstRoute: this.remainingHdRoutes[0] }
   }
 
+  private finishAtTerminal(): void {
+    const lastMergedPoint =
+      this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+    const terminalPoint = {
+      ...this.end,
+      z:
+        !this.validateTerminalContacts ||
+        this.mergedHdRoute.endPcbPortId === undefined ||
+        this.isTerminalLayerAllowed(this.end, lastMergedPoint.z)
+          ? lastMergedPoint.z
+          : this.end.z,
+    }
+    const terminalDistance = distance(lastMergedPoint, terminalPoint)
+
+    if (
+      this.validateTerminalContacts &&
+      this.mergedHdRoute.endPcbPortId !== undefined &&
+      (!this.isTerminalLayerAllowed(this.end, lastMergedPoint.z) ||
+        terminalDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3)
+    ) {
+      this.failed = true
+      this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" did not reach its terminal`
+      return
+    }
+
+    if (
+      terminalDistance > GEOMETRIC_TOLERANCE &&
+      terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    ) {
+      if (
+        !this.isPlanarStitchClear(lastMergedPoint, terminalPoint) &&
+        this.stitchClearanceMode === "require_clear"
+      ) {
+        this.failed = true
+        this.error = `Terminal stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
+        return
+      }
+      this.mergedHdRoute.route.push({
+        x: this.end.x,
+        y: this.end.y,
+        z: terminalPoint.z,
+      })
+    }
+
+    this.solved = true
+  }
+
   _step() {
     const endpoint = this.mergedHdRoute.route.at(-1)!
     const reachedTerminal =
       this.mergedHdRoute.endPcbPortId !== undefined &&
-      endpoint.z === this.end.z &&
+      this.isTerminalLayerAllowed(this.end, endpoint.z) &&
       distance(endpoint, this.end) < GEOMETRIC_TOLERANCE
     // A terminal-to-terminal path is complete here. Following leftover stubs
     // can traverse another via and disconnect the declared terminal layer.
     if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
-      const lastMergedPoint =
-        this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
-      const terminalPoint = { ...this.end, z: lastMergedPoint.z }
-      const terminalDistance = distance(lastMergedPoint, terminalPoint)
-
-      if (
-        terminalDistance > GEOMETRIC_TOLERANCE &&
-        terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-      ) {
-        if (
-          !this.isPlanarStitchClear(lastMergedPoint, terminalPoint) &&
-          this.stitchClearanceMode === "require_clear"
-        ) {
-          this.failed = true
-          this.error = `Terminal stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
-          return
-        }
-        this.mergedHdRoute.route.push({
-          x: this.end.x,
-          y: this.end.y,
-          z: lastMergedPoint.z,
-        })
-      }
-
-      this.solved = true
+      this.finishAtTerminal()
       return
     }
 
@@ -388,7 +514,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
-      if (scoreFirst < bestScore) {
+      if (
+        scoreFirst < bestScore &&
+        this.canReachTerminalAfterRoute(i, lastPointInCandidate)
+      ) {
         bestScore = scoreFirst
         closestRouteIndex = i
         matchedOn = "first"
@@ -420,7 +549,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreLast = VIA_PENALTY + distToLast
       }
 
-      if (scoreLast < bestScore) {
+      if (
+        scoreLast < bestScore &&
+        this.canReachTerminalAfterRoute(i, firstPointInCandidate)
+      ) {
         bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
@@ -428,12 +560,35 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      // Reachability accepts a legal terminal cap. Commit that same contact
+      // once there is no remaining fragment that can extend the path.
+      if (
+        this.validateTerminalContacts &&
+        this.mergedHdRoute.endPcbPortId !== undefined &&
+        this.isTerminalLayerAllowed(this.end, lastMergedPoint.z) &&
+        this.canStitchPoints(
+          lastMergedPoint,
+          { ...this.end, z: lastMergedPoint.z },
+          MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+        )
+      ) {
+        this.finishAtTerminal()
+        return
+      }
       if (blockedByCollision) {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
         return
       }
-      this.remainingHdRoutes = []
+      if (
+        !this.validateTerminalContacts ||
+        this.mergedHdRoute.endPcbPortId === undefined
+      ) {
+        this.remainingHdRoutes = []
+        return
+      }
+      this.failed = true
+      this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" has no path to its terminal`
       return
     }
 

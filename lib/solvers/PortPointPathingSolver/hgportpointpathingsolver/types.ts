@@ -5,6 +5,7 @@ import type {
   Region,
   RegionPort,
   RegionPortAssignment,
+  SerializedHyperGraph,
   SolvedRoute,
 } from "@tscircuit/hypergraph"
 
@@ -97,11 +98,18 @@ export interface HgPortPointPathingSolverParams {
   layerCount: number
   effort: number
   preserveTerminalPcbPortIds?: boolean
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
   minViaPadDiameter?: number
+  hasPreloadedTraces?: boolean
+  prepareSerializedGraph?: (graph: SerializedHyperGraph) => void
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
+    /** Use the physical-via objective when terminal and HD identity integration supports it. */
+    USE_PHYSICAL_VIA_COSTS?: boolean
+    /** Explicitly expose connected terminal layers to global routing. */
+    ENABLE_CONNECTED_TERMINAL_LAYER_CHOICES?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }

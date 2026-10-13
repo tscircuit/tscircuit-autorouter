@@ -30,6 +30,7 @@ export type UnsolvedRoute3 = {
 }
 
 type ConnectionName = string
+type StitchTerminal = Point3 & { pcb_port_id?: string }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -43,26 +44,73 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultTraceThickness: number
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
   preserveTerminalPcbPortIds: boolean
+  readonly validateTerminalContacts: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+
+  private getRoutesWithCurrentTerminalIds(params: {
+    connectionName: string
+    hdRoutes: HighDensityIntraNodeRoute[]
+    start: StitchTerminal
+    end: StitchTerminal
+  }): HighDensityIntraNodeRoute[] {
+    if (!this.validateTerminalContacts || !this.preserveTerminalPcbPortIds)
+      return params.hdRoutes
+
+    const terminalIds = new Set(
+      [params.start.pcb_port_id, params.end.pcb_port_id].filter(
+        (id): id is string => id !== undefined,
+      ),
+    )
+    return params.hdRoutes.map((route): HighDensityIntraNodeRoute => {
+      if (route.connectionName === params.connectionName) return route
+
+      // A shared-root bridge keeps its copper geometry, but another pair's
+      // terminal becomes an interior contact of the current terminal path.
+      return {
+        ...route,
+        startPcbPortId:
+          route.startPcbPortId !== undefined &&
+          terminalIds.has(route.startPcbPortId)
+            ? route.startPcbPortId
+            : undefined,
+        endPcbPortId:
+          route.endPcbPortId !== undefined &&
+          terminalIds.has(route.endPcbPortId)
+            ? route.endPcbPortId
+            : undefined,
+        route: route.route.map(
+          (point): HighDensityIntraNodeRoute["route"][number] => {
+            if (!point.pcb_port_id || terminalIds.has(point.pcb_port_id))
+              return point
+            const { pcb_port_id, ...interiorPoint } = point
+            return interiorPoint
+          },
+        ),
+      }
+    })
+  }
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
-      hdRoutes: params.hdRoutes,
+      hdRoutes: this.getRoutesWithCurrentTerminalIds(params),
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
+      terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      validateTerminalContacts: this.validateTerminalContacts,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -85,8 +133,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       ]
 
     return (
-      routeStart.z === stitchSolver.start.z &&
-      routeEnd.z === stitchSolver.end.z &&
+      stitchSolver.isTerminalLayerAllowed(stitchSolver.start, routeStart.z) &&
+      stitchSolver.isTerminalLayerAllowed(stitchSolver.end, routeEnd.z) &&
       distance(routeStart, stitchSolver.start) +
         distance(routeEnd, stitchSolver.end) <=
         MAX_TERMINAL_STITCH_GAP_DISTANCE_3
@@ -100,7 +148,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allHdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+  }): HighDensityIntraNodeRoute[] | null {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
 
@@ -133,7 +181,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return this.getRoutesWithCurrentTerminalIds({
+      connectionName: params.connectionName,
+      hdRoutes: pathRoutes,
+      start: params.start,
+      end: params.end,
+    })
   }
 
   constructor(params: {
@@ -143,7 +196,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     layerCount: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
+    terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
     preserveTerminalPcbPortIds?: boolean
+    /** Enforce owned terminal reachability; default false preserves legacy paths. */
+    validateTerminalContacts?: boolean
     preferSameLayerTerminalEndpoints?: boolean
   }) {
     super()
@@ -153,7 +209,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
+    this.terminalLayerIndicesByPcbPortId =
+      params.terminalLayerIndicesByPcbPortId
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.validateTerminalContacts = params.validateTerminalContacts ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -447,7 +506,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
+      terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      validateTerminalContacts: this.validateTerminalContacts,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",

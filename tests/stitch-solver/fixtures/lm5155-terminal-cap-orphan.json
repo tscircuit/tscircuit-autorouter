@@ -1,0 +1,579 @@
+{
+  "connectionName": "source_net_8_mst7",
+  "start": {
+    "x": 39.89379626,
+    "y": 43.5626002,
+    "layer": "top",
+    "pointId": "pcb_port_109",
+    "pcb_port_id": "pcb_port_109",
+    "z": 0
+  },
+  "end": {
+    "x": 38.38979622,
+    "y": 48.90059816,
+    "layer": "top",
+    "pointId": "pcb_port_36",
+    "pcb_port_id": "pcb_port_36",
+    "z": 0
+  },
+  "hdRoutes": [
+    {
+      "connectionName": "source_net_8_mst7",
+      "startPcbPortId": "pcb_port_109",
+      "endPcbPortId": "pcb_port_36",
+      "rootConnectionName": "source_net_8",
+      "route": [
+        {
+          "x": 39.89379626,
+          "y": 43.5626002,
+          "z": 0
+        },
+        {
+          "x": 39.875,
+          "y": 43.5,
+          "z": 0
+        },
+        {
+          "x": 39.822,
+          "y": 43.456,
+          "z": 0
+        },
+        {
+          "x": 39.77,
+          "y": 43.415,
+          "z": 0
+        },
+        {
+          "x": 39.721,
+          "y": 43.383,
+          "z": 0
+        },
+        {
+          "x": 39.676,
+          "y": 43.371,
+          "z": 0
+        },
+        {
+          "x": 39.631,
+          "y": 43.366,
+          "z": 0
+        },
+        {
+          "x": 39.592,
+          "y": 43.367,
+          "z": 0
+        },
+        {
+          "x": 39.552,
+          "y": 43.374,
+          "z": 0
+        },
+        {
+          "x": 39.475,
+          "y": 43.4,
+          "z": 0
+        },
+        {
+          "x": 39.469,
+          "y": 43.388,
+          "z": 0
+        },
+        {
+          "x": 39.45,
+          "y": 43.4,
+          "z": 0
+        },
+        {
+          "x": 39.401,
+          "y": 43.295,
+          "z": 0
+        },
+        {
+          "x": 39.368,
+          "y": 43.197,
+          "z": 0
+        },
+        {
+          "x": 39.364,
+          "y": 43.103,
+          "z": 0
+        },
+        {
+          "x": 39.381,
+          "y": 43.009,
+          "z": 0
+        },
+        {
+          "x": 39.45,
+          "y": 42.9,
+          "z": 0
+        },
+        {
+          "x": 39.469,
+          "y": 42.823,
+          "z": 0
+        },
+        {
+          "x": 39.6,
+          "y": 42.6,
+          "z": 0
+        },
+        {
+          "x": 40.017,
+          "y": 42.38,
+          "z": 0
+        },
+        {
+          "x": 40.412,
+          "y": 42.29,
+          "z": 0
+        },
+        {
+          "x": 40.805,
+          "y": 42.248,
+          "z": 0
+        },
+        {
+          "x": 41.201,
+          "y": 42.231,
+          "z": 0
+        },
+        {
+          "x": 41.598,
+          "y": 42.232,
+          "z": 0
+        },
+        {
+          "x": 41.993,
+          "y": 42.252,
+          "z": 0
+        },
+        {
+          "x": 42.384,
+          "y": 42.299,
+          "z": 0
+        },
+        {
+          "x": 42.772,
+          "y": 42.401,
+          "z": 0
+        },
+        {
+          "x": 43.179,
+          "y": 42.672,
+          "z": 0
+        },
+        {
+          "x": 43.6,
+          "y": 43,
+          "z": 0
+        },
+        {
+          "x": 43.612,
+          "y": 42.913,
+          "z": 0
+        },
+        {
+          "x": 43.719,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 43.827,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 43.933,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.04,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.147,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.253,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.36,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.467,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.574,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "portPointId": "tiny-terminal:end-port:source_net_8_mst5:z0",
+          "x": 44.628,
+          "y": 42.951,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25",
+          "prevPortPointId": "ce2010_pp2_z0::0"
+        },
+        {
+          "portPointId": "tiny-terminal:end-port:source_net_8_mst5:z1",
+          "x": 44.628,
+          "y": 42.951,
+          "z": 1,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25",
+          "prevPortPointId": "ce2352_pp1_z1::1"
+        },
+        {
+          "x": 44.574,
+          "y": 43.005,
+          "z": 1
+        },
+        {
+          "x": 44.476,
+          "y": 43.052,
+          "z": 1
+        },
+        {
+          "x": 44.369,
+          "y": 43.134,
+          "z": 1
+        },
+        {
+          "x": 44.259,
+          "y": 43.229,
+          "z": 1
+        },
+        {
+          "x": 44.15,
+          "y": 43.33,
+          "z": 1
+        },
+        {
+          "x": 44.042,
+          "y": 43.435,
+          "z": 1
+        },
+        {
+          "x": 43.934,
+          "y": 43.54,
+          "z": 1
+        },
+        {
+          "x": 43.827,
+          "y": 43.647,
+          "z": 1
+        },
+        {
+          "x": 43.719,
+          "y": 43.754,
+          "z": 1
+        },
+        {
+          "portPointId": "ce2352_pp1_z1::1",
+          "x": 43.612,
+          "y": 43.742,
+          "z": 1,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25",
+          "nextPortPointId": "tiny-terminal:end-port:source_net_8_mst5:z1"
+        },
+        {
+          "x": 42.084,
+          "y": 45.388,
+          "z": 1
+        },
+        {
+          "x": 41.818,
+          "y": 46.819,
+          "z": 1
+        },
+        {
+          "x": 41.704,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.589,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.475,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.361,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.247,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.132,
+          "y": 46.872,
+          "z": 1
+        },
+        {
+          "x": 41.018,
+          "y": 46.819,
+          "z": 1
+        },
+        {
+          "x": 40.843,
+          "y": 46.819,
+          "z": 1
+        },
+        {
+          "x": 39.179,
+          "y": 46.698,
+          "z": 1
+        },
+        {
+          "x": 38.97,
+          "y": 47.522,
+          "z": 1
+        },
+        {
+          "x": 38.795,
+          "y": 47.522,
+          "z": 1
+        },
+        {
+          "x": 38.75,
+          "y": 47.65,
+          "z": 1
+        },
+        {
+          "x": 38.679,
+          "y": 47.756,
+          "z": 1
+        },
+        {
+          "x": 38.64,
+          "y": 47.854,
+          "z": 1
+        },
+        {
+          "x": 38.591,
+          "y": 47.956,
+          "z": 1
+        },
+        {
+          "x": 38.571,
+          "y": 48.053,
+          "z": 1
+        },
+        {
+          "x": 38.561,
+          "y": 48.151,
+          "z": 1
+        },
+        {
+          "x": 38.555,
+          "y": 48.25,
+          "z": 1
+        },
+        {
+          "x": 38.552,
+          "y": 48.348,
+          "z": 1
+        },
+        {
+          "x": 38.551,
+          "y": 48.445,
+          "z": 1
+        },
+        {
+          "x": 38.55,
+          "y": 48.55,
+          "z": 1
+        },
+        {
+          "x": 38.529,
+          "y": 48.572,
+          "z": 1
+        },
+        {
+          "x": 38.263,
+          "y": 48.797,
+          "z": 1
+        },
+        {
+          "x": 38.25,
+          "y": 48.8,
+          "z": 1
+        },
+        {
+          "x": 38.153,
+          "y": 48.904,
+          "z": 1
+        },
+        {
+          "x": 38.078,
+          "y": 49,
+          "z": 1
+        },
+        {
+          "x": 38.023,
+          "y": 49.078,
+          "z": 1
+        },
+        {
+          "x": 38.023,
+          "y": 49.078,
+          "z": 0
+        },
+        {
+          "x": 38.073,
+          "y": 49.091,
+          "z": 0
+        },
+        {
+          "x": 38.15,
+          "y": 49.1,
+          "z": 0
+        },
+        {
+          "x": 38.263,
+          "y": 49.124,
+          "z": 0
+        }
+      ],
+      "vias": [
+        {
+          "x": 38.023,
+          "y": 49.078
+        }
+      ],
+      "jumpers": [],
+      "viaDiameter": 0.3,
+      "traceThickness": 0.15
+    },
+    {
+      "connectionName": "source_net_8_mst7",
+      "rootConnectionName": "source_net_8",
+      "regionId": "cmn_529",
+      "traceThickness": 0.15,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "portPointId": "ce2010_pp2_z0::0",
+          "x": 43.612,
+          "y": 42.913,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25",
+          "nextPortPointId": "tiny-terminal:end-port:source_net_8_mst5:z0"
+        },
+        {
+          "x": 43.719,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 43.827,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 43.933,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.04,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.147,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.253,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.36,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.467,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "x": 44.574,
+          "y": 43.005,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25"
+        },
+        {
+          "portPointId": "tiny-terminal:end-port:source_net_8_mst5:z0",
+          "x": 44.628,
+          "y": 42.951,
+          "z": 0,
+          "connectionName": "source_net_8_mst7",
+          "rootConnectionName": "connectivity_net25",
+          "prevPortPointId": "ce2010_pp2_z0::0"
+        }
+      ],
+      "vias": []
+    }
+  ]
+}

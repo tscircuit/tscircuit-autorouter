@@ -2,6 +2,7 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
+import { createImmutableCopperCandidateAdmission } from "./createImmutableCopperCandidateAdmission"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -75,6 +76,8 @@ type Pipeline9JointDrcRepairSolverParams = {
   defaultViaHoleDiameter: number
   effort: number
   colorMap: Record<string, string>
+  /** Project fresh physical copper before the existing detour strategies. */
+  projectCopperClearanceBeforeDetours?: boolean
 }
 
 type MovablePreloadedSection = {
@@ -101,6 +104,7 @@ type PreparedCandidateDrcInput = {
 }
 
 type NormalizedCandidateDrcResult = {
+  candidateAdmissible?: boolean
   errors: Array<Record<string, unknown>>
   errorsWithCenters: Array<Record<string, unknown>>
 }
@@ -228,11 +232,13 @@ const combinePreloadedTraceSectionGroup = ({
   sectionGroup,
   syntheticConnectionName,
   connMap,
+  layerCount,
 }: {
   trace: SimplifiedPcbTrace
   sectionGroup: PreloadedTraceSectionGroup
   syntheticConnectionName: string
   connMap: ConnectivityMap
+  layerCount: number
 }): HighDensityRoute => {
   const traceSections = sectionGroup.routes
   if (traceSections.length === 0) {
@@ -267,6 +273,34 @@ const combinePreloadedTraceSectionGroup = ({
   const startsAtTraceTerminal = sectionGroup.routePositionStart === 0
   const endsAtTraceTerminal =
     sectionGroup.routePositionEnd === trace.route.length - 1
+  for (const { pointIndex, throughPoint, side } of [
+    {
+      pointIndex: 0,
+      throughPoint: trace.route[sectionGroup.routePositionStart - 1],
+      side: "start" as const,
+    },
+    {
+      pointIndex: route.length - 1,
+      throughPoint: trace.route[sectionGroup.routePositionEnd + 1],
+      side: "end" as const,
+    },
+  ]) {
+    if (throughPoint?.route_type !== "through_obstacle") continue
+    const point = route[pointIndex]!
+    const anchor = side === "start" ? throughPoint.end : throughPoint.start
+    const layer =
+      side === "start" ? throughPoint.to_layer : throughPoint.from_layer
+    if (
+      Math.abs(point.x - anchor.x) > POINT_EPSILON ||
+      Math.abs(point.y - anchor.y) > POINT_EPSILON ||
+      mapZToLayerName(point.z, layerCount) !== layer
+    ) {
+      throw new Error(
+        `Pipeline9 preloaded section lost its retained through-copper ${side} boundary for "${trace.pcb_trace_id}"`,
+      )
+    }
+    route[pointIndex] = { ...point, isFixedToCopperBoundary: true }
+  }
   const startPcbPortId = startsAtTraceTerminal ? trace.connectsTo?.[0] : null
   const endPcbPortId = endsAtTraceTerminal ? trace.connectsTo?.at(-1) : null
   if (startPcbPortId && route[0]) {
@@ -557,7 +591,34 @@ const createSyntheticConnection = (
   }
 }
 
-const rebuildPreloadedTraceFromSections = ({
+const areExactTraceValuesEqual = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true
+  if (
+    typeof left !== "object" ||
+    left === null ||
+    typeof right !== "object" ||
+    right === null ||
+    Array.isArray(left) !== Array.isArray(right)
+  ) {
+    return false
+  }
+  if (Array.isArray(left) && left.length !== (right as unknown[]).length) {
+    return false
+  }
+  const leftKeys = Object.keys(left)
+  const rightKeys = Object.keys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+  return leftKeys.every(
+    (key): boolean =>
+      Object.prototype.hasOwnProperty.call(right, key) &&
+      areExactTraceValuesEqual(
+        (left as Record<string, unknown>)[key],
+        (right as Record<string, unknown>)[key],
+      ),
+  )
+}
+
+export const rebuildPreloadedTraceFromSections = ({
   originalTrace,
   repairedSections,
 }: {
@@ -589,10 +650,16 @@ const rebuildPreloadedTraceFromSections = ({
   }
   rebuiltRoute.push(...originalTrace.route.slice(originalRoutePosition))
 
-  return {
+  const rebuiltTrace = {
     ...originalTrace,
-    __replaces_pcb_trace_id: originalTrace.pcb_trace_id,
     route: rebuiltRoute,
+  }
+  if (areExactTraceValuesEqual(rebuiltTrace, originalTrace)) {
+    return originalTrace
+  }
+  return {
+    ...rebuiltTrace,
+    __replaces_pcb_trace_id: originalTrace.pcb_trace_id,
   }
 }
 
@@ -943,6 +1010,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             sectionGroup,
             syntheticConnectionName,
             connMap: params.connMap,
+            layerCount: params.layerCount,
           }),
         })
       }
@@ -1241,18 +1309,50 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         solverTraceIdByEvaluationTraceId,
       }
     }
+    const initialRepairRoutes = [
+      ...params.newHdRoutes,
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
+    ]
+    const immutableTraces = params.updatedPreloadedTraces.flatMap((trace) => {
+      if (!movableOriginalTraceIds.has(trace.pcb_trace_id)) return [trace]
+      const route = trace.route.filter((point) => point.route_type === "through_obstacle")
+      return route.length > 0 ? [{ ...trace, route }] : []
+    })
+    const admitImmutableCopper = immutableTraces.length > 0
+      ? createImmutableCopperCandidateAdmission({
+          srj: params.originalSrj,
+          connMap: params.connMap,
+          initialMovableTraces: (() => {
+            const prepared = prepareCandidateDrcInput(initialRepairRoutes)
+            return prepared.evaluatedTraces.filter((trace) =>
+              prepared.solverTraceIdByEvaluationTraceId.has(trace.pcb_trace_id),
+            )
+          })(),
+          immutableTraces,
+        })
+      : undefined
+    const getCandidateAdmission = (input: PreparedCandidateDrcInput): boolean | undefined => {
+      if (!admitImmutableCopper) return undefined
+      const movableTraces = input.evaluatedTraces.filter((trace) =>
+        input.solverTraceIdByEvaluationTraceId.has(trace.pcb_trace_id),
+      )
+      return admitImmutableCopper(movableTraces)
+    }
+
     const normalizeCandidateDrcResult = ({
       errors,
       errorsWithCenters,
       circuitJson,
       movableTraceIds,
       solverTraceIdByEvaluationTraceId,
+      candidateAdmissible,
     }: {
       errors: Array<Record<string, unknown>>
       errorsWithCenters: Array<Record<string, unknown>>
       circuitJson: AnyCircuitElement[]
       movableTraceIds: ReadonlySet<string>
       solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
+      candidateAdmissible?: boolean
     }): NormalizedCandidateDrcResult => {
       const remappedCircuitJson = circuitJson.map((element) => {
         if (
@@ -1268,6 +1368,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           : element
       })
       return {
+        ...(candidateAdmissible !== undefined ? { candidateAdmissible } : {}),
         errors: normalizePipeline9DrcErrorsForRepair({
           errors: remapDrcTraceIds(errors, solverTraceIdByEvaluationTraceId),
           circuitJson: remappedCircuitJson,
@@ -1357,6 +1458,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
+        candidateAdmissible: getCandidateAdmission(candidateDrcInput),
       })
     }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
@@ -1522,6 +1624,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
+        candidateAdmissible: getCandidateAdmission(candidateDrcInput),
       })
       this.indexedDrcEvaluationTimeMs +=
         performance.now() - evaluationStartedAtMs
@@ -1534,12 +1637,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
     this.exactRepairParams = {
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
-      hdRoutes: [
-        ...params.newHdRoutes,
-        ...this.movablePreloadedSections.map(
-          (movableSection) => movableSection.hdRoute,
-        ),
-      ],
+      hdRoutes: initialRepairRoutes,
       connMap: params.connMap,
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
@@ -1559,8 +1657,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     // Resolve hole clearance before detour repair, without moving preloaded copper.
     if (
-      params.updatedPreloadedTraces.length > 0 ||
-      !params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)
+      !params.projectCopperClearanceBeforeDetours &&
+      (params.updatedPreloadedTraces.length > 0 ||
+        !params.obstacles.some((obstacle) => obstacle.isNonPlatedHole))
     ) {
       this.currentPipelineStepIndex = 1
     }
