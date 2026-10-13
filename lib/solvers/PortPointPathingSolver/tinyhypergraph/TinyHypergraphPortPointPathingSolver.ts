@@ -20,6 +20,7 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
+  DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -36,10 +37,6 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import {
-  DuplicateCongestedPortSolverWithIndependentRoutes,
-  type IndependentRouteSegment,
-} from "./DuplicateCongestedPortSolverWithIndependentRoutes"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -919,7 +916,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly independentRouteSegments?: readonly IndependentRouteSegment[],
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -1023,14 +1019,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
-      if (
-        solver instanceof SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments &&
-        this.useSelectiveReripRouting &&
-        solver.PARTIAL_RIP_ENABLED &&
-        this.independentRouteSegments
-      ) {
-        solver.setInitialBackboneSegments(this.independentRouteSegments)
-      }
     }
 
     this.configuredSolvers.add(solver)
@@ -1048,7 +1036,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private alternativeCandidateEvaluated = false
   private selectedCandidate: "primary" | "alternative" = "primary"
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
-  private independentRouteSegments?: readonly IndependentRouteSegment[]
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
@@ -1098,7 +1085,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     let graphForTiny = serializedGraph
-    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolverWithIndependentRoutes(
+    const duplicateCongestedPortSolver = new DuplicateCongestedPortSolver(
       serializedGraph,
       {
         duplicatePortProximity: 0.05,
@@ -1120,7 +1107,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         duplicateCongestedPortSolver.error ?? "unknown error"
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-      this.independentRouteSegments = duplicateCongestedPortSolver.independentRouteSegments
       graphForTiny = duplicateCongestedPortSolver.getOutput()
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
@@ -1148,7 +1134,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        this.independentRouteSegments,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1398,18 +1383,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       changedPreloadedTraceSectionCount:
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
-      initialRouteOrderingRouteCount: solveGraphStats.initialRouteOrderingRouteCount,
-      initialRouteOrderingChangedPositionCount: solveGraphStats.initialRouteOrderingChangedPositionCount,
-      initialRouteOrderingMaxConflictDegree: solveGraphStats.initialRouteOrderingMaxConflictDegree,
-      initialRouteOrderingMaxPriority: solveGraphStats.initialRouteOrderingMaxPriority,
-      initialColdSeedRouteCount: solveGraphStats.initialColdSeedRouteCount,
-      initialColdSeedNetCount: solveGraphStats.initialColdSeedNetCount,
-      initialColdSeedAssignmentCount: solveGraphStats.initialColdSeedAssignmentCount,
-      initialColdSeedPendingRouteCount: solveGraphStats.initialColdSeedPendingRouteCount,
-      initialColdSeedEstimatedVias: solveGraphStats.initialColdSeedEstimatedVias,
-      initialColdSeedRegionCost: solveGraphStats.initialColdSeedRegionCost,
-      initialColdSeedMaxRegionCost: solveGraphStats.initialColdSeedMaxRegionCost,
-      initialColdSeedElapsedMs: solveGraphStats.initialColdSeedElapsedMs,
+      initialAltLandmarkCount: solveGraphStats.initialAltLandmarkCount,
+      initialAltRelaxedArcCount: solveGraphStats.initialAltRelaxedArcCount,
+      initialAltScannedArcCount: solveGraphStats.initialAltScannedArcCount,
+      initialAltPreprocessingMs: solveGraphStats.initialAltPreprocessingMs,
+      initialAltRelaxedInfinitePenaltyPortCount:
+        solveGraphStats.initialAltRelaxedInfinitePenaltyPortCount,
+      initialAltQueryCount: solveGraphStats.initialAltQueryCount,
+      initialAltCacheHitCount: solveGraphStats.initialAltCacheHitCount,
+      initialAltMaxImprovementOverEuclidean:
+        solveGraphStats.initialAltMaxImprovementOverEuclidean,
+      initialAltActive: solveGraphStats.initialAltActive,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
@@ -1470,7 +1454,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.independentRouteSegments,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

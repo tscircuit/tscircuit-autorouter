@@ -67,14 +67,15 @@ export type TinyHypergraphBenchmarkMetrics = {
   downstreamNodePfMax?: number
   downstreamSquaredNodePortPointCount?: number
   iterations: number
-  initialColdSeedRouteCount?: number
-  initialColdSeedNetCount?: number
-  initialColdSeedAssignmentCount?: number
-  initialColdSeedPendingRouteCount?: number
-  initialColdSeedEstimatedVias?: number
-  initialColdSeedRegionCost?: number
-  initialColdSeedMaxRegionCost?: number
-  initialColdSeedElapsedMs?: number
+  initialAltLandmarkCount?: number
+  initialAltRelaxedArcCount?: number
+  initialAltScannedArcCount?: number
+  initialAltPreprocessingMs?: number
+  initialAltRelaxedInfinitePenaltyPortCount?: number
+  initialAltQueryCount?: number
+  initialAltCacheHitCount?: number
+  initialAltMaxImprovementOverEuclidean?: number
+  initialAltActive?: boolean
   timeMs?: number
   ripCount?: number
   partialRipCount?: number

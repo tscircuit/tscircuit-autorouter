@@ -1,7 +1,6 @@
 import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
-import type { IndependentRouteSegment } from "./DuplicateCongestedPortSolverWithIndependentRoutes"
-import { initializePlanarBoundarySeed } from "./initializePlanarBoundarySeed"
+import { initializeTinyHypergraphLandmarkHeuristic } from "./initializeTinyHypergraphLandmarkHeuristic"
 
 /**
  * Selective rerips may move a preloaded assignment when it is the blocker.
@@ -10,31 +9,13 @@ import { initializePlanarBoundarySeed } from "./initializePlanarBoundarySeed"
  */
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
   private initialAssignmentRouteIds?: ReadonlySet<number>
-  private initialBackboneSegments?: readonly IndependentRouteSegment[]
-  private initialBackboneSetupDone = false
-
-  setInitialBackboneSegments(segments: readonly IndependentRouteSegment[]): void {
-    if (this.initialBackboneSetupDone || this.iterations !== 0) {
-      throw new Error("Initial backbone segments must be queued before setup")
-    }
-    if (this.initialBackboneSegments) {
-      throw new Error("Initial backbone segments have already been queued")
-    }
-    this.initialBackboneSegments = segments
-  }
 
   override _setup(): void {
     super._setup()
-    this.initialBackboneSetupDone = true
-    const segments = this.initialBackboneSegments
-    this.initialBackboneSegments = undefined
-    if (this.failed || !this.PARTIAL_RIP_ENABLED || !segments) return
-
-    initializePlanarBoundarySeed(
-      this,
-      segments,
-      this.routeSuccessCountByRouteId,
-    )
+    // Outside-in frontiers own a separate heuristic. Keep that engine and
+    // failed reachability checks unchanged before preprocessing these bounds.
+    if (this.failed || this.OUTSIDE_IN_ROUTING) return
+    initializeTinyHypergraphLandmarkHeuristic(this)
   }
 
   protected override getRouteIdsPreferredForPreservation(): ReadonlySet<number> {

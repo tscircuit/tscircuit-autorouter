@@ -1680,7 +1680,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.stats = {
         ...this.stats,
         ...this.exactRepairSolver.stats,
-        finalDrcIssueCount: 0,
         postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
         postExactReferenceValidationAttempted: true,
         postExactReferenceDrcIssueCount: 0,

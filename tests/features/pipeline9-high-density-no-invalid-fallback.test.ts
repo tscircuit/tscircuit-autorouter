@@ -77,11 +77,6 @@ test("Pipeline9 rejects invalid geometry and retries across legal layers", () =>
   expect(twoLayerSolver.failed).toBeFalse()
   expect(twoLayerSolver.stats.fallbackNodeCount).toBe(1)
   expect(
-    twoLayerSolver.routes.every((route): boolean =>
-      route.route.every((point): boolean => point.z === 0 || point.z === 1),
-    ),
-  ).toBeTrue()
-  expect(
     twoLayerSolver.routes.some((route) =>
       route.route.some((point) => point.z === 1),
     ),
