@@ -1746,7 +1746,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
       initialErrors: terminalEscapeResult.remainingErrors,
-      allowTracePairRepair: true,
       preloadRepairTraceIds,
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
