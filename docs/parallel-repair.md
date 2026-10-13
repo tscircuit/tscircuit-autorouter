@@ -22,6 +22,14 @@ The helper uses exactly the existing node repair policy, including boundary sett
 margin, and clearance statistics. Merely wrapping the helper in a promise on the
 main thread does not parallelize CPU work.
 
+The helper calls the pinned repair dependency's frame-building kernel directly.
+It omits the solver wrapper's diagnostic trace-conflict enumeration and live
+visualization work, which do not affect repaired routes or stage statistics.
+The parallel kernel also rejects distant obstacle checks using conservative
+bounding boxes and caches clearances for unchanged routes. It is pinned separately
+as `high-density-repair02-parallel`, retaining the original dependency for the
+sequential path and exact-output comparisons.
+
 `concurrency` defaults to 4 and must be a positive integer. It bounds in-flight
 samples. A completed sample frees its worker immediately, even when its result
 awaits an earlier node. Each executor receives an isolated copy of the original
@@ -66,3 +74,6 @@ Use `"--repair-only", "true"` to prepare upstream routing once per board and
 compare just node repair. This mode reports repair time both with and without
 stage construction, and verifies the repair output hash instead of the final SRJ.
 The default mode measures the complete pipeline and validates the final SRJ.
+Isolated runs also retain the prepared node inputs and per-node worker execution
+and round-trip times in the artifact, allowing slow nodes and serialization
+overhead to be distinguished from worker utilization.

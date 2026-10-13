@@ -1,5 +1,5 @@
 import type { DatasetSample, HdRoute } from "high-density-repair02"
-import { buildRepairFrames } from "high-density-repair02/lib/high-density-repair-solver/steps/buildRepairFrames"
+import { buildRepairFrames } from "high-density-repair02-parallel/lib/high-density-repair-solver/steps/buildRepairFrames"
 
 export type HighDensityRepairSampleInput = {
   sample: DatasetSample
