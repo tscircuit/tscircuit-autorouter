@@ -17,7 +17,6 @@ const ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.4
 const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
 const SLENDER_OBSTACLE_ASPECT_RATIO = 2
 const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
-const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
   const normalizedRotation = normalizeRotation(rotationDegrees)
@@ -307,44 +306,6 @@ const generateConservativeApproximatingRects = (
   return rects
 }
 
-const generateCenterlineApproximatingRects = (
-  rotatedRect: RotatedRect,
-  rectCount: number,
-): Rect[] => {
-  const { center, width, height, rotation } = rotatedRect
-  const longSide = Math.max(width, height)
-  const shortSide = Math.min(width, height)
-  const clampedRectCount = Math.max(1, Math.ceil(rectCount))
-  const stepLength = longSide / clampedRectCount
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
-  const rectSize = Math.max(
-    stepLength,
-    shortSide * CENTERLINE_APPROX_RECT_SIZE_FACTOR,
-  )
-  const rects: Rect[] = []
-
-  for (let i = 0; i < clampedRectCount; i++) {
-    const localOffset = (i - clampedRectCount / 2 + 0.5) * stepLength
-    const rotatedX =
-      width >= height ? localOffset * cosAngle : -localOffset * sinAngle
-    const rotatedY =
-      width >= height ? localOffset * sinAngle : localOffset * cosAngle
-
-    rects.push({
-      center: {
-        x: center.x + rotatedX,
-        y: center.y + rotatedY,
-      },
-      width: rectSize,
-      height: rectSize,
-    })
-  }
-
-  return rects
-}
-
 const getMaxLocalApproximationRectLength = (obstacle: Obstacle): number => {
   if (obstacle.obstacleId?.startsWith("trace_obstacle_")) {
     return TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH
@@ -419,6 +380,8 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
     !obstacle.obstacleId?.startsWith("trace_obstacle_")
   const needsConservativeApproximation =
     obstacle.isNonPlatedHole || useConservativeApproximation
+  // Bound each complete slice of unconnected obstacles too. Centerline
+  // squares can leave parts of a rotated keepout available for routing.
   const rects = needsConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
@@ -426,9 +389,7 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
           rotatedRect,
           getMaxLocalApproximationRectLength(obstacle),
         )
-      : obstacle.obstacleId?.startsWith("trace_obstacle_")
-        ? generateApproximatingRects(rotatedRect, rectCount)
-        : generateCenterlineApproximatingRects(rotatedRect, rectCount)
+      : generateApproximatingRects(rotatedRect, rectCount)
   const connectedRectIndex =
     obstacle.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {

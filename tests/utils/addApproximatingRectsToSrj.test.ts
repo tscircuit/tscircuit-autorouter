@@ -58,7 +58,7 @@ test("addApproximatingRectsToSrj converts diagonal trace obstacles into small no
   ).toBe(true)
 })
 
-test("addApproximatingRectsToSrj slices slender rotated obstacles into compact rects", () => {
+test("addApproximatingRectsToSrj slices slender rotated obstacles into covering rects", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -86,7 +86,7 @@ test("addApproximatingRectsToSrj slices slender rotated obstacles into compact r
     converted.obstacles.every(
       (obstacle) =>
         obstacle.ccwRotationDegrees === undefined &&
-        Math.max(obstacle.width, obstacle.height) < 0.9,
+        Math.max(obstacle.width, obstacle.height) < 1.1,
     ),
   ).toBe(true)
 })
