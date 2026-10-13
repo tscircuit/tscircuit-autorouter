@@ -28,8 +28,10 @@ import {
   TinyHyperGraphSolver,
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  type TinyHyperGraphProblem,
   type TinyHyperGraphSolverOptions,
 } from "tiny-hypergraph/lib/index"
+import type { PortId, RouteId } from "tiny-hypergraph/lib/types"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
@@ -82,6 +84,22 @@ type PreloadedTraceSegmentBaseline = ReadonlyMap<
   ReadonlySet<string>
 >
 
+export const getRouteTerminalPcbPortId = ({
+  problem,
+  routeId,
+  portId,
+  pcbPortId,
+}: {
+  problem: Pick<TinyHyperGraphProblem, "routeStartPort" | "routeEndPort">
+  routeId: RouteId
+  portId: PortId
+  pcbPortId?: string
+}): string | undefined =>
+  portId === problem.routeStartPort[routeId] ||
+  portId === problem.routeEndPort[routeId]
+    ? pcbPortId
+    : undefined
+
 type TinyBounds = {
   minX: number
   maxX: number
@@ -100,6 +118,12 @@ export type DownstreamCandidateSummary = {
 }
 
 type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
+
+type TinyHyperGraphIterationBudgetParams = {
+  effort: number
+  routeCount: number
+  largestDecomposedConnectionRouteCount: number
+}
 
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
@@ -254,8 +278,49 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 }
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
+const MIN_LARGE_CONNECTION_ROUTE_COUNT = 256
+const BASE_TINY_SOLVE_GRAPH_MAX_ITERATIONS = 2_000_000
+const TINY_SOLVE_GRAPH_MAX_ITERATIONS_PER_ROUTE = 32_768
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
+
+export const getTinyHyperGraphSolveGraphMaxIterations = ({
+  effort,
+  routeCount,
+  largestDecomposedConnectionRouteCount,
+}: TinyHyperGraphIterationBudgetParams): number => {
+  const effortScale = getEffortScale(effort)
+  const routeScaledMaxIterations =
+    largestDecomposedConnectionRouteCount >= MIN_LARGE_CONNECTION_ROUTE_COUNT
+      ? Math.max(0, routeCount) * TINY_SOLVE_GRAPH_MAX_ITERATIONS_PER_ROUTE
+      : 0
+  return Math.ceil(
+    Math.max(BASE_TINY_SOLVE_GRAPH_MAX_ITERATIONS, routeScaledMaxIterations) *
+      effortScale,
+  )
+}
+
+export const getLargestDecomposedConnectionRouteCount = (
+  connections: ReadonlyArray<{
+    simpleRouteConnection?: Pick<
+      SimpleRouteConnection,
+      "__rootConnectionNames"
+    >
+  }>,
+): number => {
+  const routeCountByRootConnectionName = new Map<string, number>()
+  let largestRouteCount = 0
+  for (const connection of connections) {
+    const rootConnectionName =
+      connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+    if (!rootConnectionName) continue
+    const routeCount =
+      (routeCountByRootConnectionName.get(rootConnectionName) ?? 0) + 1
+    routeCountByRootConnectionName.set(rootConnectionName, routeCount)
+    largestRouteCount = Math.max(largestRouteCount, routeCount)
+  }
+  return largestRouteCount
+}
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
@@ -295,6 +360,7 @@ const getTinyHyperGraphSectionSolverOptions = (
 const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
+  largestDecomposedConnectionRouteCount: number,
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
@@ -310,11 +376,20 @@ const getTinyHyperGraphPipelineInput = (
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
+  const enableLargeConnectionRouting =
+    enablePartialRip &&
+    largestDecomposedConnectionRouteCount >=
+      MIN_LARGE_CONNECTION_ROUTE_COUNT
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      MAX_ITERATIONS: getTinyHyperGraphSolveGraphMaxIterations({
+        effort,
+        routeCount,
+        largestDecomposedConnectionRouteCount,
+      }),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -323,7 +398,11 @@ const getTinyHyperGraphPipelineInput = (
           }
         : {
             PARTIAL_RIP_ENABLED: false,
-            OUTSIDE_IN_ROUTING: false,
+            OUTSIDE_IN_ROUTING: enableLargeConnectionRouting,
+            MULTI_ROUTE_CONNECTION_OUTSIDE_IN_ROUTING:
+              enableLargeConnectionRouting,
+            MULTI_ROUTE_CONNECTION_OUTSIDE_IN_MIN_ROUTE_COUNT:
+              MIN_LARGE_CONNECTION_ROUTE_COUNT,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
@@ -1126,6 +1205,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solvedRoutes: serializedGraph.solvedRoutes,
       },
       params.effort,
+      getLargestDecomposedConnectionRouteCount(connections),
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
@@ -1589,6 +1669,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const pcbPortId = getRouteTerminalPcbPortId({
+      problem: solvedTinySolver.problem,
+      routeId,
+      portId,
+      pcbPortId: portMetadata?.pcb_port_id,
+    })
 
     return {
       portPointId: String(
@@ -1602,8 +1688,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connectionName,
       rootConnectionName,
       ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
+      typeof pcbPortId === "string"
+        ? { pcb_port_id: pcbPortId }
         : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
