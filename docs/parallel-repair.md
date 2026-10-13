@@ -77,3 +77,6 @@ The default mode measures the complete pipeline and validates the final SRJ.
 Isolated runs also retain the prepared node inputs and per-node worker execution
 and round-trip times in the artifact, allowing slow nodes and serialization
 overhead to be distinguished from worker utilization.
+Add `"--profile-node", "cmn_3"` in isolated mode to capture a CPU profile of that
+node in a separate process outside the measured comparisons. The profile and its
+Markdown summary are included in the benchmark artifact.

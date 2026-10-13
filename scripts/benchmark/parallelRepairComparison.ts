@@ -65,6 +65,9 @@ function parseOptions(args: string[]): ComparisonOptions {
       options.workerCounts = [...new Set(counts)]
     } else throw new Error(`Unknown argument ${flag}`)
   }
+  if (options.profileNode && !options.repairOnly) {
+    throw new Error("--profile-node requires --repair-only true")
+  }
   return options
 }
 
@@ -209,7 +212,7 @@ async function main(): Promise<void> {
         if (options.profileNode && prepared.sampleEntries.some((entry): boolean => entry.node.capacityMeshNodeId === options.profileNode)) {
           const profile = Bun.spawn([
             process.execPath, "--cpu-prof", "--cpu-prof-md",
-            "--cpu-prof-dir", ".", "--cpu-prof-name", `parallel-repair-cpu-${sampleNumber}.cpuprofile`,
+            "--cpu-prof-dir", ".", "--cpu-prof-name", `parallel-repair-cpu-${sampleNumber}`,
             "scripts/benchmark/profileHighDensityRepairSample.ts",
             `parallel-repair-samples-${sampleNumber}.json`, options.profileNode,
           ], { stdout: "inherit", stderr: "inherit" })
