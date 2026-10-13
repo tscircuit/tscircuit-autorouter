@@ -25,7 +25,9 @@ const snapshot = async (
     const { Resvg } = await import("@resvg/resvg-js")
     const png = new Resvg(svg, {
       fitTo: { mode: "width", value: 1536 },
-    }).render().asPng()
+    })
+      .render()
+      .asPng()
     writeFileSync(
       join(import.meta.dir, "__snapshots__", `gameboy-${name}.png`),
       new Uint8Array(png),
@@ -43,37 +45,53 @@ const boundaryDetail = (
   const nearby = convertSrjToGraphicsObject({
     ...input,
     connections: [],
-    obstacles: input.obstacles.filter((obstacle) =>
-      Math.abs(obstacle.center.x - node.center.x) < 1 &&
-      Math.abs(obstacle.center.y - node.center.y) < 2,
+    obstacles: input.obstacles.filter(
+      (obstacle) =>
+        Math.abs(obstacle.center.x - node.center.x) < 1 &&
+        Math.abs(obstacle.center.y - node.center.y) < 2,
     ),
   })
   const segments = (nearby.lines ?? []).flatMap((line) =>
     line.points.slice(1).map((end, index) => ({
-      ...line, points: [line.points[index]!, end],
+      ...line,
+      points: [line.points[index]!, end],
     })),
   )
-  const lines = segments.filter((line) =>
-    line.layer === "z0" && line.points.every((point) =>
-      Math.abs(point.x - node.center.x) < 1.2 &&
-      Math.abs(point.y - node.center.y) < 2.5,
-    ),
-  ).map((line) => ({ ...line, label: undefined }))
+  const lines = segments
+    .filter(
+      (line) =>
+        line.layer === "z0" &&
+        line.points.every(
+          (point) =>
+            Math.abs(point.x - node.center.x) < 1.2 &&
+            Math.abs(point.y - node.center.y) < 2.5,
+        ),
+    )
+    .map((line) => ({ ...line, label: undefined }))
   return {
     lines,
     rects: [
-      ...(nearby.rects ?? []).filter((rect) => rect.layer === "z0")
+      ...(nearby.rects ?? [])
+        .filter((rect) => rect.layer === "z0")
         .map((rect) => ({ ...rect, label: undefined })),
-      { center: { x: node.center.x, y: node.center.y - 0.4 },
-        width: 3.4, height: 6, stroke: "transparent", fill: "transparent" },
       {
-        ...createRectFromCapacityNode({
-          ...node,
-          availableZ: [0],
-          layer: "top",
-        }, {
-          zOffset: 0,
-        }),
+        center: { x: node.center.x, y: node.center.y - 0.4 },
+        width: 3.4,
+        height: 6,
+        stroke: "transparent",
+        fill: "transparent",
+      },
+      {
+        ...createRectFromCapacityNode(
+          {
+            ...node,
+            availableZ: [0],
+            layer: "top",
+          },
+          {
+            zOffset: 0,
+          },
+        ),
         width: node.width,
         height: node.height,
         label: "",
@@ -83,13 +101,25 @@ const boundaryDetail = (
     ],
     points: [{ ...crossing, color }],
     texts: [
-      { x: crossing.x + 0.1, y: crossing.y + 0.12,
-        text: "VBUS", color, fontSize: 0.14 },
-      { x: node.center.x - 0.9, y: node.center.y - 3.0,
-        text: "Red: existing top-layer copper", fontSize: 0.12 },
-      { x: node.center.x - 0.9, y: node.center.y - 3.2,
+      {
+        x: crossing.x + 0.1,
+        y: crossing.y + 0.12,
+        text: "VBUS",
+        color,
+        fontSize: 0.14,
+      },
+      {
+        x: node.center.x - 0.9,
+        y: node.center.y - 3.0,
+        text: "Red: existing top-layer copper",
+        fontSize: 0.12,
+      },
+      {
+        x: node.center.x - 0.9,
+        y: node.center.y - 3.2,
         text: `Copper gap: ${gap.toFixed(4)} mm; required: 0.1500 mm`,
-        fontSize: 0.12 },
+        fontSize: 0.12,
+      },
     ],
   }
 }
@@ -102,65 +132,117 @@ test("real Game Boy data reproduces VBUS crossing placement on preserved GND", a
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
   solver.solveUntilPhase("highDensityRouteSolver")
   expect(solver.failed).toBeFalse()
-  const after = solver.uniformPortDistributionSolver!.getOutput().find((node) =>
-    node.capacityMeshNodeId === "new-cmn_77-345",
+  const after = solver
+    .uniformPortDistributionSolver!.getOutput()
+    .find((node) => node.capacityMeshNodeId === "new-cmn_77-345")!
+  const before = solver
+    .portPointPathingSolver!.getOutput()
+    .nodesWithPortPoints.find(
+      (node) => node.capacityMeshNodeId === after.capacityMeshNodeId,
+    )!
+  const crossingBefore = before.portPoints.find(
+    (point) => point.portPointId === "ce1738_pp1_z0::0",
   )!
-  const before = solver.portPointPathingSolver!.getOutput().nodesWithPortPoints
-    .find((node) => node.capacityMeshNodeId === after.capacityMeshNodeId)!
-  const crossingBefore = before.portPoints.find((point) =>
-    point.portPointId === "ce1738_pp1_z0::0",
-  )!
-  const crossingAfter = after.portPoints.find((point) =>
-    point.portPointId === crossingBefore.portPointId,
+  const crossingAfter = after.portPoints.find(
+    (point) => point.portPointId === crossingBefore.portPointId,
   )!
   const groundSegments: Line[] = convertSrjToGraphicsObject({
     ...input,
     connections: [],
     obstacles: [],
-    traces: input.traces!.filter((trace) =>
-      trace.connection_name === "source_trace_104",
+    traces: input.traces!.filter(
+      (trace) => trace.connection_name === "source_trace_104",
     ),
-  }).lines!.flatMap((line) => line.points.slice(1).map((end, index) => ({
-    ...line, points: [line.points[index]!, end],
-  }))).filter((line) => line.layer === "z0")
-  const copperGap = (point: typeof crossingAfter): number => Math.min(
-    ...groundSegments.map((line) => pointToSegmentDistance(
-      point, line.points[0]!, line.points[1]!,
-    ) - ((line.strokeWidth ?? input.minTraceWidth) + input.minTraceWidth) / 2),
-  )
+  })
+    .lines!.flatMap((line) =>
+      line.points.slice(1).map((end, index) => ({
+        ...line,
+        points: [line.points[index]!, end],
+      })),
+    )
+    .filter((line) => line.layer === "z0")
+  const copperGap = (point: typeof crossingAfter): number =>
+    Math.min(
+      ...groundSegments.map(
+        (line) =>
+          pointToSegmentDistance(point, line.points[0]!, line.points[1]!) -
+          ((line.strokeWidth ?? input.minTraceWidth) + input.minTraceWidth) / 2,
+      ),
+    )
   expect(crossingAfter.connectionName).toBe("source_net_11")
   expect(copperGap(crossingAfter)).toBeLessThan(0.15)
   expect(input).toEqual(original)
 
   // Contrast the crossing marker with the physical top-layer copper.
   const color = "#7c3aed"
-  const board: GraphicsObject = convertSrjToGraphicsObject({ ...input, connections: [] })
+  const board: GraphicsObject = convertSrjToGraphicsObject({
+    ...input,
+    connections: [],
+  })
   board.lines = board.lines?.map((line) => ({ ...line, label: undefined }))
   board.rects = board.rects?.map((rect) => ({ ...rect, label: undefined }))
-  board.circles = board.circles?.map((circle) => ({ ...circle, label: undefined }))
-  board.polygons = [{
-    points: input.outline!, stroke: "#334155", fill: "transparent",
-    strokeWidth: input.minTraceWidth,
-  }]
+  board.circles = board.circles?.map((circle) => ({
+    ...circle,
+    label: undefined,
+  }))
+  board.polygons = [
+    {
+      points: input.outline!,
+      stroke: "#334155",
+      fill: "transparent",
+      strokeWidth: input.minTraceWidth,
+    },
+  ]
   board.circles!.push({
-    center: after.center, radius: 3, stroke: color, fill: "transparent",
+    center: after.center,
+    radius: 3,
+    stroke: color,
+    fill: "transparent",
   })
   board.texts = [
-    { x: input.bounds.minX, y: input.bounds.maxY + 5,
+    {
+      x: input.bounds.minX,
+      y: input.bounds.maxY + 5,
       text: "abse/gameboy 1.0.16: actual board pads and 136 Pico traces",
-      fontSize: 2.2 },
-    { x: after.center.x + 10, y: after.center.y + 6,
-      text: "Circled: VBUS / GND detail", color, fontSize: 1.8 },
+      fontSize: 2.2,
+    },
+    {
+      x: after.center.x + 10,
+      y: after.center.y + 6,
+      text: "Circled: VBUS / GND detail",
+      color,
+      fontSize: 1.8,
+    },
   ]
   await snapshot(board, "board")
   const svg = getGraphicsSvgFrames({
     frames: [
-      { name: "Before uniform spacing", step: "end", iteration: solver.portPointPathingSolver!.iterations, layer: 0, graphics: boundaryDetail(
-        input, after, crossingBefore, copperGap(crossingBefore), color,
-      ) },
-      { name: "After uniform spacing", step: "end", iteration: solver.uniformPortDistributionSolver!.iterations, layer: 0, graphics: boundaryDetail(
-        input, after, crossingAfter, copperGap(crossingAfter), color,
-      ) },
+      {
+        name: "Before uniform spacing",
+        step: "end",
+        iteration: solver.portPointPathingSolver!.iterations,
+        layer: 0,
+        graphics: boundaryDetail(
+          input,
+          after,
+          crossingBefore,
+          copperGap(crossingBefore),
+          color,
+        ),
+      },
+      {
+        name: "After uniform spacing",
+        step: "end",
+        iteration: solver.uniformPortDistributionSolver!.iterations,
+        layer: 0,
+        graphics: boundaryDetail(
+          input,
+          after,
+          crossingAfter,
+          copperGap(crossingAfter),
+          color,
+        ),
+      },
     ],
     columns: 2,
     backgroundColor: "white",
@@ -172,7 +254,9 @@ test("real Game Boy data reproduces VBUS crossing placement on preserved GND", a
     writeFileSync(
       join(import.meta.dir, "__snapshots__", "gameboy-detail.png"),
       new Uint8Array(
-        new Resvg(svg, { fitTo: { mode: "width", value: 1536 } }).render().asPng(),
+        new Resvg(svg, { fitTo: { mode: "width", value: 1536 } })
+          .render()
+          .asPng(),
       ),
     )
   }
