@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
-import { solveHighDensityRepairSample } from "lib/solvers/HighDensityRepairSolver/solveHighDensityRepairSample"
+import { solveHighDensityRepairSample, type HighDensityRepairSampleResult } from "lib/solvers/HighDensityRepairSolver/solveHighDensityRepairSample"
 import { createParallelRepairFixture } from "tests/fixtures/parallelRepairFixture"
 
 test("parallel repair preserves the sequential stage iteration budget and partial output", async () => {
@@ -20,4 +20,14 @@ test("parallel repair preserves the sequential stage iteration budget and partia
     expect(parallel.stats).toEqual(sequential.stats)
     expect(parallel.error).toBe(sequential.error)
   }
+  const exhausted = new Pipeline4HighDensityRepairSolver({
+    ...structuredClone(fixture),
+    parallelRepair: {
+      executor: (): Promise<HighDensityRepairSampleResult> => new Promise(() => {}),
+    },
+  })
+  exhausted.MAX_ITERATIONS = 0
+  await exhausted.solveAsync()
+  expect(exhausted.failed).toBe(true)
+  expect(exhausted.getOutput()).toEqual(fixture.hdRoutes)
 })

@@ -447,6 +447,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     const startTime = Date.now()
     while (!this.solved && !this.failed) {
       this.step()
+      if (this.solved || this.failed) break
       const effects = getPendingEffectsFromSolverTree(this)
       if (effects.length > 0) {
         await Promise.race(effects.map((effect) => effect.promise))
