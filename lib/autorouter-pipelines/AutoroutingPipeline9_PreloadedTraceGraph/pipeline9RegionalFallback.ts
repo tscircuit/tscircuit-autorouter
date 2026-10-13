@@ -4,6 +4,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { classifyPointInBounds } from "lib/utils/classifyPointInBounds"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -217,6 +218,40 @@ const fixedRouteSliceTouchesTargetLayer = (
   )
 }
 
+const getOriginalPortPointPairs = (
+  node: NodeWithPortPoints,
+): Array<[PortPoint, PortPoint]> => {
+  if (node.portPointsInPairs) return node.portPointsInPairs
+  if (node.useExplicitPortPointPairs !== true) return []
+
+  // Adding fixed-copper endpoints must retain every original connection task.
+  // Nodes without an authoritative list retain their linked or star topology.
+  const pointsByConnectionName = new Map<string, PortPoint[]>()
+  for (const point of node.portPoints) {
+    const points = pointsByConnectionName.get(point.connectionName)
+    if (points) points.push(point)
+    else pointsByConnectionName.set(point.connectionName, [point])
+  }
+
+  return [...pointsByConnectionName.values()].flatMap(
+    (points): Array<[PortPoint, PortPoint]> => {
+      if (
+        points.some(
+          (point): boolean =>
+            point.prevPortPointId !== undefined ||
+            point.nextPortPointId !== undefined,
+        )
+      ) {
+        return getConnectionPortPointPairs(points)
+      }
+      const origin = points[0]!
+      return points
+        .slice(1)
+        .map((point): [PortPoint, PortPoint] => [origin, point])
+    },
+  )
+}
+
 /**
  * Builds the regular high-density input used only after B01 fails. Fixed
  * each contiguous section of pre-routed copper crossing the node on a target
@@ -306,7 +341,7 @@ export const createRegionalFallbackProblem = (
         ...fallbackPortPairs.flatMap((pair) => pair),
       ],
       portPointsInPairs: [
-        ...(node.portPointsInPairs ?? []),
+        ...getOriginalPortPointPairs(node),
         ...fallbackPortPairs,
       ],
     },
@@ -416,7 +451,18 @@ export const spliceFixedRouteSectionWithMutationMask = ({
       route.push(point)
       return
     }
-    if (pointsAreEqual(previousPoint, point)) return
+    if (pointsAreEqual(previousPoint, point)) {
+      if (
+        point.isFixedToCopperBoundary === true &&
+        previousPoint.isFixedToCopperBoundary !== true
+      ) {
+        route[route.length - 1] = {
+          ...previousPoint,
+          isFixedToCopperBoundary: true,
+        }
+      }
+      return
+    }
     if (
       previousPoint.z !== point.z &&
       (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||

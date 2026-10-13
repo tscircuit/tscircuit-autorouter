@@ -15,6 +15,7 @@ import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
   precomputeIntraNodeRouteParams,
+  type IntraNodeConnectionTask,
   type PrecomputedIntraNodeRouteParams,
 } from "./precomputeIntraNodeRouteParams"
 
@@ -65,6 +66,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
+  declare originalConnectionTasks?: IntraNodeConnectionTask[]
   rootConnectionNameByConnectionName: Map<string, string>
 
   totalConnections: number
@@ -133,16 +135,65 @@ export class IntraNodeRouteSolver extends BaseSolver {
         ],
       ),
     )
-    this.unsolvedConnections = Array.from(
-      this.originalConnectionPointsByName
-        .entries()
-        .map(([connectionName, points]) => ({
-          connectionName,
-          rootConnectionName:
-            this.rootConnectionNameByConnectionName.get(connectionName),
-          points: [...points],
-        })),
-    )
+    if (nodeWithPortPoints.useExplicitPortPointPairs === true) {
+      const explicitPairs = precomputedParams.explicitConnectionPairs
+      if (explicitPairs === undefined) {
+        throw new Error("Authoritative regional precomputed pairs are required")
+      }
+      const explicitPairsByConnectionName = new Map<
+        string,
+        IntraNodeConnectionTask[]
+      >()
+      for (const pair of explicitPairs) {
+        const existingPairs = explicitPairsByConnectionName.get(
+          pair.connectionName,
+        )
+        if (existingPairs) existingPairs.push(pair)
+        else explicitPairsByConnectionName.set(pair.connectionName, [pair])
+      }
+      // Keep the original routing order of connection families. Repeated passages
+      // remain separate local edges, in their declared order within each family.
+      this.originalConnectionTasks = Array.from(
+        this.originalConnectionPointsByName.entries(),
+        ([connectionName]): IntraNodeConnectionTask[] => {
+          const pairs = explicitPairsByConnectionName.get(connectionName)
+          if (!pairs) {
+            throw new Error(
+              `Authoritative regional pairs omit connection "${connectionName}"`,
+            )
+          }
+          return pairs
+        },
+      )
+        .flat()
+        .map(
+          (connection): IntraNodeConnectionTask => ({
+            ...connection,
+            points: connection.points.map(
+              (point): ConnectionPoint => ({ ...point }),
+            ),
+          }),
+        )
+      this.unsolvedConnections = this.originalConnectionTasks.map(
+        (connection): IntraNodeConnectionTask => ({
+          ...connection,
+          points: connection.points.map(
+            (point): ConnectionPoint => ({ ...point }),
+          ),
+        }),
+      )
+    } else {
+      this.unsolvedConnections = Array.from(
+        this.originalConnectionPointsByName
+          .entries()
+          .map(([connectionName, points]) => ({
+            connectionName,
+            rootConnectionName:
+              this.rootConnectionNameByConnectionName.get(connectionName),
+            points: [...points],
+          })),
+      )
+    }
     this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
@@ -378,21 +429,53 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return null
   }
 
-  private queueConnectionForPostrouteRepair(connectionName: string) {
-    const points = this.originalConnectionPointsByName.get(connectionName)
-    if (!points || points.length < 2) {
+  private queueConnectionForPostrouteRepair(connectionName: string): boolean {
+    if (this.nodeWithPortPoints.useExplicitPortPointPairs !== true) {
+      const points = this.originalConnectionPointsByName.get(connectionName)
+      if (!points || points.length < 2) {
+        return false
+      }
+
+      this.solvedRoutes = this.solvedRoutes.filter(
+        (route) => route.connectionName !== connectionName,
+      )
+      this.unsolvedConnections.push({
+        connectionName,
+        rootConnectionName:
+          this.rootConnectionNameByConnectionName.get(connectionName),
+        points: points.map((point) => ({ ...point })),
+      })
+      this.rerouteAttemptsByConnection.set(
+        connectionName,
+        (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
+      )
+      return true
+    }
+    if (!this.originalConnectionTasks) {
+      throw new Error("Authoritative regional repair tasks are required")
+    }
+    const originalTasks = this.originalConnectionTasks.filter(
+      (connection): boolean =>
+        connection.connectionName === connectionName &&
+        connection.points.length >= 2,
+    )
+    if (originalTasks.length === 0) {
       return false
     }
 
     this.solvedRoutes = this.solvedRoutes.filter(
       (route) => route.connectionName !== connectionName,
     )
-    this.unsolvedConnections.push({
-      connectionName,
-      rootConnectionName:
-        this.rootConnectionNameByConnectionName.get(connectionName),
-      points: points.map((point) => ({ ...point })),
-    })
+    this.unsolvedConnections.push(
+      ...originalTasks.map(
+        (connection): IntraNodeConnectionTask => ({
+          ...connection,
+          points: connection.points.map(
+            (point): ConnectionPoint => ({ ...point }),
+          ),
+        }),
+      ),
+    )
     this.rerouteAttemptsByConnection.set(
       connectionName,
       (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,

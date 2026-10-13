@@ -98,8 +98,15 @@ export const areNodePortPointPairsConnectedByRoutes = (
 export const repairDisconnectedSameRootPortPoints = (
   routes: HighDensityIntraNodeRoute[],
   nodeWithPortPoints: NodeWithPortPoints,
-) => {
+): HighDensityIntraNodeRoute[] => {
   const repairedRoutes = [...routes]
+  if (
+    nodeWithPortPoints.useExplicitPortPointPairs === true &&
+    nodeWithPortPoints.portPointsInPairs?.length &&
+    areNodePortPointPairsConnectedByRoutes(routes, nodeWithPortPoints)
+  ) {
+    return repairedRoutes
+  }
   const portPointsByConnection = new Map<string, PortPoint[]>()
 
   for (const portPoint of nodeWithPortPoints.portPoints) {

@@ -20,6 +20,8 @@ export type NodeWithPortPoints = {
   portPoints: PortPoint[]
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
+  /** The producer supplies complete, authoritative regional routing edges. */
+  useExplicitPortPointPairs?: boolean
 }
 
 /**
@@ -51,6 +53,8 @@ export type HighDensityIntraNodeRoute = {
     traceThickness?: number
     /** Keeps routed terminals fixed during post-route DRC optimization. */
     pcb_port_id?: string
+    /** An exact splice into retained copper; its XY and layer stay fixed. */
+    isFixedToCopperBoundary?: boolean
     insideJumperPad?: boolean
     toNextSegmentType?: "through_obstacle"
     toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata

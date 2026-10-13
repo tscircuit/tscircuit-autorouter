@@ -28,6 +28,8 @@ type Pipeline9RegionalFallbackSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
+  candidateAdmission?: (routes: readonly HighDensityRoute[]) => boolean
+  finalCandidateAdmission?: (routes: readonly HighDensityRoute[]) => boolean
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
@@ -145,6 +147,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.params = params
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
+      copperCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
@@ -163,9 +166,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
+        params.candidateAdmission || (
+          params.boardObstacles &&
+          params.movablePreloadedConnectionNames &&
+          params.viaToPadClearance !== undefined
+        )
           ? (routes) => this.validateCandidateRoutes(routes)
           : undefined,
     })
@@ -177,7 +182,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return "Pipeline9RegionalFallbackSolver"
   }
 
-  private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+  private validateCandidateRoutes(routes: HighDensityRoute[], final = false): boolean {
+    const admission = final ? this.params.finalCandidateAdmission : this.params.candidateAdmission
+    if (admission && !admission(routes)) {
+      this.stats.copperCandidateRejectionCount = Number(this.stats.copperCandidateRejectionCount ?? 0) + 1
+      return false
+    }
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
@@ -276,7 +286,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.repairSolver!.solved) return
       const repairedRoutes = this.repairSolver!.getOutput()
-      if (!this.validateCandidateRoutes(repairedRoutes)) {
+      if (!this.validateCandidateRoutes(repairedRoutes, true)) {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
         this.error =

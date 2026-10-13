@@ -68,6 +68,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  validateCandidatesBeforeGrowth: boolean
   captureSearchDebug: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
@@ -108,6 +109,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
+    validateCandidatesBeforeGrowth,
     captureSearchDebug,
   }: {
     nodePortPoints: NodeWithPortPoints[]
@@ -131,6 +133,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    validateCandidatesBeforeGrowth?: boolean
     captureSearchDebug?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
@@ -161,6 +164,8 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.validateCandidatesBeforeGrowth =
+      validateCandidatesBeforeGrowth ?? false
     this.captureSearchDebug = captureSearchDebug ?? true
     this.MAX_ITERATIONS =
       10e6 *
@@ -412,6 +417,7 @@ export class HighDensitySolver extends BaseSolver {
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      validateCandidatesBeforeGrowth: this.validateCandidatesBeforeGrowth,
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver

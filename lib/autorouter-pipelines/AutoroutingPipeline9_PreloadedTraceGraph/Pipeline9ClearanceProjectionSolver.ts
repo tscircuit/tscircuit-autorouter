@@ -93,7 +93,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
         lockedPointIndices: canonicalRoutes.map((route) =>
-          route.route.map(() => false),
+          route.route.map((point) => Boolean(point.isFixedToCopperBoundary)),
         ),
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
@@ -105,7 +105,11 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         viaClearance:
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.viaClearance!) +
-          (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
+          (params.usePrecisionMargin
+            ? CLEARANCE_PRECISION_MARGIN
+            : params.originalSrj.minPadEdgeToPadEdgeClearance !== undefined
+              ? 1e-7
+              : 0),
       })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
       this.activeSubSolver = solver
@@ -193,9 +197,11 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
-    const canPublish = params.allowPartialRepair
+    const candidateAdmissible =
+      Array.isArray(candidateReference) || candidateReference.candidateAdmissible !== false
+    const canPublish = candidateAdmissible && (params.allowPartialRepair
       ? canPublishIndependentClearanceRepairs(errors, candidateErrors)
-      : candidateErrors.length < errors.length
+      : candidateErrors.length < errors.length)
     this.state = {
       phase: "finished",
       output: canPublish ? state.candidate : params.routes,

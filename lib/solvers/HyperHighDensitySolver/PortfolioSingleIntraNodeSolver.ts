@@ -55,6 +55,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    candidateSolutionValidator?: (
+      routes: HighDensityIntraNodeRoute[],
+    ) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -127,6 +130,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      candidateSolutionValidator?: (
+        routes: HighDensityIntraNodeRoute[],
+      ) => boolean
     },
   ) {
     super()
@@ -195,20 +201,53 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  getCombinationDefs() {
+  getCombinationDefs(): string[][] {
+    if (this.nodeWithPortPoints.useExplicitPortPointPairs !== true) {
+      return [
+        ["throughObstacle"],
+        ["singleLayerNoDifferentRootIntersections"],
+        ["multiHeadPolyLine"],
+        ["majorCombinations", "orderings6", "cellSizeFactor"],
+        ["noVias"],
+        ["orderings50"],
+        ["flipTraceAlignmentDirection", "orderings6"],
+        ["closedFormSingleTrace"],
+        // ["closedFormTwoTrace"],
+        ["highDensityA01"],
+        ["highDensityA03"],
+        ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
+      ]
+    }
+    this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
+      this.nodeWithPortPoints,
+    )
+    const metadata = this.precomputedIntraNodeRouteParams
+    if (
+      metadata.hasMatchingLinkedConnectionPairs === undefined ||
+      metadata.hasMultipleExplicitConnectionPairs === undefined
+    ) {
+      throw new Error("Authoritative regional precomputed metadata is required")
+    }
+    const linkedPairsMatch = metadata.hasMatchingLinkedConnectionPairs
+    // Link-based candidates must request the same copper as the authoritative pairs.
     return [
-      ["throughObstacle"],
-      ["singleLayerNoDifferentRootIntersections"],
-      ["multiHeadPolyLine"],
+      ...(linkedPairsMatch
+        ? [["throughObstacle"], ["singleLayerNoDifferentRootIntersections"]]
+        : []),
+      // This strategy stores one path per name, so repeated prescribed edges are unsupported.
+      ...(linkedPairsMatch && !metadata.hasMultipleExplicitConnectionPairs
+        ? [["multiHeadPolyLine"]]
+        : []),
       ["majorCombinations", "orderings6", "cellSizeFactor"],
       ["noVias"],
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
-      ["closedFormSingleTrace"],
+      ...(linkedPairsMatch ? [["closedFormSingleTrace"]] : []),
       // ["closedFormTwoTrace"],
-      ["highDensityA01"],
-      ["highDensityA03"],
-      ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
+      ...(linkedPairsMatch ? [["highDensityA01"], ["highDensityA03"]] : []),
+      ...(linkedPairsMatch && this.enableNegotiatedSearch
+        ? [["highDensityA13"]]
+        : []),
     ]
   }
 
@@ -441,7 +480,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (this.adaptiveSearchExpanded) return
 
     this.adaptiveSearchExpanded = true
-    for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
+    let shuffleSeeds = ORDERING_SHUFFLE_SEEDS.slice(1)
+    if (this.nodeWithPortPoints.useExplicitPortPointPairs === true) {
+      const linkedPairsMatch =
+        this.precomputedIntraNodeRouteParams?.hasMatchingLinkedConnectionPairs
+      if (linkedPairsMatch === undefined) {
+        throw new Error("Authoritative regional adaptive metadata is required")
+      }
+      if (!linkedPairsMatch) shuffleSeeds = []
+    }
+    for (const shuffleSeed of shuffleSeeds) {
       this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
         SHUFFLE_SEED: shuffleSeed,
@@ -704,9 +752,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const candidateRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (this.constructorParams.candidateSolutionValidator) {
+      // The supervisor tentatively selects this child before onSolve. Publish
+      // its winning state only after validation, including throwing validators.
+      this.solved = false
+      this.winningSolver = undefined
+      this.solvedRoutes = []
+      if (!this.constructorParams.candidateSolutionValidator(candidateRoutes)) {
+        solver.solver.solved = false
+        solver.solver.failed = true
+        solver.solver.error = "High-density candidate rejected by validator"
+        return
+      }
+      this.solved = true
+      this.winningSolver = solver.solver
+    }
+    this.solvedRoutes = candidateRoutes
   }
 }

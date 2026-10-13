@@ -1,4 +1,7 @@
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { createPipeline9ForceCandidateAdmission } from "./createPipeline9ForceCandidateAdmission"
+import { createPipeline9CopperAdmissionSerializer } from "./createPipeline9CopperAdmissionSerializer"
+import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -16,6 +19,8 @@ import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { reserveRetainedCopperPorts } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/reserveRetainedCopperPorts"
+import { createRetainedCopperPortPlacementValidator } from "lib/solvers/UniformPortDistributionSolver/createRetainedCopperPortPlacementValidator"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -79,6 +84,7 @@ import {
 } from "./materializeHypergraphPreloadedTraceSections"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import { normalizePipeline9HdRouteTerminalIds } from "./normalizePipeline9HdRouteTerminalIds"
 import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import {
   type PreparedPipeline9MutationSections,
@@ -525,6 +531,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
+        const usePhysicalViaCosts =
+          cms.srj.layerCount === 2 &&
+          (cms.originalSrj.traces?.length ?? 0) === 0
 
         return [
           {
@@ -533,11 +542,40 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            hasPreloadedTraces: (cms.originalSrj.traces?.length ?? 0) > 0,
+            ...((cms.originalSrj.traces?.length ?? 0) > 0
+              ? {
+                  prepareSerializedGraph: (
+                    serializedGraph: SerializedHyperGraph,
+                  ): void => {
+                    reserveRetainedCopperPorts(serializedGraph, {
+                      srj: cms.originalSrj,
+                      connMap: cms.connMap,
+                      traceWidth: cms.minTraceWidth,
+                      copperClearance:
+                        cms.srj.minTraceToPadEdgeClearance ??
+                        cms.srj.defaultObstacleMargin ??
+                        0.15,
+                    })
+                  },
+                }
+              : {}),
+            ...(usePhysicalViaCosts
+              ? {
+                  terminalLayerIndicesByPcbPortId:
+                    getTerminalLayerIndicesByPcbPortId(
+                      cms.srj.connections,
+                      cms.srj.obstacles,
+                      cms.srj.layerCount,
+                    ),
+                }
+              : {}),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_PHYSICAL_VIA_COSTS: usePhysicalViaCosts,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -579,6 +617,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          ...((cms.originalSrj.traces?.length ?? 0) > 0
+            ? {
+                validatePortPointPlacement:
+                  createRetainedCopperPortPlacementValidator({
+                    srj: {
+                      ...cms.originalSrj,
+                      connections: cms.srjWithPointPairs!.connections,
+                    },
+                    sections: cms.getChangedPreloadedTraceSections(),
+                    connMap: cms.connMap,
+                    traceWidth: cms.minTraceWidth,
+                    clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+                  }),
+              }
+            : {}),
         },
       ],
     ),
@@ -616,6 +669,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           sections: cms.getChangedPreloadedTraceSections(),
         })
 
+        const includeHoleClearance =
+          portPointPathingSolver.physicalViaMode ||
+          cms.originalSrj.minTraceToHoleEdgeClearance !== undefined
+
         return [
           {
             nodePortPoints: nodePortPointsSource,
@@ -623,11 +680,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               bounds: cms.originalSrj.bounds,
               outline: cms.originalSrj.outline,
               minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
+              ...(includeHoleClearance
+                ? {
+                    minTraceToHoleEdgeClearance:
+                      cms.originalSrj.minTraceToHoleEdgeClearance,
+                  }
+                : {}),
             },
             fixedHdRoutes,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
+            copperAdmissionSrj: { ...cms.originalSrj, obstacles: cms.srj.obstacles },
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
@@ -638,6 +702,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            ...(portPointPathingSolver.physicalViaMode
+              ? { physicalViaMode: true }
+              : {}),
           },
         ]
       },
@@ -645,20 +712,52 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "highDensityForceImproveSolver",
       HighDensityForceImproveSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: simplifyPipeline9CollinearRoutePoints(
-            materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
-          ),
-          colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(
-            12,
-            Math.round(20 * Math.min(1, cms.effort)),
-          ),
-          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-        },
-      ],
+      (cms) => {
+        const highDensitySolver = cms.highDensityRouteSolver!
+        const currentFixedRoutes = highDensitySolver.getUpdatedFixedHdRoutes()
+        let currentFixedTraces: SimplifiedPcbTraces = []
+        let fixedOwnerByTraceId: ReadonlyMap<string, string> = new Map()
+        if (currentFixedRoutes.length > 0) {
+          const serializer = createPipeline9CopperAdmissionSerializer({
+            srj: cms.originalSrj,
+            connMap: cms.connMap,
+          })
+          currentFixedTraces = serializer.serialize(
+            currentFixedRoutes,
+            new Set(
+              [...highDensitySolver.fixedRouteReplacements.values()].map(
+                (route): number => route.preloadedTraceIndex,
+              ),
+            ),
+          )
+          fixedOwnerByTraceId = serializer.canonicalOwnerByTraceId
+        }
+        const candidateSolutionValidator =
+          createPipeline9ForceCandidateAdmission({
+            srj: cms.originalSrj,
+            connMap: cms.connMap,
+            physicalViaMode: cms.portPointPathingSolver!.physicalViaMode,
+            currentFixedTraces,
+            fixedOwnerByTraceId,
+          })
+        return [
+          {
+            nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+            hdRoutes: simplifyPipeline9CollinearRoutePoints(
+              materializePipeline9HdRouteVias(highDensitySolver.routes),
+            ),
+            colorMap: cms.colorMap,
+            totalStepsPerNode: Math.max(
+              12,
+              Math.round(20 * Math.min(1, cms.effort)),
+            ),
+            nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+            ...(candidateSolutionValidator
+              ? { candidateSolutionValidator }
+              : {}),
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "highDensityRepairSolver",
@@ -688,15 +787,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
           ] as SimpleRouteConnection[],
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: cms.portPointPathingSolver!.physicalViaMode
+            ? normalizePipeline9HdRouteTerminalIds(
+                cms.highDensityRepairSolver?.getOutput() ??
+                  cms.highDensityForceImproveSolver?.getOutput() ??
+                  cms.highDensityRouteSolver!.routes,
+              )
+            : (cms.highDensityRepairSolver?.getOutput() ??
+              cms.highDensityForceImproveSolver?.getOutput() ??
+              cms.highDensityRouteSolver!.routes),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          ...(cms.portPointPathingSolver!.physicalViaMode
+            ? {
+                validateTerminalContacts: true,
+                terminalLayerIndicesByPcbPortId:
+                  getTerminalLayerIndicesByPcbPortId(
+                    cms.srj.connections,
+                    cms.srj.obstacles,
+                    cms.srj.layerCount,
+                  ),
+              }
+            : {}),
         },
       ],
     ),
@@ -858,6 +973,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             effort: Math.min(1, cms.effort),
             colorMap: cms.colorMap,
+            ...(cms.portPointPathingSolver!.physicalViaMode
+              ? { projectCopperClearanceBeforeDetours: true }
+              : {}),
           },
         ]
       },
