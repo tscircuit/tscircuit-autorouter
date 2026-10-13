@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { distance } from "@tscircuit/math-utils"
-import { FuturePointIndex } from "lib/solvers/HighDensitySolver/FuturePointIndex"
+import { findClosestFuturePointIndex } from "lib/solvers/HighDensitySolver/findClosestFuturePointIndex"
 
 type Point = { x: number; y: number; z: number }
 
@@ -22,7 +22,7 @@ function referenceIndex(
   return closest
 }
 
-test("future-point spatial selection matches the original scan across ties, layers and floating-point extremes", (): void => {
+test("future-point squared minima match the original scan across ties, layers and floating-point extremes", (): void => {
   let seed = 183944
   function randomNumber(): number {
     const multiplier = 1664525
@@ -83,7 +83,6 @@ test("future-point spatial selection matches the original scan across ties, laye
   for (const points of specialSets) {
     for (const point of points) Object.freeze(point)
     Object.freeze(points)
-    const index = new FuturePointIndex(points)
     const queries: Point[] = [
       { x: 0, y: 0, z: 0 },
       { x: -0, y: 0, z: 1 },
@@ -105,7 +104,7 @@ test("future-point spatial selection matches the original scan across ties, laye
     }
     for (const query of queries) {
       for (const penalty of [0, -0, 0.1, 2, 10, -2, Infinity, -Infinity, NaN]) {
-        expect(index.findClosestIndex(query, penalty)).toBe(
+        expect(findClosestFuturePointIndex(points, query, penalty)).toBe(
           referenceIndex(points, query, penalty),
         )
         comparisons++
