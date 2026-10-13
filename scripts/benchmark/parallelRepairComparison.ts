@@ -32,6 +32,7 @@ type ComparisonRun = {
   repairStats: Record<string, unknown>
   status: "solved" | "failed"
   error: string | null
+  nodeTimings?: ParallelRepairWorkerPool["timings"]
 }
 
 function parseOptions(args: string[]): ComparisonOptions {
@@ -103,6 +104,7 @@ async function runRepair(
   workers: number,
   pool: ParallelRepairWorkerPool,
 ): Promise<Omit<ComparisonRun, "dataset" | "sampleNumber" | "scenarioName" | "repeat" | "workers">> {
+  pool.timings.length = 0
   const start = performance.now()
   const repair = new Pipeline4HighDensityRepairSolver({
     ...params,
@@ -119,6 +121,7 @@ async function runRepair(
   const end = performance.now()
   if (!repair.solved && !repair.failed) throw new Error("Benchmark repair did not terminate")
   return {
+    nodeTimings: [...pool.timings],
     totalMs: end - start,
     repairMs: end - solveStart,
     outputHash: createHash("sha256").update(JSON.stringify(repair.getOutput())).digest("hex"),
@@ -189,6 +192,8 @@ async function main(): Promise<void> {
         const stage = pipeline.pipelineDef.find((step): boolean => step.solverName === "highDensityRepairSolver")
         if (!stage) throw new Error("Pipeline9 repair stage is missing")
         ;[repairParams] = stage.getConstructorParams(pipeline) as [RepairParams]
+        const prepared = new Pipeline4HighDensityRepairSolver(repairParams)
+        await writeFile(`parallel-repair-samples-${sampleNumber}.json`, JSON.stringify(prepared.sampleEntries.map((entry) => ({ sample: entry.sample, margin: prepared.repairMargin }))))
         console.log(`Prepared repair inputs in ${preparationTimes.at(-1)!.elapsedMs.toFixed(1)}ms`)
       }
       let expected: Awaited<ReturnType<typeof runPipeline>> | undefined

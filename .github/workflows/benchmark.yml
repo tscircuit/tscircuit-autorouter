@@ -130,6 +130,7 @@ jobs:
           path: |
             parallel-repair-results.json
             parallel-repair-results.md
+            parallel-repair-samples-*.json
           if-no-files-found: warn
 
       - name: Post repair comparison to PR

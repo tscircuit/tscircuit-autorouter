@@ -14,7 +14,7 @@ export type ParallelRepairWorkerRequest = {
 
 export type ParallelRepairWorkerMessage =
   | { kind: "ready"; threadId: number; availableParallelism: number; affinity: string }
-  | { kind: "result"; requestId: number; value: HighDensityRepairSampleResult }
+  | { kind: "result"; requestId: number; value: HighDensityRepairSampleResult; solveMs: number }
   | { kind: "error"; requestId: number; error: string }
 
 if (!parentPort) throw new Error("Parallel repair benchmark must run in a worker")
@@ -24,8 +24,9 @@ if (!affinity) throw new Error("Cannot read repair worker CPU affinity")
 parentPort.postMessage({ kind: "ready", threadId, availableParallelism: availableParallelism(), affinity } satisfies ParallelRepairWorkerMessage)
 parentPort.on("message", ({ requestId, input }: ParallelRepairWorkerRequest): void => {
   try {
+    const start = performance.now()
     const value = solveHighDensityRepairSample(input)
-    parentPort!.postMessage({ kind: "result", requestId, value } satisfies ParallelRepairWorkerMessage)
+    parentPort!.postMessage({ kind: "result", requestId, value, solveMs: performance.now() - start } satisfies ParallelRepairWorkerMessage)
   } catch (error) {
     parentPort!.postMessage({ kind: "error", requestId, error: error instanceof Error ? error.message : String(error) } satisfies ParallelRepairWorkerMessage)
   }
