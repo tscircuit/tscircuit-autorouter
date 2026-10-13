@@ -883,10 +883,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         gridNodeCount > 0 &&
         gridNodeCount <= 8_000_000
       ) {
-        this.exploredNodes = new GridNodeSet(
-          gridNodeCount,
-          this.exploredNodes,
-        )
+        this.exploredNodes = new GridNodeSet(gridNodeCount, this.exploredNodes)
       }
     }
     let currentNode = this.candidates.dequeue()
