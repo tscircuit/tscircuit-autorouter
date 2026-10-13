@@ -12,7 +12,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { BaseSolver } from "../BaseSolver"
+import { BaseSolver, type PendingEffect } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
@@ -231,6 +231,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly parallelRepair?: ParallelHighDensityRepairOptions
   private nextDispatchIndex = 0
   private readonly dispatchedSamples = new Map<number, DispatchedRepairSample>()
+  private readonly pendingSampleEffects = new Map<number, PendingEffect>()
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -446,7 +447,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     while (!this.solved && !this.failed) {
       this.step()
       const effects = getPendingEffectsFromSolverTree(this)
-      await Promise.all(effects.map((effect) => effect.promise))
+      if (effects.length > 0) {
+        await Promise.race(effects.map((effect) => effect.promise))
+      }
     }
     this.timeToSolve = Date.now() - startTime
   }
@@ -456,7 +459,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     const concurrency = options.concurrency ?? 4
     while (
       this.nextDispatchIndex < this.sampleEntries.length &&
-      this.dispatchedSamples.size < concurrency
+      this.pendingSampleEffects.size < concurrency
     ) {
       const index = this.nextDispatchIndex++
       const entry = this.sampleEntries[index]
@@ -471,13 +474,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }))
         .then((value) => {
           task.result = { ok: true, value }
+          this.pendingSampleEffects.delete(index)
         }, (error: unknown) => {
           task.result = {
             ok: false,
             error: error instanceof Error ? error.message : String(error),
           }
+          this.pendingSampleEffects.delete(index)
         })
       this.dispatchedSamples.set(index, task)
+      this.pendingSampleEffects.set(index, {
+        name: `repair:${entry.node.capacityMeshNodeId}`,
+        promise: task.promise,
+      })
     }
 
     const entry = this.sampleEntries[this.activeSampleIndex]
@@ -488,10 +497,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     }
     const task = this.dispatchedSamples.get(this.activeSampleIndex)!
     if (!task.result) {
-      this.pendingEffects = [{
-        name: `repair:${entry.node.capacityMeshNodeId}`,
-        promise: task.promise,
-      }]
+      this.pendingEffects = [...this.pendingSampleEffects.values()]
       return
     }
     this.pendingEffects = []

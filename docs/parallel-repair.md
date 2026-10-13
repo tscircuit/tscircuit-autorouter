@@ -22,9 +22,10 @@ The helper uses exactly the existing node repair policy, including boundary sett
 margin, and clearance statistics. Merely wrapping the helper in a promise on the
 main thread does not parallelize CPU work.
 
-`concurrency` defaults to 4 and must be a positive integer. It bounds dispatched,
-unconsumed samples, including completed results awaiting an earlier node. Each
-executor receives an isolated copy of the original sample. Results and statistics
+`concurrency` defaults to 4 and must be a positive integer. It bounds in-flight
+samples. A completed sample frees its worker immediately, even when its result
+awaits an earlier node. Each executor receives an isolated copy of the original
+sample. Results and statistics
 are consumed in the original node order, and routes retain their original output
 order and metadata. Worker completion order does not affect the output.
 

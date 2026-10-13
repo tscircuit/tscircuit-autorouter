@@ -16,7 +16,7 @@ type RepairWorkerSlot = {
 
 type RepairWorkerMetadata = Extract<ParallelRepairWorkerMessage, { kind: "ready" }>
 
-/** Persistent benchmark pool. The repair stage bounds dispatch, so no second queue is needed. */
+/** Persistent benchmark pool. The repair stage bounds in-flight dispatch, so no second queue is needed. */
 export class ParallelRepairWorkerPool {
   readonly ready: Promise<RepairWorkerMetadata[]>
   private readonly slots: RepairWorkerSlot[] = []

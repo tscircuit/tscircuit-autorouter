@@ -21,7 +21,7 @@ export type HighDensityRepairExecutor = (
 export type ParallelHighDensityRepairOptions = {
   /** Dispatch to a worker pool or remote executor; promises alone do not parallelize CPU work. */
   executor: HighDensityRepairExecutor
-  /** Maximum number of dispatched, unconsumed samples. Defaults to 4. */
+  /** Maximum number of in-flight samples. Defaults to 4. */
   concurrency?: number
 }
 

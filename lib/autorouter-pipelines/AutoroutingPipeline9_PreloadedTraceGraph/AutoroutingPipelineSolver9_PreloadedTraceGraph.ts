@@ -1203,13 +1203,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   async solveAsync(): Promise<void> {
     const startTime = Date.now()
-    while (!this.solved && !this.failed) await this.stepAsync()
+    while (!this.solved && !this.failed) {
+      this.step()
+      const effects = getPendingEffectsFromSolverTree(this)
+      if (effects.length > 0) {
+        await Promise.race(effects.map((effect) => effect.promise))
+      }
+    }
     this.timeToSolve = Date.now() - startTime
   }
 
   async solveUntilPhaseAsync(phase: string): Promise<void> {
     while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
-      await this.stepAsync()
+      this.step()
+      const effects = getPendingEffectsFromSolverTree(this)
+      if (effects.length > 0) {
+        await Promise.race(effects.map((effect) => effect.promise))
+      }
     }
   }
 
