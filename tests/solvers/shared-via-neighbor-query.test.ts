@@ -33,9 +33,9 @@ test("via neighbors share one broadphase and skip it when all destination layers
     const viaSearch = spyOn(solver.obstacleViaIndex!, "search")
     try {
       const neighbors = solver.getNeighbors(node)
-      expect(neighbors.filter((neighbor) => neighbor.z !== node.z)).toHaveLength(
-        5,
-      )
+      expect(
+        neighbors.filter((neighbor) => neighbor.z !== node.z),
+      ).toHaveLength(5)
       expect(segmentSearch).toHaveBeenCalledTimes(1)
       expect(viaSearch).toHaveBeenCalledTimes(9)
       segmentSearch.mockClear()
