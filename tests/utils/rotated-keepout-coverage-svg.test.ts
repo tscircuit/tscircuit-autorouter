@@ -47,10 +47,8 @@ test("visualizes coverage of a 0.6 by 0.2 mm keepout rotated 45 degrees", async 
     (point) =>
       !result.obstacles.some(
         (obstacle) =>
-          Math.abs(point.x - obstacle.center.x) <=
-            obstacle.width / 2 + 1e-9 &&
-          Math.abs(point.y - obstacle.center.y) <=
-            obstacle.height / 2 + 1e-9,
+          Math.abs(point.x - obstacle.center.x) <= obstacle.width / 2 + 1e-9 &&
+          Math.abs(point.y - obstacle.center.y) <= obstacle.height / 2 + 1e-9,
       ),
   )
   const outline: GraphicsObject = {
