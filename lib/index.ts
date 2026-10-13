@@ -113,3 +113,11 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+
+export {
+  solveHighDensityRepairSample,
+  type HighDensityRepairSampleInput,
+  type HighDensityRepairSampleResult,
+  type HighDensityRepairExecutor,
+  type ParallelHighDensityRepairOptions,
+} from "./solvers/HighDensityRepairSolver/solveHighDensityRepairSample"

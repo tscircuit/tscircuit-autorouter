@@ -12,16 +12,29 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import { BaseSolver } from "../BaseSolver"
+import { BaseSolver, type PendingEffect } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectedPadSides } from "./getConnectedPadSides"
 
+import type {
+  HighDensityRepairSampleResult,
+  ParallelHighDensityRepairOptions,
+} from "./solveHighDensityRepairSample"
+import { getPendingEffectsFromSolverTree } from "../getPendingEffectsFromSolverTree"
+
 type RepairSampleEntry = {
   node: NodeWithPortPoints
   routeIndexes: number[]
   sample: DatasetSample
+}
+
+type DispatchedRepairSample = {
+  promise: Promise<void>
+  result?:
+    | { ok: true; value: HighDensityRepairSampleResult }
+    | { ok: false; error: string }
 }
 
 const DEFAULT_REPAIR_MARGIN = 0.2
@@ -215,6 +228,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly colorMap: Record<string, string>
   readonly connMap?: ConnectivityMap
 
+  readonly parallelRepair?: ParallelHighDensityRepairOptions
+  private nextDispatchIndex = 0
+  private sequentialRepairIterations = 0
+  private readonly dispatchedSamples = new Map<number, DispatchedRepairSample>()
+  private readonly pendingSampleEffects = new Map<number, PendingEffect>()
+
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
   override activeSubSolver: HighDensityRepairSolver | null = null
@@ -224,12 +243,20 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     nodeWithPortPoints: NodeWithPortPoints[]
     hdRoutes: HighDensityRoute[]
     obstacles: Obstacle[]
+    parallelRepair?: ParallelHighDensityRepairOptions
     repairMargin?: number
     minimumTraceWidth?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
+    this.parallelRepair = params.parallelRepair
+    if (this.parallelRepair) {
+      const concurrency = this.parallelRepair.concurrency ?? 4
+      if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+        throw new Error("Parallel repair concurrency must be a positive integer")
+      }
+    }
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
@@ -400,6 +427,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         nodeWithPortPoints: this.sampleEntries.map((entry) => entry.node),
         hdRoutes: this.originalHdRoutes,
         obstacles: this.originalObstacles,
+        parallelRepair: this.parallelRepair,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
         colorMap: this.colorMap,
@@ -408,7 +436,123 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     ] as const
   }
 
+  override solve(): void {
+    if (this.parallelRepair) {
+      throw new Error("Parallel repair requires solveAsync() or async stepping")
+    }
+    super.solve()
+  }
+
+  async solveAsync(): Promise<void> {
+    const startTime = Date.now()
+    while (!this.solved && !this.failed) {
+      this.step()
+      if (this.solved || this.failed) break
+      const effects = getPendingEffectsFromSolverTree(this)
+      if (effects.length > 0) {
+        await Promise.race(effects.map((effect) => effect.promise))
+      }
+    }
+    this.timeToSolve = Date.now() - startTime
+  }
+
+  private stepParallelRepair(): void {
+    const options = this.parallelRepair!
+    const concurrency = options.concurrency ?? 4
+    while (
+      this.nextDispatchIndex < this.sampleEntries.length &&
+      this.pendingSampleEffects.size < concurrency
+    ) {
+      const index = this.nextDispatchIndex++
+      const entry = this.sampleEntries[index]
+      const task: DispatchedRepairSample = {
+        promise: Promise.resolve(),
+      }
+      // Isolate executors from the original geometry and from other samples.
+      task.promise = Promise.resolve()
+        .then(() => options.executor({
+          sample: structuredClone(entry.sample),
+          margin: this.repairMargin,
+        }))
+        .then((value) => {
+          task.result = { ok: true, value }
+          this.pendingSampleEffects.delete(index)
+        }, (error: unknown) => {
+          task.result = {
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          }
+          this.pendingSampleEffects.delete(index)
+        })
+      this.dispatchedSamples.set(index, task)
+      this.pendingSampleEffects.set(index, {
+        name: `repair:${entry.node.capacityMeshNodeId}`,
+        promise: task.promise,
+      })
+    }
+
+    const entry = this.sampleEntries[this.activeSampleIndex]
+    if (!entry) {
+      this.solved = true
+      this.pendingEffects = []
+      return
+    }
+    const task = this.dispatchedSamples.get(this.activeSampleIndex)!
+    if (!task.result) {
+      this.pendingEffects = [...this.pendingSampleEffects.values()]
+      return
+    }
+    this.pendingEffects = []
+    if (!task.result.ok) {
+      this.failed = true
+      this.error = `High density repair failed for node ${entry.node.capacityMeshNodeId}: ${task.result.error}`
+      return
+    }
+    const { repairedRoutes, stats, iterations } = task.result.value
+    if (!Number.isSafeInteger(iterations) || iterations < 0) {
+      throw new Error("Repair executor must return a nonnegative solver iteration count")
+    }
+    // Sequential repair spends a step constructing each solver, then at least
+    // one step consuming it, including a solver already solved at construction.
+    const sequentialIterations = this.sequentialRepairIterations + Math.max(2, iterations + 1)
+    if (sequentialIterations > this.MAX_ITERATIONS + 1) {
+      this.failed = true
+      this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
+      return
+    }
+    this.sequentialRepairIterations = sequentialIterations
+    for (let i = 0; i < entry.routeIndexes.length; i++) {
+      const routeIndex = entry.routeIndexes[i]
+      const original = this.originalHdRoutes[routeIndex]
+      this.repairedRoutesByIndex.set(
+        routeIndex,
+        repairedRoutes[i] ? fromRepairRoute(repairedRoutes[i], original) : original,
+      )
+    }
+    for (const key of [
+      "nodeClearanceInitialConflictCount",
+      "nodeClearanceFinalConflictCount",
+      "nodeClearanceCandidateCount",
+    ] as const) {
+      this.stats[key] = Number(this.stats[key] ?? 0) + stats[key]
+    }
+    this.dispatchedSamples.delete(this.activeSampleIndex)
+    this.activeSampleIndex += 1
+    this.stats.repairedNodeCount = this.activeSampleIndex
+    this.stats.repairedRouteCount = this.repairedRoutesByIndex.size
+    if (this.activeSampleIndex === this.sampleEntries.length) {
+      this.solved = true
+    } else if (sequentialIterations > this.MAX_ITERATIONS) {
+      this.failed = true
+      this.error = `${this.getSolverName()} ran out of iterations (MAX_ITERATIONS=${this.MAX_ITERATIONS})`
+    }
+  }
+
   override _step() {
+    if (this.parallelRepair) {
+      this.stepParallelRepair()
+      return
+    }
     const sampleEntry = this.sampleEntries[this.activeSampleIndex]
 
     if (!sampleEntry) {
