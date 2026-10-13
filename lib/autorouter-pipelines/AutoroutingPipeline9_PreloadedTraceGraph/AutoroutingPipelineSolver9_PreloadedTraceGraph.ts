@@ -868,7 +868,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => {
         const preloadedTraces = cms.getUpdatedPreloadedTraces()
         const inputSrj = { ...cms.originalSrj, traces: preloadedTraces }
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes = canonicalizePipeline9HdRoutes(
+          cms.pipeline9JointDrcRepairSolver!.getOutput(),
+        )
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
@@ -1170,7 +1172,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
-      (pipelineStepDef.solverName === "effortCleanupSolver" && this.effort > 1)
+      pipelineStepDef.solverName === "effortCleanupSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,

@@ -1,4 +1,7 @@
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import {
+  TraceSimplificationSolver,
+  UselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -10,13 +13,14 @@ type CleanupParams = {
   isValid: (routes: HighDensityRoute[]) => boolean
 }
 
-/** Extra cleanup is an optimization: invalid or worse candidates are never committed. */
+/** Post-repair cleanup commits only valid improvements, including at default effort. */
 export class Pipeline9EffortCleanupSolver extends BaseSolver {
   bestRoutes: HighDensityRoute[]
   bestCost: CleanupCost
   completedPasses = 0
-  readonly extraPasses: number
+  readonly cleanupPasses: number
   simplifier?: TraceSimplificationSolver
+  viaRemovalSolver?: UselessViaRemovalSolver
   readonly params: CleanupParams
 
   constructor(params: CleanupParams) {
@@ -24,26 +28,71 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.params = params
     this.bestRoutes = structuredClone([...params.config.hdRoutes])
     this.bestCost = params.getCost(this.bestRoutes)
-    this.extraPasses = Math.max(0, Math.ceil(2 * (params.effort - 1)))
-    this.MAX_ITERATIONS = 100e6 * Math.max(1, this.extraPasses)
-    if (this.extraPasses === 0) {
-      this.solved = true
+    this.cleanupPasses = params.effort <= 1 ? 1 : Math.ceil(2 * params.effort)
+    this.MAX_ITERATIONS = 100e6 * Math.max(1, this.cleanupPasses)
+    if (params.effort <= 1) {
+      const config = params.config
+      // Path sampling already ran before repair. Only revisit removable vias
+      // at default effort; repeated path and crossing searches are expensive.
+      this.viaRemovalSolver = new UselessViaRemovalSolver({
+        unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
+        otherHdRoutes: config.otherHdRoutes,
+        obstacles: [...config.obstacles],
+        colorMap: config.colorMap,
+        layerCount: config.layerCount,
+        connMap: config.connMap,
+        outline: config.outline ? [...config.outline] : undefined,
+        geometryShortcutTraceMargin: 0.1,
+        geometryShortcutObstacleMargin:
+          config.minTraceToPadEdgeClearance ?? 0.15,
+        enableGeometryShortcuts: true,
+        enableRoutedTraceDetours: true,
+        enableObstacleDetourShortcuts: config.enableCrossingViaReduction,
+        preserveRouteEndpoints: config.preserveRouteEndpoints,
+        terminalLayerIndicesByPcbPortId: config.terminalLayerIndicesByPcbPortId,
+      })
+      this.viaRemovalSolver.MAX_ITERATIONS = this.MAX_ITERATIONS
       return
     }
     this.simplifier = new TraceSimplificationSolver({
       ...params.config,
+      enableRoutedTraceDetours: true,
       hdRoutes: structuredClone(this.bestRoutes),
     })
-    // The baseline has already completed two passes. Enable the geometry
-    // shortcuts intended for subsequent passes on the repaired routes.
+    // Pre-repair path simplification has already reduced the route points.
+    // Enable geometry shortcuts from the first post-repair pass.
     this.simplifier.simplificationPipelineLoops = 2
-    this.simplifier.MAX_SIMPLIFICATION_PIPELINE_LOOPS = 2 + this.extraPasses
+    this.simplifier.MAX_SIMPLIFICATION_PIPELINE_LOOPS = 2 + this.cleanupPasses
     this.simplifier.MAX_ITERATIONS = this.MAX_ITERATIONS
   }
 
   override _step(): void {
+    if (this.viaRemovalSolver) {
+      const remover = this.viaRemovalSolver
+      remover.step()
+      if (remover.failed) {
+        this.failed = true
+        this.error = remover.error
+        return
+      }
+      if (!remover.solved) return
+      const candidate = remover.getOptimizedHdRoutes()
+      if (!candidate) throw new Error("Via removal has no output")
+      const cost = this.params.getCost(candidate)
+      // Validate once, after the complete via pass, rather than after every
+      // phase of multiple full simplification loops.
+      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+        this.bestRoutes = structuredClone(candidate)
+        this.bestCost = cost
+      }
+      this.completedPasses = 1
+      this.solved = true
+      return
+    }
     const simplifier = this.simplifier
     if (!simplifier) throw new Error("Cleanup has no active simplifier")
+    const previousPhase = simplifier.currentPhase
+    const previousLoops = simplifier.simplificationPipelineLoops
     simplifier.step()
     if (simplifier.failed) {
       this.failed = true
@@ -51,8 +100,12 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       return
     }
     const completedPasses = simplifier.simplificationPipelineLoops - 2
-    if (completedPasses > this.completedPasses) {
-      this.completedPasses = completedPasses
+    this.completedPasses = completedPasses
+    // Keep legal via reductions before a later path pass can invalidate them.
+    if (
+      simplifier.currentPhase !== previousPhase ||
+      simplifier.simplificationPipelineLoops !== previousLoops
+    ) {
       const candidate = simplifier.simplifiedHdRoutes
       const cost = this.params.getCost(candidate)
       const improves =
