@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import type { CapacityMeshNode } from "lib/types"
 import {
   getBoundsIntersection,
@@ -125,6 +126,7 @@ export function validateTopologyMergingOutput({
   provenance: TopologyMergingOutputProvenance
 }): void {
   const nodeIds = new Set<string>()
+  const nodeBounds = nodes.map(getCapacityMeshNodeBounds)
   for (const node of nodes) {
     if (nodeIds.has(node.capacityMeshNodeId)) {
       throw new Error(
@@ -161,9 +163,30 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  if (nodes.length === 0) return
+
+  const nodeSpatialIndex = new FlatbushIndex<{ nodeIndex: number }>(nodes.length)
+  for (let nodeIndexValue = 0; nodeIndexValue < nodes.length; nodeIndexValue++) {
+    const bounds = nodeBounds[nodeIndexValue]!
+    nodeSpatialIndex.insert(
+      { nodeIndex: nodeIndexValue },
+      bounds.minX,
+      bounds.minY,
+      bounds.maxX,
+      bounds.maxY,
+    )
+  }
+  nodeSpatialIndex.finish()
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
+    const boundsA = nodeBounds[aIndex]!
+    const candidateIndexes = nodeSpatialIndex
+      .search(boundsA.minX, boundsA.minY, boundsA.maxX, boundsA.maxY)
+      .map(({ nodeIndex }) => nodeIndex)
+      .filter((bIndex) => bIndex > aIndex)
+      .sort((a, b) => a - b)
+    for (const bIndex of candidateIndexes) {
       const nodeB = nodes[bIndex]!
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
@@ -171,8 +194,8 @@ export function validateTopologyMergingOutput({
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
-        getCapacityMeshNodeBounds(nodeB),
+        boundsA,
+        nodeBounds[bIndex]!,
       )
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX
