@@ -38,7 +38,7 @@ test("shared DRC reports preloaded trace clearance and overlap with NPTHs", (): 
         message: expect.stringContaining(
           y === 1.1
             ? "gap: 0.025000mm, required: 0.2mm"
-            : 'overlaps with pcb_hole "pcb_hole[#pcb_hole_2]"',
+            : 'overlaps with pcb_hole "unnamed hole"',
         ),
       }),
     )
