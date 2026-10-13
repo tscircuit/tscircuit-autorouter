@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises"
 import { availableParallelism, cpus } from "node:os"
 import { isDeepStrictEqual } from "node:util"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib"
+import { Pipeline4HighDensityRepairSolver } from "../../lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import type { SimpleRouteJson } from "../../lib/types"
 import type { HighDensityRepairSampleInput, HighDensityRepairSampleResult } from "../../lib/solvers/HighDensityRepairSolver/solveHighDensityRepairSample"
 import { readLocalCpuTopology } from "./localHighDensityClusterResources"
@@ -14,7 +15,10 @@ type ComparisonOptions = {
   limit: number
   repeats: number
   workerCounts: number[]
+  repairOnly: boolean
 }
+
+type RepairParams = ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0]
 
 type ComparisonRun = {
   dataset: string
@@ -31,7 +35,7 @@ type ComparisonRun = {
 }
 
 function parseOptions(args: string[]): ComparisonOptions {
-  const options: ComparisonOptions = { dataset: "dataset01", limit: 10, repeats: 3, workerCounts: [2, 4, 8] }
+  const options: ComparisonOptions = { dataset: "dataset01", limit: 10, repeats: 3, workerCounts: [2, 4, 8], repairOnly: false }
   for (let index = 0; index < args.length; index += 2) {
     const flag = args[index]
     const value = args[index + 1]
@@ -45,6 +49,9 @@ function parseOptions(args: string[]): ComparisonOptions {
       if (!Number.isSafeInteger(count) || count < 1) throw new Error(`${flag} must be a positive integer`)
       if (flag === "--limit") options.limit = count
       else options.repeats = count
+    } else if (flag === "--repair-only") {
+      if (value !== "true" && value !== "false") throw new Error("--repair-only requires true or false")
+      options.repairOnly = value === "true"
     } else if (flag === "--worker-counts") {
       const counts = value.split(",").map(Number)
       if (counts.length === 0 || counts.some((count): boolean => !Number.isSafeInteger(count) || count < 1)) {
@@ -91,6 +98,36 @@ async function runPipeline(
   }
 }
 
+async function runRepair(
+  params: RepairParams,
+  workers: number,
+  pool: ParallelRepairWorkerPool,
+): Promise<Omit<ComparisonRun, "dataset" | "sampleNumber" | "scenarioName" | "repeat" | "workers">> {
+  const start = performance.now()
+  const repair = new Pipeline4HighDensityRepairSolver({
+    ...params,
+    ...(workers > 0 ? {
+      parallelRepair: {
+        concurrency: workers,
+        executor: (input: HighDensityRepairSampleInput): Promise<HighDensityRepairSampleResult> => pool.execute(input),
+      },
+    } : {}),
+  })
+  const solveStart = performance.now()
+  if (workers === 0) repair.solve()
+  else await repair.solveAsync()
+  const end = performance.now()
+  if (!repair.solved && !repair.failed) throw new Error("Benchmark repair did not terminate")
+  return {
+    totalMs: end - start,
+    repairMs: end - solveStart,
+    outputHash: createHash("sha256").update(JSON.stringify(repair.getOutput())).digest("hex"),
+    repairStats: repair.stats,
+    status: repair.solved ? "solved" : "failed",
+    error: repair.error,
+  }
+}
+
 function median(values: number[]): number {
   if (values.length === 0) throw new Error("Cannot calculate an empty median")
   const sorted = [...values].sort((left, right): number => left - right)
@@ -112,9 +149,10 @@ async function main(): Promise<void> {
   const startup = performance.now()
   const pool = new ParallelRepairWorkerPool(maxWorkers)
   const results: ComparisonRun[] = []
+  const preparationTimes: { sampleNumber: number; elapsedMs: number }[] = []
   const skipped: { sampleNumber: number; scenarioName: string; error: string | null }[] = []
   const save = async (): Promise<void> => {
-    await writeFile("parallel-repair-results.json", JSON.stringify({ options, runtime, results, skipped }, null, 2))
+    await writeFile("parallel-repair-results.json", JSON.stringify({ options, runtime, results, skipped, preparationTimes }, null, 2))
   }
   try {
     const workerMetadata = await pool.ready
@@ -135,6 +173,24 @@ async function main(): Promise<void> {
     for (const [scenarioIndex, [scenarioName, srj]] of scenarios.entries()) {
       const sampleNumber = scenarioIndex + 1
       console.log(`Starting ${options.dataset} sample ${sampleNumber}: ${scenarioName}`)
+      let repairParams: RepairParams | undefined
+      if (options.repairOnly) {
+        const start = performance.now()
+        const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(srj), { cacheProvider: null, effort: 1 })
+        while (pipeline.getCurrentPhase() !== "highDensityRepairSolver" && !pipeline.solved && !pipeline.failed) pipeline.step()
+        preparationTimes.push({ sampleNumber, elapsedMs: performance.now() - start })
+        if (pipeline.failed) {
+          skipped.push({ sampleNumber, scenarioName, error: pipeline.error })
+          console.log(`Skipping sample ${sampleNumber}: upstream routing failed: ${pipeline.error}`)
+          await save()
+          continue
+        }
+        if (pipeline.solved) throw new Error("Pipeline finished without reaching node repair")
+        const stage = pipeline.pipelineDef.find((step): boolean => step.solverName === "highDensityRepairSolver")
+        if (!stage) throw new Error("Pipeline9 repair stage is missing")
+        ;[repairParams] = stage.getConstructorParams(pipeline) as [RepairParams]
+        console.log(`Prepared repair inputs in ${preparationTimes.at(-1)!.elapsedMs.toFixed(1)}ms`)
+      }
       let expected: Awaited<ReturnType<typeof runPipeline>> | undefined
       for (let repeat = 0; repeat < options.repeats; repeat++) {
         // Rotate the comparison order to avoid consistently measuring the baseline first.
@@ -143,7 +199,9 @@ async function main(): Promise<void> {
         const order = [...modes.slice(offset), ...modes.slice(0, offset)]
         const runs: ComparisonRun[] = []
         for (const workers of order) {
-          const value = await runPipeline(srj, workers, pool)
+          const value = repairParams
+            ? await runRepair(repairParams, workers, pool)
+            : await runPipeline(srj, workers, pool)
           const run = { dataset: options.dataset, sampleNumber, scenarioName, repeat, workers, ...value }
           runs.push(run)
           results.push(run)
@@ -179,19 +237,24 @@ async function main(): Promise<void> {
     })
     const baseline = rows[0]
     const table = [
-      "| Repair workers | Total routing time | Node repair time | Total speedup | Repair speedup |",
+      options.repairOnly
+        ? "| Repair workers | Repair with setup | Repair solve time | Speedup with setup | Repair speedup |"
+        : "| Repair workers | Total routing time | Node repair time | Total speedup | Repair speedup |",
       "| --- | ---: | ---: | ---: | ---: |",
       ...rows.map((row): string => `| ${row.workers === 0 ? "Sequential" : row.workers} | ${(row.totalMs / 1000).toFixed(3)}s | ${(row.repairMs / 1000).toFixed(3)}s | ${(baseline.totalMs / row.totalMs).toFixed(2)}x | ${(baseline.repairMs / row.repairMs).toFixed(2)}x |`),
     ].join("\n")
     const report = [
       "## Parallel node repair benchmark", "",
+      options.repairOnly ? "Mode: isolated node repair. Upstream routing is prepared once per board; routing the rest of the pipeline is excluded." : "Mode: complete Pipeline9 routing.", "",
       `Dataset: ${options.dataset}. ${samples.length} solved samples; ${skipped.length} failed samples excluded from timing. ${options.repeats} repetitions, rotating run order.`, "",
       `${effectiveCpus} effective CPUs; CPU affinity ${expectedAffinity}; cgroup quota ${topology.quotaCpuCount ?? "unlimited"}. One board at a time; worker threads inherit the runner affinity.`, "",
-      `Persistent ${maxWorkers}-worker pool startup: ${poolStartupMs.toFixed(1)}ms, excluded from warm timings. Times sum the per-sample medians. Total routing includes repair dispatch, serialization, and downstream stages. Node repair excludes stage construction, matching existing phase timing.`, "",
+      `Persistent ${maxWorkers}-worker pool startup: ${poolStartupMs.toFixed(1)}ms, excluded from warm timings. Times sum the per-sample medians. Dispatch and serialization are included. Repair solve time excludes stage construction; the other timing column includes it.`, "",
       table, "",
-      "Every measured run matched the sequential final SRJ SHA-256, solve status, and repair statistics. Worker startup must be added when creating a fresh pool for a single board.", "",
+      options.repairOnly
+        ? "Every measured run matched the sequential repair output SHA-256, solve status, and repair statistics. Worker startup must be added when creating a fresh pool for a single board."
+        : "Every measured run matched the sequential final SRJ SHA-256, solve status, and repair statistics. Worker startup must be added when creating a fresh pool for a single board.", "",
     ].join("\n")
-    await writeFile("parallel-repair-results.json", JSON.stringify({ options, runtime, workerMetadata, poolStartupMs, results, skipped, summary: rows, deterministic: true }, null, 2))
+    await writeFile("parallel-repair-results.json", JSON.stringify({ options, runtime, workerMetadata, poolStartupMs, results, skipped, preparationTimes, summary: rows, deterministic: true }, null, 2))
     await writeFile("parallel-repair-results.md", report)
     console.log(report)
   } finally {

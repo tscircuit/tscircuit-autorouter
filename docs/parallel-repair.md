@@ -58,3 +58,8 @@ times, rotates run order, and compares final SRJ hashes and repair statistics fo
 every run. Raw results and CPU metadata are uploaded as an artifact and the
 summary is posted to the specified `pr_number`. Failed boards are reported and
 excluded from timing aggregates.
+
+Use `"--repair-only", "true"` to prepare upstream routing once per board and
+compare just node repair. This mode reports repair time both with and without
+stage construction, and verifies the repair output hash instead of the final SRJ.
+The default mode measures the complete pipeline and validates the final SRJ.
