@@ -1,5 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { ObstacleConnectionIndex } from "lib/data-structures/ObstacleConnectionIndex"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -77,6 +77,10 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     (obstacle) =>
       (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1,
   )
+  const multilayerObstacleConnectionIndex = new ObstacleConnectionIndex(
+    multilayerObstacles,
+    connMap,
+  )
   const connectedObstaclesByConnectionName = new Map<
     string,
     Map<string | undefined, ReadonlyArray<Obstacle>>
@@ -95,9 +99,8 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
     const cached = byRootConnectionName.get(route.rootConnectionName)
     if (cached) return cached
 
-    const connected = multilayerObstacles.filter((obstacle) =>
-      isObstacleConnectedToRoute(obstacle, route, connMap),
-    )
+    const connected =
+      multilayerObstacleConnectionIndex.getObstaclesConnectedToRoute(route)
     byRootConnectionName.set(route.rootConnectionName, connected)
     return connected
   }
