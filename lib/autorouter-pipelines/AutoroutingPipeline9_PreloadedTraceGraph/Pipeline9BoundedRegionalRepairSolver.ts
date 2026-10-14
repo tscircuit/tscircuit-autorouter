@@ -153,7 +153,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       candidateAttemptCount: 0,
       pathSearchNodeCount: 0,
       referenceValidationCount: 0,
-      projectionEvaluationCount: 0,
       initialDrcIssueCount: undefined,
       finalDrcIssueCount: undefined,
       publishedDrcIssueCount: undefined,
@@ -161,13 +160,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     // Child solvers reserve their finite iteration bounds as each stage starts.
     this.MAX_ITERATIONS = this.budget.maxRegions * 16 + 32
-  }
-
-  private evaluateProjectionDrc(input: Parameters<DrcEvaluator>[0]): DrcResult {
-    this.result.projectionEvaluationCount++
-    return (this.params.projectionDrcEvaluator ?? this.params.drcEvaluator)(
-      input,
-    )
   }
 
   private updateProgress(): void {
@@ -306,7 +298,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: referenced.currentRoutes,
-      drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+      drcEvaluator: (input): DrcResult => {
+        this.result.referenceValidationCount++
+        return this.params.drcEvaluator(input)
+      },
     })
     this.state = { phase: "initial-projection", context: referenced, solver }
     this.startChild(solver)
@@ -581,7 +576,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       // The outer via guard compares the complete spliced proposal to this input.
       previousRoutes: context.currentRoutes,
       subdivideSegments: true,
-      drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+      drcEvaluator: (input): DrcResult => {
+        this.result.referenceValidationCount++
+        return this.params.drcEvaluator(input)
+      },
     })
     this.state = { phase: "candidate-projection", context, solver }
     this.startChild(solver)
@@ -707,7 +705,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       originalSrj: this.params.originalSrj,
       routes: this.params.routes,
       allowPartialRepair: true,
-      drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+      drcEvaluator: (input): DrcResult => {
+        this.result.referenceValidationCount++
+        return this.params.drcEvaluator(input)
+      },
     })
     this.state = { phase: "independent-projection", context, solver }
     this.startChild(solver)
@@ -729,7 +730,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       routes: state.independentRoutes,
       allowPartialRepair: true,
       subdivideSegments: true,
-      drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+      drcEvaluator: (input): DrcResult => {
+        this.result.referenceValidationCount++
+        return this.params.drcEvaluator(input)
+      },
     })
     this.state = {
       phase: "independent-subdivision",
@@ -754,7 +758,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       originalSrj: this.params.originalSrj,
       routes: state.independentRoutes,
       usePrecisionMargin: true,
-      drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+      drcEvaluator: (input): DrcResult => {
+        this.result.referenceValidationCount++
+        return this.params.drcEvaluator(input)
+      },
     })
     this.state = {
       phase: "independent-coupled",
@@ -816,7 +823,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           routes: state.solver.getOutput(),
           previousRoutes: state.context.currentRoutes,
           usePrecisionMargin: true,
-          drcEvaluator: (input): DrcResult => this.evaluateProjectionDrc(input),
+          drcEvaluator: (input): DrcResult => {
+            this.result.referenceValidationCount++
+            return this.params.drcEvaluator(input)
+          },
         })
         this.state = {
           phase: "candidate-margin-projection",
