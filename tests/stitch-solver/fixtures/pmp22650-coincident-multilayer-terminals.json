@@ -1,0 +1,83 @@
+{
+  "connections": [
+    {
+      "name": "source_net_altium_pcb_377_mst0",
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
+      "pointsToConnect": [
+        {
+          "x": 197.98394489999998,
+          "y": 125.94207221999999,
+          "layer": "bottom",
+          "pointId": "pcb_port_altium_8623",
+          "pcb_port_id": "pcb_port_altium_8623",
+          "port_selector": "C14.2"
+        },
+        {
+          "x": 197.98440972,
+          "y": 125.94207221999999,
+          "layer": "top",
+          "pointId": "pcb_port_altium_7313",
+          "pcb_port_id": "pcb_port_altium_7313",
+          "port_selector": "C12.2"
+        }
+      ],
+      "__rootConnectionNames": ["source_net_altium_pcb_377"]
+    }
+  ],
+  "hdRoutes": [
+    {
+      "connectionName": "source_net_altium_pcb_377_mst0",
+      "rootConnectionName": "source_net_altium_pcb_377",
+      "regionId": "topology_merge_25392",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        { "x": 197.982, "y": 126.552, "z": 7 },
+        { "x": 198, "y": 126.6, "z": 7 },
+        { "x": 198, "y": 127, "z": 7 },
+        { "x": 198, "y": 127, "z": 0 },
+        { "x": 197.982, "y": 126.552, "z": 0 }
+      ],
+      "vias": [{ "x": 198, "y": 127 }]
+    },
+    {
+      "connectionName": "source_net_altium_pcb_377_mst0",
+      "rootConnectionName": "source_net_altium_pcb_377",
+      "endPcbPortId": "pcb_port_altium_7313",
+      "regionId": "cmn_4069",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        { "x": 197.982, "y": 126.552, "z": 0 },
+        { "x": 197.984, "y": 125.942, "z": 0 }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_377_mst0",
+      "rootConnectionName": "source_net_altium_pcb_377",
+      "startPcbPortId": "pcb_port_altium_8623",
+      "regionId": "cmn_5243",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        { "x": 197.984, "y": 125.942, "z": 7 },
+        { "x": 197.975, "y": 125.95, "z": 7 },
+        { "x": 197.975, "y": 126, "z": 7 },
+        { "x": 197.975, "y": 126.05, "z": 7 },
+        { "x": 197.975, "y": 126.1, "z": 7 },
+        { "x": 197.975, "y": 126.15, "z": 7 },
+        { "x": 197.975, "y": 126.2, "z": 7 },
+        { "x": 197.975, "y": 126.25, "z": 7 },
+        { "x": 197.975, "y": 126.299, "z": 7 },
+        { "x": 197.975, "y": 126.346, "z": 7 },
+        { "x": 197.975, "y": 126.395, "z": 7 },
+        { "x": 197.975, "y": 126.44, "z": 7 },
+        { "x": 197.975, "y": 126.5, "z": 7 },
+        { "x": 197.982, "y": 126.552, "z": 7 }
+      ],
+      "vias": []
+    }
+  ]
+}
