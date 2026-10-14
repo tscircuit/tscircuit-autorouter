@@ -8,7 +8,7 @@ test("unconnected rotated keepouts retain their full area after preprocessing", 
     [0.2, 0.6],
     [10, 0.8],
   ]) {
-    for (const rotation of [0, 15, 45, 90, 135, 225, 270, 315]) {
+    for (const ccwRotationDegrees of [0, 15, 45, 90, 135, 225, 270, 315]) {
       const srj: SimpleRouteJson = {
         layerCount: 4,
         minTraceWidth: 0.1,
@@ -20,7 +20,7 @@ test("unconnected rotated keepouts retain their full area after preprocessing", 
             center: { x: 1, y: -1 },
             width,
             height,
-            ccwRotationDegrees: rotation,
+            ccwRotationDegrees,
             layers: ["top", "inner1"],
             connectedTo: [],
           },
@@ -28,7 +28,7 @@ test("unconnected rotated keepouts retain their full area after preprocessing", 
         connections: [],
       }
       const result = addApproximatingRectsToSrj(srj)
-      const angle = (rotation * Math.PI) / 180
+      const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
       // Sample the original rectangle, including its boundary. A keepout's
       // electrical connectivity must not change the area it excludes.
       for (let xStep = 0; xStep <= 20; xStep++) {
@@ -36,8 +36,8 @@ test("unconnected rotated keepouts retain their full area after preprocessing", 
           const x = (xStep / 20 - 0.5) * width
           const y = (yStep / 20 - 0.5) * height
           const point = {
-            x: 1 + x * Math.cos(angle) - y * Math.sin(angle),
-            y: -1 + x * Math.sin(angle) + y * Math.cos(angle),
+            x: 1 + x * Math.cos(ccwRotationRadians) - y * Math.sin(ccwRotationRadians),
+            y: -1 + x * Math.sin(ccwRotationRadians) + y * Math.cos(ccwRotationRadians),
           }
           expect(
             result.obstacles.some(
