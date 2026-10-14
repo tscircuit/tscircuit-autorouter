@@ -6,6 +6,8 @@ import { areNodesBordering } from "lib/utils/areNodesBordering"
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
 const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
+// Prevent one extreme aspect ratio from expanding into an unbounded node set.
+const MAX_ASPECT_RATIO_SUBDIVISIONS = 256
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
@@ -33,12 +35,14 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     const hasRatioLimit =
       Number.isFinite(this.maxNodeRatio) && this.maxNodeRatio > 0
 
-    let cols = hasDimensionLimit
+    const dimensionLimitedCols = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.width / this.maxNodeDimension))
       : 1
-    let rows = hasDimensionLimit
+    const dimensionLimitedRows = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.height / this.maxNodeDimension))
       : 1
+    let cols = dimensionLimitedCols
+    let rows = dimensionLimitedRows
 
     if (hasRatioLimit && node.width > 0 && node.height > 0) {
       while (true) {
@@ -57,6 +61,10 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
           cols++
         } else {
           rows++
+        }
+
+        if (cols * rows > MAX_ASPECT_RATIO_SUBDIVISIONS) {
+          return { cols: dimensionLimitedCols, rows: dimensionLimitedRows }
         }
       }
     }
