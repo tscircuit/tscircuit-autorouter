@@ -43,9 +43,9 @@ test("reuses the last exact query for each immutable obstacle index", () => {
   expect(segmentSearches).toBe(1)
   expect(viaSearches).toBe(1)
 
-  expect(
-    solver.isNodeTooCloseToObstacle({ ...node, x: 0.5 }, 0.1, true),
-  ).toBe(false)
+  expect(solver.isNodeTooCloseToObstacle({ ...node, x: 0.5 }, 0.1, true)).toBe(
+    false,
+  )
   expect(segmentSearches).toBe(2)
   expect(viaSearches).toBe(2)
 })
