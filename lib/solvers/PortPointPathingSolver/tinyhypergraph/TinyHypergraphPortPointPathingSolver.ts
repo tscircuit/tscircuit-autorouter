@@ -337,6 +337,7 @@ const getTinyHyperGraphSolveGraphOptions = (
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
+    OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
@@ -399,6 +400,7 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: enableLargeConnectionRouting,
+            WHOLE_ROUTE_OUTSIDE_IN_ROUTING: enableLargeConnectionRouting,
             MULTI_ROUTE_CONNECTION_OUTSIDE_IN_ROUTING:
               enableLargeConnectionRouting,
             MULTI_ROUTE_CONNECTION_OUTSIDE_IN_MIN_ROUTE_COUNT:
