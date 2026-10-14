@@ -1,0 +1,34 @@
+name: SRJ18 layer pruning experiment
+on:
+  push:
+    branches: [experiment/srj18-hex-oct-gallery]
+    paths: [.github/workflows/srj18-layer-pruning.yml]
+permissions:
+  contents: read
+jobs:
+  pruning:
+    runs-on: blacksmith-32vcpu-ubuntu-2404-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent geometry evaluator
+        run: pip install shapely==2.2.0
+      - name: Run paired controls, cache ablation, and region pruning
+        working-directory: experiments/srj18-hex-oct
+        env:
+          BLACKSMITH_PRUNING_BENCHMARK: '1'
+        run: python benchmark_pruning.py --workers 8 --repeats 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: srj18-layer-pruning
+          path: |
+            experiments/srj18-hex-oct/work/pruning-benchmark/*.json
+            experiments/srj18-hex-oct/work/pruning-benchmark/*.gz
+          retention-days: 30

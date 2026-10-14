@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
 import { dirname } from "node:path"
 import { createHexGrid } from "./hexGrid"
 import { createOctGrid } from "./octGrid"
+import { ClearRegionPruner } from "./ClearRegionPruner"
 
 export type Point = { x: number; y: number }
 export type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
@@ -21,6 +22,7 @@ export interface RouterConfig {
   viaDiameter: number
   viaPenalty: number
   breakoutCandidates: number
+  layerPruning: "off" | "cached" | "regions"
 }
 export const defaultConfig: RouterConfig = {
   grid: "hex",
@@ -30,6 +32,7 @@ export const defaultConfig: RouterConfig = {
   viaDiameter: 0.3,
   viaPenalty: 2,
   breakoutCandidates: 16,
+  layerPruning: "off",
 }
 export type Terminal = Point & {
   layer?: string
@@ -111,6 +114,13 @@ export type RouterOutput = Dataset & {
       totalExpandedStates: number
     }
     algorithm: string
+    searchStats: {
+      viaTransitionsPruned: number
+      viaLegalityChecks: number
+      viaDominatedTransitions: number
+      regionChecks: number
+      certifiedRegions: number
+    }
   }
 }
 type Copper = {
@@ -121,6 +131,7 @@ type Copper = {
   radius: number
 }
 type IndexedObstacle = Obstacle & {
+  bounds: Bounds
   net: string
   activeLayers: Set<number>
   polygon?: Point[]
@@ -397,6 +408,13 @@ export class GridRouter {
     candidateCount: 0,
     totalExpandedStates: 0,
   }
+  searchStats = {
+    viaTransitionsPruned: 0,
+    viaLegalityChecks: 0,
+    viaDominatedTransitions: 0,
+    regionChecks: 0,
+    certifiedRegions: 0,
+  }
   constructor(
     readonly input: Dataset,
     config: Partial<RouterConfig> = {},
@@ -476,23 +494,24 @@ export class GridRouter {
         activeLayers = new Set(
           o.layers.map((l) => this.layers.indexOf(l)).filter((l) => l >= 0),
         )
+      const points = geometry.polygon ?? (geometry.capsule!.slice(0, 2) as Point[]),
+        radius = geometry.capsule?.[2] ?? 0,
+        bounds = {
+          minX: Math.min(...points.map((p) => p.x)) - radius,
+          maxX: Math.max(...points.map((p) => p.x)) + radius,
+          minY: Math.min(...points.map((p) => p.y)) - radius,
+          maxY: Math.max(...points.map((p) => p.y)) + radius,
+        }
       const ob: IndexedObstacle = {
         ...o,
         ...geometry,
+        bounds,
         activeLayers,
         net: this.union.find(
           o.connectedTo?.[0] ?? `isolated-obstacle-${index}`,
         ),
       }
-      const points =
-          geometry.polygon ?? (geometry.capsule!.slice(0, 2) as Point[]),
-        radius = geometry.capsule?.[2] ?? 0
-      this.obstacleIndex.add(ob, {
-        minX: Math.min(...points.map((p) => p.x)) - radius,
-        maxX: Math.max(...points.map((p) => p.x)) + radius,
-        minY: Math.min(...points.map((p) => p.y)) - radius,
-        maxY: Math.max(...points.map((p) => p.y)) + radius,
-      })
+      this.obstacleIndex.add(ob, bounds)
     }
     this.connections = [...input.connections].sort(
       (a, b) => this.span(a) - this.span(b) || a.name.localeCompare(b.name),
@@ -573,6 +592,26 @@ export class GridRouter {
       this.segmentLegal(p, p, layer, this.config.viaDiameter / 2, net),
     )
   }
+  clearRegion(bounds: Bounds, width: number, net: string): boolean {
+    const margin = Math.max(width / 2, this.config.viaDiameter / 2) + this.config.clearance,
+      inflated = {
+        minX: bounds.minX - margin, minY: bounds.minY - margin,
+        maxX: bounds.maxX + margin, maxY: bounds.maxY + margin,
+      },
+      intersects = (other: Bounds): boolean =>
+        other.minX <= inflated.maxX && other.maxX >= inflated.minX &&
+        other.minY <= inflated.maxY && other.maxY >= inflated.minY
+    // An interior point plus no outline edge in the inflated connected box certifies
+    // the whole box lies inside the board, including concave outlines.
+    if (!pointInPolygon({ x: bounds.minX, y: bounds.minY }, this.outline)) return false
+    for (const edge of this.edgeIndex.query(inflated))
+      if (intersects(segmentBounds(...edge, 0))) return false
+    for (const obstacle of this.obstacleIndex.query(inflated))
+      if (obstacle.net !== net && obstacle.activeLayers.size && intersects(obstacle.bounds)) return false
+    for (const copper of this.copperIndex.query(inflated))
+      if (copper.net !== net && intersects(segmentBounds(copper.a, copper.b, copper.radius))) return false
+    return true
+  }
   nodeLegal(id: number, radius: number, net: string): boolean {
     if (this.legalSeen[id] === this.generation) return !!this.legal[id]
     this.legalSeen[id] = this.generation
@@ -639,6 +678,11 @@ export class GridRouter {
       heap = new MinHeap(),
       goalMap = new Map(goals.map((g) => [g.id, g])),
       startMap = new Map(starts.map((g) => [g.id, g]))
+    const gateways = new Set([...starts, ...goals].map(g => Math.floor(g.id / this.layers.length))),
+      pruner = this.config.layerPruning === "regions"
+        ? new ClearRegionPruner(this.grid, this, bounds => this.clearRegion(bounds, width, net))
+        : null,
+      viaCache = new Map<number, boolean>()
     const goalBounds = {
       minX: Math.min(...goals.map((g) => this.point(g.id).x)),
       maxX: Math.max(...goals.map((g) => this.point(g.id).x)),
@@ -716,12 +760,43 @@ export class GridRouter {
         // Exact capsule clearance rejects diagonal corner cuts in either lattice.
         if (this.segmentLegal(p, q, layer, width / 2, net)) relax(next, length)
       }
-      if (this.viaLegal(p, net))
-        for (let nextLayer = 0; nextLayer < this.layers.length; nextLayer++)
-          if (nextLayer !== layer)
-            relax(node * this.layers.length + nextLayer, this.config.viaPenalty)
+      if (this.config.layerPruning === "off") {
+        this.searchStats.viaLegalityChecks++
+        if (this.viaLegal(p, net))
+          for (let nextLayer = 0; nextLayer < this.layers.length; nextLayer++)
+            if (nextLayer !== layer)
+              relax(node * this.layers.length + nextLayer, this.config.viaPenalty)
+      } else {
+        const nextCost = this.dist[id] + this.config.viaPenalty,
+          candidates: number[] = []
+        for (let nextLayer = 0; nextLayer < this.layers.length; nextLayer++) {
+          if (nextLayer === layer) continue
+          const next = node * this.layers.length + nextLayer
+          if (this.closed[next] === generation ||
+            (this.seen[next] === generation && this.dist[next] <= nextCost + EPS)) {
+            this.searchStats.viaDominatedTransitions++
+          } else candidates.push(next)
+        }
+        if (candidates.length) {
+          if (pruner && !pruner.allowsLayerChange(i, j, gateways.has(node))) {
+            this.searchStats.viaTransitionsPruned += candidates.length
+          } else {
+            let legal = viaCache.get(node)
+            if (legal === undefined) {
+              this.searchStats.viaLegalityChecks++
+              legal = this.viaLegal(p, net)
+              viaCache.set(node, legal)
+            }
+            if (legal) for (const next of candidates) relax(next, this.config.viaPenalty)
+          }
+        }
+      }
     }
     this.breakoutStats.totalExpandedStates += expanded
+    if (pruner) {
+      this.searchStats.regionChecks += pruner.checks
+      this.searchStats.certifiedRegions += pruner.certified
+    }
     if (bestGoal < 0) return null
     const ids: number[] = []
     let id = bestGoal
@@ -987,6 +1062,7 @@ export class GridRouter {
         config: this.config,
         layerNames: this.layers,
         breakoutStats: this.breakoutStats,
+        searchStats: this.searchStats,
         gridNodeCount: this.xs.length,
         gridStateCount: this.dist.length,
         algorithm:
@@ -1022,9 +1098,11 @@ if (import.meta.main) {
     viaDiameter: Number(value("--via-diameter", "0.3")),
     viaPenalty: Number(value("--via-penalty", "2")),
     breakoutCandidates: Number(value("--breakout-candidates", "16")),
+    layerPruning: value("--layer-pruning", "off") as RouterConfig["layerPruning"],
   }
   if (
     !["hex", "oct"].includes(config.grid) ||
+    !["off", "cached", "regions"].includes(config.layerPruning) ||
     config.pitch <= 0 ||
     config.clearance < 0 ||
     config.timeLimit <= 0 ||
