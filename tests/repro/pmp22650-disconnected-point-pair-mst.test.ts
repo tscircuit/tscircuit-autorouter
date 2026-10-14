@@ -24,11 +24,10 @@ test("PMP22650 point-pair trees span every SGND and PGND terminal", async () => 
   )
   solver.solve()
   for (const connection of solver.newConnections) {
-    solver.colorMap[connection.name] = connection.__rootConnectionNames?.includes(
-      "source_net_altium_pcb_378",
-    )
-      ? "#2563eb"
-      : "#dc2626"
+    solver.colorMap[connection.name] =
+      connection.__rootConnectionNames?.includes("source_net_altium_pcb_378")
+        ? "#2563eb"
+        : "#dc2626"
   }
 
   await expect(
