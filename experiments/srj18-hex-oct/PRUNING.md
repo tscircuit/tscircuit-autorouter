@@ -47,9 +47,9 @@ new proof and are not introduced by this experiment.
 
 ## Validation and benchmark
 
-Six added test files cover independent Dijkstra costs on 60 cases across both
+Seven added test files cover independent Dijkstra costs on 60 cases across both
 grids, 2/4 layers and three via costs; internal starts/targets; necessary bridges;
-copper invalidation; concave outlines/inner copper; and exact cached-mode paths.
+copper invalidation; concave outlines/inner copper; exact cached-mode paths; and multiple breakout/physical-tree targets with endpoint costs.
 The original 26 routing tests also run. Tests do not establish a runtime benefit.
 
 `benchmark_pruning.py` runs all five existing pitches with all three modes on

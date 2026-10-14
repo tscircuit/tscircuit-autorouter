@@ -392,5 +392,20 @@
     "path": "recorded/results.json.gz",
     "sha256": "fce724af6b51f353d1f7a0c14789eb03e6f29d0c614fb661460f4b7e1c3a20d5",
     "format": "Original input JSON bytes once per board; raw routed traces and experiment metadata once per run; independent per-run evaluations. Materialization combines each input with the corresponding result."
+  },
+  "pruningBenchmark": {
+    "path": "recorded/pruning-results.json.gz",
+    "sha256": "4f1a16d2751e854c8cda02ef77d5ba08180854199eb611ca7ac689462188209e",
+    "runs": 480,
+    "repeats": 2,
+    "displayedRepeat": 1,
+    "metadata": "recorded/pruning-metadata.json",
+    "sourceCommit": "9420d7e6ef9b0505eb67b370ccc572c4ba07aadc",
+    "summary": "recorded/pruning/summary.json",
+    "pairedQuality": "recorded/pruning/paired-quality.json",
+    "workflowUrl": "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/38563554569",
+    "allOutputsDrcPass": true,
+    "routingTestsPassed": 33,
+    "independentEvaluatorTestsPassed": 4
   }
 }

@@ -6,13 +6,26 @@ isolated from the production autorouter pipeline.
 
 Open **[gallery.html](gallery.html)** in a browser, or visit `/srj18-hex-oct.html` on the PR web preview. It is a standalone offline
 page with the aggregate table, a per-board completion matrix, and one horizontal
-row of nine router cards for each of the 16 boards. All copper layers, drilled
+row of 24 router cards for each of the 16 boards. All copper layers, drilled
 vias, zoom, and SVG export are available. Images use the recorded output
 coordinates, widths, and layers; they do not infer missing routes.
 
 ![Arduino Nano router comparison](recorded/gallery-preview.png)
 
-## Recorded results
+## Paired layer-pruning experiment
+
+**480 Blacksmith runs, 33 passing routing tests, all outputs geometry-clean.**
+The updated gallery includes control, cached-only and region-pruned results for
+all five pitches, plus the historical baselines. Cards and aggregate tables show
+completion, vias, expanded states and observed runtime.
+
+Caching supplies most of the speed gain. Region pruning adds about 2–6% time
+versus cached-only on directly paired uncapped runs with identical coverage. It
+improves coarse hex clean-board completion from 4 to 6 and equal-density coarse
+oct from 3 to 5 in both repetitions, but via reductions are inconsistent.
+Region pruning remains opt-in. [Full paired results and tradeoffs](PRUNING_RESULTS.md).
+
+## Historical recorded results
 
 Dataset: [`tscircuit/dataset-srj18@b38e23cb1941`](https://github.com/tscircuit/dataset-srj18/tree/b38e23cb1941084d1f77c935699eff425a902db5).
 The 702 single-terminal records are excluded, leaving 2,194 routing requests

@@ -2,3 +2,5 @@ gallery.html linguist-generated=true
 recorded/*.json linguist-generated=true
 recorded/*.csv linguist-generated=true
 recorded/*.gz binary
+recorded/pruning/*.json linguist-generated=true
+recorded/pruning/*.csv linguist-generated=true

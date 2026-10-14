@@ -1,0 +1,377 @@
+[
+  {
+    "configuration": "hex-p010",
+    "mode": "control",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1879,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1078,
+        "expandedStates": 42098883,
+        "timeLimitedBoards": 13
+      },
+      {
+        "repeat": 2,
+        "connected": 1883,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1104,
+        "expandedStates": 42732911,
+        "timeLimitedBoards": 13
+      }
+    ],
+    "medianWallSeconds": 60.119725835499935
+  },
+  {
+    "configuration": "hex-p010",
+    "mode": "cached",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1957,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1398,
+        "expandedStates": 56298981,
+        "timeLimitedBoards": 10
+      },
+      {
+        "repeat": 2,
+        "connected": 1956,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1394,
+        "expandedStates": 55997036,
+        "timeLimitedBoards": 9
+      }
+    ],
+    "medianWallSeconds": 60.12043297950001
+  },
+  {
+    "configuration": "hex-p010",
+    "mode": "pruned",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1951,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1362,
+        "expandedStates": 54715749,
+        "timeLimitedBoards": 10
+      },
+      {
+        "repeat": 2,
+        "connected": 1951,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1377,
+        "expandedStates": 54645928,
+        "timeLimitedBoards": 10
+      }
+    ],
+    "medianWallSeconds": 60.11957325449998
+  },
+  {
+    "configuration": "hex-p020",
+    "mode": "control",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2105,
+        "required": 2194,
+        "completeCleanBoards": 4,
+        "vias": 1979,
+        "expandedStates": 27665783,
+        "timeLimitedBoards": 3
+      },
+      {
+        "repeat": 2,
+        "connected": 2108,
+        "required": 2194,
+        "completeCleanBoards": 4,
+        "vias": 1983,
+        "expandedStates": 27971267,
+        "timeLimitedBoards": 3
+      }
+    ],
+    "medianWallSeconds": 22.84168670599996
+  },
+  {
+    "configuration": "hex-p020",
+    "mode": "cached",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2134,
+        "required": 2194,
+        "completeCleanBoards": 4,
+        "vias": 2078,
+        "expandedStates": 31330736,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2134,
+        "required": 2194,
+        "completeCleanBoards": 4,
+        "vias": 2078,
+        "expandedStates": 31265207,
+        "timeLimitedBoards": 1
+      }
+    ],
+    "medianWallSeconds": 15.627074857000025
+  },
+  {
+    "configuration": "hex-p020",
+    "mode": "pruned",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2130,
+        "required": 2194,
+        "completeCleanBoards": 6,
+        "vias": 2071,
+        "expandedStates": 30841932,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2132,
+        "required": 2194,
+        "completeCleanBoards": 6,
+        "vias": 2056,
+        "expandedStates": 30808066,
+        "timeLimitedBoards": 2
+      }
+    ],
+    "medianWallSeconds": 16.709041270499938
+  },
+  {
+    "configuration": "oct-density010",
+    "mode": "control",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1897,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1083,
+        "expandedStates": 39016394,
+        "timeLimitedBoards": 13
+      },
+      {
+        "repeat": 2,
+        "connected": 1899,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1062,
+        "expandedStates": 38941678,
+        "timeLimitedBoards": 13
+      }
+    ],
+    "medianWallSeconds": 60.10690791349987
+  },
+  {
+    "configuration": "oct-density010",
+    "mode": "cached",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1965,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1369,
+        "expandedStates": 50752319,
+        "timeLimitedBoards": 9
+      },
+      {
+        "repeat": 2,
+        "connected": 1964,
+        "required": 2194,
+        "completeCleanBoards": 2,
+        "vias": 1369,
+        "expandedStates": 50135121,
+        "timeLimitedBoards": 9
+      }
+    ],
+    "medianWallSeconds": 60.107574656
+  },
+  {
+    "configuration": "oct-density010",
+    "mode": "pruned",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 1962,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1347,
+        "expandedStates": 49961900,
+        "timeLimitedBoards": 10
+      },
+      {
+        "repeat": 2,
+        "connected": 1962,
+        "required": 2194,
+        "completeCleanBoards": 1,
+        "vias": 1354,
+        "expandedStates": 50399733,
+        "timeLimitedBoards": 9
+      }
+    ],
+    "medianWallSeconds": 60.11448405099996
+  },
+  {
+    "configuration": "oct-density020",
+    "mode": "control",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2079,
+        "required": 2194,
+        "completeCleanBoards": 3,
+        "vias": 1831,
+        "expandedStates": 25011559,
+        "timeLimitedBoards": 3
+      },
+      {
+        "repeat": 2,
+        "connected": 2081,
+        "required": 2194,
+        "completeCleanBoards": 3,
+        "vias": 1836,
+        "expandedStates": 25329834,
+        "timeLimitedBoards": 3
+      }
+    ],
+    "medianWallSeconds": 20.23522924200006
+  },
+  {
+    "configuration": "oct-density020",
+    "mode": "cached",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2108,
+        "required": 2194,
+        "completeCleanBoards": 3,
+        "vias": 1908,
+        "expandedStates": 28131501,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2108,
+        "required": 2194,
+        "completeCleanBoards": 3,
+        "vias": 1908,
+        "expandedStates": 28170960,
+        "timeLimitedBoards": 1
+      }
+    ],
+    "medianWallSeconds": 15.122759094499997
+  },
+  {
+    "configuration": "oct-density020",
+    "mode": "pruned",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2109,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1949,
+        "expandedStates": 27584712,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2111,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1954,
+        "expandedStates": 27686422,
+        "timeLimitedBoards": 1
+      }
+    ],
+    "medianWallSeconds": 15.211129896000045
+  },
+  {
+    "configuration": "oct-p020",
+    "mode": "control",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2088,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1781,
+        "expandedStates": 23812179,
+        "timeLimitedBoards": 3
+      },
+      {
+        "repeat": 2,
+        "connected": 2092,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1789,
+        "expandedStates": 24054369,
+        "timeLimitedBoards": 3
+      }
+    ],
+    "medianWallSeconds": 18.717840313500062
+  },
+  {
+    "configuration": "oct-p020",
+    "mode": "cached",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2109,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1824,
+        "expandedStates": 25857417,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2109,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1824,
+        "expandedStates": 25838217,
+        "timeLimitedBoards": 1
+      }
+    ],
+    "medianWallSeconds": 13.681082731499941
+  },
+  {
+    "configuration": "oct-p020",
+    "mode": "pruned",
+    "byRepeat": [
+      {
+        "repeat": 1,
+        "connected": 2109,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1816,
+        "expandedStates": 25261166,
+        "timeLimitedBoards": 1
+      },
+      {
+        "repeat": 2,
+        "connected": 2109,
+        "required": 2194,
+        "completeCleanBoards": 5,
+        "vias": 1816,
+        "expandedStates": 25296494,
+        "timeLimitedBoards": 1
+      }
+    ],
+    "medianWallSeconds": 14.319636862500033
+  }
+]

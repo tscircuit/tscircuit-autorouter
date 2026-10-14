@@ -25,10 +25,28 @@ type Through = {
   from_layer: string
   to_layer: string
 }
-type RawResult = { traces: Array<{ route: Array<Wire | Via | Through> }> }
+type RawResult = {
+  traces: Array<{ route: Array<Wire | Via | Through> }>
+  experiment: {
+    elapsedMs: number
+    processWallMs?: number
+    breakoutStats?: { totalExpandedStates: number }
+  }
+}
 type RawRecording = {
   inputs: Record<string, string>
   results: Record<string, Record<string, RawResult>>
+  evaluations: Record<
+    string,
+    Record<
+      string,
+      {
+        physicallyConnected: number
+        routeRequiredConnections: number
+        viaCount: number
+      }
+    >
+  >
 }
 type Segment = [string, number, number, number, number, number]
 const root = resolve(import.meta.dir, "..")
@@ -49,6 +67,7 @@ if (manifest.pruningBenchmark) {
   for (const [variant, runs] of Object.entries(pruning.results)) {
     if (/-r\d+$/.test(variant)) continue
     recording.results[variant] = runs
+    recording.evaluations[variant] = pruning.evaluations[variant]
   }
 }
 const variantCount = Object.keys(recording.results).length
@@ -192,6 +211,31 @@ for (const [sample, text] of Object.entries(recording.inputs)) {
       expectedVias(recording.results[variant][sample]).sort(),
       `${sample}/${variant}: via coordinates and diameters must match recorded output`,
     )
+    const raw = recording.results[variant][sample],
+      metric = recording.evaluations[variant][sample],
+      expanded = raw.experiment.breakoutStats?.totalExpandedStates,
+      shownExpanded = await card
+        .locator('[data-metric="expanded"]')
+        .textContent(),
+      shownRuntime = await card
+        .locator('[data-metric="runtime"]')
+        .textContent(),
+      numbers = await card.locator(".card-metrics b").allTextContents()
+    assert.equal(
+      numbers[0],
+      `${metric.physicallyConnected}/${metric.routeRequiredConnections}`,
+    )
+    assert.equal(Number(numbers[1].replaceAll(",", "")), metric.viaCount)
+    assert.equal(
+      shownExpanded,
+      expanded === undefined ? "—" : expanded.toLocaleString("en-US"),
+    )
+    assert.ok(
+      Math.abs(
+        parseFloat(shownRuntime!) -
+          (raw.experiment.processWallMs ?? raw.experiment.elapsedMs) / 1000,
+      ) <= 0.005001,
+    )
     imagesChecked++
   }
   for (const layer of layers) {
@@ -277,6 +321,7 @@ console.log(
   JSON.stringify({
     cards: cardCount,
     exactCoordinateImagesChecked: imagesChecked,
+    metricCardsChecked: imagesChecked,
     individualLayerViewsChecked: layerViewsChecked,
     horizontalRows: 16,
     modalZoom: true,

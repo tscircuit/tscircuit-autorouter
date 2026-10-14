@@ -14,7 +14,9 @@ Restore checksum-verified recorded data, without executing any router:
   python3 materialize.py
 
 This writes work/recorded/{inputs,results,evaluation}. The bundle contains the
-16 exact input files once and traces/metadata for all 144 final runs. JSON
+16 exact input files once and traces/metadata for the 144 historical runs.
+The separate Blacksmith pruning bundle retains all 480 paired runs;
+materialization and gallery images select repetition one in advance. JSON
 formatting of materialized routed outputs may differ from the original artifact;
 the original raw output hashes are retained in manifest.json for provenance.
 
@@ -27,16 +29,16 @@ The generator also writes public/srj18-hex-oct.html for the PR web preview. The 
 embeds its compressed geometry, styles, and browser script. Source is in
 src/galleryRenderer.ts, src/galleryApp.ts, src/gallery.css and build_gallery.py.
 Inspect / zoom changes the popup's layer independently; the board selector
-changes all nine cards together. Images never interpolate missing copper.
+changes all cards in the row together. Images never interpolate missing copper.
 
 Optional headless browser validation:
 
   npx playwright install chromium
   bun scripts/checkGallery.ts
 
-The browser check compares the SVG coordinates, widths, and layers of all 144
-images directly with the recorded raw SRJ, exercises all 522 individual-layer
-views, and checks row scrolling, matrix navigation, modal zoom, and mobile layout.
+The browser check compares the SVG coordinates, widths, and layers of all displayed
+images directly with the recorded raw SRJ, exercises every individual-layer
+view, and checks row scrolling, matrix navigation, modal zoom, and mobile layout.
 Screenshots are written under work/gallery-qa or a supplied output-directory arg.
 
 Re-evaluate restored copper locally (this is validation, not a benchmark):
@@ -89,3 +91,34 @@ new benchmark outputs do not silently overwrite the published comparison.
 ci-validation.example.yml is an optional workflow template. Maintainers can
 copy it to .github/workflows/ to automate these checks; this PR does not alter
 workflow permissions or install a new workflow.
+
+Paired safe layer-change benchmark (Blacksmith):
+
+  BLACKSMITH_PRUNING_BENCHMARK=1 python3 benchmark_pruning.py \
+    --workers 8 --repeats 2 --out work/pruning-benchmark
+
+This runs off/cached/regions for all five pitches, 16 boards, two repetitions
+(480 fresh processes). Each lane has a fixed CPU; mode order reverses. The job
+independently evaluates all output geometry after routing. Errors fail loudly.
+Activate blacksmith-pruning.example.yml only on the experimental branch as
+.github/workflows/srj18-layer-pruning.yml. The template's push trigger targets
+that branch and workflow path; it does not modify the default branch.
+
+Summarize a downloaded artifact without executing routers:
+
+  python3 summarize_pruning.py --bundle recorded/pruning-results.json.gz \
+    --metadata recorded/pruning-metadata.json --out work/pruning-summary
+
+All timing includes region certificate work; process wall time additionally
+includes Bun startup and JSON export. The region proof applies to a fixed-board
+search, not to later greedy connections or the wall-clock-limited entire board.
+See PRUNING.md for certificate conditions, proof scope and regression tests.
+
+Explicitly promote a downloaded Blacksmith artifact into the gallery recording:
+
+  python3 import_pruning.py work/downloaded-pruning-artifact
+  bun run build
+  python3 build_gallery.py
+
+The importer verifies the bundle checksum, exact pinned input bytes, all modes,
+both repetitions and per-board coverage before updating manifest.json.
