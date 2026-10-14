@@ -28,11 +28,11 @@ test("visualizes coverage of a 0.6 by 0.2 mm keepout rotated 45 degrees", async 
     connections: [],
   }
   const result = addApproximatingRectsToSrj(srj)
-  const angle = Math.PI / 4
+  const ccwRotationRadians = Math.PI / 4
   const toWorld = (x: number, y: number): Point => {
     return {
-      x: x * Math.cos(angle) - y * Math.sin(angle),
-      y: x * Math.sin(angle) + y * Math.cos(angle),
+      x: x * Math.cos(ccwRotationRadians) - y * Math.sin(ccwRotationRadians),
+      y: x * Math.sin(ccwRotationRadians) + y * Math.cos(ccwRotationRadians),
     }
   }
   const sourcePoints: Point[] = []
