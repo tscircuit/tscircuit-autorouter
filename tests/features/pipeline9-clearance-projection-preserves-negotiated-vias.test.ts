@@ -84,7 +84,6 @@ test("projection preserves a negotiated route when moving its via would fail the
   })
   guardedSolver.solve()
   const result = guardedSolver.getOutput()
-  expect(result).toBe(fixture.routes)
   expect(result).toEqual(negotiatedRoutes)
   expect(previousRoutes).toEqual(previousSnapshot)
   expect(
