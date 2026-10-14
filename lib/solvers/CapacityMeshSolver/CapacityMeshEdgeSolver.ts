@@ -61,6 +61,16 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     const nodeById = new Map(
       this.nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    const connectedNodeIdsByNodeId = new Map<
+      CapacityMeshNodeId,
+      Set<CapacityMeshNodeId>
+    >(this.nodes.map((node) => [node.capacityMeshNodeId, new Set()]))
+
+    for (const edge of this.edges) {
+      const [nodeAId, nodeBId] = edge.nodeIds
+      connectedNodeIdsByNodeId.get(nodeAId)!.add(nodeBId)
+      connectedNodeIdsByNodeId.get(nodeBId)!.add(nodeAId)
+    }
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -68,12 +78,22 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        const nodeAConnectedNodeIds = connectedNodeIdsByNodeId.get(
+          nodeA.capacityMeshNodeId,
+        )!
+        if (nodeAConnectedNodeIds.has(nodeB.capacityMeshNodeId)) {
+          continue
+        }
 
         this.edges.push({
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
         })
+        nodeAConnectedNodeIds.add(nodeB.capacityMeshNodeId)
+        const nodeBConnectedNodeIds = connectedNodeIdsByNodeId.get(
+          nodeB.capacityMeshNodeId,
+        )!
+        nodeBConnectedNodeIds.add(nodeA.capacityMeshNodeId)
       }
     }
 
@@ -82,21 +102,22 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
+      const connectedNodeIds = connectedNodeIdsByNodeId.get(
+        targetNode.capacityMeshNodeId,
+      )!
+      let hasRoutingEdge = false
+      for (const otherNodeId of connectedNodeIds) {
         const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
-
-        return (
+        if (!otherNode) continue
+        if (
           !otherNode._containsObstacle &&
           !otherNode._containsTarget &&
           this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
+        ) {
+          hasRoutingEdge = true
+          break
+        }
+      }
       if (hasRoutingEdge) continue
 
       throw new Error(
