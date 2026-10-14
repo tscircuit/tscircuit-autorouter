@@ -30,6 +30,26 @@ export type UnsolvedRoute3 = {
 }
 
 type ConnectionName = string
+type StitchTerminal = Point3 & { pcb_port_id?: string }
+
+const routesIdentifyBothTerminals = (params: {
+  hdRoutes: HighDensityIntraNodeRoute[]
+  start: StitchTerminal
+  end: StitchTerminal
+}): boolean => {
+  if (!params.start.pcb_port_id || !params.end.pcb_port_id) return false
+
+  const routePcbPortIds = new Set(
+    params.hdRoutes.flatMap((route) => [
+      route.startPcbPortId,
+      route.endPcbPortId,
+    ]),
+  )
+  return (
+    routePcbPortIds.has(params.start.pcb_port_id) &&
+    routePcbPortIds.has(params.end.pcb_port_id)
+  )
+}
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
@@ -62,10 +82,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultTraceThickness: this.defaultTraceThickness,
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
-      preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      // Path selection is geometric. Borrowed same-root routes can carry a
+      // sibling point-to-point connection's terminal metadata.
+      preserveTerminalPcbPortIds: false,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "require_clear",
+      stitchClearanceMode: "prefer_clear",
     })
 
     while (
@@ -133,7 +155,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return pathRoutes.map((route) =>
+      route.connectionName === params.connectionName
+        ? route
+        : {
+            ...route,
+            startPcbPortId: undefined,
+            endPcbPortId: undefined,
+          },
+    )
   }
 
   constructor(params: {
@@ -359,19 +389,22 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
-      const sharedRootPathRoutes =
-        unsolvedRoutes.length > 1
-          ? this.getSharedRootPathRoutes({
-              connectionName,
-              rootConnectionName:
-                connection.__rootConnectionNames?.[0] ??
-                hdRoutes[0]?.rootConnectionName,
-              hdRoutes,
-              allHdRoutes: canonicalHdRoutes,
-              start,
-              end,
-            })
-          : null
+      const sharedRootPathRoutes = !routesIdentifyBothTerminals({
+        hdRoutes,
+        start,
+        end,
+      })
+        ? this.getSharedRootPathRoutes({
+            connectionName,
+            rootConnectionName:
+              connection.__rootConnectionNames?.[0] ??
+              hdRoutes[0]?.rootConnectionName,
+            hdRoutes,
+            allHdRoutes: canonicalHdRoutes,
+            start,
+            end,
+          })
+        : null
 
       if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
         return unsolvedRoutes

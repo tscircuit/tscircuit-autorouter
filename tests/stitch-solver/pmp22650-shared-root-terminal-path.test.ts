@@ -100,5 +100,5 @@ test("PMP22650 completes an MST branch through shared same-net copper", async ()
   expect(targetRoutes).toHaveLength(1)
   expect(
     new Set([targetRoutes[0]?.startPcbPortId, targetRoutes[0]?.endPcbPortId]),
-  ).toEqual(new Set([undefined, "pcb_port_altium_7016"]))
+  ).toEqual(new Set(["pcb_port_altium_6701", "pcb_port_altium_7016"]))
 })
