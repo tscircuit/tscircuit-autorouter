@@ -1,0 +1,130 @@
+[
+  {
+    "sample": "sample001",
+    "wireLengthDeltaMm": 0.0023,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample002",
+    "wireLengthDeltaMm": 0.0007,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample003",
+    "wireLengthDeltaMm": 0.0004,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample004",
+    "wireLengthDeltaMm": 0.0034,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample005",
+    "wireLengthDeltaMm": 0.002,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample006",
+    "wireLengthDeltaMm": 0.0027,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample007",
+    "wireLengthDeltaMm": 0.0046,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample008",
+    "wireLengthDeltaMm": 0.0004,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample009",
+    "wireLengthDeltaMm": 0.0002,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample010",
+    "wireLengthDeltaMm": 0.0023,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample011",
+    "wireLengthDeltaMm": 0.0008,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample012",
+    "wireLengthDeltaMm": 0.0044,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample013",
+    "wireLengthDeltaMm": 0.0021,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample014",
+    "wireLengthDeltaMm": 0.0031,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample015",
+    "wireLengthDeltaMm": 0.0002,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  },
+  {
+    "sample": "sample016",
+    "wireLengthDeltaMm": 0.0033,
+    "viaCountEqual": true,
+    "widthSetMm": [
+      0.1
+    ]
+  }
+]

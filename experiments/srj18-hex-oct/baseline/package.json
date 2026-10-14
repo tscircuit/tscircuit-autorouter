@@ -1,0 +1,13 @@
+{
+  "name": "srj18-tscircuit-baseline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "node runTscircuit.mjs",
+    "run:all": "node runAllTscircuit.mjs"
+  },
+  "dependencies": {
+    "@tscircuit/capacity-autorouter": "0.0.983"
+  }
+}

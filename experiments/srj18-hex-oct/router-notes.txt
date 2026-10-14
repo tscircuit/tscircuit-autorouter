@@ -1,0 +1,65 @@
+Shared grid router implementation
+================================
+
+Entry point: bun src/gridRouter.ts INPUT.json --grid hex|oct --pitch 0.2
+             --clearance 0.1 --time-limit 60 --out OUTPUT.json
+Optional common controls: --via-diameter 0.3 --via-penalty 2
+                         --breakout-candidates 16
+
+The same GridRouter implements both experiments; only neighbor geometry changes.
+Hex uses a six-neighbor axial lattice whose six edge lengths equal pitch. Oct uses
+eight neighbors of a square lattice, cardinal length pitch and diagonal length
+sqrt(2)*pitch. Its resulting trace directions are the customary eight octilinear
+directions. Equal in-board node density uses octPitch = hexPitch*sqrt(sqrt(3)/2).
+
+Method
+------
+Connections are sorted by geometric span, shortest first. Connections containing
+fewer than two terminals require no route and are reported separately. The engine
+unifies electrical identities from obstacle connectedTo arrays, source trace IDs,
+and terminal IDs, permitting copper belonging to the same electrical net to touch.
+This logical identity never alone counts as physical completion.
+
+Each terminal gets the nearest legal pad-to-grid fanouts within a disk roughly
+1.6 mm in radius. Up to 16 candidates per available terminal layer are retained.
+Multilayer pads may fan out on their physically present active layers. The closest
+pair of terminals is routed first; each later terminal connects to its nearest
+existing physical tree. For branches, the closest 32 physical grid vertices of
+that tree are eligible goals. Pad center positions remain exact in output.
+
+A* searches the chosen layer grid using geometric wire length plus 2 mm-equivalent
+cost per through via. A bounding-box Euclidean heuristic is admissible for the
+retained goal subset. Via transitions can join any active routing layers and
+their barrels block all active layers. All committed copper blocks other nets.
+Segments are tested at actual finite width against rotated rectangular pads,
+capsule oval pads, existing trace capsules, through vias, and actual board edges.
+Geometric edge tests prevent diagonal corner cutting without imposing an extra
+raster-specific restriction on diagonals. Spatial bins limit collision queries.
+Output preserves grid directionality; only repeated or collinear vertices are
+removed. Off-grid pad fanouts are the only arbitrary-angle segments.
+
+Limits
+------
+This is a new shared experimental A* router, not a FreeRouting port. It has no
+rip-up/retry, congestion negotiation, push-and-shove, DRC repair, or layer-change
+optimization. The initial closest pair is not retried if blocked; branch failure
+stops that connection instead of trying another unconnected terminal. Breakout
+and tree goal sets are limited. Separate connection records belonging to the
+same canonical net do not share a reusable physical tree, although their copper
+may legally touch. These restrictions can explain failures and extra wire/vias.
+The same restrictions apply to both grids.
+
+The per-board time limit includes lattice construction. A search checks its wall
+clock every 256 expansions; partial routes are preserved and terminal progress is
+reported. Parallel process contention affects achieved work in a fixed time cap.
+Allocated gridNodeCount includes the bounding envelope of axial coordinates and
+outside-board nodes; it is not a measure of actual in-board lattice density.
+Use geometric density formulas above when comparing the density control.
+
+Smoke validation
+----------------
+sample004 Arduino Nano, hex pitch0.2: 88/90 nontrivial connections physically
+connected, 2.489 s, 1103.725 mm wire, 67 vias. Independent Shapely geometry found
+zero new shorts, clearance violations, outside copper, malformed items, or
+invalid layers. sample001 Arduino Leonardo, 10 s cap: 97/106 physically connected,
+2492.754 mm wire, 79 vias; the same checks passed (2 preexisting pad conflicts).

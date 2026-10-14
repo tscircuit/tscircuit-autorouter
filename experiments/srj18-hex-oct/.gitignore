@@ -1,0 +1,9 @@
+node_modules/
+work/
+.venv/
+__pycache__/
+inputs/
+results/
+evaluation/
+baseline/node_modules/
+baseline/partial-hd/

@@ -1,0 +1,46 @@
+[
+  {
+    "reference": "hex-p020",
+    "variant": "oct-p020",
+    "commonConnectedElectricalNets": 1014,
+    "boards": 16,
+    "hexLengthMm": 34518.14194000003,
+    "otherLengthMm": 34175.49442000004,
+    "lengthRatio": 0.9900734077577065,
+    "hexVias": 1554,
+    "otherVias": 1479
+  },
+  {
+    "reference": "hex-p020",
+    "variant": "oct-density020",
+    "commonConnectedElectricalNets": 1019,
+    "boards": 16,
+    "hexLengthMm": 34875.319500000034,
+    "otherLengthMm": 34227.47178999998,
+    "lengthRatio": 0.9814238917581801,
+    "hexVias": 1567,
+    "otherVias": 1562
+  },
+  {
+    "reference": "hex-p020",
+    "variant": "tscircuit-edge01",
+    "commonConnectedElectricalNets": 477,
+    "boards": 8,
+    "hexLengthMm": 16539.610350000017,
+    "otherLengthMm": 11089.689919999997,
+    "lengthRatio": 0.6704928160535526,
+    "hexVias": 832,
+    "otherVias": 966
+  },
+  {
+    "reference": "hex-p020",
+    "variant": "freerouting",
+    "commonConnectedElectricalNets": 931,
+    "boards": 16,
+    "hexLengthMm": 31735.249280000022,
+    "otherLengthMm": 20113.161810000012,
+    "lengthRatio": 0.6337798588736971,
+    "hexVias": 1467,
+    "otherVias": 1227
+  }
+]

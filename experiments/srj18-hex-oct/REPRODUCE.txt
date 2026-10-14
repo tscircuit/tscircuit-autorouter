@@ -1,0 +1,86 @@
+Run from experiments/srj18-hex-oct. No production imports or dependencies change.
+
+Local setup and focused validation:
+
+  npm ci
+  bun run build
+  bun test --timeout 9999999 tests
+  python3 -m venv .venv
+  .venv/bin/pip install -r requirements.txt
+  .venv/bin/python -m unittest discover -s tests/evaluator -v
+
+Restore checksum-verified recorded data, without executing any router:
+
+  python3 materialize.py
+
+This writes work/recorded/{inputs,results,evaluation}. The bundle contains the
+16 exact input files once and traces/metadata for all 144 final runs. JSON
+formatting of materialized routed outputs may differ from the original artifact;
+the original raw output hashes are retained in manifest.json for provenance.
+
+Regenerate the standalone, offline gallery:
+
+  python3 build_gallery.py
+
+Open gallery.html directly in a browser; no HTTP server is required. The HTML
+embeds its compressed geometry, styles, and browser script. Source is in
+src/galleryRenderer.ts, src/galleryApp.ts, src/gallery.css and build_gallery.py.
+Inspect / zoom changes the popup's layer independently; the board selector
+changes all nine cards together. Images never interpolate missing copper.
+
+Optional headless browser validation:
+
+  npx playwright install chromium
+  bun scripts/checkGallery.ts
+
+The browser check compares the SVG coordinates, widths, and layers of all 144
+images directly with the recorded raw SRJ, exercises all 522 individual-layer
+views, and checks row scrolling, matrix navigation, modal zoom, and mobile layout.
+Screenshots are written under work/gallery-qa or a supplied output-directory arg.
+
+Re-evaluate restored copper locally (this is validation, not a benchmark):
+
+  .venv/bin/python evaluate.py --dataset work/recorded/inputs \
+    --results work/recorded/results --out work/evaluation
+
+Benchmark entrypoints (run on Blacksmith per the repository's AGENTS.md):
+
+  python3 materialize.py
+  python3 run_grids.py --dataset work/recorded/inputs --workers 4
+  python3 run_grids.py --dataset work/recorded/inputs --workers 4 --fine
+
+The main grid sweep is hex0.2/oct0.2/oct0.1861209718; the fine sweep is
+hex0.1/oct0.0930604859. Every sample has a 60-second solve cap. Grid CLI:
+
+  bun src/gridRouter.ts work/recorded/inputs/sample004.json \
+    --grid oct --pitch 0.2 --clearance 0.1 --via-diameter 0.3 \
+    --time-limit 60 --out work/custom-nano.json
+
+Pinned tscircuit pipeline 9 benchmark:
+
+  npm --prefix baseline ci
+  ROUTING_DATASET_DIRECTORY="$PWD/work/recorded/inputs" ROUTING_CONCURRENCY=4 \
+    ROUTING_BOARD_EDGE_CLEARANCE=0.1 ROUTING_OUTPUT_VARIANT=tscircuit-edge01 \
+    npm --prefix baseline run run:all
+
+Omit ROUTING_BOARD_EDGE_CLEARANCE and use ROUTING_OUTPUT_VARIANT=tscircuit to
+reproduce the default edge rule. Final outputs go to results/; unstitched internal
+fragments go to baseline/partial-hd/. Both are ignored in Git.
+
+FreeRouting benchmark (Linux x64, internet needed for verified runtime setup):
+
+  python3 freerouting/setup.py --runtime work/freerouting-runtime
+  python3 freerouting/run.py work/recorded/inputs/sample*.json \
+    --binary work/freerouting-runtime/jdk-25.0.4.1+1-jre/bin/java \
+    --jar work/freerouting-runtime/freerouting-2.5.0.jar \
+    --output work/results/freerouting --seconds 60 --workers 3
+  python3 freerouting/normalize.py --results work/results/freerouting \
+    --dataset work/recorded/inputs
+
+Add --fanout and select a separate output folder for the exploratory normal-
+fanout variant. Its sub-minimum-width outputs must not be counted as clean.
+Runtime checksums, source versions and rule differences are in
+freerouting/provenance.json. The official native CLI failed in serialization;
+the same-version official JAR is used. Native binaries and node_modules are not
+tracked. The checked-in gallery always uses the immutable recorded bundle;
+new benchmark outputs do not silently overwrite the published comparison.
