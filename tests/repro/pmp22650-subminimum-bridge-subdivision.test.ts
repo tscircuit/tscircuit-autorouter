@@ -66,12 +66,10 @@ test("reproduces PMP22650 sub-minimum bridge subdivision", () => {
 
   solver.solve()
 
-  expect(solver.outputNodes).toHaveLength(306)
-  expect(
-    solver.outputNodes.every(
-      (node) => node.width * node.height < minimumNodeArea,
-    ),
-  ).toBe(true)
+  expect(solver.outputNodes).toHaveLength(1)
+  expect(solver.outputNodes[0]?.capacityMeshNodeId).toBe(
+    pmp22650Bridge.capacityMeshNodeId,
+  )
   expect(
     getSvgFromGraphicsObject(
       getBridgeCrossSectionGraphics(solver.outputNodes),
