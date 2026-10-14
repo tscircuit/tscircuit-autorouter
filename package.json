@@ -59,7 +59,7 @@
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/99e15d4dcf2b93bbf5c47825d9fa0c31576e0cdc",
     "@tscircuit/solver-utils": "^0.0.16",
-    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#864e6899f0ec9c3aa9250d7268a8d7fad5624bc4",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#3ec99910c6a1983e39a21fd294a4a743bd774640",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
