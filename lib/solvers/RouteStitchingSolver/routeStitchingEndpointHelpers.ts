@@ -183,7 +183,7 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
-}) => {
+}): Point3 => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
@@ -203,6 +203,43 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
+}
+
+/** Keep distinct point-to-point terminals distinct when both are within one snap radius. */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: Point3 & { pcb_port_id?: string }
+  end: Point3 & { pcb_port_id?: string }
+  globalStart: Point3 & { pcb_port_id?: string }
+  globalEnd: Point3 & { pcb_port_id?: string }
+}): { start: Point3; end: Point3 } => {
+  const terminals = [params.globalStart, params.globalEnd]
+  const start = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals,
+  })
+  const end = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals,
+  })
+  if (
+    start !== end ||
+    params.globalStart.pcb_port_id === undefined ||
+    params.globalEnd.pcb_port_id === undefined ||
+    params.globalStart.pcb_port_id === params.globalEnd.pcb_port_id
+  ) {
+    return { start, end }
+  }
+
+  return {
+    start: snapIslandEndpointToNearestTerminal({
+      islandEndpoint: params.start,
+      terminals: [params.globalStart],
+    }),
+    end: snapIslandEndpointToNearestTerminal({
+      islandEndpoint: params.end,
+      terminals: [params.globalEnd],
+    }),
+  }
 }
 
 /**
