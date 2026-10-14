@@ -47,7 +47,7 @@ def main():
     if args.workers < 1 or args.repeats < 1 or args.time_limit <= 0:
         raise ValueError('Positive workers, repeats and time limit required')
     args.out.mkdir(parents=True, exist_ok=True)
-    recording = load_recording()
+    recording = load_recording(include_pruning=False)
     cpus = sorted(os.sched_getaffinity(0))
     if len(cpus) < args.workers:
         raise RuntimeError('Each benchmark lane requires its own available CPU')

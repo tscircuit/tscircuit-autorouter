@@ -83,7 +83,13 @@ async function initialize(): Promise<void> {
     .stream()
     .pipeThrough(new DecompressionStream("gzip"))
   const data = JSON.parse(await new Response(stream).text()) as GalleryData
-  if (data.boards.length !== 16 || data.variants.length !== 9)
+  if (
+    data.boards.length !== 16 ||
+    data.variants.length * data.boards.length !==
+      document.querySelectorAll(".router-card").length ||
+    new Set(data.variants.map((variant) => variant.id)).size !==
+      data.variants.length
+  )
     throw new Error("Incomplete recorded comparison")
   for (const board of data.boards) {
     const section = document.getElementById(board.sample)!

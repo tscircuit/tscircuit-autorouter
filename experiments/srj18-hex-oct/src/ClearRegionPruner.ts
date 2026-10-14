@@ -9,7 +9,12 @@ export class ClearRegionPruner {
 
   constructor(
     readonly grid: GridProvider,
-    readonly indices: { minI: number; maxI: number; minJ: number; maxJ: number },
+    readonly indices: {
+      minI: number
+      maxI: number
+      minJ: number
+      maxJ: number
+    },
     readonly certify: (bounds: Bounds) => boolean,
   ) {
     // Nested patches up to approximately 5 mm, down to four grid intervals.
@@ -26,22 +31,27 @@ export class ClearRegionPruner {
       // Every entry/exit vertex remains a gateway, including diagonal hex/oct moves.
       if (i === a || j === b) continue
       if (
-        a < this.indices.minI || a + span > this.indices.maxI ||
-        b < this.indices.minJ || b + span > this.indices.maxJ
-      ) continue
+        a < this.indices.minI ||
+        a + span > this.indices.maxI ||
+        b < this.indices.minJ ||
+        b + span > this.indices.maxJ
+      )
+        continue
       const key = `${span},${a},${b}`
       let clear = this.certificates.get(key)
       if (clear === undefined) {
         const corners = [
-          this.grid.point(a, b), this.grid.point(a + span, b),
-          this.grid.point(a, b + span), this.grid.point(a + span, b + span),
+          this.grid.point(a, b),
+          this.grid.point(a + span, b),
+          this.grid.point(a, b + span),
+          this.grid.point(a + span, b + span),
         ]
         this.checks++
         clear = this.certify({
-          minX: Math.min(...corners.map(p => p.x)),
-          maxX: Math.max(...corners.map(p => p.x)),
-          minY: Math.min(...corners.map(p => p.y)),
-          maxY: Math.max(...corners.map(p => p.y)),
+          minX: Math.min(...corners.map((p) => p.x)),
+          maxX: Math.max(...corners.map((p) => p.x)),
+          minY: Math.min(...corners.map((p) => p.y)),
+          maxY: Math.max(...corners.map((p) => p.y)),
         })
         this.certificates.set(key, clear)
         if (clear) this.certified++

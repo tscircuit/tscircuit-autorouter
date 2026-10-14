@@ -37,6 +37,22 @@ const recording = JSON.parse(
     readFileSync(resolve(root, "recorded/results.json.gz")),
   ).toString(),
 ) as RawRecording
+const manifest = JSON.parse(
+  readFileSync(resolve(root, "manifest.json"), "utf8"),
+)
+if (manifest.pruningBenchmark) {
+  const pruning = JSON.parse(
+    gunzipSync(
+      readFileSync(resolve(root, manifest.pruningBenchmark.path)),
+    ).toString(),
+  ) as RawRecording
+  for (const [variant, runs] of Object.entries(pruning.results)) {
+    if (/-r\d+$/.test(variant)) continue
+    recording.results[variant] = runs
+  }
+}
+const variantCount = Object.keys(recording.results).length
+const cardCount = Object.keys(recording.inputs).length * variantCount
 const screenshots = resolve(process.argv[2] ?? resolve(root, "work/gallery-qa"))
 mkdirSync(screenshots, { recursive: true })
 
@@ -81,18 +97,20 @@ await page.goto(pathToFileURL(resolve(root, "gallery.html")).href)
 await page.waitForFunction(() => window.srj18GalleryReady)
 assert.equal(await page.locator("main table").count(), 2)
 assert.equal(await page.locator("section.board").count(), 16)
-assert.equal(await page.locator(".router-card").count(), 144)
-const layout = await page.locator(".router-row").evaluateAll((rows) =>
-  rows.every((row) => {
-    const cards = Array.from(row.children).map((card) =>
-      card.getBoundingClientRect(),
-    )
-    return (
-      cards.length === 9 &&
-      cards.every((card) => Math.abs(card.top - cards[0].top) < 1) &&
-      row.scrollWidth > row.clientWidth
-    )
-  }),
+assert.equal(await page.locator(".router-card").count(), cardCount)
+const layout = await page.locator(".router-row").evaluateAll(
+  (rows, expected) =>
+    rows.every((row) => {
+      const cards = Array.from(row.children).map((card) =>
+        card.getBoundingClientRect(),
+      )
+      return (
+        cards.length === expected &&
+        cards.every((card) => Math.abs(card.top - cards[0].top) < 1) &&
+        row.scrollWidth > row.clientWidth
+      )
+    }),
+  variantCount,
 )
 assert.equal(
   layout,
@@ -257,7 +275,7 @@ await page
 await browser.close()
 console.log(
   JSON.stringify({
-    cards: 144,
+    cards: cardCount,
     exactCoordinateImagesChecked: imagesChecked,
     individualLayerViewsChecked: layerViewsChecked,
     horizontalRows: 16,

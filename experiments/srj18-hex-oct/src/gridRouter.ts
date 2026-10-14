@@ -494,7 +494,8 @@ export class GridRouter {
         activeLayers = new Set(
           o.layers.map((l) => this.layers.indexOf(l)).filter((l) => l >= 0),
         )
-      const points = geometry.polygon ?? (geometry.capsule!.slice(0, 2) as Point[]),
+      const points =
+          geometry.polygon ?? (geometry.capsule!.slice(0, 2) as Point[]),
         radius = geometry.capsule?.[2] ?? 0,
         bounds = {
           minX: Math.min(...points.map((p) => p.x)) - radius,
@@ -593,23 +594,39 @@ export class GridRouter {
     )
   }
   clearRegion(bounds: Bounds, width: number, net: string): boolean {
-    const margin = Math.max(width / 2, this.config.viaDiameter / 2) + this.config.clearance,
+    const margin =
+        Math.max(width / 2, this.config.viaDiameter / 2) +
+        this.config.clearance,
       inflated = {
-        minX: bounds.minX - margin, minY: bounds.minY - margin,
-        maxX: bounds.maxX + margin, maxY: bounds.maxY + margin,
+        minX: bounds.minX - margin,
+        minY: bounds.minY - margin,
+        maxX: bounds.maxX + margin,
+        maxY: bounds.maxY + margin,
       },
       intersects = (other: Bounds): boolean =>
-        other.minX <= inflated.maxX && other.maxX >= inflated.minX &&
-        other.minY <= inflated.maxY && other.maxY >= inflated.minY
+        other.minX <= inflated.maxX &&
+        other.maxX >= inflated.minX &&
+        other.minY <= inflated.maxY &&
+        other.maxY >= inflated.minY
     // An interior point plus no outline edge in the inflated connected box certifies
     // the whole box lies inside the board, including concave outlines.
-    if (!pointInPolygon({ x: bounds.minX, y: bounds.minY }, this.outline)) return false
+    if (!pointInPolygon({ x: bounds.minX, y: bounds.minY }, this.outline))
+      return false
     for (const edge of this.edgeIndex.query(inflated))
       if (intersects(segmentBounds(...edge, 0))) return false
     for (const obstacle of this.obstacleIndex.query(inflated))
-      if (obstacle.net !== net && obstacle.activeLayers.size && intersects(obstacle.bounds)) return false
+      if (
+        obstacle.net !== net &&
+        obstacle.activeLayers.size &&
+        intersects(obstacle.bounds)
+      )
+        return false
     for (const copper of this.copperIndex.query(inflated))
-      if (copper.net !== net && intersects(segmentBounds(copper.a, copper.b, copper.radius))) return false
+      if (
+        copper.net !== net &&
+        intersects(segmentBounds(copper.a, copper.b, copper.radius))
+      )
+        return false
     return true
   }
   nodeLegal(id: number, radius: number, net: string): boolean {
@@ -678,10 +695,15 @@ export class GridRouter {
       heap = new MinHeap(),
       goalMap = new Map(goals.map((g) => [g.id, g])),
       startMap = new Map(starts.map((g) => [g.id, g]))
-    const gateways = new Set([...starts, ...goals].map(g => Math.floor(g.id / this.layers.length))),
-      pruner = this.config.layerPruning === "regions"
-        ? new ClearRegionPruner(this.grid, this, bounds => this.clearRegion(bounds, width, net))
-        : null,
+    const gateways = new Set(
+        [...starts, ...goals].map((g) => Math.floor(g.id / this.layers.length)),
+      ),
+      pruner =
+        this.config.layerPruning === "regions"
+          ? new ClearRegionPruner(this.grid, this, (bounds) =>
+              this.clearRegion(bounds, width, net),
+            )
+          : null,
       viaCache = new Map<number, boolean>()
     const goalBounds = {
       minX: Math.min(...goals.map((g) => this.point(g.id).x)),
@@ -765,15 +787,21 @@ export class GridRouter {
         if (this.viaLegal(p, net))
           for (let nextLayer = 0; nextLayer < this.layers.length; nextLayer++)
             if (nextLayer !== layer)
-              relax(node * this.layers.length + nextLayer, this.config.viaPenalty)
+              relax(
+                node * this.layers.length + nextLayer,
+                this.config.viaPenalty,
+              )
       } else {
         const nextCost = this.dist[id] + this.config.viaPenalty,
           candidates: number[] = []
         for (let nextLayer = 0; nextLayer < this.layers.length; nextLayer++) {
           if (nextLayer === layer) continue
           const next = node * this.layers.length + nextLayer
-          if (this.closed[next] === generation ||
-            (this.seen[next] === generation && this.dist[next] <= nextCost + EPS)) {
+          if (
+            this.closed[next] === generation ||
+            (this.seen[next] === generation &&
+              this.dist[next] <= nextCost + EPS)
+          ) {
             this.searchStats.viaDominatedTransitions++
           } else candidates.push(next)
         }
@@ -787,7 +815,8 @@ export class GridRouter {
               legal = this.viaLegal(p, net)
               viaCache.set(node, legal)
             }
-            if (legal) for (const next of candidates) relax(next, this.config.viaPenalty)
+            if (legal)
+              for (const next of candidates) relax(next, this.config.viaPenalty)
           }
         }
       }
@@ -1098,7 +1127,10 @@ if (import.meta.main) {
     viaDiameter: Number(value("--via-diameter", "0.3")),
     viaPenalty: Number(value("--via-penalty", "2")),
     breakoutCandidates: Number(value("--breakout-candidates", "16")),
-    layerPruning: value("--layer-pruning", "off") as RouterConfig["layerPruning"],
+    layerPruning: value(
+      "--layer-pruning",
+      "off",
+    ) as RouterConfig["layerPruning"],
   }
   if (
     !["hex", "oct"].includes(config.grid) ||

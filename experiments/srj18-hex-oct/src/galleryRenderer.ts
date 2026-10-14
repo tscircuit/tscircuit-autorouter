@@ -22,6 +22,9 @@ export type GalleryMetrics = {
   belowMinWidthItems: number
   outsideCopperItems: number
   malformedRouteItems: number
+  expandedStates: number | null
+  processWallMs: number | null
+  viaTransitionsPruned: number | null
 }
 export type GalleryResult = {
   segments: Record<string, Array<[number, number, number, number, number]>>
