@@ -117,6 +117,12 @@ def main():
     <dialog id="detail"><div class="detail-header"><h2 id="detail-title">Inspect routed copper</h2><button id="detail-close" aria-label="Close copper inspector">Close ×</button></div><div class="detail-controls"><label for="detail-layer">Copper layer</label><select id="detail-layer"></select><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-reset">Reset</button><span>Scroll to inspect the enlarged image · magenta rings show vias and drill holes</span></div><div class="detail-stage"><img id="detail-image" alt="Enlarged routed copper" width="1200" height="800"></div></dialog>
     <script>window.SRJ18_GALLERY_GZIP="{payload}";</script><script>{script}</script></body></html>'''
     (ROOT/'gallery.html').write_text(page)
+    public = ROOT.parents[1] / 'public'
+    if public.is_dir():
+        destination = public / 'srj18-hex-oct.html'
+        if destination.is_symlink():
+            destination.unlink()
+        destination.write_text(page)
     print(f'Built standalone gallery: 16 rows, 144 router cards, {sum(len(b["layers"])for b in boards)*9} individual-layer views; {len(page.encode()):,} bytes')
 
 

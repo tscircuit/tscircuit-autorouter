@@ -23,7 +23,7 @@ Regenerate the standalone, offline gallery:
   python3 build_gallery.py
 
 Open gallery.html directly in a browser; no HTTP server is required.
-The public/srj18-hex-oct.html link exposes the same page in the PR web preview. The HTML
+The generator also writes public/srj18-hex-oct.html for the PR web preview. The HTML
 embeds its compressed geometry, styles, and browser script. Source is in
 src/galleryRenderer.ts, src/galleryApp.ts, src/gallery.css and build_gallery.py.
 Inspect / zoom changes the popup's layer independently; the board selector
