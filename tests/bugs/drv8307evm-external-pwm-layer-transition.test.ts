@@ -18,6 +18,9 @@ const srj = JSON.parse(
 ) as SimpleRouteJson
 
 test("routes the DRV8307EVM external PWM configuration", (): void => {
+  expect(srj.connections).toHaveLength(51)
+  expect(srj.obstacles).toHaveLength(262)
+
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
