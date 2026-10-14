@@ -400,6 +400,7 @@ const getTinyHyperGraphPipelineInput = (
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: enableLargeConnectionRouting,
+            WHOLE_ROUTE_OUTSIDE_IN_ROUTING: enableLargeConnectionRouting,
             MULTI_ROUTE_CONNECTION_OUTSIDE_IN_ROUTING:
               enableLargeConnectionRouting,
             MULTI_ROUTE_CONNECTION_OUTSIDE_IN_MIN_ROUTE_COUNT:
