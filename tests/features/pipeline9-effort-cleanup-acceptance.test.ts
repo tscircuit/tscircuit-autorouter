@@ -36,7 +36,7 @@ test("post-repair cleanup commits only valid improvements and preserves its inpu
       solver.solve()
       expect(solver.failed).toBe(false)
       expect(solver.completedPasses).toBe(
-        effort <= 1 ? 1 : Math.ceil(2 * effort),
+        effort <= 1 ? (isValid ? 2 : 1) : Math.ceil(2 * effort),
       )
       expect(solver.MAX_ITERATIONS).toBe(
         100e6 * (effort <= 1 ? 1 : Math.ceil(2 * effort)),
