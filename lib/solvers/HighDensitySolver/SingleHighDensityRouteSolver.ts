@@ -85,6 +85,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  /** Obstacle indexes are immutable; retaining one result per index bounds memory. */
+  private readonly obstacleIndexSearchCache = new WeakMap<
+    Flatbush,
+    ObstacleIndexSearchCacheEntry
+  >()
   freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
@@ -332,18 +337,20 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       (!isVia
         ? this.obstacleSegmentsByLayer.get(node.z)
         : this.obstacleSegments)
+    const segmentIndex = !isVia
+      ? this.obstacleSegmentIndexByLayer.get(node.z)
+      : this.obstacleSegmentIndex
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
-      (!isVia
-        ? this.obstacleSegmentIndexByLayer.get(node.z)
-        : this.obstacleSegmentIndex
-      )?.search(
-        node.x - traceProximity,
-        node.y - traceProximity,
-        node.x + traceProximity,
-        node.y + traceProximity,
-      ) ??
-      []
+      (segmentIndex
+        ? this.searchObstacleIndex(
+            segmentIndex,
+            node.x - traceProximity,
+            node.y - traceProximity,
+            node.x + traceProximity,
+            node.y + traceProximity,
+          )
+        : [])
     const queryBounds = planarObstacleQuery?.segmentBounds
     if (indexedSegments) {
       for (const segmentId of nearbySegmentIds) {
@@ -385,7 +392,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (this.obstacleViaIndex) {
-      const nearbyViaIds = this.obstacleViaIndex.search(
+      const nearbyViaIds = this.searchObstacleIndex(
+        this.obstacleViaIndex,
         node.x - viaProximity,
         node.y - viaProximity,
         node.x + viaProximity,
@@ -450,17 +458,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const minY = Math.min(node.y, parent.y)
     const maxY = Math.max(node.y, parent.y)
 
+    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
-      this.obstacleSegmentIndexByLayer
-        .get(node.z)
-        ?.search(
-          minX - clearance,
-          minY - clearance,
-          maxX + clearance,
-          maxY + clearance,
-        ) ??
-      []
+      (segmentIndex
+        ? this.searchObstacleIndex(
+            segmentIndex,
+            minX - clearance,
+            minY - clearance,
+            maxX + clearance,
+            maxY + clearance,
+          )
+        : [])
     const queryBounds = planarObstacleQuery?.segmentBounds
     const pathDeltaX = parent.x - node.x
     const pathDeltaY = parent.y - node.y
@@ -509,6 +518,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return false
   }
 
+  private searchObstacleIndex(
+    index: Flatbush,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  ): number[] {
+    const cachedSearch = this.obstacleIndexSearchCache.get(index)
+    if (
+      cachedSearch?.minX === minX &&
+      cachedSearch.minY === minY &&
+      cachedSearch.maxX === maxX &&
+      cachedSearch.maxY === maxY
+    ) {
+      return cachedSearch.results
+    }
+    const results = index.search(minX, minY, maxX, maxY)
+    this.obstacleIndexSearchCache.set(index, {
+      minX,
+      minY,
+      maxX,
+      maxY,
+      results,
+    })
+    return results
+  }
+
   getPlanarObstacleQuery(
     node: Node,
     sharedQuery?: PlanarObstacleQuery,
@@ -550,7 +586,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
     return {
       segments,
-      segmentIds: segmentIndex!.search(minX, minY, maxX, maxY),
+      segmentIds: this.searchObstacleIndex(
+        segmentIndex!,
+        minX,
+        minY,
+        maxX,
+        maxY,
+      ),
       pointQueryProximity: traceProximity,
       pointKey,
     }
@@ -570,7 +612,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const maximumNeighborY = clamp(node.y + this.cellStep, minY, maxY)
     return {
       segments,
-      segmentIds: segmentIndex.search(
+      segmentIds: this.searchObstacleIndex(
+        segmentIndex,
         Math.min(minimumNeighborX - traceProximity, node.x - clearance),
         Math.min(minimumNeighborY - traceProximity, node.y - clearance),
         Math.max(maximumNeighborX + traceProximity, node.x + clearance),
@@ -1123,6 +1166,14 @@ type IndexedObstacleSegment = {
 }
 
 type IndexedObstacleVia = { x: number; y: number }
+
+type ObstacleIndexSearchCacheEntry = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  results: number[]
+}
 
 type FreePlanarObstaclePoint = {
   x: number
