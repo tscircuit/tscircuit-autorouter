@@ -1,6 +1,5 @@
-import "bun-match-svg"
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
+import { type GraphicsObject, getSvgFromGraphicsObject } from "graphics-debug"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import type { CapacityMeshNode } from "lib/types"
 
