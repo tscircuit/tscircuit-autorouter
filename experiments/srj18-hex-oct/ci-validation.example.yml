@@ -1,0 +1,45 @@
+name: SRJ18 grid experiment
+
+on:
+  pull_request:
+    paths:
+      - "experiments/srj18-hex-oct/**"
+      - ".github/workflows/srj18-hex-oct-experiment.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-recorded-gallery:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experiments/srj18-hex-oct
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install isolated validation dependencies
+        run: |
+          npm ci
+          python -m pip install -r requirements.txt
+      - name: Typecheck and build the experiment
+        run: bun run build
+      - name: Run routing geometry regressions
+        run: bun test --timeout 9999999 tests
+      - name: Test the independent geometry evaluator
+        run: python -m unittest discover -s tests/evaluator -v
+      - name: Rebuild gallery from the verified recorded bundle
+        run: python build_gallery.py
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify all recorded images and layer views
+        run: bun scripts/checkGallery.ts

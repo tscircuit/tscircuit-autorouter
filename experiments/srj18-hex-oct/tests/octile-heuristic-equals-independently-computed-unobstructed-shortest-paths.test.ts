@@ -4,7 +4,6 @@ import { createOctGrid, octPitchAtHexDensity } from "../src/octGrid"
 const bounds = { minX: -3.7, minY: 2.3, maxX: 9.1, maxY: 7.2 }
 
 describe("octagonal lattice geometry", () => {
-
   test("octile heuristic equals independently computed unobstructed shortest paths", () => {
     const grid = createOctGrid(bounds, 0.31)
     // Dijkstra uses physical edge lengths and does not use the heuristic.
@@ -32,7 +31,10 @@ describe("octagonal lattice geometry", () => {
     }
     for (let i = -7; i <= 7; i++) {
       for (let j = -7; j <= 7; j++) {
-        expect(grid.distance(0, 0, i, j)).toBeCloseTo(best.get(`${i},${j}`)!, 10)
+        expect(grid.distance(0, 0, i, j)).toBeCloseTo(
+          best.get(`${i},${j}`)!,
+          10,
+        )
       }
     }
   })

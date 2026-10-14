@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { GridRouter, routeDataset, segmentObstacleDistance } from "../src/gridRouter"
+import {
+  GridRouter,
+  routeDataset,
+  segmentObstacleDistance,
+} from "../src/gridRouter"
 
 const bounds = { minX: -2, minY: -2, maxX: 2, maxY: 2 }
 const rect = (x: number, y: number, layer = "top") => ({
@@ -16,7 +20,6 @@ const router = (obstacles: ReturnType<typeof rect>[] = [], layerCount = 2) =>
   )
 
 describe("octagonal routing physical geometry", () => {
-
   test("checks a through via against inner copper layers", () => {
     const r = router([rect(0, 0, "inner1")], 4)
     const p = { x: 0, y: 0 }

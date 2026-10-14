@@ -4,7 +4,7 @@ This experiment compares one breakout → nearest physical tree → multilayer A
 router on six-direction hexagonal and eight-direction octagonal grids. It is
 isolated from the production autorouter pipeline.
 
-Open **[gallery.html](gallery.html)** in a browser. It is a standalone offline
+Open **[gallery.html](gallery.html)** in a browser, or visit `/srj18-hex-oct.html` on the PR web preview. It is a standalone offline
 page with the aggregate table, a per-board completion matrix, and one horizontal
 row of nine router cards for each of the 16 boards. All copper layers, drilled
 vias, zoom, and SVG export are available. Images use the recorded output

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { GridRouter, routeDataset, segmentObstacleDistance } from "../src/gridRouter"
+import {
+  GridRouter,
+  routeDataset,
+  segmentObstacleDistance,
+} from "../src/gridRouter"
 
 const bounds = { minX: -2, minY: -2, maxX: 2, maxY: 2 }
 const rect = (x: number, y: number, layer = "top") => ({
@@ -16,7 +20,6 @@ const router = (obstacles: ReturnType<typeof rect>[] = [], layerCount = 2) =>
   )
 
 describe("octagonal routing physical geometry", () => {
-
   for (const grid of ["oct"] as const) {
     test(`${grid} detour output clears foreign obstacles and committed copper along every moving segment`, () => {
       const terminals = [
@@ -45,7 +48,9 @@ describe("octagonal routing physical geometry", () => {
       })
       const net = r.union.find("net")
       // The direct pad-to-pad edge is physically illegal, so this must detour.
-      expect(r.segmentLegal(terminals[0], terminals[1], 0, 0.05, net)).toBe(false)
+      expect(r.segmentLegal(terminals[0], terminals[1], 0, 0.05, net)).toBe(
+        false,
+      )
       const result = r.run()
       expect(result.experiment.completedConnectionNames).toEqual(["net"])
       expect(result.traces).toHaveLength(1)
@@ -56,25 +61,45 @@ describe("octagonal routing physical geometry", () => {
         if (point.route_type === "via") {
           expect(r.viaLegal(point, net)).toBe(true)
           for (let layer = 0; layer < r.layers.length; layer++) {
-            expect(r.segmentLegal(point, point, layer, point.outer_diameter / 2, net)).toBe(true)
+            expect(
+              r.segmentLegal(
+                point,
+                point,
+                layer,
+                point.outer_diameter / 2,
+                net,
+              ),
+            ).toBe(true)
           }
         }
         if (index === 0) continue
         const previous = route[index - 1]
         const length = Math.hypot(point.x - previous.x, point.y - previous.y)
         if (length < 1e-8) continue
-        const layerName = point.route_type === "wire" ? point.layer : point.from_layer
-        const previousLayer = previous.route_type === "wire" ? previous.layer : previous.to_layer
+        const layerName =
+          point.route_type === "wire" ? point.layer : point.from_layer
+        const previousLayer =
+          previous.route_type === "wire" ? previous.layer : previous.to_layer
         expect(previousLayer).toBe(layerName)
-        expect(r.segmentLegal(previous, point, r.layers.indexOf(layerName), 0.05, net)).toBe(true)
+        expect(
+          r.segmentLegal(
+            previous,
+            point,
+            r.layers.indexOf(layerName),
+            0.05,
+            net,
+          ),
+        ).toBe(true)
         movingSegments++
         outputLength += length
       }
       expect(movingSegments).toBeGreaterThanOrEqual(2)
-      expect(outputLength).toBeGreaterThan(Math.hypot(
-        terminals[1].x - terminals[0].x,
-        terminals[1].y - terminals[0].y,
-      ) + 1e-5)
+      expect(outputLength).toBeGreaterThan(
+        Math.hypot(
+          terminals[1].x - terminals[0].x,
+          terminals[1].y - terminals[0].y,
+        ) + 1e-5,
+      )
     })
   }
 })

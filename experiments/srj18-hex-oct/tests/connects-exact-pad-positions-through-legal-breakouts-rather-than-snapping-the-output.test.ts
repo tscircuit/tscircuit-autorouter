@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { GridRouter, routeDataset, segmentObstacleDistance } from "../src/gridRouter"
+import {
+  GridRouter,
+  routeDataset,
+  segmentObstacleDistance,
+} from "../src/gridRouter"
 
 const bounds = { minX: -2, minY: -2, maxX: 2, maxY: 2 }
 const rect = (x: number, y: number, layer = "top") => ({
@@ -16,7 +20,6 @@ const router = (obstacles: ReturnType<typeof rect>[] = [], layerCount = 2) =>
   )
 
 describe("octagonal routing physical geometry", () => {
-
   test("connects exact pad positions through legal breakouts rather than snapping the output", () => {
     const terminals = [
       { x: -0.73, y: -0.21, layer: "top", pointId: "a" },

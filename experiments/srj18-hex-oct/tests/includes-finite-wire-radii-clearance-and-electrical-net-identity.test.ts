@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { GridRouter, routeDataset, segmentObstacleDistance } from "../src/gridRouter"
+import {
+  GridRouter,
+  routeDataset,
+  segmentObstacleDistance,
+} from "../src/gridRouter"
 
 const bounds = { minX: -2, minY: -2, maxX: 2, maxY: 2 }
 const rect = (x: number, y: number, layer = "top") => ({
@@ -16,7 +20,6 @@ const router = (obstacles: ReturnType<typeof rect>[] = [], layerCount = 2) =>
   )
 
 describe("octagonal routing physical geometry", () => {
-
   test("includes finite wire radii, clearance, and electrical net identity", () => {
     const r = router()
     r.addCopper({
@@ -26,10 +29,30 @@ describe("octagonal routing physical geometry", () => {
       radius: 0.05,
       layers: [0],
     })
-    expect(r.segmentLegal({ x: 0, y: -1 }, { x: 0, y: 1 }, 0, 0.05, "foreign")).toBe(false)
-    expect(r.segmentLegal({ x: 0, y: -1 }, { x: 0, y: 1 }, 0, 0.05, "existing")).toBe(true)
-    expect(r.segmentLegal({ x: -1, y: 0.199 }, { x: 1, y: 0.199 }, 0, 0.05, "foreign")).toBe(false)
-    expect(r.segmentLegal({ x: -1, y: 0.201 }, { x: 1, y: 0.201 }, 0, 0.05, "foreign")).toBe(true)
+    expect(
+      r.segmentLegal({ x: 0, y: -1 }, { x: 0, y: 1 }, 0, 0.05, "foreign"),
+    ).toBe(false)
+    expect(
+      r.segmentLegal({ x: 0, y: -1 }, { x: 0, y: 1 }, 0, 0.05, "existing"),
+    ).toBe(true)
+    expect(
+      r.segmentLegal(
+        { x: -1, y: 0.199 },
+        { x: 1, y: 0.199 },
+        0,
+        0.05,
+        "foreign",
+      ),
+    ).toBe(false)
+    expect(
+      r.segmentLegal(
+        { x: -1, y: 0.201 },
+        { x: 1, y: 0.201 },
+        0,
+        0.05,
+        "foreign",
+      ),
+    ).toBe(true)
   })
 
   for (const grid of ["hex", "oct"] as const) {

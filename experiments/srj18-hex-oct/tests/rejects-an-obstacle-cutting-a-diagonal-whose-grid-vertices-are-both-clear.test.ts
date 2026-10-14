@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import { GridRouter, routeDataset, segmentObstacleDistance } from "../src/gridRouter"
+import {
+  GridRouter,
+  routeDataset,
+  segmentObstacleDistance,
+} from "../src/gridRouter"
 
 const bounds = { minX: -2, minY: -2, maxX: 2, maxY: 2 }
 const rect = (x: number, y: number, layer = "top") => ({

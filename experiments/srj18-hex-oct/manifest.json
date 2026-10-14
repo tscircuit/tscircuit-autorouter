@@ -189,10 +189,10 @@
   "implementation": {
     "revision": "physical-terminal-layer-access-v2",
     "sourceSha256": {
-      "galleryApp.ts": "3f5d04e58d6ff1016b625f235f02b717b53cdbad146ff17fccb6702ce2f9dadd",
-      "galleryRenderer.ts": "aa6c980355fa3a52af1560e8f9a422d7ebcd9a327282c95639a62ebb8a57c9af",
-      "gridRouter.ts": "cdd6c10d2f0a9617192ac7bb09aa8c3a2c492457337ea328e6fb8e7c23c424ba",
-      "hexGrid.ts": "22df945c15cd4a793b02c427299926e8a896bce3eed62c7b65aa495066c270bc",
+      "galleryApp.ts": "ef7caeb300d3b0645aeb4b3bb57bda83161ea7da03ab2251f9c129f6d6ececfb",
+      "galleryRenderer.ts": "2a5797c9029552f2f9ecd0e9279199d3303b5740479dbb05dfaf77a050d447eb",
+      "gridRouter.ts": "3e537071b2b27491e619aceaa75056dc5e95dfc603ee0111d2db7ffa6231b451",
+      "hexGrid.ts": "0269b90c3856de4b4afe384d9a0bc8bf9f0caea73a269c9bdf04162ce6a8ef3c",
       "octGrid.ts": "2840c4e253d9631bec888a89322166771d3843748f6a4c54dde801a8a1d36757"
     },
     "bunVersion": "1.3.10",
