@@ -125,9 +125,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   private updateFutureConnectionPointCoordinates(): void {
-    const coordinates = new Float64Array(
-      this.futureConnectionPoints.length * 3,
-    )
+    const coordinates = new Float64Array(this.futureConnectionPoints.length * 3)
     let coordinateIndex = 0
     for (const point of this.futureConnectionPoints) {
       coordinates[coordinateIndex++] = point.x
