@@ -236,16 +236,36 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
+    let closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
         ? firstRouteFirstPoint
         : firstRouteLastPoint
-    const closestFirstRoutePcbPortId =
+    let closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
+    if (
+      opts.preserveTerminalPcbPortIds &&
+      closestFirstRoutePcbPortId &&
+      this.start.pcb_port_id &&
+      closestFirstRoutePcbPortId !== this.start.pcb_port_id
+    ) {
+      const taggedFirstRoute = canonicalHdRoutes.find(
+        (hdRoute) =>
+          hdRoute.startPcbPortId === this.start.pcb_port_id ||
+          hdRoute.endPcbPortId === this.start.pcb_port_id,
+      )
+      if (taggedFirstRoute) {
+        firstRoute = taggedFirstRoute
+        closestFirstRoutePoint =
+          taggedFirstRoute.startPcbPortId === this.start.pcb_port_id
+            ? taggedFirstRoute.route[0]!
+            : taggedFirstRoute.route.at(-1)!
+        closestFirstRoutePcbPortId = this.start.pcb_port_id
+      }
+    }
     if (
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&

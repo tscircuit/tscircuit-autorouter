@@ -24,7 +24,7 @@ const getHdRouteGraphics = (
   ),
 })
 
-test("PMP22650 collapses coincident top and bottom terminal identities", async () => {
+test("PMP22650 keeps coincident top and bottom terminal identities", async () => {
   const hdRoutes = fixture.hdRoutes as HighDensityIntraNodeRoute[]
   const solver = new MultipleHighDensityRouteStitchSolver3({
     connections: fixture.connections as SimpleRouteConnection[],
@@ -62,8 +62,12 @@ test("PMP22650 collapses coincident top and bottom terminal identities", async (
     }),
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 
-  expect(solveError?.message).toBe(
-    'SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal "pcb_port_altium_8623" for "source_net_altium_pcb_377_mst0"',
+  expect(solveError).toBeUndefined()
+  expect(solver.mergedHdRoutes).toHaveLength(1)
+  expect(solver.mergedHdRoutes[0]?.startPcbPortId).toBe(
+    "pcb_port_altium_8623",
   )
-  expect(solver.mergedHdRoutes).toHaveLength(0)
+  expect(solver.mergedHdRoutes[0]?.endPcbPortId).toBe(
+    "pcb_port_altium_7313",
+  )
 })
