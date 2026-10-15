@@ -28,6 +28,7 @@ const GRAPHICS_LAYER_COLORS = {
 } satisfies Record<LayerName, string>
 
 const OBSTACLE_LAYER_TRANSPARENCY = 0.5
+const TRACE_WIDTH_RENDER_TOLERANCE_MM = 0.00001
 
 export type TraceColorMode = "layer" | "net"
 
@@ -250,7 +251,9 @@ export const convertSrjToGraphicsObject = (
           if (
             currentWireLine &&
             currentWireLine.layer === layer &&
-            currentWireLine.strokeWidth === traceWidth
+            typeof currentWireLine.strokeWidth === "number" &&
+            Math.abs(currentWireLine.strokeWidth - traceWidth) <=
+              TRACE_WIDTH_RENDER_TOLERANCE_MM
           ) {
             currentWireLine.points.push({
               x: nextRoutePoint.x,
