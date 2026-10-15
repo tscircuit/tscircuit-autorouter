@@ -84,6 +84,7 @@ test("closest future-point memo preserves exact references, ties, layer penaltie
     expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[0])
     expect(JSON.stringify(solver.futureConnectionPoints)).toBe(originalPoints)
 
+    const scansBeforeGridQueries = scans.mock.calls.length
     for (let index = 0; index < 600; index++) {
       const query = { ...node, x: (index - 300) * solver.cellStep }
       expect(solver.getClosestFutureConnectionPoint(query)).toBe(
@@ -91,7 +92,7 @@ test("closest future-point memo preserves exact references, ties, layer penaltie
       )
     }
     expect(solver.getClosestFutureConnectionPoint(node)).toBe(points[0])
-    expect(scans.mock.calls.length).toBeGreaterThan(600)
+    expect(scans.mock.calls.length).toBe(scansBeforeGridQueries)
   } finally {
     scans.mockRestore()
   }
