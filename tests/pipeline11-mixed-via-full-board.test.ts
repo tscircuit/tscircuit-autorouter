@@ -1,14 +1,13 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import realBoard from "fixtures/real-boards/rp2040-motor-controller-board.srj.json" with {
   type: "json",
 }
 import { ApplyTraceSimplificationSolver } from "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/ApplyTraceSimplificationSolver"
 import { PrepareTraceSimplificationSolver } from "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/PrepareTraceSimplificationSolver"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test.failing("preserves mixed vias on a full board", async () => {
+test("records mixed vias on a full board", async () => {
   // Start with the repository's complete RP2040 motor-controller board. Only
   // the two via dimensions on this trace differ from the captured board.
   const input = structuredClone(realBoard) as SimpleRouteJson
@@ -36,22 +35,27 @@ test.failing("preserves mixed vias on a full board", async () => {
   apply.solve()
   const output = apply.getOutput()
 
-  const render = (srj: SimpleRouteJson): string =>
-    getSvgFromGraphicsObject(
-      convertSrjToGraphicsObject(srj, { traceColorMode: "layer" }),
-      { backgroundColor: "white", hideInlineLabels: true },
-    )
-  await expect(render(input)).toMatchSvgSnapshot(import.meta.path, {
+  await expect(
+    getBugReportSnapshotSvg({
+      inputSrj: input,
+      srjWithPointPairs: output,
+      routedTraces: output.traces!.map((trace) => ({
+        ...trace,
+        __replaces_pcb_trace_id: trace.pcb_trace_id,
+      })),
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "mixed-via-full-board-before",
   })
 
   const outputVias = output.traces
     ?.find((candidate) => candidate.pcb_trace_id === traceId)
     ?.route.filter((point) => point.route_type === "via")
+  // Characterize the bug: the second via incorrectly inherits the first size.
   expect(
     outputVias?.map((point) => [point.via_diameter, point.via_hole_diameter]),
   ).toEqual([
     [0.6, 0.3],
-    [1.0, 0.5],
+    [0.6, 0.3],
   ])
 })

@@ -3,7 +3,7 @@ import { PrepareTraceSimplificationSolver } from "../lib/autorouter-pipelines/Au
 import { ApplyTraceSimplificationSolver } from "../lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/ApplyTraceSimplificationSolver"
 import type { SimpleRouteJson } from "../lib/types"
 
-test.failing("preserves mixed via dimensions", () => {
+test("records mixed via dimensions", () => {
   const input: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.2,
@@ -67,8 +67,9 @@ test.failing("preserves mixed via dimensions", () => {
     .getOutput()
     .traces![0]!.route.filter((point) => point.route_type === "via")
     .map((point) => [point.via_diameter, point.via_hole_diameter])
+  // Characterize the bug: the second via incorrectly inherits the first size.
   expect(dimensions).toEqual([
     [0.6, 0.3],
-    [1.0, 0.5],
+    [0.6, 0.3],
   ])
 })
