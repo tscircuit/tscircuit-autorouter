@@ -38,7 +38,7 @@
     "fromSelector": "U5.EP",
     "toSelector": "U5.GND1"
   },
-  "snapshotPolicy": "placements shows the published outline and pad/hole/keepout placements with no copper. unreachable-gnd zooms to the actual U5 footprint and adds a dashed demand line and endpoint rings, not routed traces. Detailed routing is not reached, so no routed-board DRC result is claimed.",
+  "snapshotPolicy": "One native Pipeline 9 snapshot after attempting to route the entire circuit, preserving the current failure state.",
   "testCommand": "bun test --timeout 9999999 tests/repro/pipeline9-book-reading-clip-lamp.test.ts",
   "updateSnapshotCommand": "BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-book-reading-clip-lamp.test.ts"
 }
