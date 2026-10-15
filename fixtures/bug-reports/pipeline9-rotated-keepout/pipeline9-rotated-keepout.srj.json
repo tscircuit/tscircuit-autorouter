@@ -1,0 +1,78 @@
+{
+  "layerCount": 1,
+  "minTraceWidth": 0.1,
+  "minTraceToPadEdgeClearance": 0.1,
+  "defaultObstacleMargin": 0.1,
+  "bounds": {
+    "minX": -3,
+    "maxX": 3,
+    "minY": -3,
+    "maxY": 3
+  },
+  "obstacles": [
+    {
+      "obstacleId": "rotated_keepout",
+      "type": "rect",
+      "center": {
+        "x": 0,
+        "y": 0
+      },
+      "width": 2.1,
+      "height": 0.89,
+      "ccwRotationDegrees": 45,
+      "layers": ["top"],
+      "connectedTo": []
+    },
+    {
+      "type": "rect",
+      "obstacleId": "pad_0",
+      "center": {
+        "x": -2,
+        "y": 0.5
+      },
+      "width": 0.3,
+      "height": 0.3,
+      "layers": ["top"],
+      "connectedTo": ["signal", "pcb_port_0"],
+      "circuitJsonMetadata": {
+        "pcb_smtpad_id": "pcb_smtpad_0",
+        "pcb_port_id": "pcb_port_0"
+      }
+    },
+    {
+      "type": "rect",
+      "obstacleId": "pad_1",
+      "center": {
+        "x": 2,
+        "y": 0.5
+      },
+      "width": 0.3,
+      "height": 0.3,
+      "layers": ["top"],
+      "connectedTo": ["signal", "pcb_port_1"],
+      "circuitJsonMetadata": {
+        "pcb_smtpad_id": "pcb_smtpad_1",
+        "pcb_port_id": "pcb_port_1"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "name": "signal",
+      "pointsToConnect": [
+        {
+          "x": -2,
+          "y": 0.5,
+          "layer": "top",
+          "pcb_port_id": "pcb_port_0"
+        },
+        {
+          "x": 2,
+          "y": 0.5,
+          "layer": "top",
+          "pcb_port_id": "pcb_port_1"
+        }
+      ]
+    }
+  ]
+}
