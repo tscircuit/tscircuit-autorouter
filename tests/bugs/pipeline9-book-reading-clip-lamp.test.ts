@@ -2,7 +2,9 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import type { SimpleRouteJson } from "lib/types"
-import capturedInput from "../../fixtures/repro/book-reading-clip-lamp/book-reading-clip-lamp.unrouted.srj.json" with { type: "json" }
+import capturedInput from "../../fixtures/bug-reports/book-reading-clip-lamp/book-reading-clip-lamp.unrouted.srj.json" with {
+  type: "json",
+}
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 test("Pipeline 9 attempts to route the full reading lamp circuit", async (): Promise<void> => {
@@ -20,6 +22,10 @@ test("Pipeline 9 attempts to route the full reading lamp circuit", async (): Pro
 
   // Current Pipeline 9 fails before detailed routing; preserve that outcome.
   expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("source_net_0_mst26 (pcb_port_417->pcb_port_403)")
-  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(import.meta.path)
+  expect(solver.error).toContain(
+    "source_net_0_mst26 (pcb_port_417->pcb_port_403)",
+  )
+  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })

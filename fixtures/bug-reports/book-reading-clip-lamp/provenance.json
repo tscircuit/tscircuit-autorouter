@@ -39,6 +39,6 @@
     "toSelector": "U5.GND1"
   },
   "snapshotPolicy": "One native Pipeline 9 snapshot after attempting to route the entire circuit, preserving the current failure state.",
-  "testCommand": "bun test --timeout 9999999 tests/repro/pipeline9-book-reading-clip-lamp.test.ts",
-  "updateSnapshotCommand": "BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/repro/pipeline9-book-reading-clip-lamp.test.ts"
+  "testCommand": "bun test --timeout 9999999 tests/bugs/pipeline9-book-reading-clip-lamp.test.ts",
+  "updateSnapshotCommand": "BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999 tests/bugs/pipeline9-book-reading-clip-lamp.test.ts"
 }
