@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { Point } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
@@ -8,7 +9,7 @@ import srjJson from "../../fixtures/bug-reports/pipeline9-rotated-keepout/pipeli
   type: "json",
 }
 
-test("Pipeline9 reproduces routing through an unconnected rotated keepout", async (): Promise<void> => {
+test("Pipeline9 routes clear of the original unconnected rotated keepout", async (): Promise<void> => {
   const input = structuredClone(srjJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -79,9 +80,17 @@ test("Pipeline9 reproduces routing through an unconnected rotated keepout", asyn
       distance - Math.max(start.width, end.width) / 2,
     )
   }
-  // Record the current bug. The stacked fix changes this assertion to require
-  // the declared clearance and updates this same snapshot with a legal route.
-  expect(minimumCopperClearance).toBeLessThan(0)
+  expect(minimumCopperClearance).toBeGreaterThanOrEqual(
+    input.minTraceToPadEdgeClearance! - 1e-6,
+  )
+
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: traces,
+    }).errors,
+  ).toEqual([])
 
   await expect(
     getBugReportSnapshotSvg({
