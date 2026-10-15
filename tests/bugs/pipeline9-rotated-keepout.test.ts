@@ -60,8 +60,7 @@ test("Pipeline9 reproduces routing through an unconnected rotated keepout", asyn
     const localEnd = toLocal(end)
     const endpointInside = [localStart, localEnd].some(
       (point) =>
-        Math.abs(point.x) <= halfWidth &&
-        Math.abs(point.y) <= halfHeight,
+        Math.abs(point.x) <= halfWidth && Math.abs(point.y) <= halfHeight,
     )
     const distance = endpointInside
       ? 0
