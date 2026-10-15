@@ -26,7 +26,8 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const viaCount = drcInput.routedTraces.reduce(
-    (sum, trace) => sum + trace.route.filter(point => point.route_type === "via").length,
+    (sum, trace) =>
+      sum + trace.route.filter((point) => point.route_type === "via").length,
     0,
   )
   expect(viaCount).toBeLessThan(769)

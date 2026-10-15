@@ -11,7 +11,9 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types/srj-types"
 import board from "../../fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json"
 
-type CleanupConfig = ConstructorParameters<typeof Pipeline9EffortCleanupSolver>[0]["config"]
+type CleanupConfig = ConstructorParameters<
+  typeof Pipeline9EffortCleanupSolver
+>[0]["config"]
 type CapturedProblem = {
   source: { configSha256: string }
   pointPairs: SimpleRouteJson
@@ -22,13 +24,23 @@ type CapturedProblem = {
 }
 
 test("report107 cleanup reaches a valid via fixed point after later routes free copper", (): void => {
-  const capture = JSON.parse(gunzipSync(new Uint8Array(readFileSync(new URL(
-    "../fixtures/bugreport107-cleanup/input.json.gz",
-    import.meta.url,
-  )))).toString("utf8")) as CapturedProblem
-  const { connMap: serializedConnectivity, ...serializedConfig } = capture.config
-  expect(createHash("sha256").update(JSON.stringify(serializedConfig)).digest("hex"))
-    .toBe(capture.source.configSha256)
+  const capture = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "../fixtures/bugreport107-cleanup/input.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString("utf8"),
+  ) as CapturedProblem
+  const { connMap: serializedConnectivity, ...serializedConfig } =
+    capture.config
+  expect(
+    createHash("sha256").update(JSON.stringify(serializedConfig)).digest("hex"),
+  ).toBe(capture.source.configSha256)
   const connMap = new ConnectivityMap(serializedConnectivity)
   const input = structuredClone(serializedConfig.hdRoutes)
   const srj = board.simple_route_json as SimpleRouteJson
@@ -44,16 +56,18 @@ test("report107 cleanup reaches a valid via fixed point after later routes free 
     })
   }
   const isValid = (routes: HighDensityRoute[]): boolean => {
-    return evaluateRelaxedDrc({
-      inputSrj: srj,
-      srjWithPointPairs: capture.pointPairs,
-      routedTraces: convert(routes),
-      includeBoardClearance: true,
-      drcOptions: {
-        traceClearance: srj.minTraceToPadEdgeClearance,
-        viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
-      },
-    }).errors.length === 0
+    return (
+      evaluateRelaxedDrc({
+        inputSrj: srj,
+        srjWithPointPairs: capture.pointPairs,
+        routedTraces: convert(routes),
+        includeBoardClearance: true,
+        drcOptions: {
+          traceClearance: srj.minTraceToPadEdgeClearance,
+          viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
+        },
+      }).errors.length === 0
+    )
   }
   const solver = new Pipeline9EffortCleanupSolver({
     effort: 1,
@@ -62,13 +76,21 @@ test("report107 cleanup reaches a valid via fixed point after later routes free 
       hdRoutes: input,
       connMap,
       terminalLayerIndicesByPcbPortId: new Map(
-        serializedConfig.terminalLayerIndicesByPcbPortId.map(([id, layers]) => [id, new Set(layers)]),
+        serializedConfig.terminalLayerIndicesByPcbPortId.map(([id, layers]) => [
+          id,
+          new Set(layers),
+        ]),
       ),
     },
     getCost: (routes): { vias: number; points: number } => {
       const traces = convert(routes)
       return {
-        vias: traces.reduce((sum, trace) => sum + trace.route.filter(point => point.route_type === "via").length, 0),
+        vias: traces.reduce(
+          (sum, trace) =>
+            sum +
+            trace.route.filter((point) => point.route_type === "via").length,
+          0,
+        ),
         points: traces.reduce((sum, trace) => sum + trace.route.length, 0),
       }
     },
@@ -77,7 +99,8 @@ test("report107 cleanup reaches a valid via fixed point after later routes free 
   const acceptedViaCounts = [solver.bestCost.vias]
   while (!solver.solved && !solver.failed) {
     solver.step()
-    if (solver.bestCost.vias !== acceptedViaCounts.at(-1)) acceptedViaCounts.push(solver.bestCost.vias)
+    if (solver.bestCost.vias !== acceptedViaCounts.at(-1))
+      acceptedViaCounts.push(solver.bestCost.vias)
   }
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
