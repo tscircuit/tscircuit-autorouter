@@ -59,5 +59,7 @@ test("keeps near-equal trace widths in one rounded polyline", async () => {
 
   srj.traces[0]!.route[1]!.width = 0.4
   const distinctWidths = convertSrjToGraphicsObject(srj)
-  expect(distinctWidths.lines.map((line) => line.strokeWidth)).toEqual([0.8, 0.4])
+  expect(distinctWidths.lines.map((line) => line.strokeWidth)).toEqual([
+    0.8, 0.4,
+  ])
 })
