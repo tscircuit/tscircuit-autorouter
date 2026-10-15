@@ -9,7 +9,7 @@ import bugReport from "../../fixtures/bug-reports/receiver-40b373/receiver-40b37
 }
 import "../fixtures/svg-matcher"
 
-test("receiver bug report via-in-pad regression", async (): Promise<void> => {
+test("receiver drill placement and neck widths", async (): Promise<void> => {
   const srj: SimpleRouteJson = bugReport.simple_route_json
   expect(srj.connections).toHaveLength(44)
   expect(srj.obstacles).toHaveLength(202)
@@ -24,9 +24,24 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
-  const { circuitJson } = evaluateRelaxedDrc(drcInput)
+  const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
+  expect(errors).toHaveLength(0)
   const viaInPadErrors = checkViasInPads(circuitJson)
   expect(viaInPadErrors).toHaveLength(0)
+
+  const escape = drcInput.routedTraces.find(
+    (trace) =>
+      trace.connectsTo?.includes("pcb_port_132") &&
+      trace.connectsTo?.includes("pcb_port_82"),
+  )
+  expect(escape).toBeDefined()
+  const wires = escape!.route
+    .filter((point) => point.route_type === "wire")
+    .filter((point) => point.layer === "top")
+  expect(wires[0]!.width).toBeCloseTo(0.7500112, 6)
+  expect(wires[1]!.y - wires[0]!.y).toBeCloseTo(0.3750056, 5)
+  expect(wires[2]!.width).toBe(1)
+  expect(wires[3]!.width).toBe(1)
 
   let color = "#166534"
   if (viaInPadErrors.length > 0) color = "#b91c1c"
