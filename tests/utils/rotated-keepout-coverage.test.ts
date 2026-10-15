@@ -36,8 +36,14 @@ test("unconnected rotated keepouts retain their full area after preprocessing", 
           const x = (xStep / 20 - 0.5) * width
           const y = (yStep / 20 - 0.5) * height
           const point = {
-            x: 1 + x * Math.cos(ccwRotationRadians) - y * Math.sin(ccwRotationRadians),
-            y: -1 + x * Math.sin(ccwRotationRadians) + y * Math.cos(ccwRotationRadians),
+            x:
+              1 +
+              x * Math.cos(ccwRotationRadians) -
+              y * Math.sin(ccwRotationRadians),
+            y:
+              -1 +
+              x * Math.sin(ccwRotationRadians) +
+              y * Math.cos(ccwRotationRadians),
           }
           expect(
             result.obstacles.some(
