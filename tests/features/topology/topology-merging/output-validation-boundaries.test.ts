@@ -39,8 +39,6 @@ test("topology output validation preserves layer, boundary, and same-group excep
     ),
   ).not.toThrow()
   expect(() =>
-    validateTopologyMergingOutput(
-      createTopologyMergingValidationTestInput([]),
-    ),
+    validateTopologyMergingOutput(createTopologyMergingValidationTestInput([])),
   ).not.toThrow()
 })
