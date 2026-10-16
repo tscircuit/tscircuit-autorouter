@@ -87,5 +87,7 @@ test("cleanup searches a same-layer path when a via-pair corridor detour is too 
   )
   expect(solver.getOutput()[0]!.route[0]).toEqual(original.route[0])
   expect(solver.getOutput()[0]!.route.at(-1)).toEqual(original.route.at(-1))
+  expect(solver.getOutput()[0]!.route[1]).toEqual(original.route[1])
+  expect(solver.getOutput()[0]!.route.at(-2)).toEqual(original.route.at(-2))
   expect(route).toEqual(original)
 })

@@ -165,7 +165,21 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.sameLayerRouteIndex = routeIndex + 1
     if (!path) return
     const candidate = [...this.bestRoutes]
-    candidate[routeIndex] = { ...candidate[routeIndex]!, route: path, vias: [] }
+    const route = candidate[routeIndex]!
+    const startIndex = route.route.indexOf(solver.input.start)
+    const endIndex = route.route.indexOf(solver.input.end)
+    if (startIndex < 0 || endIndex < startIndex) {
+      throw new Error("Via removal anchors must belong to the original route")
+    }
+    candidate[routeIndex] = {
+      ...route,
+      route: [
+        ...route.route.slice(0, startIndex),
+        ...path,
+        ...route.route.slice(endIndex + 1),
+      ],
+      vias: [],
+    }
     const cost = this.params.getCost(candidate)
     if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
       this.bestRoutes = structuredClone(candidate)
