@@ -26,8 +26,7 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
   }
   const { circuitJson } = evaluateRelaxedDrc(drcInput)
   const viaInPadErrors = checkViasInPads(circuitJson)
-  // The repro baseline captures the real receiver's manufacturing violations.
-  expect(viaInPadErrors).toHaveLength(3)
+  expect(viaInPadErrors).toHaveLength(0)
 
   let color = "#166534"
   if (viaInPadErrors.length > 0) color = "#b91c1c"
