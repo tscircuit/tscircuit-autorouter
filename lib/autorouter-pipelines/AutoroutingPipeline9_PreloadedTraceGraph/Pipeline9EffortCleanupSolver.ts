@@ -6,7 +6,7 @@ import { FindClearancePathSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { getPipeline9PlanarViaRemovalProblem } from "./getPipeline9PlanarViaRemovalProblem"
+import { getSameLayerViaRemovalInput } from "./getSameLayerViaRemovalInput"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -26,8 +26,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
   readonly params: CleanupParams
-  private planarRouteIndex?: number
-  private planarSolver?: FindClearancePathSolver
+  private sameLayerRouteIndex?: number
+  private sameLayerPathSolver?: FindClearancePathSolver
 
   constructor(params: CleanupParams) {
     super()
@@ -73,8 +73,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.planarRouteIndex !== undefined) {
-      this.stepPlanarViaRemoval()
+    if (this.sameLayerRouteIndex !== undefined) {
+      this.stepSameLayerViaRemoval()
       return
     }
     if (this.viaRemovalSolver) {
@@ -96,7 +96,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
       this.completedPasses = 1
-      this.planarRouteIndex = 0
+      this.sameLayerRouteIndex = 0
       return
     }
     const simplifier = this.simplifier
@@ -126,31 +126,33 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    if (simplifier.solved) this.planarRouteIndex = 0
+    if (simplifier.solved) this.sameLayerRouteIndex = 0
   }
 
-  private stepPlanarViaRemoval(): void {
-    const routeIndex = this.planarRouteIndex!
+  private stepSameLayerViaRemoval(): void {
+    const routeIndex = this.sameLayerRouteIndex!
     if (routeIndex >= this.bestRoutes.length) {
-      this.planarRouteIndex = undefined
+      this.sameLayerRouteIndex = undefined
       this.solved = true
       return
     }
-    if (!this.planarSolver) {
-      const problem = getPipeline9PlanarViaRemovalProblem({
+    if (!this.sameLayerPathSolver) {
+      const sameLayerViaRemovalInput = getSameLayerViaRemovalInput({
         srj: this.params.srj,
         routes: this.bestRoutes,
         fixedRoutes: this.params.config.otherHdRoutes ?? [],
         routeIndex,
       })
-      if (!problem) {
-        this.planarRouteIndex = routeIndex + 1
+      if (!sameLayerViaRemovalInput) {
+        this.sameLayerRouteIndex = routeIndex + 1
         return
       }
-      this.planarSolver = new FindClearancePathSolver(problem)
+      this.sameLayerPathSolver = new FindClearancePathSolver(
+        sameLayerViaRemovalInput,
+      )
       return
     }
-    const solver = this.planarSolver
+    const solver = this.sameLayerPathSolver
     solver.step()
     if (solver.failed) {
       this.failed = true
@@ -159,8 +161,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     }
     if (!solver.solved) return
     const path = solver.getOutput()
-    this.planarSolver = undefined
-    this.planarRouteIndex = routeIndex + 1
+    this.sameLayerPathSolver = undefined
+    this.sameLayerRouteIndex = routeIndex + 1
     if (!path) return
     const candidate = [...this.bestRoutes]
     candidate[routeIndex] = { ...candidate[routeIndex]!, route: path, vias: [] }

@@ -26,8 +26,11 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
   }
   const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
   expect(errors).toHaveLength(0)
+  const connectorRowMaxY = -20
   const connectorVias = drcInput.routedTraces.flatMap((trace) =>
-    trace.route.filter((point) => point.route_type === "via" && point.y < -20),
+    trace.route.filter(
+      (point) => point.route_type === "via" && point.y < connectorRowMaxY,
+    ),
   )
   expect(connectorVias).toHaveLength(0)
   const strictDrc = evaluateRelaxedDrc({
