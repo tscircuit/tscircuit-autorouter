@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { checkViasInPads } from "@tscircuit/checks"
 import { AutoroutingPipelineSolver } from "lib"
+import { getPipeline9PhysicalViaCount } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalViaCount"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
@@ -32,6 +33,26 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
     0,
   )
   expect(viaCount).toBeLessThanOrEqual(129)
+  expect(
+    getPipeline9PhysicalViaCount({ traces: drcInput.routedTraces }),
+  ).toBeLessThanOrEqual(122)
+  const connectorRowMaxY = -20
+  const connectorVias = drcInput.routedTraces.map((trace) => ({
+    ...trace,
+    route: trace.route.filter(
+      (point) => point.route_type === "via" && point.y < connectorRowMaxY,
+    ),
+  }))
+  expect(getPipeline9PhysicalViaCount({ traces: connectorVias })).toBe(6)
+  const strictDrc = evaluateRelaxedDrc({
+    ...drcInput,
+    includeBoardClearance: true,
+    drcOptions: {
+      traceClearance: srj.minTraceToPadEdgeClearance,
+      viaClearance: srj.minViaHoleEdgeToViaHoleEdgeClearance,
+    },
+  })
+  expect(strictDrc.errors).toHaveLength(0)
   const viaInPadErrors = checkViasInPads(circuitJson)
   expect(viaInPadErrors).toHaveLength(0)
 

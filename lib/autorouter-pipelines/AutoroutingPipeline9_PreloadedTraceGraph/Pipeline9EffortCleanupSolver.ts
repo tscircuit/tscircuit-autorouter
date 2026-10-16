@@ -4,11 +4,13 @@ import {
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getPipeline9SharedTerminalViaCandidates } from "./getPipeline9SharedTerminalViaCandidates"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
+  allowBlindAndBuriedVias?: boolean
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
 }
@@ -24,6 +26,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly params: CleanupParams
   private routeCandidates?: HighDensityRoute[]
   private candidateRouteIndex = 0
+  private sharedViaCandidates?: Generator<HighDensityRoute[]>
 
   constructor(params: CleanupParams) {
     super()
@@ -69,11 +72,27 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.sharedViaCandidates) {
+      const next = this.sharedViaCandidates.next()
+      if (next.done) {
+        this.solved = true
+        return
+      }
+      const cost = this.params.getCost(next.value)
+      if (cost.vias < this.bestCost.vias && this.params.isValid(next.value)) {
+        this.bestRoutes = structuredClone(next.value)
+        this.bestCost = cost
+        this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(
+          this.bestRoutes,
+        )
+      }
+      return
+    }
     if (this.routeCandidates) {
       const routeIndex = this.candidateRouteIndex++
       if (routeIndex >= this.routeCandidates.length) {
         this.completedPasses = 1
-        this.solved = true
+        this.finishViaRemoval()
         return
       }
       const candidate = [...this.bestRoutes]
@@ -108,7 +127,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         }
       }
       this.completedPasses = 1
-      this.solved = true
+      this.finishViaRemoval()
       return
     }
     const simplifier = this.simplifier
@@ -138,7 +157,17 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    this.solved = simplifier.solved
+    if (simplifier.solved) this.finishViaRemoval()
+  }
+
+  private finishViaRemoval(): void {
+    if (this.params.allowBlindAndBuriedVias) {
+      this.solved = true
+      return
+    }
+    this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(
+      this.bestRoutes,
+    )
   }
 
   getOutput(): HighDensityRoute[] {
