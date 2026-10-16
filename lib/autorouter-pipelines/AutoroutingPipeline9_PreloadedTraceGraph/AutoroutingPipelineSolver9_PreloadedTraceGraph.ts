@@ -1,4 +1,5 @@
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import type { AutorouterExecutor } from "../../execution/SolverExecutor"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -104,6 +105,8 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  /** Host-owned execution resource. Task dispatch is added incrementally. */
+  executor?: AutorouterExecutor
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -307,6 +310,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityNodePortPoints?: NodeWithPortPoints[]
 
   cacheProvider: CacheProvider | null = null
+  readonly executor?: AutorouterExecutor
   pipelineDef = [
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
@@ -1077,7 +1081,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
-    this.opts = { ...opts }
+    const { executor, ...solverOptions } = opts
+    this.executor = executor
+    this.opts = solverOptions
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers

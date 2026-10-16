@@ -23,6 +23,7 @@ export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPi
 export {
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
   AutoroutingPipelineSolver9_PreloadedTraceGraph as AutoroutingPipelineSolver,
+  type AutoroutingPipelineSolverOptions,
 } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 export {
   AutoroutingPipelineSolver9_Networked,
@@ -113,3 +114,14 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+
+export type {
+  AutorouterExecutor,
+  AutorouterTaskMap,
+  SolverExecutor,
+  SolverSharedMemory,
+  SolverTaskCatalog,
+  SolverTaskContext,
+  SolverTaskDefinition,
+} from "./execution/SolverExecutor"
+export { createSharedSolverBuffer } from "./execution/createSharedSolverBuffer"
