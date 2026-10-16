@@ -273,9 +273,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
-    if (this.constructorParams.captureSearchDebug !== false) {
-      this.failedSolvers.push(this.activeSubSolver!)
-    }
+    this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
 
