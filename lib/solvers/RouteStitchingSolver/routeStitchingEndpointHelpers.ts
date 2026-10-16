@@ -18,6 +18,11 @@ type EndpointEdge = {
   routeIndex: number | null
 }
 
+type EndpointTerminalAssignment = {
+  endpointIndex: 0 | 1
+  terminalIndex: 0 | 1
+}
+
 export type CanStitchBetweenTerminals = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
@@ -203,6 +208,85 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
+}
+
+/**
+ * Snaps two island endpoints to nearby terminals without assigning the same
+ * terminal to both endpoints. Prefer snapping both endpoints, then the
+ * assignment with the shortest total distance.
+ */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  islandEndpoints: [Point3, Point3]
+  terminals: [Point3, Point3]
+}): [Point3, Point3] => {
+  const assignmentOptions: EndpointTerminalAssignment[][] = [
+    [],
+    [{ endpointIndex: 0, terminalIndex: 0 }],
+    [{ endpointIndex: 0, terminalIndex: 1 }],
+    [{ endpointIndex: 1, terminalIndex: 0 }],
+    [{ endpointIndex: 1, terminalIndex: 1 }],
+    [
+      { endpointIndex: 0, terminalIndex: 0 },
+      { endpointIndex: 1, terminalIndex: 1 },
+    ],
+    [
+      { endpointIndex: 0, terminalIndex: 1 },
+      { endpointIndex: 1, terminalIndex: 0 },
+    ],
+  ]
+  const validAssignments = assignmentOptions.filter((assignments) =>
+    assignments.every(
+      ({ endpointIndex, terminalIndex }) =>
+        distance(
+          params.islandEndpoints[endpointIndex],
+          params.terminals[terminalIndex],
+        ) <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+    ),
+  )
+
+  validAssignments.sort((assignmentsA, assignmentsB) => {
+    if (assignmentsA.length !== assignmentsB.length) {
+      return assignmentsB.length - assignmentsA.length
+    }
+    const totalDistanceA = assignmentsA.reduce(
+      (sum, { endpointIndex, terminalIndex }) =>
+        sum +
+        distance(
+          params.islandEndpoints[endpointIndex],
+          params.terminals[terminalIndex],
+        ),
+      0,
+    )
+    const totalDistanceB = assignmentsB.reduce(
+      (sum, { endpointIndex, terminalIndex }) =>
+        sum +
+        distance(
+          params.islandEndpoints[endpointIndex],
+          params.terminals[terminalIndex],
+        ),
+      0,
+    )
+    if (Math.abs(totalDistanceA - totalDistanceB) > DISTANCE_TIE_TOLERANCE) {
+      return totalDistanceA - totalDistanceB
+    }
+    const assignmentKeyA = assignmentsA
+      .map(({ endpointIndex, terminalIndex }) =>
+        `${endpointIndex}:${terminalIndex}`,
+      )
+      .join(",")
+    const assignmentKeyB = assignmentsB
+      .map(({ endpointIndex, terminalIndex }) =>
+        `${endpointIndex}:${terminalIndex}`,
+      )
+      .join(",")
+    return assignmentKeyA.localeCompare(assignmentKeyB)
+  })
+
+  const snappedEndpoints: [Point3, Point3] = [...params.islandEndpoints]
+  for (const { endpointIndex, terminalIndex } of validAssignments[0]!) {
+    snappedEndpoints[endpointIndex] = params.terminals[terminalIndex]
+  }
+  return snappedEndpoints
 }
 
 /**

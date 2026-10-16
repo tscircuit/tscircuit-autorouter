@@ -15,7 +15,7 @@ import {
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
-  snapIslandEndpointToNearestTerminal,
+  snapIslandEndpointsToDistinctTerminals,
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
@@ -271,12 +271,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
+        ;[start, end] = snapIslandEndpointsToDistinctTerminals({
+          islandEndpoints: [start, end],
           terminals: [globalStart, globalEnd],
         })
       } else {
