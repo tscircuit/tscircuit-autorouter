@@ -29,6 +29,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly params: CleanupParams
   private sameLayerRouteIndex?: number
   private sameLayerPathSolver?: FindClearancePathSolver
+  private sameLayerRoutes?: HighDensityRoute[]
+  private viaRemovalRoutes?: HighDensityRoute[]
 
   constructor(params: CleanupParams) {
     super()
@@ -53,8 +55,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         geometryShortcutObstacleMargin:
           config.minTraceToPadEdgeClearance ?? 0.15,
         enableGeometryShortcuts: true,
-        enableRoutedTraceDetours: false,
-        enableObstacleDetourShortcuts: false,
+        enableRoutedTraceDetours: true,
+        enableObstacleDetourShortcuts: config.enableCrossingViaReduction,
         preserveRouteEndpoints: config.preserveRouteEndpoints,
         terminalLayerIndicesByPcbPortId: config.terminalLayerIndicesByPcbPortId,
       })
@@ -89,15 +91,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       if (!remover.solved) return
       const candidate = remover.getOptimizedHdRoutes()
       if (!candidate) throw new Error("Via removal has no output")
-      const cost = this.params.getCost(candidate)
-      // Validate once, after the complete via pass, rather than after every
-      // phase of multiple full simplification loops.
-      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
-        this.bestRoutes = structuredClone(candidate)
-        this.bestCost = cost
-      }
       this.completedPasses = 1
       this.viaRemovalSolver = undefined
+      this.viaRemovalRoutes = candidate
+      this.sameLayerRoutes = candidate
       this.sameLayerRouteIndex = 0
       return
     }
@@ -128,12 +125,32 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    if (simplifier.solved) this.sameLayerRouteIndex = 0
+    if (simplifier.solved) {
+      this.sameLayerRoutes = this.bestRoutes
+      this.sameLayerRouteIndex = 0
+    }
   }
 
   private stepSameLayerViaRemoval(): void {
     const routeIndex = this.sameLayerRouteIndex!
-    if (routeIndex >= this.bestRoutes.length) {
+    const routes = this.sameLayerRoutes!
+    if (routeIndex >= routes.length) {
+      const candidates = [routes]
+      if (this.viaRemovalRoutes && this.viaRemovalRoutes !== routes) {
+        candidates.push(this.viaRemovalRoutes)
+      }
+      // Check the complete cleanup once; retain the original via-only pass
+      // when the additional same-layer paths violate board rules.
+      for (const candidate of candidates) {
+        const cost = this.params.getCost(candidate)
+        if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+          this.bestRoutes = candidate
+          this.bestCost = cost
+          break
+        }
+      }
+      this.sameLayerRoutes = undefined
+      this.viaRemovalRoutes = undefined
       this.sameLayerRouteIndex = undefined
       this.solved = true
       return
@@ -141,7 +158,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     if (!this.sameLayerPathSolver) {
       const sameLayerViaRemovalInput = getSameLayerViaRemovalInput({
         srj: this.params.srj,
-        routes: this.bestRoutes,
+        routes,
         fixedRoutes: this.params.config.otherHdRoutes ?? [],
         routeIndex,
       })
@@ -166,7 +183,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.sameLayerPathSolver = undefined
     this.sameLayerRouteIndex = routeIndex + 1
     if (!path) return
-    const candidate = [...this.bestRoutes]
+    const candidate = [...routes]
     const route = candidate[routeIndex]!
     const startIndex = route.route.indexOf(solver.input.start)
     const endIndex = route.route.indexOf(solver.input.end)
@@ -182,12 +199,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       ],
       vias: [],
     }
-    if (this.params.isValid(candidate)) {
-      const cost = this.params.getCost(candidate)
-      if (cost.vias >= this.bestCost.vias) return
-      this.bestRoutes = candidate
-      this.bestCost = cost
-    }
+    this.sameLayerRoutes = candidate
   }
 
   getOutput(): HighDensityRoute[] {
