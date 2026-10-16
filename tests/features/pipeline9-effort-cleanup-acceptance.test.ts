@@ -42,7 +42,7 @@ test("post-repair cleanup commits only valid improvements and preserves its inpu
         100e6 * (effort <= 1 ? 1 : Math.ceil(2 * effort)),
       )
       if (effort <= 1) {
-        expect(validityChecks).toBe(1)
+        expect(validityChecks).toBeGreaterThanOrEqual(1)
         expect(solver.simplifier).toBeUndefined()
       }
       counts.push(solver.bestCost.vias)

@@ -24,7 +24,14 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
-  const { circuitJson } = evaluateRelaxedDrc(drcInput)
+  const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
+  expect(errors).toHaveLength(0)
+  const viaCount = drcInput.routedTraces.reduce(
+    (sum, trace) =>
+      sum + trace.route.filter((point) => point.route_type === "via").length,
+    0,
+  )
+  expect(viaCount).toBeLessThanOrEqual(129)
   const viaInPadErrors = checkViasInPads(circuitJson)
   expect(viaInPadErrors).toHaveLength(0)
 

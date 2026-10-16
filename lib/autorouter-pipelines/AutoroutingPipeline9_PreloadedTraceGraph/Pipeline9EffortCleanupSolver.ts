@@ -22,6 +22,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
   readonly params: CleanupParams
+  private routeCandidates?: HighDensityRoute[]
+  private candidateRouteIndex = 0
 
   constructor(params: CleanupParams) {
     super()
@@ -67,6 +69,22 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.routeCandidates) {
+      const routeIndex = this.candidateRouteIndex++
+      if (routeIndex >= this.routeCandidates.length) {
+        this.completedPasses = 1
+        this.solved = true
+        return
+      }
+      const candidate = [...this.bestRoutes]
+      candidate[routeIndex] = this.routeCandidates[routeIndex]!
+      const cost = this.params.getCost(candidate)
+      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+        this.bestRoutes = structuredClone(candidate)
+        this.bestCost = cost
+      }
+      return
+    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -79,11 +97,15 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       const candidate = remover.getOptimizedHdRoutes()
       if (!candidate) throw new Error("Via removal has no output")
       const cost = this.params.getCost(candidate)
-      // Validate once, after the complete via pass, rather than after every
-      // phase of multiple full simplification loops.
-      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
-        this.bestRoutes = structuredClone(candidate)
-        this.bestCost = cost
+      if (cost.vias < this.bestCost.vias) {
+        if (this.params.isValid(candidate)) {
+          this.bestRoutes = structuredClone(candidate)
+          this.bestCost = cost
+        } else {
+          // One invalid shortcut must not discard independent legal reductions.
+          this.routeCandidates = candidate
+          return
+        }
       }
       this.completedPasses = 1
       this.solved = true
