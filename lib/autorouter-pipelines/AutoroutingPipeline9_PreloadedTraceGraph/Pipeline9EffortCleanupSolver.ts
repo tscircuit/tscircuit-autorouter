@@ -7,7 +7,6 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getPipeline9PlanarViaRemovalProblem } from "./getPipeline9PlanarViaRemovalProblem"
-import { getPipeline9SharedTerminalViaCandidates } from "./getPipeline9SharedTerminalViaCandidates"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -27,9 +26,6 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
   readonly params: CleanupParams
-  private routeCandidates?: HighDensityRoute[]
-  private candidateRouteIndex = 0
-  private sharedViaCandidates?: Generator<HighDensityRoute[]>
   private planarRouteIndex?: number
   private planarSolver?: FindClearancePathSolver
 
@@ -81,38 +77,6 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       this.stepPlanarViaRemoval()
       return
     }
-    if (this.sharedViaCandidates) {
-      const next = this.sharedViaCandidates.next()
-      if (next.done) {
-        this.solved = true
-        return
-      }
-      const cost = this.params.getCost(next.value)
-      if (cost.vias < this.bestCost.vias && this.params.isValid(next.value)) {
-        this.bestRoutes = structuredClone(next.value)
-        this.bestCost = cost
-        this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(
-          this.bestRoutes,
-        )
-      }
-      return
-    }
-    if (this.routeCandidates) {
-      const routeIndex = this.candidateRouteIndex++
-      if (routeIndex >= this.routeCandidates.length) {
-        this.completedPasses = 1
-        this.planarRouteIndex = 0
-        return
-      }
-      const candidate = [...this.bestRoutes]
-      candidate[routeIndex] = this.routeCandidates[routeIndex]!
-      const cost = this.params.getCost(candidate)
-      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
-        this.bestRoutes = structuredClone(candidate)
-        this.bestCost = cost
-      }
-      return
-    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -125,15 +89,11 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       const candidate = remover.getOptimizedHdRoutes()
       if (!candidate) throw new Error("Via removal has no output")
       const cost = this.params.getCost(candidate)
-      if (cost.vias < this.bestCost.vias) {
-        if (this.params.isValid(candidate)) {
-          this.bestRoutes = structuredClone(candidate)
-          this.bestCost = cost
-        } else {
-          // One invalid shortcut must not discard independent legal reductions.
-          this.routeCandidates = candidate
-          return
-        }
+      // Validate once, after the complete via pass, rather than after every
+      // phase of multiple full simplification loops.
+      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+        this.bestRoutes = structuredClone(candidate)
+        this.bestCost = cost
       }
       this.completedPasses = 1
       this.planarRouteIndex = 0
@@ -173,11 +133,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     const routeIndex = this.planarRouteIndex!
     if (routeIndex >= this.bestRoutes.length) {
       this.planarRouteIndex = undefined
-      if (this.params.srj.allowBlindAndBuriedVias) {
-        this.solved = true
-        return
-      }
-      this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(this.bestRoutes)
+      this.solved = true
       return
     }
     if (!this.planarSolver) {

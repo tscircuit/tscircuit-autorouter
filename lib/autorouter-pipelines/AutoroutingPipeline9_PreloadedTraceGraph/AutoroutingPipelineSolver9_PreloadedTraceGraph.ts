@@ -72,7 +72,6 @@ import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matchin
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
-import { getPipeline9PhysicalViaCount } from "./getPipeline9PhysicalViaCount"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -922,10 +921,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ): { vias: number; points: number } => {
               const traces = convert(routes)
               return {
-                vias: getPipeline9PhysicalViaCount({
-                  traces,
-                  allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
-                }),
+                vias: traces.reduce(
+                  (sum, trace) =>
+                    sum +
+                    trace.route.filter((point) => point.route_type === "via")
+                      .length,
+                  0,
+                ),
                 points: traces.reduce(
                   (sum, trace) => sum + trace.route.length,
                   0,

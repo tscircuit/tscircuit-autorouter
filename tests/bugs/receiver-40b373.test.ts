@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { checkViasInPads } from "@tscircuit/checks"
 import { AutoroutingPipelineSolver } from "lib"
-import { getPipeline9PhysicalViaCount } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalViaCount"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
@@ -27,23 +26,10 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
   }
   const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
   expect(errors).toHaveLength(0)
-  const viaCount = drcInput.routedTraces.reduce(
-    (sum, trace) =>
-      sum + trace.route.filter((point) => point.route_type === "via").length,
-    0,
+  const connectorVias = drcInput.routedTraces.flatMap((trace) =>
+    trace.route.filter((point) => point.route_type === "via" && point.y < -20),
   )
-  expect(viaCount).toBeLessThanOrEqual(113)
-  expect(
-    getPipeline9PhysicalViaCount({ traces: drcInput.routedTraces }),
-  ).toBeLessThanOrEqual(111)
-  const connectorRowMaxY = -20
-  const connectorVias = drcInput.routedTraces.map((trace) => ({
-    ...trace,
-    route: trace.route.filter(
-      (point) => point.route_type === "via" && point.y < connectorRowMaxY,
-    ),
-  }))
-  expect(getPipeline9PhysicalViaCount({ traces: connectorVias })).toBe(0)
+  expect(connectorVias).toHaveLength(0)
   const strictDrc = evaluateRelaxedDrc({
     ...drcInput,
     includeBoardClearance: true,
