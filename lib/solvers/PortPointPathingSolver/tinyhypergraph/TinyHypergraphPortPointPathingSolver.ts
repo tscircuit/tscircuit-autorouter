@@ -313,8 +313,6 @@ const getTinyHyperGraphPipelineInput = (
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
-  const useOutsideInRoutingForWholeRoutes =
-    eligibilityCount > maxPartialRipRouteCount
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
@@ -328,9 +326,7 @@ const getTinyHyperGraphPipelineInput = (
           }
         : {
             PARTIAL_RIP_ENABLED: false,
-            OUTSIDE_IN_ROUTING: useOutsideInRoutingForWholeRoutes,
-            OUTSIDE_IN_ROUTING_FOR_WHOLE_ROUTES:
-              useOutsideInRoutingForWholeRoutes,
+            OUTSIDE_IN_ROUTING: false,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
