@@ -137,7 +137,13 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     input: separatedMissingGroup,
     shouldFail: false,
   })
-  for (const problem of ["duplicate id", "zero width", "NaN", "infinite", "no layers"]) {
+  for (const problem of [
+    "duplicate id",
+    "zero width",
+    "NaN",
+    "infinite",
+    "no layers",
+  ]) {
     const nodes = [createNode("a", 0, 2), createNode("b", 1, 3)]
     if (problem === "duplicate id") nodes[1]!.capacityMeshNodeId = "a"
     if (problem === "zero width") nodes[1]!.width = 0
@@ -193,7 +199,10 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
 
   for (const { name, input, shouldFail } of cases) {
     const original = structuredClone(input)
-    const expectedError = getValidationError(validateTopologyMergingOutputReference, input)
+    const expectedError = getValidationError(
+      validateTopologyMergingOutputReference,
+      input,
+    )
     const actualError = getValidationError(validateTopologyMergingOutput, input)
     expect(actualError, name).toBe(expectedError)
     if (shouldFail !== undefined) {

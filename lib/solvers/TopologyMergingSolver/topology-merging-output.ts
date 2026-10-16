@@ -188,10 +188,7 @@ export function validateTopologyMergingOutput({
       )
       if (sharedLayers.length === 0) continue
 
-      const intersection = getBoundsIntersection(
-        boundsA,
-        nodeBounds[bIndex]!,
-      )
+      const intersection = getBoundsIntersection(boundsA, nodeBounds[bIndex]!)
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX
       const intersectionHeight = intersection.maxY - intersection.minY
