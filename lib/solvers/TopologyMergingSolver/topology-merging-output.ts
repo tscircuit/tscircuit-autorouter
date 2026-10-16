@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import Flatbush from "flatbush"
 import type { CapacityMeshNode } from "lib/types"
 import {
   getBoundsIntersection,
@@ -125,6 +126,7 @@ export function validateTopologyMergingOutput({
   provenance: TopologyMergingOutputProvenance
 }): void {
   const nodeIds = new Set<string>()
+  const nodeBounds: Bounds[] = []
   for (const node of nodes) {
     if (nodeIds.has(node.capacityMeshNodeId)) {
       throw new Error(
@@ -133,7 +135,9 @@ export function validateTopologyMergingOutput({
     }
     nodeIds.add(node.capacityMeshNodeId)
 
-    if (!isValidCapacityBounds(getCapacityMeshNodeBounds(node))) {
+    const bounds = getCapacityMeshNodeBounds(node)
+    nodeBounds.push(bounds)
+    if (!isValidCapacityBounds(bounds)) {
       throw new Error(
         `TopologyMergingSolver: output node "${node.capacityMeshNodeId}" has invalid bounds`,
       )
@@ -161,9 +165,23 @@ export function validateTopologyMergingOutput({
     }
   }
 
+  if (nodes.length < 2) return
+
+  const boundsIndex = new Flatbush(nodes.length)
+  for (const bounds of nodeBounds) {
+    boundsIndex.add(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+  }
+  boundsIndex.finish()
+
   for (let aIndex = 0; aIndex < nodes.length; aIndex++) {
     const nodeA = nodes[aIndex]!
-    for (let bIndex = aIndex + 1; bIndex < nodes.length; bIndex++) {
+    const boundsA = nodeBounds[aIndex]!
+    // Keep the exhaustive validator's pair order so the first error is stable.
+    const candidateIndexes = boundsIndex
+      .search(boundsA.minX, boundsA.minY, boundsA.maxX, boundsA.maxY)
+      .filter((bIndex) => bIndex > aIndex)
+      .sort((a, b) => a - b)
+    for (const bIndex of candidateIndexes) {
       const nodeB = nodes[bIndex]!
       const sharedLayers = nodeA.availableZ.filter((z) =>
         nodeB.availableZ.includes(z),
@@ -171,8 +189,8 @@ export function validateTopologyMergingOutput({
       if (sharedLayers.length === 0) continue
 
       const intersection = getBoundsIntersection(
-        getCapacityMeshNodeBounds(nodeA),
-        getCapacityMeshNodeBounds(nodeB),
+        boundsA,
+        nodeBounds[bIndex]!,
       )
       if (!intersection) continue
       const intersectionWidth = intersection.maxX - intersection.minX
