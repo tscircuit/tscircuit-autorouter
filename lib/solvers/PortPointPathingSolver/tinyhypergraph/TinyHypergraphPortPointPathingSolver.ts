@@ -241,6 +241,7 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   // simpler topology with a large peak-congestion regression.
   PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.05,
   PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
+  OUTSIDE_IN_ROUTING_FOR_WHOLE_ROUTES: true,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -326,7 +327,7 @@ const getTinyHyperGraphPipelineInput = (
           }
         : {
             PARTIAL_RIP_ENABLED: false,
-            OUTSIDE_IN_ROUTING: false,
+            OUTSIDE_IN_ROUTING: true,
           }),
     },
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
