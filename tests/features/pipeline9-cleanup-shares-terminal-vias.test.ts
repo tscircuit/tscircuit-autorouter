@@ -10,6 +10,13 @@ test("cleanup shares a through via at a common terminal while preserving reverse
   const original = structuredClone(routes)
   const solver = new Pipeline9EffortCleanupSolver({
     effort: 1,
+    srj: {
+      layerCount: 2,
+      minTraceWidth: 0.15,
+      bounds: { minX: -10, maxX: 10, minY: -10, maxY: 10 },
+      connections: [],
+      obstacles: [],
+    },
     config: {
       hdRoutes: routes,
       obstacles: [],

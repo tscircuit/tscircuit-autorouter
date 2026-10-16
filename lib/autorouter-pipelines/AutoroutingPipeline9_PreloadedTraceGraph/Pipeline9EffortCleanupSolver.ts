@@ -2,15 +2,18 @@ import {
   TraceSimplificationSolver,
   UselessViaRemovalSolver,
 } from "@tscircuit/trace-simplification-solver"
+import { FindClearancePathSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getPipeline9PlanarViaRemovalProblem } from "./getPipeline9PlanarViaRemovalProblem"
 import { getPipeline9SharedTerminalViaCandidates } from "./getPipeline9SharedTerminalViaCandidates"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
-  allowBlindAndBuriedVias?: boolean
+  srj: SimpleRouteJson
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
 }
@@ -27,6 +30,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   private routeCandidates?: HighDensityRoute[]
   private candidateRouteIndex = 0
   private sharedViaCandidates?: Generator<HighDensityRoute[]>
+  private planarRouteIndex?: number
+  private planarSolver?: FindClearancePathSolver
 
   constructor(params: CleanupParams) {
     super()
@@ -72,6 +77,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.planarRouteIndex !== undefined) {
+      this.stepPlanarViaRemoval()
+      return
+    }
     if (this.sharedViaCandidates) {
       const next = this.sharedViaCandidates.next()
       if (next.done) {
@@ -92,7 +101,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       const routeIndex = this.candidateRouteIndex++
       if (routeIndex >= this.routeCandidates.length) {
         this.completedPasses = 1
-        this.finishViaRemoval()
+        this.planarRouteIndex = 0
         return
       }
       const candidate = [...this.bestRoutes]
@@ -127,7 +136,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         }
       }
       this.completedPasses = 1
-      this.finishViaRemoval()
+      this.planarRouteIndex = 0
       return
     }
     const simplifier = this.simplifier
@@ -157,17 +166,53 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    if (simplifier.solved) this.finishViaRemoval()
+    if (simplifier.solved) this.planarRouteIndex = 0
   }
 
-  private finishViaRemoval(): void {
-    if (this.params.allowBlindAndBuriedVias) {
-      this.solved = true
+  private stepPlanarViaRemoval(): void {
+    const routeIndex = this.planarRouteIndex!
+    if (routeIndex >= this.bestRoutes.length) {
+      this.planarRouteIndex = undefined
+      if (this.params.srj.allowBlindAndBuriedVias) {
+        this.solved = true
+        return
+      }
+      this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(this.bestRoutes)
       return
     }
-    this.sharedViaCandidates = getPipeline9SharedTerminalViaCandidates(
-      this.bestRoutes,
-    )
+    if (!this.planarSolver) {
+      const problem = getPipeline9PlanarViaRemovalProblem({
+        srj: this.params.srj,
+        routes: this.bestRoutes,
+        fixedRoutes: this.params.config.otherHdRoutes ?? [],
+        routeIndex,
+      })
+      if (!problem) {
+        this.planarRouteIndex = routeIndex + 1
+        return
+      }
+      this.planarSolver = new FindClearancePathSolver(problem)
+      return
+    }
+    const solver = this.planarSolver
+    solver.step()
+    if (solver.failed) {
+      this.failed = true
+      this.error = solver.error
+      return
+    }
+    if (!solver.solved) return
+    const path = solver.getOutput()
+    this.planarSolver = undefined
+    this.planarRouteIndex = routeIndex + 1
+    if (!path) return
+    const candidate = [...this.bestRoutes]
+    candidate[routeIndex] = { ...candidate[routeIndex]!, route: path, vias: [] }
+    const cost = this.params.getCost(candidate)
+    if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+      this.bestRoutes = structuredClone(candidate)
+      this.bestCost = cost
+    }
   }
 
   getOutput(): HighDensityRoute[] {

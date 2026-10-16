@@ -9,7 +9,14 @@ test("cleanup does not coalesce blind and buried terminal vias", (): void => {
   const routes = createSharedTerminalViaRoutes()
   const solver = new Pipeline9EffortCleanupSolver({
     effort: 1,
-    allowBlindAndBuriedVias: true,
+    srj: {
+      layerCount: 2,
+      minTraceWidth: 0.15,
+      bounds: { minX: -10, maxX: 10, minY: -10, maxY: 10 },
+      connections: [],
+      obstacles: [],
+      allowBlindAndBuriedVias: true,
+    },
     config: {
       hdRoutes: routes,
       obstacles: [],

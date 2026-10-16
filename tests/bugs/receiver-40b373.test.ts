@@ -32,10 +32,10 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
       sum + trace.route.filter((point) => point.route_type === "via").length,
     0,
   )
-  expect(viaCount).toBeLessThanOrEqual(129)
+  expect(viaCount).toBeLessThanOrEqual(113)
   expect(
     getPipeline9PhysicalViaCount({ traces: drcInput.routedTraces }),
-  ).toBeLessThanOrEqual(122)
+  ).toBeLessThanOrEqual(111)
   const connectorRowMaxY = -20
   const connectorVias = drcInput.routedTraces.map((trace) => ({
     ...trace,
@@ -43,7 +43,7 @@ test("receiver bug report via-in-pad regression", async (): Promise<void> => {
       (point) => point.route_type === "via" && point.y < connectorRowMaxY,
     ),
   }))
-  expect(getPipeline9PhysicalViaCount({ traces: connectorVias })).toBe(6)
+  expect(getPipeline9PhysicalViaCount({ traces: connectorVias })).toBe(0)
   const strictDrc = evaluateRelaxedDrc({
     ...drcInput,
     includeBoardClearance: true,

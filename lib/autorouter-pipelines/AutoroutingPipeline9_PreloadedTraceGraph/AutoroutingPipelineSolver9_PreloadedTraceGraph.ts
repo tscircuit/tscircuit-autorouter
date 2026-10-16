@@ -888,7 +888,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             effort: cms.effort,
-            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
+            srj: cms.originalSrj,
             config: {
               hdRoutes,
               preserveRouteEndpoints: true,
