@@ -132,10 +132,14 @@ const getResultGraphics = (
 
 test("PMP22650 sibling MST terminal stitching", () => {
   const result = runStitchSolver(fixture.sameRootBridge)
-
-  expect(result.error).toBe(
-    'SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "pcb_port_altium_6955" on "source_net_altium_pcb_385_mst101"',
+  const targetRoute = result.solver?.mergedHdRoutes.find(
+    (route) => route.connectionName === "source_net_altium_pcb_385_mst101",
   )
+
+  expect(result.error).toBeNull()
+  expect(result.solver?.solved).toBe(true)
+  expect(targetRoute?.startPcbPortId).toBe("pcb_port_altium_6999")
+  expect(targetRoute?.endPcbPortId).toBe("pcb_port_altium_6477")
   expect(
     getResultGraphics(result.solver, fixture.sameRootBridge),
   ).toMatchGraphicsSvg(`${import.meta.path}-same-root-bridge`)
@@ -143,10 +147,13 @@ test("PMP22650 sibling MST terminal stitching", () => {
 
 test("PMP22650 coincident layer terminal stitching", () => {
   const result = runStitchSolver(fixture.coincidentLayerTerminals)
+  const targetRoute = result.solver?.mergedHdRoutes[0]
 
-  expect(result.error).toBe(
-    'SingleHighDensityRouteStitchSolver3 received duplicate PCB terminal "pcb_port_altium_8623" for "source_net_altium_pcb_377_mst0"',
-  )
+  expect(result.error).toBeNull()
+  expect(result.solver?.solved).toBe(true)
+  expect(
+    new Set([targetRoute?.startPcbPortId, targetRoute?.endPcbPortId]),
+  ).toEqual(new Set(["pcb_port_altium_7313", "pcb_port_altium_8623"]))
   expect(
     getResultGraphics(result.solver, fixture.coincidentLayerTerminals),
   ).toMatchGraphicsSvg(`${import.meta.path}-coincident-layer-terminals`)
@@ -154,10 +161,13 @@ test("PMP22650 coincident layer terminal stitching", () => {
 
 test("PMP22650 terminal identity route orientation", () => {
   const result = runTerminalOrientationSolver(fixture.terminalRouteOrientation)
+  const targetRoute = result.solver?.mergedHdRoute
 
-  expect(result.error).toBe(
-    'SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "source_net_altium_pcb_3_mst0"',
-  )
+  expect(result.error).toBeNull()
+  expect(result.solver?.solved).toBe(true)
+  expect(
+    new Set([targetRoute?.startPcbPortId, targetRoute?.endPcbPortId]),
+  ).toEqual(new Set(["pcb_port_altium_7312", "pcb_port_altium_8622"]))
   expect(
     getResultGraphics(result.solver, fixture.terminalRouteOrientation),
   ).toMatchGraphicsSvg(`${import.meta.path}-terminal-route-orientation`)
