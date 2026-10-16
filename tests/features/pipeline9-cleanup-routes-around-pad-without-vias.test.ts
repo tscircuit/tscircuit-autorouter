@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { convertRepairRoutesToTraces } from "@tscircuit/repair04"
+import { OddAngleFinder } from "@tscircuit/pcb-trace-linter/srj"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9EffortCleanupSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -90,4 +91,16 @@ test("cleanup searches a same-layer path when a via-pair corridor detour is too 
   expect(solver.getOutput()[0]!.route[1]).toEqual(original.route[1])
   expect(solver.getOutput()[0]!.route.at(-2)).toEqual(original.route.at(-2))
   expect(route).toEqual(original)
+  const linter = new OddAngleFinder({
+    srj: {
+      layerCount: 2,
+      minTraceWidth: srj.minTraceWidth,
+      bounds: srj.bounds,
+      connections: [],
+      obstacles: [],
+      traces: convertRepairRoutesToTraces(solver.getOutput(), 2),
+    },
+  })
+  linter.solve()
+  expect(linter.getOutput()).toHaveLength(0)
 })

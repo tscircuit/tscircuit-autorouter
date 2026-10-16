@@ -7,6 +7,7 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getSameLayerViaRemovalInput } from "./getSameLayerViaRemovalInput"
+import { get45DegreeViaRemovalPath } from "./get45DegreeViaRemovalPath"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -52,8 +53,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         geometryShortcutObstacleMargin:
           config.minTraceToPadEdgeClearance ?? 0.15,
         enableGeometryShortcuts: true,
-        enableRoutedTraceDetours: true,
-        enableObstacleDetourShortcuts: config.enableCrossingViaReduction,
+        enableRoutedTraceDetours: false,
+        enableObstacleDetourShortcuts: false,
         preserveRouteEndpoints: config.preserveRouteEndpoints,
         terminalLayerIndicesByPcbPortId: config.terminalLayerIndicesByPcbPortId,
       })
@@ -96,6 +97,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
       this.completedPasses = 1
+      this.viaRemovalSolver = undefined
       this.sameLayerRouteIndex = 0
       return
     }
@@ -175,14 +177,15 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       ...route,
       route: [
         ...route.route.slice(0, startIndex),
-        ...path,
+        ...get45DegreeViaRemovalPath(path),
         ...route.route.slice(endIndex + 1),
       ],
       vias: [],
     }
-    const cost = this.params.getCost(candidate)
-    if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
-      this.bestRoutes = structuredClone(candidate)
+    if (this.params.isValid(candidate)) {
+      const cost = this.params.getCost(candidate)
+      if (cost.vias >= this.bestCost.vias) return
+      this.bestRoutes = candidate
       this.bestCost = cost
     }
   }

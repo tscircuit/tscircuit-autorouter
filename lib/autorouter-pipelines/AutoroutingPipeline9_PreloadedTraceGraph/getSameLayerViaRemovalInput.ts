@@ -1,4 +1,4 @@
-import { getBoundsFromPoints } from "@tscircuit/math-utils"
+import { doBoundsOverlap, getBoundsFromPoints } from "@tscircuit/math-utils"
 import type { ClearancePathInput } from "@tscircuit/repair04"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -73,30 +73,75 @@ export const getSameLayerViaRemovalInput = ({
     MAX_SAME_LAYER_GRID_SIZE_MM,
     route.traceThickness / 2,
   )
+  const bounds = {
+    minX: Math.max(
+      boardBounds.minX + boardMargin,
+      routeBounds.minX - SAME_LAYER_SEARCH_MARGIN_MM,
+    ),
+    maxX: Math.min(
+      boardBounds.maxX - boardMargin,
+      routeBounds.maxX + SAME_LAYER_SEARCH_MARGIN_MM,
+    ),
+    minY: Math.max(
+      boardBounds.minY + boardMargin,
+      routeBounds.minY - SAME_LAYER_SEARCH_MARGIN_MM,
+    ),
+    maxY: Math.min(
+      boardBounds.maxY - boardMargin,
+      routeBounds.maxY + SAME_LAYER_SEARCH_MARGIN_MM,
+    ),
+  }
+  const traceClearance =
+    srj.minTraceToPadEdgeClearance ?? DEFAULT_ROUTE_CLEARANCE_MM
+  const viaClearance =
+    srj.minViaHoleEdgeToViaHoleEdgeClearance ?? DEFAULT_ROUTE_CLEARANCE_MM
+  const contextMargin =
+    route.traceThickness / 2 +
+    Math.max(
+      traceClearance,
+      viaClearance,
+      srj.defaultObstacleMargin ?? 0,
+      srj.minTraceToHoleEdgeClearance ?? 0,
+      srj.minViaEdgeToPadEdgeClearance ?? 0,
+    )
+  const nearbyRoutes = [
+    route,
+    ...[...routes, ...fixedRoutes].filter((other) => {
+      if (other === route) return false
+      const otherBounds = getBoundsFromPoints(other.route)
+      if (!otherBounds) return false
+      const margin =
+        contextMargin +
+        other.route.reduce(
+          (width, point) => Math.max(width, point.traceThickness ?? 0),
+          Math.max(other.traceThickness, other.viaDiameter),
+        ) /
+          2
+      return doBoundsOverlap(bounds, {
+        minX: otherBounds.minX - margin,
+        minY: otherBounds.minY - margin,
+        maxX: otherBounds.maxX + margin,
+        maxY: otherBounds.maxY + margin,
+      })
+    }),
+  ]
+  const obstacles = srj.obstacles.filter((obstacle) => {
+    const radius =
+      Math.hypot(obstacle.width, obstacle.height) / 2 + contextMargin
+    return doBoundsOverlap(bounds, {
+      minX: obstacle.center.x - radius,
+      minY: obstacle.center.y - radius,
+      maxX: obstacle.center.x + radius,
+      maxY: obstacle.center.y + radius,
+    })
+  })
   return {
-    srj: { ...srj, traces: undefined },
-    routes: [...routes, ...fixedRoutes],
-    routeIndex,
+    srj: { ...srj, obstacles, traces: undefined },
+    routes: nearbyRoutes,
+    routeIndex: 0,
     start,
     end,
-    bounds: {
-      minX: Math.max(
-        boardBounds.minX + boardMargin,
-        routeBounds.minX - SAME_LAYER_SEARCH_MARGIN_MM,
-      ),
-      maxX: Math.min(
-        boardBounds.maxX - boardMargin,
-        routeBounds.maxX + SAME_LAYER_SEARCH_MARGIN_MM,
-      ),
-      minY: Math.max(
-        boardBounds.minY + boardMargin,
-        routeBounds.minY - SAME_LAYER_SEARCH_MARGIN_MM,
-      ),
-      maxY: Math.min(
-        boardBounds.maxY - boardMargin,
-        routeBounds.maxY + SAME_LAYER_SEARCH_MARGIN_MM,
-      ),
-    },
+    bounds,
     traceThickness: route.traceThickness,
     traceClearance:
       srj.minTraceToPadEdgeClearance ?? DEFAULT_ROUTE_CLEARANCE_MM,
