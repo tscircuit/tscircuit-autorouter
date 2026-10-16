@@ -270,13 +270,15 @@ export const snapIslandEndpointsToDistinctTerminals = (params: {
       return totalDistanceA - totalDistanceB
     }
     const assignmentKeyA = assignmentsA
-      .map(({ endpointIndex, terminalIndex }) =>
-        `${endpointIndex}:${terminalIndex}`,
+      .map(
+        ({ endpointIndex, terminalIndex }) =>
+          `${endpointIndex}:${terminalIndex}`,
       )
       .join(",")
     const assignmentKeyB = assignmentsB
-      .map(({ endpointIndex, terminalIndex }) =>
-        `${endpointIndex}:${terminalIndex}`,
+      .map(
+        ({ endpointIndex, terminalIndex }) =>
+          `${endpointIndex}:${terminalIndex}`,
       )
       .join(",")
     return assignmentKeyA.localeCompare(assignmentKeyB)
