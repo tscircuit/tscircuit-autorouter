@@ -314,5 +314,36 @@ export function buildMinimumSpanningTree<T extends Point>(
     }
   }
 
+  // A fixed-size nearest-neighbor graph is not guaranteed to be connected.
+  // Large nets with spatially separated terminal clusters used to return a
+  // forest here, permanently dropping terminals before routing began. Join
+  // the remaining components with their shortest available geometric edges.
+  while (new Set(pointsCopy.map((point) => disjointSet.find(point))).size > 1) {
+    let shortestConnectingEdge: Edge<T> | undefined
+
+    for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
+      const from = pointsCopy[fromIndex]!
+      for (
+        let toIndex = fromIndex + 1;
+        toIndex < pointsCopy.length;
+        toIndex++
+      ) {
+        const to = pointsCopy[toIndex]!
+        if (disjointSet.find(from) === disjointSet.find(to)) continue
+
+        const weight = Math.hypot(from.x - to.x, from.y - to.y)
+        if (!shortestConnectingEdge || weight < shortestConnectingEdge.weight) {
+          shortestConnectingEdge = { from, to, weight }
+        }
+      }
+    }
+
+    if (!shortestConnectingEdge) {
+      throw new Error("Unable to connect every point in spanning tree")
+    }
+    disjointSet.union(shortestConnectingEdge.from, shortestConnectingEdge.to)
+    mstEdges.push(shortestConnectingEdge)
+  }
+
   return mstEdges
 }
