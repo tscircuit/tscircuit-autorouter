@@ -41,7 +41,9 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
     }
     const overBudgetRegionIds = new Set(
       [...pointCountByRegionId]
-        .filter(([, pointCount]) => pointCount > MAX_FORCE_IMPROVE_POINTS_PER_REGION)
+        .filter(
+          ([, pointCount]) => pointCount > MAX_FORCE_IMPROVE_POINTS_PER_REGION,
+        )
         .map(([regionId]) => regionId),
     )
     const protectedRouteIndexes = new Set<number>()
