@@ -1386,6 +1386,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       changedPreloadedTraceSectionCount:
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
+      initialAltLandmarkCount: solveGraphStats.initialAltLandmarkCount,
+      initialAltRelaxedArcCount: solveGraphStats.initialAltRelaxedArcCount,
+      initialAltScannedArcCount: solveGraphStats.initialAltScannedArcCount,
+      initialAltPreprocessingMs: solveGraphStats.initialAltPreprocessingMs,
+      initialAltRelaxedInfinitePenaltyPortCount:
+        solveGraphStats.initialAltRelaxedInfinitePenaltyPortCount,
+      initialAltQueryCount: solveGraphStats.initialAltQueryCount,
+      initialAltCacheHitCount: solveGraphStats.initialAltCacheHitCount,
+      initialAltMaxImprovementOverEuclidean:
+        solveGraphStats.initialAltMaxImprovementOverEuclidean,
+      initialAltActive: solveGraphStats.initialAltActive,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,

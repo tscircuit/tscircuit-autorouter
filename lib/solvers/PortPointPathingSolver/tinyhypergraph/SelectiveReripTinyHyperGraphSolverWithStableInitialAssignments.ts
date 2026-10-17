@@ -1,5 +1,6 @@
 import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
+import { initializeTinyHypergraphLandmarkHeuristic } from "./initializeTinyHypergraphLandmarkHeuristic"
 
 /**
  * Selective rerips may move a preloaded assignment when it is the blocker.
@@ -8,6 +9,14 @@ import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
  */
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
   private initialAssignmentRouteIds?: ReadonlySet<number>
+
+  override _setup(): void {
+    super._setup()
+    // Outside-in frontiers own a separate heuristic. Keep that engine and
+    // failed reachability checks unchanged before preprocessing these bounds.
+    if (this.failed || this.OUTSIDE_IN_ROUTING) return
+    initializeTinyHypergraphLandmarkHeuristic(this)
+  }
 
   protected override getRouteIdsPreferredForPreservation(): ReadonlySet<number> {
     if (!this.initialAssignmentRouteIds) {
