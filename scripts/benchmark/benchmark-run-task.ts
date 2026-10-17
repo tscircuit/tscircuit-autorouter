@@ -550,7 +550,9 @@ export const solveWithProgress = async (
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
         : null
-    let runtime: (SolverRuntimeExecutor & { dispose(): Promise<void> }) | undefined
+    let runtime:
+      | (SolverRuntimeExecutor & { dispose(): Promise<void> })
+      | undefined
     try {
       if ((task.threads ?? 1) > 1) {
         const { createAutorouterSolverRuntime } = await import(

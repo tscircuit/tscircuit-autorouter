@@ -26,9 +26,9 @@ test("thread budgets cap samples and validate commands", (): void => {
   expect(() =>
     parsePrBenchmarkCommand("/benchmark --pipeline 9net --threads 4"),
   ).toThrow("Pipeline9")
-  expect(() =>
-    parsePrBenchmarkCommand("/profile --threads 4"),
-  ).toThrow("--threads")
+  expect(() => parsePrBenchmarkCommand("/profile --threads 4")).toThrow(
+    "--threads",
+  )
   expect(() =>
     parsePrBenchmarkCommand("/benchmark --threads 4 --profile-solvers"),
   ).toThrow("--threads")
