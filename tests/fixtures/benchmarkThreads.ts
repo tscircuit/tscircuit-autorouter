@@ -15,29 +15,51 @@ const task: BenchmarkTask = {
     minTraceWidth: 0.1,
     obstacles: [],
     bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
-    connections: [{
-      name: "signal",
-      pointsToConnect: [
-        { x: -3, y: -1, layer: "top" },
-        { x: 3, y: -1, layer: "top" },
-      ],
-    }],
+    connections: [
+      {
+        name: "signal",
+        pointsToConnect: [
+          { x: -3, y: -1, layer: "top" },
+          { x: 3, y: -1, layer: "top" },
+        ],
+      },
+    ],
   },
 }
-const serial = new Pipeline(structuredClone(task.scenario), { effort: 0.1, cacheProvider: null })
+const serial = new Pipeline(structuredClone(task.scenario), {
+  effort: 0.1,
+  cacheProvider: null,
+})
 serial.solve()
-const parallel = new Pipeline(structuredClone(task.scenario), { effort: 0.1, cacheProvider: null })
+const parallel = new Pipeline(structuredClone(task.scenario), {
+  effort: 0.1,
+  cacheProvider: null,
+})
 await solveWithProgress(task, parallel, performance.now(), {})
 assert.equal(parallel.solved, true)
-assert.equal(JSON.stringify(parallel.getOutputSimpleRouteJson()), JSON.stringify(serial.getOutputSimpleRouteJson()))
-assert.deepEqual(parallel.highDensityRouteSolver!.stats, serial.highDensityRouteSolver!.stats)
+assert.equal(
+  JSON.stringify(parallel.getOutputSimpleRouteJson()),
+  JSON.stringify(serial.getOutputSimpleRouteJson()),
+)
+assert.deepEqual(
+  parallel.highDensityRouteSolver!.stats,
+  serial.highDensityRouteSolver!.stats,
+)
 assert.equal(parallel.iterations, serial.iterations)
 await assert.rejects(
-  solveWithProgress({ ...task, solverName: "unsupported" }, parallel, performance.now(), {}),
+  solveWithProgress(
+    { ...task, solverName: "unsupported" },
+    parallel,
+    performance.now(),
+    {},
+  ),
   /requires Pipeline9/,
 )
 // An exception after dispatch must still dispose the pool and let this process exit.
-const failing = new Pipeline(structuredClone(task.scenario), { effort: 0.1, cacheProvider: null })
+const failing = new Pipeline(structuredClone(task.scenario), {
+  effort: 0.1,
+  cacheProvider: null,
+})
 const solve = failing.solveAsync.bind(failing)
 failing.solveAsync = async (runtime): Promise<void> => {
   await solve(runtime)
