@@ -17,10 +17,10 @@ test("bugreport109-board-687", async (): Promise<void> => {
   expect(solver.solved).toBe(true)
   // Native routing produces different geometry on Linux and macOS.
   let snapshotPath = import.meta.path
-  let expectedDrcCount = 7
+  let expectedDrcCount = 2
   if (process.platform === "linux") {
     snapshotPath = import.meta.path.replace(".test.ts", "-linux.test.ts")
-    expectedDrcCount = 9
+    expectedDrcCount = 4
   }
   expect(
     evaluateRelaxedDrc({
