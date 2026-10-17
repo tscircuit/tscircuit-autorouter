@@ -27,7 +27,7 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const expectedPairs = solver.srjWithPointPairs!.connections
     .map((connection) =>
-      connection.pointsToConnect.map((point) => point.pcb_port_id).sort(),
+      connection.pointsToConnect.map((point) => point.pcb_port_id!).sort(),
     )
     .sort()
   const routedPairs = routedTraces
