@@ -14,6 +14,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { splitNodeByContiguousLayers } from "./splitNodeByContiguousLayers"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -150,7 +151,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       repairCandidateRejectionCount: 0,
     }
     this.highDensitySolver = new HighDensitySolver({
-      nodePortPoints: [params.nodeWithPortPoints],
+      nodePortPoints:
+        params.minimumTraceWidth !== undefined
+          ? splitNodeByContiguousLayers(params.nodeWithPortPoints)
+          : [params.nodeWithPortPoints],
       colorMap: params.colorMap,
       connMap: params.connMap,
       viaDiameter: params.viaDiameter,

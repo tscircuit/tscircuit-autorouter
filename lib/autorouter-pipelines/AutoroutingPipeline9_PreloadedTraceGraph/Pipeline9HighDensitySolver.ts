@@ -32,6 +32,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { splitNodeByContiguousLayers } from "./splitNodeByContiguousLayers"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -349,9 +350,11 @@ export const createPipeline9RegularNodeSolver = ({
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
-    nodePortPoints: [
-      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
-    ],
+    nodePortPoints: (
+      minimumTraceWidth !== undefined
+        ? splitNodeByContiguousLayers(nodeWithPortPoints)
+        : [nodeWithPortPoints]
+    ).map((node) => normalizePipeline9NodeRootConnectionNames(node, connMap)),
     colorMap,
     connMap,
     viaDiameter,
@@ -527,11 +530,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     const regionalNode = {
       ...normalizedNode,
-      // The capacity path fixes each ordinary node to its assigned layers.
-      // Once B01 has proved that assignment unroutable, the regional repair
-      // must be able to add a legal layer transition; board obstacles still
-      // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      // Explicit physical layer sets remain binding during regional repair.
+      // Legacy problems may explore the remaining board layers, with board
+      // obstacles determining whether those transitions are legal.
+      availableZ:
+        this.minimumTraceWidth !== undefined
+          ? normalizedNode.availableZ
+          : Array.from({ length: this.layerCount }, (_, z) => z),
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,

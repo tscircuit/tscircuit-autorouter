@@ -594,7 +594,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
-        traceMargin: 0.1,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
         // Use the optimized kernel in batches; fitness accounts for search work
         // rather than the number of calls into the kernel.
         stepMultiplier: 1000,
@@ -611,7 +614,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters: {
@@ -628,7 +634,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         lowResolutionCellSize: 0.4,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
         traceThickness: this.constructorParams.minimumTraceWidth ?? 0.1,
         effort: this.effort,
         hyperParameters,

@@ -39,6 +39,7 @@ test("physical via regions index nearby ports independently of their layers", ()
     (metadata) => metadata.isLayerTransition === true,
   )
   expect(viaRegion).toBeGreaterThanOrEqual(0)
+  expect(native.problem.viaBoundaryClearance).toBeCloseTo(0.1762)
   expect(
     native.problem.viaRegionPortConflicts!.portsByRegion[viaRegion]!.length,
   ).toBeGreaterThan(0)

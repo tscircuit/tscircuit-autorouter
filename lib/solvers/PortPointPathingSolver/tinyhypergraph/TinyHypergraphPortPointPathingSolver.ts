@@ -967,6 +967,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         this.portObstacleConstraints.traceWidth,
         this.portObstacleConstraints.clearance,
       )
+      loaded.problem.viaBoundaryClearance =
+        this.portObstacleConstraints.traceWidth / 2 +
+        this.portObstacleConstraints.clearance
     }
     if (this.minPortSpacing !== undefined) {
       loaded.problem.enforceViaFit = true
