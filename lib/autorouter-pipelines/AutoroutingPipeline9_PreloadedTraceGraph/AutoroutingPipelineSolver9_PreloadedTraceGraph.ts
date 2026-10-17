@@ -801,6 +801,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance:
+              cms.originalSrj.allowViaInPad ?? false,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             preserveExplicitLayerTransitions:
               cms.originalSrj.allowViaInPad ?? false,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
@@ -842,6 +845,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance:
+              cms.originalSrj.allowViaInPad ?? false,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             preserveExplicitLayerTransitions:
               cms.originalSrj.allowViaInPad ?? false,
             preserveRouteEndpoints: true,
@@ -972,6 +978,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               ),
               enableCrossingViaReduction: true,
+              useTraceWidthAwareClearance:
+                cms.originalSrj.allowViaInPad ?? false,
+              allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
                   cms.srj.connections,

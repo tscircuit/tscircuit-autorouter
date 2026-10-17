@@ -11,6 +11,9 @@ export const mergePipeline9MovablePreloadedVias = ({
   colorMap,
   layerCount,
   connMap,
+  physicalRouting,
+  allowBlindAndBuriedVias,
+  obstacleMargin,
 }: {
   routes: HighDensityRoute[]
   otherHdRoutes: HighDensityRoute[]
@@ -18,6 +21,9 @@ export const mergePipeline9MovablePreloadedVias = ({
   colorMap: Record<string, string>
   layerCount: number
   connMap: ConnectivityMap
+  physicalRouting?: boolean
+  allowBlindAndBuriedVias?: boolean
+  obstacleMargin?: number
 }): HighDensityRoute[] => {
   const netByConnectionName = getPipeline9NetByConnectionName(
     [...routes, ...otherHdRoutes],
@@ -31,6 +37,9 @@ export const mergePipeline9MovablePreloadedVias = ({
     colorMap,
     layerCount,
     connMap,
+    usePhysicalClearance: physicalRouting,
+    allowBlindAndBuriedVias,
+    obstacleMargin,
   })
   solver.solve()
   if (solver.failed) {

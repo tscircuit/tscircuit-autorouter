@@ -1065,6 +1065,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         colorMap: params.colorMap,
         layerCount: params.layerCount,
         connMap: params.connMap,
+        physicalRouting: params.originalSrj.allowViaInPad ?? false,
+        allowBlindAndBuriedVias: params.originalSrj.allowBlindAndBuriedVias,
+        obstacleMargin: params.originalSrj.minTraceToPadEdgeClearance,
       })
       for (
         let groupIndex = 0;
