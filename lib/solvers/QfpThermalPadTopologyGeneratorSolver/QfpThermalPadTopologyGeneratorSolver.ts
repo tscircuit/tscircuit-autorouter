@@ -30,6 +30,7 @@ type QfpThermalPadRoutingRegion = {
   regionType: "pad" | "pad-gap" | "corner"
   isNarrowPadGap?: boolean
   obstacleZ?: number[]
+  connectedTo?: string[]
 }
 
 export interface QfpThermalPadTopologyGeneratorSolverParams
@@ -148,6 +149,7 @@ function createMeshNodesForRegion({
   regionType,
   isNarrowPadGap = false,
   obstacleZ = [],
+  connectedTo,
 }: {
   nodeId: string
   bounds: Bounds
@@ -156,6 +158,7 @@ function createMeshNodesForRegion({
   regionType: QfpThermalPadRoutingRegion["regionType"]
   isNarrowPadGap?: boolean
   obstacleZ?: number[]
+  connectedTo?: string[]
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -194,6 +197,7 @@ function createMeshNodesForRegion({
     _qfpRegionType: regionType,
     _isNarrowQfpPadGap: isNarrowPadGap,
     _containsObstacle: group.containsObstacle,
+    _connectedTo: group.containsObstacle ? connectedTo : undefined,
   }))
 }
 
@@ -203,6 +207,7 @@ function getPadRegions(obstacles: Obstacle[], layerCount: number) {
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    connectedTo: [...obstacle.connectedTo],
   }))
 }
 
@@ -212,6 +217,7 @@ function getThermalPadRegions(obstacles: Obstacle[], layerCount: number) {
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    connectedTo: [...obstacle.connectedTo],
   }))
 }
 
@@ -848,6 +854,7 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
         regionType: region.regionType,
         isNarrowPadGap: region.isNarrowPadGap,
         obstacleZ: region.obstacleZ,
+        connectedTo: region.connectedTo,
       }),
     )
 
