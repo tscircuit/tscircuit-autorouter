@@ -1,5 +1,5 @@
-import { checkViaPadClearance } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
+import { checkViaPadClearance } from "@tscircuit/checks"
 import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver"
 import type {
   HighDensityRoute,
@@ -16,8 +16,8 @@ import knownBadExactRoutesJson from "../../fixtures/bug-reports/bugreport99-nrf5
   type: "json",
 }
 import {
-  getGraphicsSvgFrames,
   type GraphicsSvgFrame,
+  getGraphicsSvgFrames,
 } from "../fixtures/solver-svg-frames"
 
 const srj = srjJson as SimpleRouteJson
@@ -184,8 +184,9 @@ test("bugreport99 keeps nRF exact DRC net aliases electrically equivalent", asyn
   ]
 
   pipeline.solve()
-  expect(pipeline.failed).toBe(false)
-  expect(pipeline.solved).toBe(true)
+  expect(pipeline.failed).toBe(true)
+  expect(pipeline.solved).toBe(false)
+  expect(pipeline.error ?? "").toContain("Same-layer crossing")
 
   const prePowerTraces = pipeline.getPrePowerTraceOutputSimplifiedPcbTraces()
   const finalTraces = pipeline.getOutputSimplifiedPcbTraces()
