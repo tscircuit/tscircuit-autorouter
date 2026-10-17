@@ -11,10 +11,34 @@ test("same-net MST branches may cross and join on one layer", (): void => {
     height: 2,
     availableZ: [5],
     portPoints: [
-      { x: -1, y: -0.5, z: 5, connectionName: "a", rootConnectionName: "root" },
-      { x: 1, y: 0.5, z: 5, connectionName: "a", rootConnectionName: "root" },
-      { x: -1, y: 0.5, z: 5, connectionName: "b", rootConnectionName: "root" },
-      { x: 1, y: -0.5, z: 5, connectionName: "b", rootConnectionName: "root" },
+      {
+        x: -1,
+        y: -0.5,
+        z: 5,
+        connectionName: "a",
+        rootConnectionName: "root",
+      },
+      {
+        x: 1,
+        y: 0.5,
+        z: 5,
+        connectionName: "a",
+        rootConnectionName: "root",
+      },
+      {
+        x: -1,
+        y: 0.5,
+        z: 5,
+        connectionName: "b",
+        rootConnectionName: "root",
+      },
+      {
+        x: 1,
+        y: -0.5,
+        z: 5,
+        connectionName: "b",
+        rootConnectionName: "root",
+      },
     ],
   }
   expect(

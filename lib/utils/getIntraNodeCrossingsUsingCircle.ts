@@ -138,7 +138,11 @@ function countChordCrossings(
 export const getIntraNodeCrossingsUsingCircle = (
   node: NodeWithPortPoints,
   options: { ignoreSameRootCrossings?: boolean } = {},
-) => {
+): {
+  numSameLayerCrossings: number
+  numEntryExitLayerChanges: number
+  numTransitionPairCrossings: number
+} => {
   const xmin = node.center.x - node.width / 2
   const xmax = node.center.x + node.width / 2
   const ymin = node.center.y - node.height / 2
