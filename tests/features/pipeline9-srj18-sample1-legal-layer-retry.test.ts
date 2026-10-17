@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 retries an impossible SRJ18 node across legal layers", async (): Promise<void> => {
+test("Pipeline9 routes SRJ18 sample 1 without a false crossing rejection", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 1)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -13,7 +13,8 @@ test("Pipeline9 retries an impossible SRJ18 node across legal layers", async ():
 
   expect(solver.failed).toBeFalse()
   expect(solver.highDensityRouteSolver?.solved).toBeTrue()
-  expect(solver.highDensityRouteSolver?.stats.fallbackNodeCount).toBe(1)
+  expect(solver.highDensityRouteSolver?.stats.fallbackNodeCount).toBe(0)
+  expect(solver.highDensityRouteSolver?.failedSolvers).toHaveLength(0)
   expect(
     solver.highDensityRouteSolver?.routes.every((route) =>
       route.route.every((point) => point.z === 0 || point.z === 1),
