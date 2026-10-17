@@ -53,3 +53,22 @@ Validation completed:
 - Built-package smoke checks under both Node 26.4.0 and Bun 1.3.2: synchronous/async complete output and logical iteration equality.
 - Full sample002 synchronous/async output comparisons under both runtimes.
 - Repository-wide `tsc --noEmit` reports the same pre-existing diagnostics on the unmodified base and this branch after normalizing dependency paths; no new diagnostics.
+
+## Shipping through core
+
+`@tscircuit/core` declares `@tscircuit/capacity-autorouter` as a peer dependency and its current tsup configuration keeps it external. The installed autorouter package therefore owns the worker, Node runtime loader, and shared chunks together under `dist/`. The build emits both `pipeline9HighDensityWorker.js` and `pipeline9NodeRuntime.js`; the published `files: ["dist"]` includes both.
+
+Node builtins live in the separate runtime asset, loaded by URL only after detecting a Bun/Node host. This prevents browser bundlers from resolving `node:os` and `node:worker_threads` when bundling the Pipeline9 class. In a browser, `solveAsync()` uses the existing synchronous algorithm.
+
+Reproduce the shipping checks with:
+
+```sh
+bun run build --clean
+bun scripts/check-async-packaging.ts
+```
+
+The check packs an actual npm tarball, checks both runtime assets, extracts it into an isolated consumer without source-checkout links, and verifies exact synchronous/async output and logical iteration equality on Node and Bun. It also bundles that installed package for a browser and executes `solveAsync()` with browser globals and no Node process.
+
+Node/Bun consumers that inline the autorouter into another bundle must preserve its runtime assets at their expected relative paths, or keep the autorouter external as core currently does. Arbitrary single-file bundling is not supported automatically.
+
+Core currently drives Pipeline9 with `step()` (or `stepAsync()` on solvers that expose it), so updating the package alone does not activate worker routing. Its adapter still needs to invoke the async path to receive the measured speedup.

@@ -17,12 +17,10 @@ export async function solveHighDensityInWorkers(
   // with Node's Worker. Select the API that is actually present.
   const useBunWorker = Boolean(process.versions?.bun) &&
     typeof Worker !== "undefined" && typeof Worker.prototype.addEventListener === "function"
-  const osModule = "node:os"
-  const threadsModule = "node:worker_threads"
-  const { availableParallelism } = await import(osModule) as typeof import("node:os")
+  const runtimeUrl = new URL(import.meta.url.endsWith(".ts") ? "./pipeline9NodeRuntime.ts" : "./pipeline9NodeRuntime.js", import.meta.url)
+  const { availableParallelism, Worker: NodeWorker } = await import(runtimeUrl.href) as typeof import("./pipeline9NodeRuntime")
   const workerCount = options.workerCount ?? Math.min(8, Math.max(1, Math.floor(availableParallelism() / 2)))
   if (!Number.isSafeInteger(workerCount) || workerCount < 1) throw new Error("workerCount must be a positive integer")
-  const NodeWorker = useBunWorker ? undefined : (await import(threadsModule) as typeof import("node:worker_threads")).Worker
   const workerUrl = new URL(import.meta.url.endsWith(".ts") ? "./pipeline9HighDensityWorker.ts" : "./pipeline9HighDensityWorker.js", import.meta.url)
   // Small jobs let idle workers pick up more work without changing commit order.
   const jobs: NodeWithPortPoints[][] = []
@@ -35,7 +33,7 @@ export async function solveHighDensityInWorkers(
   try {
     await new Promise<void>((resolve, reject): void => {
       for (let slot = 0; slot < Math.min(workerCount, jobs.length); slot++) {
-        const worker = useBunWorker ? new Worker(workerUrl.href, { type: "module", ...{ ref: true } }) : new NodeWorker!(workerUrl)
+        const worker = useBunWorker ? new Worker(workerUrl.href, { type: "module", ...{ ref: true } }) : new NodeWorker(workerUrl)
         workers.push(worker)
         let activeIndex: number | null = null
         const dispatch = (): void => {
