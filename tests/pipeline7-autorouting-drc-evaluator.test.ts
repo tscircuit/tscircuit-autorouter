@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   convertPipeline7HdRoutesToSimplifiedPcbTraces,
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
@@ -100,13 +101,13 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
 })
 
 test("Pipeline7 candidate conversion reuses static obstacle connectivity", () => {
-  let connectivityChecks = 0
-  const connMap = {
-    areIdsConnected: (left: string, right: string) => {
-      connectivityChecks += 1
-      return left === "route" && right === "pad"
-    },
-  } as any
+  const connMap = new ConnectivityMap({ routeNet: ["route", "pad"] })
+  let connectivityLookups = 0
+  const getNetConnectedToId = connMap.getNetConnectedToId.bind(connMap)
+  connMap.getNetConnectedToId = (id: string): string | undefined => {
+    connectivityLookups += 1
+    return getNetConnectedToId(id)
+  }
   const connection = {
     name: "route",
     pointsToConnect: [
@@ -148,6 +149,7 @@ test("Pipeline7 candidate conversion reuses static obstacle connectivity", () =>
     })
 
   const firstResult = convertCandidateRoutes(routes)
+  const warmedConnectivityLookups = connectivityLookups
   const secondResult = convertCandidateRoutes(structuredClone(routes))
 
   expect(firstResult).toEqual(secondResult)
@@ -156,5 +158,6 @@ test("Pipeline7 candidate conversion reuses static obstacle connectivity", () =>
       (routePoint) => routePoint.route_type === "through_obstacle",
     ),
   ).toBe(true)
-  expect(connectivityChecks).toBe(1)
+  expect(warmedConnectivityLookups).toBeGreaterThan(0)
+  expect(connectivityLookups).toBe(warmedConnectivityLookups)
 })

@@ -52,11 +52,11 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
     ],
   }
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
-  let connectivityChecks = 0
-  const areIdsConnected = connMap.areIdsConnected.bind(connMap)
-  connMap.areIdsConnected = (left: string, right: string): boolean => {
-    if (right === "distant_pad") connectivityChecks += 1
-    return areIdsConnected(left, right)
+  let connectivityLookups = 0
+  const getNetConnectedToId = connMap.getNetConnectedToId.bind(connMap)
+  connMap.getNetConnectedToId = (id: string): string | undefined => {
+    if (id === "distant_pad") connectivityLookups += 1
+    return getNetConnectedToId(id)
   }
   const solver = new Pipeline9JointDrcRepairSolver({
     srj,
@@ -81,7 +81,7 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
     .createSolver()
   const evaluate = solver.exactRepairSolver!.params.drcEvaluator!
   const initial = evaluate({ traces: [], routes })
-  const warmedConnectivityChecks = connectivityChecks
+  const warmedConnectivityLookups = connectivityLookups
   const candidate = structuredClone(routes)
   const repeated = evaluate({ traces: [], routes: candidate })
   expect(repeated).toBe(initial)
@@ -98,6 +98,6 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
   expect(changed.errorsWithCenters).toMatchObject([
     { center: { x: 0.5, y: 0 } },
   ])
-  expect(warmedConnectivityChecks).toBeGreaterThan(0)
-  expect(connectivityChecks).toBe(warmedConnectivityChecks)
+  expect(warmedConnectivityLookups).toBeGreaterThan(0)
+  expect(connectivityLookups).toBe(warmedConnectivityLookups)
 })

@@ -6,6 +6,7 @@ import type {
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
+import { ObstacleConnectionIndex } from "lib/data-structures/ObstacleConnectionIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
   HighDensityRoute,
@@ -80,15 +81,11 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
 
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
-  obstacles: Obstacle[],
-  connMap?: ConnectivityMap,
+  connectedMultilayerObstacles: ReadonlyArray<Obstacle>,
 ) =>
   route.route.length > 0 &&
-  obstacles.some(
-    (obstacle) =>
-      isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route, connMap) &&
-      route.route.every((point) => isPointInsideObstacle(point, obstacle)),
+  connectedMultilayerObstacles.some((obstacle) =>
+    route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
 
 const findNodeIndexForRoute = (
@@ -242,13 +239,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.connMap = params.connMap
 
+    const multilayerObstacleConnectionIndex = new ObstacleConnectionIndex(
+      params.obstacles.filter(isMultilayerObstacle),
+      params.connMap,
+    )
+
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
         isSameNetMultilayerObstacleRoute(
           params.hdRoutes[i],
-          params.obstacles,
-          params.connMap,
+          multilayerObstacleConnectionIndex.getObstaclesConnectedToRoute(
+            params.hdRoutes[i],
+          ),
         )
       ) {
         continue
