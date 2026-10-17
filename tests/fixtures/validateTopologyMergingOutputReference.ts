@@ -9,13 +9,18 @@ import type { TopologyMergingOutputProvenance } from "lib/solvers/TopologyMergin
 import type { PreparedTopologyMergingNode } from "lib/solvers/TopologyMergingSolver/topology-merging-types"
 import { TOPOLOGY_PROVENANCE_EPSILON } from "lib/solvers/TopologyMergingSolver/topology-merging-types"
 
+type TopologyMergingSourceKey = PreparedTopologyMergingNode["sourceKey"]
+
 export function validateTopologyMergingOutputReference({
   nodes,
   preparedNodeBySourceKey,
   provenance,
 }: {
   nodes: CapacityMeshNode[]
-  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  preparedNodeBySourceKey: ReadonlyMap<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >
   provenance: TopologyMergingOutputProvenance
 }): void {
   const nodeIds = new Set<string>()
@@ -126,8 +131,11 @@ function validateSingleSourceOutput({
   preparedNodeBySourceKey,
 }: {
   node: CapacityMeshNode
-  sourceKey: string
-  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  sourceKey: TopologyMergingSourceKey
+  preparedNodeBySourceKey: ReadonlyMap<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >
 }): void {
   const preparedNode = preparedNodeBySourceKey.get(sourceKey)
   if (!preparedNode) {
@@ -162,10 +170,13 @@ function isPreservedSameGroupOverlap({
 }: {
   groupIndexesA: number[]
   groupIndexesB: number[]
-  sourceKeysA: string[]
-  sourceKeysB: string[]
+  sourceKeysA: TopologyMergingSourceKey[]
+  sourceKeysB: TopologyMergingSourceKey[]
   sharedLayers: number[]
-  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  preparedNodeBySourceKey: ReadonlyMap<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >
 }): boolean {
   if (
     groupIndexesA.length !== 1 ||

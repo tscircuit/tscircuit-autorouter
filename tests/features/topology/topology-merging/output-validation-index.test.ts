@@ -2,11 +2,20 @@ import { expect, test } from "bun:test"
 import { validateTopologyMergingOutput } from "lib/solvers/TopologyMergingSolver/topology-merging-output"
 import type { PreparedTopologyMergingNode } from "lib/solvers/TopologyMergingSolver/topology-merging-types"
 import { getCapacityMeshNodeBounds } from "lib/solvers/TopologyPlanningSolver/capacity-node-geometry"
-import type { CapacityMeshNode } from "lib/types"
+import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import { createTopologyMergingTestNode } from "../../../fixtures/topology-merging-test-utils"
-import { validateTopologyMergingOutputReference } from "../../../fixtures/validate-topology-merging-output-reference"
+import { validateTopologyMergingOutputReference } from "../../../fixtures/validateTopologyMergingOutputReference"
 
 type ValidationInput = Parameters<typeof validateTopologyMergingOutput>[0]
+type TopologyMergingSourceKey = PreparedTopologyMergingNode["sourceKey"]
+type CreateNodeOptions = {
+  id: CapacityMeshNodeId
+  minX: number
+  maxX: number
+  minY?: number
+  maxY?: number
+  availableZ?: number[]
+}
 type ValidationCase = {
   name: string
   input: ValidationInput
@@ -17,10 +26,13 @@ function createValidationInput(
   nodes: CapacityMeshNode[],
   groupIndexes: number[] = nodes.map((_, index) => index),
 ): ValidationInput {
-  const preparedNodeBySourceKey = new Map<string, PreparedTopologyMergingNode>()
+  const preparedNodeBySourceKey = new Map<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >()
   const provenance = {
-    sourceKeysByNodeId: new Map<string, string[]>(),
-    groupIndexesByNodeId: new Map<string, number[]>(),
+    sourceKeysByNodeId: new Map<CapacityMeshNodeId, TopologyMergingSourceKey[]>(),
+    groupIndexesByNodeId: new Map<CapacityMeshNodeId, number[]>(),
   }
   for (const [index, node] of nodes.entries()) {
     const sourceKey = `source-${index}`
@@ -37,14 +49,14 @@ function createValidationInput(
   return { nodes, preparedNodeBySourceKey, provenance }
 }
 
-function createNode(
-  id: string,
-  minX: number,
-  maxX: number,
+function createNode({
+  id,
+  minX,
+  maxX,
   minY = 0,
   maxY = 2,
   availableZ = [0],
-): CapacityMeshNode {
+}: CreateNodeOptions): CapacityMeshNode {
   return createTopologyMergingTestNode({
     id,
     bounds: { minX, maxX, minY, maxY },
@@ -70,29 +82,60 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     { name: "empty", input: createValidationInput([]), shouldFail: false },
     {
       name: "single node",
-      input: createValidationInput([createNode("a", 0, 2)]),
+      input: createValidationInput([createNode({ id: "a", minX: 0, maxX: 2 })]),
       shouldFail: false,
     },
   ]
   for (const [name, b, shouldFail] of [
-    ["separated x", createNode("b", 3, 5), false],
-    ["separated y", createNode("b", 0, 2, 3, 5), false],
-    ["touching edge", createNode("b", 2, 4), false],
-    ["touching corner", createNode("b", 2, 4, 2, 4), false],
-    ["overlap below epsilon", createNode("b", 2 - 2e-5, 4), false],
-    ["overlap above epsilon", createNode("b", 2 - 8e-5, 4), true],
-    ["overlap", createNode("b", 1, 3), true],
-    ["contained", createNode("b", 0.5, 1.5, 0.5, 1.5), true],
-    ["different layers", createNode("b", 1, 3, 0, 2, [1]), false],
-    ["shared layer", createNode("b", 1, 3, 0, 2, [1, 0]), true],
+    ["separated x", createNode({ id: "b", minX: 3, maxX: 5 }), false],
+    [
+      "separated y",
+      createNode({ id: "b", minX: 0, maxX: 2, minY: 3, maxY: 5 }),
+      false,
+    ],
+    ["touching edge", createNode({ id: "b", minX: 2, maxX: 4 }), false],
+    [
+      "touching corner",
+      createNode({ id: "b", minX: 2, maxX: 4, minY: 2, maxY: 4 }),
+      false,
+    ],
+    [
+      "overlap below epsilon",
+      createNode({ id: "b", minX: 2 - 2e-5, maxX: 4 }),
+      false,
+    ],
+    [
+      "overlap above epsilon",
+      createNode({ id: "b", minX: 2 - 8e-5, maxX: 4 }),
+      true,
+    ],
+    ["overlap", createNode({ id: "b", minX: 1, maxX: 3 }), true],
+    [
+      "contained",
+      createNode({ id: "b", minX: 0.5, maxX: 1.5, minY: 0.5, maxY: 1.5 }),
+      true,
+    ],
+    [
+      "different layers",
+      createNode({ id: "b", minX: 1, maxX: 3, availableZ: [1] }),
+      false,
+    ],
+    [
+      "shared layer",
+      createNode({ id: "b", minX: 1, maxX: 3, availableZ: [1, 0] }),
+      true,
+    ],
   ] as const) {
     cases.push({
       name,
-      input: createValidationInput([createNode("a", 0, 2), b]),
+      input: createValidationInput([createNode({ id: "a", minX: 0, maxX: 2 }), b]),
       shouldFail,
     })
   }
-  const overlap = [createNode("a", 0, 2), createNode("b", 1, 3)]
+  const overlap = [
+    createNode({ id: "a", minX: 0, maxX: 2 }),
+    createNode({ id: "b", minX: 1, maxX: 3 }),
+  ]
   cases.push({
     name: "preserved overlap from distinct sources in one group",
     input: createValidationInput(structuredClone(overlap), [0, 0]),
@@ -113,7 +156,10 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     } else if (problem === "missing overlapping group provenance") {
       input.provenance.groupIndexesByNodeId.delete("b")
     } else if (problem === "missing source node") {
-      input.preparedNodeBySourceKey = new Map()
+      input.preparedNodeBySourceKey = new Map<
+        TopologyMergingSourceKey,
+        PreparedTopologyMergingNode
+      >()
     } else if (problem === "source geometry escape") {
       input.nodes[1]!.width += 1
     } else if (problem === "source layer escape") {
@@ -128,8 +174,8 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     cases.push({ name: problem, input, shouldFail: true })
   }
   const separatedMissingGroup = createValidationInput([
-    createNode("a", 0, 2),
-    createNode("b", 3, 5),
+    createNode({ id: "a", minX: 0, maxX: 2 }),
+    createNode({ id: "b", minX: 3, maxX: 5 }),
   ])
   separatedMissingGroup.provenance.groupIndexesByNodeId.delete("b")
   cases.push({
@@ -144,7 +190,10 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     "infinite",
     "no layers",
   ]) {
-    const nodes = [createNode("a", 0, 2), createNode("b", 1, 3)]
+    const nodes = [
+      createNode({ id: "a", minX: 0, maxX: 2 }),
+      createNode({ id: "b", minX: 1, maxX: 3 }),
+    ]
     if (problem === "duplicate id") nodes[1]!.capacityMeshNodeId = "a"
     if (problem === "zero width") nodes[1]!.width = 0
     if (problem === "NaN") nodes[1]!.center.x = Number.NaN
@@ -159,17 +208,27 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
   cases.push({
     name: "small overlap at large coordinates retains float64 precision",
     input: createValidationInput([
-      createNode("a", 1e9, 1e9 + 1),
-      createNode("b", 1e9 + 1 - 8e-5, 1e9 + 2),
+      createNode({ id: "a", minX: 1e9, maxX: 1e9 + 1 }),
+      createNode({ id: "b", minX: 1e9 + 1 - 8e-5, maxX: 1e9 + 2 }),
     ]),
     shouldFail: true,
   })
   cases.push({
     name: "multiple conflicts report the first pair in original node order",
     input: createValidationInput([
-      createNode("first", -100, 100, -100, 100),
+      createNode({
+        id: "first",
+        minX: -100,
+        maxX: 100,
+        minY: -100,
+        maxY: 100,
+      }),
       ...Array.from({ length: 48 }, (_, index) =>
-        createNode(`candidate-${index}`, 48 - index * 2, 49 - index * 2),
+        createNode({
+          id: `candidate-${index}`,
+          minX: 48 - index * 2,
+          maxX: 49 - index * 2,
+        }),
       ),
     ]),
     shouldFail: true,
@@ -178,14 +237,14 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
     const nodes = Array.from({ length: 48 }, (_, index) => {
       const x = ((index * 17 + layout * 3) % 19) * 1.25
       const y = ((index * 11 + layout) % 13) * 1.25
-      return createNode(
-        `node-${index}`,
-        x,
-        x + (layout % 2 === 0 ? 1 : 2),
-        y,
-        y + 2,
-        [index % 3, (index + layout) % 4],
-      )
+      return createNode({
+        id: `node-${index}`,
+        minX: x,
+        maxX: x + (layout % 2 === 0 ? 1 : 2),
+        minY: y,
+        maxY: y + 2,
+        availableZ: [index % 3, (index + layout) % 4],
+      })
     })
     for (let ordering = 0; ordering < 3; ordering++) {
       const reordered = ordering === 0 ? nodes : [...nodes].reverse()
