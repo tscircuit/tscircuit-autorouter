@@ -113,3 +113,6 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export { Pipeline9_Parallel, type Pipeline9ParallelOptions } from "./autorouter-pipelines/Pipeline9_Parallel/Pipeline9_Parallel"
+export { SolverRuntime, SingleThreadSolverRuntime } from "./solver-runtime/SolverRuntime"
+export { NodeSolverRuntime } from "./solver-runtime/NodeSolverRuntime"
