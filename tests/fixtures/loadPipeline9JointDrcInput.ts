@@ -9,7 +9,7 @@ type JsonRecord = Record<string, unknown>
 /** Restores the references and class instances in the debugger's exported input. */
 export const loadPipeline9JointDrcInput = (path: string): Params => {
   const bytes = readFileSync(path)
-  const json = path.endsWith(".gz") ? gunzipSync(bytes) : bytes
+  const json = path.endsWith(".gz") ? gunzipSync(new Uint8Array(bytes)) : bytes
   const params = JSON.parse(json.toString("utf8"))[0] as JsonRecord
   const resolvePath = (path: string): unknown => {
     const keys = path.slice(1).match(/[^.\[\]]+/g) ?? []
@@ -27,7 +27,9 @@ export const loadPipeline9JointDrcInput = (path: string): Params => {
     }
   }
   restoreReferences(params)
-  params.mutatedPreloadedTraceIds = new Set(params.mutatedPreloadedTraceIds as string[])
+  params.mutatedPreloadedTraceIds = new Set(
+    params.mutatedPreloadedTraceIds as string[],
+  )
   params.connMap = new ConnectivityMap(
     (params.connMap as { netMap: Record<string, string[]> }).netMap,
   )

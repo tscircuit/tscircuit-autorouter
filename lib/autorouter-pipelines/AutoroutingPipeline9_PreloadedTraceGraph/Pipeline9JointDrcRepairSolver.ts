@@ -705,7 +705,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       solverName: "initialBoundedRegionalRepairSolver",
       createSolver: (): BaseSolver => {
         if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) {
-          throw new Error("Pipeline9 initial regional repair is missing its input")
+          throw new Error(
+            "Pipeline9 initial regional repair is missing its input",
+          )
         }
         this.initialBoundedRegionalRepairStartedAt = performance.now()
         this.initialBoundedRegionalRepairSolver =
@@ -1672,12 +1674,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
-      initialBoundedRegionalRepairAttemptedRegionCount: result.attemptedRegionCount,
-      initialBoundedRegionalRepairAcceptedRegionCount: result.acceptedRegionCount,
-      initialBoundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,
-      initialBoundedRegionalRepairPathSearchNodeCount: result.pathSearchNodeCount,
-      initialBoundedRegionalRepairReferenceValidationCount: result.referenceValidationCount,
-      initialBoundedRegionalRepairPublishedDrcIssueCount: result.publishedDrcIssueCount,
+      initialBoundedRegionalRepairAttemptedRegionCount:
+        result.attemptedRegionCount,
+      initialBoundedRegionalRepairAcceptedRegionCount:
+        result.acceptedRegionCount,
+      initialBoundedRegionalRepairCandidateAttemptCount:
+        result.candidateAttemptCount,
+      initialBoundedRegionalRepairPathSearchNodeCount:
+        result.pathSearchNodeCount,
+      initialBoundedRegionalRepairReferenceValidationCount:
+        result.referenceValidationCount,
+      initialBoundedRegionalRepairPublishedDrcIssueCount:
+        result.publishedDrcIssueCount,
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
@@ -1692,16 +1700,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const errors = Array.isArray(reference) ? reference : reference.errors
     if (errors.length !== 0) {
-      throw new Error("Pipeline9 initial regional repair lost its zero-DRC validation")
+      throw new Error(
+        "Pipeline9 initial regional repair lost its zero-DRC validation",
+      )
     }
     this.combinedOutput = result.routes
     this.stats = {
       ...this.stats,
       finalDrcIssueCount: 0,
       initialBoundedRegionalRepairAccepted: true,
+      boundedRegionalRepairAttemptedRegionCount: result.attemptedRegionCount,
+      boundedRegionalRepairAcceptedRegionCount: result.acceptedRegionCount,
+      boundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,
+      boundedRegionalRepairPathSearchNodeCount: result.pathSearchNodeCount,
+      boundedRegionalRepairReferenceValidationCount:
+        result.referenceValidationCount,
+      boundedRegionalRepairRepaired: result.repaired,
+      boundedRegionalRepairPublishedDrcIssueCount:
+        result.publishedDrcIssueCount,
+      initialBoundedRegionalRepairAddedViaCount: Math.max(
+        0,
+        result.routes.reduce((count, route) => count + route.vias.length, 0) -
+          this.inputNewHdRoutes.reduce(
+            (count, route) => count + route.vias.length,
+            0,
+          ),
+      ),
       terminalEscapeCandidateCount: 0,
       terminalEscapeAcceptedCount: 0,
       regionalB01RepairAttempted: false,
+      regionalB01RepairCandidateSearchCount: 0,
+      regionalB01RepairCandidateSearchBudget: 0,
+      clearancePrecisionCandidateCount: 0,
+      clearancePrecisionCandidateValidationCount: 0,
+      clearancePrecisionReferenceValidationCount: 0,
+      clearancePrecisionRepaired: false,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
       referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
       indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,

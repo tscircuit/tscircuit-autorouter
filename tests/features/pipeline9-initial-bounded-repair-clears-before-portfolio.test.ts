@@ -48,6 +48,8 @@ test("a reference-clean bounded repair completes the joint solver before the bro
     expect(route.traceThickness).toBe(original[index]!.traceThickness)
   }
   const validation = fixture.drcEvaluator({ traces: [], routes })
-  expect(Array.isArray(validation) ? validation : validation.errors).toHaveLength(0)
+  expect(
+    Array.isArray(validation) ? validation : validation.errors,
+  ).toHaveLength(0)
   expect(fixture.routes).toEqual(original)
 })

@@ -66,7 +66,8 @@ const createExactBranch = (
   params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0],
 ): Pipeline9JointDrcRepairSolver => {
   const solver = new Pipeline9JointDrcRepairSolver(params)
-  solver.pipelineDef.find((stage) => stage.solverName === "exactRepairSolver")!
+  solver.pipelineDef
+    .find((stage) => stage.solverName === "exactRepairSolver")!
     .createSolver()
   return solver
 }
@@ -110,9 +111,7 @@ test("regional work allowances depend on effort and verified progress rather tha
   expect(conflicted.exactRepairSolver!.params.broadMaxIterations).toBe(4)
   expect(conflicted.exactRepairSolver!.params.broadPassMultiplier).toBe(0.75)
 
-  const heavilyConflicted = createExactBranch(
-    makeParams(800, 1),
-  )
+  const heavilyConflicted = createExactBranch(makeParams(800, 1))
   expect(
     heavilyConflicted.stats.initialJointDrcIssueCount,
   ).toBeGreaterThanOrEqual(200)

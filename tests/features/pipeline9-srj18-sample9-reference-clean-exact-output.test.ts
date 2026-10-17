@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
+test("Pipeline9 preserves SRJ18 sample 9's reference-clean repair output", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -17,10 +17,21 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
   // Original pad geometry removes the indexed evaluator's false positives.
   expect(Number(repairStats?.finalDrcIssueCount)).toBe(0)
+  if (repairStats?.initialBoundedRegionalRepairAccepted === true) {
+    expect(repairStats.initialBoundedRegionalRepairPublishedDrcIssueCount).toBe(
+      0,
+    )
+    expect(
+      solver.pipeline9JointDrcRepairSolver?.exactRepairSolver,
+    ).toBeUndefined()
+  } else {
+    expect(repairStats).toMatchObject({
+      postExactReferenceValidationAttempted: true,
+      postExactReferenceDrcIssueCount: 0,
+      postExactReferenceAccepted: true,
+    })
+  }
   expect(repairStats).toMatchObject({
-    postExactReferenceValidationAttempted: true,
-    postExactReferenceDrcIssueCount: 0,
-    postExactReferenceAccepted: true,
     clearancePrecisionCandidateCount: 0,
     clearancePrecisionCandidateValidationCount: 0,
     clearancePrecisionReferenceValidationCount: 0,
