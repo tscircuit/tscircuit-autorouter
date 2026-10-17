@@ -8,7 +8,7 @@ import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounde
 const createSolver = (): Pipeline9JointDrcRepairSolver => {
   const fixture = createBoundedRegionalRepairFixture()
   const srj = fixture.originalSrj
-  return new Pipeline9JointDrcRepairSolver({
+  const solver = new Pipeline9JointDrcRepairSolver({
     srj,
     srjWithPointPairs: srj,
     originalSrj: srj,
@@ -24,6 +24,20 @@ const createSolver = (): Pipeline9JointDrcRepairSolver => {
     effort: 1,
     colorMap: {},
   })
+  // This test exercises the later stages. Model an incomplete bounded pass
+  // so the exact, B01 and final bounded children still execute.
+  const initial = solver.initialBoundedRegionalRepairSolver!
+  const getResult = initial.getResult.bind(initial)
+  const initialResult = spyOn(initial, "getResult").mockImplementation(() => ({
+    ...getResult(),
+    publishedDrcIssueCount: undefined,
+  }))
+  try {
+    while (!solver.exactRepairSolver && !solver.failed) solver.step()
+  } finally {
+    initialResult.mockRestore()
+  }
+  return solver
 }
 
 test("joint DRC repair exposes sequential child stages and propagates failures", (): void => {

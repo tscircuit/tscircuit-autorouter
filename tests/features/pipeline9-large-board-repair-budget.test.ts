@@ -62,6 +62,15 @@ const makeParams = (
   }
 }
 
+const createExactBranch = (
+  params: ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0],
+): Pipeline9JointDrcRepairSolver => {
+  const solver = new Pipeline9JointDrcRepairSolver(params)
+  solver.pipelineDef.find((stage) => stage.solverName === "exactRepairSolver")!
+    .createSolver()
+  return solver
+}
+
 test("regional work allowances depend on effort and verified progress rather than board size", (): void => {
   const budget = getPipeline9BoundedRepairBudget(1, 1, 1)
   // Adding clean routes or changing error density must not switch policies.
@@ -95,13 +104,13 @@ test("regional work allowances depend on effort and verified progress rather tha
       getPipeline9BoundedRepairBudget(500, 20, invalidEffort),
     ).toThrow()
   }
-  const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
+  const conflicted = createExactBranch(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
   expect(conflicted.exactRepairSolver!.params.broadMaxIterations).toBe(4)
   expect(conflicted.exactRepairSolver!.params.broadPassMultiplier).toBe(0.75)
 
-  const heavilyConflicted = new Pipeline9JointDrcRepairSolver(
+  const heavilyConflicted = createExactBranch(
     makeParams(800, 1),
   )
   expect(
@@ -113,11 +122,11 @@ test("regional work allowances depend on effort and verified progress rather tha
     0.1875,
   )
 
-  const nearClean = new Pipeline9JointDrcRepairSolver(makeParams(0.2, 1))
+  const nearClean = createExactBranch(makeParams(0.2, 1))
   expect(nearClean.stats.initialJointDrcIssueCount).toBe(1)
   expect(nearClean.exactRepairSolver!.params.maxIterations).toBe(32)
 
-  const higherEffort = new Pipeline9JointDrcRepairSolver(makeParams(800, 4))
+  const higherEffort = createExactBranch(makeParams(800, 4))
   expect(higherEffort.exactRepairSolver!.params.maxIterations).toBe(32)
   expect(higherEffort.exactRepairSolver!.params.broadMaxIterations).toBe(12)
   expect(higherEffort.exactRepairSolver!.params.broadPassMultiplier).toBe(3)
