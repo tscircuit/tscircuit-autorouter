@@ -31,13 +31,15 @@ test("thermal-pad copper remains traversable around an embedded trace target", (
     minViaPadDiameter: 0.45,
     bounds: { minX: -3, maxX: 3, minY: -3, maxY: 3 },
     obstacles,
-    connections: [{
-      name: "ground",
-      pointsToConnect: [
-        { x: 0, y: 0, layer: "top", pointId: "ep", pcb_port_id: "ep" },
-        { x: 2.5, y: 0, layer: "top", pointId: "gnd", pcb_port_id: "gnd" },
-      ],
-    }],
+    connections: [
+      {
+        name: "ground",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pointId: "ep", pcb_port_id: "ep" },
+          { x: 2.5, y: 0, layer: "top", pointId: "gnd", pcb_port_id: "gnd" },
+        ],
+      },
+    ],
   }
   const topologySolver = new QfpThermalPadTopologyGeneratorSolver({
     inputSrj,
@@ -66,7 +68,11 @@ test("thermal-pad copper remains traversable around an embedded trace target", (
     layerCount: inputSrj.layerCount,
     nodeGroups: [
       { groupId: "global", nodes: [traceTarget], isComponent: false },
-      { groupId: "u1", nodes: topologySolver.getOutput().routingRegions, isComponent: true },
+      {
+        groupId: "u1",
+        nodes: topologySolver.getOutput().routingRegions,
+        isComponent: true,
+      },
     ],
   })
   mergingSolver.solve()
@@ -82,7 +88,9 @@ test("thermal-pad copper remains traversable around an embedded trace target", (
   segmentSolver.solve()
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes: nodes,
-    segmentPortPoints: segmentSolver.getOutput().flatMap((segment) => segment.portPoints),
+    segmentPortPoints: segmentSolver
+      .getOutput()
+      .flatMap((segment) => segment.portPoints),
     layerCount: inputSrj.layerCount,
     connectivityMap: getConnectivityMapFromSimpleRouteJson(inputSrj),
     simpleRouteJsonConnections: inputSrj.connections,
@@ -120,17 +128,30 @@ test("thermal-pad copper remains traversable around an embedded trace target", (
   expect(pathingSolver.error).toBeNull()
   expect(pathingSolver.solved).toBe(true)
   expect(pathingSolver.failed).toBe(false)
-  expect(pathingSolver.getOutput().nodesWithPortPoints.length).toBeGreaterThan(0)
-  const copperPadOwners = topologySolver.getOutput().routingRegions
-    .filter((node) => node._qfpRegionType === "pad" && node._containsObstacle)
+  expect(pathingSolver.getOutput().nodesWithPortPoints.length).toBeGreaterThan(
+    0,
+  )
+  const copperPadOwners = topologySolver
+    .getOutput()
+    .routingRegions.filter(
+      (node) => node._qfpRegionType === "pad" && node._containsObstacle,
+    )
     .map((node) => node._connectedTo)
     .sort((a, b) => a!.join(",").localeCompare(b!.join(",")))
   expect(copperPadOwners).toEqual([
-    ["bottom"], ["ep"], ["gnd"], ["left"], ["top"],
+    ["bottom"],
+    ["ep"],
+    ["gnd"],
+    ["left"],
+    ["top"],
   ])
-  const freePadLayers = topologySolver.getOutput().routingRegions.filter(
-    (node) => node._qfpRegionType === "pad" && !node._containsObstacle,
-  )
+  const freePadLayers = topologySolver
+    .getOutput()
+    .routingRegions.filter(
+      (node) => node._qfpRegionType === "pad" && !node._containsObstacle,
+    )
   expect(freePadLayers.length).toBeGreaterThan(0)
-  expect(freePadLayers.every((node) => node._connectedTo === undefined)).toBe(true)
+  expect(freePadLayers.every((node) => node._connectedTo === undefined)).toBe(
+    true,
+  )
 })
