@@ -18,6 +18,7 @@ import {
   AutoroutingPipelineSolver2_PortPointPathing,
   AutoroutingPipelineSolver3_HgPortPointPathing,
   AutoroutingPipelineSolver4,
+  AutoroutingPipelineSolver6,
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
 } from "../lib"
@@ -38,7 +39,7 @@ import {
   toSimpleRouteJson,
 } from "./benchmark/scenarios"
 
-type PipelineId = 1 | 2 | 3 | 4 | 7 | 9
+type PipelineId = 1 | 2 | 3 | 4 | 6 | 7 | 9
 
 type SolverOptions = {
   effort?: number
@@ -67,6 +68,7 @@ type RunSampleOptions = {
   stopAfterStage?: string
   writeAiVisuals: boolean
   netColors: boolean
+  octagonalRegions: boolean
 }
 
 const PIPELINE_SOLVERS: Record<
@@ -92,6 +94,10 @@ const PIPELINE_SOLVERS: Record<
     solverName: "AutoroutingPipelineSolver4",
     SolverConstructor: AutoroutingPipelineSolver4,
   },
+  6: {
+    solverName: "AutoroutingPipelineSolver6",
+    SolverConstructor: AutoroutingPipelineSolver6,
+  },
   7: {
     solverName: "AutoroutingPipelineSolver7_MultiGraph",
     SolverConstructor: AutoroutingPipelineSolver7_MultiGraph,
@@ -110,7 +116,8 @@ const printHelp = () => {
       "  ./run-sample.sh [--pipeline 7] --sample 1 [--dataset dataset01]",
       "",
       "Options:",
-      "  --pipeline N     Pipeline to run (1, 2, 3, 4, 7, or 9; defaults to 7)",
+      "  --pipeline N     Pipeline to run (1, 2, 3, 4, 6, 7, or 9; defaults to 7)",
+      "  --octagonal-regions  Pipeline 6: replace mesh generation and pathing with octagonal regions",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
       `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
@@ -295,6 +302,7 @@ const parseArgs = (): RunSampleOptions => {
     pngSize: 1536,
     writeAiVisuals: false,
     netColors: false,
+    octagonalRegions: false,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -308,7 +316,7 @@ const parseArgs = (): RunSampleOptions => {
     if (arg === "--pipeline") {
       const pipelineId = parsePositiveInt(args[i + 1] ?? "", "--pipeline")
       if (!(pipelineId in PIPELINE_SOLVERS)) {
-        throw new Error("--pipeline must be one of 1, 2, 3, 4, 7, or 9")
+        throw new Error("--pipeline must be one of 1, 2, 3, 4, 6, 7, or 9")
       }
       options.pipeline = pipelineId as PipelineId
       i += 1
@@ -378,6 +386,11 @@ const parseArgs = (): RunSampleOptions => {
       continue
     }
 
+    if (arg === "--octagonal-regions") {
+      options.octagonalRegions = true
+      continue
+    }
+
     if (arg === "--net-colors") {
       options.netColors = true
       options.writeAiVisuals = true
@@ -399,6 +412,10 @@ const parseArgs = (): RunSampleOptions => {
 
   if (options.pngSize < 1024) {
     throw new Error("--png-size must be at least 1024")
+  }
+
+  if (options.octagonalRegions && options.pipeline !== 6) {
+    throw new Error("--octagonal-regions requires --pipeline 6")
   }
 
   if (options.netColors && options.pipeline !== 7 && options.pipeline !== 9) {
@@ -468,6 +485,7 @@ const main = async () => {
 
   const pipelineSolver = new pipelineConfig.SolverConstructor(input.scenario, {
     effort: options.effort,
+    polyRegionShape: options.octagonalRegions ? "octagonal" : "convex",
     visualizationTraceColorMode: options.netColors ? "net" : "layer",
   })
   const onLog = (line: string) => {
@@ -492,6 +510,7 @@ const main = async () => {
       srjSource: input.sourceLabel,
       stopAfterStage: options.stopAfterStage ?? "",
       aiVisuals: options.writeAiVisuals,
+      octagonalRegions: options.octagonalRegions,
     },
     onLog,
   })

@@ -8,15 +8,18 @@ import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/cal
 import type { CapacityMeshNodeId, SimpleRouteJson } from "lib/types"
 import type { PortPoint } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   type ConvexRegionsComputeResult,
   type LayerMergeMode,
   PORT_MARGIN_FROM_SEGMENT_ENDPOINT,
   PORT_SPACING,
   type SerializedPolyHyperGraph,
+  type PolyHyperGraphObstacleRegion,
   applySerializedRegionNetIdsToLoadedProblem,
   buildPolyHyperGraphFromRegions,
   computeConvexRegions,
+  mapLayerNameToZ,
 } from "pcb-poly-hyper-graph"
 import {
   type PolyHyperGraphLoadResult,
@@ -31,6 +34,8 @@ import {
   getPolyGraphRectsFromSrj,
 } from "./srjToPolyHyperGraph"
 import type { PolyNodeWithPortPoints } from "./types"
+import { computeOctagonalRegions } from "./computeOctagonalRegions"
+import { isPointInConvexPolygon } from "./geometry"
 
 type RouteMetadata = {
   connectionId: string
@@ -69,6 +74,7 @@ const asPolyPortMetadata = (metadata: unknown): PolyPortMetadata =>
 
 export type PolyHypergraphPortPointPathingSolverOptions = {
   srj: SimpleRouteJson
+  regionShape?: "convex" | "octagonal"
   effort?: number
   concavityTolerance?: number
   layerMergeMode?: LayerMergeMode
@@ -167,28 +173,41 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
         usePolyanyaMerge: params.usePolyanyaMerge ?? false,
         viaSegments: params.viaSegments ?? 8,
       })
-    const useConstrainedDelaunay = params.useConstrainedDelaunay ?? true
-    try {
-      this.convexRegions = computeRegions(useConstrainedDelaunay)
-    } catch (error) {
-      if (!useConstrainedDelaunay) throw error
-      this.usedUnconstrainedDelaunayFallback = true
-      this.convexRegions = computeRegions(false)
+    let obstacleRegions: PolyHyperGraphObstacleRegion[]
+    let connections = getPolyGraphConnectionsFromSrj(params.srj)
+    if (params.regionShape === "octagonal") {
+      const result = computeOctagonalRegions(params.srj, this.clearance + params.srj.minTraceWidth / 2)
+      this.convexRegions = result
+      obstacleRegions = result.obstacleRegions
+      const connMap = getConnectivityMapFromSimpleRouteJson(params.srj)
+      connections = connections.map((connection) => {
+        const networkId = connMap.getNetConnectedToId(connection.connectionId)
+        if (!networkId) throw new Error(`Missing network for "${connection.connectionId}"`)
+        return { ...connection, mutuallyConnectedNetworkId: networkId }
+      })
+    } else {
+      obstacleRegions = getConnectedObstacleRegionsFromSrj(params.srj, this.clearance)
+      const useConstrainedDelaunay = params.useConstrainedDelaunay ?? true
+      try {
+        this.convexRegions = computeRegions(useConstrainedDelaunay)
+      } catch (error) {
+        if (!useConstrainedDelaunay) throw error
+        this.usedUnconstrainedDelaunayFallback = true
+        this.convexRegions = computeRegions(false)
+      }
     }
     this.serializedGraph = buildPolyHyperGraphFromRegions({
       regions: this.convexRegions.regions,
       availableZ: this.convexRegions.availableZ,
       layerCount: params.srj.layerCount,
-      connections: getPolyGraphConnectionsFromSrj(params.srj),
-      obstacleRegions: getConnectedObstacleRegionsFromSrj(
-        params.srj,
-        this.clearance,
-      ),
+      connections,
+      obstacleRegions,
       portSpacing: params.portSpacing ?? PORT_SPACING,
       portMarginFromSegmentEndpoint:
         params.portMarginFromSegmentEndpoint ??
         PORT_MARGIN_FROM_SEGMENT_ENDPOINT,
     })
+    if (params.regionShape === "octagonal") this.validateOctagonalTerminals()
     this.loaded = loadSerializedHyperGraphAsPoly(this.serializedGraph)
     this.reservedRegionCount = applySerializedRegionNetIdsToLoadedProblem(
       this.loaded,
@@ -211,6 +230,24 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     this.activeSubSolver = this.polySolver
     this.MAX_ITERATIONS = solverOptions.MAX_ITERATIONS! + 1_000
     this.inputNodeWithPortPoints = this.createInputNodesWithPortPoints()
+  }
+
+  private validateOctagonalTerminals(): void {
+    const regions = new Map(this.serializedGraph.regions.map((region) => [region.regionId, region]))
+    const ports = new Map(this.serializedGraph.ports.map((port) => [port.portId, port]))
+    for (const connection of getPolyGraphConnectionsFromSrj(this.params.srj)) {
+      for (const end of ["start", "end"] as const) {
+        const point = connection[end]
+        const port = ports.get(`terminal-${end}-port-${connection.connectionId}`)
+        const region = port && regions.get(port.region1Id)
+        const layers = point.layers ?? (point.layer ? [point.layer] : [])
+        const requestedZ = layers.map((layer) => mapLayerNameToZ(layer, this.params.srj.layerCount))
+        if (!port || !region || !requestedZ.includes(port.d.z) ||
+          !isPointInConvexPolygon(point, region.d.polygon)) {
+          throw new Error(`Octagonal pathing cannot place ${end} of "${connection.connectionId}" on its requested layer`)
+        }
+      }
+    }
   }
 
   private createInputNodesWithPortPoints(): InputNodeWithPortPoints[] {
