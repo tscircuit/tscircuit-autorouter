@@ -1,3 +1,5 @@
+import { SolverRuntime, type SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -407,7 +409,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
-  constructor(params: Pipeline9HighDensitySolverParams) {
+  private asyncRunning = false
+
+  constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
@@ -452,6 +456,81 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override getSolverName(): string {
     return "Pipeline9HighDensitySolver"
+  }
+
+  /** Independent batches use the host runtime; preloaded repairs retain serial visibility. */
+  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    if (this.asyncRunning) throw new Error("High-density solveAsync is already running")
+    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+    const inlineRuntime = runtime === undefined ? new SolverRuntime() : undefined
+    const executor = runtime ?? inlineRuntime!
+    const startTime = performance.now()
+    try {
+      if (this.fixedHdRoutes.length > 0) {
+        this.solveUntilIteration(stopAtIteration)
+        return
+      }
+      while (this.activeNode && !this.solved && !this.failed && this.iterations < stopAtIteration) this.step()
+      if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+      this.asyncRunning = true
+      const nodes = [...this.unsolvedNodePortPoints].reverse()
+      const { connMap, nodePortPoints: _, ...params } = this.params
+      const pending = []
+      for (let offset = 0; offset < nodes.length; offset += 4) {
+        pending.push(executor.executeAsync(Pipeline9HighDensityBatchSolver, {
+          ...params,
+          nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
+          connectivityNetMap: connMap.netMap,
+          maxIterations: this.MAX_ITERATIONS,
+        }).then(
+          (result) => ({ type: "result" as const, result }),
+          (error: unknown) => ({ type: "error" as const, error }),
+        ))
+      }
+      for (const promise of pending) {
+        const outcome = await promise
+        if (outcome.type === "error") throw outcome.error
+        const result = outcome.result
+        const logicalIterations = result.iterations - (result.solved ? 1 : 0)
+        if (this.iterations + logicalIterations > Math.min(this.MAX_ITERATIONS, stopAtIteration)) {
+          // Replay only the remaining serial prefix when a batch crosses a budget.
+          this.asyncRunning = false
+          this.solveUntilIteration(stopAtIteration)
+          return
+        }
+        this.iterations += logicalIterations
+        this.routes.push(...result.routes)
+        for (const [key, value] of Object.entries(result.stats)) {
+          if (key !== "nodeCount" && key !== "fixedObstacleCount") this.stats[key] += value
+        }
+        this.unsolvedNodePortPoints.splice(-result.consumedNodeCount, result.consumedNodeCount)
+        this.progress = this.computeProgress()
+        if (!result.solved) {
+          this.error = result.error
+          this.failed = true
+          return
+        }
+      }
+      this.asyncRunning = false
+      if (this.iterations < stopAtIteration) this.step()
+    } catch (error) {
+      this.failed = true
+      this.error = `Pipeline9 high-density runtime error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
+      await inlineRuntime?.dispose()
+    }
+  }
+
+  private solveUntilIteration(stopAtIteration: number): void {
+    while (
+      !this.solved && !this.failed &&
+      this.iterations < stopAtIteration
+    ) {
+      this.step()
+    }
   }
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
