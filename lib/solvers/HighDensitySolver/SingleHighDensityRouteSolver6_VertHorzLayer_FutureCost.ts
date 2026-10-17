@@ -1,6 +1,7 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { findClosestFuturePointIndex } from "./findClosestFuturePointIndex"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
@@ -80,22 +81,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         ? null
         : this.futureConnectionPoints[cachedPointIndex]
     }
-    let minDist = Infinity
-    let closestPoint = null
-    let closestPointIndex = -1
-    let pointIndex = 0
-
-    for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
-      if (dist < minDist) {
-        minDist = dist
-        closestPoint = point
-        closestPointIndex = pointIndex
-      }
-      pointIndex++
-    }
+    const closestPointIndex = findClosestFuturePointIndex(
+      this.futureConnectionPoints,
+      node,
+      viaPenaltyDistance,
+    )
+    const closestPoint =
+      closestPointIndex === -1
+        ? null
+        : this.futureConnectionPoints[closestPointIndex]
 
     // A fixed workspace avoids retaining every explored coordinate in large
     // portfolio searches. Colliding slots simply perform the original scan.
