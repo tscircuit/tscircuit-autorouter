@@ -113,3 +113,7 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export {
+  Pipeline9HighDensitySolver,
+  type Pipeline9HighDensitySolverParams,
+} from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
