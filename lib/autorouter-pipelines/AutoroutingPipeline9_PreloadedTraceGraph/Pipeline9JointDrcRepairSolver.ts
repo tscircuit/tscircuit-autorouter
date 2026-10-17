@@ -1709,6 +1709,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.stats,
       finalDrcIssueCount: 0,
       initialBoundedRegionalRepairAccepted: true,
+      boundedRegionalRepairMaxRegions:
+        this.initialBoundedRegionalRepairSolver.budget.maxRegions,
+      boundedRegionalRepairMaxCandidateAttempts:
+        this.initialBoundedRegionalRepairSolver.budget.maxCandidateAttempts,
+      boundedRegionalRepairMaxPathSearchNodes:
+        this.initialBoundedRegionalRepairSolver.budget.maxPathSearchNodes,
       boundedRegionalRepairAttemptedRegionCount: result.attemptedRegionCount,
       boundedRegionalRepairAcceptedRegionCount: result.acceptedRegionCount,
       boundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,

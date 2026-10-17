@@ -38,6 +38,14 @@ test("a reference-clean bounded repair completes the joint solver before the bro
   expect(solver.initialBoundedRegionalRepairSolver?.solved).toBeTrue()
   expect(solver.stats.initialBoundedRegionalRepairAccepted).toBeTrue()
   expect(solver.stats.finalDrcIssueCount).toBe(0)
+  const budget = solver.initialBoundedRegionalRepairSolver!.budget
+  expect(solver.stats.boundedRegionalRepairMaxRegions).toBe(budget.maxRegions)
+  expect(solver.stats.boundedRegionalRepairMaxCandidateAttempts).toBe(
+    budget.maxCandidateAttempts,
+  )
+  expect(solver.stats.boundedRegionalRepairMaxPathSearchNodes).toBe(
+    budget.maxPathSearchNodes,
+  )
   expect(solver.exactRepairSolver).toBeUndefined()
   expect(solver.regionalB01RepairSolver).toBeUndefined()
   const routes = solver.getOutput()
