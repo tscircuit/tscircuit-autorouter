@@ -1147,6 +1147,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
+    // Reference DRC defaults mounting-hole clearance to 0.2 mm. Repair APIs
+    // otherwise interpret an absent hole rule as the generic copper margin.
+    if (
+      srjWithBoardValidObstacleLayers.minTraceToHoleEdgeClearance === undefined &&
+      srjWithBoardValidObstacleLayers.obstacles.some(
+        (obstacle) => obstacle.isNonPlatedHole,
+      )
+    ) {
+      srjWithBoardValidObstacleLayers.minTraceToHoleEdgeClearance = 0.2
+    }
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts

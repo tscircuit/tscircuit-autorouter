@@ -359,7 +359,8 @@ export const selectRoutesAlongEndpointPath = (params: {
   }
 
   const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  const visitedHashes = new Set<string>()
+  const gapCostByHash = new Map<string, number>([[startHash, 0]])
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
@@ -367,16 +368,27 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   while (queue.length > 0) {
     const currentHash = queue.shift()!
+    if (visitedHashes.has(currentHash)) continue
+    visitedHashes.add(currentHash)
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
       if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      // Detailed routes already encode obstacle-avoiding copper. A one-mm
+      // virtual gap must not beat that real path merely because it has fewer
+      // fragments: the gap can cut straight across a foreign pad. In complete
+      // mode, use 0-1 BFS to minimize invented gaps before fragment count.
+      const edgeCost =
+        params.preserveTerminalBranches && edge.routeIndex !== null ? 0 : 1
+      const gapCost = gapCostByHash.get(currentHash)! + edgeCost
+      if (gapCost >= (gapCostByHash.get(edge.nextHash) ?? Infinity)) continue
+      gapCostByHash.set(edge.nextHash, gapCost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      if (edgeCost === 0) queue.unshift(edge.nextHash)
+      else queue.push(edge.nextHash)
     }
   }
 

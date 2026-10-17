@@ -68,6 +68,47 @@ type NodeBounds = {
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
 
+const getPlannedViaRoutes = (
+  nodes: NodeWithPortPoints[],
+  connMap: ConnectivityMap,
+  traceThickness: number,
+  viaDiameter: number,
+): HighDensityRoute[] => {
+  const routes: HighDensityRoute[] = []
+  for (const node of nodes) {
+    if (!node.isLayerTransition) continue
+    if (!node.portPointsInPairs) {
+      throw new Error("A planned layer transition has no paired ports")
+    }
+    for (const [start, end] of node.portPointsInPairs) {
+      // Transition regions also admit planar traversals, which have no barrel.
+      if (start.z === end.z) continue
+      if (
+        start.x !== end.x ||
+        start.y !== end.y ||
+        start.connectionName !== end.connectionName
+      ) {
+        throw new Error("A planned via has inconsistent physical endpoints")
+      }
+      routes.push({
+        connectionName: start.connectionName,
+        rootConnectionName:
+          connMap.getNetConnectedToId(
+            start.rootConnectionName ?? start.connectionName,
+          ) ??
+          start.rootConnectionName ??
+          start.connectionName,
+        regionId: node.capacityMeshNodeId,
+        traceThickness,
+        viaDiameter,
+        route: [start, end],
+        vias: [{ x: start.x, y: start.y }],
+      })
+    }
+  }
+  return routes
+}
+
 const getNodeBounds = (
   node: NodeWithPortPoints,
   margin: number,
@@ -134,7 +175,7 @@ const routeOverlapsNode = (
 }
 
 const convertFixedRouteToB01Obstacles = (
-  route: PreloadedHighDensityRoute,
+  route: HighDensityRoute,
   node: NodeWithPortPoints,
   board: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
 ): HighDensityRouteObstacle[] => {
@@ -382,6 +423,7 @@ export const createPipeline9RegularNodeSolver = ({
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
+  readonly plannedViaRoutes: HighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
@@ -429,6 +471,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.minimumTraceWidth = params.minimumTraceWidth
+    this.plannedViaRoutes =
+      this.minimumTraceWidth === undefined
+        ? []
+        : getPlannedViaRoutes(
+            params.nodePortPoints,
+            this.connMap,
+            this.traceWidth,
+            this.viaDiameter,
+          )
     this.traceToPadClearance = params.traceToPadClearance
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
@@ -573,6 +624,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
+    const plannedViaObstacles = getPipeline9FixedRouteObstacles({
+      fixedObstacleRoutes: this.plannedViaRoutes.filter(
+        (route) => route.regionId !== this.activeNode!.capacityMeshNodeId,
+      ),
+      layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+    })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
@@ -583,8 +641,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: [...this.obstacles, ...fixedRouteObstacles],
-      boardObstacles: this.obstacles,
+      obstacles: [
+        ...this.obstacles,
+        ...fixedRouteObstacles,
+        ...plannedViaObstacles,
+      ],
+      boardObstacles: [...this.obstacles, ...plannedViaObstacles],
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -1014,7 +1076,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
-    const fixedObstacles = this.getUpdatedFixedHdRoutes()
+    const fixedObstacles = [
+      ...this.getUpdatedFixedHdRoutes(),
+      ...this.plannedViaRoutes.filter(
+        (route) => route.regionId !== node.capacityMeshNodeId,
+      ),
+    ]
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
       )
