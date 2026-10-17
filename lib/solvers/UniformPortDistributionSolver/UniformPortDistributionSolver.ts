@@ -30,6 +30,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Keep coordinates already validated against global copper constraints. */
   preservePhysicalPortPositions?: boolean
   minPortSpacing?: number
 }
@@ -130,6 +131,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const ownerPairKey = this.currentOwnerPairBeingProcessed
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
+    // Physical pathing has already selected finite, legal copper slots. An
+    // edge-local redistribution cannot preserve constraints on nearby edges.
+    if (this.input.preservePhysicalPortPositions) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
@@ -149,8 +153,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
-        (this.input.preservePhysicalPortPositions ||
-          (this.input.preserveSolitaryPorts && blockedOnAnotherLayer)) &&
+        this.input.preserveSolitaryPorts &&
+        blockedOnAnotherLayer &&
         portCountByLayer.get(portPoint.z) === 1
       ) {
         continue

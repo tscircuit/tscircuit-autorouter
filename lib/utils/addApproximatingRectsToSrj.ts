@@ -507,9 +507,7 @@ export const addApproximatingRectsToSrj = (
           continue
         }
 
-        if (
-          !isPointInsideObstacle(point, originalObstacle, srj.allowViaInPad)
-        )
+        if (!isPointInsideObstacle(point, originalObstacle, srj.allowViaInPad))
           continue
 
         const approximatedObstacles =

@@ -39,11 +39,14 @@ test("physical detailed routing respects board pads without any preloaded traces
     viaDiameter: 0.2,
     traceWidth: 0.1524,
     minimumTraceWidth: 0.1524,
+    traceToPadClearance: 0.1,
     obstacleMargin: 0.1,
     includeBoardObstacles: true,
     enableRegionalFallback: false,
     effort: 1,
   })
+  solver.step()
+  expect(solver.activeB01Solver?.obstacleClearanceMargin).toBe(0.1)
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()

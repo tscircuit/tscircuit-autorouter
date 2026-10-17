@@ -39,6 +39,7 @@ const getCandidateRegionsForAssignableVia = (params: {
   graph: HyperGraphHg
   point: { x: number; y: number }
   z: number
+  existingCopperRadius?: number
 }) => {
   const candidates = params.graph.regions
     .filter(
@@ -51,7 +52,11 @@ const getCandidateRegionsForAssignableVia = (params: {
       region,
       distance: pointToBoxDistance(params.point, region.d),
     }))
-    .filter((candidate) => candidate.distance <= GEOMETRIC_TOLERANCE)
+    .filter(
+      (candidate) =>
+        candidate.distance <=
+        (params.existingCopperRadius ?? 0) + GEOMETRIC_TOLERANCE,
+    )
     .sort(
       (a, b) =>
         a.distance - b.distance ||
@@ -59,9 +64,9 @@ const getCandidateRegionsForAssignableVia = (params: {
           b.region.d.width * b.region.d.height,
     )
 
-  // The port is materialized at the via center. A neighboring rectangle that
-  // merely overlaps the via radius does not contain that endpoint: its grid
-  // router will clamp the port to its boundary and disconnect the copper.
+  // New via endpoints must be inside their owner rectangles. A preplaced via
+  // already has copper joining its center to a neighboring rectangle within
+  // its pad radius; do not remove those physical connections from Pipeline8.
   return candidates.slice(0, 4).map((candidate) => candidate.region)
 }
 
@@ -175,6 +180,7 @@ const addAssignableViaRegions = (params: {
         graph: params.graph,
         point: obstacle.center,
         z,
+        existingCopperRadius: Math.min(obstacle.width, obstacle.height) / 2,
       })) {
         const rawPort: RawPort = {
           portId: `${viaRegionId}:port:${region.regionId}:z${z}`,

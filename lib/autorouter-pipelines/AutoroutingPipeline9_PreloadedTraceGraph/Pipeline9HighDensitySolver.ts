@@ -45,6 +45,7 @@ export type Pipeline9HighDensitySolverParams = {
   viaDiameter: number
   traceWidth: number
   minimumTraceWidth?: number
+  traceToPadClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -388,6 +389,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly minimumTraceWidth?: number
+  readonly traceToPadClearance?: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
   readonly effort: number
@@ -425,6 +427,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.minimumTraceWidth = params.minimumTraceWidth
+    this.traceToPadClearance = params.traceToPadClearance
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
@@ -572,6 +575,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -1013,6 +1017,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
+    if (node.isLayerTransition && fixedObstacles.length === 0) {
+      // These net-owned via centers and their clear layer spans were checked
+      // before pathing. A grid solver must not quantize them to another site.
+      this.startRegularSolver(node)
+      return
+    }
     if (fixedObstacles.length === 0 && this.minimumTraceWidth === undefined) {
       this.startRegularSolver(node)
       return
@@ -1065,7 +1075,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin:
+        this.traceToPadClearance ?? PRELOADED_TRACE_CLEARANCE,
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {

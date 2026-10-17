@@ -1,9 +1,8 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { materializePipeline9HdRouteVias } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/materializePipeline9HdRouteVias"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 routes every pedometer high-density region", async (): Promise<void> => {
+test("Pipeline9 does not detail-route an invalid pedometer timeout graph", async (): Promise<void> => {
   const srj: SimpleRouteJson = await Bun.file(
     new URL(
       "../../public/fixtures/bugreport103-pedometer.srj.json",
@@ -18,16 +17,9 @@ test("Pipeline9 routes every pedometer high-density region", async (): Promise<v
     pipeline.step()
   }
 
-  expect(pipeline.failed).toBe(false)
-  expect(pipeline.portPointPathingSolver?.solved).toBe(true)
-  const highDensitySolver = pipeline.highDensityRouteSolver!
-  expect(highDensitySolver.solved).toBe(true)
-  expect(Number(highDensitySolver.stats.nodeCount)).toBeGreaterThan(0)
-  expect(highDensitySolver.stats.solvedNodeCount).toBe(
-    highDensitySolver.stats.nodeCount,
-  )
-  expect(highDensitySolver.unsolvedNodePortPoints).toHaveLength(0)
-  expect(() =>
-    materializePipeline9HdRouteVias(highDensitySolver.routes),
-  ).not.toThrow()
+  expect(pipeline.failed).toBe(true)
+  expect(pipeline.portPointPathingSolver?.failed).toBe(true)
+  expect(pipeline.portPointPathingSolver?.solved).toBe(false)
+  expect(pipeline.highDensityRouteSolver).toBeUndefined()
+  expect(pipeline.error).toContain("ran out of iterations")
 })

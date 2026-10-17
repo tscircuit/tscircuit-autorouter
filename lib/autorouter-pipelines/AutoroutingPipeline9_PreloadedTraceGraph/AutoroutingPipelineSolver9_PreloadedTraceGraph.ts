@@ -571,10 +571,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                   clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
                 }
               : undefined,
-            minPortSpacing:
-              cms.originalSrj.allowViaInPad
-                ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
-                : undefined,
+            minPortSpacing: cms.originalSrj.allowViaInPad
+              ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+              : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -615,10 +614,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
-          minPortSpacing:
-            cms.originalSrj.allowViaInPad
-              ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
-              : undefined,
+          minPortSpacing: cms.originalSrj.allowViaInPad
+            ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+            : undefined,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
@@ -679,6 +677,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceWidth: cms.minTraceWidth,
             minimumTraceWidth: cms.originalSrj.allowViaInPad
               ? cms.minTraceWidth
+              : undefined,
+            traceToPadClearance: cms.originalSrj.allowViaInPad
+              ? (cms.srj.minTraceToPadEdgeClearance ?? 0.1)
               : undefined,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,

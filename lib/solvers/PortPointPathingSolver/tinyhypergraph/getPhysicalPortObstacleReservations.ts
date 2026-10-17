@@ -33,8 +33,8 @@ export const getPhysicalPortObstacleReservations = (
 ): Int32Array => {
   const netIndexById = new Map<string, number>()
   for (let routeId = 0; routeId < graph.problem.routeNet.length; routeId++) {
-    const netId = graph.problem.routeMetadata?.[routeId]
-      ?.mutuallyConnectedNetworkId
+    const netId =
+      graph.problem.routeMetadata?.[routeId]?.mutuallyConnectedNetworkId
     if (typeof netId !== "string") {
       throw new Error(`Physical port route ${routeId} is missing its net ID`)
     }
