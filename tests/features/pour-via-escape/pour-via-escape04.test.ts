@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape04.json" with {
   type: "json",
@@ -32,6 +33,29 @@ test("pour-via-escape04.json", () => {
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }).errors,
+  ).toHaveLength(0)
+
+  const longSignalRoute = solver.exactGeometryDrcForceImproveSolver!
+    .getOutput()
+    .find((route) => route.startPcbPortId === "pcb_port_17")!
+  const minimumStraightRunLength = 8
+  expect(
+    longSignalRoute.route.some((point, index) => {
+      const previous = longSignalRoute.route[index - 1]
+      if (!previous) return false
+      return (
+        point.z === previous.z &&
+        point.y === previous.y &&
+        Math.abs(point.x - previous.x) > minimumStraightRunLength
+      )
+    }),
+  ).toBe(true)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,

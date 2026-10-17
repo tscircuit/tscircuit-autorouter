@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape03.json" with {
   type: "json",
@@ -34,6 +35,13 @@ test("pour-via-escape03.json", () => {
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }).errors,
+  ).toHaveLength(0)
 
   const output = solver.getOutputSimpleRouteJson()
   const forbiddenLayer = mapZToLayerName(1, srj.layerCount)

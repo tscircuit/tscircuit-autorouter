@@ -65,6 +65,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
+import { RepairedTraceSimplificationSolver } from "lib/solvers/RepairedTraceSimplificationSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
@@ -232,6 +233,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  repairedTraceSimplificationSolver?: RepairedTraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -630,6 +632,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
+          useTraceWidthAwareClearance: true,
           iterations: 2,
         },
       ],
@@ -665,10 +668,25 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "repairedTraceSimplificationSolver",
+      RepairedTraceSimplificationSolver,
+      (cms) => [
+        {
+          unsimplifiedHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+          useTraceWidthAwareClearance: true,
+        },
+      ],
+    ),
+    definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
-        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
+        const hdRoutes = cms.repairedTraceSimplificationSolver!.simplifiedHdRoutes
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
@@ -1096,6 +1114,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceSimplificationViz,
       traceWidthViz,
       globalDrcForceImproveViz,
+      this.repairedTraceSimplificationSolver?.visualize(),
       exactGeometryDrcForceImproveViz,
       lengthMatchingPostProcessingViz,
       this.solved

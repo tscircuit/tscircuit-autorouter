@@ -59,6 +59,9 @@ test(
       )
 
     expect(routedViasInsideBga).toHaveLength(0)
+    expect(
+      solver.repairedTraceSimplificationSolver!.simplifiedHdRoutes.map((route) => route.vias),
+    ).toEqual(solver.globalDrcForceImproveSolver!.getOutput().map((route) => route.vias))
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
     )
