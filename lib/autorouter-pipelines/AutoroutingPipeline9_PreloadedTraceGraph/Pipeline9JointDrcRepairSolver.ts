@@ -681,6 +681,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof Pipeline9BoundedRegionalRepairSolver
   >[0]
   private boundedRegionalRepairStartedAt?: number
+  initialBoundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
+  private initialBoundedRegionalRepairStartedAt?: number
   readonly pipelineDef = [
     {
       solverName: "clearanceProjectionSolver",
@@ -698,6 +700,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return this.clearanceProjectionSolver
       },
       onSolved: (): void => {},
+    },
+    {
+      solverName: "initialBoundedRegionalRepairSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) {
+          throw new Error(
+            "Pipeline9 initial regional repair is missing its input",
+          )
+        }
+        this.initialBoundedRegionalRepairStartedAt = performance.now()
+        this.initialBoundedRegionalRepairSolver =
+          new Pipeline9BoundedRegionalRepairSolver({
+            connMap: this.params.connMap,
+            originalSrj: {
+              ...this.params.originalSrj,
+              connections: [
+                ...this.params.originalSrj.connections,
+                ...this.params.newConnections,
+              ],
+            },
+            routes:
+              this.clearanceProjectionSolver?.getOutput() ??
+              this.exactRepairParams.hdRoutes,
+            viaHoleDiameter: this.params.defaultViaHoleDiameter,
+            syntheticConnectionNames: this.syntheticConnectionNames,
+            drcEvaluator: this.cachedReferenceDrcEvaluator,
+            budget: getPipeline9BoundedRepairBudget(
+              this.exactRepairParams.hdRoutes.length,
+              this.stats.initialJointDrcIssueCount,
+              this.params.effort,
+            ),
+          })
+        return this.initialBoundedRegionalRepairSolver
+      },
+      onSolved: (): void => this.finishInitialBoundedRegionalRepair(),
     },
     {
       solverName: "exactRepairSolver",
@@ -1557,6 +1594,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       broadMaxIterations: maxBroadRepairIterations,
       broadPassMultiplier: 3 * pairwiseRepairBudgetScale,
     }
+    // Bounded repair does not own preloaded copper. Keep those boards on
+    // their existing exact/preload repair stages without an extra search.
+    if (
+      params.updatedPreloadedTraces.length > 0 ||
+      (params.originalSrj.traces?.length ?? 0) > 0
+    ) {
+      this.pipelineDef.splice(1, 1)
+    }
     // Resolve hole clearance before detour repair, without moving preloaded copper.
     if (
       params.updatedPreloadedTraces.length > 0 ||
@@ -1615,6 +1660,96 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   getCurrentPhase(): string {
     return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+  }
+
+  private finishInitialBoundedRegionalRepair(): void {
+    if (
+      !this.initialBoundedRegionalRepairSolver?.solved ||
+      this.initialBoundedRegionalRepairStartedAt === undefined ||
+      !this.cachedReferenceDrcEvaluator
+    ) {
+      throw new Error("Pipeline9 initial regional repair is not complete")
+    }
+    const result = this.initialBoundedRegionalRepairSolver.getResult()
+    this.stats = {
+      ...this.stats,
+      initialBoundedRegionalRepairAccepted: false,
+      initialBoundedRegionalRepairAttemptedRegionCount:
+        result.attemptedRegionCount,
+      initialBoundedRegionalRepairAcceptedRegionCount:
+        result.acceptedRegionCount,
+      initialBoundedRegionalRepairCandidateAttemptCount:
+        result.candidateAttemptCount,
+      initialBoundedRegionalRepairPathSearchNodeCount:
+        result.pathSearchNodeCount,
+      initialBoundedRegionalRepairReferenceValidationCount:
+        result.referenceValidationCount,
+      initialBoundedRegionalRepairPublishedDrcIssueCount:
+        result.publishedDrcIssueCount,
+      initialBoundedRegionalRepairTimeMs:
+        performance.now() - this.initialBoundedRegionalRepairStartedAt,
+    }
+    // A complete bounded repair can avoid the much broader portfolio search.
+    // Keep incomplete candidates private so the existing stages see their
+    // original input, including all preload ownership and candidate budgets.
+    if (result.publishedDrcIssueCount !== 0) return
+    const reference = this.cachedReferenceDrcEvaluator({
+      traces: [],
+      routes: result.routes,
+      hdRoutes: result.routes,
+    })
+    const errors = Array.isArray(reference) ? reference : reference.errors
+    if (errors.length !== 0) {
+      throw new Error(
+        "Pipeline9 initial regional repair lost its zero-DRC validation",
+      )
+    }
+    this.combinedOutput = result.routes
+    this.stats = {
+      ...this.stats,
+      finalDrcIssueCount: 0,
+      initialBoundedRegionalRepairAccepted: true,
+      boundedRegionalRepairMaxRegions:
+        this.initialBoundedRegionalRepairSolver.budget.maxRegions,
+      boundedRegionalRepairMaxCandidateAttempts:
+        this.initialBoundedRegionalRepairSolver.budget.maxCandidateAttempts,
+      boundedRegionalRepairMaxPathSearchNodes:
+        this.initialBoundedRegionalRepairSolver.budget.maxPathSearchNodes,
+      boundedRegionalRepairAttemptedRegionCount: result.attemptedRegionCount,
+      boundedRegionalRepairAcceptedRegionCount: result.acceptedRegionCount,
+      boundedRegionalRepairCandidateAttemptCount: result.candidateAttemptCount,
+      boundedRegionalRepairPathSearchNodeCount: result.pathSearchNodeCount,
+      boundedRegionalRepairReferenceValidationCount:
+        result.referenceValidationCount,
+      boundedRegionalRepairRepaired: result.repaired,
+      boundedRegionalRepairPublishedDrcIssueCount:
+        result.publishedDrcIssueCount,
+      initialBoundedRegionalRepairAddedViaCount: Math.max(
+        0,
+        result.routes.reduce((count, route) => count + route.vias.length, 0) -
+          this.inputNewHdRoutes.reduce(
+            (count, route) => count + route.vias.length,
+            0,
+          ),
+      ),
+      terminalEscapeCandidateCount: 0,
+      terminalEscapeAcceptedCount: 0,
+      regionalB01RepairAttempted: false,
+      regionalB01RepairCandidateSearchCount: 0,
+      regionalB01RepairCandidateSearchBudget: 0,
+      clearancePrecisionCandidateCount: 0,
+      clearancePrecisionCandidateValidationCount: 0,
+      clearancePrecisionReferenceValidationCount: 0,
+      clearancePrecisionRepaired: false,
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
+      referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+      indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
+      indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
+      indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
+      indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
+      indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
+    }
+    this.solved = true
   }
 
   private finishExactRepair(): void {

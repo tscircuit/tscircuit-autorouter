@@ -9,6 +9,7 @@ type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
   config: ConstructorParameters<typeof TraceSimplificationSolver>[0]
   effort: number
+  viaRemovalPasses?: 1 | 2
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
 }
@@ -28,30 +29,15 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.params = params
     this.bestRoutes = structuredClone([...params.config.hdRoutes])
     this.bestCost = params.getCost(this.bestRoutes)
-    this.cleanupPasses = params.effort <= 1 ? 1 : Math.ceil(2 * params.effort)
+    this.cleanupPasses =
+      params.effort <= 1
+        ? (params.viaRemovalPasses ?? 1)
+        : Math.ceil(2 * params.effort)
     this.MAX_ITERATIONS = 100e6 * Math.max(1, this.cleanupPasses)
     if (params.effort <= 1) {
-      const config = params.config
       // Path sampling already ran before repair. Only revisit removable vias
       // at default effort; repeated path and crossing searches are expensive.
-      this.viaRemovalSolver = new UselessViaRemovalSolver({
-        unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
-        otherHdRoutes: config.otherHdRoutes,
-        obstacles: [...config.obstacles],
-        colorMap: config.colorMap,
-        layerCount: config.layerCount,
-        connMap: config.connMap,
-        outline: config.outline ? [...config.outline] : undefined,
-        geometryShortcutTraceMargin: 0.1,
-        geometryShortcutObstacleMargin:
-          config.minTraceToPadEdgeClearance ?? 0.15,
-        enableGeometryShortcuts: true,
-        enableRoutedTraceDetours: true,
-        enableObstacleDetourShortcuts: config.enableCrossingViaReduction,
-        preserveRouteEndpoints: config.preserveRouteEndpoints,
-        terminalLayerIndicesByPcbPortId: config.terminalLayerIndicesByPcbPortId,
-      })
-      this.viaRemovalSolver.MAX_ITERATIONS = this.MAX_ITERATIONS
+      this.viaRemovalSolver = this.createViaRemovalSolver()
       return
     }
     this.simplifier = new TraceSimplificationSolver({
@@ -64,6 +50,28 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.simplifier.simplificationPipelineLoops = 2
     this.simplifier.MAX_SIMPLIFICATION_PIPELINE_LOOPS = 2 + this.cleanupPasses
     this.simplifier.MAX_ITERATIONS = this.MAX_ITERATIONS
+  }
+
+  private createViaRemovalSolver(): UselessViaRemovalSolver {
+    const config = this.params.config
+    const solver = new UselessViaRemovalSolver({
+      unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
+      otherHdRoutes: config.otherHdRoutes,
+      obstacles: [...config.obstacles],
+      colorMap: config.colorMap,
+      layerCount: config.layerCount,
+      connMap: config.connMap,
+      outline: config.outline ? [...config.outline] : undefined,
+      geometryShortcutTraceMargin: 0.1,
+      geometryShortcutObstacleMargin: config.minTraceToPadEdgeClearance ?? 0.15,
+      enableGeometryShortcuts: true,
+      enableRoutedTraceDetours: true,
+      enableObstacleDetourShortcuts: config.enableCrossingViaReduction,
+      preserveRouteEndpoints: config.preserveRouteEndpoints,
+      terminalLayerIndicesByPcbPortId: config.terminalLayerIndicesByPcbPortId,
+    })
+    solver.MAX_ITERATIONS = this.MAX_ITERATIONS
+    return solver
   }
 
   override _step(): void {
@@ -81,11 +89,20 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       const cost = this.params.getCost(candidate)
       // Validate once, after the complete via pass, rather than after every
       // phase of multiple full simplification loops.
-      if (cost.vias < this.bestCost.vias && this.params.isValid(candidate)) {
+      const improves =
+        cost.vias < this.bestCost.vias && this.params.isValid(candidate)
+      if (improves) {
         this.bestRoutes = structuredClone(candidate)
         this.bestCost = cost
       }
-      this.completedPasses = 1
+      this.completedPasses++
+      // Earlier removals can unblock a different route on the next sweep.
+      // Reserve that extra work for repairs that introduced new vias, and
+      // stop as soon as a complete sweep produces no valid improvement.
+      if (improves && this.completedPasses < this.cleanupPasses) {
+        this.viaRemovalSolver = this.createViaRemovalSolver()
+        return
+      }
       this.solved = true
       return
     }
