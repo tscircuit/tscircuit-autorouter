@@ -1,7 +1,7 @@
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import type { SimpleRouteJson } from "lib/types"
-import srj from "./book-reading-clip-lamp.unrouted.srj.json" with {
+import srj from "./bugreport109-book-reading-clip-lamp.srj.json" with {
   type: "json",
 }
 

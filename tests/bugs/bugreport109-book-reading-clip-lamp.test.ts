@@ -2,12 +2,12 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import type { SimpleRouteJson } from "lib/types"
-import capturedInput from "../../fixtures/bug-reports/book-reading-clip-lamp/book-reading-clip-lamp.unrouted.srj.json" with {
+import capturedInput from "../../fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json" with {
   type: "json",
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("Pipeline 9 attempts to route the full reading lamp circuit", async (): Promise<void> => {
+test("bugreport109: Pipeline 9 attempts to route the full reading lamp circuit", async (): Promise<void> => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(capturedInput) as SimpleRouteJson,
     { cacheProvider: null, effort: 1 },
