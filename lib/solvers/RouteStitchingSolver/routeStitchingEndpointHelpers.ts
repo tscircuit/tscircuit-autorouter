@@ -272,6 +272,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   end: StitchEndpoint
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
+  preserveTerminalBranches?: boolean
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -401,7 +402,9 @@ export const selectRoutesAlongEndpointPath = (params: {
   // A short gap in the endpoint graph must not prune the only copper that
   // actually reaches a requested pad. Keep that branch until the physical
   // terminal-to-terminal route has been assembled, not merely inferred.
-  for (const terminal of [params.start, params.end]) {
+  for (const terminal of params.preserveTerminalBranches
+    ? [params.start, params.end]
+    : []) {
     if (!terminal.pcb_port_id) continue
     const terminalRoute = canonicalHdRoutes.find(
       (route) =>

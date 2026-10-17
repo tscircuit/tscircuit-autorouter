@@ -6,13 +6,18 @@ test("A03 receives the board minimum instead of routing narrower copper", (): vo
   const portfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: {
       capacityMeshNodeId: "width-regression",
-      center: { x: 0, y: 0 }, width: 4, height: 4, availableZ: [0],
+      center: { x: 0, y: 0 },
+      width: 4,
+      height: 4,
+      availableZ: [0],
       portPoints: [
         { x: -2, y: 0, z: 0, connectionName: "signal" },
         { x: 2, y: 0, z: 0, connectionName: "signal" },
       ],
     },
-    traceWidth: 0.1524, viaDiameter: 0.2032,
+    traceWidth: 0.1524,
+    minimumTraceWidth: 0.1524,
+    viaDiameter: 0.2032,
   })
   const solver = portfolio.generateSolver({
     HIGH_DENSITY_A03: true,

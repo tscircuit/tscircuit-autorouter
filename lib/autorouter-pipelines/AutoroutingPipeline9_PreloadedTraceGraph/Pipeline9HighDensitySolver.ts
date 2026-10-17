@@ -44,6 +44,7 @@ export type Pipeline9HighDensitySolverParams = {
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -316,6 +317,7 @@ export type Pipeline9RegularNodeSolverParams = {
   colorMap: Record<string, string>
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
   obstacleMargin: number
   effort: number
   nodePfById:
@@ -337,6 +339,7 @@ export const createPipeline9RegularNodeSolver = ({
   colorMap,
   viaDiameter,
   traceWidth,
+  minimumTraceWidth,
   obstacleMargin,
   effort,
   nodePfById,
@@ -352,6 +355,7 @@ export const createPipeline9RegularNodeSolver = ({
     connMap,
     viaDiameter,
     traceWidth,
+    minimumTraceWidth,
     obstacleMargin,
     effort,
     nodePfById,
@@ -383,6 +387,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
+  readonly minimumTraceWidth?: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
   readonly effort: number
@@ -392,6 +397,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
+  readonly boardObstacleRegionIds = new Set<string>()
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -418,6 +424,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
+    this.minimumTraceWidth = params.minimumTraceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
@@ -491,6 +498,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -1005,7 +1013,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
+    if (fixedObstacles.length === 0 && this.minimumTraceWidth === undefined) {
       this.startRegularSolver(node)
       return
     }
@@ -1026,6 +1034,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
+    if (boardObstacles.length > 0) {
+      this.boardObstacleRegionIds.add(node.capacityMeshNodeId)
+    }
+    if (fixedObstacles.length === 0 && boardObstacles.length === 0) {
+      this.startRegularSolver(node)
+      return
+    }
 
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {

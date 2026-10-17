@@ -179,6 +179,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: 1,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacles: projectedInput.obstacles,
       boardGeometry: this.boardGeometry,
       regionalObstacles: regionalInput.obstacles,

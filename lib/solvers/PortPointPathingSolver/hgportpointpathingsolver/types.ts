@@ -12,6 +12,7 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   SimpleRouteConnection,
+  Obstacle,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
@@ -89,6 +90,13 @@ export type RegionId = CapacityMeshNodeId
 export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
+export type PortObstacleConstraints = {
+  /** connectedTo contains the same canonical net IDs as the graph connections. */
+  obstacles: Obstacle[]
+  traceWidth: number
+  clearance: number
+}
+
 export interface HgPortPointPathingSolverParams {
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
@@ -100,6 +108,7 @@ export interface HgPortPointPathingSolverParams {
   minViaPadDiameter?: number
   /** Physical center-to-center pitch for distinct traces at a shared boundary. */
   minPortSpacing?: number
+  portObstacleConstraints?: PortObstacleConstraints
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

@@ -10,23 +10,32 @@ test("a partial stitched island does not claim a disconnected PCB terminal", () 
     enableCompleteTerminalStitching: true,
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-    hdRoutes: [{
-      connectionName: "net-mst0",
-      rootConnectionName: "net",
-      startPcbPortId: "pad-a",
-      traceThickness: 0.1524,
-      viaDiameter: 0.2032,
-      vias: [],
-      route: [{ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
-    }, {
-      connectionName: "net-mst0",
-      rootConnectionName: "net",
-      endPcbPortId: "pad-b",
-      traceThickness: 0.1524,
-      viaDiameter: 0.2032,
-      vias: [],
-      route: [{ x: 5, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }],
-    }],
+    hdRoutes: [
+      {
+        connectionName: "net-mst0",
+        rootConnectionName: "net",
+        startPcbPortId: "pad-a",
+        traceThickness: 0.1524,
+        viaDiameter: 0.2032,
+        vias: [],
+        route: [
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+        ],
+      },
+      {
+        connectionName: "net-mst0",
+        rootConnectionName: "net",
+        endPcbPortId: "pad-b",
+        traceThickness: 0.1524,
+        viaDiameter: 0.2032,
+        vias: [],
+        route: [
+          { x: 5, y: 0, z: 0 },
+          { x: 10, y: 0, z: 0 },
+        ],
+      },
+    ],
   })
   solver.solve()
   expect(solver.solved).toBeTrue()

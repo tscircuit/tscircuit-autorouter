@@ -3,11 +3,7 @@ import {
   pointToBoxDistance,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import type {
-  ConnectionPoint,
-  Obstacle,
-  SimpleRouteJson,
-} from "lib/types"
+import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import { isSingleLayerConnectionPoint } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 

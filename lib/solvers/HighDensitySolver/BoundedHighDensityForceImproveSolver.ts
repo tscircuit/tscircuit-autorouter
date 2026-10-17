@@ -13,6 +13,8 @@ export type BoundedHighDensityForceImproveSolverParams = {
   nodeAssignmentMargin?: number
   colorMap?: Record<string, string>
   protectOverBudgetRegions?: boolean
+  /** PCB-constrained regions cannot be optimized by a copper-only force model. */
+  fixedObstacleRegionIds?: ReadonlySet<string>
 }
 
 /**
@@ -26,6 +28,8 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
   private readonly protectedLayerTransitionRouteCount: number
   private readonly protectedOverBudgetRouteCount: number
   private readonly protectOverBudgetRegions: boolean
+  private readonly fixedObstacleRegionIds: ReadonlySet<string>
+  private readonly protectedBoardObstacleRouteCount: number
 
   constructor(params: BoundedHighDensityForceImproveSolverParams) {
     const transitionNodeIds = new Set(
@@ -53,8 +57,10 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
         )
       : new Set<string>()
     const protectedRouteIndexes = new Set<number>()
+    const fixedObstacleRegionIds = params.fixedObstacleRegionIds ?? new Set()
     let protectedLayerTransitionRouteCount = 0
     let protectedOverBudgetRouteCount = 0
+    let protectedBoardObstacleRouteCount = 0
     const movableRoutes = params.hdRoutes.filter((route, index) => {
       const isLayerTransition =
         route.regionId !== undefined && transitionNodeIds.has(route.regionId)
@@ -62,12 +68,19 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
         route.regionId !== undefined && overBudgetRegionIds.has(route.regionId)
       if (isLayerTransition) protectedLayerTransitionRouteCount++
       if (isOverBudget) protectedOverBudgetRouteCount++
-      if (isLayerTransition || isOverBudget) protectedRouteIndexes.add(index)
-      return !isLayerTransition && !isOverBudget
+      const hasBoardObstacle =
+        route.regionId !== undefined &&
+        fixedObstacleRegionIds.has(route.regionId)
+      if (hasBoardObstacle) protectedBoardObstacleRouteCount++
+      if (isLayerTransition || isOverBudget || hasBoardObstacle) {
+        protectedRouteIndexes.add(index)
+      }
+      return !isLayerTransition && !isOverBudget && !hasBoardObstacle
     })
     const protectedRegionIds = new Set([
       ...transitionNodeIds,
       ...overBudgetRegionIds,
+      ...fixedObstacleRegionIds,
     ])
 
     super({
@@ -83,6 +96,8 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
     this.protectedLayerTransitionRouteCount = protectedLayerTransitionRouteCount
     this.protectedOverBudgetRouteCount = protectedOverBudgetRouteCount
     this.protectOverBudgetRegions = protectOverBudgetRegions
+    this.fixedObstacleRegionIds = fixedObstacleRegionIds
+    this.protectedBoardObstacleRouteCount = protectedBoardObstacleRouteCount
     this.updateProtectionStats()
   }
 
@@ -91,6 +106,8 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
       this.protectedLayerTransitionRouteCount
     this.stats.protectedOverBudgetRouteCount =
       this.protectedOverBudgetRouteCount
+    this.stats.protectedBoardObstacleRouteCount =
+      this.protectedBoardObstacleRouteCount
   }
 
   override _step(): void {
@@ -117,6 +134,7 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
         nodeAssignmentMargin: this.nodeAssignmentMargin,
         colorMap: this.colorMap,
         protectOverBudgetRegions: this.protectOverBudgetRegions,
+        fixedObstacleRegionIds: this.fixedObstacleRegionIds,
       },
     ] as const
   }

@@ -17,7 +17,9 @@ export const fitDuplicatedPortsToPhysicalSlots = (
     throw new Error("Physical port spacing must be finite and positive")
   }
   const boundsByRegionId = new Map<string, Bounds>()
-  const regionById = new Map(graph.regions.map((region) => [region.regionId, region]))
+  const regionById = new Map(
+    graph.regions.map((region) => [region.regionId, region]),
+  )
   for (const region of graph.regions) {
     const { center, width, height } = region.d
     boundsByRegionId.set(region.regionId, {
@@ -48,25 +50,45 @@ export const fitDuplicatedPortsToPhysicalSlots = (
     })
     // Synthetic terminal/via interfaces are not extra shared-edge capacity.
     if (!edge) continue
-    if ([first.region1Id, first.region2Id].some((id) => {
-      const region = regionById.get(id)!
-      return region.d._containsTarget || region.d._containsObstacle
-    })) continue
-    const edgeMargin = minPortSpacing * 3 / 4
+    if (
+      [first.region1Id, first.region2Id].some((id) => {
+        const region = regionById.get(id)!
+        return region.d._containsTarget || region.d._containsObstacle
+      })
+    )
+      continue
+    const edgeMargin = (minPortSpacing * 3) / 4
     const effectiveLength = edge.length - edgeMargin * 2
     if (effectiveLength < 0) continue
     const slotCount = Math.floor(effectiveLength / minPortSpacing) + 1
     const occupied = originals.map((port) => ({ x: port.d.x, y: port.d.y }))
     let duplicateIndex = 0
-    for (let index = 0; index < slotCount && duplicateIndex < duplicates.length; index++) {
-      const distance = slotCount === 1 ? edge.length / 2 : edgeMargin + effectiveLength * index / (slotCount - 1)
+    for (
+      let index = 0;
+      index < slotCount && duplicateIndex < duplicates.length;
+      index++
+    ) {
+      const distance =
+        slotCount === 1
+          ? edge.length / 2
+          : edgeMargin + (effectiveLength * index) / (slotCount - 1)
       const point = {
         x: edge.orientation === "horizontal" ? edge.x1 + distance : edge.x1,
         y: edge.orientation === "vertical" ? edge.y1 + distance : edge.y1,
       }
-      if (occupied.some((other) => Math.hypot(point.x - other.x, point.y - other.y) < minPortSpacing - 1e-6)) continue
+      if (
+        occupied.some(
+          (other) =>
+            Math.hypot(point.x - other.x, point.y - other.y) <
+            minPortSpacing - 1e-6,
+        )
+      )
+        continue
       const duplicate = duplicates[duplicateIndex++]!
-      keptPorts.set(duplicate.portId, { ...duplicate, d: { ...duplicate.d, ...point } })
+      keptPorts.set(duplicate.portId, {
+        ...duplicate,
+        d: { ...duplicate.d, ...point },
+      })
       occupied.push(point)
     }
   }

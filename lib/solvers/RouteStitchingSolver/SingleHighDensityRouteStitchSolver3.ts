@@ -267,14 +267,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = this.enableCompleteTerminalStitching &&
-        opts.start.z !== firstPoint.z ? Infinity : distance(opts.start, firstPoint)
-      const distStartToLast = this.enableCompleteTerminalStitching &&
-        opts.start.z !== lastPoint.z ? Infinity : distance(opts.start, lastPoint)
-      const distEndToFirst = this.enableCompleteTerminalStitching &&
-        opts.end.z !== firstPoint.z ? Infinity : distance(opts.end, firstPoint)
-      const distEndToLast = this.enableCompleteTerminalStitching &&
-        opts.end.z !== lastPoint.z ? Infinity : distance(opts.end, lastPoint)
+      const distStartToFirst =
+        this.enableCompleteTerminalStitching && opts.start.z !== firstPoint.z
+          ? Infinity
+          : distance(opts.start, firstPoint)
+      const distStartToLast =
+        this.enableCompleteTerminalStitching && opts.start.z !== lastPoint.z
+          ? Infinity
+          : distance(opts.start, lastPoint)
+      const distEndToFirst =
+        this.enableCompleteTerminalStitching && opts.end.z !== firstPoint.z
+          ? Infinity
+          : distance(opts.end, firstPoint)
+      const distEndToLast =
+        this.enableCompleteTerminalStitching && opts.end.z !== lastPoint.z
+          ? Infinity
+          : distance(opts.end, lastPoint)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -422,7 +430,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
-        lastMergedPoint.z === this.end.z &&
+        (!this.enableCompleteTerminalStitching ||
+          lastMergedPoint.z === this.end.z) &&
         terminalDistance > GEOMETRIC_TOLERANCE &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
@@ -447,14 +456,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstMergedPoint = this.mergedHdRoute.route[0]!
       const finalMergedPoint = this.mergedHdRoute.route.at(-1)!
       if (
-        firstMergedPoint.z !== this.start.z ||
-        distance(firstMergedPoint, this.start) >= GEOMETRIC_TOLERANCE
+        this.enableCompleteTerminalStitching &&
+        (firstMergedPoint.z !== this.start.z ||
+          distance(firstMergedPoint, this.start) >= GEOMETRIC_TOLERANCE)
       ) {
         delete this.mergedHdRoute.startPcbPortId
       }
       if (
-        finalMergedPoint.z !== this.end.z ||
-        distance(finalMergedPoint, this.end) >= GEOMETRIC_TOLERANCE
+        this.enableCompleteTerminalStitching &&
+        (finalMergedPoint.z !== this.end.z ||
+          distance(finalMergedPoint, this.end) >= GEOMETRIC_TOLERANCE)
       ) {
         delete this.mergedHdRoute.endPcbPortId
       }

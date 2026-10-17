@@ -7,7 +7,12 @@ import {
 } from "@tscircuit/math-utils"
 import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
 import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
-import { applyToPoint, compose, rotateDEG, translate } from "transformation-matrix"
+import {
+  applyToPoint,
+  compose,
+  rotateDEG,
+  translate,
+} from "transformation-matrix"
 
 const normalizeRotation = (rotationDegrees: number) =>
   ((rotationDegrees % 360) + 360) % 360
@@ -88,7 +93,11 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
+const isPointInsideObstacle = (
+  point: ConnectionPoint,
+  obstacle: Obstacle,
+  preservePhysicalPadGeometry = false,
+): boolean => {
   if (
     getConnectionPointLayers(point).length > 0 &&
     !getConnectionPointLayers(point).some((layer) =>
@@ -101,15 +110,20 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
   // Obstacle dimensions are local to their rotation; connection points are
   // board-world positions in mm. Test in the obstacle's frame before deciding
   // that approximation has displaced a terminal out of its physical pad.
-  const rotation = obstacle.ccwRotationDegrees ?? 0
-  const localPoint = rotation === 0 ? point : applyToPoint(
-    compose(
-      translate(obstacle.center.x, obstacle.center.y),
-      rotateDEG(-rotation),
-      translate(-obstacle.center.x, -obstacle.center.y),
-    ),
-    point,
-  )
+  const rotation = preservePhysicalPadGeometry
+    ? (obstacle.ccwRotationDegrees ?? 0)
+    : 0
+  const localPoint =
+    rotation === 0
+      ? point
+      : applyToPoint(
+          compose(
+            translate(obstacle.center.x, obstacle.center.y),
+            rotateDEG(-rotation),
+            translate(-obstacle.center.x, -obstacle.center.y),
+          ),
+          point,
+        )
   return isPointInsideBounds(localPoint, getBoundFromCenteredRect(obstacle))
 }
 
@@ -475,8 +489,10 @@ export const addApproximatingRectsToSrj = (
       if (pointIds.length === 0) return point
 
       for (const [sourceKey, originalObstacle] of originalObstaclesBySource) {
-        const owningPcbPortId = originalObstacle.circuitJsonMetadata?.pcb_port_id
+        const owningPcbPortId =
+          originalObstacle.circuitJsonMetadata?.pcb_port_id
         if (
+          srj.allowViaInPad &&
           owningPcbPortId !== undefined &&
           point.pcb_port_id !== undefined &&
           owningPcbPortId !== point.pcb_port_id
@@ -491,7 +507,10 @@ export const addApproximatingRectsToSrj = (
           continue
         }
 
-        if (!isPointInsideObstacle(point, originalObstacle)) continue
+        if (
+          !isPointInsideObstacle(point, originalObstacle, srj.allowViaInPad)
+        )
+          continue
 
         const approximatedObstacles =
           approximatedObstaclesBySource.get(sourceKey) ?? []
@@ -499,7 +518,7 @@ export const addApproximatingRectsToSrj = (
 
         if (
           approximatedObstacles.some((obstacle) =>
-            isPointInsideObstacle(point, obstacle),
+            isPointInsideObstacle(point, obstacle, srj.allowViaInPad),
           )
         ) {
           return point

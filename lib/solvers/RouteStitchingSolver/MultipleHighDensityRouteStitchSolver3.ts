@@ -149,6 +149,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     const pathRoutes = selectRoutesAlongEndpointPath({
+      preserveTerminalBranches: this.enableCompleteTerminalStitching,
       connectionName: params.connectionName,
       hdRoutes: sameRootRoutes,
       start: params.start,
@@ -351,6 +352,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
 
       const selectedHdRoutes = selectRoutesAlongEndpointPath({
+        preserveTerminalBranches: this.enableCompleteTerminalStitching,
         connectionName: hdRoutes[0].connectionName,
         hdRoutes,
         start,
@@ -439,6 +441,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           hdRoutes:
             sharedRootPathRoutes?.hdRoutes ??
             selectRoutesAlongEndpointPath({
+              preserveTerminalBranches: this.enableCompleteTerminalStitching,
               connectionName,
               hdRoutes,
               start,

@@ -60,6 +60,11 @@ test("PMP22650 point-pair trees span every terminal", async () => {
     }
   }
 
-  expect(solver.newConnections).toHaveLength(1029)
+  expect(
+    scenario.connections.flatMap(
+      (connection) => connection.externallyConnectedPointIds ?? [],
+    ),
+  ).toEqual([])
+  expect(solver.newConnections).toHaveLength(1934)
   expect(disconnectedNets).toEqual([])
 })

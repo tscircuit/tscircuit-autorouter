@@ -13,7 +13,8 @@ export const getPhysicalPortConflicts = (
     throw new Error("Physical port spacing must be finite and positive")
   }
   const conflicts: number[][] = Array.from(
-    { length: coordinates.portX.length }, () => [],
+    { length: coordinates.portX.length },
+    () => [],
   )
   const buckets = new Map<string, number[]>()
   for (let port = 0; port < coordinates.portX.length; port++) {
@@ -27,9 +28,14 @@ export const getPhysicalPortConflicts = (
         const neighbors = buckets.get(`${z}:${bucketX + dx}:${bucketY + dy}`)
         if (!neighbors) continue
         for (const other of neighbors) {
-          if (Math.hypot(
-            x - coordinates.portX[other]!, y - coordinates.portY[other]!,
-          ) >= minPortSpacing - 1e-6) continue
+          if (
+            Math.hypot(
+              x - coordinates.portX[other]!,
+              y - coordinates.portY[other]!,
+            ) >=
+            minPortSpacing - 1e-6
+          )
+            continue
           conflicts[port]!.push(other)
           conflicts[other]!.push(port)
         }

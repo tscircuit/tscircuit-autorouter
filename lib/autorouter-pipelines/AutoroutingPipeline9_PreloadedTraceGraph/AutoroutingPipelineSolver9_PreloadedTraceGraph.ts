@@ -559,7 +559,22 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
-            minPortSpacing: cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15),
+            portObstacleConstraints: cms.originalSrj.allowViaInPad
+              ? {
+                  obstacles: cms.srj.obstacles.map((obstacle) => ({
+                    ...obstacle,
+                    connectedTo: obstacle.connectedTo.map(
+                      (id) => cms.connMap.getNetConnectedToId(id) ?? id,
+                    ),
+                  })),
+                  traceWidth: cms.minTraceWidth,
+                  clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+                }
+              : undefined,
+            minPortSpacing:
+              cms.originalSrj.allowViaInPad
+                ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+                : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -600,13 +615,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
-          minPortSpacing: cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15),
+          minPortSpacing:
+            cms.originalSrj.allowViaInPad
+              ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+              : undefined,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
-          preserveSolitaryPorts: Boolean(
-            cms.originalSrj.allowViaInPad || cms.srj.traces?.length,
-          ),
+          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preservePhysicalPortPositions: cms.originalSrj.allowViaInPad ?? false,
         },
       ],
     ),
@@ -660,6 +677,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
+            minimumTraceWidth: cms.originalSrj.allowViaInPad
+              ? cms.minTraceWidth
+              : undefined,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -686,6 +706,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
+          fixedObstacleRegionIds: cms.originalSrj.allowViaInPad
+            ? cms.highDensityRouteSolver!.boardObstacleRegionIds
+            : undefined,
         },
       ],
     ),

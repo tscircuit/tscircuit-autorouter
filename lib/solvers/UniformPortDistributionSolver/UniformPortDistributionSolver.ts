@@ -30,6 +30,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  preservePhysicalPortPositions?: boolean
   minPortSpacing?: number
 }
 
@@ -148,7 +149,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
-        this.input.preserveSolitaryPorts &&
+        (this.input.preservePhysicalPortPositions ||
+          (this.input.preserveSolitaryPorts && blockedOnAnotherLayer)) &&
         portCountByLayer.get(portPoint.z) === 1
       ) {
         continue

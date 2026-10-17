@@ -55,6 +55,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    minimumTraceWidth?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -127,6 +128,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      minimumTraceWidth?: number
     },
   ) {
     super()
@@ -627,7 +629,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceMargin: 0.1,
-        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        traceThickness: this.constructorParams.minimumTraceWidth ?? 0.1,
         effort: this.effort,
         hyperParameters,
       })

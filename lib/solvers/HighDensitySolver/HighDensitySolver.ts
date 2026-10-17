@@ -54,6 +54,7 @@ export class HighDensitySolver extends BaseSolver {
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
   obstacleMargin: number
   effort: number
   obstacles: Obstacle[]
@@ -93,6 +94,7 @@ export class HighDensitySolver extends BaseSolver {
     connMap,
     viaDiameter,
     traceWidth,
+    minimumTraceWidth,
     obstacleMargin,
     effort,
     nodePfById,
@@ -115,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     connMap?: ConnectivityMap
     viaDiameter?: number
     traceWidth?: number
+    minimumTraceWidth?: number
     obstacleMargin?: number
     effort?: number
     obstacles?: Obstacle[]
@@ -145,6 +148,7 @@ export class HighDensitySolver extends BaseSolver {
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
+    this.minimumTraceWidth = minimumTraceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
@@ -468,6 +472,7 @@ export class HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       obstacles: this.obstacles,
