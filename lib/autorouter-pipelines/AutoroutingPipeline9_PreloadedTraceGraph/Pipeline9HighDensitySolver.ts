@@ -350,10 +350,9 @@ export const createPipeline9RegularNodeSolver = ({
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
-    nodePortPoints: (
-      minimumTraceWidth !== undefined
-        ? splitNodeByContiguousLayers(nodeWithPortPoints)
-        : [nodeWithPortPoints]
+    nodePortPoints: (minimumTraceWidth !== undefined
+      ? splitNodeByContiguousLayers(nodeWithPortPoints)
+      : [nodeWithPortPoints]
     ).map((node) => normalizePipeline9NodeRootConnectionNames(node, connMap)),
     colorMap,
     connMap,

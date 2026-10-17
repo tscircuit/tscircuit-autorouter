@@ -4,7 +4,11 @@ import type { NodeWithPortPoints } from "lib/types/high-density-types"
 export const splitNodeByContiguousLayers = (
   node: NodeWithPortPoints,
 ): NodeWithPortPoints[] => {
-  if (node.isLayerTransition || !node.availableZ || node.availableZ.length < 2) {
+  if (
+    node.isLayerTransition ||
+    !node.availableZ ||
+    node.availableZ.length < 2
+  ) {
     return [node]
   }
   const groups: number[][] = []
