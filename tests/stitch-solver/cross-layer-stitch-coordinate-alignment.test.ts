@@ -21,11 +21,9 @@ test("aligns a tolerance-matched cross-layer stitch and its via", () => {
     hdRoutes: [
       createRoute({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }),
       {
-        ...createRoute(
-          { x: 1.0004, y: 0.0003, z: 0 },
-          { x: 2, y: 0, z: 1 },
-          [{ x: 1.0004, y: 0.0003 }],
-        ),
+        ...createRoute({ x: 1.0004, y: 0.0003, z: 0 }, { x: 2, y: 0, z: 1 }, [
+          { x: 1.0004, y: 0.0003 },
+        ]),
         route: [
           { x: 1.0004, y: 0.0003, z: 0 },
           { x: 1.0004, y: 0.0003, z: 1 },

@@ -84,12 +84,13 @@ const pointHasBoardClearance = ({
   if (!outline?.length) return true
   if (!isPointInsidePolygon(point, outline)) return false
 
-  return outline.every((outlinePoint, index) =>
-    pointToSegmentDistance(
-      point,
-      outlinePoint,
-      outline[(index + 1) % outline.length]!,
-    ) >= clearance,
+  return outline.every(
+    (outlinePoint, index) =>
+      pointToSegmentDistance(
+        point,
+        outlinePoint,
+        outline[(index + 1) % outline.length]!,
+      ) >= clearance,
   )
 }
 
@@ -132,9 +133,7 @@ export const getTargetLayerTransitionPoints = ({
         connection,
         obstacles: srj.obstacles,
       })
-      const halfWidth = terminalObstacle?.width
-        ? terminalObstacle.width / 2
-        : 0
+      const halfWidth = terminalObstacle?.width ? terminalObstacle.width / 2 : 0
       const halfHeight = terminalObstacle?.height
         ? terminalObstacle.height / 2
         : 0
@@ -162,11 +161,13 @@ export const getTargetLayerTransitionPoints = ({
       )
 
       const candidate = candidates.find((candidate) => {
-        if (!pointHasBoardClearance({
-          point: candidate,
-          srj,
-          clearance: boardClearance,
-        })) {
+        if (
+          !pointHasBoardClearance({
+            point: candidate,
+            srj,
+            clearance: boardClearance,
+          })
+        ) {
           return false
         }
         return srj.obstacles.every(
