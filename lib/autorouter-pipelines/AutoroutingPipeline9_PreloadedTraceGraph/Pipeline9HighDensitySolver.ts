@@ -1077,6 +1077,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ] as HighDensityObstacle[],
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      useExactPortCoordinates: this.minimumTraceWidth !== undefined,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
       obstacleClearanceMargin:

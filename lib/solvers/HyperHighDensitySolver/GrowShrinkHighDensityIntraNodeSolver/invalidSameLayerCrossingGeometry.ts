@@ -18,7 +18,9 @@ export const hasImpossibleSameLayerCrossingGeometry = (
   node: NodeWithPortPoints,
 ) =>
   uniqueAvailableZ(node).length === 1 &&
-  getIntraNodeCrossingsUsingCircle(node).numSameLayerCrossings > 0
+  getIntraNodeCrossingsUsingCircle(node, {
+    ignoreSameRootCrossings: true,
+  }).numSameLayerCrossings > 0
 
 export const createInvalidDirectConnectionRoutes = (
   node: NodeWithPortPoints,

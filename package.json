@@ -107,7 +107,7 @@
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/a4faabf0679702f33fcdcd717981adee46ec8f46",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#a37cdda28be5785092dacb8ea3d49d42df69ff87"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#2a8e00f4b6d4fb147ac1eb52f240eedf590930c8"
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
