@@ -10,16 +10,18 @@ test("Pipeline9 passes the reference mounting-hole default to every repair stage
       minTraceToHoleEdgeClearance: declared,
       bounds: { minX: -2, maxX: 2, minY: -2, maxY: 2 },
       connections: [],
-      obstacles: [{
-        type: "rect",
-        isNonPlatedHole: true,
-        shape: "circle",
-        center: { x: 0, y: 0 },
-        width: 1,
-        height: 1,
-        layers: ["top", "bottom"],
-        connectedTo: [],
-      }],
+      obstacles: [
+        {
+          type: "rect",
+          isNonPlatedHole: true,
+          shape: "circle",
+          center: { x: 0, y: 0 },
+          width: 1,
+          height: 1,
+          layers: ["top", "bottom"],
+          connectedTo: [],
+        },
+      ],
     }
     const original = structuredClone(input)
     const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
