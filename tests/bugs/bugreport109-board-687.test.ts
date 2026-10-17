@@ -1,0 +1,29 @@
+import { expect, test } from "bun:test"
+import { AutoroutingPipelineSolver } from "lib"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import type { SimpleRouteJson } from "lib/types"
+import board from "../../fixtures/bug-reports/bugreport109-board-687/bugreport109-board-687.srj.json" with {
+  type: "json",
+}
+
+const srj = board as SimpleRouteJson
+
+test("bugreport109-board-687", async (): Promise<void> => {
+  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+  solver.solve()
+
+  expect(solver.failed, solver.error ?? "").toBe(false)
+  expect(solver.solved).toBe(true)
+  // Native routing produces different geometry on Linux and macOS.
+  let snapshotPath = import.meta.path
+  if (process.platform === "linux") {
+    snapshotPath = import.meta.path.replace(".test.ts", "-linux.test.ts")
+  }
+  await expect(
+    getBugReportSnapshotSvg({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }),
+  ).toMatchSvgSnapshot(snapshotPath)
+})
