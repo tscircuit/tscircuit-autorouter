@@ -64,9 +64,21 @@ const scaleRoute = (
   route: HighDensityIntraNodeRoute,
   center: { x: number; y: number },
   scaleFactor: number,
+  scalePhysicalDimensions = false,
 ): HighDensityIntraNodeRoute => ({
   ...route,
-  route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
+  traceThickness: scalePhysicalDimensions
+    ? route.traceThickness * scaleFactor
+    : route.traceThickness,
+  viaDiameter: scalePhysicalDimensions
+    ? route.viaDiameter * scaleFactor
+    : route.viaDiameter,
+  route: route.route.map((point) => ({
+    ...scalePoint(point, center, scaleFactor),
+    ...(scalePhysicalDimensions && point.traceThickness !== undefined
+      ? { traceThickness: point.traceThickness * scaleFactor }
+      : {}),
+  })),
   vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
   jumpers: route.jumpers?.map((jumper) => ({
     ...jumper,
@@ -203,8 +215,53 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
+    const physicalScale =
+      portfolioParams.minimumTraceWidth !== undefined ? this.scaleFactor : 1
+    const center = this.nodeWithPortPoints.center
+    const board = portfolioParams.boardGeometry
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      ...(portfolioParams.minimumTraceWidth !== undefined
+        ? {
+            // Growth changes coordinate units, not physical routing capacity.
+            // Shrinking geometry with unscaled copper widths manufactures
+            // clearances that disappear when the result returns to the board.
+            traceWidth: (portfolioParams.traceWidth ?? 0.15) * physicalScale,
+            minimumTraceWidth:
+              portfolioParams.minimumTraceWidth * physicalScale,
+            viaDiameter: (portfolioParams.viaDiameter ?? 0.3) * physicalScale,
+            obstacleMargin:
+              (portfolioParams.obstacleMargin ?? 0.15) * physicalScale,
+            obstacles: portfolioParams.obstacles?.map((obstacle) => ({
+              ...obstacle,
+              center: scalePoint(obstacle.center, center, physicalScale),
+              width: obstacle.width * physicalScale,
+              height: obstacle.height * physicalScale,
+            })),
+            boardGeometry: board
+              ? {
+                  ...board,
+                  bounds: {
+                    minX:
+                      center.x + (board.bounds.minX - center.x) * physicalScale,
+                    maxX:
+                      center.x + (board.bounds.maxX - center.x) * physicalScale,
+                    minY:
+                      center.y + (board.bounds.minY - center.y) * physicalScale,
+                    maxY:
+                      center.y + (board.bounds.maxY - center.y) * physicalScale,
+                  },
+                  outline: board.outline?.map((point) =>
+                    scalePoint(point, center, physicalScale),
+                  ),
+                  minBoardEdgeClearance:
+                    board.minBoardEdgeClearance === undefined
+                      ? undefined
+                      : board.minBoardEdgeClearance * physicalScale,
+                }
+              : undefined,
+          }
+        : {}),
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
@@ -228,6 +285,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               route,
               this.nodeWithPortPoints.center,
               1 / this.scaleFactor,
+              this.constructorParams.minimumTraceWidth !== undefined,
             ),
           )
     if (

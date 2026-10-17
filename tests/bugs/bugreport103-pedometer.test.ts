@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
-test("Pipeline9 completes the pedometer graph at low effort", async () => {
+test("Pipeline9 rejects a pedometer timeout with illegal single-layer crossings", async () => {
   const srj: SimpleRouteJson = await Bun.file(
     new URL(
       "../../public/fixtures/bugreport103-pedometer.srj.json",
@@ -25,22 +24,30 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
     }
   }
 
-  expect(pipeline.failed).toBe(false)
-  expect(pipeline.portPointPathingSolver?.solved).toBe(true)
+  expect(pipeline.failed).toBe(true)
+  expect(pipeline.portPointPathingSolver?.solved).toBe(false)
   if (!tinySolver) {
     throw new Error("Pipeline9 did not create a tiny-hypergraph solver")
   }
-  expect(tinySolver.failed).toBe(false)
-  expect(tinySolver.solved).toBe(true)
+  expect(tinySolver.failed).toBe(true)
+  expect(tinySolver.solved).toBe(false)
   expect(tinySolver.iterations).toBe(tinySolver.MAX_ITERATIONS)
-  expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).toBe(true)
-  expect(tinySolver.getOutput().solvedRoutes).toHaveLength(230)
-  expect(tinySolver.state.unroutedRoutes).toEqual([])
+  // The old greedy override bypassed hard checks, including 83 forced
+  // boundary-chord crossings. An incomplete graph is not a routed board.
+  expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).not.toBe(true)
+  expect(tinySolver.state.unroutedRoutes.length).toBeGreaterThan(0)
   for (
     let regionId = 0;
     regionId < tinySolver.topology.regionCount;
     regionId++
   ) {
+    const mask = tinySolver.topology.regionAvailableZMask?.[regionId] ?? 0
+    if (mask > 0 && (mask & (mask - 1)) === 0) {
+      expect(
+        tinySolver.state.regionIntersectionCaches[regionId]
+          .existingSameLayerIntersections,
+      ).toBe(0)
+    }
     for (const [routeId, fromPortId, toPortId] of tinySolver.state
       .regionSegments[regionId]) {
       const netId = tinySolver.problem.routeNet[routeId]
@@ -50,10 +57,4 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
       expect(reservedNetId === -1 || reservedNetId === netId).toBe(true)
     }
   }
-  const svg = getSvgFromGraphicsObject(tinySolver.visualize(), {
-    backgroundColor: "white",
-  })
-  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
-    import.meta.path,
-  )
 })

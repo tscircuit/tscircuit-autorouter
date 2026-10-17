@@ -26,12 +26,14 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    stats.postExactReferenceDrcIssueCount,
-  )
-  expect(errors.length).toBeLessThanOrEqual(
-    stats.boundedRegionalRepairPublishedDrcIssueCount,
-  )
+  const publishedIssues = stats.boundedRegionalRepairPublishedDrcIssueCount
+  if (stats.initialBoundedRegionalRepairAccepted === true) {
+    expect(stats.finalDrcIssueCount).toBe(0)
+    expect(publishedIssues).toBeLessThanOrEqual(stats.initialJointDrcIssueCount)
+  } else {
+    expect(publishedIssues).toBeLessThan(stats.postExactReferenceDrcIssueCount)
+  }
+  expect(errors.length).toBeLessThanOrEqual(publishedIssues)
   expect(errors).toHaveLength(0)
   const declaredDrc = evaluateRelaxedDrc({
     ...drcInput,

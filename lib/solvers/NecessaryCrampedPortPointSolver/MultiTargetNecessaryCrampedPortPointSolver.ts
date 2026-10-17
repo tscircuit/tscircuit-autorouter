@@ -15,13 +15,17 @@ import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
-const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
+// Tiny-hypergraph's distance cost is 0.05/mm, so this remains a meaningful
+// preference without making an available escape look thousands of mm longer.
+const LEGACY_CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
+const RELAXED_CRAMPED_NON_NECESSARY_PORT_PENALTY = 1
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
+  relaxMultilayerEscapePenalty?: boolean
 }
 
 /**
@@ -245,15 +249,26 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.flatMap((portPoint) => {
-        if (!portPoint.cramped || this.crampedPortPointsToKeep.has(portPoint)) {
+        if (!portPoint.cramped) {
           return [portPoint]
+        }
+
+        if (this.crampedPortPointsToKeep.has(portPoint)) {
+          return this.input.relaxMultilayerEscapePenalty
+            ? [{ ...portPoint, cramped: false }]
+            : [portPoint]
         }
 
         if (this.isMultilayerEscapePort(portPoint)) {
           return [
             {
               ...portPoint,
-              tinyHypergraphPortPenalty: CRAMPED_NON_NECESSARY_PORT_PENALTY,
+              ...(this.input.relaxMultilayerEscapePenalty
+                ? { cramped: false }
+                : {}),
+              tinyHypergraphPortPenalty: this.input.relaxMultilayerEscapePenalty
+                ? RELAXED_CRAMPED_NON_NECESSARY_PORT_PENALTY
+                : LEGACY_CRAMPED_NON_NECESSARY_PORT_PENALTY,
             },
           ]
         }

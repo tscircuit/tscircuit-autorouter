@@ -104,6 +104,7 @@ export interface InputNodeWithPortPoints {
   _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
   _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
   _isNarrowQfpPadGap?: boolean
+  isLayerTransition?: boolean
 }
 
 /**

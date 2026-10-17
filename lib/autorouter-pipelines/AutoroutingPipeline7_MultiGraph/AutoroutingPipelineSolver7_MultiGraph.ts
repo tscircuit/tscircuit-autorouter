@@ -3,7 +3,7 @@ import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { BoundedHighDensityForceImproveSolver } from "lib/solvers/HighDensitySolver/BoundedHighDensityForceImproveSolver"
 import {
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
@@ -14,6 +14,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { getTargetLayerTransitionPoints } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/getTargetLayerTransitionPoints"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
@@ -165,20 +166,29 @@ function mergeComponentSharedEdgeSegments({
   originalSharedEdgeSegments,
   filteredSharedEdgeSegments,
   componentCapacityMeshNodeIds,
+  clearComponentCrampedPenalty,
 }: {
   originalSharedEdgeSegments: SharedEdgeSegment[]
   filteredSharedEdgeSegments: SharedEdgeSegment[]
   componentCapacityMeshNodeIds: Set<string>
+  clearComponentCrampedPenalty: boolean
 }) {
   const filteredSegmentsByEdgeId = new Map(
     filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
   )
 
   return originalSharedEdgeSegments.map((segment) => {
-    // Component-local cramped points are intentionally preserved even if they
-    // would otherwise be filtered by the necessary cramped port point solver.
+    // Component-local points are already the intentional escape geometry.
+    // Retain them without charging the generic cramped-port penalty again.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
-      return segment
+      if (!clearComponentCrampedPenalty) return segment
+      return {
+        ...segment,
+        portPoints: segment.portPoints.map((portPoint) => ({
+          ...portPoint,
+          cramped: false,
+        })),
+      }
     }
 
     return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
@@ -223,7 +233,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: HighDensitySolver
-  highDensityForceImproveSolver?: HighDensityForceImproveSolver
+  highDensityForceImproveSolver?: BoundedHighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
@@ -439,6 +449,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            relaxMultilayerEscapePenalty:
+              cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -455,6 +467,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               filteredSharedEdgeSegments:
                 cms.necessaryCrampedPortPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
+              clearComponentCrampedPenalty:
+                cms.originalSrj.allowViaInPad ?? false,
             })
         },
       },
@@ -475,6 +489,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          layerTransitionPoints: cms.originalSrj.allowViaInPad
+            ? getTargetLayerTransitionPoints({
+                srj: cms.srjWithPointPairs!,
+                viaDiameter: cms.viaDiameter,
+                obstacleMargin:
+                  cms.srj.minViaEdgeToPadEdgeClearance ??
+                  cms.srj.defaultObstacleMargin ??
+                  0.15,
+              })
+            : [],
+          viaDiameter: cms.viaDiameter,
         })
 
         return [
@@ -567,7 +592,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }),
     definePipelineStep(
       "highDensityForceImproveSolver",
-      HighDensityForceImproveSolver,
+      BoundedHighDensityForceImproveSolver,
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
@@ -578,6 +603,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
         },
       ],
     ),
@@ -611,6 +637,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
+          enableCompleteTerminalStitching:
+            cms.originalSrj.allowViaInPad ?? false,
           preserveTerminalPcbPortIds: true,
         },
       ],
@@ -630,6 +658,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
+          preserveExplicitLayerTransitions:
+            cms.originalSrj.allowViaInPad ?? false,
           iterations: 2,
         },
       ],

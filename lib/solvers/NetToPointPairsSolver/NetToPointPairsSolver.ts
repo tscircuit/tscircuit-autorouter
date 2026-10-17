@@ -101,6 +101,7 @@ export class NetToPointPairsSolver extends BaseSolver {
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
+      ensureConnected: this.ogSrj.allowViaInPad ?? false,
     })
 
     let mstIdx = 0

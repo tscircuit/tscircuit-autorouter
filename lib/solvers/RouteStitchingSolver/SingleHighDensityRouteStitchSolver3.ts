@@ -19,6 +19,11 @@ const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 type StitchTerminal = Point3 & { pcb_port_id?: string }
+type TaggedRouteEndpoint = {
+  route: HighDensityIntraNodeRoute
+  point: RoutePoint
+}
+type Via = HighDensityIntraNodeRoute["vias"][number]
 export type StitchClearanceMode = "require_clear" | "prefer_clear"
 export {
   MAX_STITCH_GAP_DISTANCE_3,
@@ -44,6 +49,75 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   return reversed
 }
 
+const getRouteEndpointForPcbPortId = (params: {
+  routes: HighDensityIntraNodeRoute[]
+  pcbPortId?: string
+}): TaggedRouteEndpoint | undefined => {
+  if (!params.pcbPortId) return undefined
+
+  for (const route of params.routes) {
+    if (route.startPcbPortId === params.pcbPortId) {
+      return { route, point: route.route[0]! }
+    }
+    if (route.endPcbPortId === params.pcbPortId) {
+      return { route, point: route.route.at(-1)! }
+    }
+  }
+
+  return undefined
+}
+
+const alignRouteEntryAtStitch = (params: {
+  anchor: RoutePoint
+  points: RoutePoint[]
+  vias: Via[]
+}) => {
+  const entryPoint = params.points[0]
+  if (
+    !entryPoint ||
+    distance(entryPoint, params.anchor) >= GEOMETRIC_TOLERANCE
+  ) {
+    return { points: params.points, vias: params.vias }
+  }
+
+  let alignedPointCount = 1
+  while (
+    alignedPointCount < params.points.length &&
+    params.points[alignedPointCount]!.x === entryPoint.x &&
+    params.points[alignedPointCount]!.y === entryPoint.y
+  ) {
+    alignedPointCount++
+  }
+  const hasLayerTransition = params.points
+    .slice(0, alignedPointCount)
+    .some((point) => point.z !== params.anchor.z)
+  const alignedPoints = params.points.map((point, index) => {
+    if (index >= alignedPointCount) return point
+    return { ...point, x: params.anchor.x, y: params.anchor.y }
+  })
+  let movedVia = false
+  const alignedVias = params.vias.map((via) => {
+    if (
+      Math.hypot(via.x - entryPoint.x, via.y - entryPoint.y) >=
+      GEOMETRIC_TOLERANCE
+    ) {
+      return via
+    }
+    movedVia = true
+    return { x: params.anchor.x, y: params.anchor.y }
+  })
+
+  if (
+    hasLayerTransition &&
+    !movedVia &&
+    params.anchor.toNextSegmentType !== "through_obstacle"
+  ) {
+    alignedVias.push({ x: params.anchor.x, y: params.anchor.y })
+  }
+
+  return { points: alignedPoints, vias: alignedVias }
+}
+
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "SingleHighDensityRouteStitchSolver3"
@@ -51,10 +125,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   mergedHdRoute!: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
+  unmergedHdRoutes: HighDensityIntraNodeRoute[] = []
   start: StitchTerminal
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  enableCompleteTerminalStitching: boolean
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
 
@@ -76,6 +152,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultTraceThickness?: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
+    allowedPcbPortIds?: ReadonlySet<string>
+    enableCompleteTerminalStitching?: boolean
     preserveTerminalPcbPortIds?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
@@ -85,6 +163,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
+    this.enableCompleteTerminalStitching =
+      opts.enableCompleteTerminalStitching ?? false
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
 
@@ -150,12 +230,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       return
     }
 
-    const expectedPcbPortIds = new Set(
-      (opts.preserveTerminalPcbPortIds
-        ? [opts.start.pcb_port_id, opts.end.pcb_port_id]
-        : []
-      ).filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined),
-    )
+    const expectedPcbPortIds = new Set(opts.allowedPcbPortIds)
+    if (opts.preserveTerminalPcbPortIds) {
+      if (opts.start.pcb_port_id) expectedPcbPortIds.add(opts.start.pcb_port_id)
+      if (opts.end.pcb_port_id) expectedPcbPortIds.add(opts.end.pcb_port_id)
+    }
     if (
       opts.preserveTerminalPcbPortIds &&
       opts.start.pcb_port_id &&
@@ -188,10 +267,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst =
+        this.enableCompleteTerminalStitching && opts.start.z !== firstPoint.z
+          ? Infinity
+          : distance(opts.start, firstPoint)
+      const distStartToLast =
+        this.enableCompleteTerminalStitching && opts.start.z !== lastPoint.z
+          ? Infinity
+          : distance(opts.start, lastPoint)
+      const distEndToFirst =
+        this.enableCompleteTerminalStitching && opts.end.z !== firstPoint.z
+          ? Infinity
+          : distance(opts.end, firstPoint)
+      const distEndToLast =
+        this.enableCompleteTerminalStitching && opts.end.z !== lastPoint.z
+          ? Infinity
+          : distance(opts.end, lastPoint)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -236,17 +327,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
+    let closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        (this.enableCompleteTerminalStitching &&
+        firstRouteFirstPoint.z !== firstRouteLastPoint.z
+          ? firstRouteFirstPoint.z === this.start.z
+          : comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0))
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
-    if (
+    const matchingTerminalRouteEndpoint = this.enableCompleteTerminalStitching
+      ? getRouteEndpointForPcbPortId({
+          routes: canonicalHdRoutes,
+          pcbPortId: this.start.pcb_port_id,
+        })
+      : undefined
+    if (matchingTerminalRouteEndpoint) {
+      firstRoute = matchingTerminalRouteEndpoint.route
+      closestFirstRoutePoint = matchingTerminalRouteEndpoint.point
+    } else if (
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
@@ -318,12 +421,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     // A terminal-to-terminal path is complete here. Following leftover stubs
     // can traverse another via and disconnect the declared terminal layer.
     if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
+      if (this.enableCompleteTerminalStitching && reachedTerminal) {
+        this.unmergedHdRoutes = this.remainingHdRoutes
+      }
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
+        (!this.enableCompleteTerminalStitching ||
+          lastMergedPoint.z === this.end.z) &&
         terminalDistance > GEOMETRIC_TOLERANCE &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
@@ -342,6 +450,25 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
+      // Islands can end on another same-net branch rather than the requested
+      // terminal. Terminal identity describes emitted copper, not intent: a
+      // provisional tag must never make Multiple discard the real pad branch.
+      const firstMergedPoint = this.mergedHdRoute.route[0]!
+      const finalMergedPoint = this.mergedHdRoute.route.at(-1)!
+      if (
+        this.enableCompleteTerminalStitching &&
+        (firstMergedPoint.z !== this.start.z ||
+          distance(firstMergedPoint, this.start) >= GEOMETRIC_TOLERANCE)
+      ) {
+        delete this.mergedHdRoute.startPcbPortId
+      }
+      if (
+        this.enableCompleteTerminalStitching &&
+        (finalMergedPoint.z !== this.end.z ||
+          distance(finalMergedPoint, this.end) >= GEOMETRIC_TOLERANCE)
+      ) {
+        delete this.mergedHdRoute.endPcbPortId
+      }
       this.solved = true
       return
     }
@@ -433,6 +560,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
         return
       }
+      if (this.enableCompleteTerminalStitching) {
+        this.unmergedHdRoutes = this.remainingHdRoutes
+      }
       this.remainingHdRoutes = []
       return
     }
@@ -447,6 +577,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
+    const alignedStitch = this.enableCompleteTerminalStitching
+      ? alignRouteEntryAtStitch({
+          anchor: lastMergedPoint,
+          points: pointsToAdd,
+          vias: hdRouteToMerge.vias,
+        })
+      : { points: pointsToAdd, vias: hdRouteToMerge.vias }
+    pointsToAdd = alignedStitch.points
+
     if (
       pointsToAdd.length > 0 &&
       distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
@@ -460,7 +599,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.mergedHdRoute.route.push(...pointsToAdd)
     }
 
-    this.mergedHdRoute.vias.push(...hdRouteToMerge.vias)
+    this.mergedHdRoute.vias.push(...alignedStitch.vias)
 
     if (hdRouteToMerge.jumpers) {
       this.mergedHdRoute.jumpers!.push(...hdRouteToMerge.jumpers)

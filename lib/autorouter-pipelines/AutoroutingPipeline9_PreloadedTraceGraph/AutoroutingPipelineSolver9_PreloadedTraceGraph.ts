@@ -4,7 +4,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { BoundedHighDensityForceImproveSolver } from "lib/solvers/HighDensitySolver/BoundedHighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -12,6 +12,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { getTargetLayerTransitionPoints } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/getTargetLayerTransitionPoints"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -199,20 +200,29 @@ function mergeComponentSharedEdgeSegments({
   originalSharedEdgeSegments,
   filteredSharedEdgeSegments,
   componentCapacityMeshNodeIds,
+  clearComponentCrampedPenalty,
 }: {
   originalSharedEdgeSegments: SharedEdgeSegment[]
   filteredSharedEdgeSegments: SharedEdgeSegment[]
   componentCapacityMeshNodeIds: Set<string>
+  clearComponentCrampedPenalty: boolean
 }) {
   const filteredSegmentsByEdgeId = new Map(
     filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
   )
 
   return originalSharedEdgeSegments.map((segment) => {
-    // Component-local cramped points are intentionally preserved even if they
-    // would otherwise be filtered by the necessary cramped port point solver.
+    // Component-local points are already the intentional escape geometry.
+    // Retain them without charging the generic cramped-port penalty again.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
-      return segment
+      if (!clearComponentCrampedPenalty) return segment
+      return {
+        ...segment,
+        portPoints: segment.portPoints.map((portPoint) => ({
+          ...portPoint,
+          cramped: false,
+        })),
+      }
     }
 
     return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
@@ -261,7 +271,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
-  highDensityForceImproveSolver?: HighDensityForceImproveSolver
+  highDensityForceImproveSolver?: BoundedHighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
@@ -480,6 +490,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            relaxMultilayerEscapePenalty:
+              cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -496,6 +508,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               filteredSharedEdgeSegments:
                 cms.necessaryCrampedPortPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
+              clearComponentCrampedPenalty:
+                cms.originalSrj.allowViaInPad ?? false,
             })
         },
       },
@@ -524,6 +538,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          layerTransitionPoints: cms.originalSrj.allowViaInPad
+            ? getTargetLayerTransitionPoints({
+                srj: cms.srjWithPointPairs!,
+                viaDiameter: cms.viaDiameter,
+                obstacleMargin:
+                  cms.srj.minViaEdgeToPadEdgeClearance ??
+                  cms.srj.defaultObstacleMargin ??
+                  0.15,
+              })
+            : [],
+          viaDiameter: cms.viaDiameter,
         })
 
         return [
@@ -534,6 +559,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            portObstacleConstraints: cms.originalSrj.allowViaInPad
+              ? {
+                  obstacles: cms.srj.obstacles.map((obstacle) => ({
+                    ...obstacle,
+                    connectedTo: obstacle.connectedTo.map(
+                      (id) => cms.connMap.getNetConnectedToId(id) ?? id,
+                    ),
+                  })),
+                  traceWidth: cms.minTraceWidth,
+                  clearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+                }
+              : undefined,
+            minPortSpacing: cms.originalSrj.allowViaInPad
+              ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+              : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -574,11 +614,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
-          minTraceWidth: cms.minTraceWidth,
+          minPortSpacing: cms.originalSrj.allowViaInPad
+            ? cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15)
+            : undefined,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preservePhysicalPortPositions: cms.originalSrj.allowViaInPad ?? false,
         },
       ],
     ),
@@ -632,6 +675,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
+            minimumTraceWidth: cms.originalSrj.allowViaInPad
+              ? cms.minTraceWidth
+              : undefined,
+            traceToPadClearance: cms.originalSrj.allowViaInPad
+              ? (cms.srj.minTraceToPadEdgeClearance ?? 0.1)
+              : undefined,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -644,7 +693,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "highDensityForceImproveSolver",
-      HighDensityForceImproveSolver,
+      BoundedHighDensityForceImproveSolver,
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
@@ -657,6 +706,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
+          fixedObstacleRegionIds: cms.originalSrj.allowViaInPad
+            ? cms.highDensityRouteSolver!.boardObstacleRegionIds
+            : undefined,
         },
       ],
     ),
@@ -695,6 +748,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
+          enableCompleteTerminalStitching:
+            cms.originalSrj.allowViaInPad ?? false,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
         },
@@ -746,6 +801,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: cms.originalSrj.allowViaInPad ?? false,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
+            preserveExplicitLayerTransitions:
+              cms.originalSrj.allowViaInPad ?? false,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -785,6 +844,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: cms.originalSrj.allowViaInPad ?? false,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
+            preserveExplicitLayerTransitions:
+              cms.originalSrj.allowViaInPad ?? false,
             preserveRouteEndpoints: true,
             enableVertexShortcuts: true,
             iterations: 2,
@@ -913,6 +976,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               ),
               enableCrossingViaReduction: true,
+              useTraceWidthAwareClearance:
+                cms.originalSrj.allowViaInPad ?? false,
+              allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
                   cms.srj.connections,
@@ -1081,6 +1147,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     super()
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(srj)
+    // Reference DRC defaults mounting-hole clearance to 0.2 mm. Repair APIs
+    // otherwise interpret an absent hole rule as the generic copper margin.
+    if (
+      srjWithBoardValidObstacleLayers.minTraceToHoleEdgeClearance ===
+        undefined &&
+      srjWithBoardValidObstacleLayers.obstacles.some(
+        (obstacle) => obstacle.isNonPlatedHole,
+      )
+    ) {
+      srjWithBoardValidObstacleLayers.minTraceToHoleEdgeClearance = 0.2
+    }
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts

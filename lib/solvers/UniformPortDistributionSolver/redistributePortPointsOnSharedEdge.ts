@@ -7,9 +7,11 @@ import { PortPointWithOwnerPair, SharedEdge } from "./types"
 export const redistributePortPointsOnSharedEdge = ({
   sharedEdge,
   portPoints,
+  minPortSpacing,
 }: {
   sharedEdge: SharedEdge
   portPoints: PortPointWithOwnerPair[]
+  minPortSpacing?: number
 }): PortPointWithOwnerPair[] => {
   if (portPoints.length === 0) return []
 
@@ -27,13 +29,31 @@ export const redistributePortPointsOnSharedEdge = ({
   for (const z of zLayers) {
     const portsOnZ = portsByZ.get(z)!
     const count = portsOnZ.length
+    const edgeMargin =
+      minPortSpacing === undefined ? 0 : (minPortSpacing * 3) / 4
+    const effectiveLength = sharedEdge.length - edgeMargin * 2
+    if (
+      minPortSpacing !== undefined &&
+      count > 1 &&
+      effectiveLength < (count - 1) * minPortSpacing - 1e-6
+    ) {
+      throw new Error(
+        "Assigned traces exceed the physical capacity of their shared edge",
+      )
+    }
 
     portsOnZ.sort((a, b) =>
       sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,
     )
 
     for (let i = 0; i < count; i++) {
-      const fraction = (2 * i + 1) / (2 * count)
+      const fraction =
+        minPortSpacing === undefined
+          ? (2 * i + 1) / (2 * count)
+          : count === 1
+            ? 0.5
+            : (edgeMargin + (effectiveLength * i) / (count - 1)) /
+              sharedEdge.length
       const x =
         sharedEdge.orientation === "horizontal"
           ? sharedEdge.x1 + sharedEdge.length * fraction

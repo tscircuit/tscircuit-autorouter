@@ -54,6 +54,7 @@ export class HighDensitySolver extends BaseSolver {
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
   obstacleMargin: number
   effort: number
   obstacles: Obstacle[]
@@ -93,6 +94,7 @@ export class HighDensitySolver extends BaseSolver {
     connMap,
     viaDiameter,
     traceWidth,
+    minimumTraceWidth,
     obstacleMargin,
     effort,
     nodePfById,
@@ -115,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     connMap?: ConnectivityMap
     viaDiameter?: number
     traceWidth?: number
+    minimumTraceWidth?: number
     obstacleMargin?: number
     effort?: number
     obstacles?: Obstacle[]
@@ -145,6 +148,7 @@ export class HighDensitySolver extends BaseSolver {
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
+    this.minimumTraceWidth = minimumTraceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
@@ -346,6 +350,51 @@ export class HighDensitySolver extends BaseSolver {
     }))
   }
 
+  private solveLayerTransitionNode(
+    node: NodeWithPortPoints,
+  ): HighDensityIntraNodeRoute[] {
+    return (node.portPointsInPairs ?? []).map(([start, end]) => {
+      const route: HighDensityIntraNodeRoute["route"] = [
+        {
+          x: start.x,
+          y: start.y,
+          z: start.z,
+          pcb_port_id: start.pcb_port_id,
+        },
+      ]
+      if (start.x !== node.center.x || start.y !== node.center.y) {
+        route.push({ ...node.center, z: start.z })
+      }
+      if (start.z !== end.z) {
+        route.push({ ...node.center, z: end.z })
+      }
+      if (
+        end.x !== node.center.x ||
+        end.y !== node.center.y ||
+        route.length === 1
+      ) {
+        route.push({
+          x: end.x,
+          y: end.y,
+          z: end.z,
+          pcb_port_id: end.pcb_port_id,
+        })
+      }
+
+      return {
+        connectionName: start.connectionName,
+        rootConnectionName: start.rootConnectionName,
+        startPcbPortId: start.pcb_port_id,
+        endPcbPortId: end.pcb_port_id,
+        traceThickness: this.traceWidth,
+        viaDiameter: this.viaDiameter,
+        route,
+        vias: start.z === end.z ? [] : [{ ...node.center }],
+        regionId: node.capacityMeshNodeId,
+      }
+    })
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -392,6 +441,26 @@ export class HighDensitySolver extends BaseSolver {
     }
     const node = this.unsolvedNodePortPoints.pop()!
 
+    if (node.isLayerTransition) {
+      this.routes.push(...this.solveLayerTransitionNode(node))
+      this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
+        node,
+        status: "solved",
+        solverType: "LayerTransition",
+        iterations: 0,
+        routeCount: node.portPointsInPairs?.length ?? 0,
+        nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+      })
+      const solverNodeCount = this.stats.solverNodeCount as Record<
+        string,
+        number
+      >
+      solverNodeCount.LayerTransition =
+        (solverNodeCount.LayerTransition ?? 0) + 1
+      this.updateCacheStats()
+      return
+    }
+
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
@@ -403,6 +472,7 @@ export class HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       obstacles: this.obstacles,

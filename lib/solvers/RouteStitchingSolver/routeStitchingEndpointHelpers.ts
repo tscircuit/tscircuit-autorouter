@@ -18,6 +18,8 @@ type EndpointEdge = {
   routeIndex: number | null
 }
 
+type StitchEndpoint = Point3 & { pcb_port_id?: string }
+
 export type CanStitchBetweenTerminals = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
@@ -181,10 +183,18 @@ export const selectIslandEndpoints = (params: {
  * already close enough to be considered the same stitch target.
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
-  islandEndpoint: Point3
-  terminals: Point3[]
+  islandEndpoint: StitchEndpoint
+  terminals: StitchEndpoint[]
+  preferSameLayerTerminalEndpoints?: boolean
 }) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const sameLayerTerminals = params.terminals.filter(
+    (terminal) => terminal.z === params.islandEndpoint.z,
+  )
+  const candidateTerminals =
+    params.preferSameLayerTerminalEndpoints && sameLayerTerminals.length > 0
+      ? sameLayerTerminals
+      : params.terminals
+  const sortedTerminals = [...candidateTerminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
@@ -206,6 +216,51 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 }
 
 /**
+ * Snaps both island endpoints jointly so a cross-layer pair cannot collapse
+ * onto the one nearby terminal that happens to share both island layers.
+ */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: StitchEndpoint
+  end: StitchEndpoint
+  globalStart: StitchEndpoint
+  globalEnd: StitchEndpoint
+  preferSameLayerTerminalEndpoints?: boolean
+}) => {
+  const terminals = [params.globalStart, params.globalEnd]
+  const start = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals,
+    preferSameLayerTerminalEndpoints: params.preferSameLayerTerminalEndpoints,
+  })
+  const end = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals,
+    preferSameLayerTerminalEndpoints: params.preferSameLayerTerminalEndpoints,
+  })
+  const distinctPcbPortsCollapsed =
+    start.pcb_port_id !== undefined &&
+    start.pcb_port_id === end.pcb_port_id &&
+    params.globalStart.pcb_port_id !== undefined &&
+    params.globalEnd.pcb_port_id !== undefined &&
+    params.globalStart.pcb_port_id !== params.globalEnd.pcb_port_id
+
+  if (!distinctPcbPortsCollapsed) return { start, end }
+
+  return {
+    start:
+      distance(params.start, params.globalStart) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        ? params.globalStart
+        : params.start,
+    end:
+      distance(params.end, params.globalEnd) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        ? params.globalEnd
+        : params.end,
+  }
+}
+
+/**
  * Returns the route islands on the deterministic endpoint path between the
  * chosen terminals. If the subset cannot actually stitch to both terminals,
  * the full route set is returned instead.
@@ -213,10 +268,11 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 export const selectRoutesAlongEndpointPath = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchEndpoint
+  end: StitchEndpoint
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
+  preserveTerminalBranches?: boolean
 }) => {
   if (params.hdRoutes.length <= 2) return params.hdRoutes
 
@@ -303,7 +359,8 @@ export const selectRoutesAlongEndpointPath = (params: {
   }
 
   const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  const visitedHashes = new Set<string>()
+  const gapCostByHash = new Map<string, number>([[startHash, 0]])
   const prevByHash = new Map<
     string,
     { prevHash: string; routeIndex: number | null }
@@ -311,16 +368,27 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   while (queue.length > 0) {
     const currentHash = queue.shift()!
+    if (visitedHashes.has(currentHash)) continue
+    visitedHashes.add(currentHash)
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
       if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      // Detailed routes already encode obstacle-avoiding copper. A one-mm
+      // virtual gap must not beat that real path merely because it has fewer
+      // fragments: the gap can cut straight across a foreign pad. In complete
+      // mode, use 0-1 BFS to minimize invented gaps before fragment count.
+      const edgeCost =
+        params.preserveTerminalBranches && edge.routeIndex !== null ? 0 : 1
+      const gapCost = gapCostByHash.get(currentHash)! + edgeCost
+      if (gapCost >= (gapCostByHash.get(edge.nextHash) ?? Infinity)) continue
+      gapCostByHash.set(edge.nextHash, gapCost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      if (edgeCost === 0) queue.unshift(edge.nextHash)
+      else queue.push(edge.nextHash)
     }
   }
 
@@ -342,6 +410,23 @@ export const selectRoutesAlongEndpointPath = (params: {
   const selectedHdRoutes = selectedRouteIndexesInReverse
     .reverse()
     .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+
+  // A short gap in the endpoint graph must not prune the only copper that
+  // actually reaches a requested pad. Keep that branch until the physical
+  // terminal-to-terminal route has been assembled, not merely inferred.
+  for (const terminal of params.preserveTerminalBranches
+    ? [params.start, params.end]
+    : []) {
+    if (!terminal.pcb_port_id) continue
+    const terminalRoute = canonicalHdRoutes.find(
+      (route) =>
+        route.startPcbPortId === terminal.pcb_port_id ||
+        route.endPcbPortId === terminal.pcb_port_id,
+    )
+    if (terminalRoute && !selectedHdRoutes.includes(terminalRoute)) {
+      return canonicalHdRoutes
+    }
+  }
 
   if (
     selectedHdRoutes.length > 0 &&

@@ -34,9 +34,14 @@ import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
+  PortObstacleConstraints,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { fitDuplicatedPortsToPhysicalSlots } from "./fitDuplicatedPortsToPhysicalSlots"
+import { getPhysicalPortConflicts } from "./getPhysicalPortConflicts"
+import { getPhysicalPortObstacleReservations } from "./getPhysicalPortObstacleReservations"
+import { getPhysicalViaRegionPortConflicts } from "./getPhysicalViaRegionPortConflicts"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -179,6 +184,7 @@ type TinyRegionMetadata = {
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
+  isLayerTransition?: boolean
 }
 
 type TinyPortMetadata = {
@@ -264,9 +270,10 @@ const getTinyViaSizeOptions = (
     ? { minViaPadDiameter: minViaPadDiameter }
     : {}
 
-const getTinyHyperGraphSolveGraphOptions = (
+export const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  physicalRouteCount = 0,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
@@ -277,7 +284,9 @@ const getTinyHyperGraphSolveGraphOptions = (
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(
+      Math.max(2_000_000, physicalRouteCount * 10_000) * effortScale,
+    ),
   }
 }
 
@@ -301,6 +310,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  physicalRouting = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -317,7 +327,11 @@ const getTinyHyperGraphPipelineInput = (
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
-      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...getTinyHyperGraphSolveGraphOptions(
+        effort,
+        minViaPadDiameter,
+        physicalRouting ? routeCount : 0,
+      ),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -406,6 +420,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    isLayerTransition: regionMetadata.isLayerTransition,
     ...(netId !== undefined ? { netId } : {}),
   }
 }
@@ -727,6 +742,7 @@ const buildInputNodesWithPortPoints = (
         ._qfpRegionType,
       _isNarrowQfpPadGap: (region.d as typeof region.d & TinyRegionMetadata)
         ._isNarrowQfpPadGap,
+      isLayerTransition: Boolean(region.d.isLayerTransition),
     }
   })
 }
@@ -919,6 +935,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly minPortSpacing?: number,
+    private readonly portObstacleConstraints?: PortObstacleConstraints,
+    private readonly layerCount = 2,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -945,6 +964,28 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
+    if (this.portObstacleConstraints) {
+      loaded.problem.portReservedNetId = getPhysicalPortObstacleReservations(
+        loaded,
+        this.portObstacleConstraints,
+        this.layerCount,
+      )
+      loaded.problem.viaRegionPortConflicts = getPhysicalViaRegionPortConflicts(
+        loaded.topology,
+        this.portObstacleConstraints.traceWidth,
+        this.portObstacleConstraints.clearance,
+      )
+      loaded.problem.viaBoundaryClearance =
+        this.portObstacleConstraints.traceWidth / 2 +
+        this.portObstacleConstraints.clearance
+    }
+    if (this.minPortSpacing !== undefined) {
+      loaded.problem.enforceViaFit = true
+      loaded.problem.portConflicts = getPhysicalPortConflicts(
+        loaded.topology,
+        this.minPortSpacing,
+      )
+    }
     restorePreloadedTraceSectionMetadata(
       loaded,
       this.inputProblem.serializedHyperGraph,
@@ -1111,6 +1152,26 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.minPortSpacing !== undefined) {
+        graphForTiny = fitDuplicatedPortsToPhysicalSlots(
+          graphForTiny,
+          params.minPortSpacing,
+        )
+        const retainedPortIds = new Set(
+          graphForTiny.ports.map((port) => port.portId),
+        )
+        this.duplicateCongestedPortReport = {
+          ...this.duplicateCongestedPortReport,
+          duplicatedPorts: this.duplicateCongestedPortReport.duplicatedPorts
+            .map((source) => ({
+              ...source,
+              duplicatePortIds: source.duplicatePortIds.filter((id) =>
+                retainedPortIds.has(id),
+              ),
+            }))
+            .filter((source) => source.duplicatePortIds.length > 0),
+        }
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
@@ -1132,11 +1193,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.portObstacleConstraints !== undefined,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.minPortSpacing,
+        params.portObstacleConstraints,
+        params.layerCount,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1511,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.minPortSpacing,
+            this.params.portObstacleConstraints,
+            this.params.layerCount,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1679,6 +1747,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         portPoints,
         portPointsInPairs,
         availableZ: originalRegion.d.availableZ,
+        isLayerTransition: Boolean(originalRegion.d.isLayerTransition),
       })
     }
 

@@ -30,6 +30,9 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Keep coordinates already validated against global copper constraints. */
+  preservePhysicalPortPositions?: boolean
+  minPortSpacing?: number
 }
 
 /**
@@ -128,6 +131,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const ownerPairKey = this.currentOwnerPairBeingProcessed
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
+    // Physical pathing has already selected finite, legal copper slots. An
+    // edge-local redistribution cannot preserve constraints on nearby edges.
+    if (this.input.preservePhysicalPortPositions) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
     const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
@@ -173,6 +179,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
+      minPortSpacing: this.input.minPortSpacing,
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)

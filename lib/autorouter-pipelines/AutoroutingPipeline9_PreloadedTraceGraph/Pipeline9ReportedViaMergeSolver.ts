@@ -94,6 +94,9 @@ export class Pipeline9ReportedViaMergeSolver extends BaseSolver {
       connMap,
       colorMap: {},
       preserveRouteEndpoints: true,
+      usePhysicalClearance: srj.allowViaInPad ?? false,
+      allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
+      obstacleMargin: srj.minTraceToPadEdgeClearance,
     })
     this.MAX_ITERATIONS = this.merger.MAX_ITERATIONS + 4
     this.activeSubSolver = this.merger

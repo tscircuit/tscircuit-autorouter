@@ -12,6 +12,7 @@ import {
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
+import type { LayerTransitionPoint } from "./getTargetLayerTransitionPoints"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
   RawPort,
@@ -38,18 +39,24 @@ const getCandidateRegionsForAssignableVia = (params: {
   graph: HyperGraphHg
   point: { x: number; y: number }
   z: number
-  viaRadius: number
+  existingCopperRadius?: number
 }) => {
   const candidates = params.graph.regions
     .filter(
       (region) =>
         region.d.availableZ.includes(params.z) &&
-        !(region.d as any)._assignableVia,
+        !(region.d as any)._assignableVia &&
+        !region.d.isLayerTransition,
     )
     .map((region) => ({
       region,
       distance: pointToBoxDistance(params.point, region.d),
     }))
+    .filter(
+      (candidate) =>
+        candidate.distance <=
+        (params.existingCopperRadius ?? 0) + GEOMETRIC_TOLERANCE,
+    )
     .sort(
       (a, b) =>
         a.distance - b.distance ||
@@ -57,20 +64,80 @@ const getCandidateRegionsForAssignableVia = (params: {
           b.region.d.width * b.region.d.height,
     )
 
-  const nearestDistance = candidates[0]?.distance
-  if (nearestDistance === undefined) {
-    return []
+  // New via endpoints must be inside their owner rectangles. A preplaced via
+  // already has copper joining its center to a neighboring rectangle within
+  // its pad radius; do not remove those physical connections from Pipeline8.
+  return candidates.slice(0, 4).map((candidate) => candidate.region)
+}
+
+const addLayerTransitionRegions = (params: {
+  graph: HyperGraphHg
+  layerTransitionPoints: readonly LayerTransitionPoint[]
+  layerCount: number
+  viaDiameter: number
+}): void => {
+  for (const [index, point] of params.layerTransitionPoints.entries()) {
+    const availableZ =
+      point.availableZ ?? Array.from({ length: params.layerCount }, (_, z) => z)
+    const regionId = `layer-transition:${index}`
+    const region: RegionHg = {
+      regionId,
+      d: {
+        capacityMeshNodeId: regionId,
+        center: { x: point.x, y: point.y },
+        width: params.viaDiameter,
+        height: params.viaDiameter,
+        layer: `z${availableZ.join(",")}`,
+        availableZ,
+        _containsObstacle: false,
+        _completelyInsideObstacle: false,
+        _containsTarget: false,
+        _connectedTo: [point.connectionName],
+        isLayerTransition: true,
+      } as CapacityMeshNode,
+      ports: [],
+    }
+    const ports: RegionPortHg[] = []
+
+    for (const z of availableZ) {
+      for (const adjacentRegion of getCandidateRegionsForAssignableVia({
+        graph: params.graph,
+        point,
+        z,
+      })) {
+        const rawPort: RawPort = {
+          portId: `${regionId}:port:${adjacentRegion.regionId}:z${z}`,
+          x: point.x,
+          y: point.y,
+          z,
+          distToCentermostPortOnZ: 0,
+          cramped: false,
+          regions: [adjacentRegion, region],
+        }
+        const port: RegionPortHg = {
+          portId: rawPort.portId,
+          d: rawPort,
+          region1: adjacentRegion,
+          region2: region,
+        }
+        ports.push(port)
+        adjacentRegion.ports.push(port)
+      }
+    }
+
+    if (new Set(ports.map((port) => port.d.z)).size < 2) {
+      for (const port of ports) {
+        port.region1.ports = port.region1.ports.filter(
+          (existingPort) => existingPort !== port,
+        )
+      }
+      continue
+    }
+
+    region.ports.push(...ports)
+    params.graph.regions.push(region)
+    params.graph.ports.push(...ports)
   }
-
-  const maxConnectionDistance = Math.max(
-    nearestDistance + GEOMETRIC_TOLERANCE,
-    params.viaRadius + 0.15,
-  )
-
-  return candidates
-    .filter((candidate) => candidate.distance <= maxConnectionDistance)
-    .slice(0, 4)
-    .map((candidate) => candidate.region)
 }
 
 const addAssignableViaRegions = (params: {
@@ -89,7 +156,6 @@ const addAssignableViaRegions = (params: {
 
     const assignableViaId = getAssignableViaId(obstacle, index)
     const viaRegionId = `assignable-via:${assignableViaId}`
-    const viaRadius = Math.min(obstacle.width, obstacle.height) / 2
     const viaRegion: RegionHg = {
       regionId: viaRegionId,
       d: {
@@ -114,7 +180,7 @@ const addAssignableViaRegions = (params: {
         graph: params.graph,
         point: obstacle.center,
         z,
-        viaRadius,
+        existingCopperRadius: Math.min(obstacle.width, obstacle.height) / 2,
       })) {
         const rawPort: RawPort = {
           portId: `${viaRegionId}:port:${region.regionId}:z${z}`,
@@ -161,6 +227,8 @@ export function buildHyperGraph(params: {
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
+  layerTransitionPoints?: readonly LayerTransitionPoint[]
+  viaDiameter?: number
 }): {
   graph: HyperGraphHg
   connections: ConnectionHgWithSimpleRouteConnection[]
@@ -249,6 +317,12 @@ export function buildHyperGraph(params: {
     graph,
     assignableViaObstacles: params.assignableViaObstacles ?? [],
     layerCount: params.layerCount,
+  })
+  addLayerTransitionRegions({
+    graph,
+    layerTransitionPoints: params.layerTransitionPoints ?? [],
+    layerCount: params.layerCount,
+    viaDiameter: params.viaDiameter ?? 0.3,
   })
 
   for (const connection of params.simpleRouteJsonConnections) {

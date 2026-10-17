@@ -55,6 +55,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    minimumTraceWidth?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -127,6 +128,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      minimumTraceWidth?: number
     },
   ) {
     super()
@@ -592,7 +594,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
-        traceMargin: 0.1,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
         // Use the optimized kernel in batches; fitness accounts for search work
         // rather than the number of calls into the kernel.
         stepMultiplier: 1000,
@@ -609,7 +614,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters: {
@@ -626,12 +634,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         lowResolutionCellSize: 0.4,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
-        // This likely needs to be corrected to use the actual trace width-
-        // but using anything but 0.1 for traceThickness is causing issues
-        // needs more debugging- repro01 in the high-density-a01 repo
-        // has a good reproduction
-        traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
+        traceMargin:
+          this.constructorParams.minimumTraceWidth !== undefined
+            ? (this.constructorParams.obstacleMargin ?? 0.1)
+            : 0.1,
+        traceThickness: this.constructorParams.minimumTraceWidth ?? 0.1,
         effort: this.effort,
         hyperParameters,
       })
@@ -641,18 +648,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.minimumTraceWidth,
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return new SingleTransitionCrossingRouteSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.minimumTraceWidth,
       }) as any
     }
     if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.minimumTraceWidth,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -671,6 +681,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         connMap: this.connMap,
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceWidth: this.constructorParams.minimumTraceWidth,
       }) as any
     }
     return new CachedIntraNodeRouteSolver({

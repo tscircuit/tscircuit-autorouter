@@ -37,6 +37,7 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     connMap,
     viaDiameter: input.viaDiameter,
     traceWidth: input.traceWidth,
+    minimumTraceWidth: input.minimumTraceWidth,
     obstacleMargin: input.obstacleMargin,
     effort: input.effort,
     nodePfById: {
@@ -113,6 +114,7 @@ export function solvePipeline9NetworkedHighDensityNode(
     connMap,
     viaDiameter: input.viaDiameter,
     traceWidth: input.traceWidth,
+    minimumTraceWidth: input.minimumTraceWidth,
     obstacleMargin: input.obstacleMargin,
     effort: input.effort,
     nodePfById: {

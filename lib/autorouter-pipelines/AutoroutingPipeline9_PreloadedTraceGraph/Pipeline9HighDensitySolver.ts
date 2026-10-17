@@ -32,6 +32,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { splitNodeByContiguousLayers } from "./splitNodeByContiguousLayers"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -44,6 +45,8 @@ export type Pipeline9HighDensitySolverParams = {
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
+  traceToPadClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -64,6 +67,47 @@ type NodeBounds = {
 }
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
+
+const getPlannedViaRoutes = (
+  nodes: NodeWithPortPoints[],
+  connMap: ConnectivityMap,
+  traceThickness: number,
+  viaDiameter: number,
+): HighDensityRoute[] => {
+  const routes: HighDensityRoute[] = []
+  for (const node of nodes) {
+    if (!node.isLayerTransition) continue
+    if (!node.portPointsInPairs) {
+      throw new Error("A planned layer transition has no paired ports")
+    }
+    for (const [start, end] of node.portPointsInPairs) {
+      // Transition regions also admit planar traversals, which have no barrel.
+      if (start.z === end.z) continue
+      if (
+        start.x !== end.x ||
+        start.y !== end.y ||
+        start.connectionName !== end.connectionName
+      ) {
+        throw new Error("A planned via has inconsistent physical endpoints")
+      }
+      routes.push({
+        connectionName: start.connectionName,
+        rootConnectionName:
+          connMap.getNetConnectedToId(
+            start.rootConnectionName ?? start.connectionName,
+          ) ??
+          start.rootConnectionName ??
+          start.connectionName,
+        regionId: node.capacityMeshNodeId,
+        traceThickness,
+        viaDiameter,
+        route: [start, end],
+        vias: [{ x: start.x, y: start.y }],
+      })
+    }
+  }
+  return routes
+}
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
@@ -131,7 +175,7 @@ const routeOverlapsNode = (
 }
 
 const convertFixedRouteToB01Obstacles = (
-  route: PreloadedHighDensityRoute,
+  route: HighDensityRoute,
   node: NodeWithPortPoints,
   board: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">,
 ): HighDensityRouteObstacle[] => {
@@ -316,6 +360,7 @@ export type Pipeline9RegularNodeSolverParams = {
   colorMap: Record<string, string>
   viaDiameter: number
   traceWidth: number
+  minimumTraceWidth?: number
   obstacleMargin: number
   effort: number
   nodePfById:
@@ -337,6 +382,7 @@ export const createPipeline9RegularNodeSolver = ({
   colorMap,
   viaDiameter,
   traceWidth,
+  minimumTraceWidth,
   obstacleMargin,
   effort,
   nodePfById,
@@ -345,13 +391,15 @@ export const createPipeline9RegularNodeSolver = ({
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
-    nodePortPoints: [
-      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
-    ],
+    nodePortPoints: (minimumTraceWidth !== undefined
+      ? splitNodeByContiguousLayers(nodeWithPortPoints)
+      : [nodeWithPortPoints]
+    ).map((node) => normalizePipeline9NodeRootConnectionNames(node, connMap)),
     colorMap,
     connMap,
     viaDiameter,
     traceWidth,
+    minimumTraceWidth,
     obstacleMargin,
     effort,
     nodePfById,
@@ -375,6 +423,7 @@ export const createPipeline9RegularNodeSolver = ({
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
+  readonly plannedViaRoutes: HighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
@@ -383,6 +432,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
+  readonly minimumTraceWidth?: number
+  readonly traceToPadClearance?: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
   readonly effort: number
@@ -392,6 +443,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
+  readonly boardObstacleRegionIds = new Set<string>()
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -418,6 +470,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
+    this.minimumTraceWidth = params.minimumTraceWidth
+    this.plannedViaRoutes =
+      this.minimumTraceWidth === undefined
+        ? []
+        : getPlannedViaRoutes(
+            params.nodePortPoints,
+            this.connMap,
+            this.traceWidth,
+            this.viaDiameter,
+          )
+    this.traceToPadClearance = params.traceToPadClearance
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
@@ -491,6 +554,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
@@ -516,11 +580,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     const regionalNode = {
       ...normalizedNode,
-      // The capacity path fixes each ordinary node to its assigned layers.
-      // Once B01 has proved that assignment unroutable, the regional repair
-      // must be able to add a legal layer transition; board obstacles still
-      // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      // Explicit physical layer sets remain binding during regional repair.
+      // Legacy problems may explore the remaining board layers, with board
+      // obstacles determining whether those transitions are legal.
+      availableZ:
+        this.minimumTraceWidth !== undefined
+          ? normalizedNode.availableZ
+          : Array.from({ length: this.layerCount }, (_, z) => z),
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
@@ -558,17 +624,29 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
+    const plannedViaObstacles = getPipeline9FixedRouteObstacles({
+      fixedObstacleRoutes: this.plannedViaRoutes.filter(
+        (route) => route.regionId !== this.activeNode!.capacityMeshNodeId,
+      ),
+      layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+    })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
+      minimumTraceWidth: this.minimumTraceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: [...this.obstacles, ...fixedRouteObstacles],
-      boardObstacles: this.obstacles,
+      obstacles: [
+        ...this.obstacles,
+        ...fixedRouteObstacles,
+        ...plannedViaObstacles,
+      ],
+      boardObstacles: [...this.obstacles, ...plannedViaObstacles],
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -998,14 +1076,25 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
-    const fixedObstacles = this.getUpdatedFixedHdRoutes()
+    const fixedObstacles = [
+      ...this.getUpdatedFixedHdRoutes(),
+      ...this.plannedViaRoutes.filter(
+        (route) => route.regionId !== node.capacityMeshNodeId,
+      ),
+    ]
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
       )
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
+    if (node.isLayerTransition && fixedObstacles.length === 0) {
+      // These net-owned via centers and their clear layer spans were checked
+      // before pathing. A grid solver must not quantize them to another site.
+      this.startRegularSolver(node)
+      return
+    }
+    if (fixedObstacles.length === 0 && this.minimumTraceWidth === undefined) {
       this.startRegularSolver(node)
       return
     }
@@ -1026,6 +1115,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
+    if (boardObstacles.length > 0) {
+      this.boardObstacleRegionIds.add(node.capacityMeshNodeId)
+    }
+    if (fixedObstacles.length === 0 && boardObstacles.length === 0) {
+      this.startRegularSolver(node)
+      return
+    }
 
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {
@@ -1048,9 +1144,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ] as HighDensityObstacle[],
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      useExactPortCoordinates: this.minimumTraceWidth !== undefined,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin:
+        this.traceToPadClearance ?? PRELOADED_TRACE_CLEARANCE,
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {
