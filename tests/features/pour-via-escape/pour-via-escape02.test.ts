@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import { distance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
+import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape02.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -53,9 +53,7 @@ test(
       inner2Vias.some((segment) => distance(segment, pcbPort14) <= 1),
     ).toBe(true)
 
-    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
-    )
+    expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
   },
   { timeout: 180_000 },
 )
