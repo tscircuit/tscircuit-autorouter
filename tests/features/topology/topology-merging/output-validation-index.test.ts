@@ -31,7 +31,10 @@ function createValidationInput(
     PreparedTopologyMergingNode
   >()
   const provenance = {
-    sourceKeysByNodeId: new Map<CapacityMeshNodeId, TopologyMergingSourceKey[]>(),
+    sourceKeysByNodeId: new Map<
+      CapacityMeshNodeId,
+      TopologyMergingSourceKey[]
+    >(),
     groupIndexesByNodeId: new Map<CapacityMeshNodeId, number[]>(),
   }
   for (const [index, node] of nodes.entries()) {
@@ -128,7 +131,10 @@ test("indexed topology validation preserves exhaustive outcomes and first errors
   ] as const) {
     cases.push({
       name,
-      input: createValidationInput([createNode({ id: "a", minX: 0, maxX: 2 }), b]),
+      input: createValidationInput([
+        createNode({ id: "a", minX: 0, maxX: 2 }),
+        b,
+      ]),
       shouldFail,
     })
   }
