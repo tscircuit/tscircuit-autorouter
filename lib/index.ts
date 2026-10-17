@@ -29,6 +29,7 @@ export {
   type AutoroutingPipelineSolver9NetworkedOptions,
 } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
 export { AUTOROUTER_VERSION } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+export type { Pipeline9SolveAsyncOptions } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9HighDensityWorkerTypes"
 export { DEFAULT_HD_CACHE2_SERVER_URL } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
 export type {
   Pipeline9NetworkedCacheSource,

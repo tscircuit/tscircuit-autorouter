@@ -32,6 +32,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import type { Pipeline9SolveAsyncOptions } from "./pipeline9HighDensityWorkerTypes"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -406,8 +407,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackPromotedFixedRouteConnectionNames = new Set<string>()
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
+  private asyncRunning = false
 
-  constructor(params: Pipeline9HighDensitySolverParams) {
+  constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
@@ -452,6 +454,67 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override getSolverName(): string {
     return "Pipeline9HighDensitySolver"
+  }
+
+  /** Completes independent nodes in workers, publishing routes in synchronous pop order. */
+  async solveAsync(options: Pipeline9SolveAsyncOptions = {}): Promise<void> {
+    if (this.asyncRunning) throw new Error("High-density solveAsync is already running")
+    if (this.solved || this.failed) return
+    if (options.workerCount !== undefined && (!Number.isSafeInteger(options.workerCount) || options.workerCount < 1)) {
+      throw new Error("workerCount must be a positive integer")
+    }
+    const startTime = performance.now()
+    // Regional repairs mutate preloaded copper, which later nodes must observe.
+    // Hosts without a Bun/Node runtime retain the synchronous implementation.
+    if (this.fixedHdRoutes.length > 0 || (typeof process === "undefined" || !process.versions?.node)) {
+      this.solve()
+      return
+    }
+    while (this.activeNode && !this.solved && !this.failed) this.step()
+    if (this.solved || this.failed) return
+    this.asyncRunning = true
+    try {
+      const { solveHighDensityInWorkers } = await import("./solveHighDensityInWorkers")
+      const { connMap, nodePortPoints: _, ...shared } = this.params
+      const results = await solveHighDensityInWorkers(
+        [...this.unsolvedNodePortPoints].reverse(),
+        { ...shared, connectivityNetMap: connMap.netMap },
+        this.MAX_ITERATIONS,
+        options,
+      )
+      for (const result of results) {
+        // Every job includes one terminal step, which belongs only at the end
+        // of the original solver's iteration stream.
+        const logicalIterations = result.iterations - (result.solved ? 1 : 0)
+        if (this.iterations + logicalIterations > this.MAX_ITERATIONS) {
+          // Stop inside the budget-crossing job at the exact synchronous step,
+          // rather than publishing routes from beyond the iteration limit.
+          this.asyncRunning = false
+          this.solve()
+          return
+        }
+        this.iterations += logicalIterations
+        this.routes.push(...result.routes)
+        for (const [key, value] of Object.entries(result.stats)) {
+          if (key !== "nodeCount" && key !== "fixedObstacleCount") this.stats[key] += value
+        }
+        if (result.consumedNodeCount > 0) this.unsolvedNodePortPoints.splice(-result.consumedNodeCount)
+        if (!result.solved) {
+          this.error = result.error
+          this.failed = true
+          this.progress = this.computeProgress()
+          return
+        }
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Pipeline9 high-density worker error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
+    }
+    this.step()
   }
 
   getUpdatedFixedHdRoutes(): PreloadedHighDensityRoute[] {
@@ -911,6 +974,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.asyncRunning) throw new Error("Cannot step during an asynchronous high-density solve")
     this.stepNodeRouting()
     this.activeSubSolver =
       this.activeFallbackSolver ??

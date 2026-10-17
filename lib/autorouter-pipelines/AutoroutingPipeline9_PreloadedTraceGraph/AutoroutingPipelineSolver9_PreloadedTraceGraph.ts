@@ -90,6 +90,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import type { Pipeline9SolveAsyncOptions } from "./pipeline9HighDensityWorkerTypes"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -1126,6 +1127,34 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   currentPipelineStepIndex = 0
+  private asyncRunning = false
+
+  /** Uses Bun workers (or Node worker_threads) for the high-density phase. */
+  async solveAsync(options: Pipeline9SolveAsyncOptions = {}): Promise<void> {
+    if (this.asyncRunning) throw new Error("Pipeline9 solveAsync is already running")
+    if (options.workerCount !== undefined && (!Number.isSafeInteger(options.workerCount) || options.workerCount < 1)) {
+      throw new Error("workerCount must be a positive integer")
+    }
+    const startTime = performance.now()
+    this.asyncRunning = true
+    try {
+      while (!this.solved && !this.failed) {
+        if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
+          const previousIterations = this.activeSubSolver.iterations
+          await this.activeSubSolver.solveAsync(options)
+          this.iterations += Math.max(0, this.activeSubSolver.iterations - previousIterations - 1)
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Pipeline9 asynchronous solve error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
+    }
+  }
 
   computeProgress(): number {
     const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
