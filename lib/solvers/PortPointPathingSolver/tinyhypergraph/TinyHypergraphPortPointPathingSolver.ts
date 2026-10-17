@@ -412,6 +412,7 @@ const toSerializedRegionData = (
         : [...region.d._offBoardConnectedCapacityMeshNodeIds],
     _qfpRegionType: regionMetadata._qfpRegionType,
     _isNarrowQfpPadGap: regionMetadata._isNarrowQfpPadGap,
+    isLayerTransition: regionMetadata.isLayerTransition,
     ...(netId !== undefined ? { netId } : {}),
   }
 }

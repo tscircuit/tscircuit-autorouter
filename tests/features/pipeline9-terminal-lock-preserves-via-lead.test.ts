@@ -13,7 +13,11 @@ test("Pipeline9 terminal locking preserves the lead from a nearby via", (): void
     endPcbPortId: "bottom-pad",
     traceThickness: 0.1524,
     viaDiameter: 0.2032,
-    route: [{ ...via, z: 0 }, { ...via, z: 0 }, { ...via, z: 7 }],
+    route: [
+      { ...via, z: 0 },
+      { ...via, z: 0 },
+      { ...via, z: 7 },
+    ],
     vias: [],
   }
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(

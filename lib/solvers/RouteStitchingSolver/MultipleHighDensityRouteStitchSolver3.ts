@@ -517,8 +517,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           return false
         }
         return (
-          !connectionNamesWithCompleteTerminalRoutes.has(route.connectionName) ||
-          Boolean(route.startPcbPortId && route.endPcbPortId)
+          !connectionNamesWithCompleteTerminalRoutes.has(
+            route.connectionName,
+          ) || Boolean(route.startPcbPortId && route.endPcbPortId)
         )
       })
       this.solved = true
