@@ -190,7 +190,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.preferSameLayerTerminalEndpoints =
       params.preferSameLayerTerminalEndpoints ?? false
     this.enableCompleteTerminalStitching =
-      params.enableCompleteTerminalStitching ?? true
+      params.enableCompleteTerminalStitching ?? false
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys

@@ -39,6 +39,7 @@ test("allows an intermediate PCB terminal from the same root net", (): void => {
       start: { x: 0, y: 0, z: 0, pcb_port_id: "pcb_port_a" },
       end: { x: 2, y: 0, z: 0, pcb_port_id: "pcb_port_c" },
       allowedPcbPortIds,
+      enableCompleteTerminalStitching: true,
       preserveTerminalPcbPortIds: true,
       isStitchSegmentClear: () => true,
       stitchClearanceMode: "require_clear",

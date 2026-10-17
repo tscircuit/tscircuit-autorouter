@@ -33,6 +33,7 @@ test("aligns a tolerance-matched cross-layer stitch and its via", () => {
     ],
     start: { x: 0, y: 0, z: 0 },
     end: { x: 2, y: 0, z: 1 },
+    enableCompleteTerminalStitching: true,
     preserveTerminalPcbPortIds: true,
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",

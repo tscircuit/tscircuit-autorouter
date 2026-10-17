@@ -163,7 +163,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.enableCompleteTerminalStitching =
-      opts.enableCompleteTerminalStitching ?? true
+      opts.enableCompleteTerminalStitching ?? false
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
 
