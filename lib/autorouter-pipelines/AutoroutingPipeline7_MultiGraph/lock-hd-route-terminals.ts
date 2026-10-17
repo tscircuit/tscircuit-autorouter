@@ -82,26 +82,45 @@ export const lockHdRouteTerminals = ({
       ? terminalByPcbPortId.get(hdRoute.endPcbPortId)
       : undefined
 
-    const route = hdRoute.route.map((point, pointIndex) => {
+    const route = hdRoute.route.flatMap((point, pointIndex) => {
+      const interiorPoint = { ...point }
+      delete interiorPoint.pcb_port_id
       if (pointIndex === 0 && startTerminal) {
-        return {
+        const lockedPoint = {
           ...point,
           x: startTerminal.x,
           y: startTerminal.y,
           pcb_port_id: startTerminal.pcb_port_id,
         }
+        const next = hdRoute.route[1]
+        if (
+          next &&
+          next.z !== point.z &&
+          (point.x !== lockedPoint.x || point.y !== lockedPoint.y)
+        ) {
+          return [lockedPoint, interiorPoint]
+        }
+        return [lockedPoint]
       }
       if (pointIndex === hdRoute.route.length - 1 && endTerminal) {
-        return {
+        const lockedPoint = {
           ...point,
           x: endTerminal.x,
           y: endTerminal.y,
           pcb_port_id: endTerminal.pcb_port_id,
         }
+        const previous = hdRoute.route[pointIndex - 1]
+        if (
+          previous &&
+          previous.z !== point.z &&
+          (point.x !== lockedPoint.x || point.y !== lockedPoint.y)
+        ) {
+          // Moving a terminal must not also move the via at that endpoint.
+          return [interiorPoint, lockedPoint]
+        }
+        return [lockedPoint]
       }
-      const interiorPoint = { ...point }
-      delete interiorPoint.pcb_port_id
-      return interiorPoint
+      return [interiorPoint]
     })
 
     return { ...hdRoute, route }

@@ -485,17 +485,42 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!unsolvedRoute) {
       const connectionNamesWithCompleteTerminalRoutes =
         new Set<ConnectionName>()
+      const copperTerminalsByConnection = new Map<ConnectionName, Set<string>>()
       for (const route of this.mergedHdRoutes) {
-        if (route.startPcbPortId && route.endPcbPortId) {
+        if (
+          route.startPcbPortId &&
+          route.endPcbPortId &&
+          route.startPcbPortId !== route.endPcbPortId
+        ) {
           connectionNamesWithCompleteTerminalRoutes.add(route.connectionName)
+          const terminals =
+            copperTerminalsByConnection.get(route.connectionName) ?? new Set()
+          terminals.add(route.startPcbPortId)
+          terminals.add(route.endPcbPortId)
+          copperTerminalsByConnection.set(route.connectionName, terminals)
         }
       }
-      this.mergedHdRoutes = this.mergedHdRoutes.filter(
-        (route) =>
-          !connectionNamesWithCompleteTerminalRoutes.has(
-            route.connectionName,
-          ) || Boolean(route.startPcbPortId && route.endPcbPortId),
-      )
+      this.mergedHdRoutes = this.mergedHdRoutes.filter((route) => {
+        // A one-point pad marker has no copper. Once a real terminal path
+        // includes that same pad, retaining the marker as a closed trace
+        // duplicates its identity and violates the terminal-lock contract.
+        if (
+          this.enableCompleteTerminalStitching &&
+          route.route.length === 1 &&
+          route.vias.length === 0 &&
+          route.startPcbPortId &&
+          route.startPcbPortId === route.endPcbPortId &&
+          copperTerminalsByConnection
+            .get(route.connectionName)
+            ?.has(route.startPcbPortId)
+        ) {
+          return false
+        }
+        return (
+          !connectionNamesWithCompleteTerminalRoutes.has(route.connectionName) ||
+          Boolean(route.startPcbPortId && route.endPcbPortId)
+        )
+      })
       this.solved = true
       return
     }

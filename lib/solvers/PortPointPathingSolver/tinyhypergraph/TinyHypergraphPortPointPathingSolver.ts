@@ -41,6 +41,7 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { fitDuplicatedPortsToPhysicalSlots } from "./fitDuplicatedPortsToPhysicalSlots"
 import { getPhysicalPortConflicts } from "./getPhysicalPortConflicts"
 import { getPhysicalPortObstacleReservations } from "./getPhysicalPortObstacleReservations"
+import { getPhysicalViaRegionPortConflicts } from "./getPhysicalViaRegionPortConflicts"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -959,6 +960,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         loaded,
         this.portObstacleConstraints,
         this.layerCount,
+      )
+      loaded.problem.viaRegionPortConflicts = getPhysicalViaRegionPortConflicts(
+        loaded.topology,
+        this.portObstacleConstraints.traceWidth,
+        this.portObstacleConstraints.clearance,
       )
     }
     if (this.minPortSpacing !== undefined) {
