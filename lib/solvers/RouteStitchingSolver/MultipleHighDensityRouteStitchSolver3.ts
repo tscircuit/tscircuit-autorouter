@@ -91,8 +91,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       allowedPcbPortIds: params.allowedPcbPortIds,
-      enableCompleteTerminalStitching:
-        this.enableCompleteTerminalStitching,
+      enableCompleteTerminalStitching: this.enableCompleteTerminalStitching,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
@@ -504,8 +503,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       allowedPcbPortIds: unsolvedRoute.allowedPcbPortIds,
-      enableCompleteTerminalStitching:
-        this.enableCompleteTerminalStitching,
+      enableCompleteTerminalStitching: this.enableCompleteTerminalStitching,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),

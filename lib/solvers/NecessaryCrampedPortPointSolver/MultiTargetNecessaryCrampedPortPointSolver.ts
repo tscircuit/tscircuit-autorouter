@@ -266,8 +266,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
               ...(this.input.relaxMultilayerEscapePenalty
                 ? { cramped: false }
                 : {}),
-              tinyHypergraphPortPenalty: this.input
-                .relaxMultilayerEscapePenalty
+              tinyHypergraphPortPenalty: this.input.relaxMultilayerEscapePenalty
                 ? RELAXED_CRAMPED_NON_NECESSARY_PORT_PENALTY
                 : LEGACY_CRAMPED_NON_NECESSARY_PORT_PENALTY,
             },
