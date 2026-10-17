@@ -1,3 +1,4 @@
+import type { Pipeline9RepairRuntime } from "../Pipeline9_Parallel/pipeline9NegotiationTask"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -60,7 +61,8 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
-type Pipeline9JointDrcRepairSolverParams = {
+export type Pipeline9JointDrcRepairSolverParams = {
+  repairRuntime?: Pipeline9RepairRuntime
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -660,6 +662,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private fastReferenceDrcEvaluator?: DrcEvaluator
+  parallelBoundedRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
@@ -1302,6 +1306,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
+      includeBoardClearance = true,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1318,6 +1323,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           traceClearance,
           viaClearance: viaHoleClearance,
           includeTraceContinuity,
+          includeBoardClearance,
         },
       })
       const evaluatedTraceIds = new Set(
@@ -1382,6 +1388,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    let fastCandidateCache: { key: string; result: ReturnType<DrcEvaluator> } | undefined
+    this.fastReferenceDrcEvaluator = (input): ReturnType<DrcEvaluator> => {
+      const evaluatedRoutes = input.routes ?? input.hdRoutes
+      if (!evaluatedRoutes) throw new Error("Parallel repair requires candidate routes")
+      const key = JSON.stringify(evaluatedRoutes)
+      if (fastCandidateCache?.key === key) return fastCandidateCache.result
+      // Continuity and board-edge validation are deferred only while searching.
+      // Every zero-error result receives both checks before publication.
+      let result = referenceDrcEvaluator(input, false, false)
+      const errors = Array.isArray(result) ? result : result.errors
+      if (errors.length === 0) result = cachedReferenceDrcEvaluator(input)
+      fastCandidateCache = { key, result }
+      return result
+    }
     this.clearancePrecisionDrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1563,6 +1583,50 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       !params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)
     ) {
       this.currentPipelineStepIndex = 1
+    }
+    if (params.repairRuntime) {
+      const serialStartIndex = this.currentPipelineStepIndex
+      this.pipelineDef.unshift({
+        solverName: "parallelBoundedRepairSolver",
+        createSolver: (): BaseSolver => {
+          if (!this.exactRepairParams || !this.fastReferenceDrcEvaluator) {
+            throw new Error("Parallel bounded repair stage is missing its input")
+          }
+          this.parallelBoundedRepairSolver = new Pipeline9BoundedRegionalRepairSolver({
+            originalSrj: {
+              ...params.originalSrj,
+              connections: [...params.originalSrj.connections, ...params.newConnections],
+            },
+            connMap: params.connMap,
+            routes: this.exactRepairParams.hdRoutes,
+            syntheticConnectionNames: this.syntheticConnectionNames,
+            viaHoleDiameter: params.defaultViaHoleDiameter,
+            drcEvaluator: this.fastReferenceDrcEvaluator,
+            runtime: params.repairRuntime,
+            budget: getPipeline9BoundedRepairBudget(this.exactRepairParams.hdRoutes.length, 0, params.effort),
+          })
+          return this.parallelBoundedRepairSolver
+        },
+        onSolved: (): void => {
+          const result = this.parallelBoundedRepairSolver!.getResult()
+          const reference = this.cachedReferenceDrcEvaluator!({ traces: [], routes: result.routes, hdRoutes: result.routes })
+          const errors = Array.isArray(reference) ? reference : reference.errors
+          this.stats.parallelRepairAttempted = true
+          this.stats.parallelRepairWorkerCount = params.repairRuntime!.workerCount
+          this.stats.parallelRepairFinalDrcIssueCount = errors.length
+          this.stats.parallelRepairSearchNodes = result.pathSearchNodeCount
+          this.stats.parallelRepairCandidateAttempts = result.candidateAttemptCount
+          this.stats.parallelRepairRegions = result.attemptedRegionCount
+          if (errors.length !== 0) this.currentPipelineStepIndex = serialStartIndex
+          if (errors.length === 0) {
+            this.combinedOutput = result.routes
+            this.stats.finalDrcIssueCount = 0
+            this.stats.parallelRepairAccepted = true
+            this.solved = true
+          }
+        },
+      })
+      this.currentPipelineStepIndex = 0
     }
     this.activeSubSolver =
       this.pipelineDef[this.currentPipelineStepIndex]!.createSolver()

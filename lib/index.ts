@@ -113,3 +113,6 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+
+export { Pipeline9JointDrcRepairSolver, type Pipeline9JointDrcRepairSolverParams } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+export type { Pipeline9RepairRuntime } from "./autorouter-pipelines/Pipeline9_Parallel/pipeline9NegotiationTask"

@@ -1,3 +1,4 @@
+import type { Pipeline9RepairRuntime } from "../Pipeline9_Parallel/pipeline9NegotiationTask"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
@@ -74,6 +75,7 @@ export const getPipeline9BoundedRepairBudget = (
 }
 
 export type Pipeline9BoundedRegionalRepairParams = {
+  runtime?: Pipeline9RepairRuntime
   originalSrj: SimpleRouteJson
   connMap?: ConnectivityMap
   routes: HighDensityRoute[]
