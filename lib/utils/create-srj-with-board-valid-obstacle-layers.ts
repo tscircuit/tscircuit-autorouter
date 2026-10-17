@@ -21,9 +21,7 @@ function getObstacleZLayersOnBoard(
   )
   if (namedZLayers.length > 0) return namedZLayers
 
-  throw new Error(
-    `Obstacle "${obstacle.obstacleId ?? "unknown"}" has no layers on this ${layerCount}-layer board`,
-  )
+  return []
 }
 
 function createObstacleWithBoardValidLayers(

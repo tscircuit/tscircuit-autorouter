@@ -11,11 +11,8 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
  */
 export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends PreprocessSimpleRouteJsonSolver {
   override _step(): void {
-    this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
-    if (this.error) {
-      this.failed = true
-      return
-    }
+    if (!this.validatePreRoutingDiagnostics()) return
+
     const { traces, ...inputSrjWithoutTraces } = this.inputSrj
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(

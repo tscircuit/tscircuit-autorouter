@@ -1,9 +1,15 @@
 import type { GraphicsObject } from "graphics-debug"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
+import type { AutoroutingDiagnostic } from "lib/types/diagnostics"
 
 export type PendingEffect = {
   name: string
   promise: Promise<unknown>
+}
+
+export type SolverEventMap = {
+  diagnostic: (diagnostic: AutoroutingDiagnostic) => void
+  [event: string]: (...args: any[]) => void
 }
 
 export class BaseSolver {
@@ -13,6 +19,8 @@ export class BaseSolver {
   iterations = 0
   progress = 0
   error: string | null = null
+  diagnostics?: AutoroutingDiagnostic[]
+  private _listeners?: { [K in keyof SolverEventMap]?: SolverEventMap[K][] }
   activeSubSolver?: BaseSolver | null
   failedSubSolvers?: BaseSolver[]
   timeToSolve?: number
@@ -59,6 +67,56 @@ export class BaseSolver {
 
   getConstructorParams() {
     throw new Error("getConstructorParams not implemented")
+  }
+
+  on?: <K extends keyof SolverEventMap>(
+    event: K,
+    listener: SolverEventMap[K],
+  ) => this = (event, listener) => {
+    if (!this._listeners) {
+      this._listeners = {}
+    }
+    if (!this._listeners[event]) {
+      this._listeners[event] = []
+    }
+    this._listeners[event]?.push(listener)
+    return this
+  }
+
+  off?: <K extends keyof SolverEventMap>(
+    event: K,
+    listener: SolverEventMap[K],
+  ) => this = (event, listener) => {
+    if (!this._listeners || !this._listeners[event]) return this
+    this._listeners[event] = this._listeners[event]?.filter(
+      (l) => l !== listener,
+    )
+    return this
+  }
+
+  emit?: (event: string, ...args: any[]) => void = (event, ...args) => {
+    if (!this._listeners || !this._listeners[event]) return
+    for (const listener of this._listeners[event] ?? []) {
+      try {
+        listener(...args)
+      } catch (err) {
+        console.error(`Error in solver event listener for ${event}:`, err)
+      }
+    }
+  }
+
+  emitDiagnostic?: (diagnostic: AutoroutingDiagnostic) => void = (
+    diagnostic,
+  ) => {
+    if (!this.diagnostics) {
+      this.diagnostics = []
+    }
+    this.diagnostics.push(diagnostic)
+    this.emit?.("diagnostic", diagnostic)
+  }
+
+  getDiagnostics?: () => AutoroutingDiagnostic[] = () => {
+    return this.diagnostics ?? []
   }
 
   solve() {

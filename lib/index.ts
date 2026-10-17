@@ -113,3 +113,11 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export type {
+  AutoroutingDiagnostic,
+  DiagnosticCode,
+  DiagnosticSeverity,
+  RecommendedAction,
+} from "./types/diagnostics"
+export { getPreRoutingDiagnostics } from "./diagnostics/getPreRoutingDiagnostics"
+export { PreRoutingDiagnosticSolver } from "./solvers/PreRoutingDiagnosticSolver/PreRoutingDiagnosticSolver"
