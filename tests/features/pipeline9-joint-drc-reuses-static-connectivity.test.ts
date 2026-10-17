@@ -74,6 +74,11 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
     effort: 1,
     colorMap: {},
   })
+  // Construct the exact branch directly: a successful bounded pass can now
+  // finish the joint solver before that branch is needed.
+  solver.pipelineDef
+    .find((stage) => stage.solverName === "exactRepairSolver")!
+    .createSolver()
   const evaluate = solver.exactRepairSolver!.params.drcEvaluator!
   const initial = evaluate({ traces: [], routes })
   const warmedConnectivityChecks = connectivityChecks

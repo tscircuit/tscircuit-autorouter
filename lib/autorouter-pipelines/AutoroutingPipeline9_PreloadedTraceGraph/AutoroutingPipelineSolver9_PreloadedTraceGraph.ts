@@ -946,6 +946,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             effort: cms.effort,
+            viaRemovalPasses:
+              cms.pipeline9JointDrcRepairSolver!.stats
+                .initialBoundedRegionalRepairAddedViaCount > 0
+                ? 2
+                : 1,
             config: {
               hdRoutes,
               preserveRouteEndpoints: true,

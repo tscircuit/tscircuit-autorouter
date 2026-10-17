@@ -78,6 +78,13 @@ test("Pipeline9 falls back to reference DRC for an indexed-engine false negative
     colorMap: { route: "red" },
   })
 
+  // Exercise indexed/reference validation in the exact branch, even when an
+  // initial bounded pass could now solve this small fixture by itself.
+  solver.currentPipelineStepIndex = solver.pipelineDef.findIndex(
+    (stage) => stage.solverName === "exactRepairSolver",
+  )
+  solver.activeSubSolver =
+    solver.pipelineDef[solver.currentPipelineStepIndex]!.createSolver()
   solver.solve()
 
   expect(solver.failed).toBeFalse()

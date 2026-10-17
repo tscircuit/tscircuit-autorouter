@@ -15,7 +15,18 @@ test("Pipeline9 routes SRJ18 sample 13 within its regional work budget", async (
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
-  expect(repairStats?.postExactReferenceValidationAttempted).toBeTrue()
+  const initialRepairAccepted =
+    repairStats?.initialBoundedRegionalRepairAccepted === true
+  if (initialRepairAccepted) {
+    expect(repairStats.initialBoundedRegionalRepairPublishedDrcIssueCount).toBe(
+      0,
+    )
+    expect(
+      solver.pipeline9JointDrcRepairSolver?.exactRepairSolver,
+    ).toBeUndefined()
+  } else {
+    expect(repairStats?.postExactReferenceValidationAttempted).toBeTrue()
+  }
   expect(Number(repairStats?.terminalEscapeCandidateCount)).toBeLessThanOrEqual(
     256,
   )
@@ -28,13 +39,25 @@ test("Pipeline9 routes SRJ18 sample 13 within its regional work budget", async (
     Number(repairStats?.clearancePrecisionCandidateCount),
   ).toBeLessThanOrEqual(24)
   expect(
-    Number(repairStats?.boundedRegionalRepairAttemptedRegionCount),
+    Number(
+      initialRepairAccepted
+        ? repairStats?.initialBoundedRegionalRepairAttemptedRegionCount
+        : repairStats?.boundedRegionalRepairAttemptedRegionCount,
+    ),
   ).toBeLessThanOrEqual(8)
   expect(
-    Number(repairStats?.boundedRegionalRepairCandidateAttemptCount),
+    Number(
+      initialRepairAccepted
+        ? repairStats?.initialBoundedRegionalRepairCandidateAttemptCount
+        : repairStats?.boundedRegionalRepairCandidateAttemptCount,
+    ),
   ).toBeLessThanOrEqual(1_024)
   expect(
-    Number(repairStats?.boundedRegionalRepairPathSearchNodeCount),
+    Number(
+      initialRepairAccepted
+        ? repairStats?.initialBoundedRegionalRepairPathSearchNodeCount
+        : repairStats?.boundedRegionalRepairPathSearchNodeCount,
+    ),
   ).toBeLessThanOrEqual(10_000_000)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,

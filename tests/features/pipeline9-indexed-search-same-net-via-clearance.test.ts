@@ -81,6 +81,9 @@ test("indexed repair does not apply the different-net copper rule to connected v
     effort: 1,
     colorMap: {},
   })
+  solver.pipelineDef
+    .find((stage) => stage.solverName === "exactRepairSolver")!
+    .createSolver()
   const evaluate = solver.exactRepairSolver!.params.drcEvaluator!
   const validation = evaluate({ traces: [], routes })
   const errors = Array.isArray(validation) ? validation : validation.errors

@@ -19,7 +19,7 @@ test("Pipeline9 simplifies repaired SRJ18 sample 2 at default effort", async ():
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.effortCleanupSolver?.completedPasses).toBe(1)
+  expect(solver.effortCleanupSolver?.completedPasses).toBe(2)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const simplifiedViaCount = routedTraces.reduce(
     (sum, trace) =>
