@@ -12,6 +12,7 @@ export type BoundedHighDensityForceImproveSolverParams = {
   totalStepsPerNode?: number
   nodeAssignmentMargin?: number
   colorMap?: Record<string, string>
+  protectOverBudgetRegions?: boolean
 }
 
 /**
@@ -24,6 +25,7 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
   private readonly protectedRouteIndexes: Set<number>
   private readonly protectedLayerTransitionRouteCount: number
   private readonly protectedOverBudgetRouteCount: number
+  private readonly protectOverBudgetRegions: boolean
 
   constructor(params: BoundedHighDensityForceImproveSolverParams) {
     const transitionNodeIds = new Set(
@@ -39,13 +41,17 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
         (pointCountByRegionId.get(route.regionId) ?? 0) + route.route.length,
       )
     }
-    const overBudgetRegionIds = new Set(
-      [...pointCountByRegionId]
-        .filter(
-          ([, pointCount]) => pointCount > MAX_FORCE_IMPROVE_POINTS_PER_REGION,
+    const protectOverBudgetRegions = params.protectOverBudgetRegions ?? true
+    const overBudgetRegionIds = protectOverBudgetRegions
+      ? new Set(
+          [...pointCountByRegionId]
+            .filter(
+              ([, pointCount]) =>
+                pointCount > MAX_FORCE_IMPROVE_POINTS_PER_REGION,
+            )
+            .map(([regionId]) => regionId),
         )
-        .map(([regionId]) => regionId),
-    )
+      : new Set<string>()
     const protectedRouteIndexes = new Set<number>()
     let protectedLayerTransitionRouteCount = 0
     let protectedOverBudgetRouteCount = 0
@@ -76,6 +82,7 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
     this.protectedRouteIndexes = protectedRouteIndexes
     this.protectedLayerTransitionRouteCount = protectedLayerTransitionRouteCount
     this.protectedOverBudgetRouteCount = protectedOverBudgetRouteCount
+    this.protectOverBudgetRegions = protectOverBudgetRegions
     this.updateProtectionStats()
   }
 
@@ -109,6 +116,7 @@ export class BoundedHighDensityForceImproveSolver extends HighDensityForceImprov
         totalStepsPerNode: this.totalStepsPerNode,
         nodeAssignmentMargin: this.nodeAssignmentMargin,
         colorMap: this.colorMap,
+        protectOverBudgetRegions: this.protectOverBudgetRegions,
       },
     ] as const
   }

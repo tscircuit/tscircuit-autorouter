@@ -166,10 +166,12 @@ function mergeComponentSharedEdgeSegments({
   originalSharedEdgeSegments,
   filteredSharedEdgeSegments,
   componentCapacityMeshNodeIds,
+  clearComponentCrampedPenalty,
 }: {
   originalSharedEdgeSegments: SharedEdgeSegment[]
   filteredSharedEdgeSegments: SharedEdgeSegment[]
   componentCapacityMeshNodeIds: Set<string>
+  clearComponentCrampedPenalty: boolean
 }) {
   const filteredSegmentsByEdgeId = new Map(
     filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
@@ -179,6 +181,7 @@ function mergeComponentSharedEdgeSegments({
     // Component-local points are already the intentional escape geometry.
     // Retain them without charging the generic cramped-port penalty again.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
+      if (!clearComponentCrampedPenalty) return segment
       return {
         ...segment,
         portPoints: segment.portPoints.map((portPoint) => ({
@@ -446,6 +449,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            relaxMultilayerEscapePenalty:
+              cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -462,6 +467,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               filteredSharedEdgeSegments:
                 cms.necessaryCrampedPortPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
+              clearComponentCrampedPenalty:
+                cms.originalSrj.allowViaInPad ?? false,
             })
         },
       },
@@ -482,14 +489,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-          layerTransitionPoints: getTargetLayerTransitionPoints({
-            srj: cms.srjWithPointPairs!,
-            viaDiameter: cms.viaDiameter,
-            obstacleMargin:
-              cms.srj.minViaEdgeToPadEdgeClearance ??
-              cms.srj.defaultObstacleMargin ??
-              0.15,
-          }),
+          layerTransitionPoints: cms.originalSrj.allowViaInPad
+            ? getTargetLayerTransitionPoints({
+                srj: cms.srjWithPointPairs!,
+                viaDiameter: cms.viaDiameter,
+                obstacleMargin:
+                  cms.srj.minViaEdgeToPadEdgeClearance ??
+                  cms.srj.defaultObstacleMargin ??
+                  0.15,
+              })
+            : [],
           viaDiameter: cms.viaDiameter,
         })
 
@@ -594,6 +603,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
         },
       ],
     ),
@@ -627,6 +637,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
+          enableCompleteTerminalStitching:
+            cms.originalSrj.allowViaInPad ?? false,
           preserveTerminalPcbPortIds: true,
         },
       ],
@@ -646,6 +658,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
+          preserveExplicitLayerTransitions:
+            cms.originalSrj.allowViaInPad ?? false,
           iterations: 2,
         },
       ],

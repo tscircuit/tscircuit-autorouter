@@ -15,6 +15,7 @@ import {
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
+  snapIslandEndpointToNearestTerminal,
   snapIslandEndpointsToDistinctTerminals,
 } from "./routeStitchingEndpointHelpers"
 import {
@@ -67,6 +68,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  private enableCompleteTerminalStitching: boolean
   private preferSameLayerTerminalEndpoints: boolean
   private pcbPortIdsByRootConnectionName: Map<string, Set<string>>
   private endpointIndex: EndpointClusterIndex
@@ -89,6 +91,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       allowedPcbPortIds: params.allowedPcbPortIds,
+      enableCompleteTerminalStitching:
+        this.enableCompleteTerminalStitching,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
@@ -128,6 +132,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     start: Point3
     end: Point3
   }) {
+    if (!this.enableCompleteTerminalStitching) return null
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
     const allowedPcbPortIds =
@@ -175,6 +180,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     layerCount: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
+    enableCompleteTerminalStitching?: boolean
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
   }) {
@@ -184,6 +190,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
     this.preferSameLayerTerminalEndpoints =
       params.preferSameLayerTerminalEndpoints ?? false
+    this.enableCompleteTerminalStitching =
+      params.enableCompleteTerminalStitching ?? true
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
@@ -307,14 +315,25 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
-        ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
-          start,
-          end,
-          globalStart,
-          globalEnd,
-          preferSameLayerTerminalEndpoints:
-            this.preferSameLayerTerminalEndpoints,
-        }))
+        if (this.enableCompleteTerminalStitching) {
+          ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
+            start,
+            end,
+            globalStart,
+            globalEnd,
+            preferSameLayerTerminalEndpoints:
+              this.preferSameLayerTerminalEndpoints,
+          }))
+        } else {
+          start = snapIslandEndpointToNearestTerminal({
+            islandEndpoint: start,
+            terminals: [globalStart, globalEnd],
+          })
+          end = snapIslandEndpointToNearestTerminal({
+            islandEndpoint: end,
+            terminals: [globalStart, globalEnd],
+          })
+        }
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -485,6 +504,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       allowedPcbPortIds: unsolvedRoute.allowedPcbPortIds,
+      enableCompleteTerminalStitching:
+        this.enableCompleteTerminalStitching,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),

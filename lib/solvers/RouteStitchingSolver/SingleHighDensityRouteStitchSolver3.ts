@@ -129,6 +129,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   end: StitchTerminal
   colorMap: Record<string, string>
   allowedLayerTransitionPointKeys?: Set<string>
+  enableCompleteTerminalStitching: boolean
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
 
@@ -151,6 +152,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     allowedPcbPortIds?: ReadonlySet<string>
+    enableCompleteTerminalStitching?: boolean
     preserveTerminalPcbPortIds?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
@@ -160,6 +162,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
+    this.enableCompleteTerminalStitching =
+      opts.enableCompleteTerminalStitching ?? true
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
 
@@ -325,10 +329,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
     ) {
-      const matchingTerminalRouteEndpoint = getRouteEndpointForPcbPortId({
-        routes: canonicalHdRoutes,
-        pcbPortId: this.start.pcb_port_id,
-      })
+      const matchingTerminalRouteEndpoint = this.enableCompleteTerminalStitching
+        ? getRouteEndpointForPcbPortId({
+            routes: canonicalHdRoutes,
+            pcbPortId: this.start.pcb_port_id,
+          })
+        : undefined
       if (!matchingTerminalRouteEndpoint) {
         throw new Error(
           `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
@@ -529,11 +535,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
-    const alignedStitch = alignRouteEntryAtStitch({
-      anchor: lastMergedPoint,
-      points: pointsToAdd,
-      vias: hdRouteToMerge.vias,
-    })
+    const alignedStitch = this.enableCompleteTerminalStitching
+      ? alignRouteEntryAtStitch({
+          anchor: lastMergedPoint,
+          points: pointsToAdd,
+          vias: hdRouteToMerge.vias,
+        })
+      : { points: pointsToAdd, vias: hdRouteToMerge.vias }
     pointsToAdd = alignedStitch.points
 
     if (

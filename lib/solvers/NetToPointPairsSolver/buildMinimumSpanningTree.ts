@@ -249,6 +249,7 @@ interface Edge<T extends Point> {
 
 interface BuildMinimumSpanningTreeOptions<T extends Point> {
   extraEdges?: Edge<T>[]
+  ensureConnected?: boolean
 }
 
 // Main function to build a minimum spanning tree using Kruskal's algorithm
@@ -318,7 +319,10 @@ export function buildMinimumSpanningTree<T extends Point>(
   // Large nets with spatially separated terminal clusters used to return a
   // forest here, permanently dropping terminals before routing began. Join
   // the remaining components with their shortest available geometric edges.
-  while (new Set(pointsCopy.map((point) => disjointSet.find(point))).size > 1) {
+  while (
+    (opts.ensureConnected ?? true) &&
+    new Set(pointsCopy.map((point) => disjointSet.find(point))).size > 1
+  ) {
     let shortestConnectingEdge: Edge<T> | undefined
 
     for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {

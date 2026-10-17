@@ -200,10 +200,12 @@ function mergeComponentSharedEdgeSegments({
   originalSharedEdgeSegments,
   filteredSharedEdgeSegments,
   componentCapacityMeshNodeIds,
+  clearComponentCrampedPenalty,
 }: {
   originalSharedEdgeSegments: SharedEdgeSegment[]
   filteredSharedEdgeSegments: SharedEdgeSegment[]
   componentCapacityMeshNodeIds: Set<string>
+  clearComponentCrampedPenalty: boolean
 }) {
   const filteredSegmentsByEdgeId = new Map(
     filteredSharedEdgeSegments.map((segment) => [segment.edgeId, segment]),
@@ -213,6 +215,7 @@ function mergeComponentSharedEdgeSegments({
     // Component-local points are already the intentional escape geometry.
     // Retain them without charging the generic cramped-port penalty again.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
+      if (!clearComponentCrampedPenalty) return segment
       return {
         ...segment,
         portPoints: segment.portPoints.map((portPoint) => ({
@@ -487,6 +490,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
+            relaxMultilayerEscapePenalty:
+              cms.originalSrj.allowViaInPad ?? false,
           },
         ]
       },
@@ -503,6 +508,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               filteredSharedEdgeSegments:
                 cms.necessaryCrampedPortPointSolver!.getOutput(),
               componentCapacityMeshNodeIds,
+              clearComponentCrampedPenalty:
+                cms.originalSrj.allowViaInPad ?? false,
             })
         },
       },
@@ -531,14 +538,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
-          layerTransitionPoints: getTargetLayerTransitionPoints({
-            srj: cms.srjWithPointPairs!,
-            viaDiameter: cms.viaDiameter,
-            obstacleMargin:
-              cms.srj.minViaEdgeToPadEdgeClearance ??
-              cms.srj.defaultObstacleMargin ??
-              0.15,
-          }),
+          layerTransitionPoints: cms.originalSrj.allowViaInPad
+            ? getTargetLayerTransitionPoints({
+                srj: cms.srjWithPointPairs!,
+                viaDiameter: cms.viaDiameter,
+                obstacleMargin:
+                  cms.srj.minViaEdgeToPadEdgeClearance ??
+                  cms.srj.defaultObstacleMargin ??
+                  0.15,
+              })
+            : [],
           viaDiameter: cms.viaDiameter,
         })
 
@@ -673,6 +682,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             Math.round(20 * Math.min(1, cms.effort)),
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
         },
       ],
     ),
@@ -711,6 +721,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
+          enableCompleteTerminalStitching:
+            cms.originalSrj.allowViaInPad ?? false,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
         },
@@ -762,6 +774,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            preserveExplicitLayerTransitions:
+              cms.originalSrj.allowViaInPad ?? false,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -801,6 +815,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
+            preserveExplicitLayerTransitions:
+              cms.originalSrj.allowViaInPad ?? false,
             preserveRouteEndpoints: true,
             enableVertexShortcuts: true,
             iterations: 2,

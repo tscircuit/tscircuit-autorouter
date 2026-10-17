@@ -55,6 +55,7 @@ test("multilayer escape ports retain a bounded cost without the generic cramped 
     capacityMeshNodes: nodes,
     sharedEdgeSegments: segments,
     simpleRouteJson: srj,
+    relaxMultilayerEscapePenalty: true,
   })
 
   const outputPort = solver.getOutput()[0]!.portPoints[0]!

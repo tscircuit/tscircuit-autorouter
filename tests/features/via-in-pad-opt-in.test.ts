@@ -18,6 +18,18 @@ test("Pipeline 7 requires an explicit via-in-pad opt-in", () => {
 
     solver.solve()
 
+    const [pathingParams] =
+      solver.portPointPathingSolver!.getConstructorParams()
+    expect(
+      pathingParams.graph.regions.some((region) =>
+        region.regionId.startsWith("layer-transition:"),
+      ),
+    ).toBe(allowViaInPad === true)
+    const [forceImproveParams] =
+      solver.highDensityForceImproveSolver!.getConstructorParams()
+    expect(forceImproveParams.protectOverBudgetRegions).toBe(
+      allowViaInPad ?? false,
+    )
     const [params] =
       solver.exactGeometryDrcForceImproveSolver!.getConstructorParams()
     expect(params.enableViaInPadLayerMoves).toBe(allowViaInPad ?? false)
