@@ -26,6 +26,30 @@ export const getBenchmarkConcurrency = (
   return Math.max(1, Math.min(availableParallelism, memoryWorkerLimit))
 }
 
+/** One coordinator plus N routing workers; a single-thread run stays inline. */
+export const getBenchmarkThreadConcurrency = (
+  requestedConcurrency: number,
+  threads: number,
+  availableParallelism = os.availableParallelism(),
+  memoryLimitBytes = getBenchmarkMemoryLimit(),
+): number => {
+  if (!Number.isSafeInteger(threads) || threads < 1) {
+    throw new Error("--threads must be a positive integer")
+  }
+  if (!Number.isSafeInteger(requestedConcurrency) || requestedConcurrency < 1) {
+    throw new Error("--concurrency must be a positive integer")
+  }
+  const cpuBudgetPerSample = threads === 1 ? 1 : threads + 1
+  const cpuSampleLimit = Math.floor(availableParallelism / cpuBudgetPerSample)
+  const memorySampleLimit = Math.floor(
+    memoryLimitBytes / BENCHMARK_MEMORY_BUDGET_PER_WORKER_BYTES,
+  )
+  return Math.max(
+    1,
+    Math.min(requestedConcurrency, cpuSampleLimit, memorySampleLimit),
+  )
+}
+
 export const getBenchmarkRuntimeMetadata = (
   requestedConcurrency: number,
   workerCount: number,
