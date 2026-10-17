@@ -13,7 +13,7 @@
   "scripts": {
     "prepublishOnly": "bun run build && bun scripts/check-published-autorouter-version.ts",
     "start": "cosmos",
-    "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
+    "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap && tsup ./lib/autorouter-pipelines/Pipeline9_Parallel/pipeline9HighDensityTask.ts --format esm --out-dir dist/parallel-worker --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",
