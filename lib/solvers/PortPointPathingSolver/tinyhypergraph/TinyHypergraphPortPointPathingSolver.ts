@@ -37,6 +37,8 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { fitDuplicatedPortsToPhysicalSlots } from "./fitDuplicatedPortsToPhysicalSlots"
+import { getPhysicalPortConflicts } from "./getPhysicalPortConflicts"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -921,6 +923,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly minPortSpacing?: number,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -947,6 +950,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
+    if (this.minPortSpacing !== undefined) {
+      loaded.problem.enforceViaFit = true
+      loaded.problem.portConflicts = getPhysicalPortConflicts(
+        loaded.topology, this.minPortSpacing,
+      )
+    }
     restorePreloadedTraceSectionMetadata(
       loaded,
       this.inputProblem.serializedHyperGraph,
@@ -1113,6 +1122,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.minPortSpacing !== undefined) {
+        graphForTiny = fitDuplicatedPortsToPhysicalSlots(
+          graphForTiny,
+          params.minPortSpacing,
+        )
+        const retainedPortIds = new Set(graphForTiny.ports.map((port) => port.portId))
+        this.duplicateCongestedPortReport = {
+          ...this.duplicateCongestedPortReport,
+          duplicatedPorts: this.duplicateCongestedPortReport.duplicatedPorts
+            .map((source) => ({
+              ...source,
+              duplicatePortIds: source.duplicatePortIds.filter((id) => retainedPortIds.has(id)),
+            }))
+            .filter((source) => source.duplicatePortIds.length > 0),
+        }
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
@@ -1139,6 +1164,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.minPortSpacing,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1448,6 +1474,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.minPortSpacing,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

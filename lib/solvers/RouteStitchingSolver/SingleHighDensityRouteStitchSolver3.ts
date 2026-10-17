@@ -125,6 +125,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   mergedHdRoute!: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
+  unmergedHdRoutes: HighDensityIntraNodeRoute[] = []
   start: StitchTerminal
   end: StitchTerminal
   colorMap: Record<string, string>
@@ -266,10 +267,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst = this.enableCompleteTerminalStitching &&
+        opts.start.z !== firstPoint.z ? Infinity : distance(opts.start, firstPoint)
+      const distStartToLast = this.enableCompleteTerminalStitching &&
+        opts.start.z !== lastPoint.z ? Infinity : distance(opts.start, lastPoint)
+      const distEndToFirst = this.enableCompleteTerminalStitching &&
+        opts.end.z !== firstPoint.z ? Infinity : distance(opts.end, firstPoint)
+      const distEndToLast = this.enableCompleteTerminalStitching &&
+        opts.end.z !== lastPoint.z ? Infinity : distance(opts.end, lastPoint)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -317,31 +322,33 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        (this.enableCompleteTerminalStitching &&
+        firstRouteFirstPoint.z !== firstRouteLastPoint.z
+          ? firstRouteFirstPoint.z === this.start.z
+          : comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0))
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
-    if (
+    const matchingTerminalRouteEndpoint = this.enableCompleteTerminalStitching
+      ? getRouteEndpointForPcbPortId({
+          routes: canonicalHdRoutes,
+          pcbPortId: this.start.pcb_port_id,
+        })
+      : undefined
+    if (matchingTerminalRouteEndpoint) {
+      firstRoute = matchingTerminalRouteEndpoint.route
+      closestFirstRoutePoint = matchingTerminalRouteEndpoint.point
+    } else if (
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
       closestFirstRoutePcbPortId !== this.start.pcb_port_id
     ) {
-      const matchingTerminalRouteEndpoint = this.enableCompleteTerminalStitching
-        ? getRouteEndpointForPcbPortId({
-            routes: canonicalHdRoutes,
-            pcbPortId: this.start.pcb_port_id,
-          })
-        : undefined
-      if (!matchingTerminalRouteEndpoint) {
-        throw new Error(
-          `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
-        )
-      }
-      firstRoute = matchingTerminalRouteEndpoint.route
-      closestFirstRoutePoint = matchingTerminalRouteEndpoint.point
+      throw new Error(
+        `SingleHighDensityRouteStitchSolver3 terminal identity disagrees with route orientation for "${opts.connectionName}"`,
+      )
     }
 
     this.mergedHdRoute = {
@@ -406,12 +413,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     // A terminal-to-terminal path is complete here. Following leftover stubs
     // can traverse another via and disconnect the declared terminal layer.
     if (this.remainingHdRoutes.length === 0 || reachedTerminal) {
+      if (this.enableCompleteTerminalStitching && reachedTerminal) {
+        this.unmergedHdRoutes = this.remainingHdRoutes
+      }
       const lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
+        lastMergedPoint.z === this.end.z &&
         terminalDistance > GEOMETRIC_TOLERANCE &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
@@ -430,6 +441,23 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
+      // Islands can end on another same-net branch rather than the requested
+      // terminal. Terminal identity describes emitted copper, not intent: a
+      // provisional tag must never make Multiple discard the real pad branch.
+      const firstMergedPoint = this.mergedHdRoute.route[0]!
+      const finalMergedPoint = this.mergedHdRoute.route.at(-1)!
+      if (
+        firstMergedPoint.z !== this.start.z ||
+        distance(firstMergedPoint, this.start) >= GEOMETRIC_TOLERANCE
+      ) {
+        delete this.mergedHdRoute.startPcbPortId
+      }
+      if (
+        finalMergedPoint.z !== this.end.z ||
+        distance(finalMergedPoint, this.end) >= GEOMETRIC_TOLERANCE
+      ) {
+        delete this.mergedHdRoute.endPcbPortId
+      }
       this.solved = true
       return
     }
@@ -520,6 +548,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
         return
+      }
+      if (this.enableCompleteTerminalStitching) {
+        this.unmergedHdRoutes = this.remainingHdRoutes
       }
       this.remainingHdRoutes = []
       return

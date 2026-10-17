@@ -268,8 +268,8 @@ export const snapIslandEndpointsToDistinctTerminals = (params: {
 export const selectRoutesAlongEndpointPath = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchEndpoint
+  end: StitchEndpoint
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
 }) => {
@@ -397,6 +397,21 @@ export const selectRoutesAlongEndpointPath = (params: {
   const selectedHdRoutes = selectedRouteIndexesInReverse
     .reverse()
     .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+
+  // A short gap in the endpoint graph must not prune the only copper that
+  // actually reaches a requested pad. Keep that branch until the physical
+  // terminal-to-terminal route has been assembled, not merely inferred.
+  for (const terminal of [params.start, params.end]) {
+    if (!terminal.pcb_port_id) continue
+    const terminalRoute = canonicalHdRoutes.find(
+      (route) =>
+        route.startPcbPortId === terminal.pcb_port_id ||
+        route.endPcbPortId === terminal.pcb_port_id,
+    )
+    if (terminalRoute && !selectedHdRoutes.includes(terminalRoute)) {
+      return canonicalHdRoutes
+    }
+  }
 
   if (
     selectedHdRoutes.length > 0 &&

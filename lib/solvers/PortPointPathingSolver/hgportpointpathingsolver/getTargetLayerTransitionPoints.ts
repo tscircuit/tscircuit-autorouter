@@ -6,15 +6,16 @@ import {
 import type {
   ConnectionPoint,
   Obstacle,
-  SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import { isSingleLayerConnectionPoint } from "lib/types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 export type LayerTransitionPoint = {
   x: number
   y: number
   connectionName: string
+  availableZ?: number[]
 }
 
 const pointIsInsideObstacle = (
@@ -26,27 +27,18 @@ const pointIsInsideObstacle = (
 
 const obstacleMatchesConnection = (
   obstacle: Obstacle,
-  connection: SimpleRouteConnection,
+  connectionIds: ReadonlySet<string>,
 ): boolean => {
-  const connectionIds = new Set([
-    connection.name,
-    ...(connection.__rootConnectionNames ?? []),
-    ...connection.pointsToConnect.flatMap((point) =>
-      [point.pointId, point.pcb_port_id].filter(
-        (id): id is string => id !== undefined,
-      ),
-    ),
-  ])
   return obstacle.connectedTo.some((id) => connectionIds.has(id))
 }
 
 const getTerminalObstacle = ({
   point,
-  connection,
+  connectionIds,
   obstacles,
 }: {
   point: ConnectionPoint
-  connection: SimpleRouteConnection
+  connectionIds: ReadonlySet<string>
   obstacles: Obstacle[]
 }): Obstacle | undefined => {
   if (!isSingleLayerConnectionPoint(point)) return undefined
@@ -55,13 +47,10 @@ const getTerminalObstacle = ({
       (obstacle) =>
         obstacle.layers.includes(point.layer) &&
         pointIsInsideObstacle(point, obstacle) &&
-        obstacleMatchesConnection(obstacle, connection),
+        obstacleMatchesConnection(obstacle, connectionIds),
     )
     .sort((a, b) => a.width * a.height - b.width * b.height)[0]
 }
-
-const pointKey = (point: LayerTransitionPoint): string =>
-  `${point.connectionName}:${point.x.toFixed(6)},${point.y.toFixed(6)}`
 
 const pointHasBoardClearance = ({
   point,
@@ -96,7 +85,7 @@ const pointHasBoardClearance = ({
 
 /**
  * Finds sparse, obstacle-clear places where the path graph can represent a via.
- * A site is placed beside each distinct terminal so same-layer point pairs can
+ * A site is placed at or beside each distinct terminal so same-layer point pairs can
  * leave and re-enter their terminal layer when a local corridor is occupied.
  */
 export const getTargetLayerTransitionPoints = ({
@@ -111,26 +100,33 @@ export const getTargetLayerTransitionPoints = ({
   const viaClearance = viaDiameter / 2 + obstacleMargin
   const boardClearance = viaDiameter / 2 + (srj.minBoardEdgeClearance ?? 0)
   const transitionPointsByKey = new Map<string, LayerTransitionPoint>()
+  const visitedTerminals = new Set<string>()
 
   for (const connection of srj.connections) {
     if (connection.pointsToConnect.length !== 2) continue
     const [start, end] = connection.pointsToConnect
-    if (
-      !start ||
-      !end ||
-      !isSingleLayerConnectionPoint(start) ||
-      !isSingleLayerConnectionPoint(end)
-    ) {
-      continue
-    }
+    if (!start || !end) continue
+    const connectionIds = new Set([
+      connection.name,
+      ...(connection.__rootConnectionNames ?? []),
+      ...connection.pointsToConnect.flatMap((point) =>
+        [point.pointId, point.pcb_port_id].filter(
+          (id): id is string => id !== undefined,
+        ),
+      ),
+    ])
 
     for (const [terminal, otherTerminal] of [
       [start, end],
       [end, start],
     ] as const) {
+      if (!isSingleLayerConnectionPoint(terminal)) continue
+      const terminalKey = terminal.pcb_port_id ?? terminal.pointId
+      if (terminalKey && visitedTerminals.has(terminalKey)) continue
+      if (terminalKey) visitedTerminals.add(terminalKey)
       const terminalObstacle = getTerminalObstacle({
         point: terminal,
-        connection,
+        connectionIds,
         obstacles: srj.obstacles,
       })
       const halfWidth = terminalObstacle?.width ? terminalObstacle.width / 2 : 0
@@ -160,7 +156,11 @@ export const getTargetLayerTransitionPoints = ({
           Math.hypot(b.x - otherTerminal.x, b.y - otherTerminal.y),
       )
 
-      const candidate = candidates.find((candidate) => {
+      if (srj.allowViaInPad && terminalObstacle) {
+        candidates.unshift({ x: terminal.x, y: terminal.y })
+      }
+
+      for (const candidate of candidates) {
         if (
           !pointHasBoardClearance({
             point: candidate,
@@ -168,20 +168,45 @@ export const getTargetLayerTransitionPoints = ({
             clearance: boardClearance,
           })
         ) {
-          return false
+          continue
         }
-        return srj.obstacles.every(
-          (obstacle) =>
-            obstacleMatchesConnection(obstacle, connection) ||
-            pointToBoxDistance(candidate, obstacle) >= viaClearance,
+        const clearZ = Array.from({ length: srj.layerCount }, () => true)
+        for (const obstacle of srj.obstacles) {
+          if (
+            obstacleMatchesConnection(obstacle, connectionIds) ||
+            pointToBoxDistance(candidate, obstacle) >= viaClearance
+          ) {
+            continue
+          }
+          for (const layer of obstacle.layers) {
+            clearZ[mapLayerNameToZ(layer, srj.layerCount)] = false
+          }
+        }
+        const terminalZ = mapLayerNameToZ(terminal.layer, srj.layerCount)
+        if (!clearZ[terminalZ]) continue
+        let firstZ = terminalZ
+        let lastZ = terminalZ
+        if (srj.allowBlindAndBuriedVias) {
+          while (firstZ > 0 && clearZ[firstZ - 1]) firstZ--
+          while (lastZ + 1 < srj.layerCount && clearZ[lastZ + 1]) lastZ++
+        } else {
+          if (clearZ.some((clear) => !clear)) continue
+          firstZ = 0
+          lastZ = srj.layerCount - 1
+        }
+        if (firstZ === lastZ) continue
+        const availableZ = Array.from(
+          { length: lastZ - firstZ + 1 },
+          (_, index) => firstZ + index,
         )
-      })
-      if (candidate) {
-        const transitionPoint = {
+        const transitionPoint: LayerTransitionPoint = {
           ...candidate,
           connectionName: connection.name,
+          availableZ,
         }
-        transitionPointsByKey.set(pointKey(transitionPoint), transitionPoint)
+        const key = `${terminalKey ?? connection.name}:${candidate.x.toFixed(6)},${candidate.y.toFixed(6)}:${availableZ.join(",")}`
+        transitionPointsByKey.set(key, transitionPoint)
+        break
       }
     }
   }

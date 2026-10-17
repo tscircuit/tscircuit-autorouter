@@ -464,6 +464,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
           this.clearanceValidator.addRoute(this.activeSolver.mergedHdRoute)
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
+          // A route tree may have branches beyond the selected linear walk.
+          // They remain physical copper unless a complete terminal path below
+          // proves them redundant; a dead end must never erase a pad branch.
+          this.mergedHdRoutes.push(...this.activeSolver.unmergedHdRoutes)
         }
         this.activeSolver = null
       } else if (this.activeSolver.failed) {
@@ -507,7 +511,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "prefer_clear",
+      stitchClearanceMode: this.enableCompleteTerminalStitching
+        ? "require_clear"
+        : "prefer_clear",
     })
   }
 

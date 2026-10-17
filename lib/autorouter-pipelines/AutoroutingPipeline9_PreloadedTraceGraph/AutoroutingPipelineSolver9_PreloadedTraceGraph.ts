@@ -559,6 +559,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            minPortSpacing: cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15),
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -599,11 +600,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
-          minTraceWidth: cms.minTraceWidth,
+          minPortSpacing: cms.minTraceWidth + (cms.srj.defaultObstacleMargin ?? 0.15),
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
-          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
+          preserveSolitaryPorts: Boolean(
+            cms.originalSrj.allowViaInPad || cms.srj.traces?.length,
+          ),
         },
       ],
     ),

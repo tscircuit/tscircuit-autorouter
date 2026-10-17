@@ -30,6 +30,7 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  minPortSpacing?: number
 }
 
 /**
@@ -148,7 +149,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
         this.input.preserveSolitaryPorts &&
-        blockedOnAnotherLayer &&
         portCountByLayer.get(portPoint.z) === 1
       ) {
         continue
@@ -173,6 +173,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
+      minPortSpacing: this.input.minPortSpacing,
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
