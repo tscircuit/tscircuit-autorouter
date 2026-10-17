@@ -158,10 +158,7 @@ verify().catch(error => { console.error(error); process.exitCode = 1 })
       const format = platform === "node" && rebundled ? "cjs" : "esm"
       const output = join(
         temporary,
-        platform +
-          "-" +
-          rebundled +
-          (format === "cjs" ? ".cjs" : ".mjs"),
+        platform + "-" + rebundled + (format === "cjs" ? ".cjs" : ".mjs"),
       )
       await Bun.write(
         output,
