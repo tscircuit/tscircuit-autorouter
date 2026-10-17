@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="197.984,122.552 197.984,123.162" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="312.994526974202,307.08365910867724 312.994526974202,40" fill="none" stroke="#e11d48" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="197.984,123.162 197.984,122.552" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="312.994526974202,40 312.994526974202,307.08365910867724" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="197.984,122.552 198,122.552" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="312.994526974202,307.08365910867724 320,307.08365910867724" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.552 198,122.439" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,307.08365910867724 320,356.5598123534073" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.439 198,122.199" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,356.5598123534073 320,461.641907740428" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.199 198,122.033" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,461.641907740428 320,534.323690383113" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.033 198,122.033" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,534.323690383113 320,534.323690383113" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.033 198,122.152" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,534.323690383113 320,482.2204847537141" fill="none" stroke="#e11d48" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><g><polyline data-points="198,122.152 197.984,122.552" data-type="line" data-label="source_net_altium_pcb_3_mst0" points="320,482.2204847537141 312.994526974202,307.08365910867724" fill="none" stroke="#e11d48" stroke-linejoin="round" stroke-width="43.78420641125844"/></g><circle data-type="circle" data-label="" data-x="198" data-y="122.033" cx="320" cy="534.323690383113" r="65.67630961688765" fill="#7c3aed" stroke="black" stroke-width="0.0022839285714285904"/><g><circle data-type="point" data-label="pcb_port_altium_7312" data-x="197.984" data-y="123.162" cx="312.994526974202" cy="40" r="3" fill="#111827"/></g><g><circle data-type="point" data-label="pcb_port_altium_8622" data-x="197.984" data-y="123.162" cx="312.994526974202" cy="40" r="3" fill="#111827"/></g><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":437.84206411258435,"c":0,"e":-86372.7286942917,"b":0,"d":-437.84206411258435,"f":53965.50430023412};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>
