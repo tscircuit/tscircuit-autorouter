@@ -4,6 +4,8 @@ import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
+type FutureConnectionPoint = { x: number; y: number; z: number }
+
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -12,8 +14,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
-  futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+  futureConnectionPoints: FutureConnectionPoint[]
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private futureConnectionPointCoordinates = new Float64Array(0)
   private readonly closestFuturePointCacheCoordinates = new Float64Array(
     CLOSEST_FUTURE_POINT_CACHE_SLOTS * 4,
   )
@@ -48,7 +51,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
-  getClosestFutureConnectionPoint(node: Node) {
+  getClosestFutureConnectionPoint(node: Node): FutureConnectionPoint | null {
     if (
       this.cachedFutureConnectionPoints !== this.futureConnectionPoints ||
       this.cachedFutureConnectionPointCount !==
@@ -57,6 +60,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheIndices.fill(-2)
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
       this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
+      this.updateFutureConnectionPointCoordinates()
     }
     const pointKey = this.getNodeKey(node)
     const cacheSlot = Number.isSafeInteger(pointKey)
@@ -80,22 +84,32 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         ? null
         : this.futureConnectionPoints[cachedPointIndex]
     }
-    let minDist = Infinity
-    let closestPoint = null
+    let minimumDistance = Infinity
     let closestPointIndex = -1
-    let pointIndex = 0
-
-    for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
-      if (dist < minDist) {
-        minDist = dist
-        closestPoint = point
+    // This exact scan runs for every candidate node. Keep immutable point data
+    // densely packed so the hot loop does not repeatedly dereference objects.
+    const coordinates = this.futureConnectionPointCoordinates
+    for (
+      let pointIndex = 0;
+      pointIndex < this.futureConnectionPoints.length;
+      pointIndex += 1
+    ) {
+      const coordinateIndex = pointIndex * 3
+      const deltaX = node.x - coordinates[coordinateIndex]!
+      const deltaY = node.y - coordinates[coordinateIndex + 1]!
+      const pointLayer = coordinates[coordinateIndex + 2]!
+      const candidateDistance =
+        Math.sqrt(deltaX * deltaX + deltaY * deltaY) +
+        (node.z !== pointLayer ? viaPenaltyDistance : 0)
+      if (candidateDistance < minimumDistance) {
+        minimumDistance = candidateDistance
         closestPointIndex = pointIndex
       }
-      pointIndex++
     }
+    const closestPoint =
+      closestPointIndex === -1
+        ? null
+        : this.futureConnectionPoints[closestPointIndex]!
 
     // A fixed workspace avoids retaining every explored coordinate in large
     // portfolio searches. Colliding slots simply perform the original scan.
@@ -108,6 +122,17 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
     }
     return closestPoint
+  }
+
+  private updateFutureConnectionPointCoordinates(): void {
+    const coordinates = new Float64Array(this.futureConnectionPoints.length * 3)
+    let coordinateIndex = 0
+    for (const point of this.futureConnectionPoints) {
+      coordinates[coordinateIndex++] = point.x
+      coordinates[coordinateIndex++] = point.y
+      coordinates[coordinateIndex++] = point.z
+    }
+    this.futureConnectionPointCoordinates = coordinates
   }
 
   getFutureConnectionSegments() {
