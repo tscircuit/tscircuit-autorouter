@@ -62,3 +62,18 @@ High density is **1.93× faster**; the full pipeline is **1.16× faster** (14.1%
 Local timings are noisy. An earlier 1/2/4-worker sweep showed a 1.6× high-density gain but effectively flat total medians (8.15 s versus 8.36 s) because other phase timings varied. The raw report retains both runs; confirm end-to-end gains on an isolated benchmark host before treating these totals as a stable performance claim. In the final reference run, high density represented about 30% of total time, below the previously observed 43%. Other phases therefore limit the total gain.
 
 [Raw timings and environment](benchmarks/pipeline9-parallel-node-m3-pro.json). The ESM main and worker bundles build and load under Node. The five focused tests pass. A full workspace TypeScript check remains blocked by cached dependency API mismatches and an unavailable existing benchmark source file; it reported no diagnostics in the added implementation or tests.
+
+## Thread-count comparison
+
+Three new runs each under the same Node/CPU/dependency configuration, with trial order rotated. Times include cold worker startup. All 18 full outputs match byte for byte.
+
+| Configuration | Median high density | Median total | HD speedup vs SYNC |
+| --- | ---: | ---: | ---: |
+| 16 workers | 2.10 s | 7.65 s | 1.24× |
+| 8 workers | 1.50 s | 6.98 s | 1.74× |
+| 4 workers | 1.25 s | 6.63 s | 2.08× |
+| 2 workers | 1.58 s | 7.05 s | 1.64× |
+| 1 worker | 2.94 s | 8.78 s | 0.89× |
+| SYNC (Pipeline9) | 2.60 s | 8.19 s | 1.00× |
+
+Four workers were fastest on this input and machine: 2.08× for high density and 19.0% less total time than this sweep's SYNC median. More workers add startup/coordination costs; 16 workers also exceed this machine's 12 logical CPU cores. These results are specific to this input and host. The comparison script now runs all six configurations by default.

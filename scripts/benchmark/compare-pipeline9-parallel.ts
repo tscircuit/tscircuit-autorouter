@@ -12,7 +12,11 @@ mkdirSync(outputDir, { recursive: true })
 const results: Record<string, any>[] = []
 let expected: string | undefined
 for (let trial = 1; trial <= trials; trial++) {
-  for (const [mode, threads] of [["baseline", 0], ["parallel", 1], ["parallel", 2], ["parallel", 4]] as const) {
+  const configurations = [["baseline", 0], ["parallel", 1], ["parallel", 2], ["parallel", 4], ["parallel", 8], ["parallel", 16]] as const
+  // Rotate trial order to reduce timing bias from local load and temperature.
+  const offset = ((trial - 1) * 2) % configurations.length
+  const ordered = [...configurations.slice(offset), ...configurations.slice(0, offset)]
+  for (const [mode, threads] of ordered) {
     const directory = `${outputDir}/trial-${trial}/${mode}-${threads}`
     const child = spawnSync(executable, [entry, mode, String(threads), directory], { encoding: "utf8" })
     if (child.status !== 0) throw new Error(`${child.error ?? child.stderr}\n${child.stdout}`)
