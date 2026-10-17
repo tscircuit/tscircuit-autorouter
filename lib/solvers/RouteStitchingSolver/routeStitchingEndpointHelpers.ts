@@ -18,6 +18,8 @@ type EndpointEdge = {
   routeIndex: number | null
 }
 
+type StitchEndpoint = Point3 & { pcb_port_id?: string }
+
 export type CanStitchBetweenTerminals = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
@@ -181,10 +183,18 @@ export const selectIslandEndpoints = (params: {
  * already close enough to be considered the same stitch target.
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
-  islandEndpoint: Point3
-  terminals: Point3[]
+  islandEndpoint: StitchEndpoint
+  terminals: StitchEndpoint[]
+  preferSameLayerTerminalEndpoints?: boolean
 }) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const sameLayerTerminals = params.terminals.filter(
+    (terminal) => terminal.z === params.islandEndpoint.z,
+  )
+  const candidateTerminals =
+    params.preferSameLayerTerminalEndpoints && sameLayerTerminals.length > 0
+      ? sameLayerTerminals
+      : params.terminals
+  const sortedTerminals = [...candidateTerminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
@@ -203,6 +213,51 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
+}
+
+/**
+ * Snaps both island endpoints jointly so a cross-layer pair cannot collapse
+ * onto the one nearby terminal that happens to share both island layers.
+ */
+export const snapIslandEndpointsToDistinctTerminals = (params: {
+  start: StitchEndpoint
+  end: StitchEndpoint
+  globalStart: StitchEndpoint
+  globalEnd: StitchEndpoint
+  preferSameLayerTerminalEndpoints?: boolean
+}) => {
+  const terminals = [params.globalStart, params.globalEnd]
+  const start = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.start,
+    terminals,
+    preferSameLayerTerminalEndpoints: params.preferSameLayerTerminalEndpoints,
+  })
+  const end = snapIslandEndpointToNearestTerminal({
+    islandEndpoint: params.end,
+    terminals,
+    preferSameLayerTerminalEndpoints: params.preferSameLayerTerminalEndpoints,
+  })
+  const distinctPcbPortsCollapsed =
+    start.pcb_port_id !== undefined &&
+    start.pcb_port_id === end.pcb_port_id &&
+    params.globalStart.pcb_port_id !== undefined &&
+    params.globalEnd.pcb_port_id !== undefined &&
+    params.globalStart.pcb_port_id !== params.globalEnd.pcb_port_id
+
+  if (!distinctPcbPortsCollapsed) return { start, end }
+
+  return {
+    start:
+      distance(params.start, params.globalStart) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        ? params.globalStart
+        : params.start,
+    end:
+      distance(params.end, params.globalEnd) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+        ? params.globalEnd
+        : params.end,
+  }
 }
 
 /**

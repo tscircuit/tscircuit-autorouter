@@ -12,6 +12,7 @@ import {
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
 import { assertDefined } from "./assertDefined"
+import type { LayerTransitionPoint } from "./getTargetLayerTransitionPoints"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
   RawPort,
@@ -44,7 +45,8 @@ const getCandidateRegionsForAssignableVia = (params: {
     .filter(
       (region) =>
         region.d.availableZ.includes(params.z) &&
-        !(region.d as any)._assignableVia,
+        !(region.d as any)._assignableVia &&
+        !region.d.isLayerTransition,
     )
     .map((region) => ({
       region,
@@ -71,6 +73,78 @@ const getCandidateRegionsForAssignableVia = (params: {
     .filter((candidate) => candidate.distance <= maxConnectionDistance)
     .slice(0, 4)
     .map((candidate) => candidate.region)
+}
+
+const addLayerTransitionRegions = (params: {
+  graph: HyperGraphHg
+  layerTransitionPoints: readonly LayerTransitionPoint[]
+  layerCount: number
+  viaDiameter: number
+}): void => {
+  const availableZ = Array.from({ length: params.layerCount }, (_, z) => z)
+  const viaRadius = params.viaDiameter / 2
+
+  for (const [index, point] of params.layerTransitionPoints.entries()) {
+    const regionId = `layer-transition:${index}`
+    const region: RegionHg = {
+      regionId,
+      d: {
+        capacityMeshNodeId: regionId,
+        center: { x: point.x, y: point.y },
+        width: params.viaDiameter,
+        height: params.viaDiameter,
+        layer: `z${availableZ.join(",")}`,
+        availableZ,
+        _containsObstacle: false,
+        _completelyInsideObstacle: false,
+        _containsTarget: false,
+        _connectedTo: [point.connectionName],
+        isLayerTransition: true,
+      } as CapacityMeshNode,
+      ports: [],
+    }
+    const ports: RegionPortHg[] = []
+
+    for (const z of availableZ) {
+      for (const adjacentRegion of getCandidateRegionsForAssignableVia({
+        graph: params.graph,
+        point,
+        z,
+        viaRadius,
+      })) {
+        const rawPort: RawPort = {
+          portId: `${regionId}:port:${adjacentRegion.regionId}:z${z}`,
+          x: point.x,
+          y: point.y,
+          z,
+          distToCentermostPortOnZ: 0,
+          cramped: false,
+          regions: [adjacentRegion, region],
+        }
+        const port: RegionPortHg = {
+          portId: rawPort.portId,
+          d: rawPort,
+          region1: adjacentRegion,
+          region2: region,
+        }
+        ports.push(port)
+        adjacentRegion.ports.push(port)
+      }
+    }
+
+    if (new Set(ports.map((port) => port.d.z)).size < 2) {
+      for (const port of ports) {
+        port.region1.ports = port.region1.ports.filter(
+          (existingPort) => existingPort !== port,
+        )
+      }
+      continue
+    }
+
+    region.ports.push(...ports)
+    params.graph.regions.push(region)
+    params.graph.ports.push(...ports)
+  }
 }
 
 const addAssignableViaRegions = (params: {
@@ -161,6 +235,8 @@ export function buildHyperGraph(params: {
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
+  layerTransitionPoints?: readonly LayerTransitionPoint[]
+  viaDiameter?: number
 }): {
   graph: HyperGraphHg
   connections: ConnectionHgWithSimpleRouteConnection[]
@@ -249,6 +325,12 @@ export function buildHyperGraph(params: {
     graph,
     assignableViaObstacles: params.assignableViaObstacles ?? [],
     layerCount: params.layerCount,
+  })
+  addLayerTransitionRegions({
+    graph,
+    layerTransitionPoints: params.layerTransitionPoints ?? [],
+    layerCount: params.layerCount,
+    viaDiameter: params.viaDiameter ?? 0.3,
   })
 
   for (const connection of params.simpleRouteJsonConnections) {

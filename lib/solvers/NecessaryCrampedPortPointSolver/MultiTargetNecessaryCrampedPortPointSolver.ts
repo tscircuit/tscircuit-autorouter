@@ -15,7 +15,9 @@ import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
-const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
+// Tiny-hypergraph's distance cost is 0.05/mm, so this remains a meaningful
+// preference without making an available escape look thousands of mm longer.
+const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
@@ -245,14 +247,19 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.flatMap((portPoint) => {
-        if (!portPoint.cramped || this.crampedPortPointsToKeep.has(portPoint)) {
+        if (!portPoint.cramped) {
           return [portPoint]
+        }
+
+        if (this.crampedPortPointsToKeep.has(portPoint)) {
+          return [{ ...portPoint, cramped: false }]
         }
 
         if (this.isMultilayerEscapePort(portPoint)) {
           return [
             {
               ...portPoint,
+              cramped: false,
               tinyHypergraphPortPenalty: CRAMPED_NON_NECESSARY_PORT_PENALTY,
             },
           ]

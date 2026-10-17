@@ -4,7 +4,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { BoundedHighDensityForceImproveSolver } from "lib/solvers/HighDensitySolver/BoundedHighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -12,6 +12,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { getTargetLayerTransitionPoints } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/getTargetLayerTransitionPoints"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -209,10 +210,16 @@ function mergeComponentSharedEdgeSegments({
   )
 
   return originalSharedEdgeSegments.map((segment) => {
-    // Component-local cramped points are intentionally preserved even if they
-    // would otherwise be filtered by the necessary cramped port point solver.
+    // Component-local points are already the intentional escape geometry.
+    // Retain them without charging the generic cramped-port penalty again.
     if (isComponentSharedEdgeSegment(segment, componentCapacityMeshNodeIds)) {
-      return segment
+      return {
+        ...segment,
+        portPoints: segment.portPoints.map((portPoint) => ({
+          ...portPoint,
+          cramped: false,
+        })),
+      }
     }
 
     return filteredSegmentsByEdgeId.get(segment.edgeId) ?? segment
@@ -261,7 +268,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
-  highDensityForceImproveSolver?: HighDensityForceImproveSolver
+  highDensityForceImproveSolver?: BoundedHighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
@@ -524,6 +531,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             (seg) => seg.portPoints,
           ),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
+          layerTransitionPoints: getTargetLayerTransitionPoints({
+            srj: cms.srjWithPointPairs!,
+            viaDiameter: cms.viaDiameter,
+            obstacleMargin:
+              cms.srj.minViaEdgeToPadEdgeClearance ??
+              cms.srj.defaultObstacleMargin ??
+              0.15,
+          }),
+          viaDiameter: cms.viaDiameter,
         })
 
         return [
@@ -644,7 +660,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "highDensityForceImproveSolver",
-      HighDensityForceImproveSolver,
+      BoundedHighDensityForceImproveSolver,
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],

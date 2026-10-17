@@ -20,6 +20,8 @@ export type NodeWithPortPoints = {
   portPoints: PortPoint[]
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
+  /** A prevalidated, net-owned via site represented directly at its center. */
+  isLayerTransition?: boolean
 }
 
 /**

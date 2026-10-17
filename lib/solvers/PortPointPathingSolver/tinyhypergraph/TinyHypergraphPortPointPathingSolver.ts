@@ -179,6 +179,7 @@ type TinyRegionMetadata = {
   _qfpRegionType?: InputNodeWithPortPoints["_qfpRegionType"]
   _isNarrowQfpPadGap?: boolean
   _offBoardConnectionId?: string
+  isLayerTransition?: boolean
 }
 
 type TinyPortMetadata = {
@@ -727,6 +728,7 @@ const buildInputNodesWithPortPoints = (
         ._qfpRegionType,
       _isNarrowQfpPadGap: (region.d as typeof region.d & TinyRegionMetadata)
         ._isNarrowQfpPadGap,
+      isLayerTransition: Boolean(region.d.isLayerTransition),
     }
   })
 }
@@ -1679,6 +1681,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         portPoints,
         portPointsInPairs,
         availableZ: originalRegion.d.availableZ,
+        isLayerTransition: Boolean(originalRegion.d.isLayerTransition),
       })
     }
 
