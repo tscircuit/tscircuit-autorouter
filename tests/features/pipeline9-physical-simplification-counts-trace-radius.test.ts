@@ -39,9 +39,9 @@ test("physical simplification checks the routed trace radius", (): void => {
       const step = pipeline.pipelineDef.find(
         (candidate) => candidate.solverName === name,
       )!
-      const [params] = step.getConstructorParams(pipeline) as ConstructorParameters<
-        typeof TraceSimplificationSolver
-      >
+      const [params] = step.getConstructorParams(
+        pipeline,
+      ) as ConstructorParameters<typeof TraceSimplificationSolver>
       expect(params.useTraceWidthAwareClearance).toBe(allowViaInPad)
       expect(params.allowBlindAndBuriedVias).toBeTrue()
       if (name === "traceSimplificationSolver") {

@@ -801,8 +801,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
-            useTraceWidthAwareClearance:
-              cms.originalSrj.allowViaInPad ?? false,
+            useTraceWidthAwareClearance: cms.originalSrj.allowViaInPad ?? false,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             preserveExplicitLayerTransitions:
               cms.originalSrj.allowViaInPad ?? false,
@@ -845,8 +844,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
             enableCrossingViaReduction: true,
-            useTraceWidthAwareClearance:
-              cms.originalSrj.allowViaInPad ?? false,
+            useTraceWidthAwareClearance: cms.originalSrj.allowViaInPad ?? false,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             preserveExplicitLayerTransitions:
               cms.originalSrj.allowViaInPad ?? false,
