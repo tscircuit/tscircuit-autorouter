@@ -1,6 +1,7 @@
 import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
+import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -65,7 +66,6 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
@@ -902,6 +902,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
+        if (this.activeSubSolver?.diagnostics) {
+          for (const d of this.activeSubSolver.diagnostics) {
+            if (!this.diagnostics?.includes(d)) {
+              this.emitDiagnostic?.(d)
+            }
+          }
+        }
         this.failed = true
         this.activeSubSolver = null
       }
@@ -916,6 +923,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.activeSubSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS *
           Math.min(1, this.effort),
       )
+    }
+    if (typeof (this.activeSubSolver as any)?.on === "function") {
+      ;(this.activeSubSolver as any).on("diagnostic", (diagnostic: any) => {
+        this.emitDiagnostic?.(diagnostic)
+      })
     }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
