@@ -1,3 +1,5 @@
+import { ParallelPipeline9NegotiationSolver } from "../Pipeline9_Parallel/ParallelPipeline9NegotiationSolver"
+import type { NegotiationInput } from "../Pipeline9_Parallel/pipeline9NegotiationTask"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
@@ -89,7 +91,7 @@ type BoundedRepairState =
   | {
       phase: "negotiate"
       negotiation: NegotiationContext
-      solver: NegotiateTraceClearanceSolver
+      solver: NegotiateTraceClearanceSolver | ParallelPipeline9NegotiationSolver
     }
   | {
       phase: "splice-region"
@@ -486,7 +488,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : allowance.maxCandidateAttempts),
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
-    const solver = new NegotiateTraceClearanceSolver({
+    const input: NegotiationInput = {
       srj: region.srj,
       routes: region.routes,
       bounds: region.mutableBounds,
@@ -506,7 +508,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
-    })
+    }
+    const solver = this.params.runtime
+      ? new ParallelPipeline9NegotiationSolver(input, this.params.runtime)
+      : new NegotiateTraceClearanceSolver(input)
     this.state = {
       phase: "negotiate",
       negotiation: { context, allowance, maxPathSearchCalls, region },

@@ -1,3 +1,4 @@
+import type { Pipeline9RepairRuntime } from "../Pipeline9_Parallel/pipeline9NegotiationTask"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -104,6 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  repairRuntime?: Pipeline9RepairRuntime
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -839,6 +841,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.getSrjWithMaterializedPreloadedTraces()
         return [
           {
+            repairRuntime: cms.opts.repairRuntime,
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
             originalSrj: cms.originalSrj,

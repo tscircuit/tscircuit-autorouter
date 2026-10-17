@@ -53,6 +53,8 @@ export interface GetDrcErrorsOptions {
   viaClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
+  /** Search-only callers can defer this check until final validation. */
+  includeBoardClearance?: boolean
   includeTypedTraceClearance?: boolean
 }
 
@@ -114,7 +116,7 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
-    ...checkPcbTracesOutOfBoard(circuitJson),
+    ...(options.includeBoardClearance === false ? [] : checkPcbTracesOutOfBoard(circuitJson)),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
