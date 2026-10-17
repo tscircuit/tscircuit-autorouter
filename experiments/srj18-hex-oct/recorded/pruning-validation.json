@@ -1,0 +1,16 @@
+{
+  "cards": 384,
+  "exactCoordinateImagesChecked": 384,
+  "metricCardsChecked": 384,
+  "individualLayerViewsChecked": 1392,
+  "horizontalRows": 16,
+  "modalZoom": true,
+  "matrixNavigation": true,
+  "mobileOverflow": false,
+  "pageErrors": 0,
+  "routingTestsPassed": 33,
+  "routingAssertions": 4245,
+  "independentEvaluatorTestsPassed": 4,
+  "newRunsIndependentlyEvaluated": 480,
+  "allNewOutputsDrcPass": true
+}

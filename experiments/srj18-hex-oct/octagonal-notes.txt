@@ -1,0 +1,62 @@
+Octagonal grid interpretation and experimental controls
+=====================================================
+
+The octagonal variant is an eight-neighbor square lattice: 0, 45, 90, 135,
+180, 225, 270 and 315 degree headings. Regular octagons cannot tessellate
+alone. A literal octagon/square tiling would be a different graph and is
+not the graph implemented here.
+
+Grid pitch is the cardinal neighbor distance in millimeters. Diagonal
+steps cost sqrt(2) times pitch. The admissible octile heuristic exactly
+matches unobstructed graph distance; it does not make diagonal wires
+artificially cheap. The provider exposes that distance, while the shared
+A* engine uses the Euclidean distance to the goal-candidate bounding box
+for both graph variants: a consistent, admissible lower bound when there
+are several possible breakout/tree targets. The source and target physical
+pad positions must
+connect through independently checked breakouts to the nearest feasible
+grid vertices. Boundary bounds and copper clearance belong to the shared
+routing engine and do not clamp nearest-node calculations.
+
+Equal-pitch hexagonal and octagonal graphs have different point density.
+For a triangular lattice with six neighbors and neighbor spacing h, area
+per vertex is sqrt(3)/2 * h^2. Square lattice area per vertex is o^2.
+To compare equal point density, use o=h*sqrt(sqrt(3)/2), about 0.930605*h.
+At equal neighbor spacing, hex has about 15.47 percent more vertices per
+unit area. Report which control was used; grid geometry can otherwise be
+confounded with resolution and runtime.
+
+There is a geometric reason to test eight directions. In an unbounded,
+obstacle-free direction graph with k uniformly spaced headings, worst-case
+path length divided by Euclidean length is sec(pi/k). That gives 1.154701
+for six hexagonal directions and 1.082392 for eight octagonal directions.
+For example the octagonal worst case is a displacement 22.5 degrees from
+a cardinal heading. This is a directional quantization bound, not a claim
+of achieved improvement on SRJ18: pads, obstacles, vias, breakout lengths,
+rip-up policies and node spacing can dominate actual board results.
+
+Dataset interpretation matters. Across the sixteen inputs, 702 of 2,896
+connection records have one terminal and require no new route. A complete
+singleton net is not evidence of routing success. Multi-terminal nets
+should contribute terminalCount-1 required spanning links; report links
+completed as well as net completion. The dataset uses two, four and six
+layers depending on the board, and rect/oval obstacle records with optional
+ccwRotationDegrees. Rotation must be applied to obstacle clearance checks;
+oval records describe capsule-shaped pads rather than elliptical pads.
+
+Meaningful provider checks in src/octGrid.test.ts verify nearest-node
+choice against surrounding physical vertices and octile costs against
+Dijkstra paths using physical edge lengths, including negative indices.
+Six additional independent checks in src/octRouterGeometry.test.ts verify
+diagonal obstacle cuts, a legal diagonal despite blocked adjacent cardinal
+vertices, finite trace width/clearance, through vias blocked by an inner
+layer, rotated rectangles/capsule ovals, and exact endpoint coordinates
+preserved through breakouts. All ten checks passed before suite execution.
+
+Shared algorithm limitations: local breakouts reach about 1.6 mm and have
+a candidate cap; the closest terminal pair is attempted first; the next
+branch targets at most the closest 32 existing tree vertices. A failed
+initial pair or branch ends that connection without trying a different
+pair/branch ordering. There is no rip-up. These choices are identical for
+the hexagonal and octagonal variants and can dominate graph geometry.
+Measured SRJ18 results are recorded separately by the suite orchestrator.

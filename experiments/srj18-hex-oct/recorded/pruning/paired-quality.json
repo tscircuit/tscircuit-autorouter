@@ -1,0 +1,1282 @@
+[
+  {
+    "configuration": "hex-p010",
+    "mode": "cached",
+    "commonCompletedNets": 1792,
+    "controlVias": 1954,
+    "otherVias": 1956,
+    "controlLengthMm": 44177.75863000001,
+    "otherLengthMm": 44432.82739000002,
+    "uncappedIdenticalCoveragePairs": 6,
+    "uncappedCachedExactPathPairs": 6,
+    "uncappedRuntimeGeomeanRatio": 0.7891729239012285,
+    "uncappedControlExpandedStates": 4650358,
+    "uncappedOtherExpandedStates": 4650358,
+    "uncappedPairs": [
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.7309011987954775,
+        "controlStates": 1035993,
+        "otherStates": 1035993
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9029187990790172,
+        "controlStates": 717882,
+        "otherStates": 717882
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.7778891592264926,
+        "controlStates": 571304,
+        "otherStates": 571304
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7194753316613842,
+        "controlStates": 1035993,
+        "otherStates": 1035993
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.8971296554304184,
+        "controlStates": 717882,
+        "otherStates": 717882
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.7290156456641953,
+        "controlStates": 571304,
+        "otherStates": 571304
+      }
+    ]
+  },
+  {
+    "configuration": "hex-p010",
+    "mode": "pruned",
+    "commonCompletedNets": 1792,
+    "controlVias": 1954,
+    "otherVias": 1954,
+    "controlLengthMm": 44177.75863000001,
+    "otherLengthMm": 44367.158240000026,
+    "uncappedIdenticalCoveragePairs": 6,
+    "uncappedCachedExactPathPairs": null,
+    "uncappedRuntimeGeomeanRatio": 0.8448365693507072,
+    "uncappedControlExpandedStates": 4650358,
+    "uncappedOtherExpandedStates": 4758824,
+    "uncappedPairs": [
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8007890586842203,
+        "controlStates": 1035993,
+        "otherStates": 1088378
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9839589685565171,
+        "controlStates": 717882,
+        "otherStates": 718325
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8412255468870402,
+        "controlStates": 571304,
+        "otherStates": 572709
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7818751295153173,
+        "controlStates": 1035993,
+        "otherStates": 1088378
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9367541411346794,
+        "controlStates": 717882,
+        "otherStates": 718325
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.7489720878112838,
+        "controlStates": 571304,
+        "otherStates": 572709
+      }
+    ]
+  },
+  {
+    "configuration": "hex-p020",
+    "mode": "cached",
+    "commonCompletedNets": 2085,
+    "controlVias": 3678,
+    "otherVias": 3678,
+    "controlLengthMm": 75432.65912999988,
+    "otherLengthMm": 75592.49531999989,
+    "uncappedIdenticalCoveragePairs": 26,
+    "uncappedCachedExactPathPairs": 26,
+    "uncappedRuntimeGeomeanRatio": 0.7270606234009395,
+    "uncappedControlExpandedStates": 28548512,
+    "uncappedOtherExpandedStates": 28548512,
+    "uncappedPairs": [
+      {
+        "sample": "sample001",
+        "repeat": 1,
+        "runtimeRatio": 0.894912666567639,
+        "controlStates": 2226030,
+        "otherStates": 2226030
+      },
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.7412488209185215,
+        "controlStates": 290841,
+        "otherStates": 290841
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9248443578164027,
+        "controlStates": 183787,
+        "otherStates": 183787
+      },
+      {
+        "sample": "sample005",
+        "repeat": 1,
+        "runtimeRatio": 0.8212328037079246,
+        "controlStates": 1960851,
+        "otherStates": 1960851
+      },
+      {
+        "sample": "sample006",
+        "repeat": 1,
+        "runtimeRatio": 0.560003046414695,
+        "controlStates": 880748,
+        "otherStates": 880748
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.6890162256544592,
+        "controlStates": 2669920,
+        "otherStates": 2669920
+      },
+      {
+        "sample": "sample008",
+        "repeat": 1,
+        "runtimeRatio": 0.7107383294233048,
+        "controlStates": 653820,
+        "otherStates": 653820
+      },
+      {
+        "sample": "sample009",
+        "repeat": 1,
+        "runtimeRatio": 0.6904034015494062,
+        "controlStates": 813423,
+        "otherStates": 813423
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.6619299384548665,
+        "controlStates": 847827,
+        "otherStates": 847827
+      },
+      {
+        "sample": "sample011",
+        "repeat": 1,
+        "runtimeRatio": 0.6607166284658328,
+        "controlStates": 1156928,
+        "otherStates": 1156928
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.6532844514503453,
+        "controlStates": 1271375,
+        "otherStates": 1271375
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.7108836385399163,
+        "controlStates": 1123449,
+        "otherStates": 1123449
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8874001706542906,
+        "controlStates": 195257,
+        "otherStates": 195257
+      },
+      {
+        "sample": "sample001",
+        "repeat": 2,
+        "runtimeRatio": 0.8435755040670584,
+        "controlStates": 2226030,
+        "otherStates": 2226030
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7231581486804879,
+        "controlStates": 290841,
+        "otherStates": 290841
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9081820677931494,
+        "controlStates": 183787,
+        "otherStates": 183787
+      },
+      {
+        "sample": "sample005",
+        "repeat": 2,
+        "runtimeRatio": 0.8175220712795979,
+        "controlStates": 1960851,
+        "otherStates": 1960851
+      },
+      {
+        "sample": "sample006",
+        "repeat": 2,
+        "runtimeRatio": 0.5474677437916081,
+        "controlStates": 880748,
+        "otherStates": 880748
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.7309216560720377,
+        "controlStates": 2669920,
+        "otherStates": 2669920
+      },
+      {
+        "sample": "sample008",
+        "repeat": 2,
+        "runtimeRatio": 0.684355046731176,
+        "controlStates": 653820,
+        "otherStates": 653820
+      },
+      {
+        "sample": "sample009",
+        "repeat": 2,
+        "runtimeRatio": 0.6806603076788961,
+        "controlStates": 813423,
+        "otherStates": 813423
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.6890174704889569,
+        "controlStates": 847827,
+        "otherStates": 847827
+      },
+      {
+        "sample": "sample011",
+        "repeat": 2,
+        "runtimeRatio": 0.6687899475851352,
+        "controlStates": 1156928,
+        "otherStates": 1156928
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.6714373099427959,
+        "controlStates": 1271375,
+        "otherStates": 1271375
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.7124140030963604,
+        "controlStates": 1123449,
+        "otherStates": 1123449
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.7865887140911538,
+        "controlStates": 195257,
+        "otherStates": 195257
+      }
+    ]
+  },
+  {
+    "configuration": "hex-p020",
+    "mode": "pruned",
+    "commonCompletedNets": 2083,
+    "controlVias": 3600,
+    "otherVias": 3594,
+    "controlLengthMm": 74738.73472999988,
+    "otherLengthMm": 75023.49611999994,
+    "uncappedIdenticalCoveragePairs": 20,
+    "uncappedCachedExactPathPairs": null,
+    "uncappedRuntimeGeomeanRatio": 0.7302849037531637,
+    "uncappedControlExpandedStates": 17860894,
+    "uncappedOtherExpandedStates": 17772230,
+    "uncappedPairs": [
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.7890230178843766,
+        "controlStates": 290841,
+        "otherStates": 291001
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9013637695578451,
+        "controlStates": 183787,
+        "otherStates": 170456
+      },
+      {
+        "sample": "sample006",
+        "repeat": 1,
+        "runtimeRatio": 0.5475875021041929,
+        "controlStates": 880748,
+        "otherStates": 850388
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.6845261436077076,
+        "controlStates": 2669920,
+        "otherStates": 2712088
+      },
+      {
+        "sample": "sample008",
+        "repeat": 1,
+        "runtimeRatio": 0.7363239062453824,
+        "controlStates": 653820,
+        "otherStates": 641118
+      },
+      {
+        "sample": "sample009",
+        "repeat": 1,
+        "runtimeRatio": 0.6706106462924609,
+        "controlStates": 813423,
+        "otherStates": 776625
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.7284634120113559,
+        "controlStates": 847827,
+        "otherStates": 871371
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.6805466471317132,
+        "controlStates": 1271375,
+        "otherStates": 1269778
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.7407923868979298,
+        "controlStates": 1123449,
+        "otherStates": 1107857
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8641751550278858,
+        "controlStates": 195257,
+        "otherStates": 195433
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7564992386665526,
+        "controlStates": 290841,
+        "otherStates": 291001
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.885122193064014,
+        "controlStates": 183787,
+        "otherStates": 170456
+      },
+      {
+        "sample": "sample006",
+        "repeat": 2,
+        "runtimeRatio": 0.5282686406050346,
+        "controlStates": 880748,
+        "otherStates": 850388
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.7909033387167722,
+        "controlStates": 2669920,
+        "otherStates": 2712088
+      },
+      {
+        "sample": "sample008",
+        "repeat": 2,
+        "runtimeRatio": 0.7167720495088103,
+        "controlStates": 653820,
+        "otherStates": 641118
+      },
+      {
+        "sample": "sample009",
+        "repeat": 2,
+        "runtimeRatio": 0.6620018020711796,
+        "controlStates": 813423,
+        "otherStates": 776625
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.7658920202331907,
+        "controlStates": 847827,
+        "otherStates": 871371
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.7002886637018612,
+        "controlStates": 1271375,
+        "otherStates": 1269778
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.7312471482724464,
+        "controlStates": 1123449,
+        "otherStates": 1107857
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.8557971322340909,
+        "controlStates": 195257,
+        "otherStates": 195433
+      }
+    ]
+  },
+  {
+    "configuration": "oct-density010",
+    "mode": "cached",
+    "commonCompletedNets": 1809,
+    "controlVias": 1986,
+    "otherVias": 1986,
+    "controlLengthMm": 43921.46859999994,
+    "otherLengthMm": 44324.61861999995,
+    "uncappedIdenticalCoveragePairs": 6,
+    "uncappedCachedExactPathPairs": 6,
+    "uncappedRuntimeGeomeanRatio": 0.8318010846476136,
+    "uncappedControlExpandedStates": 4086206,
+    "uncappedOtherExpandedStates": 4086206,
+    "uncappedPairs": [
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.7619766403943414,
+        "controlStates": 929908,
+        "otherStates": 929908
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9452705369416977,
+        "controlStates": 638186,
+        "otherStates": 638186
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.7906949770084193,
+        "controlStates": 475009,
+        "otherStates": 475009
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7645983374639734,
+        "controlStates": 929908,
+        "otherStates": 929908
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9401384651387823,
+        "controlStates": 638186,
+        "otherStates": 638186
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.8090678868343939,
+        "controlStates": 475009,
+        "otherStates": 475009
+      }
+    ]
+  },
+  {
+    "configuration": "oct-density010",
+    "mode": "pruned",
+    "commonCompletedNets": 1809,
+    "controlVias": 1986,
+    "otherVias": 1945,
+    "controlLengthMm": 43921.46859999994,
+    "otherLengthMm": 44515.24031999995,
+    "uncappedIdenticalCoveragePairs": 6,
+    "uncappedCachedExactPathPairs": null,
+    "uncappedRuntimeGeomeanRatio": 0.8674898044749928,
+    "uncappedControlExpandedStates": 4086206,
+    "uncappedOtherExpandedStates": 4087148,
+    "uncappedPairs": [
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8019590081348963,
+        "controlStates": 929908,
+        "otherStates": 927471
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9841176842589195,
+        "controlStates": 638186,
+        "otherStates": 638199
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8282994630807186,
+        "controlStates": 475009,
+        "otherStates": 477904
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7946348509071943,
+        "controlStates": 929908,
+        "otherStates": 927471
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 1.0048546481138478,
+        "controlStates": 638186,
+        "otherStates": 638199
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.8164485755797977,
+        "controlStates": 475009,
+        "otherStates": 477904
+      }
+    ]
+  },
+  {
+    "configuration": "oct-density020",
+    "mode": "cached",
+    "commonCompletedNets": 2051,
+    "controlVias": 3339,
+    "otherVias": 3339,
+    "controlLengthMm": 70584.89077000006,
+    "otherLengthMm": 70672.01048000008,
+    "uncappedIdenticalCoveragePairs": 26,
+    "uncappedCachedExactPathPairs": 26,
+    "uncappedRuntimeGeomeanRatio": 0.7677241831544851,
+    "uncappedControlExpandedStates": 24809158,
+    "uncappedOtherExpandedStates": 24809158,
+    "uncappedPairs": [
+      {
+        "sample": "sample001",
+        "repeat": 1,
+        "runtimeRatio": 0.8715309024470214,
+        "controlStates": 2229928,
+        "otherStates": 2229928
+      },
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8091353868616882,
+        "controlStates": 259640,
+        "otherStates": 259640
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.8946642619178952,
+        "controlStates": 179693,
+        "otherStates": 179693
+      },
+      {
+        "sample": "sample005",
+        "repeat": 1,
+        "runtimeRatio": 0.817812900729163,
+        "controlStates": 1356121,
+        "otherStates": 1356121
+      },
+      {
+        "sample": "sample006",
+        "repeat": 1,
+        "runtimeRatio": 0.6220928353649192,
+        "controlStates": 768108,
+        "otherStates": 768108
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.8103844562061367,
+        "controlStates": 2198748,
+        "otherStates": 2198748
+      },
+      {
+        "sample": "sample008",
+        "repeat": 1,
+        "runtimeRatio": 0.7523255300675099,
+        "controlStates": 558392,
+        "otherStates": 558392
+      },
+      {
+        "sample": "sample009",
+        "repeat": 1,
+        "runtimeRatio": 0.7219621327923442,
+        "controlStates": 722785,
+        "otherStates": 722785
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.736302771714717,
+        "controlStates": 850122,
+        "otherStates": 850122
+      },
+      {
+        "sample": "sample011",
+        "repeat": 1,
+        "runtimeRatio": 0.7572495361629298,
+        "controlStates": 1170618,
+        "otherStates": 1170618
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.6929361221079264,
+        "controlStates": 1074564,
+        "otherStates": 1074564
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.745770595104868,
+        "controlStates": 873805,
+        "otherStates": 873805
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8525739298218178,
+        "controlStates": 162055,
+        "otherStates": 162055
+      },
+      {
+        "sample": "sample001",
+        "repeat": 2,
+        "runtimeRatio": 0.8557154773448248,
+        "controlStates": 2229928,
+        "otherStates": 2229928
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.8026910950294226,
+        "controlStates": 259640,
+        "otherStates": 259640
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9301403686597336,
+        "controlStates": 179693,
+        "otherStates": 179693
+      },
+      {
+        "sample": "sample005",
+        "repeat": 2,
+        "runtimeRatio": 0.8104064467185439,
+        "controlStates": 1356121,
+        "otherStates": 1356121
+      },
+      {
+        "sample": "sample006",
+        "repeat": 2,
+        "runtimeRatio": 0.620081984825173,
+        "controlStates": 768108,
+        "otherStates": 768108
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.7112999997414666,
+        "controlStates": 2198748,
+        "otherStates": 2198748
+      },
+      {
+        "sample": "sample008",
+        "repeat": 2,
+        "runtimeRatio": 0.742511319924368,
+        "controlStates": 558392,
+        "otherStates": 558392
+      },
+      {
+        "sample": "sample009",
+        "repeat": 2,
+        "runtimeRatio": 0.7533056472781245,
+        "controlStates": 722785,
+        "otherStates": 722785
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.7248175875297425,
+        "controlStates": 850122,
+        "otherStates": 850122
+      },
+      {
+        "sample": "sample011",
+        "repeat": 2,
+        "runtimeRatio": 0.7138774222069018,
+        "controlStates": 1170618,
+        "otherStates": 1170618
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.6828287001892799,
+        "controlStates": 1074564,
+        "otherStates": 1074564
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.7285937787940988,
+        "controlStates": 873805,
+        "otherStates": 873805
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.9077582476012316,
+        "controlStates": 162055,
+        "otherStates": 162055
+      }
+    ]
+  },
+  {
+    "configuration": "oct-density020",
+    "mode": "pruned",
+    "commonCompletedNets": 2051,
+    "controlVias": 3339,
+    "otherVias": 3341,
+    "controlLengthMm": 70584.89077000006,
+    "otherLengthMm": 70168.83652000008,
+    "uncappedIdenticalCoveragePairs": 20,
+    "uncappedCachedExactPathPairs": null,
+    "uncappedRuntimeGeomeanRatio": 0.7918911530852171,
+    "uncappedControlExpandedStates": 19534562,
+    "uncappedOtherExpandedStates": 19485004,
+    "uncappedPairs": [
+      {
+        "sample": "sample001",
+        "repeat": 1,
+        "runtimeRatio": 0.8733894471069789,
+        "controlStates": 2229928,
+        "otherStates": 2229908
+      },
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8041433370202272,
+        "controlStates": 259640,
+        "otherStates": 243098
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9695350954556516,
+        "controlStates": 179693,
+        "otherStates": 179686
+      },
+      {
+        "sample": "sample006",
+        "repeat": 1,
+        "runtimeRatio": 0.6285958603480868,
+        "controlStates": 768108,
+        "otherStates": 769679
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.8738001861316445,
+        "controlStates": 2198748,
+        "otherStates": 2251005
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.7509368390202079,
+        "controlStates": 850122,
+        "otherStates": 821210
+      },
+      {
+        "sample": "sample011",
+        "repeat": 1,
+        "runtimeRatio": 0.7455625227460713,
+        "controlStates": 1170618,
+        "otherStates": 1140190
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.7161637052934215,
+        "controlStates": 1074564,
+        "otherStates": 1060487
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.791347798619257,
+        "controlStates": 873805,
+        "otherStates": 887067
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.9077472369833892,
+        "controlStates": 162055,
+        "otherStates": 160172
+      },
+      {
+        "sample": "sample001",
+        "repeat": 2,
+        "runtimeRatio": 0.9062068571099078,
+        "controlStates": 2229928,
+        "otherStates": 2229908
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.8095720770652116,
+        "controlStates": 259640,
+        "otherStates": 243098
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9717150333832234,
+        "controlStates": 179693,
+        "otherStates": 179686
+      },
+      {
+        "sample": "sample006",
+        "repeat": 2,
+        "runtimeRatio": 0.6212285265255678,
+        "controlStates": 768108,
+        "otherStates": 769679
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.7553475936561208,
+        "controlStates": 2198748,
+        "otherStates": 2251005
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.7292432398375123,
+        "controlStates": 850122,
+        "otherStates": 821210
+      },
+      {
+        "sample": "sample011",
+        "repeat": 2,
+        "runtimeRatio": 0.7506739420083978,
+        "controlStates": 1170618,
+        "otherStates": 1140190
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.6686490097800507,
+        "controlStates": 1074564,
+        "otherStates": 1060487
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.7973930083444882,
+        "controlStates": 873805,
+        "otherStates": 887067
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.8940765434337374,
+        "controlStates": 162055,
+        "otherStates": 160172
+      }
+    ]
+  },
+  {
+    "configuration": "oct-p020",
+    "mode": "cached",
+    "commonCompletedNets": 2066,
+    "controlVias": 3382,
+    "otherVias": 3382,
+    "controlLengthMm": 73492.83420999977,
+    "otherLengthMm": 73791.67159999978,
+    "uncappedIdenticalCoveragePairs": 26,
+    "uncappedCachedExactPathPairs": 26,
+    "uncappedRuntimeGeomeanRatio": 0.7633551358336108,
+    "uncappedControlExpandedStates": 22402390,
+    "uncappedOtherExpandedStates": 22402390,
+    "uncappedPairs": [
+      {
+        "sample": "sample001",
+        "repeat": 1,
+        "runtimeRatio": 0.889830175513634,
+        "controlStates": 1876919,
+        "otherStates": 1876919
+      },
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8155965432511461,
+        "controlStates": 231653,
+        "otherStates": 231653
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9007442153842239,
+        "controlStates": 168967,
+        "otherStates": 168967
+      },
+      {
+        "sample": "sample005",
+        "repeat": 1,
+        "runtimeRatio": 0.8931313585651481,
+        "controlStates": 1259645,
+        "otherStates": 1259645
+      },
+      {
+        "sample": "sample006",
+        "repeat": 1,
+        "runtimeRatio": 0.5943852908592799,
+        "controlStates": 654860,
+        "otherStates": 654860
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.7166603931665617,
+        "controlStates": 1982477,
+        "otherStates": 1982477
+      },
+      {
+        "sample": "sample008",
+        "repeat": 1,
+        "runtimeRatio": 0.7099757001271246,
+        "controlStates": 598024,
+        "otherStates": 598024
+      },
+      {
+        "sample": "sample009",
+        "repeat": 1,
+        "runtimeRatio": 0.740075869859479,
+        "controlStates": 678196,
+        "otherStates": 678196
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.7346493298846014,
+        "controlStates": 730484,
+        "otherStates": 730484
+      },
+      {
+        "sample": "sample011",
+        "repeat": 1,
+        "runtimeRatio": 0.698945386214455,
+        "controlStates": 1018051,
+        "otherStates": 1018051
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.7129035977303418,
+        "controlStates": 993490,
+        "otherStates": 993490
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.7235885616683218,
+        "controlStates": 862924,
+        "otherStates": 862924
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.8901075510835884,
+        "controlStates": 145505,
+        "otherStates": 145505
+      },
+      {
+        "sample": "sample001",
+        "repeat": 2,
+        "runtimeRatio": 0.8670521764338939,
+        "controlStates": 1876919,
+        "otherStates": 1876919
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.7975008060868117,
+        "controlStates": 231653,
+        "otherStates": 231653
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9055490469351277,
+        "controlStates": 168967,
+        "otherStates": 168967
+      },
+      {
+        "sample": "sample005",
+        "repeat": 2,
+        "runtimeRatio": 0.8763300192358615,
+        "controlStates": 1259645,
+        "otherStates": 1259645
+      },
+      {
+        "sample": "sample006",
+        "repeat": 2,
+        "runtimeRatio": 0.58758643018254,
+        "controlStates": 654860,
+        "otherStates": 654860
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.6976768829702612,
+        "controlStates": 1982477,
+        "otherStates": 1982477
+      },
+      {
+        "sample": "sample008",
+        "repeat": 2,
+        "runtimeRatio": 0.7242216073257955,
+        "controlStates": 598024,
+        "otherStates": 598024
+      },
+      {
+        "sample": "sample009",
+        "repeat": 2,
+        "runtimeRatio": 0.7371956609445854,
+        "controlStates": 678196,
+        "otherStates": 678196
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.8094495877653244,
+        "controlStates": 730484,
+        "otherStates": 730484
+      },
+      {
+        "sample": "sample011",
+        "repeat": 2,
+        "runtimeRatio": 0.6991763731977448,
+        "controlStates": 1018051,
+        "otherStates": 1018051
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.6771016650412524,
+        "controlStates": 993490,
+        "otherStates": 993490
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.7376334971432238,
+        "controlStates": 862924,
+        "otherStates": 862924
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.8538786822318216,
+        "controlStates": 145505,
+        "otherStates": 145505
+      }
+    ]
+  },
+  {
+    "configuration": "oct-p020",
+    "mode": "pruned",
+    "commonCompletedNets": 2062,
+    "controlVias": 3282,
+    "otherVias": 3311,
+    "controlLengthMm": 72777.05376999982,
+    "otherLengthMm": 73138.35691999982,
+    "uncappedIdenticalCoveragePairs": 18,
+    "uncappedCachedExactPathPairs": null,
+    "uncappedRuntimeGeomeanRatio": 0.8523072728709117,
+    "uncappedControlExpandedStates": 16504128,
+    "uncappedOtherExpandedStates": 16685484,
+    "uncappedPairs": [
+      {
+        "sample": "sample001",
+        "repeat": 1,
+        "runtimeRatio": 0.9390292574302407,
+        "controlStates": 1876919,
+        "otherStates": 1876962
+      },
+      {
+        "sample": "sample003",
+        "repeat": 1,
+        "runtimeRatio": 0.8488586103815777,
+        "controlStates": 231653,
+        "otherStates": 236779
+      },
+      {
+        "sample": "sample004",
+        "repeat": 1,
+        "runtimeRatio": 0.9669731655279712,
+        "controlStates": 168967,
+        "otherStates": 168963
+      },
+      {
+        "sample": "sample005",
+        "repeat": 1,
+        "runtimeRatio": 0.9575209452800881,
+        "controlStates": 1259645,
+        "otherStates": 1297272
+      },
+      {
+        "sample": "sample007",
+        "repeat": 1,
+        "runtimeRatio": 0.7495143216761129,
+        "controlStates": 1982477,
+        "otherStates": 1983503
+      },
+      {
+        "sample": "sample010",
+        "repeat": 1,
+        "runtimeRatio": 0.8873498716244523,
+        "controlStates": 730484,
+        "otherStates": 789104
+      },
+      {
+        "sample": "sample013",
+        "repeat": 1,
+        "runtimeRatio": 0.7241576725010332,
+        "controlStates": 993490,
+        "otherStates": 991615
+      },
+      {
+        "sample": "sample015",
+        "repeat": 1,
+        "runtimeRatio": 0.7267743414938703,
+        "controlStates": 862924,
+        "otherStates": 850819
+      },
+      {
+        "sample": "sample016",
+        "repeat": 1,
+        "runtimeRatio": 0.9279610867195647,
+        "controlStates": 145505,
+        "otherStates": 147725
+      },
+      {
+        "sample": "sample001",
+        "repeat": 2,
+        "runtimeRatio": 0.9330681898854521,
+        "controlStates": 1876919,
+        "otherStates": 1876962
+      },
+      {
+        "sample": "sample003",
+        "repeat": 2,
+        "runtimeRatio": 0.8732687004987503,
+        "controlStates": 231653,
+        "otherStates": 236779
+      },
+      {
+        "sample": "sample004",
+        "repeat": 2,
+        "runtimeRatio": 0.9628999451393238,
+        "controlStates": 168967,
+        "otherStates": 168963
+      },
+      {
+        "sample": "sample005",
+        "repeat": 2,
+        "runtimeRatio": 0.9824817619584192,
+        "controlStates": 1259645,
+        "otherStates": 1297272
+      },
+      {
+        "sample": "sample007",
+        "repeat": 2,
+        "runtimeRatio": 0.7042455628019886,
+        "controlStates": 1982477,
+        "otherStates": 1983503
+      },
+      {
+        "sample": "sample010",
+        "repeat": 2,
+        "runtimeRatio": 0.9134791619773678,
+        "controlStates": 730484,
+        "otherStates": 789104
+      },
+      {
+        "sample": "sample013",
+        "repeat": 2,
+        "runtimeRatio": 0.6852124366000524,
+        "controlStates": 993490,
+        "otherStates": 991615
+      },
+      {
+        "sample": "sample015",
+        "repeat": 2,
+        "runtimeRatio": 0.757216628146294,
+        "controlStates": 862924,
+        "otherStates": 850819
+      },
+      {
+        "sample": "sample016",
+        "repeat": 2,
+        "runtimeRatio": 0.9132336734175303,
+        "controlStates": 145505,
+        "otherStates": 147725
+      }
+    ]
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "routerTests": {
+    "passed": 26,
+    "assertions": 3876,
+    "oneTestPerFile": true
+  },
+  "independentGeometryEvaluatorTests": {
+    "passed": 4
+  },
+  "isolatedTypecheck": "passed",
+  "isolatedBunBuild": "passed",
+  "galleryBrowserQA": {
+    "cards": 144,
+    "exactCoordinateImagesChecked": 144,
+    "individualLayerViewsChecked": 522,
+    "horizontalRows": 16,
+    "modalZoom": true,
+    "matrixNavigation": true,
+    "mobileOverflow": false,
+    "pageErrors": 0
+  },
+  "galleryViaCoordinatesAndDiameters": "matched recorded SRJ for every output",
+  "recordedInputs": 16,
+  "recordedOutputs": 144,
+  "productionPipelineChanges": false,
+  "benchmarks": "Recorded prior to repository integration; no benchmark was rerun for this PR"
+}

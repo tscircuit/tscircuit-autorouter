@@ -1,0 +1,15 @@
+{
+  "variant": "freerouting-fanout",
+  "boardsWithWidthViolations": 16,
+  "belowMinWidthItems": 2320,
+  "configuredAutomaticNeckdown": false,
+  "neck100SmokeAlsoNarrowed": true,
+  "microNeckdownRatios": [
+    0.75,
+    0.6,
+    0.5
+  ],
+  "source": "https://github.com/freerouting/freerouting/blob/v2.5.0/src/main/java/app/freerouting/autoroute/path/FoundConnectionInserter.java#L243",
+  "correctedBaselineSetting": "router.fanout.enabled=false",
+  "outputWidthsRescaled": false
+}

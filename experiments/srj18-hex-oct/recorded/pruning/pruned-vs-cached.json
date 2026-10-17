@@ -1,0 +1,52 @@
+[
+  {
+    "configuration": "hex-p010",
+    "uncappedIdenticalCoveragePairs": 10,
+    "prunedOverCachedRuntimeGeomean": 1.047089598319247,
+    "cachedExpandedStates": 16935266,
+    "prunedExpandedStates": 16744936,
+    "commonCompletedNetComparisons": 1884,
+    "cachedVias": 2323,
+    "prunedVias": 2329
+  },
+  {
+    "configuration": "hex-p020",
+    "uncappedIdenticalCoveragePairs": 22,
+    "prunedOverCachedRuntimeGeomean": 1.0215441560395422,
+    "cachedExpandedStates": 31111688,
+    "prunedExpandedStates": 30912794,
+    "commonCompletedNetComparisons": 2109,
+    "cachedVias": 3711,
+    "prunedVias": 3707
+  },
+  {
+    "configuration": "oct-density010",
+    "uncappedIdenticalCoveragePairs": 11,
+    "prunedOverCachedRuntimeGeomean": 1.0488039599735,
+    "cachedExpandedStates": 17487667,
+    "prunedExpandedStates": 17940483,
+    "commonCompletedNetComparisons": 1892,
+    "cachedVias": 2340,
+    "prunedVias": 2297
+  },
+  {
+    "configuration": "oct-density020",
+    "uncappedIdenticalCoveragePairs": 22,
+    "prunedOverCachedRuntimeGeomean": 1.025378933456497,
+    "cachedExpandedStates": 30300454,
+    "prunedExpandedStates": 29970840,
+    "commonCompletedNetComparisons": 2079,
+    "cachedVias": 3443,
+    "prunedVias": 3447
+  },
+  {
+    "configuration": "oct-p020",
+    "uncappedIdenticalCoveragePairs": 20,
+    "prunedOverCachedRuntimeGeomean": 1.0591240466696978,
+    "cachedExpandedStates": 26118720,
+    "prunedExpandedStates": 26052594,
+    "commonCompletedNetComparisons": 2080,
+    "cachedVias": 3340,
+    "prunedVias": 3388
+  }
+]

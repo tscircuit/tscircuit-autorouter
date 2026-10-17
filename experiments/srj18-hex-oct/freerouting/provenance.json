@@ -1,0 +1,58 @@
+{
+  "dataset": {
+    "repository": "https://github.com/tscircuit/dataset-srj18",
+    "commit": "b38e23cb1941084d1f77c935699eff425a902db5",
+    "samplesPresent": 16,
+    "samplesUsed": "sample001 through sample016"
+  },
+  "freerouting": {
+    "version": "2.5.0",
+    "releasePublishedAt": "2026-10-05T15:58:39Z",
+    "commit": "b647a2f824cfbc54bc4dcaee71b03b7cd945eb76",
+    "releaseUrl": "https://github.com/freerouting/freerouting/releases/tag/v2.5.0",
+    "jarSha256": "f6f51bb02245e8e717f9359bd260cc9c5c0b1bc0acc8b7cb2cd5b8ffeb5de3c7",
+    "sha256VerifiedAgainst": "GitHub official release asset digest",
+    "nativeCliArchiveSha256": "64a957a9ef2a2fbde6ab2001bb32800f5ba34f9fd15575e363512934b870d63a",
+    "nativeCliBinarySha256": "1cf75b007af551818ff2e15d6bef3cdefe1119decb2cb29527589c797af186f1",
+    "nativeCliStatus": "unsupported native-image serialization of java.lang.Number crashes board history; replaced by same-version JAR"
+  },
+  "jre": {
+    "distribution": "Adoptium Temurin",
+    "release": "jdk-25.0.4.1+1",
+    "archiveSha256": "1731a34baadec5479258ea0202e4d5d865d2efeee60cb0c7d7eb056fe96ca219",
+    "sha256VerifiedAgainst": "Adoptium official API binary package checksum",
+    "source": "https://github.com/adoptium/temurin25-binaries/releases/tag/jdk-25.0.4.1%2B1"
+  },
+  "experiment": {
+    "samples": 16,
+    "routingTimeBudgetSeconds": 60,
+    "processTimeCapSeconds": 70,
+    "parallelJobs": 3,
+    "traceWidthMm": 0.1,
+    "clearanceMm": 0.1,
+    "copperToEdgeClearanceMm": 0.1,
+    "viaDiameterMm": 0.3,
+    "viaHoleDiameterMm": 0.15,
+    "automaticNeckdown": false,
+    "neckWidthUm": 100,
+    "fanoutEnabled": false,
+    "strictDrc": true,
+    "autoroutePassCap": 100,
+    "optimizerPassCap": 5,
+    "optimizerThreads": 1,
+    "dsnGeometrySource": "SRJ18 samples, no original KiCad traces",
+    "netlessObstacles": "Synthetic unconnected pads act as foreign copper obstacles",
+    "missingPadTerminals": "One terminal each in sample001 and sample005; represented by trace-width circle, recorded in sample mapping.json",
+    "comparisonLimits": "60-second partial routes, synthetic per-obstacle components affect fanout ordering, FreeRouting rule and evaluator tolerances differ",
+    "exploratoryVariant": "results/freerouting-fanout: same engine/rules with default fanout enabled; all16 boards violate minimum width",
+    "upstreamFanoutWidthIssue": "FoundConnectionInserter.java243 allows micro-neckdown when ctrl.isFanout even if ctrl.withNeckdown is false;500-502 tries widths3/4,3/5,1/2 nominal. neck_width_um100 does not prevent this. Official unmodified primary baseline disables fanout."
+  },
+  "sources": [
+    "https://github.com/freerouting/freerouting/blob/v2.5.0/docs/command_line_arguments.md",
+    "https://github.com/freerouting/freerouting/blob/v2.5.0/docs/settings.md",
+    "https://github.com/freerouting/freerouting/blob/v2.5.0/src/main/java/app/freerouting/settings/RouterSettings.java",
+    "https://github.com/freerouting/freerouting/blob/master/fixtures/Issue955-rotated-pad-contacts.dsn",
+    "https://github.com/freerouting/freerouting/blob/v2.5.0/src/main/java/app/freerouting/autoroute/path/FoundConnectionInserter.java#L243",
+    "https://github.com/freerouting/freerouting/blob/v2.5.0/src/main/java/app/freerouting/autoroute/path/FoundConnectionInserter.java#L500"
+  ]
+}
