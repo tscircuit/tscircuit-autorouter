@@ -1,10 +1,16 @@
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "../../solvers/BaseSolver"
-import { Pipeline9HighDensitySolver, type Pipeline9HighDensitySolverParams } from "./Pipeline9HighDensitySolver"
+import {
+  Pipeline9HighDensitySolver,
+  type Pipeline9HighDensitySolverParams,
+} from "./Pipeline9HighDensitySolver"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
-export type Pipeline9HighDensityBatchInput = Omit<Pipeline9HighDensitySolverParams, "connMap"> & {
+export type Pipeline9HighDensityBatchInput = Omit<
+  Pipeline9HighDensitySolverParams,
+  "connMap"
+> & {
   connectivityNetMap: Record<string, string[]>
   maxIterations: number
 }
@@ -29,7 +35,9 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
 
   override _step(): void {
     if (this.input.fixedHdRoutes.length !== 0) {
-      throw new Error("Parallel high-density batches cannot mutate preloaded copper")
+      throw new Error(
+        "Parallel high-density batches cannot mutate preloaded copper",
+      )
     }
     const solver = new Pipeline9HighDensitySolver({
       ...this.input,
@@ -43,7 +51,8 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
       routes: solver.routes,
       stats: solver.stats,
       iterations: solver.iterations,
-      consumedNodeCount: this.input.nodePortPoints.length - solver.unsolvedNodePortPoints.length,
+      consumedNodeCount:
+        this.input.nodePortPoints.length - solver.unsolvedNodePortPoints.length,
       solved: solver.solved,
       error: solver.error,
     }

@@ -1,4 +1,7 @@
-import { SolverRuntime, type SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import {
+  SolverRuntime,
+  type SolverRuntimeExecutor,
+} from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -1136,8 +1139,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   /** Orchestrate on the host so independent high-density batches can use its pool. */
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
-    if (this.asyncRunning) throw new Error("Pipeline9 solveAsync is already running")
-    const inlineRuntime = runtime === undefined ? new SolverRuntime() : undefined
+    if (this.asyncRunning)
+      throw new Error("Pipeline9 solveAsync is already running")
+    const inlineRuntime =
+      runtime === undefined ? new SolverRuntime() : undefined
     const executor = runtime ?? inlineRuntime!
     const startTime = performance.now()
     let lastYield = startTime
@@ -1147,12 +1152,22 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
-          await phase.solveAsync(executor, previousIterations + Math.max(0, this.MAX_ITERATIONS - this.iterations))
+          await phase.solveAsync(
+            executor,
+            previousIterations +
+              Math.max(0, this.MAX_ITERATIONS - this.iterations),
+          )
           const terminal = phase.solved || phase.failed
-          this.iterations += Math.max(0, phase.iterations - previousIterations - (terminal ? 1 : 0))
+          this.iterations += Math.max(
+            0,
+            phase.iterations - previousIterations - (terminal ? 1 : 0),
+          )
         }
         this.step()
-        if (this.iterations % 1024 === 0 && performance.now() - lastYield >= 16) {
+        if (
+          this.iterations % 1024 === 0 &&
+          performance.now() - lastYield >= 16
+        ) {
           await new Promise<void>((resolve) => setTimeout(resolve, 0))
           lastYield = performance.now()
         }
