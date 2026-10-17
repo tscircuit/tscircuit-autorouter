@@ -63,7 +63,7 @@ test("benchmark datasets load in sample order", async () => {
   expect(srj24Scenarios[25][0]).toBe("sample026")
   expect(srj24Scenarios[0][1].connections.length).toBeGreaterThan(0)
   for (const [sampleNumber, connectionCount, endpointCount] of [
-    [21, 75, 533],
+    [21, 53, 184],
     [22, 44, 264],
     [23, 2, 18],
     [24, 409, 2343],
@@ -79,6 +79,13 @@ test("benchmark datasets load in sample order", async () => {
       ),
     ).toBe(endpointCount)
   }
+  expect(srj24Scenarios[20][1]).toMatchObject({
+    defaultObstacleMargin: 0.09999979999999999,
+    minTraceToPadEdgeClearance: 0.09999979999999999,
+    minTraceWidth: 0.15239999999999998,
+    minViaDiameter: 0.508,
+    minViaHoleDiameter: 0.254,
+  })
   for (const [sampleNumber, layerCount] of [
     [11, 6],
     [13, 8],
