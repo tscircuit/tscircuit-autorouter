@@ -38,6 +38,7 @@ test("revisited logical branches retain exact physical pairs and registered elec
     signal: ["first", "second"],
     "signal-alias": ["same-net-alias"],
     foreign: ["first__physical_hop_partial-revisit_0", "unrelated"],
+    "first__physical_hop_partial-revisit_1": ["foreign-net-key"],
   })
   connMap.addConnections([["first", "same-net-alias"]])
   const originalNetMap = structuredClone(connMap.netMap)
@@ -82,6 +83,8 @@ test("revisited logical branches retain exact physical pairs and registered elec
     aliases.every((name) => solver.connMap.areIdsConnected(name, "first")),
   ).toBe(true)
   expect(solver.connMap.areIdsConnected("unrelated", "first")).toBe(false)
+  expect(aliases).not.toContain("first__physical_hop_partial-revisit_1")
+  expect(solver.connMap.areIdsConnected("foreign-net-key", "first")).toBe(false)
   expect(solver.connMap.getNetConnectedToId("first")).toBe(
     connMap.getNetConnectedToId("first"),
   )

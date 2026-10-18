@@ -40,14 +40,12 @@ export const createPairedSharedCopperNodeRoutingPlan = (
     for (const [index, hop] of hops.entries()) {
       let physicalName = representative
       if (index > 0) {
-        const root = hop[0].rootConnectionName ?? representative
-        const net = connMap.getNetConnectedToId(root) ?? root
         do {
           physicalName = `${representative}__physical_hop_${encodeURIComponent(node.capacityMeshNodeId)}_${counter++}`
         } while (
           reservedNames.has(physicalName) ||
-          (connMap.getNetConnectedToId(physicalName) !== undefined &&
-            connMap.getNetConnectedToId(physicalName) !== net)
+          Object.hasOwn(connMap.netMap, physicalName) ||
+          connMap.getNetConnectedToId(physicalName) !== undefined
         )
         reservedNames.add(physicalName)
       }
