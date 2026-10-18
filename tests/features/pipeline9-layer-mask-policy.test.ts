@@ -73,6 +73,9 @@ test("physical layer masks stay binding in both stages", (): void => {
         Pipeline9HighDensitySolverParams,
       ]
       expect(params.minimumTraceWidth !== undefined).toBe(allowViaInPad)
+      expect(params.shareSameNetCopper).toBe(
+        !allowViaInPad && !hasPreloadedCopper,
+      )
     }
   }
 })

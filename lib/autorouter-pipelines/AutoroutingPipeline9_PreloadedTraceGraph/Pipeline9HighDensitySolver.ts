@@ -21,6 +21,10 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
+  createSharedCopperNodeRoutingPlan,
+  type SharedCopperNodeRoutingPlan,
+} from "./createSharedCopperNodeRoutingPlan"
+import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9FixedRouteObstacles,
@@ -57,6 +61,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
+  shareSameNetCopper?: boolean
 }
 
 type NodeBounds = {
@@ -446,6 +451,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly boardObstacleRegionIds = new Set<string>()
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
+  readonly routingNodePortPoints: NodeWithPortPoints[]
+  private readonly sharedCopperPlansByNodeId = new Map<
+    string,
+    SharedCopperNodeRoutingPlan
+  >()
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
   readonly removedFixedRouteConnectionNames = new Set<string>()
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
@@ -492,10 +502,35 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
-    this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    if (
+      params.shareSameNetCopper &&
+      (this.minimumTraceWidth !== undefined || this.fixedHdRoutes.length > 0)
+    ) {
+      throw new Error(
+        "Shared legacy copper cannot replace physical/fixed-copper routing demands",
+      )
+    }
+    let sharedCopperConnectionCount = 0
+    let sharedCopperRegionCount = 0
+    this.routingNodePortPoints = params.nodePortPoints.map((node) => {
+      if (!params.shareSameNetCopper) return node
+      const plan = createSharedCopperNodeRoutingPlan(node, this.connMap)
+      this.sharedCopperPlansByNodeId.set(node.capacityMeshNodeId, plan)
+      sharedCopperConnectionCount += plan.sharedConnectionCount
+      if (plan.sharedConnectionCount > 0) sharedCopperRegionCount++
+      // Preserve electrical identity through physical optimization. Logical
+      // source/MST aliases are restored only at the terminal-stitch boundary.
+      return normalizePipeline9NodeRootConnectionNames(
+        plan.routingNode,
+        this.connMap,
+      )
+    })
+    this.unsolvedNodePortPoints = [...this.routingNodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
+      sharedCopperConnectionCount,
+      sharedCopperRegionCount,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
       fixedObstacleUses: 0,
@@ -523,6 +558,40 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return []
       }
       return [this.fixedRouteReplacements.get(route.connectionName) ?? route]
+    })
+  }
+
+  restoreSharedCopperBranches(
+    routes: HighDensityIntraNodeRoute[],
+  ): HighDensityIntraNodeRoute[] {
+    if (this.sharedCopperPlansByNodeId.size === 0) return routes
+    return routes.flatMap((route) => {
+      const plan = route.regionId
+        ? this.sharedCopperPlansByNodeId.get(route.regionId)
+        : undefined
+      if (!plan) {
+        throw new Error(
+          `Shared copper route "${route.connectionName}" lost its physical region "${route.regionId}"`,
+        )
+      }
+      const names = plan.connectionNamesByRepresentative.get(
+        route.connectionName,
+      )
+      if (!names) {
+        throw new Error(
+          `Shared copper route "${route.connectionName}" has no logical branches in "${plan.originalNode.capacityMeshNodeId}"`,
+        )
+      }
+      const logicalRoutes = restoreRootConnectionNames(
+        names.map((connectionName) => ({
+          ...structuredClone(route),
+          connectionName,
+        })),
+        plan.originalNode,
+      )
+      return this.preserveTerminalPcbPortIds
+        ? addTerminalPcbPortIds(logicalRoutes, plan.originalNode)
+        : logicalRoutes
     })
   }
 

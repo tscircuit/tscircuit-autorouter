@@ -695,6 +695,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            shareSameNetCopper:
+              portPointPathingSolver.stats.sharedCopperCapacity === true,
           },
         ]
       },
@@ -704,7 +706,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       BoundedHighDensityForceImproveSolver,
       (cms) => [
         {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          nodeWithPortPoints:
+            cms.portPointPathingSolver!.stats.sharedCopperCapacity === true
+              ? cms.highDensityRouteSolver!.routingNodePortPoints
+              : (cms.highDensityNodePortPoints ?? []),
           hdRoutes: simplifyPipeline9CollinearRoutePoints(
             materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
@@ -726,7 +731,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       Pipeline4HighDensityRepairSolver,
       (cms) => [
         {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
+          nodeWithPortPoints:
+            cms.portPointPathingSolver!.stats.sharedCopperCapacity === true
+              ? cms.highDensityRouteSolver!.routingNodePortPoints
+              : (cms.highDensityNodePortPoints ?? []),
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
@@ -749,10 +757,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
           ] as SimpleRouteConnection[],
-          hdRoutes:
+          // Keep the shared physical demand intact through force/repair, then
+          // recover every logical branch required by terminal stitching.
+          hdRoutes: cms.highDensityRouteSolver!.restoreSharedCopperBranches(
             cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+              cms.highDensityForceImproveSolver?.getOutput() ??
+              cms.highDensityRouteSolver!.routes,
+          ),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,

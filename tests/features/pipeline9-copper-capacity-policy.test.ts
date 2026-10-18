@@ -26,9 +26,16 @@ test("advisory layers do not waive declared copper-demand accounting", async ():
     "minViaDiameter",
     "minViaPadDiameter",
     "minViaHoleDiameter",
+    "min_via_hole_diameter",
+    "min_via_pad_diameter",
+    "defaultObstacleMargin",
     "minTraceToPadEdgeClearance",
+    "minTraceToHoleEdgeClearance",
+    "minBoardEdgeClearance",
     "minViaHoleEdgeToViaHoleEdgeClearance",
     "minViaEdgeToPadEdgeClearance",
+    "minPlatedHoleDrillEdgeToDrillEdgeClearance",
+    "minPadEdgeToPadEdgeClearance",
   ] as const) {
     const declared = { ...input, [field]: 0.2 }
     expect(canShareLegacyDefaultCopper(declared)).toBeFalse()
@@ -45,6 +52,30 @@ test("advisory layers do not waive declared copper-demand accounting", async ():
     expect(
       solver.portPointPathingSolver!.stats.sharedCopperCapacity,
     ).toBeFalse()
+  }
+  expect(
+    canShareLegacyDefaultCopper({ ...input, minTraceToPadEdgeClearance: 0 }),
+  ).toBeFalse()
+  for (const width of [0.05, 0.1, 0.2]) {
+    for (const field of ["width", "nominalTraceWidth"] as const) {
+      expect(
+        canShareLegacyDefaultCopper({
+          ...input,
+          connections: input.connections.map((connection) => ({
+            ...connection,
+            [field]: width,
+          })),
+        }),
+      ).toBe(width <= input.minTraceWidth)
+    }
+    expect(
+      canShareLegacyDefaultCopper({
+        ...input,
+        buses: [
+          { busId: "signal", connectionNames: ["signal"], traceWidth: width },
+        ],
+      }),
+    ).toBe(width <= input.minTraceWidth)
   }
   const { scenario: sample6 } = await loadScenarioBySampleNumber("srj18", 6)
   const { scenario: sample24 } = await loadScenarioBySampleNumber("srj24", 24)
