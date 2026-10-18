@@ -18,6 +18,7 @@ import {
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
   PreparedTopologyMergingNode,
+  TopologyMergingLayerTopology,
   TopologyMergingRegion,
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
@@ -27,7 +28,13 @@ export type {
   TopologyMergingSolverParams,
 } from "./topology-merging-types"
 
+type TopologyMergingLayerTopologyKey = string
+
 export class TopologyMergingSolver extends BaseSolver {
+  private readonly layerTopologiesByKey = new Map<
+    TopologyMergingLayerTopologyKey,
+    TopologyMergingLayerTopology
+  >()
   private readonly preparedNodes: PreparedTopologyMergingNode[]
   private readonly preparedNodeBySourceKey: Map<
     string,
@@ -100,6 +107,7 @@ export class TopologyMergingSolver extends BaseSolver {
     this.stats.compactedRegionCount = compactedRegions.length
     // The solved output no longer needs the uncompressed slab grid.
     this.atomicRegions.length = 0
+    this.layerTopologiesByKey.clear()
     this.solved = true
   }
 
@@ -201,13 +209,24 @@ export class TopologyMergingSolver extends BaseSolver {
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
       })
+      const bounds: TopologyMergingRegion["bounds"] = { minX, maxX, minY, maxY }
       for (const layerTopology of layerTopologies) {
+        // Cells only read this metadata; compaction copies it before merging.
+        const topologyKey: TopologyMergingLayerTopologyKey = JSON.stringify([
+          layerTopology.availableZ,
+          layerTopology.topologySignature,
+        ])
+        let sharedTopology = this.layerTopologiesByKey.get(topologyKey)
+        if (!sharedTopology) {
+          sharedTopology = layerTopology
+          this.layerTopologiesByKey.set(topologyKey, sharedTopology)
+        }
         this.atomicRegions.push({
-          bounds: { minX, maxX, minY, maxY },
-          availableZ: layerTopology.availableZ,
-          sourceKeys: layerTopology.sourceKeys,
-          topologyMode: layerTopology.topologyMode,
-          topologySignature: layerTopology.topologySignature,
+          bounds,
+          availableZ: sharedTopology.availableZ,
+          sourceKeys: sharedTopology.sourceKeys,
+          topologyMode: sharedTopology.topologyMode,
+          topologySignature: sharedTopology.topologySignature,
         })
       }
     }
