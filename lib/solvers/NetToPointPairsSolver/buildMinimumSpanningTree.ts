@@ -260,35 +260,46 @@ export function buildMinimumSpanningTree<T extends Point>(
     return []
   }
 
-  // Prevent in-place KD-tree sorting from mutating caller-owned arrays.
-  const pointsCopy = [...points]
+  const pointsCopy = [...points].sort((a, b) => a.x - b.x)
 
-  // Build KD-Tree for efficient nearest neighbor search
-  const kdTree = new KDTree(pointsCopy)
-
-  // Generate edges with k-nearest neighbors for each point
-  // This is an optimization to avoid generating all possible n(n-1)/2 edges
+  // A fixed nearest-neighbor graph can be disconnected. Dense Prim represents
+  // the complete Euclidean graph exactly using O(n) memory, without storing
+  // all n(n-1)/2 edges. Its MST remains sufficient when extra edges are added;
+  // Kruskal below incorporates the initially connected zero-weight edges.
   const edges: Edge<T>[] = []
-  const k = Math.min(10, points.length - 1) // Consider k nearest neighbors
+  const included = new Uint8Array(pointsCopy.length)
+  const bestDistance = new Float64Array(pointsCopy.length).fill(Infinity)
+  const parentIndex = new Int32Array(pointsCopy.length).fill(-1)
+  bestDistance[0] = 0
 
-  for (const point of pointsCopy) {
-    const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
-
-    for (const neighbor of neighbors) {
-      // Skip self
-      if (point.x === neighbor.x && point.y === neighbor.y) {
-        continue
+  for (let count = 0; count < pointsCopy.length; count++) {
+    let nextIndex = -1
+    for (let index = 0; index < pointsCopy.length; index++) {
+      if (
+        !included[index] &&
+        (nextIndex === -1 || bestDistance[index] < bestDistance[nextIndex])
+      ) {
+        nextIndex = index
       }
-
-      const distance = Math.sqrt(
-        (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
-      )
-
+    }
+    included[nextIndex] = 1
+    const point = pointsCopy[nextIndex]!
+    if (parentIndex[nextIndex] !== -1) {
       edges.push({
-        from: point,
-        to: neighbor as T,
-        weight: distance,
+        from: pointsCopy[parentIndex[nextIndex]!]!,
+        to: point,
+        weight: bestDistance[nextIndex]!,
       })
+    }
+
+    for (let index = 0; index < pointsCopy.length; index++) {
+      if (included[index]) continue
+      const candidate = pointsCopy[index]!
+      const distance = Math.hypot(point.x - candidate.x, point.y - candidate.y)
+      if (distance < bestDistance[index]) {
+        bestDistance[index] = distance
+        parentIndex[index] = nextIndex
+      }
     }
   }
 
