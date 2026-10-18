@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json" with {
@@ -34,6 +35,13 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
     .map((trace) => [...trace.connectsTo!].sort())
     .sort()
   expect(routedPairs).toEqual(expectedPairs)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    }).errors,
+  ).toHaveLength(0)
   // Native routing can produce different valid route variants across platforms.
   const snapshotPath =
     process.platform === "linux"

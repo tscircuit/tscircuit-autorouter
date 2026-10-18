@@ -24,6 +24,15 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
+  const requiredPairs = solver
+    .srjWithPointPairs!.connections.map((connection) =>
+      connection.pointsToConnect.map((point) => point.pcb_port_id!).sort(),
+    )
+    .sort()
+  const routedPairs = drcInput.routedTraces
+    .map((trace) => [...trace.connectsTo!].sort())
+    .sort()
+  expect(routedPairs).toEqual(requiredPairs)
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
   const publishedIssues = stats.boundedRegionalRepairPublishedDrcIssueCount

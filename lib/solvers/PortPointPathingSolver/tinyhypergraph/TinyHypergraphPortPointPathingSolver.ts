@@ -939,6 +939,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     private readonly portObstacleConstraints?: PortObstacleConstraints,
     private readonly layerCount = 2,
     private readonly regionLayerMasksAreBinding = true,
+    private readonly shareSameNetCopper = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -966,9 +967,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
     loaded.problem.regionLayerMasksAreBinding = this.regionLayerMasksAreBinding
-    // Advisory legacy graphs contain logical MST aliases of shared copper.
-    // Physical and preloaded graphs retain their existing capacity model.
-    loaded.problem.shareSameNetCopper = !this.regionLayerMasksAreBinding
+    // Layer hints and copper-demand accounting are independent contracts.
+    loaded.problem.shareSameNetCopper =
+      !this.regionLayerMasksAreBinding && this.shareSameNetCopper
     if (this.portObstacleConstraints) {
       loaded.problem.portReservedNetId = getPhysicalPortObstacleReservations(
         loaded,
@@ -1208,6 +1209,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         params.portObstacleConstraints,
         params.layerCount,
         params.regionLayerMasksAreBinding,
+        params.shareSameNetCopper,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1521,6 +1523,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.params.portObstacleConstraints,
             this.params.layerCount,
             this.params.regionLayerMasksAreBinding,
+            this.params.shareSameNetCopper,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

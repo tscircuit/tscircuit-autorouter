@@ -108,6 +108,8 @@ export interface HgPortPointPathingSolverParams {
   minViaPadDiameter?: number
   /** Whether detailed routing must stay on each region's available layers. */
   regionLayerMasksAreBinding?: boolean
+  /** Share exact logical hops only for the legacy uniform/default copper model. */
+  shareSameNetCopper?: boolean
   /** Physical center-to-center pitch for distinct traces at a shared boundary. */
   minPortSpacing?: number
   portObstacleConstraints?: PortObstacleConstraints
