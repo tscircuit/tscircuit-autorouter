@@ -577,13 +577,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
-    const alignedStitch = this.enableCompleteTerminalStitching
-      ? alignRouteEntryAtStitch({
-          anchor: lastMergedPoint,
-          points: pointsToAdd,
-          vias: hdRouteToMerge.vias,
-        })
-      : { points: pointsToAdd, vias: hdRouteToMerge.vias }
+    // A tolerance-matched join must keep the entire via at one XY in every
+    // stitching mode, including legacy grid endpoints rounded at the boundary.
+    const alignedStitch = alignRouteEntryAtStitch({
+      anchor: lastMergedPoint,
+      points: pointsToAdd,
+      vias: hdRouteToMerge.vias,
+    })
     pointsToAdd = alignedStitch.points
 
     if (

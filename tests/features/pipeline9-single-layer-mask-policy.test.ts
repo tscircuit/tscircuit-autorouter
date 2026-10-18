@@ -25,4 +25,5 @@ test("a one-layer board cannot treat its sole routing plane as advisory", (): vo
   expect(solver.failed, solver.error ?? "").toBeFalse()
   const [params] = solver.portPointPathingSolver!.getConstructorParams()
   expect(params.regionLayerMasksAreBinding).toBeTrue()
+  expect(solver.portPointPathingSolver!.stats.sharedCopperCapacity).toBeFalse()
 })

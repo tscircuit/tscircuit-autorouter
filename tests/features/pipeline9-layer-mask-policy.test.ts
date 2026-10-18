@@ -63,6 +63,9 @@ test("physical layer masks stay binding in both stages", (): void => {
       expect(pathing.regionLayerMasksAreBinding).toBe(
         allowViaInPad || hasPreloadedCopper,
       )
+      expect(solver.portPointPathingSolver!.stats.sharedCopperCapacity).toBe(
+        !allowViaInPad && !hasPreloadedCopper,
+      )
       const detailed = solver.pipelineDef.find(
         (step) => step.solverName === "highDensityRouteSolver",
       )!

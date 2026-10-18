@@ -966,6 +966,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
     loaded.problem.regionLayerMasksAreBinding = this.regionLayerMasksAreBinding
+    // Advisory legacy graphs contain logical MST aliases of shared copper.
+    // Physical and preloaded graphs retain their existing capacity model.
+    loaded.problem.shareSameNetCopper = !this.regionLayerMasksAreBinding
     if (this.portObstacleConstraints) {
       loaded.problem.portReservedNetId = getPhysicalPortObstacleReservations(
         loaded,
@@ -1580,6 +1583,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
+      sharedCopperCapacity:
+        currentTinySolver?.problem.shareSameNetCopper === true,
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
