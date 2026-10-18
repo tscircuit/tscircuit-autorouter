@@ -30,6 +30,10 @@ on:
         required: false
         default: "auto"
         type: string
+      threads:
+        description: Routing threads per sample (1 = inline; Pipeline9 only)
+        required: false
+        type: string
       include_assignable:
         description: Include assignable pipelines
         required: false
@@ -198,6 +202,8 @@ jobs:
                 const scenarioLimit = (inputs.scenario_limit || '').trim()
                 const effort = (inputs.effort || '').trim()
                 const concurrency = (inputs.concurrency || '').trim()
+                const threads = (inputs.threads || '').trim()
+                if (threads) benchmarkArgs.push('--threads', threads)
                 const includeAssignable = inputs.include_assignable === true || inputs.include_assignable === 'true'
                 if (scenarioLimit) {
                   benchmarkArgs.push('--scenario-limit', scenarioLimit)
@@ -254,6 +260,9 @@ jobs:
               ref = context.payload.pull_request.head.sha
             }
 
+            if (profileSolvers && benchmarkArgs.includes('--threads')) {
+              throw new Error('--threads cannot be combined with profiling')
+            }
             core.setOutput('benchmark_args_json', JSON.stringify(benchmarkArgs))
             core.setOutput('benchmark_concurrency', benchmarkConcurrency)
             core.setOutput('profile_solvers', profileSolvers ? 'true' : 'false')
@@ -1580,6 +1589,7 @@ jobs:
                 ['scenario_limit', '--scenario-limit'],
                 ['effort', '--effort'],
                 ['concurrency', '--concurrency'],
+                ['threads', '--threads'],
               ]) {
                 const value = (inputs[name] || '').trim()
                 if (value && value.toLowerCase() !== 'auto') benchmarkArgs.push(flag, value)

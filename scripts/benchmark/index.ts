@@ -30,6 +30,7 @@ import type {
 import { extendPartialBenchmarkStageTiming } from "./benchmark-stage-timing"
 import {
   getBenchmarkConcurrency,
+  getBenchmarkThreadConcurrency,
   getBenchmarkRuntimeMetadata,
 } from "./benchmarkRuntime"
 import {
@@ -58,6 +59,7 @@ type BenchmarkOptions = {
   scenarioLimit?: number
   sampleNumbers?: number[]
   concurrency: number
+  threads?: number
   effort?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
@@ -787,6 +789,11 @@ export const parseArgs = (
       i += 1
       continue
     }
+    if (arg === "--threads") {
+      options.threads = Number(args[i + 1])
+      i += 1
+      continue
+    }
     if (arg === "--effort") {
       options.effort = Number(args[i + 1] ?? "")
       i += 1
@@ -836,6 +843,17 @@ export const parseArgs = (
 
   if (!Number.isSafeInteger(options.concurrency) || options.concurrency < 1) {
     throw new Error("--concurrency must be a positive integer")
+  }
+
+  if (options.threads !== undefined) {
+    getBenchmarkThreadConcurrency(options.concurrency, options.threads)
+    if (
+      options.threads > 1 &&
+      options.solverName !== undefined &&
+      options.solverName !== "AutoroutingPipelineSolver9_PreloadedTraceGraph"
+    ) {
+      throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
+    }
   }
 
   if (
@@ -1973,7 +1991,15 @@ const main = async () => {
     excludeAssignable,
     datasetName,
   } = options
+  if ((options.threads ?? 1) > 1) {
+    console.log(
+      "This revision uses serial Pipeline9; --threads reserves the CPU budget for comparison with parallel revisions.",
+    )
+  }
   let concurrency = options.concurrency
+  if (options.threads !== undefined) {
+    concurrency = getBenchmarkThreadConcurrency(concurrency, options.threads)
+  }
   const useLocalCluster =
     solverName === NETWORKED_PIPELINE9_SOLVER_NAME && !networkedRemote
   const resourcePlan = useLocalCluster
@@ -2065,6 +2091,7 @@ const main = async () => {
           ({ scenarioName, sampleNumber, scenario }) =>
             ({
               datasetName,
+              threads: options.threads,
               solverName: solverRun.displayName,
               solverConstructorName: solverRun.constructorName,
               networkedCachePass: solverRun.networkedCachePass,
@@ -2080,6 +2107,7 @@ const main = async () => {
             ({ scenarioName, sampleNumber, scenario }) =>
               ({
                 datasetName,
+                threads: options.threads,
                 solverName: solverRun.displayName,
                 solverConstructorName: solverRun.constructorName,
                 scenarioName,
@@ -2091,9 +2119,13 @@ const main = async () => {
       ]
   const tasks = taskGroups.flat()
   const runtime = getBenchmarkRuntimeMetadata(
-    concurrency,
+    options.concurrency,
     Math.min(concurrency, Math.max(...taskGroups.map((group) => group.length))),
   )
+  runtime.threadsPerSample = options.threads ?? 1
+  runtime.effectiveThreadsPerSample = 1
+  runtime.cpuBudgetPerSample =
+    (options.threads ?? 1) === 1 ? 1 : options.threads! + 1
   if (resourcePlan) {
     concurrency = Math.min(concurrency, scenarios.length)
     runtime.workerCount = concurrency
@@ -2130,7 +2162,7 @@ const main = async () => {
   }
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} sample workers, ${options.threads ?? 1} routing threads budgeted per sample (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
   console.log(`[benchmark] runtime ${JSON.stringify(runtime)}`)
 

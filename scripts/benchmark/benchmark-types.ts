@@ -6,6 +6,7 @@ export type BenchmarkTask = {
   /** Display/report name; may differ for two passes of the same constructor. */
   solverName: string
   solverConstructorName?: string
+  threads?: number
   networkedCachePass?: "cold" | "hot"
   networkedServer?: {
     url: string
@@ -237,6 +238,10 @@ export type BenchmarkRuntimeMetadata = {
   availableParallelism: number
   memoryLimitBytes: number
   memoryBudgetPerWorkerBytes: number
+  /** Requested routing-worker budget, not observed worker usage. */
+  threadsPerSample?: number
+  effectiveThreadsPerSample?: number
+  cpuBudgetPerSample?: number
   requestedConcurrency: number
   workerCount: number
   localHighDensityCluster?: {

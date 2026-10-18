@@ -95,6 +95,9 @@ export const parsePrBenchmarkCommand = (body) => {
     if (usesNetworkedPipeline9(parsedArgs)) {
       throw new Error("Pipeline 9net is only supported by /benchmark")
     }
+    if (parsedArgs.includes("--threads")) {
+      throw new Error("--threads is only supported by /benchmark")
+    }
     let datasetName = "dataset01"
 
     for (let index = 0; index < parsedArgs.length; index += 1) {
@@ -158,6 +161,15 @@ export const parsePrBenchmarkCommand = (body) => {
 
   for (let index = 0; index < parsedArgs.length; index += 1) {
     const arg = parsedArgs[index]
+    if (arg === "--threads") {
+      const threads = Number(parsedArgs[index + 1])
+      if (!Number.isSafeInteger(threads) || threads < 1) {
+        throw new Error("--threads must be a positive integer")
+      }
+      if (threads > 1 && isNetworkedPipeline9) {
+        throw new Error("--threads > 1 requires local Pipeline9")
+      }
+    }
     if (arg === "--same-machine") {
       sameMachineCompare = true
       continue
@@ -177,6 +189,9 @@ export const parsePrBenchmarkCommand = (body) => {
     benchmarkArgs.push(arg)
   }
 
+  if (parsedArgs.includes("--threads") && profileSolvers) {
+    throw new Error("--threads cannot be combined with --profile-solvers")
+  }
   if (isNetworkedPipeline9 && profileSolvers) {
     throw new Error("Pipeline 9net does not support --profile-solvers")
   }
