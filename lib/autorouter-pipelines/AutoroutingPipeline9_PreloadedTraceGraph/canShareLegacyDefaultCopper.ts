@@ -24,11 +24,13 @@ export const canShareLegacyDefaultCopper = (srj: SimpleRouteJson): boolean => {
     declaredRules.every((value) => value === undefined) &&
     srj.connections.every(
       (connection) =>
-        (connection.nominalTraceWidth ?? connection.width ?? srj.minTraceWidth) <=
-        srj.minTraceWidth,
+        (connection.nominalTraceWidth ??
+          connection.width ??
+          srj.minTraceWidth) <= srj.minTraceWidth,
     ) &&
     !srj.buses?.some(
-      (bus) => bus.traceWidth !== undefined && bus.traceWidth > srj.minTraceWidth,
+      (bus) =>
+        bus.traceWidth !== undefined && bus.traceWidth > srj.minTraceWidth,
     )
   )
 }

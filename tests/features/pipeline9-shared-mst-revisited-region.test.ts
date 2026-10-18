@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { createSharedCopperNodeRoutingPlan } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createSharedCopperNodeRoutingPlan"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 test("shared MST copper preserves the pairings of a revisited region", (): void => {
   const pairs: [PortPoint, PortPoint][] = []

@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { createSharedCopperNodeRoutingPlan } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createSharedCopperNodeRoutingPlan"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 test("same-net MST hops share copper without merging foreign nets or ports", (): void => {
   const pair = (

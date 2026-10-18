@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 test("shared copper restores independent logical routes and terminal IDs", (): void => {
   const pairs: [PortPoint, PortPoint][] = ["mst-1", "mst-2"].map(
@@ -67,10 +70,9 @@ test("shared copper restores independent logical routes and terminal IDs", (): v
     "mst-1",
     "mst-2",
   ])
-  expect(logicalRoutes.map((route) => route.rootConnectionName).sort()).toEqual([
-    "mst-1",
-    "mst-2",
-  ])
+  expect(logicalRoutes.map((route) => route.rootConnectionName).sort()).toEqual(
+    ["mst-1", "mst-2"],
+  )
   for (const route of logicalRoutes) {
     expect(route.startPcbPortId).toBe("pad-a")
     expect(route.endPcbPortId).toBe("pad-b")

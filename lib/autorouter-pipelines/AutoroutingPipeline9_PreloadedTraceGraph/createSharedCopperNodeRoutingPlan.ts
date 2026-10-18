@@ -48,10 +48,9 @@ export const createSharedCopperNodeRoutingPlan = (
     const hasPairedCopper =
       endpointKeys.length === 2 ||
       (endpointKeys.length > 2 && pairKeys !== undefined && pairKeys.length > 0)
-    const copperKey =
-      hasPairedCopper
-        ? JSON.stringify([net, endpointKeys, pairKeys])
-        : JSON.stringify([connectionName, net, endpointKeys])
+    const copperKey = hasPairedCopper
+      ? JSON.stringify([net, endpointKeys, pairKeys])
+      : JSON.stringify([connectionName, net, endpointKeys])
     const representative = representativeByCopperKey.get(copperKey)
     if (representative !== undefined) {
       connectionNamesByRepresentative.get(representative)!.push(connectionName)
