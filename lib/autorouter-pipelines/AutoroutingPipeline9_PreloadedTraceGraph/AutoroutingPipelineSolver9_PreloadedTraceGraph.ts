@@ -559,9 +559,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
-            // Fresh legacy routing uses advisory regional guides. Existing
-            // copper adds physical graph assignments that must remain binding.
+            // Fresh multilayer legacy routing uses advisory regional guides.
+            // A sole layer or existing copper must retain binding assignments.
             regionLayerMasksAreBinding:
+              cms.srj.layerCount === 1 ||
               cms.originalSrj.allowViaInPad === true ||
               (cms.originalSrj.traces?.length ?? 0) > 0,
             portObstacleConstraints: cms.originalSrj.allowViaInPad

@@ -13,6 +13,9 @@ test(
   () => {
     const solver = new AutoroutingPipelineSolver7_MultiGraph(simpleRouteJson)
     solver.solve()
+    expect(solver.error).toBeNull()
+    expect(solver.failed).toBe(false)
+    expect(solver.solved).toBe(true)
     const bgaComponent = solver
       .componentDetectionSolver!.getOutput()
       .find(

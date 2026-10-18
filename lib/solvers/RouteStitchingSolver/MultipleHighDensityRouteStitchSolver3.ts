@@ -315,13 +315,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         ) {
           ;[start, end] = [end, start]
         }
-        if (this.enableCompleteTerminalStitching) {
+        if (
+          this.enableCompleteTerminalStitching ||
+          this.preserveTerminalPcbPortIds
+        ) {
+          // Identity preservation also applies to legacy partial islands.
+          // Independent snapping may assign one nearby pad to both ends.
           ;({ start, end } = snapIslandEndpointsToDistinctTerminals({
             start,
             end,
             globalStart,
             globalEnd,
             preferSameLayerTerminalEndpoints:
+              this.enableCompleteTerminalStitching &&
               this.preferSameLayerTerminalEndpoints,
           }))
         } else {
