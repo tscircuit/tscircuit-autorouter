@@ -523,7 +523,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       (candidate) => candidate.solver === solver,
     )
     if (index === -1) {
-      throw new Error("Failed portfolio candidate is missing from its supervisor")
+      throw new Error(
+        "Failed portfolio candidate is missing from its supervisor",
+      )
     }
     const candidate = this.supervisedSolvers[index]!
     const order = this.candidateOrderBySolver.get(solver)
@@ -534,7 +536,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       order,
       error: solver.error,
       f: candidate.f,
-      iterations: solver instanceof HighDensitySolverA13 ? 0 : solver.iterations,
+      iterations:
+        solver instanceof HighDensitySolverA13 ? 0 : solver.iterations,
       maxIterations:
         solver instanceof HighDensitySolverA13 ? 1 : solver.MAX_ITERATIONS,
       progress: this.getCandidateProgress(solver),
