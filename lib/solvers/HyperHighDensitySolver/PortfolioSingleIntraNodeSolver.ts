@@ -36,6 +36,15 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+type FailedPortfolioCandidate = {
+  order: number
+  error: string | null
+  f: number
+  iterations: number
+  maxIterations: number
+  progress: number
+}
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -68,6 +77,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly rejectOverlappingTerminals: boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
+  private readonly failedCandidates: FailedPortfolioCandidate[] = []
+  private readonly candidateOrderBySolver = new WeakMap<BaseSolver, number>()
+  private nextCandidateOrder = 0
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
@@ -376,8 +388,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private refreshDynamicIterationLimit() {
-    this.totalCandidateWork = 0
-    this.dynamicExpansionWorkBudget = 1
+    this.totalCandidateWork = this.failedCandidates.reduce(
+      (total, candidate) => total + candidate.iterations,
+      0,
+    )
+    this.dynamicExpansionWorkBudget = Math.max(
+      1,
+      ...this.failedCandidates.map((candidate) => candidate.maxIterations),
+    )
     const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) => {
         // A13 negotiates route orders internally. Its larger budget must not
@@ -418,6 +436,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   override initializeSolvers() {
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
+      this.candidateOrderBySolver.set(solver, this.nextCandidateOrder++)
       this.initializeCandidateBudget(solver)
     }
     this.refreshDynamicIterationLimit()
@@ -427,6 +446,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
     this.initializeCandidateBudget(solver)
+    this.candidateOrderBySolver.set(solver, this.nextCandidateOrder++)
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,
@@ -453,6 +473,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.candidateWorkAtExpansion = this.totalCandidateWork
     this.stats.bestProgressAtExpansion = Math.max(
       0,
+      ...this.failedCandidates.map((candidate) => candidate.progress),
       ...(this.supervisedSolvers ?? []).map(({ solver }) =>
         this.getCandidateProgress(solver),
       ),
@@ -487,9 +508,58 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.stats.negotiatedSearchStartedAtIteration = this.iterations
     }
 
+    this.releaseFailedCandidate()
+
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
+  }
+
+  private releaseFailedCandidate(): void {
+    if (this.constructorParams.captureSearchDebug !== false) return
+    const solver = this.activeSubSolver
+    if (!solver?.failed || !this.supervisedSolvers) return
+    const index = this.supervisedSolvers.findIndex(
+      (candidate) => candidate.solver === solver,
+    )
+    if (index === -1) {
+      throw new Error("Failed portfolio candidate is missing from its supervisor")
+    }
+    const candidate = this.supervisedSolvers[index]!
+    const order = this.candidateOrderBySolver.get(solver)
+    if (order === undefined) {
+      throw new Error("Failed portfolio candidate is missing its search order")
+    }
+    this.failedCandidates.push({
+      order,
+      error: solver.error,
+      f: candidate.f,
+      iterations: solver instanceof HighDensitySolverA13 ? 0 : solver.iterations,
+      maxIterations:
+        solver instanceof HighDensitySolverA13 ? 1 : solver.MAX_ITERATIONS,
+      progress: this.getCandidateProgress(solver),
+    })
+    this.supervisedSolvers.splice(index, 1)
+    this.activeSubSolver = null
+  }
+
+  override getFailureMessage(): string {
+    if (this.constructorParams.captureSearchDebug !== false) {
+      return super.getFailureMessage()
+    }
+    const failures = [
+      ...this.failedCandidates,
+      ...(this.supervisedSolvers ?? []).map(({ solver, f }) => ({
+        order: this.candidateOrderBySolver.get(solver)!,
+        error: solver.error,
+        f,
+      })),
+    ]
+    failures.sort((a, b) => b.f - a.f || a.order - b.order)
+    return `All solvers failed in hyper solver. Example failures: ${failures
+      .slice(0, 5)
+      .map((candidate) => candidate.error)
+      .join(", ")}`
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
@@ -504,7 +574,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       accountedWork.iterations = solver.iterations
       if (accountedWork.maxIterations !== solver.MAX_ITERATIONS) {
         accountedWork.maxIterations = solver.MAX_ITERATIONS
-        this.dynamicExpansionWorkBudget = 1
+        this.dynamicExpansionWorkBudget = Math.max(
+          1,
+          ...this.failedCandidates.map((candidate) => candidate.maxIterations),
+        )
         for (const { solver: candidate } of this.supervisedSolvers ?? []) {
           if (candidate instanceof HighDensitySolverA13) continue
           this.dynamicExpansionWorkBudget = Math.max(
