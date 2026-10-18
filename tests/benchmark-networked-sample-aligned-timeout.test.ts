@@ -29,6 +29,7 @@ test("the harness applies the same sample budget to existing networked construct
   }
   const nodePortPoints: NodeWithPortPoints[] = []
   const pathingStub = {
+    stats: { sharedCopperCapacity: false },
     getOutput(): {
       nodesWithPortPoints: NodeWithPortPoints[]
       changedPreloadedTraceSections: []
@@ -50,6 +51,7 @@ test("the harness applies the same sample budget to existing networked construct
       Record<string, unknown>,
     ]
     expect(params.requestTimeoutMs).toBe(360_000)
+    expect(params.shareSameNetCopper).toBe(false)
     expect(params.hdCache2ServerUrl).toBe(task.networkedServer!.url)
     expect(params.hdCache2CacheVersion).toBe(task.networkedServer!.cacheVersion)
     const StageConstructor = routeStep.solverClass as new (

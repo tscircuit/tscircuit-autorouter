@@ -6,7 +6,7 @@ import {
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
@@ -21,9 +21,9 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
-  createSharedCopperNodeRoutingPlan,
+  createPairedSharedCopperNodeRoutingPlan,
   type SharedCopperNodeRoutingPlan,
-} from "./createSharedCopperNodeRoutingPlan"
+} from "./createPairedSharedCopperNodeRoutingPlan"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -472,7 +472,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   constructor(params: Pipeline9HighDensitySolverParams) {
     super()
     this.fixedHdRoutes = params.fixedHdRoutes
-    this.connMap = params.connMap
+    this.connMap = params.shareSameNetCopper
+      ? new ConnectivityMap(structuredClone(params.connMap.netMap))
+      : params.connMap
+    if (params.shareSameNetCopper) {
+      // Rehydrating merged netMap entries alone can change their canonical ID.
+      this.connMap.idToNetMap = { ...params.connMap.idToNetMap }
+    }
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
@@ -514,7 +520,27 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     let sharedCopperRegionCount = 0
     this.routingNodePortPoints = params.nodePortPoints.map((node) => {
       if (!params.shareSameNetCopper) return node
-      const plan = createSharedCopperNodeRoutingPlan(node, this.connMap)
+      const plan = createPairedSharedCopperNodeRoutingPlan(node, this.connMap)
+      // Separate traversal identities still share one electrical net through
+      // detailed routing and repair; restore logical names only at stitching.
+      for (const [
+        physicalName,
+        logicalNames,
+      ] of plan.connectionNamesByRepresentative) {
+        const logicalName = logicalNames[0]!
+        if (physicalName === logicalName) continue
+        const net = this.connMap.getNetConnectedToId(logicalName)
+        if (net === undefined) {
+          throw new Error(`Physical hop lost its logical net: ${logicalName}`)
+        }
+        const previousNet = this.connMap.getNetConnectedToId(physicalName)
+        if (previousNet !== undefined && previousNet !== net) {
+          throw new Error(
+            `Physical hop alias collides with a foreign net: ${physicalName}`,
+          )
+        }
+        this.connMap.addConnections([[physicalName, logicalName]])
+      }
       this.sharedCopperPlansByNodeId.set(node.capacityMeshNodeId, plan)
       sharedCopperConnectionCount += plan.sharedConnectionCount
       if (plan.sharedConnectionCount > 0) sharedCopperRegionCount++

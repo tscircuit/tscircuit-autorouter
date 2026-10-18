@@ -52,6 +52,9 @@ test("Pipeline9 preserves vias through force improvement", (): void => {
   })
   pipeline9.colorMap = { route: "#ff0000" }
   pipeline9.highDensityNodePortPoints = [nodeWithPortPoints]
+  Object.assign(pipeline9, {
+    portPointPathingSolver: { stats: { sharedCopperCapacity: false } },
+  })
   pipeline9.highDensityRouteSolver = {
     routes: [rawRoute],
   } as Pipeline9HighDensitySolver
@@ -63,6 +66,9 @@ test("Pipeline9 preserves vias through force improvement", (): void => {
     pipeline9,
   ) as ConstructorParameters<typeof HighDensityForceImproveSolver>
 
+  expect(forceImproveParams.nodeWithPortPoints).toBe(
+    pipeline9.highDensityNodePortPoints,
+  )
   expect(forceImproveParams.hdRoutes[0]?.route).toEqual([
     { x: -0.5, y: 0, z: 1 },
     { x: 0, y: 0.2, z: 1 },

@@ -46,6 +46,9 @@ test("Pipeline9 repairs every node when the board has more than 80 repair sample
     { cacheProvider: null },
   )
   pipeline.highDensityNodePortPoints = nodes
+  Object.assign(pipeline, {
+    portPointPathingSolver: { stats: { sharedCopperCapacity: false } },
+  })
   pipeline.highDensityForceImproveSolver = {
     getOutput: (): HighDensityRoute[] => routes,
   } as typeof pipeline.highDensityForceImproveSolver
@@ -57,6 +60,7 @@ test("Pipeline9 repairs every node when the board has more than 80 repair sample
   )[0] as ConstructorParameters<typeof Pipeline4HighDensityRepairSolver>[0]
   const repair = new Pipeline4HighDensityRepairSolver(params)
 
+  expect(params.nodeWithPortPoints).toBe(nodes)
   expect(repair.sampleEntries).toHaveLength(81)
   repair.solve()
   expect(repair.failed).toBe(false)

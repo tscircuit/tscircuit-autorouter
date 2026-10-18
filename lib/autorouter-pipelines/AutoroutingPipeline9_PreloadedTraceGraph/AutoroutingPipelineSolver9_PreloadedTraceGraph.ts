@@ -629,7 +629,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-          preservePhysicalPortPositions: cms.originalSrj.allowViaInPad ?? false,
+          preservePhysicalPortPositions:
+            cms.originalSrj.allowViaInPad === true ||
+            cms.portPointPathingSolver!.stats.sharedCopperCapacity === true,
         },
       ],
     ),
@@ -742,7 +744,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
-          connMap: cms.connMap,
+          connMap:
+            cms.portPointPathingSolver!.stats.sharedCopperCapacity === true
+              ? cms.highDensityRouteSolver!.connMap
+              : cms.connMap,
         },
       ],
     ),
