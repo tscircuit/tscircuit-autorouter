@@ -45,7 +45,8 @@ test("legacy island snapping preserves distinct terminal identities", (): void =
   })
 
   const startIsland = solver.unsolvedRoutes.find(
-    (route) => (route.start as { pcb_port_id?: string }).pcb_port_id === "pad-a",
+    (route) =>
+      (route.start as { pcb_port_id?: string }).pcb_port_id === "pad-a",
   )!
   expect(startIsland.end).toEqual({ x: 0.7, y: 0, z: 0 })
   solver.solve()
@@ -54,8 +55,10 @@ test("legacy island snapping preserves distinct terminal identities", (): void =
   expect(solver.error).toBeNull()
   expect(solver.mergedHdRoutes).toHaveLength(2)
   expect(
-    solver.mergedHdRoutes.flatMap((route) =>
-      [route.startPcbPortId, route.endPcbPortId].filter(Boolean),
-    ).sort(),
+    solver.mergedHdRoutes
+      .flatMap((route) =>
+        [route.startPcbPortId, route.endPcbPortId].filter(Boolean),
+      )
+      .sort(),
   ).toEqual(["pad-a", "pad-b"])
 })
