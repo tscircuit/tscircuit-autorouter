@@ -32,14 +32,19 @@ test("advisory layers do not waive declared copper-demand accounting", async ():
   ] as const) {
     const declared = { ...input, [field]: 0.2 }
     expect(canShareLegacyDefaultCopper(declared)).toBeFalse()
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(declared, {
-      cacheProvider: null,
-    })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      declared,
+      {
+        cacheProvider: null,
+      },
+    )
     solver.solveUntilPhase("highDensityRouteSolver")
     expect(solver.failed, solver.error ?? "").toBeFalse()
     const [params] = solver.portPointPathingSolver!.getConstructorParams()
     expect(params.regionLayerMasksAreBinding).toBeFalse()
-    expect(solver.portPointPathingSolver!.stats.sharedCopperCapacity).toBeFalse()
+    expect(
+      solver.portPointPathingSolver!.stats.sharedCopperCapacity,
+    ).toBeFalse()
   }
   const { scenario: sample6 } = await loadScenarioBySampleNumber("srj18", 6)
   const { scenario: sample24 } = await loadScenarioBySampleNumber("srj24", 24)
