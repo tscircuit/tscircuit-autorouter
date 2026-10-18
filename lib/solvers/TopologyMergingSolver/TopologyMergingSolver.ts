@@ -98,6 +98,8 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    // The solved output no longer needs the uncompressed slab grid.
+    this.atomicRegions.length = 0
     this.solved = true
   }
 
