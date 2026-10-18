@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
+import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
 test("Pipeline9 rejects a pedometer timeout with illegal single-layer crossings", async () => {
@@ -14,6 +15,15 @@ test("Pipeline9 rejects a pedometer timeout with illegal single-layer crossings"
     effort: 0.01,
     cacheProvider: null,
   })
+  // This regression exercises binding layer masks, not legacy layer hints.
+  const pathing = pipeline.pipelineDef.find(
+    (step) => step.solverName === "portPointPathingSolver",
+  )!
+  const getParams = pathing.getConstructorParams
+  pathing.getConstructorParams = (cms) => {
+    const [params] = getParams(cms) as [HgPortPointPathingSolverParams]
+    return [{ ...params, regionLayerMasksAreBinding: true }]
+  }
   let tinySolver: TinyHyperGraphSolver | undefined
   while (!pipeline.portPointPathingSolver?.solved && !pipeline.failed) {
     pipeline.step()

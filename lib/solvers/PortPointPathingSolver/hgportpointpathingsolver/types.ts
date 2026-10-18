@@ -106,6 +106,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Whether detailed routing must stay on each region's available layers. */
+  regionLayerMasksAreBinding?: boolean
   /** Physical center-to-center pitch for distinct traces at a shared boundary. */
   minPortSpacing?: number
   portObstacleConstraints?: PortObstacleConstraints

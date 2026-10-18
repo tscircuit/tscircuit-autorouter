@@ -1094,11 +1094,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.startRegularSolver(node)
       return
     }
-    if (fixedObstacles.length === 0 && this.minimumTraceWidth === undefined) {
-      this.startRegularSolver(node)
-      return
-    }
-
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
       .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
       .map((obstacle) =>
@@ -1145,7 +1140,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       viaMinDistFromBorder: this.viaDiameter / 2,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-      useExactPortCoordinates: this.minimumTraceWidth !== undefined,
+      useExactPortCoordinates: true,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
       obstacleClearanceMargin:

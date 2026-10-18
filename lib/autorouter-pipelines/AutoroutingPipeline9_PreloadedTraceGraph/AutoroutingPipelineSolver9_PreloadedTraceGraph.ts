@@ -559,6 +559,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            // Legacy regional routing may use the remaining board layers;
+            // physical routing binds the same layer set in both stages.
+            regionLayerMasksAreBinding: cms.originalSrj.allowViaInPad === true,
             portObstacleConstraints: cms.originalSrj.allowViaInPad
               ? {
                   obstacles: cms.srj.obstacles.map((obstacle) => ({
@@ -678,9 +681,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minimumTraceWidth: cms.originalSrj.allowViaInPad
               ? cms.minTraceWidth
               : undefined,
-            traceToPadClearance: cms.originalSrj.allowViaInPad
-              ? (cms.srj.minTraceToPadEdgeClearance ?? 0.1)
-              : undefined,
+            traceToPadClearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -707,9 +708,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
-          fixedObstacleRegionIds: cms.originalSrj.allowViaInPad
-            ? cms.highDensityRouteSolver!.boardObstacleRegionIds
-            : undefined,
+          fixedObstacleRegionIds:
+            cms.highDensityRouteSolver!.boardObstacleRegionIds,
         },
       ],
     ),

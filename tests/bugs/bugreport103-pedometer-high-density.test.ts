@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
+import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 
 test("Pipeline9 does not detail-route an invalid pedometer timeout graph", async (): Promise<void> => {
   const srj: SimpleRouteJson = await Bun.file(
@@ -10,9 +11,19 @@ test("Pipeline9 does not detail-route an invalid pedometer timeout graph", async
     ),
   ).json()
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
-    effort: 1,
+    // Force timeout acceptance; this is not a board-solvability assertion.
+    effort: 0.01,
     cacheProvider: null,
   })
+  // Keep this strict-model rejection test distinct from legacy layer hints.
+  const pathing = pipeline.pipelineDef.find(
+    (step) => step.solverName === "portPointPathingSolver",
+  )!
+  const getParams = pathing.getConstructorParams
+  pathing.getConstructorParams = (cms) => {
+    const [params] = getParams(cms) as [HgPortPointPathingSolverParams]
+    return [{ ...params, regionLayerMasksAreBinding: true }]
+  }
   while (!pipeline.highDensityRouteSolver?.solved && !pipeline.failed) {
     pipeline.step()
   }

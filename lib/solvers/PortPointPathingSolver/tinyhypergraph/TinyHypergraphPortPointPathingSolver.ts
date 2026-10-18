@@ -938,6 +938,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     private readonly minPortSpacing?: number,
     private readonly portObstacleConstraints?: PortObstacleConstraints,
     private readonly layerCount = 2,
+    private readonly regionLayerMasksAreBinding = true,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -964,6 +965,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
     const loaded = super.loadHyperGraph(serializedHyperGraph)
+    loaded.problem.regionLayerMasksAreBinding = this.regionLayerMasksAreBinding
     if (this.portObstacleConstraints) {
       loaded.problem.portReservedNetId = getPhysicalPortObstacleReservations(
         loaded,
@@ -1202,6 +1204,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         params.minPortSpacing,
         params.portObstacleConstraints,
         params.layerCount,
+        params.regionLayerMasksAreBinding,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1514,6 +1517,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.params.minPortSpacing,
             this.params.portObstacleConstraints,
             this.params.layerCount,
+            this.params.regionLayerMasksAreBinding,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
