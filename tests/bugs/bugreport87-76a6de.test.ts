@@ -13,6 +13,8 @@ test(
   () => {
     const solver = new AutoroutingPipelineSolver(srj)
     solver.solve()
+    expect(solver.failed).toBe(false)
+    expect(solver.solved).toBe(true)
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
       { tolerance: 0.02 },

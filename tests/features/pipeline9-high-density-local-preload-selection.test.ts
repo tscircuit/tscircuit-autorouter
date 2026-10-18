@@ -83,7 +83,7 @@ const createSolver = (
     enableRegionalFallback: false,
   })
 
-test("Pipeline9 selects detailed routing by copper and board obstacles", () => {
+test("Pipeline9 selects the detailed solver by local preload overlap", () => {
   const distantPreloadSolver = createSolver([
     createFixedRoute([
       { x: -5, y: -5, z: 0 },
@@ -100,14 +100,14 @@ test("Pipeline9 selects detailed routing by copper and board obstacles", () => {
   distantPreloadSolver.step()
   crossingPreloadSolver.step()
 
-  expect(distantPreloadSolver.activeRegularSolver).toBeNull()
-  expect(distantPreloadSolver.activeB01Solver).not.toBeNull()
+  expect(distantPreloadSolver.activeRegularSolver).not.toBeNull()
+  expect(distantPreloadSolver.activeB01Solver).toBeNull()
   expect(distantPreloadSolver.stats).toMatchObject({
     fixedObstacleCount: 1,
     fixedObstacleUses: 0,
-    boardObstacleUses: 1,
-    regularNodeCount: 0,
-    b01NodeCount: 1,
+    boardObstacleUses: 0,
+    regularNodeCount: 1,
+    b01NodeCount: 0,
   })
   expect(crossingPreloadSolver.activeRegularSolver).toBeNull()
   expect(crossingPreloadSolver.activeB01Solver).not.toBeNull()

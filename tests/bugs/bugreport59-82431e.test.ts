@@ -13,6 +13,8 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport59-82431e.json", () => {
   const solver = new AutoroutingPipelineSolver8(srj)
   solver.solve()
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
@@ -24,6 +26,8 @@ test("bugreport59-82431e.json", () => {
 test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () => {
   const solver = new AutoroutingPipelineSolver8(srj, { effort: 2 })
   solver.solve()
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
 
   const allowedViaPointKeys = getAssignableViaPointKeys(srj.obstacles)
   const outputVias = solver

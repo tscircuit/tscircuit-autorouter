@@ -681,7 +681,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minimumTraceWidth: cms.originalSrj.allowViaInPad
               ? cms.minTraceWidth
               : undefined,
-            traceToPadClearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+            traceToPadClearance: cms.originalSrj.allowViaInPad
+              ? (cms.srj.minTraceToPadEdgeClearance ?? 0.1)
+              : undefined,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
@@ -708,8 +710,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           ),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           protectOverBudgetRegions: cms.originalSrj.allowViaInPad ?? false,
-          fixedObstacleRegionIds:
-            cms.highDensityRouteSolver!.boardObstacleRegionIds,
+          fixedObstacleRegionIds: cms.originalSrj.allowViaInPad
+            ? cms.highDensityRouteSolver!.boardObstacleRegionIds
+            : undefined,
         },
       ],
     ),
