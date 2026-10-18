@@ -20,7 +20,7 @@ while (!solver.solved && !solver.failed) {
     console.log(JSON.stringify({ phase: currentPhase, elapsedMs: performance.now() - started, stages: solver.timeSpentOnPhase }))
     phase = currentPhase
     if (solver.activeSubSolver && ["highDensitySolver", "pipeline9HighDensitySolver", "traceWidthSolver", "pipeline9JointDrcRepairSolver"].includes(phase)) {
-      writeFileSync(`${outputDirectory}/${phase}-input.json.gz`, gzipSync(JSON.stringify(solver.activeSubSolver.getConstructorParams())))
+      writeFileSync(`${outputDirectory}/${phase}-input.json.gz`, gzipSync(JSON.stringify(solver.pipelineDef[solver.currentPipelineStepIndex]!.getConstructorParams(solver))))
     }
   }
   const effects = getPendingEffectsFromSolverTree(solver)
