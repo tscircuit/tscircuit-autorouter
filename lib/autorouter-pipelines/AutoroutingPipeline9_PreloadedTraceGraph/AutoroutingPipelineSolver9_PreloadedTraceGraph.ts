@@ -1183,6 +1183,22 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
+  /** Solve cooperatively, yielding between steps during long routing tasks. */
+  async solveAsync(): Promise<void> {
+    const startTime = Date.now()
+    let nextYieldAt = performance.now() + 100
+    while (!this.solved && !this.failed) {
+      this.step()
+      if (this.solved || this.failed || (this.iterations & 255) !== 0) continue
+      if (performance.now() < nextYieldAt) continue
+
+      // A timer crosses the event-loop boundary so completed work can be reclaimed.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
+      nextYieldAt = performance.now() + 100
+    }
+    this.timeToSolve = Date.now() - startTime
+  }
+
   solveUntilPhase(phase: string) {
     while (this.getCurrentPhase() !== phase) {
       this.step()
