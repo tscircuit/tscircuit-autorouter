@@ -46,11 +46,14 @@ test("atomic cells share matching metadata without merging their layers or geome
   let sharedCellCount = 0
   for (let index = 0; index < cells.length; index++) {
     const cell = cells[index]!
-    const previous = cells.slice(0, index).find(
-      (candidate) =>
-        candidate.topologySignature === cell.topologySignature &&
-        JSON.stringify(candidate.availableZ) === JSON.stringify(cell.availableZ),
-    )
+    const previous = cells
+      .slice(0, index)
+      .find(
+        (candidate) =>
+          candidate.topologySignature === cell.topologySignature &&
+          JSON.stringify(candidate.availableZ) ===
+            JSON.stringify(cell.availableZ),
+      )
     if (!previous) continue
     expect(cell.availableZ).toBe(previous.availableZ)
     expect(cell.sourceKeys).toBe(previous.sourceKeys)
