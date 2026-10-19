@@ -8,10 +8,15 @@ on:
       rectdiff_sha:
         type: string
         required: true
+      topology_only:
+        type: boolean
+        default: false
 jobs:
   benchmark:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 60
+    env:
+      TOPOLOGY_ONLY: ${{ inputs.topology_only }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -39,15 +44,15 @@ jobs:
         working-directory: candidate
         run: bun install
       - name: Baseline first pass
-        run: bun scripts/benchmarkBoard109.ts comparison/base-1
+        run: bun scripts/benchmarkBoard109.ts comparison/base-1 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Candidate first pass
         working-directory: candidate
-        run: bun scripts/benchmarkBoard109.ts ../comparison/head-1
+        run: bun scripts/benchmarkBoard109.ts ../comparison/head-1 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Candidate second pass
         working-directory: candidate
-        run: bun scripts/benchmarkBoard109.ts ../comparison/head-2
+        run: bun scripts/benchmarkBoard109.ts ../comparison/head-2 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Baseline second pass
-        run: bun scripts/benchmarkBoard109.ts comparison/base-2
+        run: bun scripts/benchmarkBoard109.ts comparison/base-2 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Compare routing results
         run: python3 scripts/compareBoard109Results.py
       - uses: actions/upload-artifact@v4

@@ -8,6 +8,7 @@ import type { SimpleRouteJson } from "../lib/types"
 import capturedInput from "../fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json"
 
 const outputDirectory = process.argv[2] ?? "board109-results"
+const topologyOnly = process.argv.includes("--topology-only")
 mkdirSync(outputDirectory, { recursive: true })
 const input = structuredClone(capturedInput) as SimpleRouteJson
 const started = performance.now()
@@ -16,6 +17,20 @@ let phase = ""
 while (!solver.solved && !solver.failed) {
   solver.step()
   const currentPhase = solver.getCurrentPhase()
+  if (topologyOnly && currentPhase === "topologyMergingSolver") {
+    const output = solver.topologyPlanningSolver!.getOutput()
+    const result = {
+      kind: "topology",
+      elapsedMs: performance.now() - started,
+      topologyMs: solver.timeSpentOnPhase.topologyPlanningSolver,
+      outputSha256: createHash("sha256").update(JSON.stringify(output)).digest("hex"),
+      nodeCount: output.globalMeshNodes.length + output.componentMeshNodes.reduce((sum, nodes) => sum + nodes.length, 0),
+      stages: solver.timeSpentOnPhase,
+    }
+    writeFileSync(`${outputDirectory}/result.json`, JSON.stringify(result, null, 2))
+    console.log(JSON.stringify(result))
+    process.exit(0)
+  }
   if (currentPhase !== phase) {
     console.log(JSON.stringify({ phase: currentPhase, elapsedMs: performance.now() - started, stages: solver.timeSpentOnPhase }))
     phase = currentPhase
