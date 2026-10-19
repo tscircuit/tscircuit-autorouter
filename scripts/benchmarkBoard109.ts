@@ -12,6 +12,7 @@ const topologyOnly = process.argv.includes("--topology-only")
 mkdirSync(outputDirectory, { recursive: true })
 const input = structuredClone(capturedInput) as SimpleRouteJson
 const started = performance.now()
+const cpuStarted = process.cpuUsage()
 const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { cacheProvider: null, effort: 1 })
 let phase = ""
 while (!solver.solved && !solver.failed) {
@@ -42,6 +43,7 @@ while (!solver.solved && !solver.failed) {
   if (effects.length > 0) await Promise.all(effects.map((effect) => effect.promise))
 }
 const elapsedMs = performance.now() - started
+const cpuUsage = process.cpuUsage(cpuStarted)
 if (!solver.solved || solver.failed) throw new Error(solver.error ?? "Board 109 failed to route")
 const traces = solver.getOutputSimplifiedPcbTraces()
 const requestedPairs = solver.srjWithPointPairs!.connections.map((connection) => connection.pointsToConnect.map((point) => point.pcb_port_id!).sort()).sort()
@@ -51,6 +53,7 @@ const validationStarted = performance.now()
 const drc = evaluateRelaxedDrc({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces })
 const result = {
   elapsedMs,
+  cpuMs: (cpuUsage.user + cpuUsage.system) / 1000,
   validationMs: performance.now() - validationStarted,
   traceCount: traces.length,
   drcErrorCount: drc.errors.length,

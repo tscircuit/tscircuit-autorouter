@@ -43,6 +43,17 @@ jobs:
       - name: Install candidate dependencies
         working-directory: candidate
         run: bun install
+      - name: Verify installed rectangle algorithms
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          source = Path('node_modules/@tscircuit/rectdiff/lib/solvers/RectDiffSeedingSolver/computeEdgeCandidates3D.ts')
+          for name, root in [('baseline', Path('.')), ('candidate', Path('candidate'))]:
+              package = json.loads((root / 'package.json').read_text())
+              data = (root / source).read_bytes()
+              print(json.dumps({'checkout': name, 'rectdiff': package['devDependencies']['@tscircuit/rectdiff'], 'sourceSha256': hashlib.sha256(data).hexdigest(), 'hasDistanceIndex': b'hardRectIndexByLayer' in data}))
+          PY
       - name: Baseline first pass
         run: bun scripts/benchmarkBoard109.ts comparison/base-1 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Candidate first pass
