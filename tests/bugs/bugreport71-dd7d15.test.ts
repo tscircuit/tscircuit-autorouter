@@ -4,6 +4,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport71-dd7d15/bugreport71
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
@@ -11,6 +12,14 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport71-dd7d15.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }).errors,
+  ).toHaveLength(0)
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
