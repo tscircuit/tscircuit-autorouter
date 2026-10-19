@@ -14,17 +14,17 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - run: bun install
-      - name: Baseline first pass
-        run: bun scripts/benchmarkBoard109.ts comparison/base-1
-      - name: Install candidate rectdiff revision
+      - name: Pin candidate rectdiff revision
+        working-directory: candidate
         env:
           RECTDIFF_SHA: ${{ inputs.rectdiff_sha }}
         run: |
-          cp package.json /tmp/board109-baseline-package.json
           python3 - <<'PY'
           import json, os, re
           sha = os.environ['RECTDIFF_SHA']
@@ -33,15 +33,19 @@ jobs:
           p['devDependencies']['@tscircuit/rectdiff'] = f'https://codeload.github.com/tscircuit/rectdiff/tar.gz/{sha}'
           open('package.json', 'w').write(json.dumps(p, indent=2) + '\n')
           PY
-          bun install
+      - name: Install baseline dependencies
+        run: bun install
+      - name: Install candidate dependencies
+        working-directory: candidate
+        run: bun install
+      - name: Baseline first pass
+        run: bun scripts/benchmarkBoard109.ts comparison/base-1
       - name: Candidate first pass
-        run: bun scripts/benchmarkBoard109.ts comparison/head-1
+        working-directory: candidate
+        run: bun scripts/benchmarkBoard109.ts ../comparison/head-1
       - name: Candidate second pass
-        run: bun scripts/benchmarkBoard109.ts comparison/head-2
-      - name: Restore baseline rectdiff revision
-        run: |
-          cp /tmp/board109-baseline-package.json package.json
-          bun install
+        working-directory: candidate
+        run: bun scripts/benchmarkBoard109.ts ../comparison/head-2
       - name: Baseline second pass
         run: bun scripts/benchmarkBoard109.ts comparison/base-2
       - name: Compare routing results
