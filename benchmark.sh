@@ -38,6 +38,7 @@ default_concurrency() {
   bun --eval 'import { getBenchmarkConcurrency } from "./scripts/benchmark/benchmarkRuntime.ts"; console.log(getBenchmarkConcurrency())'
 }
 
+THREADS=""
 CONCURRENCY_WAS_SET=false
 if [ -n "${BENCHMARK_CONCURRENCY:-}" ]; then
   CONCURRENCY="$BENCHMARK_CONCURRENCY"
@@ -90,7 +91,8 @@ Options:
   --networked-remote   Explicitly use HD_CACHE2_SERVER_URL instead of local servers
   --limit N            Run only first N scenarios (same as second positional arg)
   --scenario-limit N   Backward-compatible alias for --limit
-  --concurrency N      Number of Bun workers used per solver, or "auto"
+  --concurrency N      Maximum concurrent samples, or "auto"
+  --threads N          Routing threads per sample (1 = inline; Pipeline9 only)
   --effort N           Override scenario effort multiplier
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
   --sample N           Run one 1-based sample number from the dataset order
@@ -190,6 +192,14 @@ while [ "$#" -gt 0 ]; do
       CONCURRENCY_WAS_SET=true
       shift 2
       ;;
+    --threads)
+      if [ -z "${2:-}" ] || [[ "$2" == --* ]]; then
+        echo "--threads requires a positive integer" >&2
+        exit 1
+      fi
+      THREADS="$2"
+      shift 2
+      ;;
     --effort)
       EFFORT="${2:-}"
       shift 2
@@ -273,6 +283,9 @@ if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipeline
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
+if [ -n "$THREADS" ]; then
+  CMD+=("--threads" "$THREADS")
+fi
 
 if [ "$NETWORKED_COLD_HOT" = true ]; then
   CMD+=("--networked-cold-hot")
