@@ -88,14 +88,16 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
   const vias = drc.circuitJson.filter(
     (element): element is PcbVia => element.type === "pcb_via",
   )
-  const mst10Vias = vias.filter((via) =>
-    via.pcb_trace_id?.includes("source_net_4_mst10_0"),
+  // MST branch numbers describe tree order, not electrical identity. Check
+  // the closest pair on the HDMI 1.8 V net even when its MST branches change.
+  const hdmiVias = vias.filter((via) =>
+    via.pcb_trace_id?.includes("source_net_4_mst"),
   )
-  const mst15Vias = vias.filter((via) =>
-    via.pcb_trace_id?.includes("source_net_4_mst15_0"),
-  )
-  const closestPair = mst10Vias
-    .flatMap((viaA) => mst15Vias.map((viaB) => [viaA, viaB] as const))
+  expect(hdmiVias.length).toBeGreaterThanOrEqual(2)
+  const closestPair = hdmiVias
+    .flatMap((viaA, index) =>
+      hdmiVias.slice(index + 1).map((viaB) => [viaA, viaB] as const),
+    )
     .sort(
       ([viaA, viaB], [nextViaA, nextViaB]) =>
         Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y) -

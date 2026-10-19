@@ -260,13 +260,31 @@ export function buildMinimumSpanningTree<T extends Point>(
     return []
   }
 
-  const pointsCopy = [...points].sort((a, b) => a.x - b.x)
+  const pointsCopy = [...points]
+  const kdTree = new KDTree(pointsCopy)
+  const edges: Edge<T>[] = []
+  const k = Math.min(10, points.length - 1)
+
+  // Keep existing candidates first so equal-cost edges retain their direction
+  // and ordering. Downstream connection names and route order depend on these.
+  for (const point of pointsCopy) {
+    for (const neighbor of kdTree.findKNearestNeighbors(point, k + 1)) {
+      if (point.x === neighbor.x && point.y === neighbor.y) continue
+      edges.push({
+        from: point,
+        to: neighbor as T,
+        weight: Math.sqrt(
+          (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
+        ),
+      })
+    }
+  }
 
   // A fixed nearest-neighbor graph can be disconnected. Dense Prim represents
   // the complete Euclidean graph exactly using O(n) memory, without storing
-  // all n(n-1)/2 edges. Its MST remains sufficient when extra edges are added;
-  // Kruskal below incorporates the initially connected zero-weight edges.
-  const edges: Edge<T>[] = []
+  // all n(n-1)/2 edges. Adding its edges guarantees a complete minimum tree
+  // without replacing equally short existing candidates. Kruskal below also
+  // incorporates the initially connected zero-weight edges.
   const included = new Uint8Array(pointsCopy.length)
   const bestDistance = new Float64Array(pointsCopy.length).fill(Infinity)
   const parentIndex = new Int32Array(pointsCopy.length).fill(-1)
@@ -295,7 +313,9 @@ export function buildMinimumSpanningTree<T extends Point>(
     for (let index = 0; index < pointsCopy.length; index++) {
       if (included[index]) continue
       const candidate = pointsCopy[index]!
-      const distance = Math.hypot(point.x - candidate.x, point.y - candidate.y)
+      const distance = Math.sqrt(
+        (point.x - candidate.x) ** 2 + (point.y - candidate.y) ** 2,
+      )
       if (distance < bestDistance[index]) {
         bestDistance[index] = distance
         parentIndex[index] = nextIndex

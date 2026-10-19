@@ -26,12 +26,10 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    stats.postExactReferenceDrcIssueCount,
-  )
-  expect(errors.length).toBeLessThanOrEqual(
-    stats.boundedRegionalRepairPublishedDrcIssueCount,
-  )
+  // A valid MST can avoid the post-exact regional stage entirely. Validate
+  // the published result rather than requiring one particular repair path.
+  expect(stats.finalDrcIssueCount).toBe(0)
+  expect(stats.referenceDrcValidationCount).toBeGreaterThan(0)
   expect(errors).toHaveLength(0)
   const declaredDrc = evaluateRelaxedDrc({
     ...drcInput,
