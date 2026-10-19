@@ -1,0 +1,87 @@
+name: Inspect PR 3139 benchmark artifacts
+
+on:
+  push:
+    branches:
+      - perf/inspect-pr3139-artifacts
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout only the reviewed diagnostic script
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: .github/scripts/verify-pr3139-artifacts.py
+          sparse-checkout-cone-mode: false
+
+      - name: Require all seven benchmark runs to be complete
+        env:
+          ARTIFACT_GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/verify-pr3139-artifacts.py --check-runs
+
+      - name: Download dataset1 run 39309110611
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-1
+          github-token: ${{ github.token }}
+          run-id: '39309110611'
+          path: artifacts/39309110611
+
+      - name: Download dataset1 run 39310925313
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-1
+          github-token: ${{ github.token }}
+          run-id: '39310925313'
+          path: artifacts/39310925313
+
+      - name: Download dataset1 run 39310948565
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-1
+          github-token: ${{ github.token }}
+          run-id: '39310948565'
+          path: artifacts/39310948565
+
+      - name: Download dataset18 run 39309073322
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          github-token: ${{ github.token }}
+          run-id: '39309073322'
+          path: artifacts/39309073322
+
+      - name: Download dataset18 run 39309836344
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          github-token: ${{ github.token }}
+          run-id: '39309836344'
+          path: artifacts/39309836344
+
+      - name: Download dataset18 run 39309860798
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-18
+          github-token: ${{ github.token }}
+          run-id: '39309860798'
+          path: artifacts/39309860798
+
+      - name: Download dataset24 run 39309090786
+        uses: actions/download-artifact@v4
+        with:
+          name: same-machine-benchmark-24
+          github-token: ${{ github.token }}
+          run-id: '39309090786'
+          path: artifacts/39309090786
+
+      - name: Verify all per-board fields and exact SVGs
+        run: python3 .github/scripts/verify-pr3139-artifacts.py --artifacts-root artifacts
