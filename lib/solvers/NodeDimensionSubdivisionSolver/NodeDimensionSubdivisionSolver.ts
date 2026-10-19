@@ -145,7 +145,9 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     // Rect decomposition can produce low-area slices that still connect larger
     // regions. Removing such a slice changes reachability, so retain bridges.
     const { index, originalNodeIndices } =
-      (bridgeNodeWorkspace.bridgeNodeIndex ??= createBridgeNodeIndex(this.nodes))
+      (bridgeNodeWorkspace.bridgeNodeIndex ??= createBridgeNodeIndex(
+        this.nodes,
+      ))
     const candidateIndices = index.search(
       node.center.x - node.width / 2 - CONNECTIVITY_BRIDGE_QUERY_PADDING,
       node.center.y - node.height / 2 - CONNECTIVITY_BRIDGE_QUERY_PADDING,

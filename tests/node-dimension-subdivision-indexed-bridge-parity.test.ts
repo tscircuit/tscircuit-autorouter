@@ -143,7 +143,9 @@ test("indexed bridges match complete ordered linear output", (): void => {
     neighbors.map((node) => ({
       ...node,
       capacityMeshNodeId:
-        node.capacityMeshNodeId === "before" ? "bridge" : node.capacityMeshNodeId,
+        node.capacityMeshNodeId === "before"
+          ? "bridge"
+          : node.capacityMeshNodeId,
     })),
     neighbors.map((node) => ({
       ...node,
