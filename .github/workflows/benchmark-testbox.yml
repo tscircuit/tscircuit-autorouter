@@ -7,7 +7,19 @@ on:
         default: board109
 
 jobs:
+  analyze:
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: board109-results
+          path: board109-results/
+          run-id: 39164999783
+          github-token: ${{ github.token }}
+      - run: python3 scripts/summarizeBoardProfile.py
   benchmark:
+    if: false
     name: Run benchmark
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 60
