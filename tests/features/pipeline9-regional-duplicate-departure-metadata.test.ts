@@ -9,7 +9,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 
 type RepairSrj = Parameters<typeof extractRepairRegion>[0]["srj"]
 
-test("canonical duplicate points preserve the departure's plated-hole or via identity through regional repair", (): void => {
+test("regional repair preserves coincident vertices' departure metadata and plated-hole or via identity", (): void => {
   for (const throughHole of [false, true]) {
     const departureMetadata = {
       toNextSegmentType: "through_obstacle" as const,
@@ -65,12 +65,17 @@ test("canonical duplicate points preserve the departure's plated-hole or via ide
       region,
       repairedRoutes: solver.getOutput().routes,
     })
-    expect(canonical[0]!.route).toHaveLength(6)
-    expect(canonical[0]!.route[3]).toEqual(route.route[4])
+    expect(canonical[0]!.route).toEqual(route.route)
+    expect(merged).toEqual(canonical)
     expect(merged[0]!.vias).toEqual(route.vias)
     expect(merged[0]!.route[0]).toEqual(route.route[0])
     expect(merged[0]!.route.at(-1)).toEqual(route.route.at(-1))
-    expect(merged[0]!.route.some((point) => point.toNextSegmentType === "through_obstacle")).toBe(throughHole)
+    const transition = merged[0]!.route.find(
+      (point, index, points): boolean =>
+        point.x === 4.75 &&
+        point.z !== points[index + 1]?.z,
+    )!
+    expect(transition.toNextSegmentType === "through_obstacle").toBe(throughHole)
   }
   for (const distinct of [
     { pcb_port_id: "other-terminal" },

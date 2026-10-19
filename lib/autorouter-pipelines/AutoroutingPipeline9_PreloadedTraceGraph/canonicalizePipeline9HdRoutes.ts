@@ -21,25 +21,6 @@ export const canonicalizePipeline9HdRoutes = (
         // Materialization accepts sub-micrometre coincidence; repair04 needs
         // exact XY equality. Preserve both endpoints with an explicit lead.
         return [{ x: point.x, y: point.y, z: previous.z }, point]
-      }).filter((point, index, points): boolean => {
-        const next = points[index + 1]
-        // A tagged zero-length segment has no copper extent. Keep its
-        // successor's departure metadata, or extraction can mistake a plated
-        // hole for a new via (or discard an existing via). Never merge points
-        // with distinct terminal identities, copper widths or jumper state.
-        return (
-          !next ||
-          (point.toNextSegmentType === undefined &&
-            next.toNextSegmentType === undefined &&
-            point.toNextSegmentCircuitJsonMetadata === undefined &&
-            next.toNextSegmentCircuitJsonMetadata === undefined) ||
-          point.x !== next.x ||
-          point.y !== next.y ||
-          point.z !== next.z ||
-          point.pcb_port_id !== next.pcb_port_id ||
-          point.traceThickness !== next.traceThickness ||
-          point.insideJumperPad !== next.insideJumperPad
-        )
       }),
     }),
   )

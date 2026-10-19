@@ -1,7 +1,6 @@
 import { writeFileSync } from "node:fs"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
-import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9BoundedRegionalRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
@@ -15,19 +14,7 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
-  try {
-    solver.solve()
-  } catch (error) {
-    const activeRepair = solver.pipeline9JointDrcRepairSolver?.activeSubSolver
-    if (activeRepair instanceof Pipeline9BoundedRegionalRepairSolver) {
-      const { state } = activeRepair as unknown as { state: unknown }
-      writeFileSync(
-        new URL("./__snapshots__/bugreport107-regional-drc.received.json", import.meta.url),
-        JSON.stringify(state, null, 2),
-      )
-    }
-    throw error
-  }
+  solver.solve()
 
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
