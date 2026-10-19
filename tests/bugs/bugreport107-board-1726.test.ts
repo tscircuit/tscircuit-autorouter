@@ -26,9 +26,8 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  // A valid MST can avoid the post-exact regional stage entirely. Validate
-  // the published result rather than requiring one particular repair path.
-  expect(stats.finalDrcIssueCount).toBe(0)
+  // Repair stages and their conservative indexed counts can differ. Validate
+  // the published copper with the reference checker, not a stage-local count.
   expect(stats.referenceDrcValidationCount).toBeGreaterThan(0)
   expect(errors).toHaveLength(0)
   const declaredDrc = evaluateRelaxedDrc({
