@@ -1,0 +1,15 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`SK-AM62: full-board routing preparation: full-board routing preparation 1`] = `
+{
+  "connections": 1009,
+  "detectedComponents": 33,
+  "endpoints": 4731,
+  "error": "NetToPointPairsSolver2_OffBoardConnection ran out of iterations (MAX_ITERATIONS=1000)",
+  "failed": true,
+  "layerCount": 10,
+  "obstacles": 5052,
+  "phase": "netToPointPairsSolver",
+  "pointPairs": undefined,
+}
+`;

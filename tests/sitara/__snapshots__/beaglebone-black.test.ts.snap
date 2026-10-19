@@ -1,0 +1,15 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`BeagleBone Black: full-board routing preparation: full-board routing preparation 1`] = `
+{
+  "connections": 310,
+  "detectedComponents": 5,
+  "endpoints": 1533,
+  "error": null,
+  "failed": false,
+  "layerCount": 6,
+  "obstacles": 1711,
+  "phase": "topologyPlanningSolver",
+  "pointPairs": 1218,
+}
+`;

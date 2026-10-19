@@ -1,0 +1,15 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`TMDS62LEVM: full-board routing preparation: full-board routing preparation 1`] = `
+{
+  "connections": 1000,
+  "detectedComponents": 54,
+  "endpoints": 5125,
+  "error": null,
+  "failed": false,
+  "layerCount": 6,
+  "obstacles": 5598,
+  "phase": "topologyPlanningSolver",
+  "pointPairs": 4097,
+}
+`;

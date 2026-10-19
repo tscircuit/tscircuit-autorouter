@@ -21,6 +21,7 @@ export const DATASET_NAMES = [
   "srj28",
   "srj29",
   "srj33",
+  "srj35",
 ] as const
 
 export type DatasetName = (typeof DATASET_NAMES)[number]
@@ -28,9 +29,14 @@ export type DatasetName = (typeof DATASET_NAMES)[number]
 type DatasetModule = Record<string, unknown>
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29, 33/srj33, 35/srj35"
 
 const datasetAliases: Record<string, DatasetName> = {
+  "35": "srj35",
+  dataset35: "srj35",
+  srj35: "srj35",
+  "dataset-srj35-sitara": "srj35",
+  "@shibosoftwaredev/dataset-srj35-sitara": "srj35",
   "1": "dataset01",
   "01": "dataset01",
   dataset1: "dataset01",
@@ -268,6 +274,10 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   },
   srj33: async () =>
     (await import("@tscircuit/dataset-srj33-drc-failures")) as DatasetModule,
+  srj35: async () => {
+    const { dataset } = await import("@shibosoftwaredev/dataset-srj35-sitara")
+    return dataset
+  },
 }
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
@@ -290,6 +300,7 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj28: /^circuit\d{3}$/,
   srj29: /^sample\d{3}$/,
   srj33: /^sample\d{3}$/,
+  srj35: /^sample\d{3}$/,
 }
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {

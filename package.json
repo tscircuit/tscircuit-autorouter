@@ -29,6 +29,7 @@
     "@radix-ui/react-menubar": "^1.1.14",
     "@react-hook/resize-observer": "^2.0.2",
     "@resvg/resvg-js": "^2.6.2",
+    "@shibosoftwaredev/dataset-srj35-sitara": "github:ShiboSoftwareDev/dataset-srj35-sitara#0d06a00d8cbe677585d0f8492e4f29e34e418dab",
     "@tsci/seveibar.dataset-srj13": "git+https://github.com/tscircuit/dataset-srj13.git#56db70039aeb28a76540fe951b5a96be60f9e949",
     "@tsci/dataset-srj23-partially-routed-subcircuits": "git+https://github.com/tscircuit/dataset-srj23-partially-routed-subcircuits.git#53fc559",
     "@tsci/tscircuit.dataset-srj16-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj16-bga-breakouts.git#e8b2e70e1f50a0dba3ad977e140766f53b9b75fb",
