@@ -11,6 +11,9 @@ on:
       topology_only:
         type: boolean
         default: false
+      verification_only:
+        type: boolean
+        default: false
 jobs:
   benchmark:
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
@@ -49,25 +52,35 @@ jobs:
           import hashlib, json
           from pathlib import Path
           source = Path('node_modules/@tscircuit/rectdiff/lib/solvers/RectDiffSeedingSolver/computeEdgeCandidates3D.ts')
+          audits = []
           for name, root in [('baseline', Path('.')), ('candidate', Path('candidate'))]:
               package = json.loads((root / 'package.json').read_text())
               data = (root / source).read_bytes()
-              print(json.dumps({'checkout': name, 'rectdiff': package['devDependencies']['@tscircuit/rectdiff'], 'sourceSha256': hashlib.sha256(data).hexdigest(), 'hasDistanceIndex': b'hardRectIndexByLayer' in data}))
+              audit = {'checkout': name, 'rectdiff': package['devDependencies']['@tscircuit/rectdiff'], 'sourceSha256': hashlib.sha256(data).hexdigest(), 'hasDistanceIndex': b'hardRectIndexByLayer' in data}
+              audits.append(audit)
+              print(json.dumps(audit), flush=True)
+          assert not audits[0]['hasDistanceIndex'], 'Baseline installed source contains candidate algorithm'
+          assert audits[1]['hasDistanceIndex'], 'Candidate installed source is missing the indexed algorithm'
           PY
       - name: Baseline first pass
+        if: ${{ !inputs.verification_only }}
         run: bun scripts/benchmarkBoard109.ts comparison/base-1 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Candidate first pass
+        if: ${{ !inputs.verification_only }}
         working-directory: candidate
         run: bun scripts/benchmarkBoard109.ts ../comparison/head-1 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Candidate second pass
+        if: ${{ !inputs.verification_only }}
         working-directory: candidate
         run: bun scripts/benchmarkBoard109.ts ../comparison/head-2 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Baseline second pass
+        if: ${{ !inputs.verification_only }}
         run: bun scripts/benchmarkBoard109.ts comparison/base-2 ${{ inputs.topology_only && '--topology-only' || '' }}
       - name: Compare routing results
+        if: ${{ !inputs.verification_only }}
         run: python3 scripts/compareBoard109Results.py
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && !inputs.verification_only }}
         with:
           name: board109-paired-results
           path: comparison/
