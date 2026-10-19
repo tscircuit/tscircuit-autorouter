@@ -35,7 +35,7 @@ jobs:
           sha = os.environ['RECTDIFF_SHA']
           assert re.fullmatch('[0-9a-f]{40}', sha)
           p = json.load(open('package.json'))
-          p['devDependencies']['@tscircuit/rectdiff'] = f'https://codeload.github.com/tscircuit/rectdiff/tar.gz/{sha}'
+          p['devDependencies']['@tscircuit/rectdiff'] = f'git+https://github.com/tscircuit/rectdiff.git#{sha}'
           open('package.json', 'w').write(json.dumps(p, indent=2) + '\n')
           PY
       - name: Install baseline dependencies
