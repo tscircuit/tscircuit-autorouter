@@ -35,16 +35,18 @@ test("obstacle ownership preserves both original views without rescanning repeat
     ["other_pad", "other_pad"],
     Array.from({ length: 512 }, (): string => "unknown"),
     [],
-  ].map((connectedTo, index): Obstacle => ({
-    obstacleId: "repeated-obstacle-id",
-    type: "rect",
-    center: { x: index, y: 0 },
-    width: 0.5,
-    height: 0.5,
-    layers: ["top"],
-    connectedTo,
-    circuitJsonMetadata: { pcb_port_id: `pcb_port_${index}` },
-  }))
+  ].map(
+    (connectedTo, index): Obstacle => ({
+      obstacleId: "repeated-obstacle-id",
+      type: "rect",
+      center: { x: index, y: 0 },
+      width: 0.5,
+      height: 0.5,
+      layers: ["top"],
+      connectedTo,
+      circuitJsonMetadata: { pcb_port_id: `pcb_port_${index}` },
+    }),
+  )
   const originalInput = JSON.stringify({ obstacles, routes })
   for (const obstacle of obstacles) {
     Object.freeze(obstacle.connectedTo)

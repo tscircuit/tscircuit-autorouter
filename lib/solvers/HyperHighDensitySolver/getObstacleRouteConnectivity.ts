@@ -22,7 +22,11 @@ export const getObstacleRouteConnectivity = ({
   const connectedRouteNamesByObstacle = obstacles.map((): string[] => [])
   const connectedObstaclesByRoute = routes.map((): Obstacle[] => [])
 
-  for (let obstacleIndex = 0; obstacleIndex < obstacles.length; obstacleIndex++) {
+  for (
+    let obstacleIndex = 0;
+    obstacleIndex < obstacles.length;
+    obstacleIndex++
+  ) {
     const obstacle = obstacles[obstacleIndex]!
     // Duplicate ownership IDs do not change connectivity, but some imported
     // obstacles repeat them thousands of times. Keep the original for output.
