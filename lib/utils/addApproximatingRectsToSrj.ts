@@ -87,7 +87,10 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle): boolean => {
+const isPointInsideObstacle = (
+  point: ConnectionPoint,
+  obstacle: Obstacle,
+): boolean => {
   if (
     getConnectionPointLayers(point).length > 0 &&
     !getConnectionPointLayers(point).some((layer) =>
@@ -106,12 +109,15 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle): bool
   }
 
   // Width/height are in the pad's local frame, not its unrotated world bounds.
-  const radians = rotation * Math.PI / 180
+  const radians = (rotation * Math.PI) / 180
   const dx = point.x - obstacle.center.x
   const dy = point.y - obstacle.center.y
   const localX = dx * Math.cos(radians) + dy * Math.sin(radians)
   const localY = -dx * Math.sin(radians) + dy * Math.cos(radians)
-  return Math.abs(localX) <= obstacle.width / 2 && Math.abs(localY) <= obstacle.height / 2
+  return (
+    Math.abs(localX) <= obstacle.width / 2 &&
+    Math.abs(localY) <= obstacle.height / 2
+  )
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {

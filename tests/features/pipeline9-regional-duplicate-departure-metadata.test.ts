@@ -72,17 +72,24 @@ test("regional repair preserves coincident vertices' departure metadata and plat
     expect(merged[0]!.route.at(-1)).toEqual(route.route.at(-1))
     const transition = merged[0]!.route.find(
       (point, index, points): boolean =>
-        point.x === 4.75 &&
-        point.z !== points[index + 1]?.z,
+        point.x === 4.75 && point.z !== points[index + 1]?.z,
     )!
-    expect(transition.toNextSegmentType === "through_obstacle").toBe(throughHole)
+    expect(transition.toNextSegmentType === "through_obstacle").toBe(
+      throughHole,
+    )
   }
   for (const distinct of [
     { pcb_port_id: "other-terminal" },
     { traceThickness: 0.2 },
     { insideJumperPad: true },
   ]) {
-    const point = { x: 0, y: 0, z: 0, pcb_port_id: "terminal", traceThickness: 0.1 }
+    const point = {
+      x: 0,
+      y: 0,
+      z: 0,
+      pcb_port_id: "terminal",
+      traceThickness: 0.1,
+    }
     const route: HighDensityRoute = {
       connectionName: "distinct-point-metadata",
       traceThickness: 0.1,
@@ -93,14 +100,21 @@ test("regional repair preserves coincident vertices' departure metadata and plat
       ],
       vias: [],
     }
-    expect(canonicalizePipeline9HdRoutes([route])[0]!.route).toEqual(route.route)
+    expect(canonicalizePipeline9HdRoutes([route])[0]!.route).toEqual(
+      route.route,
+    )
   }
   const ordinary: HighDensityRoute = {
     connectionName: "ordinary-duplicates",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }],
+    route: [
+      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0, z: 0 },
+    ],
     vias: [],
   }
-  expect(canonicalizePipeline9HdRoutes([ordinary])[0]!.route).toEqual(ordinary.route)
+  expect(canonicalizePipeline9HdRoutes([ordinary])[0]!.route).toEqual(
+    ordinary.route,
+  )
 })
