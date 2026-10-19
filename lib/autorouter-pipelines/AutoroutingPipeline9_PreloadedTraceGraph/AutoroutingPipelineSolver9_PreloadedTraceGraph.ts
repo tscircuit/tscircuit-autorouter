@@ -1,6 +1,5 @@
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
-import { getAllowedZByConnection } from "lib/utils/getAllowedZByConnection"
-import { getBusLayerRoutingError } from "lib/utils/getBusLayerRoutingError"
+import { getAllowedZByConnection, getBusLayerRoutingError } from "lib/utils/busLayerConstraints"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"

@@ -2,7 +2,7 @@ import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
 import type { PortId } from "tiny-hypergraph/lib/types"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
-import type { AllowedZByConnection } from "lib/utils/getAllowedZByConnection"
+import type { AllowedZByConnection } from "lib/utils/busLayerConstraints"
 
 type SerializedConnection = NonNullable<SerializedHyperGraph["connections"]>[number]
 

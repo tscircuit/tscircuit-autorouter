@@ -19,7 +19,7 @@ import type {
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import type { AllowedZByConnection } from "lib/utils/getAllowedZByConnection"
+import type { AllowedZByConnection } from "lib/utils/busLayerConstraints"
 import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
@@ -1145,15 +1145,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
-    if (params.allowedZByConnection?.size) {
-      this.tinyPipelineSolver.allowedZByConnection = params.allowedZByConnection
-      // The section optimizer does not preserve per-connection layer masks.
-      this.tinyPipelineSolver.pipelineDef = this.tinyPipelineSolver.pipelineDef.filter(
-        (step) => step.solverName !== "optimizeSection",
-      )
-    }
+    this.tinyPipelineSolver.allowedZByConnection = params.allowedZByConnection
     if (
-      !params.allowedZByConnection?.size &&
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
       connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
     ) {
@@ -1461,6 +1454,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
           )
+        this.alternativeTinyPipelineSolver.allowedZByConnection =
+          this.params.allowedZByConnection
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
       } else {

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { getAllowedZByConnection } from "lib/utils/getAllowedZByConnection"
+import { getAllowedZByConnection } from "lib/utils/busLayerConstraints"
 
 test("split connections retain the intersection of their root bus layers", () => {
   const allowedZ = getAllowedZByConnection({

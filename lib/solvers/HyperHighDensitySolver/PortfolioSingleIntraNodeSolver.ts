@@ -708,5 +708,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    const violatesLayerRestriction = this.solvedRoutes.some((route) => {
+      const allowedZ =
+        this.nodeWithPortPoints.allowedZByConnection?.[route.connectionName]
+      return (
+        allowedZ !== undefined &&
+        route.route.some((point) => !allowedZ.includes(point.z))
+      )
+    })
+    if (violatesLayerRestriction) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Detailed route violates its allowed PCB layers"
+      this.solved = false
+      this.winningSolver = undefined
+      this.solvedRoutes = []
+    }
   }
 }

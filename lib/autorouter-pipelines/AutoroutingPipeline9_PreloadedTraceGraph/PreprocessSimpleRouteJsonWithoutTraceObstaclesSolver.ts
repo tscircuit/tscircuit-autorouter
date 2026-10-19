@@ -3,7 +3,7 @@ import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
-import { restrictBusConnectionPointLayers } from "lib/utils/restrictBusConnectionPointLayers"
+import { restrictBusConnectionPointLayers } from "lib/utils/busLayerConstraints"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 
 /**

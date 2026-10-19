@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { getBusLayerRoutingError } from "lib/utils/getBusLayerRoutingError"
+import { getBusLayerRoutingError } from "lib/utils/busLayerConstraints"
 
 test("final bus validation rejects an inner-layer wire introduced after routing", () => {
   expect(getBusLayerRoutingError({

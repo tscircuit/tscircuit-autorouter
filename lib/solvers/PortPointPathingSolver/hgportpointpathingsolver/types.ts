@@ -14,7 +14,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { AllowedZByConnection } from "lib/utils/getAllowedZByConnection"
+import type { AllowedZByConnection } from "lib/utils/busLayerConstraints"
 
 export type RawPort = {
   portId: string
