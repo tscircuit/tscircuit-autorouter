@@ -82,9 +82,20 @@ test("canonical duplicate points preserve the departure's plated-hole or via ide
       connectionName: "distinct-point-metadata",
       traceThickness: 0.1,
       viaDiameter: 0.3,
-      route: [point, { ...point, ...distinct }],
+      route: [
+        { ...point, toNextSegmentType: "through_obstacle" },
+        { ...point, ...distinct },
+      ],
       vias: [],
     }
     expect(canonicalizePipeline9HdRoutes([route])[0]!.route).toEqual(route.route)
   }
+  const ordinary: HighDensityRoute = {
+    connectionName: "ordinary-duplicates",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }],
+    vias: [],
+  }
+  expect(canonicalizePipeline9HdRoutes([ordinary])[0]!.route).toEqual(ordinary.route)
 })

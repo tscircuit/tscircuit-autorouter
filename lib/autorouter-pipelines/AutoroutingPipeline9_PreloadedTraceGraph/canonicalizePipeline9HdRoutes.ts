@@ -23,12 +23,16 @@ export const canonicalizePipeline9HdRoutes = (
         return [{ x: point.x, y: point.y, z: previous.z }, point]
       }).filter((point, index, points): boolean => {
         const next = points[index + 1]
-        // A zero-length segment has no copper extent. Keep its successor's
-        // departure metadata, or regional extraction can mistake a plated
+        // A tagged zero-length segment has no copper extent. Keep its
+        // successor's departure metadata, or extraction can mistake a plated
         // hole for a new via (or discard an existing via). Never merge points
         // with distinct terminal identities, copper widths or jumper state.
         return (
           !next ||
+          (point.toNextSegmentType === undefined &&
+            next.toNextSegmentType === undefined &&
+            point.toNextSegmentCircuitJsonMetadata === undefined &&
+            next.toNextSegmentCircuitJsonMetadata === undefined) ||
           point.x !== next.x ||
           point.y !== next.y ||
           point.z !== next.z ||
