@@ -12,5 +12,8 @@ const circuits: DatasetCircuit[] = Object.entries(dataset).map(
 )
 
 export default () => (
-  <DatasetBenchmarkFixture datasetLabel="dataset-srj35-sitara" circuits={circuits} />
+  <DatasetBenchmarkFixture
+    datasetLabel="dataset-srj35-sitara"
+    circuits={circuits}
+  />
 )
