@@ -321,7 +321,11 @@ export function buildMinimumSpanningTree<T extends Point>(
   while (new Set(roots).size > 1) {
     const nearestEdges = new Map<string, Edge<T>>()
     for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
-      for (let toIndex = fromIndex + 1; toIndex < pointsCopy.length; toIndex++) {
+      for (
+        let toIndex = fromIndex + 1;
+        toIndex < pointsCopy.length;
+        toIndex++
+      ) {
         if (roots[fromIndex] === roots[toIndex]) continue
         const from = pointsCopy[fromIndex]!
         const to = pointsCopy[toIndex]!

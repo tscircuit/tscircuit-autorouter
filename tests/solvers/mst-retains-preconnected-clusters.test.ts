@@ -9,7 +9,10 @@ test("honor preconnections and coincident terminals", (): void => {
       pointId: `${offset}-${index}`,
     })),
   )
-  const points = [...clusters.flat(), { ...clusters[0]![0]!, pointId: "same-xy" }]
+  const points = [
+    ...clusters.flat(),
+    { ...clusters[0]![0]!, pointId: "same-xy" },
+  ]
   const preconnection = {
     from: clusters[0]![0]!,
     to: clusters[2]![0]!,
