@@ -414,9 +414,13 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
-    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+    if (node.allowedZByConnection !== undefined) {
+      this.activeSubSolver = new IntraNodeRouteSolver(intraNodeSolverParams)
+    } else if (this.useGrowShrinkHighDensityIntraNodeSolver) {
+      this.activeSubSolver = new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+    } else {
+      this.activeSubSolver = new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+    }
     this.updateCacheStats()
   }
 

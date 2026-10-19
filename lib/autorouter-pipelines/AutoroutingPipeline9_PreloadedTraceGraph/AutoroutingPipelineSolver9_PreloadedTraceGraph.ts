@@ -1,4 +1,6 @@
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
+import { getAllowedZByConnection } from "lib/utils/getAllowedZByConnection"
+import { getBusLayerRoutingError } from "lib/utils/getBusLayerRoutingError"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
@@ -530,6 +532,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             graph,
             connections,
+            allowedZByConnection: getAllowedZByConnection(cms.srjWithPointPairs!),
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
@@ -599,6 +602,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
+        const allowedZByConnection = getAllowedZByConnection(cms.srjWithPointPairs!)
+        for (const node of nodePortPointsSource) {
+          if (node.portPoints.some((point) => allowedZByConnection.has(point.connectionName))) {
+            node.allowedZByConnection = Object.fromEntries(
+              node.portPoints.flatMap((point) => {
+                const allowedZ = allowedZByConnection.get(point.connectionName)
+                if (allowedZ === undefined) return []
+                return [[point.connectionName, allowedZ]]
+              }),
+            )
+          }
+        }
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
         const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
           (trace, traceIndex) =>
@@ -1143,7 +1158,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      this.solved = true
+      if (!this.originalSrj.buses?.some((bus) => bus.allowedLayers !== undefined)) {
+        this.solved = true
+        return
+      }
+      this.error = getBusLayerRoutingError({
+        srj: this.originalSrj,
+        traces: [
+          ...this.getPowerTraceExpansionFixedTraces(),
+          ...this.powerTraceExpansionSolver!.getOutput(),
+        ],
+      }) ?? null
+      if (this.error) this.failed = true
+      else this.solved = true
       return
     }
 

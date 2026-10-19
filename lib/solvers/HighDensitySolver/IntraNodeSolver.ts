@@ -218,6 +218,22 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }) {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const allowedZ = this.nodeWithPortPoints.allowedZByConnection?.[connectionName]
+    let availableZ = [...new Set(this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0))].sort((a, b) => a - b)
+    if (this.nodeWithPortPoints.availableZ && this.nodeWithPortPoints.availableZ.length > 0) {
+      availableZ = this.nodeWithPortPoints.availableZ
+    }
+    let connectionAvailableZ = availableZ
+    if (allowedZ !== undefined) {
+      connectionAvailableZ = availableZ.filter((z) => allowedZ.includes(z))
+    }
+    let layerCount = this.nodeWithPortPoints.portPoints.reduce(
+      (max, point) => Math.max(max, (point.z ?? 0) + 1),
+      2,
+    )
+    if (allowedZ !== undefined) {
+      layerCount = Math.max(layerCount, ...availableZ.map((z) => z + 1))
+    }
     return {
       connectionName,
       rootConnectionName,
@@ -237,19 +253,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
-        (max, p) => Math.max(max, (p.z ?? 0) + 1),
-        2,
-      ),
-      availableZ:
-        this.nodeWithPortPoints.availableZ &&
-        this.nodeWithPortPoints.availableZ.length > 0
-          ? this.nodeWithPortPoints.availableZ
-          : [
-              ...new Set(
-                this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
-              ),
-            ].sort((a, b) => a - b),
+      layerCount,
+      availableZ: connectionAvailableZ,
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

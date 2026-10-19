@@ -14,6 +14,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { AllowedZByConnection } from "lib/utils/getAllowedZByConnection"
 
 export type RawPort = {
   portId: string
@@ -90,6 +91,7 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
+  allowedZByConnection?: AllowedZByConnection
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>

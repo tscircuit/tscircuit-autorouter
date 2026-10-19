@@ -3,6 +3,7 @@ import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
+import { restrictBusConnectionPointLayers } from "lib/utils/restrictBusConnectionPointLayers"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 
 /**
@@ -34,7 +35,9 @@ export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends Prepro
       return
     }
 
-    this.outputSrj = traces === undefined ? outputSrj : { ...outputSrj, traces }
+    const layerRestrictedSrj = restrictBusConnectionPointLayers(outputSrj)
+    this.outputSrj = layerRestrictedSrj
+    if (traces !== undefined) this.outputSrj = { ...layerRestrictedSrj, traces }
     this.solved = true
   }
 }

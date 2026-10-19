@@ -1,4 +1,4 @@
-import type { CircuitJsonMetadata } from "./srj-types"
+import type { CircuitJsonMetadata, SimpleRouteConnection } from "./srj-types"
 
 export type PortPoint = {
   connectionName: string
@@ -13,6 +13,7 @@ export type PortPoint = {
 }
 
 export type NodeWithPortPoints = {
+  allowedZByConnection?: Readonly<Record<SimpleRouteConnection["name"], readonly number[]>>
   capacityMeshNodeId: string
   center: { x: number; y: number }
   width: number

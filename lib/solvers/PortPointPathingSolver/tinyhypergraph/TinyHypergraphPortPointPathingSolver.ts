@@ -19,6 +19,7 @@ import type {
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import type { AllowedZByConnection } from "lib/utils/getAllowedZByConnection"
 import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
@@ -907,6 +908,7 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
 }
 
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
+  allowedZByConnection?: AllowedZByConnection
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
   metadataPortPenaltyCount = 0
@@ -1012,6 +1014,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   private configureSolver(solver?: BaseSolver | null) {
     if (!solver || this.configuredSolvers.has(solver)) {
       return
+    }
+
+    if (solver instanceof SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments) {
+      solver.allowedZByConnection = this.allowedZByConnection
     }
 
     if (
@@ -1139,7 +1145,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+    if (params.allowedZByConnection?.size) {
+      this.tinyPipelineSolver.allowedZByConnection = params.allowedZByConnection
+      // The section optimizer does not preserve per-connection layer masks.
+      this.tinyPipelineSolver.pipelineDef = this.tinyPipelineSolver.pipelineDef.filter(
+        (step) => step.solverName !== "optimizeSection",
+      )
+    }
     if (
+      !params.allowedZByConnection?.size &&
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
       connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
     ) {
