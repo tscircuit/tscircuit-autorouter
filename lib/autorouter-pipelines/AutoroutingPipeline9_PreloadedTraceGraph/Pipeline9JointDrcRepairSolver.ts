@@ -154,12 +154,6 @@ export const addAutoroutingViaTraceIds = ({
             (viaId): viaId is string => typeof viaId === "string",
           )
         : []),
-      ...(Array.isArray(error.pcb_pad_ids)
-        ? error.pcb_pad_ids.filter(
-            (padId): padId is string =>
-              typeof padId === "string" && traceIdByViaId.has(padId),
-          )
-        : []),
     ]
     const primaryTraceId =
       typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
@@ -1156,9 +1150,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
-        obstacles: params.originalSrj.obstacles.filter(
-          (obstacle) => !obstacle.isViaKeepout,
-        ),
+        obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
@@ -1167,10 +1159,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connMap: params.connMap,
         traceClearance,
         viaClearance,
-        viaToPadClearance:
-          params.originalSrj.minViaEdgeToPadEdgeClearance ??
-          params.originalSrj.minPadEdgeToPadEdgeClearance ??
-          traceClearance,
         includeTraceViaOwnerMetadata: true,
         spatialCellSize:
           Math.max(

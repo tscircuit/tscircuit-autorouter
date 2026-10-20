@@ -156,10 +156,7 @@ export const hasCustomViaKeepoutOrClearanceRules = (
   srj?: Partial<SimpleRouteJson>,
   obstacles?: readonly Obstacle[],
 ): boolean => {
-  if (
-    srj?.minViaEdgeToPadEdgeClearance !== undefined ||
-    (srj?.viaKeepouts?.length ?? 0) > 0
-  ) {
+  if ((srj?.viaKeepouts?.length ?? 0) > 0) {
     return true
   }
   const obsList = obstacles ?? srj?.obstacles ?? []

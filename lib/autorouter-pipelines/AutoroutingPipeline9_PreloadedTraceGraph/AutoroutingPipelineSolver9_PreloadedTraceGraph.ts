@@ -1152,6 +1152,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   unroutedConnections: UnroutedConnectionIssue[] = []
+  private unroutedConnectionsComputed = false
   private violatingTraceIds = new Set<string>()
   private violatingConnectionNames = new Set<string>()
 
@@ -1164,12 +1165,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   private computeFinalUnroutedConnections(): void {
+    if (this.unroutedConnectionsComputed) return
     if (!this.powerTraceExpansionSolver || !this.srjWithPointPairs) {
       this.unroutedConnections = []
       this.violatingTraceIds.clear()
       this.violatingConnectionNames.clear()
       return
     }
+    this.unroutedConnectionsComputed = true
     const rawRoutedTraces = [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
@@ -1190,6 +1193,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getUnroutedConnections(): UnroutedConnectionIssue[] {
+    this.computeFinalUnroutedConnections()
     return structuredClone(this.unroutedConnections)
   }
 
@@ -1206,8 +1210,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      this.computeFinalUnroutedConnections()
       const rejectMode = this.getRejectClearanceViolationsMode()
+      if (rejectMode) {
+        this.computeFinalUnroutedConnections()
+      }
       if (rejectMode === "error" && this.unroutedConnections.length > 0) {
         const summary = this.unroutedConnections
           .map(
