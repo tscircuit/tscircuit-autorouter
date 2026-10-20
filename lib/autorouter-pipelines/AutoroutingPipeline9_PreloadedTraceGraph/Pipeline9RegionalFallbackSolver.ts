@@ -10,8 +10,12 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, ViaKeepoutRegion } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  getHdRoutesViaPlacementViolations,
+  hasCustomViaKeepoutOrClearanceRules,
+} from "lib/utils/viaKeepoutUtils"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
@@ -28,6 +32,7 @@ type Pipeline9RegionalFallbackSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardObstacles?: Obstacle[]
+  viaKeepouts?: ViaKeepoutRegion[]
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
@@ -148,6 +153,17 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
+    const shouldValidateCandidates =
+      (params.boardObstacles !== undefined &&
+        params.movablePreloadedConnectionNames !== undefined &&
+        params.viaToPadClearance !== undefined) ||
+      hasCustomViaKeepoutOrClearanceRules(
+        {
+          minViaEdgeToPadEdgeClearance: params.viaToPadClearance,
+          viaKeepouts: params.viaKeepouts,
+        },
+        params.boardObstacles ?? params.obstacles,
+      )
     this.highDensitySolver = new HighDensitySolver({
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
@@ -157,17 +173,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
       nodePfById: params.nodePfById,
-      obstacles: params.obstacles,
+      obstacles: params.obstacles.filter((obstacle) => !obstacle.isViaKeepout),
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
+      growShrinkSolutionValidator: shouldValidateCandidates
+        ? (routes) => this.validateCandidateRoutes(routes)
+        : undefined,
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
@@ -180,9 +193,34 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
     const {
       boardObstacles,
+      viaKeepouts,
       movablePreloadedConnectionNames,
       viaToPadClearance,
     } = this.params
+    const obstaclesForViaCheck = boardObstacles ?? this.params.obstacles
+    const hasCustomRules = hasCustomViaKeepoutOrClearanceRules(
+      {
+        minViaEdgeToPadEdgeClearance: viaToPadClearance,
+        viaKeepouts,
+      },
+      obstaclesForViaCheck,
+    )
+    if (hasCustomRules) {
+      const customViolations = getHdRoutesViaPlacementViolations({
+        routes,
+        obstacles: obstaclesForViaCheck,
+        viaKeepouts,
+        layerCount: this.params.layerCount,
+        allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+        connMap: this.params.connMap,
+        defaultViaToPadClearance: viaToPadClearance,
+      })
+      if (customViolations.length > 0) {
+        this.stats.preloadedViaCandidateRejectionCount =
+          Number(this.stats.preloadedViaCandidateRejectionCount ?? 0) + 1
+        return false
+      }
+    }
     if (
       !boardObstacles ||
       !movablePreloadedConnectionNames ||

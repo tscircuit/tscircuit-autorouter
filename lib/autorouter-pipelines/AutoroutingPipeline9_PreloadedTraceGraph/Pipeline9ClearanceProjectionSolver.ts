@@ -103,7 +103,8 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
             ? CLEARANCE_PRECISION_MARGIN
             : 0),
         viaClearance:
-          (params.originalSrj.minPadEdgeToPadEdgeClearance ??
+          (params.originalSrj.minViaEdgeToPadEdgeClearance ??
+            params.originalSrj.minPadEdgeToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.viaClearance!) +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })

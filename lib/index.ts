@@ -104,6 +104,7 @@ export type {
   DifferentialPair,
   MultiLayerConnectionPoint,
   Obstacle,
+  RejectClearanceViolationsMode,
   SimpleRouteBus,
   SimpleRouteBusTermination,
   SimpleRouteConnection,
@@ -112,4 +113,6 @@ export type {
   SimplifiedPcbTraces,
   SingleLayerConnectionPoint,
   TerminalViaHint,
+  UnroutedConnectionIssue,
+  ViaKeepoutRegion,
 } from "./types/srj-types"

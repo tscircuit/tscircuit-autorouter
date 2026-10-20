@@ -680,6 +680,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
+    if (obstacle.isViaKeepout) continue
     if (obstacle.isNonPlatedHole) {
       const common = {
         type: "pcb_hole" as const,

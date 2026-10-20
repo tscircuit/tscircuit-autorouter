@@ -15,8 +15,16 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import type {
+  Obstacle,
+  SimpleRouteJson,
+  ViaKeepoutRegion,
+} from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  getHdRoutesViaPlacementViolations,
+  hasCustomViaKeepoutOrClearanceRules,
+} from "lib/utils/viaKeepoutUtils"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -39,6 +47,7 @@ export type Pipeline9HighDensitySolverParams = {
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
+  viaKeepouts?: ViaKeepoutRegion[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
   allowBlindAndBuriedVias?: boolean
@@ -317,6 +326,9 @@ export type Pipeline9RegularNodeSolverParams = {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
+  viaKeepouts?: ViaKeepoutRegion[]
+  allowBlindAndBuriedVias?: boolean
   effort: number
   nodePfById:
     | Map<CapacityMeshNodeId, number | null>
@@ -338,13 +350,26 @@ export const createPipeline9RegularNodeSolver = ({
   viaDiameter,
   traceWidth,
   obstacleMargin,
+  viaToPadClearance,
+  viaKeepouts,
+  allowBlindAndBuriedVias,
   effort,
   nodePfById,
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const routingObstacles = obstacles.filter(
+    (obstacle) => !obstacle.isViaKeepout,
+  )
+  const shouldValidateViaRules = hasCustomViaKeepoutOrClearanceRules(
+    {
+      minViaEdgeToPadEdgeClearance: viaToPadClearance,
+      viaKeepouts,
+    },
+    obstacles,
+  )
+  return new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -355,7 +380,7 @@ export const createPipeline9RegularNodeSolver = ({
     obstacleMargin,
     effort,
     nodePfById,
-    obstacles,
+    obstacles: routingObstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     enableNegotiatedSearch: true,
@@ -365,8 +390,21 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    growShrinkSolutionValidator: shouldValidateViaRules
+      ? (routes) =>
+          getHdRoutesViaPlacementViolations({
+            routes,
+            obstacles,
+            viaKeepouts,
+            layerCount,
+            allowBlindAndBuriedVias,
+            connMap,
+            defaultViaToPadClearance: viaToPadClearance,
+          }).length === 0
+      : undefined,
     captureSearchDebug: false,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -378,6 +416,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
+  readonly viaKeepouts?: ViaKeepoutRegion[]
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
@@ -413,6 +452,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
+    this.viaKeepouts = params.viaKeepouts
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
@@ -492,6 +532,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
+      viaKeepouts: this.viaKeepouts,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
@@ -569,6 +612,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
       boardObstacles: this.obstacles,
+      viaKeepouts: this.viaKeepouts,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
@@ -986,7 +1030,39 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       if (!this.activeB01Solver.solved) return
 
-      this.finishActiveNode(this.activeB01Solver.getOutput())
+      const b01Output = this.activeB01Solver.getOutput()
+      if (
+        hasCustomViaKeepoutOrClearanceRules(
+          {
+            minViaEdgeToPadEdgeClearance: this.viaToPadClearance,
+            viaKeepouts: this.viaKeepouts,
+          },
+          this.obstacles,
+        ) &&
+        getHdRoutesViaPlacementViolations({
+          routes: b01Output,
+          obstacles: this.obstacles,
+          viaKeepouts: this.viaKeepouts,
+          layerCount: this.layerCount,
+          allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+          connMap: this.connMap,
+          defaultViaToPadClearance: this.viaToPadClearance,
+        }).length > 0
+      ) {
+        this.activeFallbackReason =
+          "B01 output violated via keepout or via-to-pad clearance"
+        this.activeB01Solver = null
+        if (!this.enableRegionalFallback) {
+          this.error = `Pipeline9 ${this.activeFallbackReason}`
+          this.failed = true
+          this.activeNode = null
+          return
+        }
+        this.startRegionalFallback()
+        return
+      }
+
+      this.finishActiveNode(b01Output)
       return
     }
 
@@ -1011,7 +1087,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
 
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
-      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .filter(
+        (obstacle) =>
+          !obstacle.isViaKeepout && obstacleOverlapsNode(obstacle, nodeBounds),
+      )
       .map((obstacle) =>
         convertObstacleToB01Obstacle({
           obstacle,

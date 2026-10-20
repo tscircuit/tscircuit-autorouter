@@ -24,9 +24,11 @@ import {
   CapacityMeshEdge,
   CapacityMeshNode,
   DifferentialPair,
+  RejectClearanceViolationsMode,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
+  UnroutedConnectionIssue,
 } from "lib/types"
 import {
   HighDensityRoute,
@@ -48,6 +50,7 @@ import {
 } from "lib/utils/getGraphicsObjectLayer"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
+import { collectUnroutedConnectionIssues } from "lib/utils/getUnroutedConnectionsFromDrc"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   AvailableSegmentPointSolver,
@@ -113,6 +116,13 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /**
+   * Controls how connections that cannot be routed within clearance are handled:
+   * - `true` or `"unroute"`: omit clearance-violating routes from output traces and report them in `unroutedConnections`
+   * - `"error"`: fail the solver when any connection cannot be routed within clearance
+   * - `false` (default): retain legacy behavior while still populating `unroutedConnections`
+   */
+  rejectClearanceViolations?: RejectClearanceViolationsMode
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -575,7 +585,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
+          obstacles: cms.srj.obstacles.filter(
+            (obstacle) => !obstacle.isViaKeepout,
+          ),
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
@@ -628,6 +640,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
+            viaKeepouts: cms.srj.viaKeepouts,
             layerCount: cms.srj.layerCount,
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
@@ -669,7 +682,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes:
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
-          obstacles: cms.srj.obstacles,
+          obstacles: cms.srj.obstacles.filter(
+            (obstacle) => !obstacle.isViaKeepout,
+          ),
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
@@ -735,7 +750,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: newHdRoutes,
-            obstacles: cms.srj.obstacles,
+            obstacles: cms.srj.obstacles.filter(
+              (obstacle) => !obstacle.isViaKeepout,
+            ),
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -771,7 +788,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             hdRoutes: editableHdRoutes,
-            obstacles: cms.srj.obstacles,
+            obstacles: cms.srj.obstacles.filter(
+              (obstacle) => !obstacle.isViaKeepout,
+            ),
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
@@ -795,7 +814,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
-        obstacles: cms.srj.obstacles,
+        obstacles: cms.srj.obstacles.filter(
+          (obstacle) => !obstacle.isViaKeepout,
+        ),
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
@@ -1130,6 +1151,48 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return [this.srj, this.opts] as const
   }
 
+  unroutedConnections: UnroutedConnectionIssue[] = []
+  private violatingTraceIds = new Set<string>()
+  private violatingConnectionNames = new Set<string>()
+
+  private getRejectClearanceViolationsMode(): RejectClearanceViolationsMode {
+    return (
+      this.opts.rejectClearanceViolations ??
+      this.originalSrj.rejectClearanceViolations ??
+      false
+    )
+  }
+
+  private computeFinalUnroutedConnections(): void {
+    if (!this.powerTraceExpansionSolver || !this.srjWithPointPairs) {
+      this.unroutedConnections = []
+      this.violatingTraceIds.clear()
+      this.violatingConnectionNames.clear()
+      return
+    }
+    const rawRoutedTraces = [
+      ...this.getPowerTraceExpansionFixedTraces().filter(
+        (trace) => trace.__replaces_pcb_trace_id !== undefined,
+      ),
+      ...this.powerTraceExpansionSolver.getOutput(),
+    ]
+    const { unroutedConnections, violatingTraceIds, violatingConnectionNames } =
+      collectUnroutedConnectionIssues({
+        originalSrj: this.originalSrj,
+        srjWithPointPairs: this.srjWithPointPairs,
+        routedTraces: rawRoutedTraces,
+        newConnections: this.netToPointPairsSolver?.newConnections,
+        connMap: this.connMap,
+      })
+    this.unroutedConnections = unroutedConnections
+    this.violatingTraceIds = violatingTraceIds
+    this.violatingConnectionNames = violatingConnectionNames
+  }
+
+  getUnroutedConnections(): UnroutedConnectionIssue[] {
+    return structuredClone(this.unroutedConnections)
+  }
+
   currentPipelineStepIndex = 0
 
   computeProgress(): number {
@@ -1143,6 +1206,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      this.computeFinalUnroutedConnections()
+      const rejectMode = this.getRejectClearanceViolationsMode()
+      if (rejectMode === "error" && this.unroutedConnections.length > 0) {
+        const summary = this.unroutedConnections
+          .map(
+            (issue) =>
+              `${issue.connectionName} at (${issue.location.x.toFixed(3)}mm, ${issue.location.y.toFixed(3)}mm)`,
+          )
+          .join(", ")
+        this.error = `Unable to route connection(s) within clearance: ${summary}`
+        this.failed = true
+        this.solved = false
+        return
+      }
       this.solved = true
       return
     }
@@ -1620,6 +1697,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ).fixedTraces
   }
 
+  private shouldOmitViolatingTrace(
+    trace: SimplifiedPcbTraces[number],
+  ): boolean {
+    const rejectMode = this.getRejectClearanceViolationsMode()
+    if (rejectMode !== true && rejectMode !== "unroute") {
+      return false
+    }
+    return (
+      this.violatingTraceIds.has(trace.pcb_trace_id) ||
+      this.violatingConnectionNames.has(trace.connection_name)
+    )
+  }
+
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
@@ -1634,7 +1724,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    ].filter((trace) => !this.shouldOmitViolatingTrace(trace))
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1649,10 +1739,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    ].filter((trace) => !this.shouldOmitViolatingTrace(trace))
     return {
       ...this.originalSrj,
       traces,
+      ...(this.unroutedConnections.length > 0
+        ? { unroutedConnections: this.getUnroutedConnections() }
+        : {}),
     }
   }
 }
