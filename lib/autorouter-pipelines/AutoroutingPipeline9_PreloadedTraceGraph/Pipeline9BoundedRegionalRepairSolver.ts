@@ -474,9 +474,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     context.attemptedRegions.push({ bounds: region.mutableBounds, size })
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
-    const dirtyTraceIds = new Set(
-      targetErrors.flatMap(getDrcErrorTraceIds),
-    )
+    const dirtyTraceIds = new Set(targetErrors.flatMap(getDrcErrorTraceIds))
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(

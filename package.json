@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.990",
+  "version": "0.0.992",
   "type": "module",
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
-    "@tscircuit/checks": "^0.0.255",
+    "@tscircuit/checks": "^0.0.259",
     "@tscircuit/circuit-json-util": "^0.0.114",
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
@@ -56,7 +56,7 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#01ce27085607c0ee22573a39cce232d73580b7c0",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#215284c506fe586399e65d05077eba0dd9b00112",
+    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#d3a8b095035f4e7d03cdb19f2fdb7a554c6c008a",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
     "@tscircuit/solver-utils": "^0.0.16",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
