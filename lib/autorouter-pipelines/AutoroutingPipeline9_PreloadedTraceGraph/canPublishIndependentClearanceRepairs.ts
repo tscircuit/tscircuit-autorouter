@@ -18,6 +18,23 @@ export const canPublishIndependentClearanceRepairs = (
       return JSON.stringify([error.type, error.pcb_trace_id, error.pcb_pad_id])
     }
     if (
+      error.type === "pcb_pad_pad_clearance_error" &&
+      typeof error.pcb_trace_id === "string" &&
+      Array.isArray(error.pcb_via_ids) &&
+      error.pcb_via_ids.length === 1 &&
+      typeof error.pcb_via_ids[0] === "string" &&
+      Array.isArray(error.pcb_pad_ids) &&
+      error.pcb_pad_ids.length === 2 &&
+      error.pcb_pad_ids.every((id) => typeof id === "string") &&
+      error.pcb_pad_ids.includes(error.pcb_via_ids[0])
+    ) {
+      return JSON.stringify([
+        error.type,
+        error.pcb_trace_id,
+        [...error.pcb_pad_ids].sort(),
+      ])
+    }
+    if (
       error.type === "pcb_via_clearance_error" &&
       Array.isArray(error.pcb_via_ids)
     ) {
