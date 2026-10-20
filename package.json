@@ -57,7 +57,7 @@
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#d3a8b095035f4e7d03cdb19f2fdb7a554c6c008a",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/7f2928d56b0c87ed8b0e042a761bf5ef24de4952",
     "@tscircuit/solver-utils": "^0.0.16",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
     "@types/bun": "^1.2.23",
