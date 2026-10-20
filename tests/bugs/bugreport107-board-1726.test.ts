@@ -26,13 +26,6 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    stats.postExactReferenceDrcIssueCount,
-  )
-  expect(errors.length).toBeLessThanOrEqual(
-    stats.boundedRegionalRepairPublishedDrcIssueCount,
-  )
-  expect(errors).toHaveLength(0)
   const declaredDrc = evaluateRelaxedDrc({
     ...drcInput,
     includeBoardClearance: true,
@@ -56,12 +49,20 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
           beforePowerTraces: solver.getNewTracesBeforePowerExpansion(),
           finalTraces: drcInput.routedTraces,
           errors: declaredDrc.errors,
+          stats,
         },
         null,
         2,
       ),
     )
   }
+  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
+    stats.postExactReferenceDrcIssueCount,
+  )
+  expect(errors.length).toBeLessThanOrEqual(
+    stats.boundedRegionalRepairPublishedDrcIssueCount,
+  )
+  expect(errors).toHaveLength(0)
   expect(
     declaredDrc.errors,
     JSON.stringify(declaredDrc.errors, null, 2),
