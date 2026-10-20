@@ -20,8 +20,15 @@ On main at `f0d84e20b6fb0c21e78d35651c75d67a72f39507`, with checks 0.0.255:
 
 The snapshot draws the same physical geometry for both checks. Its counts and
 measurements come from the evaluated results. The repro commit characterizes
-the current mismatch; the stacked fix must change the reference assertion to
-require both errors and map their vias back to the affected routes.
+the mismatch. The stacked fix requires both errors from the reference evaluator
+and verifies their locations and mapping to `escape_0` / `escape_1`.
+
+The fix integrates the existing checker, preserves explicit via identities for
+the existing repair normalizer, and passes the declared copper rules even when
+candidate evaluation omits the board element. A via-specific rule cannot weaken
+an explicitly declared general pad-copper rule. Trace and drill rules remain
+separate. Geometry is unchanged: this fix detects and attributes the violations;
+it does not implement the issue's separate unrouted-result or keep-out APIs.
 
 ```sh
 bun test tests/repro/issue3130-via-pad-clearance.test.ts --timeout 9999999

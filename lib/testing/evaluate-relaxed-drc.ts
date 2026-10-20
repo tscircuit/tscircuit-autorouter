@@ -84,11 +84,23 @@ export const evaluateRelaxedDrc = ({
     )
   }
 
+  // A via-specific copper rule must not weaken an explicitly declared
+  // general pad-copper rule. Preserve zero and leave unspecified rules to
+  // the reference checker, independently of the benchmark's drill clearance.
+  const viaToPadClearance =
+    inputSrj.minViaEdgeToPadEdgeClearance === undefined
+      ? inputSrj.minPadEdgeToPadEdgeClearance
+      : Math.max(
+          inputSrj.minViaEdgeToPadEdgeClearance,
+          inputSrj.minPadEdgeToPadEdgeClearance ?? 0,
+        )
+
   return {
     circuitJson,
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+      viaToPadClearance,
       ...drcOptions,
     }),
   }
