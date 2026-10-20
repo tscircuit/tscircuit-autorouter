@@ -31,7 +31,10 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
-type ViaPadDrcError = PcbPadPadClearanceError & { pcb_via_ids: string[] }
+type ViaPadDrcError = PcbPadPadClearanceError & {
+  pcb_via_ids: string[]
+  pcb_trace_id?: string
+}
 
 type DrcError =
   | PcbTraceError
@@ -122,12 +125,19 @@ export const getDrcErrors = (
   const viaPadErrors = checkViaPadClearance(circuitJson, {
     connMap,
     minClearance: options.viaToPadClearance,
-  }).map((error): ViaPadDrcError => ({
-    ...error,
-    // The checker identifies both copper participants as pcb_pad_ids. Keep
-    // explicit via identities so repair can resolve them to their owning traces.
-    pcb_via_ids: error.pcb_pad_ids.filter((id) => viasById.has(id)),
-  }))
+  }).map((error): ViaPadDrcError => {
+    const viaIds = error.pcb_pad_ids.filter((id) => viasById.has(id))
+    const via = viasById.get(viaIds[0])
+    // Preserve explicit ownership for evaluators that consume reference errors
+    // directly, as well as the Pipeline9 repair normalizer.
+    return {
+      ...error,
+      pcb_via_ids: viaIds,
+      ...(via && typeof via.pcb_trace_id === "string"
+        ? { pcb_trace_id: via.pcb_trace_id }
+        : {}),
+    }
+  })
   const viaErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,

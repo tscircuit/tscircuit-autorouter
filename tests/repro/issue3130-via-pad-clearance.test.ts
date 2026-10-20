@@ -42,6 +42,9 @@ test("issue 3130: reference DRC reports and maps both via-to-pad clearances", as
 
   expect(drc.errors).toHaveLength(2)
   expect(drc.locationAwareErrors).toHaveLength(2)
+  expect(drc.errors).toMatchObject(
+    traces.map((trace) => ({ pcb_trace_id: trace.pcb_trace_id })),
+  )
   const repairErrors = normalizePipeline9DrcErrorsForRepair({
     errors: drc.errors as unknown as Record<string, unknown>[],
     circuitJson: drc.circuitJson,
