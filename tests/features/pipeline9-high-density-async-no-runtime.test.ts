@@ -1,7 +1,10 @@
 import { expect, spyOn, test } from "bun:test"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { Pipeline9HighDensitySolver, type Pipeline9HighDensitySolverParams } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import {
+  Pipeline9HighDensitySolver,
+  type Pipeline9HighDensitySolverParams,
+} from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 
 const params: Pipeline9HighDensitySolverParams = {
   nodePortPoints: Array.from({ length: 9 }, (_, index) => ({
@@ -26,7 +29,10 @@ const params: Pipeline9HighDensitySolverParams = {
 }
 
 test("high density without a runtime avoids batches and preserves iteration limits", async (): Promise<void> => {
-  const dispatch = spyOn(SolverRuntime.prototype, "executeAsync").mockImplementation(() => {
+  const dispatch = spyOn(
+    SolverRuntime.prototype,
+    "executeAsync",
+  ).mockImplementation(() => {
     throw new Error("Unthreaded solving must not dispatch runtime batches")
   })
   try {
@@ -36,7 +42,13 @@ test("high density without a runtime avoids batches and preserves iteration limi
       baseline.step()
       solver.step()
       if (limit === Infinity) baseline.solve()
-      else while (!baseline.solved && !baseline.failed && baseline.iterations < limit) baseline.step()
+      else
+        while (
+          !baseline.solved &&
+          !baseline.failed &&
+          baseline.iterations < limit
+        )
+          baseline.step()
       const solve = spyOn(solver, "solve")
       await solver.solveAsync(undefined, limit)
       expect(solve).toHaveBeenCalledTimes(limit === Infinity ? 1 : 0)
@@ -46,7 +58,9 @@ test("high density without a runtime avoids batches and preserves iteration limi
       expect(solver.solved).toBe(baseline.solved)
       expect(solver.failed).toBe(baseline.failed)
       expect(solver.error).toBe(baseline.error)
-      expect(solver.unsolvedNodePortPoints).toEqual(baseline.unsolvedNodePortPoints)
+      expect(solver.unsolvedNodePortPoints).toEqual(
+        baseline.unsolvedNodePortPoints,
+      )
       solve.mockRestore()
     }
     expect(dispatch).not.toHaveBeenCalled()

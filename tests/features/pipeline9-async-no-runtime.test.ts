@@ -8,24 +8,35 @@ const input: SimpleRouteJson = {
   minTraceWidth: 0.1,
   obstacles: [],
   bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
-  connections: [{
-    name: "signal",
-    pointsToConnect: [
-      { x: -3, y: 0, layer: "top" },
-      { x: 3, y: 0, layer: "top" },
-    ],
-  }],
+  connections: [
+    {
+      name: "signal",
+      pointsToConnect: [
+        { x: -3, y: 0, layer: "top" },
+        { x: 3, y: 0, layer: "top" },
+      ],
+    },
+  ],
 }
 
 test("Pipeline9 without a runtime uses synchronous solving with exact resumed output", async (): Promise<void> => {
-  const baseline = new Pipeline9(structuredClone(input), { effort: 0.1, cacheProvider: null })
+  const baseline = new Pipeline9(structuredClone(input), {
+    effort: 0.1,
+    cacheProvider: null,
+  })
   baseline.solve()
-  const dispatch = spyOn(SolverRuntime.prototype, "executeAsync").mockImplementation(() => {
+  const dispatch = spyOn(
+    SolverRuntime.prototype,
+    "executeAsync",
+  ).mockImplementation(() => {
     throw new Error("Unthreaded solving must not dispatch runtime batches")
   })
   try {
     for (const resume of [false, true]) {
-      const solver = new Pipeline9(structuredClone(input), { effort: 0.1, cacheProvider: null })
+      const solver = new Pipeline9(structuredClone(input), {
+        effort: 0.1,
+        cacheProvider: null,
+      })
       if (resume) {
         solver.solveUntilPhase("highDensityRouteSolver")
         solver.step()
@@ -36,9 +47,13 @@ test("Pipeline9 without a runtime uses synchronous solving with exact resumed ou
       expect(solve).toHaveBeenCalledTimes(1)
       expect(solver.solved).toBe(true)
       expect(solver.failed).toBe(false)
-      expect(JSON.stringify(solver.getOutputSimpleRouteJson())).toBe(JSON.stringify(baseline.getOutputSimpleRouteJson()))
+      expect(JSON.stringify(solver.getOutputSimpleRouteJson())).toBe(
+        JSON.stringify(baseline.getOutputSimpleRouteJson()),
+      )
       expect(solver.iterations).toBe(baseline.iterations)
-      expect(solver.highDensityRouteSolver!.stats).toEqual(baseline.highDensityRouteSolver!.stats)
+      expect(solver.highDensityRouteSolver!.stats).toEqual(
+        baseline.highDensityRouteSolver!.stats,
+      )
       solve.mockRestore()
     }
     expect(dispatch).not.toHaveBeenCalled()
