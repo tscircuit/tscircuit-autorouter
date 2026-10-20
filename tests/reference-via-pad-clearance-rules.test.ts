@@ -12,7 +12,11 @@ test("reference via-pad DRC honors copper rules independently of trace and drill
     minimum?: number
     errorCount: number
   }> = [
-    { rules: { minPadEdgeToPadEdgeClearance: 0.2 }, minimum: 0.2, errorCount: 1 },
+    {
+      rules: { minPadEdgeToPadEdgeClearance: 0.2 },
+      minimum: 0.2,
+      errorCount: 1,
+    },
     {
       rules: {
         minPadEdgeToPadEdgeClearance: undefined,

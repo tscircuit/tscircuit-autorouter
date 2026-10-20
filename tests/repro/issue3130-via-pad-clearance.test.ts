@@ -60,7 +60,10 @@ test("issue 3130: reference DRC reports and maps both via-to-pad clearances", as
     ).toMatchObject({ source_trace_id: input.connections[index]!.name })
   }
 
-  const graphics: GraphicsObject = convertSrjToGraphicsObject({ ...input, traces })
+  const graphics: GraphicsObject = convertSrjToGraphicsObject({
+    ...input,
+    traces,
+  })
   graphics.points = []
   const measurements = viaPadErrors.map((error, index) => ({
     x: 1.2,
@@ -94,7 +97,9 @@ test("issue 3130: reference DRC reports and maps both via-to-pad clearances", as
               ...viaPadErrors.map((error): Circle => {
                 const center = error.center
                 if (center?.x === undefined || center.y === undefined) {
-                  throw new Error("Via-pad violations must retain their location")
+                  throw new Error(
+                    "Via-pad violations must retain their location",
+                  )
                 }
                 return {
                   center: { x: center.x, y: center.y },
