@@ -26,12 +26,8 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    stats.postExactReferenceDrcIssueCount,
-  )
-  expect(errors.length).toBeLessThanOrEqual(
-    stats.boundedRegionalRepairPublishedDrcIssueCount,
-  )
+  // Initial bounded repair can finish before an exact-stage count exists.
+  expect(errors.length).toBeLessThan(stats.initialJointDrcIssueCount)
   expect(errors).toHaveLength(0)
   const declaredDrc = evaluateRelaxedDrc({
     ...drcInput,
