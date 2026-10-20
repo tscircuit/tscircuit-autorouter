@@ -9,6 +9,7 @@ import {
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import { isViaPadDrcError } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
@@ -375,7 +376,15 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const centeredErrors = Array.isArray(context.reference)
       ? context.reference
       : (context.reference.errorsWithCenters ?? context.reference.errors)
-    const centers = centeredErrors
+    // Match the portfolio's repair order. Via-pad centers can shift a trace's
+    // repair region into the fixed collar before its crossing is resolved.
+    // Candidate acceptance and publication still validate every error type.
+    const nonViaPadErrors = centeredErrors.filter(
+      (error) => !isViaPadDrcError(error),
+    )
+    const targetErrors =
+      nonViaPadErrors.length > 0 ? nonViaPadErrors : centeredErrors
+    const centers = targetErrors
       .map((error) => {
         // Crop around the physical pad when its display marker is far away.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
@@ -466,7 +475,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.result.attemptedRegionCount++
     if (region.routes.length === 0) return
     const dirtyTraceIds = new Set(
-      context.currentErrors.flatMap(getDrcErrorTraceIds),
+      targetErrors.flatMap(getDrcErrorTraceIds),
     )
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
@@ -504,7 +513,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
           : undefined,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
-      viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
+      viaClearance:
+        context.srj.minPadEdgeToPadEdgeClearance ??
+        RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
     })
     this.state = {

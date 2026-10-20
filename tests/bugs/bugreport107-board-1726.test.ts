@@ -56,8 +56,11 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
       ),
     )
   }
+  const repairInputDrcIssueCount = stats.initialBoundedRegionalRepairAccepted
+    ? stats.initialJointDrcIssueCount
+    : stats.postExactReferenceDrcIssueCount
   expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    stats.postExactReferenceDrcIssueCount,
+    repairInputDrcIssueCount,
   )
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
