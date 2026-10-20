@@ -11,10 +11,8 @@ test("dataset18 sample01 matches exactly with four native Bun workers", async ()
       process.execPath,
       [
         "--preserve-symlinks",
-        new URL(
-          "../fixtures/pipeline9Sample01ThreadParity.ts",
-          import.meta.url,
-        ).pathname,
+        new URL("../fixtures/pipeline9Sample01ThreadParity.ts", import.meta.url)
+          .pathname,
         directory,
       ],
       {
