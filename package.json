@@ -57,7 +57,7 @@
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#d3a8b095035f4e7d03cdb19f2fdb7a554c6c008a",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/7d4361ee6c6fecde98f07a32bc12faf3015f5a14",
     "@tscircuit/solver-utils": "^0.0.16",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
     "@types/bun": "^1.2.23",
@@ -93,7 +93,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#e5e1d34f6df3f9b364dc420b17ec5c97cd487fa0",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#c5fb228d8994e05e172d1d07d1d4a9327d9e9c7a",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -107,7 +107,7 @@
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/79c9b022a678b1f0289059962bf49f253310a5dc",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e3cc617a86329e7a9371d156b9036cfaa6b2c082"
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
