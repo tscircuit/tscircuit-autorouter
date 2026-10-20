@@ -1,7 +1,4 @@
-import {
-  SolverRuntime,
-  type SolverRuntimeExecutor,
-} from "@tscircuit/solver-utils"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
   defaultB01Params,
@@ -469,11 +466,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.asyncRunning)
       throw new Error("High-density solveAsync is already running")
     if (this.solved || this.failed || this.iterations >= stopAtIteration) return
-    const inlineRuntime =
-      runtime === undefined ? new SolverRuntime() : undefined
-    const executor = runtime ?? inlineRuntime!
     const startTime = performance.now()
     try {
+      if (runtime === undefined) {
+        if (stopAtIteration === Infinity) this.solve()
+        else this.solveUntilIteration(stopAtIteration)
+        return
+      }
       if (this.fixedHdRoutes.length > 0) {
         this.solveUntilIteration(stopAtIteration)
         return
@@ -493,7 +492,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
         pending.push(
-          executor
+          runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
               nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
@@ -546,7 +545,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     } finally {
       this.asyncRunning = false
       this.timeToSolve = performance.now() - startTime
-      await inlineRuntime?.dispose()
     }
   }
 

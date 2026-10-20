@@ -28,9 +28,11 @@ only its owner disposes it. Threaded Bun execution requires Bun 1.4.2+.
 ## Execution and parity
 
 - `.step()` and `.solve()` retain their synchronous implementation.
-- `.solveAsync()` without a supplied runtime uses an owned inline runtime,
-  including in browsers and eval's existing worker. The default package entry
-  imports no Node worker adapter or embedded worker payload.
+- `.solveAsync()` without a supplied runtime calls `.solve()` directly, including
+  in browsers and eval's existing worker. This avoids batch creation and runtime
+  input/output copying when no pool is requested. The high-density phase retains
+  bounded synchronous stepping when an explicit iteration limit is supplied.
+  The default package entry imports no Node worker adapter or embedded worker payload.
 - Independent nodes run through the registered `Pipeline9HighDensityBatchSolver`,
   four nodes per task. Its explicit static `solverName` supplies the registration
   key. Connectivity data crosses as a net map and is reconstructed in each task;

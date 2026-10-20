@@ -1,7 +1,4 @@
-import {
-  SolverRuntime,
-  type SolverRuntimeExecutor,
-} from "@tscircuit/solver-utils"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -1141,19 +1138,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
-    const inlineRuntime =
-      runtime === undefined ? new SolverRuntime() : undefined
-    const executor = runtime ?? inlineRuntime!
     const startTime = performance.now()
     let lastYield = startTime
     this.asyncRunning = true
     try {
+      if (runtime === undefined) {
+        this.solve()
+        return
+      }
       while (!this.solved && !this.failed) {
         if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
           await phase.solveAsync(
-            executor,
+            runtime,
             previousIterations +
               Math.max(0, this.MAX_ITERATIONS - this.iterations),
           )
@@ -1179,7 +1177,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     } finally {
       this.asyncRunning = false
       this.timeToSolve = performance.now() - startTime
-      await inlineRuntime?.dispose()
     }
   }
 
