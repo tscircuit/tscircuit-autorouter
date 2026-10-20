@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json" with {
@@ -25,6 +26,12 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  })
+  expect(errors, JSON.stringify(errors, null, 2)).toEqual([])
   const expectedPairs = solver
     .srjWithPointPairs!.connections.map((connection) =>
       connection.pointsToConnect.map((point) => point.pcb_port_id!).sort(),

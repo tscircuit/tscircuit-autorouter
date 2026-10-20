@@ -79,7 +79,7 @@ test("regional repair publishes bounded improvements without hiding via-pad resi
   const remainingErrors = Array.isArray(validation)
     ? validation
     : validation.errors
-  expect(remainingErrors).toHaveLength(result.publishedDrcIssueCount)
+  expect(result.publishedDrcIssueCount).toBe(remainingErrors.length)
   expect(
     remainingErrors.every(
       (error) => error.type === "pcb_pad_pad_clearance_error",
