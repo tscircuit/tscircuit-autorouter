@@ -41,7 +41,7 @@ test("entrypoints preserve per-sample thread budgets", (): void => {
       new URL("../scripts/benchmark/index.ts", import.meta.url),
       "utf8",
     )
-    expect(controller).toContain("runtime.effectiveThreadsPerSample = 1")
+    expect(controller).toContain('await import("../build-solver-workers")')
     expect(controller).toContain("threads: options.threads")
   } finally {
     rmSync(directory, { recursive: true, force: true })
