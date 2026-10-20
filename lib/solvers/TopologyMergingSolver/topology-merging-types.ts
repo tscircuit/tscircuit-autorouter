@@ -13,6 +13,7 @@ export interface TopologyMergingNodeGroup {
 export interface TopologyMergingSolverParams {
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  minViaPadDiameter?: number
 }
 
 export type PreparedTopologyMergingNode = {
@@ -23,6 +24,7 @@ export type PreparedTopologyMergingNode = {
 }
 
 export type TopologyMergingMode =
+  | "free-layer-union"
   | "passthrough"
   | "merged"
   | "target-passthrough"

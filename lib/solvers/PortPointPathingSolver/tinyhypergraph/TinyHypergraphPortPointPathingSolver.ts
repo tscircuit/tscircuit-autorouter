@@ -277,7 +277,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(32_000_000 * effortScale),
   }
 }
 

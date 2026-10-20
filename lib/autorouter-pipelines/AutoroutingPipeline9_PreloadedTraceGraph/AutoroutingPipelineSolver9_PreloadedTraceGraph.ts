@@ -399,6 +399,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            minViaPadDiameter: cms.viaDiameter,
             nodeGroups: [
               {
                 groupId: "global",
@@ -1080,7 +1081,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   ) {
     super()
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(srj)
+      createSrjWithBoardValidObstacleLayers(
+        srj.minTraceToHoleEdgeClearance === undefined &&
+          srj.obstacles.some((obstacle) => obstacle.isNonPlatedHole)
+          ? { ...srj, minTraceToHoleEdgeClearance: 0.2 }
+          : srj,
+      )
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts

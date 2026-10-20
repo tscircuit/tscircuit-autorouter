@@ -53,6 +53,17 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     start: Point3
     end: Point3
   }) {
+    // A closest endpoint can still be far outside terminal stitch range.
+    // Reject that candidate before enforcing the single-path terminal IDs.
+    if ([params.start, params.end].some((terminal) =>
+      !params.hdRoutes.some((route) =>
+        [route.route[0]!, route.route.at(-1)!].some((point) =>
+          point.z === terminal.z &&
+          distance(point, terminal) <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+        ),
+      ),
+    )) return false
+
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
