@@ -42,7 +42,10 @@ test("issue 3130: reference DRC misses two via-to-pad copper clearances", async 
   // violations from the autorouter reference evaluator as well.
   expect(drc.errors).toHaveLength(0)
 
-  const graphics: GraphicsObject = convertSrjToGraphicsObject({ ...input, traces })
+  const graphics: GraphicsObject = convertSrjToGraphicsObject({
+    ...input,
+    traces,
+  })
   graphics.points = []
   const measurements = viaPadErrors.map((error, index) => ({
     x: 1.2,
@@ -76,7 +79,9 @@ test("issue 3130: reference DRC misses two via-to-pad copper clearances", async 
               ...viaPadErrors.map((error): Circle => {
                 const center = error.center
                 if (center?.x === undefined || center.y === undefined) {
-                  throw new Error("Via-pad violations must retain their location")
+                  throw new Error(
+                    "Via-pad violations must retain their location",
+                  )
                 }
                 return {
                   center: { x: center.x, y: center.y },
