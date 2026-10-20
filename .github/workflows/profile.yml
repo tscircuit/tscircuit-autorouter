@@ -1,4 +1,4 @@
-name: Pipeline 7 Profile Comparison
+name: Solver CPU Diagnostics
 
 on:
   workflow_dispatch:
@@ -8,220 +8,96 @@ on:
         required: true
         type: string
       ref:
-        description: PR head ref
+        description: Exact autorouter revision
         required: true
         type: string
       pr_number:
-        description: Pull request number where results are posted
+        description: Related PR for metadata only
         required: true
         type: string
       profile_args_json:
-        description: JSON argument array forwarded from an authorized PR comment
-        required: false
+        description: JSON array of sample numbers
+        required: true
         type: string
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   profile:
-    name: Compare Pipeline 7 profiles
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 180
-    env:
-      PROFILE_SOLVERS_HEARTBEAT_INTERVAL_MS: "30000"
-
+    timeout-minutes: 40
     steps:
-      - name: Resolve comparison refs
-        id: refs
-        uses: actions/github-script@v7
-        env:
-          PR_NUMBER: ${{ inputs.pr_number }}
-          DATASET_NAME: ${{ inputs.dataset_name }}
+      - uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-          script: |
-            const prNumber = Number.parseInt(process.env.PR_NUMBER || '', 10)
-            if (!Number.isInteger(prNumber) || prNumber < 1) {
-              throw new Error('/profile requires a valid pr_number')
-            }
-
-            const dataset = (process.env.DATASET_NAME || '').trim() || 'dataset01'
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            })
-            const base = await github.rest.repos.getBranch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: pr.data.base.ref,
-            })
-            const mainSha = base.data.commit.sha
-            const prSha = pr.data.head.sha
-            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
-            const statusComment = await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: [
-                '## Pipeline 7 Profile Comparison',
-                '',
-                `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
-                '',
-                'Both revisions will run sequentially in one Blacksmith job.',
-                '',
-                `Workflow: [View run](${runUrl})`,
-              ].join('\n'),
-            })
-
-            core.setOutput('dataset', dataset)
-            core.setOutput('main_sha', mainSha)
-            core.setOutput('pr_sha', prSha)
-            core.setOutput('status_comment_id', String(statusComment.data.id))
-
-      - name: Checkout profile controller
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          path: profile-controller
+          ref: ${{ inputs.ref }}
           persist-credentials: false
-
-      - name: Checkout current main
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.refs.outputs.main_sha }}
-          path: profile-main
-          persist-credentials: false
-
-      - name: Checkout PR head
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.refs.outputs.pr_sha }}
-          path: profile-pr
-          persist-credentials: false
-
-      - name: Use one profiling controller for both revisions
-        run: |
-          cp profile-controller/scripts/profile-solvers.ts profile-main/scripts/profile-solvers.ts
-          cp profile-controller/scripts/profile-solvers.ts profile-pr/scripts/profile-solvers.ts
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-
-      - name: Install main dependencies
-        working-directory: profile-main
-        run: bun install
-
-      - name: Install PR dependencies
-        working-directory: profile-pr
-        run: bun install
-
-      - name: Prepare comparison artifacts
-        run: mkdir -p profile-results/main profile-results/pr
-
-      - name: Profile current main
-        working-directory: profile-main
+      - run: bun install
+      - name: Profile real pipeline solves
         env:
-          PROFILE_ARGS_JSON: ${{ inputs.profile_args_json }}
-          PROFILE_DATASET: ${{ steps.refs.outputs.dataset }}
+          PROFILE_DATASET: ${{ inputs.dataset_name }}
+          PROFILE_SAMPLES: ${{ inputs.profile_args_json }}
+          PROFILE_REF: ${{ inputs.ref }}
+          PROFILE_PR: ${{ inputs.pr_number }}
         run: |
-          node <<'NODE'
-          const { spawnSync } = require('node:child_process')
-          const args = JSON.parse(process.env.PROFILE_ARGS_JSON || '[]')
-          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
-            throw new Error('profile_args_json must be a JSON array of strings')
+          mkdir -p cpu-profiles
+          cat > cpu-profile.ts <<'TS'
+          import { createHash } from "node:crypto"
+          import { AutoroutingPipelineSolver } from "./lib"
+          import { loadScenarios, type DatasetName } from "./scripts/benchmark/scenarios"
+          const dataset = process.argv[2] as DatasetName
+          const sample = Number(process.argv[3])
+          const scenarios = await loadScenarios(dataset, { effort: 1 })
+          const [name, input] = scenarios[sample - 1]!
+          const solver = new AutoroutingPipelineSolver(structuredClone(input))
+          console.log(JSON.stringify({ event: "start", dataset, sample, name }))
+          let lastPhase = ""
+          let lastLog = performance.now()
+          while (!solver.solved && !solver.failed) {
+            solver.step()
+            const phase = solver.getCurrentPhase()
+            const now = performance.now()
+            if (phase !== lastPhase || now - lastLog > 30_000) {
+              console.log(JSON.stringify({ event: "progress", sample, phase, iterations: solver.iterations }))
+              lastPhase = phase
+              lastLog = now
+            }
           }
-          if (!args.includes('--dataset')) args.push('--dataset', process.env.PROFILE_DATASET)
-          if (!args.includes('--concurrency')) args.push('--concurrency', '1')
-          if (!args.includes('--sample-timeout')) args.push('--sample-timeout', '20m')
-          const result = spawnSync('bun', ['scripts/profile-solvers.ts', ...args], {
-            stdio: 'inherit',
-          })
-          if (result.error) throw result.error
-          process.exit(result.status ?? 1)
-          NODE
-          cp profile-solvers.json ../profile-results/main/profile-solvers.json
-
-      - name: Profile PR head
-        working-directory: profile-pr
-        env:
-          PROFILE_ARGS_JSON: ${{ inputs.profile_args_json }}
-          PROFILE_DATASET: ${{ steps.refs.outputs.dataset }}
-        run: |
-          node <<'NODE'
-          const { spawnSync } = require('node:child_process')
-          const args = JSON.parse(process.env.PROFILE_ARGS_JSON || '[]')
-          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
-            throw new Error('profile_args_json must be a JSON array of strings')
+          if (!solver.solved || solver.failed) throw new Error(solver.error ?? "Unsolved")
+          const traces = solver.getOutputSimplifiedPcbTraces()
+          const output = {
+            dataset, sample, name, ref: process.env.PROFILE_REF,
+            hash: createHash("sha256").update(JSON.stringify(traces)).digest("hex"),
+            stageTimeMs: solver.timeSpentOnPhase,
+            highDensityStats: solver.highDensityRouteSolver?.stats,
           }
-          if (!args.includes('--dataset')) args.push('--dataset', process.env.PROFILE_DATASET)
-          if (!args.includes('--concurrency')) args.push('--concurrency', '1')
-          if (!args.includes('--sample-timeout')) args.push('--sample-timeout', '20m')
-          const result = spawnSync('bun', ['scripts/profile-solvers.ts', ...args], {
-            stdio: 'inherit',
-          })
-          if (result.error) throw result.error
-          process.exit(result.status ?? 1)
+          await Bun.write(`cpu-profiles/${dataset}-${sample}.json`, JSON.stringify(output, null, 2))
+          console.log(JSON.stringify({ event: "complete", sample, hash: output.hash }))
+          TS
+          node <<'NODE'
+          const { spawn } = require('node:child_process')
+          const fs = require('node:fs')
+          const samples = JSON.parse(process.env.PROFILE_SAMPLES)
+          if (!Array.isArray(samples) || samples.length > 3 || samples.some(s => !Number.isSafeInteger(Number(s)) || Number(s) < 1)) throw new Error('Provide at most three positive sample numbers')
+          Promise.all(samples.map(sample => new Promise((resolve, reject) => {
+            const label = `${process.env.PROFILE_DATASET}-${sample}`
+            const output = fs.createWriteStream(`cpu-profiles/${label}.log`)
+            const child = spawn('bun', ['--cpu-prof', '--cpu-prof-dir', 'cpu-profiles', '--cpu-prof-name', `${label}.cpuprofile`, 'cpu-profile.ts', process.env.PROFILE_DATASET, String(sample)], { stdio: ['ignore', 'pipe', 'pipe'] })
+            child.stdout.pipe(output, { end: false })
+            child.stderr.pipe(output, { end: false })
+            child.stdout.pipe(process.stdout)
+            child.stderr.pipe(process.stderr)
+            child.on('error', reject)
+            child.on('close', code => { output.end(); code === 0 ? resolve() : reject(new Error(`${label} exited ${code}`)) })
+          }))).catch(error => { console.error(error); process.exitCode = 1 })
           NODE
-          cp profile-solvers.json ../profile-results/pr/profile-solvers.json
-
-      - name: Render profile comparison
-        working-directory: profile-controller
-        env:
-          MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
-          PR_SHA: ${{ steps.refs.outputs.pr_sha }}
-          RUNNER_NAME: ${{ runner.name }}
-        run: |
-          bun scripts/profile/profile-comparison.ts \
-            --main-report ../profile-results/main/profile-solvers.json \
-            --pr-report ../profile-results/pr/profile-solvers.json \
-            --main-sha "$MAIN_SHA" \
-            --pr-sha "$PR_SHA" \
-            --repository "${{ github.repository }}" \
-            --runner-name "$RUNNER_NAME" \
-            --output ../profile-results/comment.md
-
-      - name: Upload profile comparison
+      - name: Upload CPU profiles
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pipeline7-profile-${{ steps.refs.outputs.dataset }}
-          path: profile-results
-          if-no-files-found: warn
-
-      - name: Post profile comparison comment
-        if: always() && steps.refs.outputs.status_comment_id != ''
-        uses: actions/github-script@v7
-        env:
-          STATUS_COMMENT_ID: ${{ steps.refs.outputs.status_comment_id }}
-          JOB_STATUS: ${{ job.status }}
-        with:
-          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-          script: |
-            const fs = require('node:fs')
-            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
-            const resultPath = 'profile-results/comment.md'
-            const resultBody = fs.existsSync(resultPath)
-              ? fs.readFileSync(resultPath, 'utf8').trim()
-              : [
-                  '## Pipeline 7 Profile Comparison',
-                  '',
-                  `The paired profile ended with **${process.env.JOB_STATUS}** before both reports were produced.`,
-                ].join('\n')
-            const body = [
-              resultBody,
-              '',
-              `Workflow: [View run](${runUrl})`,
-              `Artifact: [Download raw reports](${runUrl})`,
-            ].join('\n')
-
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: Number(process.env.STATUS_COMMENT_ID),
-              body,
-            })
+          name: solver-cpu-profiles
+          path: cpu-profiles
+          if-no-files-found: error
