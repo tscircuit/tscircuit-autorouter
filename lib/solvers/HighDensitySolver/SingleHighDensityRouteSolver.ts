@@ -746,11 +746,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             this.debug_nodesTooCloseToObstacle.add(neighborKey)
           }
           this.exploredNodes.add(neighborKey)
+          this.freePlanarObstaclePoints.delete(neighborKey)
           continue
         }
 
         if (this.isNodeTooCloseToEdge(neighbor, false)) {
           this.exploredNodes.add(neighborKey)
+          this.freePlanarObstaclePoints.delete(neighborKey)
           continue
         }
 
@@ -761,6 +763,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
           this.exploredNodes.add(neighborKey)
+          this.freePlanarObstaclePoints.delete(neighborKey)
           continue
         }
 
@@ -888,10 +891,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     if (!currentNode || !currentNodeKey) {
       this.failed = true
+      this.freePlanarObstaclePoints.clear()
       this.error = "Ran out of candidate nodes to explore"
       return
     }
     this.exploredNodes.add(currentNodeKey)
+    // Explored grid keys are rejected before any future point-clearance query.
+    this.freePlanarObstaclePoints.delete(currentNodeKey)
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
         key: currentNodeKey,
@@ -932,6 +938,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     for (const neighbor of neighbors) {
       this.candidates.enqueue(neighbor)
     }
+    if (this.solved) this.freePlanarObstaclePoints.clear()
   }
 
   visualize(): GraphicsObject {
