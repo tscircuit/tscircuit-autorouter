@@ -18,7 +18,10 @@ test("route search stops expanding after accepting its checked goal connection",
       futureConnections: [
         {
           connectionName: "other",
-          points: [{ x: 1, y: 3, z: 0 }, { x: 3, y: 3, z: 0 }],
+          points: [
+            { x: 1, y: 3, z: 0 },
+            { x: 3, y: 3, z: 0 },
+          ],
         },
       ],
     })
