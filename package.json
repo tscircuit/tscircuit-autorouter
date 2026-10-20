@@ -56,7 +56,7 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#c7168409c1bdd7ab85ea027137ca4cc3481a45d2",
+    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#2e1edb4f684b8d46efb88bcc2cb3cbbae3170684",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
     "@tscircuit/solver-utils": "^0.0.16",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
