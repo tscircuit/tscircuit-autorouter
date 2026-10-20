@@ -16,6 +16,9 @@ import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import { selectIndependentClearanceRepairs } from "./selectIndependentClearanceRepairs"
 import { subdividePipeline9ClearanceSegments } from "./subdividePipeline9ClearanceSegments"
 
+// Finite relaxation sweeps can stop just below the requested via copper gap.
+const VIA_COPPER_PROJECTION_MARGIN = 1e-5
+
 export type Pipeline9ClearanceProjectionParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
@@ -105,6 +108,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         viaClearance:
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.viaClearance!) +
+          VIA_COPPER_PROJECTION_MARGIN +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
       })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
