@@ -1,4 +1,4 @@
-name: Dataset01 Benchmark Order Control
+name: SRJ28 Sample 37 Benchmark Order Control
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 90
     env:
       BASE_REF: 53df67cbdd0c04a1c2f6fb9cc3d37948e40045c7
-      CANDIDATE_REF: f2f2eafe83f6eb48a51a9ea5fd627f4e6c499235
+      CANDIDATE_REF: e21e5d254445f1fdfb19e2006aebb6025f90b037
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
       BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
       BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
@@ -28,7 +28,7 @@ jobs:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: f2f2eafe83f6eb48a51a9ea5fd627f4e6c499235
+          ref: e21e5d254445f1fdfb19e2006aebb6025f90b037
           path: candidate
           persist-credentials: false
       - name: Setup Bun
@@ -51,7 +51,7 @@ jobs:
           const { spawnSync } = require('node:child_process')
           const root = process.env.GITHUB_WORKSPACE
           const output = path.join(root, 'order-control-results')
-          const args = ['--pipeline', '9', '--dataset', 'dataset01', '--concurrency', '3', '--threads', '1', '--effort', '1', '--sample-timeout', '10m']
+          const args = ['--pipeline', '9', '--dataset', 'srj28', '--sample-numbers', '37', '--concurrency', '3', '--threads', '1', '--effort', '1', '--sample-timeout', '10m']
           const order = ['candidate1', 'base1', 'base2', 'candidate2']
           fs.mkdirSync(output, { recursive: true })
           const readCommand = (cmd, argv, cwd = root) => {
@@ -107,7 +107,7 @@ jobs:
             const reportPath = path.join(cwd, 'benchmark-result.json')
             if (fs.statSync(reportPath).mtimeMs < startedAtMs) throw new Error(`${label} did not produce a fresh report`)
             const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'))
-            if (report.datasetName !== 'dataset01' || report.scenarioCount !== 85) throw new Error(`${label} did not execute all 85 dataset01 scenarios`)
+            if (report.datasetName !== 'srj28' || report.scenarioCount !== 1 || report.tests.length !== 1 || report.tests[0].sampleNumber !== 37) throw new Error(`${label} did not execute exactly srj28 sample 37`)
             for (const filename of ['benchmark-result.json', 'benchmark-result.txt', 'benchmark-snapshots.html']) {
               fs.copyFileSync(path.join(cwd, filename), path.join(passOutput, filename))
             }
@@ -120,6 +120,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-order-control-dataset01
+          name: benchmark-order-control-srj28-sample37
           path: order-control-results
           if-no-files-found: error
