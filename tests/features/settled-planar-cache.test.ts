@@ -26,8 +26,9 @@ test("planar point cache only retains unexplored grid cells", (): void => {
         },
       ],
     }
-    const solver =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options)
+    const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      options,
+    )
     const reference =
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options)
     // Preserve the previous cache-retention policy without changing the search.
@@ -61,7 +62,10 @@ test("planar point cache only retains unexplored grid cells", (): void => {
         referencePeak,
         reference.freePlanarObstaclePoints.size,
       )
-      optimizedPeak = Math.max(optimizedPeak, solver.freePlanarObstaclePoints.size)
+      optimizedPeak = Math.max(
+        optimizedPeak,
+        solver.freePlanarObstaclePoints.size,
+      )
       for (const key of solver.freePlanarObstaclePoints.keys()) {
         expect(solver.exploredNodes.has(key)).toBeFalse()
       }
