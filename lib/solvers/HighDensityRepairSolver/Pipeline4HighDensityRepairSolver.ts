@@ -1,4 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import type {
@@ -17,6 +18,10 @@ import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getConnectedPadSides } from "./getConnectedPadSides"
+import {
+  Pipeline4HighDensityRepairSampleSolver,
+  type Pipeline4HighDensityRepairSampleOutput,
+} from "./Pipeline4HighDensityRepairSampleSolver"
 
 type RepairSampleEntry = {
   node: NodeWithPortPoints
@@ -219,6 +224,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   activeSampleIndex = 0
   override activeSubSolver: HighDensityRepairSolver | null = null
   latestVisualization: GraphicsObject = {}
+  private asyncRunning = false
 
   constructor(params: {
     nodeWithPortPoints: NodeWithPortPoints[]
@@ -394,6 +400,117 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     return "Pipeline4HighDensityRepairSolver"
   }
 
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning)
+      throw new Error("High-density repair solveAsync is already running")
+    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+    const startTime = performance.now()
+    try {
+      if (runtime === undefined) {
+        if (stopAtIteration === Infinity) this.solve()
+        else this.solveUntilIteration(stopAtIteration)
+        return
+      }
+      // Finish an existing serial prefix before dispatching independent samples.
+      while (
+        this.activeSubSolver &&
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      )
+        this.step()
+      if (this.solved || this.failed || this.iterations >= stopAtIteration)
+        return
+      this.asyncRunning = true
+      const parallelSampleCount = Math.max(0, Math.floor(
+        (Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations) / 2,
+      ))
+      const pending = this.sampleEntries.slice(
+        this.activeSampleIndex,
+        this.activeSampleIndex + parallelSampleCount,
+      ).map(
+        (entry) => runtime.executeAsync(Pipeline4HighDensityRepairSampleSolver, {
+          sample: entry.sample,
+          margin: this.repairMargin,
+        }).then(
+          (result) => ({ type: "result" as const, result }),
+          (error: unknown) => ({ type: "error" as const, error }),
+        ),
+      )
+      for (const promise of pending) {
+        // A serial sample uses one construction step and one repair step.
+        if (
+          this.iterations + 2 >
+          Math.min(this.MAX_ITERATIONS, stopAtIteration)
+        ) {
+          this.asyncRunning = false
+          this.solveUntilIteration(stopAtIteration)
+          return
+        }
+        const outcome = await promise
+        if (outcome.type === "error") throw outcome.error
+        this.consumeRepairSample(outcome.result)
+        this.iterations += 2
+      }
+      this.asyncRunning = false
+      this.solveUntilIteration(stopAtIteration)
+    } catch (error) {
+      this.failed = true
+      this.error = `High-density repair runtime error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - startTime
+    }
+  }
+
+  private solveUntilIteration(stopAtIteration: number): void {
+    while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      this.step()
+    }
+  }
+
+  private consumeRepairSample(
+    result: Pipeline4HighDensityRepairSampleOutput,
+  ): void {
+    const sampleEntry = this.sampleEntries[this.activeSampleIndex]
+    if (!sampleEntry) throw new Error("Node repair sample is missing")
+    const clearanceStats = {
+      nodeClearanceInitialConflictCount:
+        Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
+        Number(result.clearanceStats?.nodeClearanceInitialConflictCount ?? 0),
+      nodeClearanceFinalConflictCount:
+        Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
+        Number(result.clearanceStats?.nodeClearanceFinalConflictCount ?? 0),
+      nodeClearanceCandidateCount:
+        Number(this.stats.nodeClearanceCandidateCount ?? 0) +
+        Number(result.clearanceStats?.nodeClearanceCandidateCount ?? 0),
+    }
+    for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
+      const routeIndex = sampleEntry.routeIndexes[i]
+      const fallbackRoute = this.originalHdRoutes[routeIndex]
+      const repairedRoute = result.repairedRoutes[i]
+      this.repairedRoutesByIndex.set(
+        routeIndex,
+        repairedRoute
+          ? fromRepairRoute(repairedRoute, fallbackRoute)
+          : fallbackRoute,
+      )
+    }
+    this.activeSubSolver = null
+    this.activeSampleIndex += 1
+    this.stats = {
+      ...clearanceStats,
+      sampleCount: this.sampleEntries.length,
+      repairedNodeCount: this.activeSampleIndex,
+      repairedRouteCount: this.repairedRoutesByIndex.size,
+    }
+    if (this.activeSampleIndex >= this.sampleEntries.length) this.solved = true
+  }
+
   override getConstructorParams() {
     return [
       {
@@ -433,46 +550,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         return
       }
 
-      const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
-      const clearanceStats = {
-        nodeClearanceInitialConflictCount:
-          Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
-          Number(
-            this.activeSubSolver.stats.nodeClearanceInitialConflictCount ?? 0,
-          ),
-        nodeClearanceFinalConflictCount:
-          Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
-          Number(
-            this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
-          ),
-        nodeClearanceCandidateCount:
-          Number(this.stats.nodeClearanceCandidateCount ?? 0) +
-          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
-      }
-      for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
-        const routeIndex = sampleEntry.routeIndexes[i]
-        const fallbackRoute = this.originalHdRoutes[routeIndex]
-        const repairedRoute = repairedRoutes[i]
-        this.repairedRoutesByIndex.set(
-          routeIndex,
-          repairedRoute
-            ? fromRepairRoute(repairedRoute, fallbackRoute)
-            : fallbackRoute,
-        )
-      }
-
-      this.activeSubSolver = null
-      this.activeSampleIndex += 1
-      this.stats = {
-        ...clearanceStats,
-        sampleCount: this.sampleEntries.length,
-        repairedNodeCount: this.activeSampleIndex,
-        repairedRouteCount: this.repairedRoutesByIndex.size,
-      }
-
-      if (this.activeSampleIndex >= this.sampleEntries.length) {
-        this.solved = true
-      }
+      this.consumeRepairSample({
+        repairedRoutes: this.activeSubSolver.getOutput().repairedRoutes,
+        clearanceStats: {
+          nodeClearanceInitialConflictCount:
+            this.activeSubSolver.stats.nodeClearanceInitialConflictCount,
+          nodeClearanceFinalConflictCount:
+            this.activeSubSolver.stats.nodeClearanceFinalConflictCount,
+          nodeClearanceCandidateCount:
+            this.activeSubSolver.stats.nodeClearanceCandidateCount,
+        },
+      })
       return
     }
 

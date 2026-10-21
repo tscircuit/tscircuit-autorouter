@@ -1134,7 +1134,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   currentPipelineStepIndex = 0
   private asyncRunning = false
 
-  /** Orchestrate on the host so independent high-density batches can use its pool. */
+  /** Keep orchestration on the host while independent node work uses its pool. */
   async solveAsync(runtime?: SolverRuntimeExecutor): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Pipeline9 solveAsync is already running")
@@ -1147,7 +1147,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return
       }
       while (!this.solved && !this.failed) {
-        if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
+        if (
+          this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver
+        ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
           await phase.solveAsync(
