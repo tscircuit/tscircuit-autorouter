@@ -4,6 +4,13 @@ import { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/Sing
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("route search stops expanding after accepting its checked goal connection", (): void => {
+  const snapshots: Array<{
+    solver: string
+    iterations: number
+    neighborExpansions: number
+    expansionsAfterSuccess: number
+    route: NonNullable<SingleHighDensityRouteSolver["solvedPath"]>
+  }> = []
   for (const Solver of [
     SingleHighDensityRouteSolver,
     SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
@@ -27,7 +34,9 @@ test("route search stops expanding after accepting its checked goal connection",
     })
     const getNeighbors = solver.getNeighbors.bind(solver)
     let expansions = 0
+    let expansionsAfterSuccess = 0
     solver.getNeighbors = (node: Node): Node[] => {
+      if (solver.solved) expansionsAfterSuccess++
       expect(solver.solved).toBeFalse()
       expansions++
       return getNeighbors(node)
@@ -41,5 +50,15 @@ test("route search stops expanding after accepting its checked goal connection",
     expect(solver.solvedPath!.route[0]).toEqual(solver.A)
     expect(solver.solvedPath!.route.at(-1)).toEqual(solver.B)
     expect(solver.solvedPath!.vias).toEqual([])
+    snapshots.push({
+      solver: Solver.name,
+      iterations: solver.iterations,
+      neighborExpansions: expansions,
+      expansionsAfterSuccess,
+      route: solver.solvedPath!,
+    })
   }
+  expect(snapshots).toMatchSnapshot(
+    "accepted goals keep the complete route and produce no further neighbors",
+  )
 })
