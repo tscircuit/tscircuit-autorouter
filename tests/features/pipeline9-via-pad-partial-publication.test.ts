@@ -94,8 +94,6 @@ test("partial repair retains only identified non-worsening via-pad residue", ():
         remainingErrors: errors,
       }),
     ).toBe(regionalAllowed ?? allowed)
-    expect(canPublishIndependentClearanceRepairs(before, errors)).toBe(
-      allowed,
-    )
+    expect(canPublishIndependentClearanceRepairs(before, errors)).toBe(allowed)
   }
 })
