@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../../fixtures/bug-reports/bugreport109-book-reading-clip-lamp/bugreport109-book-reading-clip-lamp.srj.json" with {
@@ -39,11 +40,12 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
-  ).toMatchSvgSnapshot(snapshotPath)
+  const drcInput = {
+    inputSrj: input,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+  }
+  const { errors } = evaluateRelaxedDrc(drcInput)
+  expect(errors, JSON.stringify(errors, null, 2)).toHaveLength(0)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
 }, 900_000)
