@@ -16,8 +16,7 @@ test("Pipeline9 preserves via transitions while repairing SRJ18 sample 15", asyn
   expect(solver.solved).toBe(true)
   const routes = solver.globalDrcForceImproveSolver!.getOutput()
   const repairedRoute = routes.find(
-    (route) =>
-      route.connectionName === "source_trace_117__source_net_117_mst3",
+    (route) => route.connectionName === "source_trace_117__source_net_117_mst3",
   )
   expect(repairedRoute).toBeDefined()
   expect(repairedRoute!.vias).toHaveLength(2)
