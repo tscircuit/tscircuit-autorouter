@@ -1,4 +1,4 @@
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { createPcbPadElements } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
@@ -18,8 +18,9 @@ export const canPublishPartialFixedObstacleRepair = ({
   remainingErrors: Pipeline9DrcError[]
 }): boolean => {
   if (remainingErrors.length >= initialErrors.length) return false
+  if (remainingErrors.length === 0) return true
   const padIds = new Set(
-    convertToCircuitJson(originalSrj, []).flatMap((element) =>
+    createPcbPadElements(originalSrj).flatMap((element) =>
       element.type === "pcb_smtpad"
         ? [element.pcb_smtpad_id]
         : element.type === "pcb_plated_hole"
