@@ -1189,12 +1189,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    let referenceDrcCandidateCache:
-      | {
-          candidateKey: string
-          result: ReturnType<DrcEvaluator>
-        }
-      | undefined
+    // Projection can reject B and return to A. Retain both exact evaluations
+    // without keeping a portfolio's worth of full-board keys and errors.
+    const referenceDrcCandidateCache = new Map<
+      string,
+      ReturnType<DrcEvaluator>
+    >()
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1408,8 +1408,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
-        return referenceDrcCandidateCache.result
+      const cachedResult = referenceDrcCandidateCache.get(candidateKey)
+      if (cachedResult !== undefined) {
+        return cachedResult
       }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
@@ -1417,7 +1418,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      referenceDrcCandidateCache = { candidateKey, result }
+      if (referenceDrcCandidateCache.size >= 2) {
+        const oldestKey = referenceDrcCandidateCache.keys().next().value
+        if (oldestKey !== undefined) referenceDrcCandidateCache.delete(oldestKey)
+      }
+      referenceDrcCandidateCache.set(candidateKey, result)
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
