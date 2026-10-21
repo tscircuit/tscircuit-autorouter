@@ -4,6 +4,8 @@ import { gzipSync } from "node:zlib"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import type { BaseSolver } from "../../lib/solvers/BaseSolver"
+import { loadScenarioBySampleNumber } from "../benchmark/scenarios"
+import { getBenchmarkSolverOptions } from "../benchmark/benchmark-run-task"
 
 type DiagnosticSolver = BaseSolver & { getCurrentPhase?: () => string }
 type DiagnosticKind = "full06" | "full15" | "memory04" | "memory24"
@@ -16,8 +18,13 @@ const fullRun = kind === "full06" || kind === "full15"
 const samplePath = fullRun
   ? `node_modules/dataset-srj18/samples/sample${kind === "full06" ? "006" : "015"}.json`
   : `node_modules/@tscircuit/dataset-srj24/samples/sample${kind === "memory04" ? "004" : "024"}.json`
-const inputBytes = readFileSync(samplePath, "utf8")
-const input = JSON.parse(inputBytes)
+const rawInputBytes = readFileSync(samplePath, "utf8")
+const { scenario: input } = await loadScenarioBySampleNumber(
+  fullRun ? "srj18" : "srj24",
+  kind === "full06" ? 6 : kind === "full15" ? 15 : kind === "memory04" ? 4 : 24,
+  1,
+)
+const inputBytes = JSON.stringify(input)
 const hash = (value: unknown): string => {
   const serialized = JSON.stringify(value)
   const digest = createHash("sha256")
@@ -26,14 +33,16 @@ const hash = (value: unknown): string => {
   return result
 }
 const inputHash = createHash("sha256").update(inputBytes).digest("hex")
+const rawInputHash = createHash("sha256").update(rawInputBytes).digest("hex")
 const startupMemory = { ...process.memoryUsage(), maxRssKiB: process.resourceUsage().maxRSS }
 const started = performance.now()
-const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { effort: 1, cacheProvider: null })
+const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, getBenchmarkSolverOptions(input))
 const targetPhase = kind === "memory04" ? "highDensityRouteSolver" : "edgeSolver"
 const targetIterations = kind === "memory04" ? 800_000 : 100_000
 let previousPhase = ""
 let previousJointPhase = ""
 let captured = false
+let capturedGlobal = false
 let stopReason = "finished"
 const phases: unknown[] = []
 const jointPhases: unknown[] = []
@@ -44,6 +53,12 @@ while (!solver.solved && !solver.failed) {
     const event = { phase, iterations: solver.iterations, elapsedMs: performance.now() - started, memory: process.memoryUsage() }
     phases.push(event)
     console.log(JSON.stringify(event))
+  }
+  if (fullRun && phase === "globalDrcForceImproveSolver" && !capturedGlobal) {
+    const [params] = solver.pipelineDef[solver.currentPipelineStepIndex].getConstructorParams(solver) as any
+    const { connMap, ...serializableParams } = params
+    writeFileSync(`diagnostic-results/${label}-global-input.json.gz`, gzipSync(JSON.stringify(serializableParams)))
+    capturedGlobal = true
   }
   if (fullRun && phase === "pipeline9JointDrcRepairSolver") {
     if (!captured) {
@@ -90,7 +105,7 @@ if (solver.solved && !solver.failed) {
   outputHash = hash(traces)
   drcErrors = evaluateRelaxedDrc({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces }).errors
 }
-const result = { kind, label, inputHash, partialStateHash, solved: solver.solved, failed: solver.failed, error: solver.error, stopReason, elapsedMs, startupMemory, memory, outputHash, drcErrors, phases, jointPhases, activeChain, phaseTimes: solver.timeSpentOnPhase }
+const result = { kind, label, inputHash, rawInputHash, normalizedLikeBenchmark: true, partialStateHash, solved: solver.solved, failed: solver.failed, error: solver.error, stopReason, elapsedMs, startupMemory, memory, outputHash, drcErrors, phases, jointPhases, activeChain, phaseTimes: solver.timeSpentOnPhase }
 writeFileSync(`diagnostic-results/${label}-result.json`, JSON.stringify(result, null, 2))
 console.log(`DIAGNOSTIC_RESULT ${JSON.stringify(result)}`)
 if (!fullRun && (stopReason !== "matched-iterations" || solver.activeSubSolver?.iterations !== targetIterations)) {

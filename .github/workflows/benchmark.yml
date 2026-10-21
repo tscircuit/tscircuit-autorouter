@@ -1,10 +1,10 @@
-name: Repair03 final runtime diagnostics
+name: Repair03 normalized runtime diagnostics
 on:
   workflow_dispatch:
     inputs:
       cases:
-        description: JSON array of full06, full15, memory04, memory24
-        default: '["full06","full15","memory04","memory24"]'
+        description: JSON array of global6, full06, full15, memory04, memory24
+        default: '["global6","full06","full15"]'
         required: true
         type: string
 permissions:
@@ -41,16 +41,27 @@ jobs:
           CASE: ${{ matrix.case }}
         run: |
           set -euo pipefail
-          refs=(79c9b022a678b1f0289059962bf49f253310a5dc 963153b26f94d800c058f7e32098461dc2911329 963153b26f94d800c058f7e32098461dc2911329 79c9b022a678b1f0289059962bf49f253310a5dc)
-          labels=(production final final-repeat production-repeat)
+          refs=(79c9b022a678b1f0289059962bf49f253310a5dc 963153b26f94d800c058f7e32098461dc2911329 deccde00068c1a96563dd7ff153b4a57edd6acc3 deccde00068c1a96563dd7ff153b4a57edd6acc3 963153b26f94d800c058f7e32098461dc2911329 79c9b022a678b1f0289059962bf49f253310a5dc)
+          labels=(production final candidate candidate-repeat final-repeat production-repeat)
           for i in "${!refs[@]}"; do
             git -C .repair03-source fetch origin "${refs[$i]}"
             rm -rf node_modules/high-density-repair03/lib
             git -C .repair03-source archive "${refs[$i]}" lib | tar -x -C node_modules/high-density-repair03
             printf '%s %s\n' "${labels[$i]}" "${refs[$i]}" >> diagnostic-results/revisions.txt
-            bun scripts/repair03-diagnostics/run.ts "$CASE" "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
+            if [ "$CASE" = "global6" ]; then
+              bun scripts/repair03-diagnostics/run-force.ts "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
+            else
+              bun scripts/repair03-diagnostics/run.ts "$CASE" "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
+            fi
             sha256sum bun.lock >> diagnostic-results/lock-hashes.txt
           done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          results = {name: json.loads(Path(f"diagnostic-results/{name}-result.json").read_text()) for name in ("final", "candidate", "candidate-repeat", "final-repeat")}
+          assert len({result["inputHash"] for result in results.values()}) == 1, "Inputs differ"
+          assert len({result["outputHash"] for result in results.values()}) == 1, "Optimization changed routing output"
+          PY
       - name: Print shared lock and revision identities
         if: always()
         run: |
