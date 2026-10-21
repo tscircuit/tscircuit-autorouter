@@ -82,6 +82,48 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
 - Keep diffs to the requested fix. Do not add precautionary or adjacent
   refactors without asking first.
 - ONE TEST PER FILE
+- Pass helpers only the fields they read, e.g.
+  `opts: Pick<SimpleRouteJson, "layerCount" | "allowBlindAndBuriedVias">`
+  instead of the whole `srj`.
+- Give every non-obvious tuning constant a one-line comment with its unit and
+  why that value (`MAX_SEGMENT_LENGTH = 0.5 // mm, max length between bends`).
+- Don't use `Math.hypot` in new solver geometry. It has produced
+  cross-platform differences; compute `Math.sqrt(dx * dx + dy * dy)`.
+- Don't nudge thresholds with tiny epsilons, extra caches, or identity-tracking
+  layers to make one board pass. If you think one is needed, explain why in the
+  PR and ask first.
+
+## Write Like a Human
+
+Reviewers have to read everything you produce. Code and PR text that reads like
+a generated audit log gets rejected or ignored, even when the fix is right.
+
+- Code should look like the surrounding code. Short names, no stacked guards
+  for states that can't happen, no comments that restate the line below.
+- A PR description is: what was broken, what you changed, how you know it
+  works. Aim for under 15 lines plus one before/after image or table.
+- Don't paste validation inventories ("24 focused tests, 1,738 assertions"),
+  lists of every command you ran, or hedging like "no claim is made that...".
+  Say what passed and what still doesn't, plainly.
+- When you push follow-ups, rewrite the description to describe the PR as it
+  is now. Don't append "Follow-up investigation" sections.
+- Explain the motivation, especially when a change modifies preloaded or
+  existing routes. Reviewers asked "what's the motivation?" on #2924.
+
+## Proving a Change
+
+- Show a bug fix through the pipeline that had the bug. A utility-only test
+  isn't enough: "i'm not sure this fix does anything because a pipeline wasn't
+  used" (#3054). Add a bug report test that fails before the fix.
+- Performance claims need clear before/after numbers. Unclear gains get
+  changes requested (#3135).
+- Benchmarks: add memory next to runtime, as rows in the existing comparison
+  table, not a horizontal layout (#2866). Call out P50 memory increases
+  (#2927).
+- If a snapshot changes, compare DRC errors and via counts on the same input
+  and say if they got worse. Don't call a refreshed snapshot an improvement
+  without that.
+- Get CI green before asking for review (#2770).
 
 ## Architecture
 
@@ -90,7 +132,7 @@ The codebase follows a modular architecture with solvers handling different aspe
 ## Writing tests
 
 When writing visualization snapshot tests, read the `tscircuit-visualization`
-skill first. Do not set timeouts in test code; CI controls test timeouts.
+skill first. Do not set timeouts in test code (no `test("...", fn, 300_000)`); CI controls test timeouts.
 When running tests locally, pass a large timeout, such as `--timeout 9999999`.
 
 When asked to update snapshots, run
