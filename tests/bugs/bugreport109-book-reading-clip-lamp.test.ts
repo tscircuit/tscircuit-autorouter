@@ -47,5 +47,7 @@ test("bugreport109: Pipeline 9 routes the full reading lamp circuit", async (): 
   }
   const { errors } = evaluateRelaxedDrc(drcInput)
   expect(errors, JSON.stringify(errors, null, 2)).toHaveLength(0)
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 }, 900_000)
