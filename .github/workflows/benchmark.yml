@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       cases:
-        description: JSON array of full06, full15, memory04, memory24
+        description: JSON array of full06, full15, memory04, memory24, concurrent
         default: '["full06","full15","memory04","memory24"]'
         required: true
         type: string
@@ -48,7 +48,13 @@ jobs:
             rm -rf node_modules/high-density-repair03/lib
             git -C .repair03-source archive "${refs[$i]}" lib | tar -x -C node_modules/high-density-repair03
             printf '%s %s\n' "${labels[$i]}" "${refs[$i]}" >> diagnostic-results/revisions.txt
-            bun scripts/repair03-diagnostics/run.ts "$CASE" "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
+            if [ "$CASE" = concurrent ]; then
+              bash ./benchmark.sh --pipeline 9 --dataset srj18 --sample-numbers 6,14,15 --concurrency 3 --effort 1 --sample-timeout 360s | tee "diagnostic-results/${labels[$i]}.log"
+              cp benchmark-result.json "diagnostic-results/${labels[$i]}-benchmark-result.json"
+              bun scripts/repair03-diagnostics/print-concurrent-result.ts "${labels[$i]}"
+            else
+              bun scripts/repair03-diagnostics/run.ts "$CASE" "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
+            fi
             sha256sum bun.lock >> diagnostic-results/lock-hashes.txt
           done
       - name: Print shared lock and revision identities
