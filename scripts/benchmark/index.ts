@@ -1991,14 +1991,13 @@ const main = async () => {
     excludeAssignable,
     datasetName,
   } = options
-  if ((options.threads ?? 1) > 1) {
-    console.log(
-      "This revision uses serial Pipeline9; --threads reserves the CPU budget for comparison with parallel revisions.",
-    )
-  }
   let concurrency = options.concurrency
   if (options.threads !== undefined) {
     concurrency = getBenchmarkThreadConcurrency(concurrency, options.threads)
+  }
+  if ((options.threads ?? 1) > 1) {
+    // Build once before child processes start, using this revision's algorithms.
+    await import("../build-solver-workers")
   }
   const useLocalCluster =
     solverName === NETWORKED_PIPELINE9_SOLVER_NAME && !networkedRemote
@@ -2123,7 +2122,7 @@ const main = async () => {
     Math.min(concurrency, Math.max(...taskGroups.map((group) => group.length))),
   )
   runtime.threadsPerSample = options.threads ?? 1
-  runtime.effectiveThreadsPerSample = 1
+  runtime.effectiveThreadsPerSample = options.threads ?? 1
   runtime.cpuBudgetPerSample =
     (options.threads ?? 1) === 1 ? 1 : options.threads! + 1
   if (resourcePlan) {
@@ -2162,7 +2161,7 @@ const main = async () => {
   }
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} sample workers, ${options.threads ?? 1} routing threads budgeted per sample (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} sample workers, ${options.threads ?? 1} routing threads per sample (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName}, isolated per-sample memory measurement)`,
   )
   console.log(`[benchmark] runtime ${JSON.stringify(runtime)}`)
 
