@@ -100,20 +100,22 @@ const isPointInsideObstacle = (
     return false
   }
 
-  const rotation = obstacle.ccwRotationDegrees ?? 0
-  if (!Number.isFinite(rotation)) {
+  const ccwRotationDegrees = obstacle.ccwRotationDegrees ?? 0
+  if (!Number.isFinite(ccwRotationDegrees)) {
     throw new Error("Obstacle rotation must be finite")
   }
-  if (rotation === 0) {
+  if (ccwRotationDegrees === 0) {
     return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
   }
 
   // Obstacle dimensions describe its local frame, not an unrotated world AABB.
-  const radians = (rotation * Math.PI) / 180
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
   const dx = point.x - obstacle.center.x
   const dy = point.y - obstacle.center.y
-  const localX = dx * Math.cos(radians) + dy * Math.sin(radians)
-  const localY = -dx * Math.sin(radians) + dy * Math.cos(radians)
+  const localX =
+    dx * Math.cos(ccwRotationRadians) + dy * Math.sin(ccwRotationRadians)
+  const localY =
+    -dx * Math.sin(ccwRotationRadians) + dy * Math.cos(ccwRotationRadians)
   return (
     Math.abs(localX) <= obstacle.width / 2 &&
     Math.abs(localY) <= obstacle.height / 2

@@ -399,12 +399,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
-            // Keep established lower-layer and fixed-copper routing unchanged.
-            // Reconstruct the split full-stack domains for fresh 8+ layer boards.
-            minViaPadDiameter:
-              cms.srj.layerCount < 8 || cms.originalSrj.traces?.length
-                ? undefined
-                : cms.viaDiameter,
+            minViaPadDiameter: cms.hasUnroutedInnerLayerObstacles
+              ? cms.viaDiameter
+              : undefined,
             nodeGroups: [
               {
                 groupId: "global",
@@ -540,12 +537,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            initialRoutingMaxIterations:
+              cms.hasUnroutedInnerLayerObstacles && cms.effort >= 1
+                ? 32_000_000
+                : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
-              USE_INITIAL_ROUTING_CONTINUATION:
-                cms.srj.layerCount >= 8 && !cms.originalSrj.traces?.length,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -705,8 +704,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
-          strictTerminalLayerIdentity:
-            cms.srj.layerCount >= 8 && !cms.originalSrj.traces?.length,
+          strictTerminalLayerIdentity: cms.hasUnroutedInnerLayerObstacles,
         },
       ],
     ),
@@ -1129,6 +1127,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+  }
+
+  private get hasUnroutedInnerLayerObstacles(): boolean {
+    // Layer-specific inner copper splits the free space needed by through vias.
+    // Fixed traces still require the existing projection of their assignments.
+    return (
+      !this.originalSrj.traces?.length &&
+      this.originalSrj.obstacles.some(
+        (obstacle) =>
+          obstacle.layers.length > 0 &&
+          obstacle.layers.every(
+            (layer) => layer !== "top" && layer !== "bottom",
+          ),
+      )
+    )
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {

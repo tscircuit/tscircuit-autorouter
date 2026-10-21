@@ -10,6 +10,14 @@ test("only reconstructs free via domains when no preloaded copper needs projecti
     ...structuredClone(capturedInput),
     layerCount: 8,
   } as SimpleRouteJson
+  input.obstacles.push({
+    type: "rect",
+    center: { x: 8, y: 5 },
+    width: 0.2,
+    height: 0.2,
+    layers: ["inner1"],
+    connectedTo: [],
+  })
   expect(input.traces!.length).toBeGreaterThan(0)
   for (const includePreloadedCopper of [true, false]) {
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -38,8 +46,8 @@ test("only reconstructs free via domains when no preloaded copper needs projecti
     const [routingParams] = routingStage.getConstructorParams(solver) as [
       HgPortPointPathingSolverParams,
     ]
-    expect(routingParams.flags.USE_INITIAL_ROUTING_CONTINUATION).toBe(
-      !includePreloadedCopper,
+    expect(routingParams.initialRoutingMaxIterations).toBe(
+      includePreloadedCopper ? undefined : 32_000_000,
     )
   }
 })

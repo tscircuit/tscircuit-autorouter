@@ -4,6 +4,8 @@ import type { CapacityMeshNode } from "lib/types"
 export const TOPOLOGY_MERGING_EPSILON = 1e-5
 export const TOPOLOGY_PROVENANCE_EPSILON = TOPOLOGY_MERGING_EPSILON * 4
 
+export type TopologyMergingSourceKey = string
+
 export interface TopologyMergingNodeGroup {
   groupId: string
   nodes: CapacityMeshNode[]
@@ -17,14 +19,14 @@ export interface TopologyMergingSolverParams {
 }
 
 export type PreparedTopologyMergingNode = {
-  sourceKey: string
+  sourceKey: TopologyMergingSourceKey
   groupIndex: number
   node: CapacityMeshNode
   bounds: Bounds
 }
 
 export type TopologyMergingMode =
-  | "free-layer-union"
+  | "free_layer_union"
   | "passthrough"
   | "merged"
   | "target-passthrough"
@@ -33,14 +35,14 @@ export type TopologyMergingMode =
 export type TopologyMergingRegion = {
   bounds: Bounds
   availableZ: number[]
-  sourceKeys: string[]
+  sourceKeys: TopologyMergingSourceKey[]
   topologyMode: TopologyMergingMode
   topologySignature: string
 }
 
 export type TopologyMergingLayerTopology = {
   availableZ: number[]
-  sourceKeys: string[]
+  sourceKeys: TopologyMergingSourceKey[]
   topologyMode: TopologyMergingMode
   topologySignature: string
 }

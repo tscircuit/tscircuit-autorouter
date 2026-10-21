@@ -10,7 +10,9 @@ class BudgetProbeSolver extends SelectiveReripTinyHyperGraphSolverWithStableInit
   }
 }
 
-function createBudgetProbe(): BudgetProbeSolver {
+function createBudgetProbe(
+  initialRoutingMaxIterations?: number,
+): BudgetProbeSolver {
   const { topology, problem } = loadSerializedHyperGraph({
     regions: [
       { regionId: "start", pointIds: ["port"], d: { availableZ: [0] } },
@@ -30,6 +32,7 @@ function createBudgetProbe(): BudgetProbeSolver {
   })
   return new BudgetProbeSolver(topology, problem, {
     MAX_ITERATIONS: 100,
+    INITIAL_ROUTING_MAX_ITERATIONS: initialRoutingMaxIterations,
     GREEDY_FINAL_ROUTE_ITERS: 0,
     ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   })
@@ -41,8 +44,7 @@ test("only opted-in incomplete first assignments can extend the original limit",
   legacy.tryFinalAcceptance()
   expect(legacy.MAX_ITERATIONS).toBe(100)
 
-  const incomplete = createBudgetProbe()
-  incomplete.initialRoutingIterationLimit = 1_600
+  const incomplete = createBudgetProbe(1_600)
   incomplete.iterations = incomplete.MAX_ITERATIONS
   incomplete.tryFinalAcceptance()
   expect(incomplete.MAX_ITERATIONS).toBe(1_600)
@@ -52,8 +54,7 @@ test("only opted-in incomplete first assignments can extend the original limit",
   incomplete.tryFinalAcceptance()
   expect(incomplete.MAX_ITERATIONS).toBe(1_600)
 
-  const complete = createBudgetProbe()
-  complete.initialRoutingIterationLimit = 1_600
+  const complete = createBudgetProbe(1_600)
   complete.solve()
   expect(complete.solved).toBe(true)
   complete.captureCompleteAssignmentAtLimit()

@@ -6,8 +6,8 @@ import type { SimpleRouteJson } from "lib/types"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import capturedInput from "../repro/assets/pipeline9-sot23-missing-via.json"
 
-test("established layer stacks retain their original topology, stitching, and budget", (): void => {
-  for (const layerCount of [2, 4, 6]) {
+test("outer-layer copper retains its original topology, stitching, and budget", (): void => {
+  for (const layerCount of [2, 4, 6, 8]) {
     const input = {
       ...structuredClone(capturedInput),
       layerCount,
@@ -33,7 +33,7 @@ test("established layer stacks retain their original topology, stitching, and bu
     const [routingParams] = routingStage.getConstructorParams(solver) as [
       HgPortPointPathingSolverParams,
     ]
-    expect(routingParams.flags.USE_INITIAL_ROUTING_CONTINUATION).toBe(false)
+    expect(routingParams.initialRoutingMaxIterations).toBeUndefined()
     Reflect.set(solver, "highDensityRouteSolver", { routes: [] })
     const stitchStage = solver.pipelineDef.find(
       (step) => step.solverName === "highDensityStitchSolver",

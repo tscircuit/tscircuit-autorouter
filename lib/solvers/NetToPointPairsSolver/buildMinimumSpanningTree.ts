@@ -1,4 +1,5 @@
 type Point = { x: number; y: number }
+type PointComponentId = string
 
 export class KDNode {
   point: Point
@@ -319,7 +320,7 @@ export function buildMinimumSpanningTree<T extends Point>(
   // replacing existing pairs or changing their order and connection names.
   let roots = pointsCopy.map((point) => disjointSet.find(point))
   while (new Set(roots).size > 1) {
-    const nearestEdges = new Map<string, Edge<T>>()
+    const nearestEdges = new Map<PointComponentId, Edge<T>>()
     for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
       for (
         let toIndex = fromIndex + 1;

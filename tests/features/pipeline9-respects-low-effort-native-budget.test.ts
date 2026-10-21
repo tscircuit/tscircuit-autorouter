@@ -4,6 +4,7 @@ import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathi
 import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 import type { SimpleRouteJson } from "lib/types"
 import capturedInput from "../repro/assets/pipeline9-sot23-missing-via.json"
+import { TinyHyperGraphSectionPipelineSolver } from "tiny-hypergraph/lib/index"
 
 test("explicit low effort keeps its requested native budget", (): void => {
   for (const effort of [0.01, 1]) {
@@ -12,6 +13,14 @@ test("explicit low effort keeps its requested native budget", (): void => {
       layerCount: 8,
       traces: undefined,
     } as SimpleRouteJson
+    input.obstacles.push({
+      type: "rect",
+      center: { x: 8, y: 5 },
+      width: 0.2,
+      height: 0.2,
+      layers: ["inner1"],
+      connectedTo: [],
+    })
     const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
       effort,
       cacheProvider: null,
@@ -25,10 +34,16 @@ test("explicit low effort keeps its requested native budget", (): void => {
       HgPortPointPathingSolverParams,
     ]
     expect(params.effort).toBe(effort)
-    expect(params.flags.USE_INITIAL_ROUTING_CONTINUATION).toBe(true)
+    const expectedBudget = effort >= 1 ? 32_000_000 : undefined
+    expect(params.initialRoutingMaxIterations).toBe(expectedBudget)
     const pathing = new TinyHypergraphPortPointPathingSolver(params)
-    expect(Reflect.get(pathing, "allowInitialRoutingContinuation")).toBe(
-      effort >= 1,
-    )
+    const nativePipeline = Reflect.get(pathing, "tinyPipelineSolver")
+    if (!(nativePipeline instanceof TinyHyperGraphSectionPipelineSolver)) {
+      throw new Error("Missing native routing pipeline")
+    }
+    expect(
+      nativePipeline.inputProblem.solveGraphOptions
+        ?.INITIAL_ROUTING_MAX_ITERATIONS,
+    ).toBe(expectedBudget)
   }
 })

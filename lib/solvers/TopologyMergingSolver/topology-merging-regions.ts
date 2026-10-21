@@ -5,6 +5,7 @@ import type {
   TopologyMergingMode,
   TopologyMergingNodeGroup,
   TopologyMergingRegion,
+  TopologyMergingSourceKey,
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
@@ -151,7 +152,7 @@ export function getLayerTopologiesForCoveredNodes({
     const sourceKeys = [
       ...new Set(topologies.flatMap((topology) => topology.sourceKeys)),
     ].sort()
-    const topologyMode = "free-layer-union" as const
+    const topologyMode = "free_layer_union" as const
     return [
       {
         availableZ: Array.from({ length: layerCount }, (_, z) => z),
@@ -172,14 +173,17 @@ export function separateUndersizedViaRegions({
   minViaPadDiameter,
 }: {
   regions: TopologyMergingRegion[]
-  preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  preparedNodeBySourceKey: ReadonlyMap<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
   minViaPadDiameter: number
 }): TopologyMergingRegion[] {
   return regions.flatMap((region) => {
     if (
-      region.topologyMode !== "free-layer-union" ||
+      region.topologyMode !== "free_layer_union" ||
       (region.bounds.maxX - region.bounds.minX >= minViaPadDiameter &&
         region.bounds.maxY - region.bounds.minY >= minViaPadDiameter)
     )

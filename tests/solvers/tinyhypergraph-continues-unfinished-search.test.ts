@@ -26,11 +26,11 @@ function createRoutingProbe(allowContinuation: boolean): RoutingSolver {
   const { topology, problem } = loadSerializedHyperGraph(graph)
   const solver = new RoutingSolver(topology, problem, {
     MAX_ITERATIONS: 3,
+    INITIAL_ROUTING_MAX_ITERATIONS: allowContinuation ? 300 : undefined,
     GREEDY_FINAL_ROUTE_ITERS: 0,
     ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
     RIP_THRESHOLD_RAMP_ATTEMPTS: 0,
   })
-  if (allowContinuation) solver.initialRoutingIterationLimit = 300
   return solver
 }
 
