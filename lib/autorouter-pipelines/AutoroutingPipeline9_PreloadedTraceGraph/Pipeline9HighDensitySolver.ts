@@ -494,7 +494,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // after hundreds of inexpensive nodes have passed through the pool.
       const batches = Array.from(
         { length: Math.min(16, nodes.length) },
-        () => ({ work: 0, nodes: [] as { node: NodeWithPortPoints; index: number }[] }),
+        () => ({
+          work: 0,
+          nodes: [] as { node: NodeWithPortPoints; index: number }[],
+        }),
       )
       const plannedNodes = nodes
         .map((node, index) => ({ node, index }))
@@ -530,7 +533,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           pending[index] = promise.then((outcome) =>
             outcome.type === "error"
               ? outcome
-              : { type: "result" as const, result: outcome.results[batchIndex]! },
+              : {
+                  type: "result" as const,
+                  result: outcome.results[batchIndex]!,
+                },
           )
         }
       }

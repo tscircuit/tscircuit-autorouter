@@ -7,8 +7,12 @@ test("parallel repair reports the same iteration exhaustion as serial repair", a
   const runtime = new SolverRuntime()
   try {
     for (const limit of [0, 1, 2, 3, 7, 8]) {
-      const baseline = new Pipeline4HighDensityRepairSolver(createHighDensityRepairRuntimeFixture())
-      const solver = new Pipeline4HighDensityRepairSolver(createHighDensityRepairRuntimeFixture())
+      const baseline = new Pipeline4HighDensityRepairSolver(
+        createHighDensityRepairRuntimeFixture(),
+      )
+      const solver = new Pipeline4HighDensityRepairSolver(
+        createHighDensityRepairRuntimeFixture(),
+      )
       baseline.MAX_ITERATIONS = limit
       solver.MAX_ITERATIONS = limit
       baseline.solve()

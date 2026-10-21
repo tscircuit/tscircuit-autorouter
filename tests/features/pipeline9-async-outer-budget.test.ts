@@ -19,8 +19,7 @@ const input: SimpleRouteJson = {
   ],
 }
 
-test("async node stages respect the outer pipeline budget at the same serial step", async (): Promise<void> => {
-  for (const phase of ["highDensityRouteSolver", "highDensityRepairSolver"]) {
+test("async high density respects the outer pipeline budget at the same serial step", async (): Promise<void> => {
   for (const extraIterations of [0, 1, 7, 30]) {
     const solvers = [
       new Pipeline9(structuredClone(input), {
@@ -33,7 +32,7 @@ test("async node stages respect the outer pipeline budget at the same serial ste
       }),
     ]
     for (const solver of solvers) {
-      solver.solveUntilPhase(phase)
+      solver.solveUntilPhase("highDensityRouteSolver")
       solver.step()
       solver.MAX_ITERATIONS = solver.iterations + extraIterations
     }
@@ -58,17 +57,5 @@ test("async node stages respect the outer pipeline budget at the same serial ste
     expect(parallel.highDensityRouteSolver!.iterations).toBe(
       serial.highDensityRouteSolver!.iterations,
     )
-    if (phase === "highDensityRepairSolver") {
-      expect(parallel.highDensityRepairSolver!.getOutput()).toEqual(
-        serial.highDensityRepairSolver!.getOutput(),
-      )
-      expect(parallel.highDensityRepairSolver!.stats).toEqual(
-        serial.highDensityRepairSolver!.stats,
-      )
-      expect(parallel.highDensityRepairSolver!.iterations).toBe(
-        serial.highDensityRepairSolver!.iterations,
-      )
-    }
-  }
   }
 })

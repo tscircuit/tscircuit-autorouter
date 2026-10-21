@@ -425,21 +425,29 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       if (this.solved || this.failed || this.iterations >= stopAtIteration)
         return
       this.asyncRunning = true
-      const parallelSampleCount = Math.max(0, Math.floor(
-        (Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations) / 2,
-      ))
-      const pending = this.sampleEntries.slice(
-        this.activeSampleIndex,
-        this.activeSampleIndex + parallelSampleCount,
-      ).map(
-        (entry) => runtime.executeAsync(Pipeline4HighDensityRepairSampleSolver, {
-          sample: entry.sample,
-          margin: this.repairMargin,
-        }).then(
-          (result) => ({ type: "result" as const, result }),
-          (error: unknown) => ({ type: "error" as const, error }),
+      const parallelSampleCount = Math.max(
+        0,
+        Math.floor(
+          (Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations) /
+            2,
         ),
       )
+      const pending = this.sampleEntries
+        .slice(
+          this.activeSampleIndex,
+          this.activeSampleIndex + parallelSampleCount,
+        )
+        .map((entry) =>
+          runtime
+            .executeAsync(Pipeline4HighDensityRepairSampleSolver, {
+              sample: entry.sample,
+              margin: this.repairMargin,
+            })
+            .then(
+              (result) => ({ type: "result" as const, result }),
+              (error: unknown) => ({ type: "error" as const, error }),
+            ),
+        )
       for (const promise of pending) {
         // A serial sample uses one construction step and one repair step.
         if (

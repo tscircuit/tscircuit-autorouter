@@ -5,11 +5,17 @@ import { createHighDensityRepairRuntimeFixture } from "../fixtures/createHighDen
 
 test("repair runtime errors reject and leave failed state instead of using serial repair", async (): Promise<void> => {
   const runtime = new SolverRuntime()
-  const dispatch = spyOn(runtime, "executeAsync").mockRejectedValue(new Error("repair worker failed"))
-  const solver = new Pipeline4HighDensityRepairSolver(createHighDensityRepairRuntimeFixture())
+  const dispatch = spyOn(runtime, "executeAsync").mockRejectedValue(
+    new Error("repair worker failed"),
+  )
+  const solver = new Pipeline4HighDensityRepairSolver(
+    createHighDensityRepairRuntimeFixture(),
+  )
   const serial = spyOn(solver, "solve")
   try {
-    await expect(solver.solveAsync(runtime)).rejects.toThrow("repair worker failed")
+    await expect(solver.solveAsync(runtime)).rejects.toThrow(
+      "repair worker failed",
+    )
     expect(solver.failed).toBe(true)
     expect(solver.solved).toBe(false)
     expect(solver.error).toContain("repair worker failed")

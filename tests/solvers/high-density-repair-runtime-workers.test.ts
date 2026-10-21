@@ -4,12 +4,16 @@ import { createHighDensityRepairRuntimeFixture } from "../fixtures/createHighDen
 import { createPipeline9TestRuntime } from "../fixtures/createPipeline9TestRuntime"
 
 test("node repair preserves exact serial geometry and stats in one and four workers", async (): Promise<void> => {
-  const baseline = new Pipeline4HighDensityRepairSolver(createHighDensityRepairRuntimeFixture())
+  const baseline = new Pipeline4HighDensityRepairSolver(
+    createHighDensityRepairRuntimeFixture(),
+  )
   baseline.solve()
   for (const workerCount of [1, 4]) {
     const runtime = createPipeline9TestRuntime(workerCount)
     try {
-      const solver = new Pipeline4HighDensityRepairSolver(createHighDensityRepairRuntimeFixture())
+      const solver = new Pipeline4HighDensityRepairSolver(
+        createHighDensityRepairRuntimeFixture(),
+      )
       await solver.solveAsync(runtime)
       expect(solver.getOutput()).toEqual(baseline.getOutput())
       expect(solver.stats).toEqual(baseline.stats)

@@ -20,13 +20,25 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
       height: 4,
       availableZ: [0],
       portPoints: Array.from({ length: index === 2 ? 4 : 1 }, (_, row) => [
-        { x: index * 8 - 1, y: row - 1.5, z: 0, connectionName: `${index}-${row}` },
-        { x: index * 8 + 1, y: row - 1.5, z: 0, connectionName: `${index}-${row}` },
+        {
+          x: index * 8 - 1,
+          y: row - 1.5,
+          z: 0,
+          connectionName: `${index}-${row}`,
+        },
+        {
+          x: index * 8 + 1,
+          y: row - 1.5,
+          z: 0,
+          connectionName: `${index}-${row}`,
+        },
       ]).flat(),
     })),
     fixedHdRoutes: [],
     connMap: new ConnectivityMap({}),
-    nodePfById: new Map(Array.from({ length: 40 }, (_, index) => [`node-${index}`, index / 40])),
+    nodePfById: new Map(
+      Array.from({ length: 40 }, (_, index) => [`node-${index}`, index / 40]),
+    ),
     obstacles: [],
     layerCount: 2,
     viaDiameter: 0.3,
@@ -41,7 +53,10 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
     resolve: (output: Pipeline9HighDensityBatchOutput) => void
   }[] = []
   const runtime = {
-    executeAsync: (_Solver: unknown, input: Pipeline9HighDensityBatchInput): Promise<Pipeline9HighDensityBatchOutput> =>
+    executeAsync: (
+      _Solver: unknown,
+      input: Pipeline9HighDensityBatchInput,
+    ): Promise<Pipeline9HighDensityBatchOutput> =>
       new Promise((resolve) => tasks.push({ input, resolve })),
   } as SolverRuntimeExecutor
   const solver = new Pipeline9HighDensitySolver(params)
@@ -49,9 +64,9 @@ test("crowded nodes are scheduled first in bounded batches while results retain 
   expect(tasks).toHaveLength(16)
   expect(tasks[0]!.input.nodePortPoints[0]!.capacityMeshNodeId).toBe("node-2")
   for (const { input, resolve } of tasks.toReversed()) {
-    expect([...input.nodePfById as Map<string, number | null>].map(([id]) => id)).toEqual(
-      input.nodePortPoints.map((node) => node.capacityMeshNodeId),
-    )
+    expect(
+      [...(input.nodePfById as Map<string, number | null>)].map(([id]) => id),
+    ).toEqual(input.nodePortPoints.map((node) => node.capacityMeshNodeId))
     const batch = new Pipeline9HighDensityBatchSolver(input)
     batch.solve()
     resolve(batch.getOutput())

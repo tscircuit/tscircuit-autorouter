@@ -18,13 +18,14 @@ test("parallel node repairs consume out-of-order results in serial order", async
     executeAsync: (
       Solver: typeof Pipeline4HighDensityRepairSampleSolver,
       input: Pipeline4HighDensityRepairSampleInput,
-    ): Promise<Pipeline4HighDensityRepairSampleOutput> => new Promise((resolve) => {
-      release.push((): void => {
-        const sample = new Solver(input)
-        sample.solve()
-        resolve(sample.getOutput())
-      })
-    }),
+    ): Promise<Pipeline4HighDensityRepairSampleOutput> =>
+      new Promise((resolve) => {
+        release.push((): void => {
+          const sample = new Solver(input)
+          sample.solve()
+          resolve(sample.getOutput())
+        })
+      }),
   } as SolverRuntimeExecutor
   const solving = solver.solveAsync(runtime)
   expect(release).toHaveLength(4)
