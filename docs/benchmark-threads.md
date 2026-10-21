@@ -1,20 +1,26 @@
-# Per-sample thread budgets
+# Routing threads per sample
 
-`/benchmark --dataset 18 --threads 4` reserves four routing workers per sample.
-The flag also works with `./benchmark.sh` and the workflow's `threads` input.
-With N > 1, sample concurrency is capped by available CPUs / (N + 1), the requested
-`--concurrency`, and the existing 6 GiB per-sample memory limit (minimum one sample).
-N = 1 reserves a single CPU. Without the flag, existing concurrency behavior stays
-unchanged. Invalid counts and unsupported pipeline/profiling combinations reject.
+`/benchmark --pipeline 9 --dataset srj18 --threads 4`
 
-This PR prepares the benchmark harness before the parallel solver lands. Pipeline9
-in this revision executes serially: the runner explicitly logs this and reports
-`effectiveThreadsPerSample: 1`. `threadsPerSample` records the requested budget,
-not observed usage. #3125 supplies the worker pool and updates effective usage.
+The same flag works with `./benchmark.sh` and the workflow's `threads` input.
+Pipeline9 runs its high-density batches in a separate Bun worker pool for each
+sample. `--threads 1` keeps execution inline; omitting the flag preserves existing
+concurrency behavior. Other pipelines reject thread counts above one.
 
-Merge this PR into main first, then rebase #3125 and repeat the benchmark comment.
-Comment-triggered workflows execute from main. Both compared revisions must
-understand the flag; copying head's benchmark harness into an older base would
-introduce runtime/build imports the base cannot satisfy. Each revision therefore
-keeps its own harness and algorithms, using the same reserved sample CPU budget.
-The comparison measures the serial baseline against the parallel PR.
+With N > 1, each sample reserves N routing workers plus one coordinator.
+Concurrent samples are capped at the smaller of the requested `--concurrency`,
+available CPUs divided by N + 1, and the existing 6 GiB per-sample memory limit.
+For example, 32 available CPUs allow six samples with four workers each, or three
+samples with eight workers each, before memory limits. At least one sample runs,
+even when an explicit worker count exceeds available CPUs.
+
+Reports record requested sample concurrency, actual sample workers,
+`threadsPerSample`, and `cpuBudgetPerSample`. Sample timing includes pool startup,
+message copying, and disposal. Workers are built once before samples start.
+Worker failures fail the sample; they do not retry serially.
+
+Same-machine comparisons retain each revision's own benchmark harness and
+algorithms. The serial base accepts the thread-budget flag and reserves the same sample
+CPU budget, while this revision configures the requested worker pool.
+Reports distinguish the requested budget from effective configured thread count.
+Threaded profiling and Pipeline9's separate networked mode are rejected.

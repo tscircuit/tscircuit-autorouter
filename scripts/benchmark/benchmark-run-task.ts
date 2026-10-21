@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
@@ -53,7 +54,7 @@ type SolverInstance = Omit<PipelineStageTimingSource, "pipelineDef"> & {
   srjWithPointPairs?: SimpleRouteJson
   step?: () => void
   solve?: () => void | Promise<void>
-  solveAsync?: () => Promise<void>
+  solveAsync?: (runtime?: SolverRuntimeExecutor) => Promise<void>
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
@@ -535,17 +536,39 @@ export const solveWithProgress = async (
 
   emitProgress(true)
 
+  if (
+    (task.threads ?? 1) > 1 &&
+    ((task.solverConstructorName ?? task.solverName) !==
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph" ||
+      typeof solver.solveAsync !== "function")
+  ) {
+    throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
+  }
+
   if (typeof solver.solveAsync === "function") {
     const interval =
       options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
         : null
+    let runtime:
+      | (SolverRuntimeExecutor & { dispose(): Promise<void> })
+      | undefined
     try {
-      await solver.solveAsync()
+      if ((task.threads ?? 1) > 1) {
+        const { createAutorouterSolverRuntime } = await import(
+          "../../lib/runtime/bun"
+        )
+        runtime = createAutorouterSolverRuntime({
+          workerCount: task.threads!,
+          requireWorker: true,
+        })
+      }
+      await solver.solveAsync(runtime)
     } finally {
       if (interval) {
         clearInterval(interval)
       }
+      await runtime?.dispose()
     }
     emitProgress(true)
     return

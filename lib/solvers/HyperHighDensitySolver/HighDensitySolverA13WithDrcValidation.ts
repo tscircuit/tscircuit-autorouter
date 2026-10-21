@@ -1,7 +1,6 @@
 import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import {
   convertToCircuitJson,
@@ -12,6 +11,7 @@ import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geom
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensitySolverA13WithBoundaryClearance } from "./HighDensitySolverA13WithBoundaryClearance"
+import { getObstacleRouteConnectivity } from "./getObstacleRouteConnectivity"
 
 type A13Params = ConstructorParameters<typeof HighDensitySolverA13>[0]
 type ValidatedA13Params = A13Params & {
@@ -54,6 +54,8 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
       )
     })
     this.stats.boardObstaclesChecked = obstacles.length
+    const { connectedRouteNamesByObstacle, connectedObstaclesByRoute } =
+      getObstacleRouteConnectivity({ obstacles, routes, connMap })
     const srj: SimpleRouteJson = {
       layerCount,
       minTraceWidth: this.traceThickness,
@@ -65,18 +67,14 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
         maxY: node.center.y + node.height / 2,
       },
       ...this.validationParams.boardGeometry,
-      obstacles: obstacles.map((obstacle) => ({
+      obstacles: obstacles.map((obstacle, obstacleIndex) => ({
         ...obstacle,
         connectedTo: [
           ...obstacle.connectedTo,
-          ...routes
-            .filter((route) =>
-              isObstacleConnectedToRoute(obstacle, route, connMap),
-            )
-            .map((route) => route.connectionName),
+          ...connectedRouteNamesByObstacle[obstacleIndex]!,
         ],
       })),
-      connections: routes.map((route) => ({
+      connections: routes.map((route, routeIndex) => ({
         name: route.connectionName,
         rootConnectionName: route.rootConnectionName,
         __netConnectionName: route.rootConnectionName ?? route.connectionName,
@@ -88,22 +86,18 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
           })),
           // Register ownership independently of whether this partial route
           // reaches its pad in the current node.
-          ...obstacles
-            .filter((obstacle) =>
-              isObstacleConnectedToRoute(obstacle, route, connMap),
-            )
-            .flatMap((obstacle) => {
-              const pcbPortId = obstacle.circuitJsonMetadata?.pcb_port_id
-              return pcbPortId
-                ? [
-                    {
-                      ...obstacle.center,
-                      layer: mapZToLayerName(0, layerCount),
-                      pcb_port_id: pcbPortId,
-                    },
-                  ]
-                : []
-            }),
+          ...connectedObstaclesByRoute[routeIndex]!.flatMap((obstacle) => {
+            const pcbPortId = obstacle.circuitJsonMetadata?.pcb_port_id
+            return pcbPortId
+              ? [
+                  {
+                    ...obstacle.center,
+                    layer: mapZToLayerName(0, layerCount),
+                    pcb_port_id: pcbPortId,
+                  },
+                ]
+              : []
+          }),
         ],
       })),
     }

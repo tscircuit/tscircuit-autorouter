@@ -1,4 +1,5 @@
 import type { GraphicsObject } from "graphics-debug"
+import Flatbush from "flatbush"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
@@ -6,6 +7,57 @@ import { areNodesBordering } from "lib/utils/areNodesBordering"
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
 const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
+const CONNECTIVITY_BRIDGE_QUERY_PADDING = 0.002
+
+type BridgeNodeIndex = {
+  index: Flatbush
+  originalNodeIndices: number[]
+}
+
+type BridgeNodeWorkspace = {
+  bridgeNodeIndex?: BridgeNodeIndex
+}
+
+const createBridgeNodeIndex = (nodes: CapacityMeshNode[]): BridgeNodeIndex => {
+  const originalNodeIndices: number[] = []
+  for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+    const node = nodes[nodeIndex]!
+    // These coordinates cannot satisfy areNodesBordering against a finite
+    // bridge. Infinite dimensions can, so retain their unbounded rectangles.
+    if (
+      !Number.isFinite(node.center.x) ||
+      !Number.isFinite(node.center.y) ||
+      Number.isNaN(node.width) ||
+      Number.isNaN(node.height)
+    ) {
+      continue
+    }
+    originalNodeIndices.push(nodeIndex)
+  }
+
+  // The finite bridge requesting this index is itself an indexed original.
+  if (originalNodeIndices.length === 0) {
+    throw new Error("Connectivity bridge index has no original nodes")
+  }
+  const index = new Flatbush(originalNodeIndices.length)
+  for (const nodeIndex of originalNodeIndices) {
+    const node = nodes[nodeIndex]!
+    const left = node.center.x - node.width / 2
+    const right = node.center.x + node.width / 2
+    const top = node.center.y - node.height / 2
+    const bottom = node.center.y + node.height / 2
+    // Canonical bounds also cover the original predicate's negative-dimension
+    // cases. Clipping infinities preserves intersections with finite bridges.
+    index.add(
+      Math.max(-Number.MAX_VALUE, Math.min(left, right)),
+      Math.max(-Number.MAX_VALUE, Math.min(top, bottom)),
+      Math.min(Number.MAX_VALUE, Math.max(left, right)),
+      Math.min(Number.MAX_VALUE, Math.max(top, bottom)),
+    )
+  }
+  index.finish()
+  return { index, originalNodeIndices }
+}
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
@@ -64,7 +116,10 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     return { cols, rows }
   }
 
-  private shouldRemoveNode(node: CapacityMeshNode): boolean {
+  private shouldRemoveNode(
+    node: CapacityMeshNode,
+    bridgeNodeWorkspace: BridgeNodeWorkspace,
+  ): boolean {
     const hasMinAreaLimit =
       Number.isFinite(this.minNodeArea) && this.minNodeArea > 0
 
@@ -82,10 +137,29 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
 
     if (node._containsTarget) return false
 
+    // Finite dimensions at a nonfinite center cannot border another rectangle.
+    if (!Number.isFinite(node.center.x) || !Number.isFinite(node.center.y)) {
+      return true
+    }
+
     // Rect decomposition can produce low-area slices that still connect larger
     // regions. Removing such a slice changes reachability, so retain bridges.
+    const { index, originalNodeIndices } =
+      (bridgeNodeWorkspace.bridgeNodeIndex ??= createBridgeNodeIndex(
+        this.nodes,
+      ))
+    const candidateIndices = index.search(
+      node.center.x - node.width / 2 - CONNECTIVITY_BRIDGE_QUERY_PADDING,
+      node.center.y - node.height / 2 - CONNECTIVITY_BRIDGE_QUERY_PADDING,
+      node.center.x + node.width / 2 + CONNECTIVITY_BRIDGE_QUERY_PADDING,
+      node.center.y + node.height / 2 + CONNECTIVITY_BRIDGE_QUERY_PADDING,
+    )
+    // Flatbush traversal order differs from the original input scan. Insertion
+    // indices preserve that scan's order, including repeated original ids.
+    candidateIndices.sort((left, right) => left - right)
     let borderingNodeCount = 0
-    for (const candidate of this.nodes) {
+    for (const candidateIndex of candidateIndices) {
+      const candidate = this.nodes[originalNodeIndices[candidateIndex]!]!
       if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue
       if (!node.availableZ.some((z) => candidate.availableZ.includes(z))) {
         continue
@@ -100,8 +174,11 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     return true
   }
 
-  private subdivideNode(node: CapacityMeshNode): CapacityMeshNode[] {
-    if (this.shouldRemoveNode(node)) {
+  private subdivideNode(
+    node: CapacityMeshNode,
+    bridgeNodeWorkspace: BridgeNodeWorkspace,
+  ): CapacityMeshNode[] {
+    if (this.shouldRemoveNode(node, bridgeNodeWorkspace)) {
       return []
     }
 
@@ -142,11 +219,13 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     let subdividedNodeCount = 0
     let removedSmallNodeCount = 0
     let removedInvalidNodeCount = 0
+    // This workspace is released after the one-step subdivision stage completes.
+    const bridgeNodeWorkspace: BridgeNodeWorkspace = {}
 
     for (const node of this.nodes) {
       const hasInvalidDimensions =
         !Number.isFinite(node.width) || !Number.isFinite(node.height)
-      const subdividedNodes = this.subdivideNode(node)
+      const subdividedNodes = this.subdivideNode(node, bridgeNodeWorkspace)
       if (subdividedNodes.length === 0) {
         if (hasInvalidDimensions) {
           removedInvalidNodeCount++

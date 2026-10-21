@@ -1,11 +1,18 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.992",
+  "version": "0.0.996",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/tscircuit-autorouter"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./runtime/bun": "./dist/runtime/bun.js",
+    "./runtime/node": "./dist/runtime/node.js",
+    "./package.json": "./package.json",
+    "./dist/*": "./dist/*"
   },
   "files": [
     "dist"
@@ -13,7 +20,7 @@
   "scripts": {
     "prepublishOnly": "bun run build && bun scripts/check-published-autorouter-version.ts",
     "start": "cosmos",
-    "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
+    "build": "bun scripts/build-solver-workers.ts && tsup --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",
@@ -37,7 +44,7 @@
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
     "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
-    "@tscircuit/checks": "^0.0.255",
+    "@tscircuit/checks": "^0.0.259",
     "@tscircuit/circuit-json-util": "^0.0.114",
     "@tscircuit/core": "0.0.337",
     "@tscircuit/curvy-trace-solver": "^0.0.10",
@@ -58,7 +65,6 @@
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
     "@tscircuit/rectdiff": "0.0.56",
     "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/4273e9455084b7b35ebc860ebe4483b9d19692ea",
-    "@tscircuit/solver-utils": "^0.0.16",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -110,6 +116,7 @@
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
   },
   "dependencies": {
+    "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1",
