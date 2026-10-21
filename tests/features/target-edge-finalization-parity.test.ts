@@ -6,7 +6,11 @@ import type {
 } from "lib/types/capacity-mesh-types"
 import { ExhaustiveTargetEdgeSolver } from "tests/fixtures/ExhaustiveTargetEdgeSolver"
 
-test("target-edge indexing preserves ordered edges and validation errors", (): void => {
+class IndexedTargetEdgeSolver extends CapacityMeshEdgeSolver {
+  protected override readonly targetIndexMinScanEstimate = 0
+}
+
+test("target-edge lookups preserve edge order and validation errors", (): void => {
   let seed = 472_193
   for (let trial = 0; trial < 500; trial++) {
     const nodes: CapacityMeshNode[] = []
@@ -45,7 +49,11 @@ test("target-edge indexing preserves ordered edges and validation errors", (): v
     const beforeNodes = JSON.stringify(nodes)
     const results: Array<{ edges: CapacityMeshEdge[]; error: string | null }> =
       []
-    for (const Solver of [ExhaustiveTargetEdgeSolver, CapacityMeshEdgeSolver]) {
+    for (const Solver of [
+      ExhaustiveTargetEdgeSolver,
+      CapacityMeshEdgeSolver,
+      IndexedTargetEdgeSolver,
+    ]) {
       const solver = new Solver(nodes)
       solver.edges = structuredClone(edges)
       let error: string | null = null
@@ -58,6 +66,7 @@ test("target-edge indexing preserves ordered edges and validation errors", (): v
       results.push({ edges: solver.edges, error })
     }
     expect(results[1]).toEqual(results[0])
+    expect(results[2]).toEqual(results[0])
     expect(JSON.stringify(nodes)).toBe(beforeNodes)
   }
 })

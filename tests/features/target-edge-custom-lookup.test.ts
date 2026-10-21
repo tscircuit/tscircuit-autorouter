@@ -6,6 +6,7 @@ import type {
 } from "lib/types/capacity-mesh-types"
 
 class CustomEdgeLookupSolver extends CapacityMeshEdgeSolver {
+  protected override readonly targetIndexMinScanEstimate = 0
   edgeExists = false
   observedPairs: Array<[CapacityMeshNodeId, CapacityMeshNodeId]> = []
 
