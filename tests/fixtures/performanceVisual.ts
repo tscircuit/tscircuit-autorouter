@@ -1,4 +1,4 @@
-import "bun-match-svg"
+import "./svg-matcher"
 import { expect } from "bun:test"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
@@ -163,7 +163,7 @@ export async function expectPerformanceSvg(
   // rasterizing two identical dense diagrams; changed SVGs still use the
   // existing visual matcher and its normal snapshot-update behavior.
   if (existing === svg) expect(svg).toBe(existing)
-  else await expect(svg).toMatchSvgSnapshot(testPath, "visual")
+  else await expect(svg).toMatchSvgSnapshot(testPath, { svgName: "visual" })
   const exportDirectory = process.env.PERFORMANCE_SNAPSHOT_EXPORT_DIR
   if (exportDirectory) {
     await mkdir(exportDirectory, { recursive: true })
