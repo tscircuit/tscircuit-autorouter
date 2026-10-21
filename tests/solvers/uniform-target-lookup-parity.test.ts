@@ -89,7 +89,11 @@ test("indexed target checks preserve exhaustive first-match behavior", (): void 
         expect(
           shouldIgnorePortPoint({ portPoint, ownerNodeIds, inputNodesById }),
         ).toBe(
-          shouldIgnorePortPointReference({ portPoint, ownerNodeIds, inputNodes }),
+          shouldIgnorePortPointReference({
+            portPoint,
+            ownerNodeIds,
+            inputNodes,
+          }),
         )
       }
     }

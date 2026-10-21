@@ -26,8 +26,7 @@ export const shouldIgnorePortPoint = ({
     )
     if (
       inputPortPoint?.connectionNodeIds?.some(
-        (id) =>
-          inputNodesById.get(id)?._containsTarget,
+        (id) => inputNodesById.get(id)?._containsTarget,
       )
     ) {
       return true

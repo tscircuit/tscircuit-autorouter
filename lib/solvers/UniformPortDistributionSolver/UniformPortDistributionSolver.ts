@@ -52,7 +52,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
-  readonly inputNodesById = new Map<CapacityMeshNodeId, InputNodeWithPortPoints>()
+  readonly inputNodesById = new Map<
+    CapacityMeshNodeId,
+    InputNodeWithPortPoints
+  >()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
