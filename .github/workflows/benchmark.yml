@@ -1,22 +1,22 @@
-name: Repair03 normalized runtime diagnostics
+name: Repair03 via-exit controlled datasets
 on:
   workflow_dispatch:
     inputs:
-      cases:
-        description: JSON array of global6, full06, full15, memory04, memory24
-        default: '["global6","full06","full15"]'
+      datasets:
+        description: JSON array of dataset names
+        default: '["dataset01","srj18","srj24"]'
         required: true
         type: string
 permissions:
   contents: read
 jobs:
-  diagnostics:
+  comparison:
     strategy:
       fail-fast: false
       matrix:
-        case: ${{ fromJSON(inputs.cases) }}
+        dataset: ${{ fromJSON(inputs.datasets) }}
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 75
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +27,7 @@ jobs:
       - run: |
           sed -i "s/save = false/save = true/" bunfig.toml
           bun install
-      - name: Capture environment and shared dependency lock
+      - name: Capture environment and shared dependency graph
         run: |
           mkdir -p diagnostic-results
           cp bun.lock diagnostic-results/bun.lock
@@ -36,39 +36,26 @@ jobs:
           free -m >> diagnostic-results/environment.txt
           bun --version >> diagnostic-results/environment.txt
           git clone --filter=blob:none https://github.com/tscircuit/high-density-repair03.git .repair03-source
-      - name: Run variants with one installed dependency graph
+      - name: Compare production, current pin, and one-line candidate
         env:
-          CASE: ${{ matrix.case }}
+          DATASET: ${{ matrix.dataset }}
         run: |
           set -euo pipefail
-          refs=(79c9b022a678b1f0289059962bf49f253310a5dc 963153b26f94d800c058f7e32098461dc2911329 deccde00068c1a96563dd7ff153b4a57edd6acc3 deccde00068c1a96563dd7ff153b4a57edd6acc3 963153b26f94d800c058f7e32098461dc2911329 79c9b022a678b1f0289059962bf49f253310a5dc)
-          labels=(production final candidate candidate-repeat final-repeat production-repeat)
+          refs=(79c9b022a678b1f0289059962bf49f253310a5dc 963153b26f94d800c058f7e32098461dc2911329 121aca69eec19ee7d14fe519dd04c9c0ae69970d)
+          labels=(production current via-exit)
           for i in "${!refs[@]}"; do
+            label="${labels[$i]}"
             git -C .repair03-source fetch origin "${refs[$i]}"
             rm -rf node_modules/high-density-repair03/lib
             git -C .repair03-source archive "${refs[$i]}" lib | tar -x -C node_modules/high-density-repair03
-            printf '%s %s\n' "${labels[$i]}" "${refs[$i]}" >> diagnostic-results/revisions.txt
-            if [ "$CASE" = "global6" ]; then
-              bun scripts/repair03-diagnostics/run-force.ts "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
-            else
-              bun scripts/repair03-diagnostics/run.ts "$CASE" "${labels[$i]}" | tee "diagnostic-results/${labels[$i]}.log"
-            fi
+            mkdir -p "diagnostic-results/$label"
+            printf '%s %s\n' "$label" "${refs[$i]}" >> diagnostic-results/revisions.txt
+            ./benchmark.sh --pipeline 9 --dataset "$DATASET" --effort 1 --concurrency 3 --sample-timeout 360s | tee "diagnostic-results/$label/run.log"
+            cp benchmark-result.json benchmark-result.txt "diagnostic-results/$label/"
             sha256sum bun.lock >> diagnostic-results/lock-hashes.txt
           done
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          results = {name: json.loads(Path(f"diagnostic-results/{name}-result.json").read_text()) for name in ("final", "candidate", "candidate-repeat", "final-repeat")}
-          assert len({result["inputHash"] for result in results.values()}) == 1, "Inputs differ"
-          assert len({result["outputHash"] for result in results.values()}) == 1, "Optimization changed routing output"
-          PY
-      - name: Print shared lock and revision identities
-        if: always()
-        run: |
-          cat diagnostic-results/revisions.txt
-          cat diagnostic-results/lock-hashes.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: repair03-diagnostic-${{ matrix.case }}
+          name: repair03-via-exit-${{ matrix.dataset }}
           path: diagnostic-results
