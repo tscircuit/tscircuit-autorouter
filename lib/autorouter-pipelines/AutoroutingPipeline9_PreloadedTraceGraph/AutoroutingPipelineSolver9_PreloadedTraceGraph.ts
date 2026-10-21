@@ -537,8 +537,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            // Only the expanded via search space opts into longer unfinished
+            // searches. The native solver retains its normal completed limit.
             initialRoutingMaxIterations:
-              cms.hasUnroutedInnerLayerObstacles && cms.effort >= 1
+              cms.topologyMergingSolver!.reconstructedViaDomainCount > 0 &&
+              cms.effort >= 1
                 ? 32_000_000
                 : undefined,
             flags: {
@@ -704,7 +707,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
-          strictTerminalLayerIdentity: cms.hasUnroutedInnerLayerObstacles,
         },
       ],
     ),

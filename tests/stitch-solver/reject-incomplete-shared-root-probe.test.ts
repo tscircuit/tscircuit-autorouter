@@ -30,7 +30,6 @@ test("rejects incomplete shared-root probes without weakening final terminal val
     layerCount: 8,
     preserveTerminalPcbPortIds: true,
     preferSameLayerTerminalEndpoints: true,
-    strictTerminalLayerIdentity: true,
   })
   type Probe = (params: {
     connectionName: string

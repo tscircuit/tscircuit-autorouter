@@ -6,12 +6,18 @@ import type { SimpleRouteJson } from "lib/types"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import capturedInput from "../repro/assets/pipeline9-sot23-missing-via.json"
 
-test("outer-layer copper retains its original topology, stitching, and budget", (): void => {
-  for (const layerCount of [2, 4, 6, 8]) {
+test("outer-layer copper keeps layer-aware stitching with or without preloaded traces", (): void => {
+  const cases = [2, 4, 6, 8].flatMap((layerCount) =>
+    [false, true].map((includePreloadedCopper) => ({
+      layerCount,
+      includePreloadedCopper,
+    })),
+  )
+  for (const { layerCount, includePreloadedCopper } of cases) {
     const input = {
       ...structuredClone(capturedInput),
       layerCount,
-      traces: undefined,
+      traces: includePreloadedCopper ? capturedInput.traces : undefined,
     } as SimpleRouteJson
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
       cacheProvider: null,
@@ -43,8 +49,5 @@ test("outer-layer copper retains its original topology, stitching, and budget", 
       ConstructorParameters<typeof MultipleHighDensityRouteStitchSolver3>[0],
     ]
     expect(stitchParams.preferSameLayerTerminalEndpoints).toBe(true)
-    expect(stitchParams.strictTerminalLayerIdentity).toBe(false)
-    const stitchSolver = new MultipleHighDensityRouteStitchSolver3(stitchParams)
-    expect(Reflect.get(stitchSolver, "strictTerminalLayerIdentity")).toBe(false)
   }
 })

@@ -146,7 +146,7 @@ export function getLayerTopologiesForCoveredNodes({
         !node._connectedTo?.length &&
         !node._isVirtualOffboard &&
         !node._offBoardConnectionId &&
-        !Reflect.get(node, "_assignedViaObstacle"),
+        !node._assignedViaObstacle,
     )
   ) {
     const sourceKeys = [

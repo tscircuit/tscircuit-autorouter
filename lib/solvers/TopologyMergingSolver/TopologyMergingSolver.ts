@@ -42,6 +42,7 @@ export class TopologyMergingSolver extends BaseSolver {
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
+  reconstructedViaDomainCount = 0
 
   constructor(public readonly inputProblem: TopologyMergingSolverParams) {
     super()
@@ -101,6 +102,9 @@ export class TopologyMergingSolver extends BaseSolver {
         }),
       )
     }
+    this.reconstructedViaDomainCount = compactedRegions.filter(
+      (region) => region.topologyMode === "free_layer_union",
+    ).length
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,

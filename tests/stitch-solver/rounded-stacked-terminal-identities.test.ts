@@ -60,7 +60,6 @@ test("stacked terminal islands retain two distinct physical pad identities", ():
     layerCount: 8,
     preserveTerminalPcbPortIds: true,
     preferSameLayerTerminalEndpoints: true,
-    strictTerminalLayerIdentity: true,
   })
   solver.solve()
 

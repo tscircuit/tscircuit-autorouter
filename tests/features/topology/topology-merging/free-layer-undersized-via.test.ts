@@ -25,6 +25,7 @@ test("a free intersection narrower than the via remains layer-separated", (): vo
     ],
   })
   solver.solve()
+  expect(solver.reconstructedViaDomainCount).toBe(0)
   expect(getAvailableZAtPoint(solver.getOutput(), { x: 0.1, y: 1 })).toEqual([
     [0],
     [1],

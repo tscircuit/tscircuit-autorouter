@@ -33,6 +33,9 @@ test("inner-layer copper uses full-stack via domains independently of layer coun
     ]
     expect(topologyParams.minViaPadDiameter).toBe(solver.viaDiameter)
     solver.solveUntilPhase("portPointPathingSolver")
+    expect(
+      solver.topologyMergingSolver!.reconstructedViaDomainCount,
+    ).toBeGreaterThan(0)
     const routingStage = solver.pipelineDef.find(
       (step) => step.solverName === "portPointPathingSolver",
     )

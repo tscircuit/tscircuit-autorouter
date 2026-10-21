@@ -31,6 +31,7 @@ test("overlapping free layer domains expose a through-via region", (): void => {
   const solver = new TopologyMergingSolver(input)
   solver.solve()
   const nodes = solver.getOutput()
+  expect(solver.reconstructedViaDomainCount).toBe(1)
   expect(getAvailableZAtPoint(nodes, { x: 1.5, y: 1 })).toEqual([[0, 1]])
   expect(getAvailableZAtPoint(nodes, { x: 0.5, y: 1 })).toEqual([[0]])
   expect(getAvailableZAtPoint(nodes, { x: 2.5, y: 1 })).toEqual([[1]])
