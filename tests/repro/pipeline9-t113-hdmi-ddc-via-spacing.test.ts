@@ -80,6 +80,7 @@ test("repairs T113 HDMI 1.8 V same-net drill spacing", async (): Promise<void> =
     routedTraces,
     drcOptions: { viaClearance },
   })
+  expect(drc.errors, JSON.stringify(drc.errors, null, 2)).toHaveLength(0)
   const viaErrors = drc.errors.filter(
     (error) => error.type === "pcb_via_clearance_error",
   )

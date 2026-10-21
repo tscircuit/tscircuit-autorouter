@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
@@ -57,11 +58,31 @@ test("Pipeline9 routes across a preloaded default via's missing bottom obstacle"
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  const drcInput = {
+    inputSrj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  }
+  // This copper-only fixture has no terminal pads. Assert the exact endpoint
+  // diagnostics so any physical copper clearance error still fails the test.
+  const { errors } = evaluateRelaxedDrc(drcInput)
+  expect(errors.map((error) => error.type)).toEqual([
+    "pcb_trace_error",
+    "pcb_trace_error",
+    "pcb_trace_error",
+    "pcb_trace_error",
+  ])
   expect(
-    getBugReportSnapshotSvg({
-      inputSrj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+    errors
+      .map((error) =>
+        "pcb_trace_error_id" in error ? error.pcb_trace_error_id : undefined,
+      )
+      .sort(),
+  ).toEqual([
+    "disconnected_endpoint_bottom-trace_0_end",
+    "disconnected_endpoint_bottom-trace_0_start",
+    "disconnected_endpoint_preloaded-transition_end",
+    "disconnected_endpoint_preloaded-transition_start",
+  ])
+  expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(import.meta.path)
 })

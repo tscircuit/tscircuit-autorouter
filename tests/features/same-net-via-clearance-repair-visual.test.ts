@@ -116,6 +116,8 @@ test("shows dataset 18 sample 11's production exact DRC repair", async () => {
   expect(inputDrc.errors.length).toBeGreaterThan(0)
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
+  expect(outputDrc.errors.length).toBeLessThanOrEqual(70)
+  expect(outputDrc.errors.length).toBeLessThan(inputDrc.errors.length)
 
   await expect(
     getGraphicsSvgFrames({
