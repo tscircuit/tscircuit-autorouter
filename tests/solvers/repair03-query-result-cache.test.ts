@@ -24,7 +24,7 @@ type CacheInternals = {
 }
 
 test("DRC query result cache preserves ordered results and logical stats across input changes", (): void => {
-  const srj: SimpleRouteJson = {
+  const srj: SimpleRouteJson & { allowBlindAndBuriedVias?: boolean } = {
     layerCount: 4,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
