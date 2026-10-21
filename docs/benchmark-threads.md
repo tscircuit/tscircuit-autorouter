@@ -19,8 +19,17 @@ Reports record requested sample concurrency, actual sample workers,
 message copying, and disposal. Workers are built once before samples start.
 Worker failures fail the sample; they do not retry serially.
 
-Same-machine comparisons retain each revision's own benchmark harness and
-algorithms. The serial base accepts the thread-budget flag and reserves the same sample
-CPU budget, while this revision configures the requested worker pool.
-Reports distinguish the requested budget from effective configured thread count.
-Threaded profiling and Pipeline9's separate networked mode are rejected.
+For `/benchmark --dataset 18 --threads 4`, the same-machine job runs four
+independent passes sequentially: Base with inline routing, PR with inline routing,
+Base with four workers, then PR with four workers. The table shows `Base`, `PR`,
+`Base (4T)`, and `PR (4T)` in that order. Other thread counts use the corresponding
+labels. Each pass retains that revision's own benchmark harness and algorithms,
+with separate raw reports, snapshots, and stage timings. Threaded comparisons
+therefore run twice as many passes as ordinary comparisons.
+
+Inline passes explicitly use `--threads 1`; threaded passes use the requested
+worker count and its sample-concurrency budget. Reports show effective configured
+threads and concurrent samples, including when an older base only supports a
+serial implementation. Omitting `--threads`, or using `--threads 1`, retains the
+ordinary Base/PR comparison. Threaded profiling and Pipeline9's separate networked
+mode are rejected.
