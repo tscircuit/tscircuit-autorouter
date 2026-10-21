@@ -198,3 +198,6 @@ tmp
 
 *.received.svg
 *-drc.received.json
+
+/lib/runtime/generated/*.ts
+!/lib/runtime/generated/*.d.ts
