@@ -1,11 +1,18 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.992",
+  "version": "0.0.998",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/tscircuit/tscircuit-autorouter"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./runtime/bun": "./dist/runtime/bun.js",
+    "./runtime/node": "./dist/runtime/node.js",
+    "./package.json": "./package.json",
+    "./dist/*": "./dist/*"
   },
   "files": [
     "dist"
@@ -13,7 +20,7 @@
   "scripts": {
     "prepublishOnly": "bun run build && bun scripts/check-published-autorouter-version.ts",
     "start": "cosmos",
-    "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
+    "build": "bun scripts/build-solver-workers.ts && tsup --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",
@@ -56,9 +63,8 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#d3a8b095035f4e7d03cdb19f2fdb7a554c6c008a",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/81d4585d335ea1958a1c6569e4064c58cba44bad",
-    "@tscircuit/solver-utils": "^0.0.16",
+    "@tscircuit/rectdiff": "0.0.56",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/4273e9455084b7b35ebc860ebe4483b9d19692ea",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -110,6 +116,7 @@
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
   },
   "dependencies": {
+    "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1",

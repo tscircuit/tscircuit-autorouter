@@ -1555,7 +1555,7 @@ jobs:
     name: Same machine benchmark
     if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
     runs-on: ${{ (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 'blacksmith-16vcpu-ubuntu-2404-arm' || 'blacksmith-8vcpu-ubuntu-2404-arm' }}
-    timeout-minutes: ${{ inputs.long_benchmark && (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 480 || 180 }}
+    timeout-minutes: ${{ inputs.long_benchmark && (contains(inputs.benchmark_args_json, '"9net"') || contains(inputs.benchmark_args_json, '"AutoroutingPipelineSolver9_Networked"') || inputs.solver_name == 'AutoroutingPipelineSolver9_Networked') && 480 || (contains(inputs.benchmark_args_json, '"--threads"') || inputs.threads != '') && 360 || 180 }}
     env:
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
       BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
@@ -1638,7 +1638,7 @@ jobs:
                 '',
                 `Queued \`${dataset}\` on PR base \`${baseSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
                 '',
-                'Both revisions will run sequentially in one Blacksmith job.',
+                'Both revisions will run sequentially in one Blacksmith job. With --threads above one, each revision runs inline and again with the requested routing workers.',
                 '',
                 ...(networkedRemote ? [
                   'Remote mode validates every cold response and requires a fully cached hot pass; incompatible responses or local transport fallbacks fail the run.',
@@ -1699,72 +1699,15 @@ jobs:
             cp same-machine-controller/benchmark.sh "same-machine-$revision/benchmark.sh"
           done
 
-      - name: Prepare comparison artifacts
-        run: mkdir -p same-machine-results/base same-machine-results/pr
-
-      - name: Benchmark PR base
-        working-directory: same-machine-base
+      - name: Benchmark comparison passes
+        id: compare
+        working-directory: same-machine-controller
         env:
           BENCHMARK_ARGS_JSON: ${{ steps.refs.outputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
           BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: ${{ steps.refs.outputs.networked_remote == 'true' && '65000' || '0' }}
           HD_CACHE2_SERVER_URL: ${{ steps.refs.outputs.networked_remote == 'true' && 'https://hd-cache2.tscircuit.com' || '' }}
-        run: |
-          chmod +x ./benchmark.sh
-          node <<'NODE'
-          const { spawnSync } = require('node:child_process')
-          const { randomUUID } = require('node:crypto')
-          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
-          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
-            throw new Error('benchmark_args_json must be a JSON array of strings')
-          }
-          if (!args.includes('--dataset')) {
-            args.push('--dataset', process.env.BENCHMARK_DATASET)
-          }
-          if (args.includes('--networked-remote')) {
-            process.env.HD_CACHE2_CACHE_VERSION = `benchmark-${randomUUID()}`
-          } else {
-            delete process.env.HD_CACHE2_CACHE_VERSION
-          }
-          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
-          if (result.error) throw result.error
-          process.exit(result.status ?? 1)
-          NODE
-          cp benchmark-result.json ../same-machine-results/base/benchmark-result.json
-          cp benchmark-result.txt ../same-machine-results/base/benchmark-result.txt
-          cp benchmark-snapshots.html ../same-machine-results/base/benchmark-snapshots.html
-
-      - name: Benchmark PR head
-        working-directory: same-machine-pr
-        env:
-          BENCHMARK_ARGS_JSON: ${{ steps.refs.outputs.benchmark_args_json }}
-          BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
-          BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: ${{ steps.refs.outputs.networked_remote == 'true' && '65000' || '0' }}
-          HD_CACHE2_SERVER_URL: ${{ steps.refs.outputs.networked_remote == 'true' && 'https://hd-cache2.tscircuit.com' || '' }}
-        run: |
-          chmod +x ./benchmark.sh
-          node <<'NODE'
-          const { spawnSync } = require('node:child_process')
-          const { randomUUID } = require('node:crypto')
-          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
-          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
-            throw new Error('benchmark_args_json must be a JSON array of strings')
-          }
-          if (!args.includes('--dataset')) {
-            args.push('--dataset', process.env.BENCHMARK_DATASET)
-          }
-          if (args.includes('--networked-remote')) {
-            process.env.HD_CACHE2_CACHE_VERSION = `benchmark-${randomUUID()}`
-          } else {
-            delete process.env.HD_CACHE2_CACHE_VERSION
-          }
-          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
-          if (result.error) throw result.error
-          process.exit(result.status ?? 1)
-          NODE
-          cp benchmark-result.json ../same-machine-results/pr/benchmark-result.json
-          cp benchmark-result.txt ../same-machine-results/pr/benchmark-result.txt
-          cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
+        run: bun scripts/benchmark/runSameMachineBenchmarks.ts
 
       - name: Render same-machine comparison
         working-directory: same-machine-controller
@@ -1772,7 +1715,16 @@ jobs:
           BASE_SHA: ${{ steps.refs.outputs.base_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}
           RUNNER_NAME: ${{ runner.name }}
+          COMPARISON_THREADS: ${{ steps.compare.outputs.threads }}
         run: |
+          threaded_args=()
+          if [ -n "$COMPARISON_THREADS" ]; then
+            threaded_args=(
+              --threads "$COMPARISON_THREADS"
+              --base-threaded-report ../same-machine-results/base-threaded/benchmark-result.json
+              --pr-threaded-report ../same-machine-results/pr-threaded/benchmark-result.json
+            )
+          fi
           bun scripts/benchmark/same-machine-results.ts \
             --base-report ../same-machine-results/base/benchmark-result.json \
             --pr-report ../same-machine-results/pr/benchmark-result.json \
@@ -1780,19 +1732,25 @@ jobs:
             --pr-sha "$PR_SHA" \
             --repository "${{ github.repository }}" \
             --runner-name "$RUNNER_NAME" \
+            "${threaded_args[@]}" \
             --output ../same-machine-results/comment.md
 
       - name: Preserve interrupted comparison diagnostics
         if: always()
         run: |
-          for revision in base pr; do
-            mkdir -p "same-machine-results/$revision"
-            for filename in benchmark-interrupted.json benchmark-failure.json; do
-              if [ -f "same-machine-$revision/$filename" ]; then
-                cp "same-machine-$revision/$filename" "same-machine-results/$revision/$filename"
-              fi
-            done
-          done
+          node <<'NODE'
+          const fs = require('node:fs')
+          const activePass = 'same-machine-results/active-pass.json'
+          if (!fs.existsSync(activePass)) process.exit(0)
+          const { revision, output } = JSON.parse(fs.readFileSync(activePass, 'utf8'))
+          if (!['base', 'pr'].includes(revision) || !['base', 'pr', 'base-threaded', 'pr-threaded'].includes(output)) {
+            throw new Error('Invalid active comparison pass')
+          }
+          for (const filename of ['benchmark-interrupted.json', 'benchmark-failure.json']) {
+            const source = `same-machine-${revision}/${filename}`
+            if (fs.existsSync(source)) fs.copyFileSync(source, `same-machine-results/${output}/${filename}`)
+          }
+          NODE
 
       - name: Upload same-machine benchmark results
         if: always()
@@ -1819,7 +1777,7 @@ jobs:
               : [
                   '## Same Machine Benchmark Results',
                   '',
-                  `The paired benchmark ended with **${process.env.JOB_STATUS}** before both reports were produced.`,
+                  `The paired benchmark ended with **${process.env.JOB_STATUS}** before all comparison reports were produced.`,
                 ].join('\n')
             const body = [
               resultBody,
