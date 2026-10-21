@@ -83,10 +83,16 @@ test("reference DRC reuses a rejected proposal's original without confusing muta
     pcb_trace_id: "escape_0_0",
     minimum_clearance: 0.2,
   })
-  expect(reference.referenceDrcValidationCount).toBe(validationsBeforeReturn + 1)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 1,
+  )
   expect(evaluate(cleanProposal)).toHaveLength(0)
-  expect(reference.referenceDrcValidationCount).toBe(validationsBeforeReturn + 1)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 1,
+  )
   // Three distinct geometries evict the oldest, bounding retained board data.
   expect(evaluate(routes)).toEqual(original)
-  expect(reference.referenceDrcValidationCount).toBe(validationsBeforeReturn + 2)
+  expect(reference.referenceDrcValidationCount).toBe(
+    validationsBeforeReturn + 2,
+  )
 })
