@@ -37,7 +37,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import {
+  INITIAL_ROUTE_ITERATION_BUDGET_MULTIPLIER,
+  SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments,
+} from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -277,7 +280,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
-    MAX_ITERATIONS: Math.ceil(32_000_000 * effortScale),
+    MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
 }
 
@@ -338,8 +341,12 @@ const getTinyHyperGraphPipelineInput = (
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,
-) =>
-  (inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 1_000_000) +
+  allowInitialRoutingContinuation: boolean = false,
+): number =>
+  (inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 1_000_000) *
+    (allowInitialRoutingContinuation
+      ? INITIAL_ROUTE_ITERATION_BUDGET_MULTIPLIER
+      : 1) +
   (inputProblem.sectionSolverOptions?.MAX_ITERATIONS ?? 1_000_000) +
   1_000_000
 
@@ -919,6 +926,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    readonly allowInitialRoutingContinuation: boolean = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -940,7 +948,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
-    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
+    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(
+      inputProblem,
+      allowInitialRoutingContinuation,
+    )
   }
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
@@ -1009,9 +1020,18 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     )
   }
 
-  private configureSolver(solver?: BaseSolver | null) {
+  private configureSolver(solver?: BaseSolver | null): void {
     if (!solver || this.configuredSolvers.has(solver)) {
       return
+    }
+
+    if (
+      this.allowInitialRoutingContinuation &&
+      solver instanceof
+        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+    ) {
+      solver.initialRoutingIterationLimit =
+        solver.MAX_ITERATIONS * INITIAL_ROUTE_ITERATION_BUDGET_MULTIPLIER
     }
 
     if (
@@ -1030,6 +1050,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private readonly allowInitialRoutingContinuation: boolean
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1076,6 +1097,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
+    this.allowInitialRoutingContinuation =
+      params.effort >= 1 &&
+      params.flags.USE_SELECTIVE_RERIP_ROUTING === true &&
+      params.flags.USE_INITIAL_ROUTING_CONTINUATION === true &&
+      !hasPreloadedTraceOccupancy
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
@@ -1137,6 +1163,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        this.allowInitialRoutingContinuation,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1152,8 +1179,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       }
     }
     this.MAX_ITERATIONS =
-      getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
-      (this.alternativeTinyPipelineInput ? 2 : 1)
+      getTinyHyperGraphPipelineMaxIterations(
+        tinyPipelineInput,
+        this.allowInitialRoutingContinuation,
+      ) * (this.alternativeTinyPipelineInput ? 2 : 1)
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -1446,6 +1475,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.allowInitialRoutingContinuation,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

@@ -134,26 +134,32 @@ export function getLayerTopologiesForCoveredNodes({
     minViaPadDiameter !== undefined &&
     layerCount > 1 &&
     !topologies.some((topology) => topology.availableZ.length === layerCount) &&
-    new Set(topologies.flatMap((topology) => topology.availableZ)).size === layerCount &&
-    coveringNodes.every(({ node }) =>
-      !node._containsObstacle &&
-      !node._completelyInsideObstacle &&
-      !node._containsTarget &&
-      !node._targetConnectionName &&
-      !node._connectedTo?.length &&
-      !node._isVirtualOffboard &&
-      !node._offBoardConnectionId &&
-      !Reflect.get(node, "_assignedViaObstacle"),
+    new Set(topologies.flatMap((topology) => topology.availableZ)).size ===
+      layerCount &&
+    coveringNodes.every(
+      ({ node }) =>
+        !node._containsObstacle &&
+        !node._completelyInsideObstacle &&
+        !node._containsTarget &&
+        !node._targetConnectionName &&
+        !node._connectedTo?.length &&
+        !node._isVirtualOffboard &&
+        !node._offBoardConnectionId &&
+        !Reflect.get(node, "_assignedViaObstacle"),
     )
   ) {
-    const sourceKeys = [...new Set(topologies.flatMap((topology) => topology.sourceKeys))].sort()
+    const sourceKeys = [
+      ...new Set(topologies.flatMap((topology) => topology.sourceKeys)),
+    ].sort()
     const topologyMode = "free-layer-union" as const
-    return [{
-      availableZ: Array.from({ length: layerCount }, (_, z) => z),
-      sourceKeys,
-      topologyMode,
-      topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
-    }]
+    return [
+      {
+        availableZ: Array.from({ length: layerCount }, (_, z) => z),
+        sourceKeys,
+        topologyMode,
+        topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+      },
+    ]
   }
   return topologies
 }
@@ -176,14 +182,21 @@ export function separateUndersizedViaRegions({
       region.topologyMode !== "free-layer-union" ||
       (region.bounds.maxX - region.bounds.minX >= minViaPadDiameter &&
         region.bounds.maxY - region.bounds.minY >= minViaPadDiameter)
-    ) return [region]
+    )
+      return [region]
     const coveringNodes = region.sourceKeys.map((key) => {
       const preparedNode = preparedNodeBySourceKey.get(key)
-      if (!preparedNode) throw new Error(`TopologyMergingSolver: missing via-domain source "${key}"`)
+      if (!preparedNode)
+        throw new Error(
+          `TopologyMergingSolver: missing via-domain source "${key}"`,
+        )
       return preparedNode
     })
-    return getLayerTopologiesForCoveredNodes({ coveringNodes, nodeGroups, layerCount })
-      .map((topology) => ({ ...topology, bounds: region.bounds }))
+    return getLayerTopologiesForCoveredNodes({
+      coveringNodes,
+      nodeGroups,
+      layerCount,
+    }).map((topology) => ({ ...topology, bounds: region.bounds }))
   })
 }
 

@@ -184,14 +184,24 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
+  preferSameLayerTerminalEndpoints?: boolean
 }): Point3 => {
   // Snapping a wire endpoint must not invent a transition to another layer.
   const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const getTerminalDistance = params.preferSameLayerTerminalEndpoints
+    ? getSameLayerPointDistance
+    : distance
   let closestTerminal = sortedTerminals[0]
-  let closestDistance = getSameLayerPointDistance(params.islandEndpoint, closestTerminal)
+  let closestDistance = getTerminalDistance(
+    params.islandEndpoint,
+    closestTerminal,
+  )
 
   for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = getSameLayerPointDistance(params.islandEndpoint, terminal)
+    const terminalDistance = getTerminalDistance(
+      params.islandEndpoint,
+      terminal,
+    )
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&

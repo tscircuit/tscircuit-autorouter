@@ -68,8 +68,11 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.inputProblem.nodeGroups.length === 1 &&
-      (this.inputProblem.minViaPadDiameter === undefined || this.inputProblem.layerCount === 1)) {
+    if (
+      this.inputProblem.nodeGroups.length === 1 &&
+      (this.inputProblem.minViaPadDiameter === undefined ||
+        this.inputProblem.layerCount === 1)
+    ) {
       this.completePassthroughTopology()
       return
     }
@@ -88,13 +91,15 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     let compactedRegions = compactTopologyMergingRegions(topologyRegions)
     if (this.inputProblem.minViaPadDiameter !== undefined) {
-      compactedRegions = compactTopologyMergingRegions(separateUndersizedViaRegions({
-        regions: compactedRegions,
-        preparedNodeBySourceKey: this.preparedNodeBySourceKey,
-        nodeGroups: this.inputProblem.nodeGroups,
-        layerCount: this.inputProblem.layerCount,
-        minViaPadDiameter: this.inputProblem.minViaPadDiameter,
-      }))
+      compactedRegions = compactTopologyMergingRegions(
+        separateUndersizedViaRegions({
+          regions: compactedRegions,
+          preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          nodeGroups: this.inputProblem.nodeGroups,
+          layerCount: this.inputProblem.layerCount,
+          minViaPadDiameter: this.inputProblem.minViaPadDiameter,
+        }),
+      )
     }
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,

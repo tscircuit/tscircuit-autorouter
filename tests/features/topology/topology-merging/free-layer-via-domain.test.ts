@@ -12,7 +12,7 @@ test("overlapping free layer domains expose a through-via region", (): void => {
     nodeGroups: [
       {
         groupId: "component",
-        isComponent: true,
+        isComponent: false,
         nodes: [
           createTopologyMergingTestNode({
             id: "top",
@@ -35,7 +35,10 @@ test("overlapping free layer domains expose a through-via region", (): void => {
   expect(getAvailableZAtPoint(nodes, { x: 0.5, y: 1 })).toEqual([[0]])
   expect(getAvailableZAtPoint(nodes, { x: 2.5, y: 1 })).toEqual([[1]])
   for (const z of [0, 1]) {
-    expect(nodes.filter((node) => node.availableZ.includes(z))
-      .reduce((area, node) => area + node.width * node.height, 0)).toBe(4)
+    expect(
+      nodes
+        .filter((node) => node.availableZ.includes(z))
+        .reduce((area, node) => area + node.width * node.height, 0),
+    ).toBe(4)
   }
 })

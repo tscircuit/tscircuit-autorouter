@@ -10,17 +10,27 @@ test("rejects incomplete shared-root probes without weakening final terminal val
     endPcbPortId: "c",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: 0, y: 0, z: 0 }, { x: 2, y: 0, z: 0 }],
+    route: [
+      { x: 0, y: 0, z: 0 },
+      { x: 2, y: 0, z: 0 },
+    ],
     vias: [],
   }
   const solver = new MultipleHighDensityRouteStitchSolver3({
-    connections: [{ name: "a_to_c", pointsToConnect: [
-      { x: 0, y: 0, layer: "top", pcb_port_id: "a" },
-      { x: 2, y: 0, layer: "top", pcb_port_id: "c" },
-    ] }],
+    connections: [
+      {
+        name: "a_to_c",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "a" },
+          { x: 2, y: 0, layer: "top", pcb_port_id: "c" },
+        ],
+      },
+    ],
     hdRoutes: [route],
-    layerCount: 2,
+    layerCount: 8,
     preserveTerminalPcbPortIds: true,
+    preferSameLayerTerminalEndpoints: true,
+    strictTerminalLayerIdentity: true,
   })
   type Probe = (params: {
     connectionName: string
@@ -36,6 +46,16 @@ test("rejects incomplete shared-root probes without weakening final terminal val
     end: { x: 6, y: 0, z: 0, pcb_port_id: "b" },
   }
   expect(probe.call(solver, selection)).toBe(false)
-  expect(probe.call(solver, { ...selection, end: { x: 2, y: 0, z: 0, pcb_port_id: "c" } })).toBe(true)
-  expect(() => probe.call(solver, { ...selection, end: { x: 2, y: 0, z: 0, pcb_port_id: "foreign" } })).toThrow("unknown PCB terminal")
+  expect(
+    probe.call(solver, {
+      ...selection,
+      end: { x: 2, y: 0, z: 0, pcb_port_id: "c" },
+    }),
+  ).toBe(true)
+  expect(() =>
+    probe.call(solver, {
+      ...selection,
+      end: { x: 2, y: 0, z: 0, pcb_port_id: "foreign" },
+    }),
+  ).toThrow("unknown PCB terminal")
 })
