@@ -660,6 +660,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private candidateDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
@@ -725,7 +726,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
               this.exactRepairParams.hdRoutes,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
-            drcEvaluator: this.cachedReferenceDrcEvaluator,
+            drcEvaluator: this.candidateDrcEvaluator!,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -775,7 +776,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         }
         this.boundedRegionalRepairStartedAt = performance.now()
         this.boundedRegionalRepairSolver =
-          new Pipeline9BoundedRegionalRepairSolver(this.boundedRegionalParams)
+          new Pipeline9BoundedRegionalRepairSolver({
+            ...this.boundedRegionalParams,
+            drcEvaluator: this.candidateDrcEvaluator!,
+          })
         return this.boundedRegionalRepairSolver
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
@@ -1339,6 +1343,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
+      includeBoardClearance = true,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1346,7 +1351,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
-        includeBoardClearance: true,
+        includeBoardClearance,
         connectivityMaps,
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
@@ -1419,6 +1424,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    let candidateCache:
+      | { key: string; result: ReturnType<DrcEvaluator> }
+      | undefined
+    const candidateDrcEvaluator: DrcEvaluator = (input) => {
+      const routes = input.routes ?? input.hdRoutes
+      if (!routes) {
+        throw new Error("Pipeline9 candidate validation requires HD routes")
+      }
+      const key = JSON.stringify(routes)
+      if (candidateCache?.key === key) return candidateCache.result
+      this.stats.deferredCandidateDrcEvaluationCount =
+        Number(this.stats.deferredCandidateDrcEvaluationCount ?? 0) + 1
+      // Intermediate candidates may defer these checks, but a zero-error
+      // candidate always receives the complete reference validation.
+      let result = referenceDrcEvaluator(input, false, false)
+      const errors = Array.isArray(result) ? result : result.errors
+      if (errors.length === 0) result = cachedReferenceDrcEvaluator(input)
+      candidateCache = { key, result }
+      return result
+    }
+    candidateDrcEvaluator.inputMode = "routes-only"
+    this.candidateDrcEvaluator = candidateDrcEvaluator
     this.clearancePrecisionDrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1965,9 +1992,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    if (!this.cachedReferenceDrcEvaluator) {
+      throw new Error("Pipeline9 final reference evaluator is missing")
+    }
+    const reference = this.cachedReferenceDrcEvaluator({
+      traces: [],
+      routes: boundedRegionalRepairResult.routes,
+      hdRoutes: boundedRegionalRepairResult.routes,
+    })
+    const errors = Array.isArray(reference) ? reference : reference.errors
+    const publishedDrcIssueCount = errors.length
+    if (
+      boundedRegionalRepairResult.publishedDrcIssueCount === 0 &&
+      publishedDrcIssueCount !== 0
+    ) {
+      throw new Error("Pipeline9 candidate lost its full zero-DRC validation")
+    }
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      finalDrcIssueCount: publishedDrcIssueCount,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
@@ -1985,7 +2029,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         boundedRegionalRepairResult.referenceValidationCount,
       boundedRegionalRepairRepaired: boundedRegionalRepairResult.repaired,
       boundedRegionalRepairPublishedDrcIssueCount:
-        boundedRegionalRepairResult.publishedDrcIssueCount,
+        publishedDrcIssueCount,
       boundedRegionalRepairTimeMs:
         performance.now() - this.boundedRegionalRepairStartedAt,
       regionalB01RepairCandidateCount:
