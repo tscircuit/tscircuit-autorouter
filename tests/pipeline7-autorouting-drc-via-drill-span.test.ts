@@ -88,6 +88,24 @@ test("Pipeline7 repair agrees with reference DRC on physical through-via spans",
     )
     expect(referenceContacts).toHaveLength(allowBlindAndBuriedVias ? 0 : 1)
     expect(result.errors).toHaveLength(allowBlindAndBuriedVias ? 0 : 1)
+
+    const preloadedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      ...options,
+      hdRoutes: [routes[0]!],
+    })
+    for (const point of preloadedTraces[0]!.route) {
+      if (point.route_type === "via") {
+        point.layers = ["top", "inner1", "inner2"]
+      }
+    }
+    const preloadedResult = createPipeline7AutoroutingDrcEvaluator({
+      ...options,
+      originalSrj: { ...srj, traces: preloadedTraces },
+    })({ traces: [], routes: [routes[1]!] })
+    if (Array.isArray(preloadedResult)) {
+      throw new Error("Expected indexed DRC result")
+    }
+    expect(preloadedResult.errors).toHaveLength(allowBlindAndBuriedVias ? 0 : 1)
   }
   expect(routes).toEqual(originalRoutes)
 })
