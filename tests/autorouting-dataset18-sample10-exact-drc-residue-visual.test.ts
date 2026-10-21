@@ -90,7 +90,7 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
 
   // Node-local repair may clear all errors before the exact stage.
   expect(outputDrc.errors.length).toBeLessThanOrEqual(inputDrc.errors.length)
-  expect(outputDrc.errors, JSON.stringify(outputDrc.errors, null, 2)).toHaveLength(0)
+  expect(outputDrc.errors).toHaveLength(0)
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
