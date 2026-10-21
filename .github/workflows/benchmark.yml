@@ -28,7 +28,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - run: bun install
+      - run: |
+          sed -i "s/save = false/save = true/" bunfig.toml
+          bun install
       - name: Capture environment and shared dependency lock
         run: |
           mkdir -p diagnostic-results
