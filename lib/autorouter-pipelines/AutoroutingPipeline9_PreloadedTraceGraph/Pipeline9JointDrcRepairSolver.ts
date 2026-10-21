@@ -1427,7 +1427,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     let candidateCache:
       | { key: string; result: ReturnType<DrcEvaluator> }
       | undefined
-    const candidateDrcEvaluator: DrcEvaluator = (input) => {
+    const candidateDrcEvaluator: DrcEvaluator = (
+      input,
+    ): ReturnType<DrcEvaluator> => {
       const routes = input.routes ?? input.hdRoutes
       if (!routes) {
         throw new Error("Pipeline9 candidate validation requires HD routes")
