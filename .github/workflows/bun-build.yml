@@ -26,6 +26,9 @@ jobs:
       - name: Run build
         run: bun run build
 
+      - name: Check packed solver runtime consumers
+        run: bun scripts/check-solver-runtime-packaging.ts
+
       - name: Create npm package tarball
         id: create-npm-package-tarball
         run: |
