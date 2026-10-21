@@ -6,7 +6,9 @@ import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityM
 
 export class ExhaustiveTargetEdgeSolver extends CapacityMeshEdgeSolver {
   override handleTargetNodes(): void {
-    const targetNodes = this.nodes.filter((node): boolean => Boolean(node._containsTarget))
+    const targetNodes = this.nodes.filter((node): boolean =>
+      Boolean(node._containsTarget),
+    )
     const nodeById = new Map<CapacityMeshNodeId, CapacityMeshNode>(
       this.nodes.map((node): [CapacityMeshNodeId, CapacityMeshNode] => [
         node.capacityMeshNodeId,

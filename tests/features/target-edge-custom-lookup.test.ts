@@ -13,10 +13,7 @@ class CustomEdgeLookupSolver extends CapacityMeshEdgeSolver {
     left: CapacityMeshNode,
     right: CapacityMeshNode,
   ): boolean {
-    this.observedPairs.push([
-      left.capacityMeshNodeId,
-      right.capacityMeshNodeId,
-    ])
+    this.observedPairs.push([left.capacityMeshNodeId, right.capacityMeshNodeId])
     return this.edgeExists
   }
 }

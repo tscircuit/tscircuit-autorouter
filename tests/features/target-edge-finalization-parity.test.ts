@@ -25,7 +25,9 @@ test("target-edge indexing preserves ordered edges and validation errors", (): v
         availableZ: trial % 3 === 0 ? [0, 1] : [(seed >>> 12) % 2],
         _containsTarget: containsTarget,
         _containsObstacle: containsObstacle,
-        _targetConnectionName: containsTarget ? `connection_${index}` : undefined,
+        _targetConnectionName: containsTarget
+          ? `connection_${index}`
+          : undefined,
       })
     }
     for (let index = 0; index < 40; index++) {
@@ -41,7 +43,8 @@ test("target-edge indexing preserves ordered edges and validation errors", (): v
       })
     }
     const beforeNodes = JSON.stringify(nodes)
-    const results: Array<{ edges: CapacityMeshEdge[]; error: string | null }> = []
+    const results: Array<{ edges: CapacityMeshEdge[]; error: string | null }> =
+      []
     for (const Solver of [ExhaustiveTargetEdgeSolver, CapacityMeshEdgeSolver]) {
       const solver = new Solver(nodes)
       solver.edges = structuredClone(edges)
