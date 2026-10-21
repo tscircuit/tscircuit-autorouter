@@ -87,7 +87,10 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
+const isPointInsideObstacle = (
+  point: ConnectionPoint,
+  obstacle: Obstacle,
+): boolean => {
   if (
     getConnectionPointLayers(point).length > 0 &&
     !getConnectionPointLayers(point).some((layer) =>
@@ -97,7 +100,26 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  const ccwRotationDegrees = obstacle.ccwRotationDegrees ?? 0
+  if (!Number.isFinite(ccwRotationDegrees)) {
+    throw new Error("Obstacle rotation must be finite")
+  }
+  if (ccwRotationDegrees === 0) {
+    return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  }
+
+  // Obstacle dimensions describe its local frame, not an unrotated world AABB.
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
+  const dx = point.x - obstacle.center.x
+  const dy = point.y - obstacle.center.y
+  const localX =
+    dx * Math.cos(ccwRotationRadians) + dy * Math.sin(ccwRotationRadians)
+  const localY =
+    -dx * Math.sin(ccwRotationRadians) + dy * Math.cos(ccwRotationRadians)
+  return (
+    Math.abs(localX) <= obstacle.width / 2 &&
+    Math.abs(localY) <= obstacle.height / 2
+  )
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {

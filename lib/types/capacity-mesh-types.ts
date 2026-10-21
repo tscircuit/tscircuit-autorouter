@@ -1,3 +1,5 @@
+import type { Obstacle } from "./srj-types"
+
 export type CapacityMeshNodeId = string
 
 export interface CapacityMesh {
@@ -34,6 +36,7 @@ export interface CapacityMeshNode {
   _soicRegionType?: "center" | "pad" | "pad-gap"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
+  _assignedViaObstacle?: Obstacle
 
   _parent?: CapacityMeshNode
 }

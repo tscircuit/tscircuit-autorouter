@@ -5,6 +5,7 @@ import type {
   TopologyMergingMode,
   TopologyMergingNodeGroup,
   TopologyMergingRegion,
+  TopologyMergingSourceKey,
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
@@ -64,10 +65,12 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
   layerCount,
+  minViaPadDiameter,
 }: {
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
+  minViaPadDiameter?: number
 }): TopologyMergingLayerTopology[] {
   const layerTopologyBySignature = new Map<
     string,
@@ -125,7 +128,80 @@ export function getLayerTopologiesForCoveredNodes({
     }
   }
 
-  return [...layerTopologyBySignature.values()]
+  const topologies = [...layerTopologyBySignature.values()]
+  // Source IDs describe the planar partition, not a physical barrier between
+  // otherwise free layers. A full-stack free intersection can contain a via.
+  if (
+    minViaPadDiameter !== undefined &&
+    layerCount > 1 &&
+    !topologies.some((topology) => topology.availableZ.length === layerCount) &&
+    new Set(topologies.flatMap((topology) => topology.availableZ)).size ===
+      layerCount &&
+    coveringNodes.every(
+      ({ node }) =>
+        !node._containsObstacle &&
+        !node._completelyInsideObstacle &&
+        !node._containsTarget &&
+        !node._targetConnectionName &&
+        !node._connectedTo?.length &&
+        !node._isVirtualOffboard &&
+        !node._offBoardConnectionId &&
+        !node._assignedViaObstacle,
+    )
+  ) {
+    const sourceKeys = [
+      ...new Set(topologies.flatMap((topology) => topology.sourceKeys)),
+    ].sort()
+    const topologyMode = "free_layer_union" as const
+    return [
+      {
+        availableZ: Array.from({ length: layerCount }, (_, z) => z),
+        sourceKeys,
+        topologyMode,
+        topologySignature: JSON.stringify({ mode: topologyMode, sourceKeys }),
+      },
+    ]
+  }
+  return topologies
+}
+
+export function separateUndersizedViaRegions({
+  regions,
+  preparedNodeBySourceKey,
+  nodeGroups,
+  layerCount,
+  minViaPadDiameter,
+}: {
+  regions: TopologyMergingRegion[]
+  preparedNodeBySourceKey: ReadonlyMap<
+    TopologyMergingSourceKey,
+    PreparedTopologyMergingNode
+  >
+  nodeGroups: readonly TopologyMergingNodeGroup[]
+  layerCount: number
+  minViaPadDiameter: number
+}): TopologyMergingRegion[] {
+  return regions.flatMap((region) => {
+    if (
+      region.topologyMode !== "free_layer_union" ||
+      (region.bounds.maxX - region.bounds.minX >= minViaPadDiameter &&
+        region.bounds.maxY - region.bounds.minY >= minViaPadDiameter)
+    )
+      return [region]
+    const coveringNodes = region.sourceKeys.map((key) => {
+      const preparedNode = preparedNodeBySourceKey.get(key)
+      if (!preparedNode)
+        throw new Error(
+          `TopologyMergingSolver: missing via-domain source "${key}"`,
+        )
+      return preparedNode
+    })
+    return getLayerTopologiesForCoveredNodes({
+      coveringNodes,
+      nodeGroups,
+      layerCount,
+    }).map((topology) => ({ ...topology, bounds: region.bounds }))
+  })
 }
 
 export function restoreAuthoritativeTargetRegions({

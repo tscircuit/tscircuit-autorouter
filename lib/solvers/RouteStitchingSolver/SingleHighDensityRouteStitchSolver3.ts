@@ -9,6 +9,7 @@ import {
   comparePoints,
   compareRoutes,
   DISTANCE_TIE_TOLERANCE,
+  getSameLayerPointDistance,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
@@ -77,6 +78,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preferSameLayerTerminalEndpoints?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -181,6 +183,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     let bestDist = Infinity
+    const getTerminalDistance = opts.preferSameLayerTerminalEndpoints
+      ? getSameLayerPointDistance
+      : distance
     let firstRoute = canonicalHdRoutes[0]
     let orientation: "start-to-end" | "end-to-start" = "start-to-end"
 
@@ -188,10 +193,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst = getTerminalDistance(opts.start, firstPoint)
+      const distStartToLast = getTerminalDistance(opts.start, lastPoint)
+      const distEndToFirst = getTerminalDistance(opts.end, firstPoint)
+      const distEndToLast = getTerminalDistance(opts.end, lastPoint)
 
       const minDist = Math.min(
         distStartToFirst,
@@ -224,6 +229,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
+    if (!Number.isFinite(bestDist)) {
+      throw new Error(
+        `No route endpoint shares a terminal layer for "${opts.connectionName}"`,
+      )
+    }
+
     if (orientation === "start-to-end") {
       this.start = opts.start
       this.end = opts.end
@@ -234,8 +245,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
+    const distToFirst = getTerminalDistance(this.start, firstRouteFirstPoint)
+    const distToLast = getTerminalDistance(this.start, firstRouteLastPoint)
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&

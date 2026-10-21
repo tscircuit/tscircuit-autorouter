@@ -14,6 +14,7 @@ import {
   getCanonicalCoordinates,
   getLayerTopologiesForCoveredNodes,
   restoreAuthoritativeTargetRegions,
+  separateUndersizedViaRegions,
 } from "./topology-merging-regions"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 import type {
@@ -41,6 +42,7 @@ export class TopologyMergingSolver extends BaseSolver {
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
+  reconstructedViaDomainCount = 0
 
   constructor(public readonly inputProblem: TopologyMergingSolverParams) {
     super()
@@ -67,7 +69,11 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.inputProblem.nodeGroups.length === 1) {
+    if (
+      this.inputProblem.nodeGroups.length === 1 &&
+      (this.inputProblem.minViaPadDiameter === undefined ||
+        this.inputProblem.layerCount === 1)
+    ) {
       this.completePassthroughTopology()
       return
     }
@@ -84,7 +90,21 @@ export class TopologyMergingSolver extends BaseSolver {
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
     })
-    const compactedRegions = compactTopologyMergingRegions(topologyRegions)
+    let compactedRegions = compactTopologyMergingRegions(topologyRegions)
+    if (this.inputProblem.minViaPadDiameter !== undefined) {
+      compactedRegions = compactTopologyMergingRegions(
+        separateUndersizedViaRegions({
+          regions: compactedRegions,
+          preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+          nodeGroups: this.inputProblem.nodeGroups,
+          layerCount: this.inputProblem.layerCount,
+          minViaPadDiameter: this.inputProblem.minViaPadDiameter,
+        }),
+      )
+    }
+    this.reconstructedViaDomainCount = compactedRegions.filter(
+      (region) => region.topologyMode === "free_layer_union",
+    ).length
     this.outputNodes = createTopologyMergingOutputNodes({
       regions: compactedRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
@@ -198,6 +218,7 @@ export class TopologyMergingSolver extends BaseSolver {
         coveringNodes,
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
+        minViaPadDiameter: this.inputProblem.minViaPadDiameter,
       })
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({

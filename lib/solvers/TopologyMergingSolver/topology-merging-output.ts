@@ -66,6 +66,11 @@ export function createTopologyMergingOutputNodes({
       sourceNodes,
       isComponentTopologyNode,
     })
+    if (region.topologyMode === "free_layer_union") {
+      metadata._qfpRegionType = undefined
+      metadata._soicRegionType = undefined
+      metadata._isNarrowQfpPadGap = undefined
+    }
     const preservedSourceNode =
       preserveSourceIds && sourcePreparedNodes.length === 1
         ? sourcePreparedNodes[0]!.node
