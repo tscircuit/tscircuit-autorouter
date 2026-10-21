@@ -15,7 +15,7 @@ import {
   type GraphicsSvgFrame,
 } from "./fixtures/solver-svg-frames"
 
-test("tracks dataset 18 sample 10's remaining exact DRC error", async () => {
+test("repairs dataset 18 sample 10's exact DRC errors", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
   const pipeline = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     cacheProvider: null,
@@ -88,9 +88,9 @@ test("tracks dataset 18 sample 10's remaining exact DRC error", async () => {
     graphics: viewer.visualize(),
   })
 
-  // Latest repair03 leaves one known error; the exact stage must not add errors.
+  // Node-local repair may clear all errors before the exact stage.
   expect(outputDrc.errors.length).toBeLessThanOrEqual(inputDrc.errors.length)
-  expect(outputDrc.errors).toHaveLength(1)
+  expect(outputDrc.errors, JSON.stringify(outputDrc.errors, null, 2)).toHaveLength(0)
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
