@@ -1,5 +1,6 @@
 import { createPcbPadElements } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
+import { isViaPadClearanceError } from "./isViaPadClearanceError"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 /**
@@ -38,18 +39,11 @@ export const canPublishPartialFixedObstacleRepair = ({
       error.pcb_trace_error_id.startsWith(prefix)
         ? error.pcb_trace_error_id.slice(prefix.length)
         : undefined
-    const isViaPadClearance =
-      error.type === "pcb_pad_pad_clearance_error" &&
-      Array.isArray(error.pcb_via_ids) &&
-      error.pcb_via_ids.length === 1 &&
-      typeof error.pcb_via_ids[0] === "string" &&
-      Array.isArray(error.pcb_pad_ids) &&
-      error.pcb_pad_ids.length === 2 &&
-      error.pcb_pad_ids.includes(error.pcb_via_ids[0])
+    const isViaPadClearance = isViaPadClearanceError(error)
     const isPadClearance =
       error.type === "pcb_pad_trace_clearance_error" || isViaPadClearance
     const padId = isViaPadClearance
-      ? (error.pcb_pad_ids as string[]).find((id) => padIds.has(id))
+      ? error.pcb_pad_ids.find((id) => padIds.has(id))
       : isPadClearance
         ? error.pcb_pad_id
         : overlapPadId
@@ -62,9 +56,7 @@ export const canPublishPartialFixedObstacleRepair = ({
         original.type === error.type &&
         original.pcb_trace_id === error.pcb_trace_id &&
         (isViaPadClearance
-          ? Array.isArray(original.pcb_via_ids) &&
-            original.pcb_via_ids.length === 1 &&
-            Array.isArray(original.pcb_pad_ids) &&
+          ? isViaPadClearanceError(original) &&
             original.pcb_pad_ids.includes(padId)
           : isPadClearance
             ? original.pcb_pad_id === padId
