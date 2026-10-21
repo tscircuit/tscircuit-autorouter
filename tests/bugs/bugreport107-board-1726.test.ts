@@ -56,12 +56,15 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
       ),
     )
   }
-  const repairInputDrcIssueCount = stats.initialBoundedRegionalRepairAccepted
-    ? stats.initialJointDrcIssueCount
-    : stats.postExactReferenceDrcIssueCount
-  expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
-    repairInputDrcIssueCount,
-  )
+  // Initial bounded repair can solve native route variants before exact repair.
+  if (stats.initialBoundedRegionalRepairAccepted === true) {
+    expect(stats.initialBoundedRegionalRepairPublishedDrcIssueCount).toBe(0)
+    expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBe(0)
+  } else {
+    expect(stats.boundedRegionalRepairPublishedDrcIssueCount).toBeLessThan(
+      stats.postExactReferenceDrcIssueCount,
+    )
+  }
   expect(errors.length).toBeLessThanOrEqual(
     stats.boundedRegionalRepairPublishedDrcIssueCount,
   )

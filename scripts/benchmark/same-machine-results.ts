@@ -10,6 +10,11 @@ type SameMachineBenchmarkInput = {
   prSha: string
   repository: string
   runnerName: string
+  threaded?: {
+    threads: number
+    baseReport: BenchmarkReport
+    prReport: BenchmarkReport
+  }
 }
 
 const formatTime = (timeMs: number | null): string => {
@@ -179,6 +184,7 @@ export const renderSameMachineBenchmarkResults = ({
   prSha,
   repository,
   runnerName,
+  threaded,
 }: SameMachineBenchmarkInput): string => {
   if (baseReport.datasetName !== prReport.datasetName) {
     throw new Error(
@@ -186,90 +192,187 @@ export const renderSameMachineBenchmarkResults = ({
     )
   }
 
-  const baseSummaries = new Map(
-    baseReport.summary.map((summary) => [summary.solverName, summary]),
-  )
+  const columns = [
+    { label: "Base", report: baseReport },
+    { label: "PR", report: prReport },
+    ...(threaded
+      ? [
+          { label: `Base (${threaded.threads}T)`, report: threaded.baseReport },
+          { label: `PR (${threaded.threads}T)`, report: threaded.prReport },
+        ]
+      : []),
+  ]
+  if (threaded) {
+    if (!Number.isSafeInteger(threaded.threads) || threaded.threads < 2) {
+      throw new Error("Threaded comparisons require a thread count above one")
+    }
+    const sampleKeys = new Set(baseReport.tests.map(testKey))
+    const solverNames = new Set(baseReport.summary.map((row) => row.solverName))
+    for (const [index, { label, report }] of columns.entries()) {
+      if (
+        report.datasetName !== baseReport.datasetName ||
+        report.scenarioCount !== baseReport.scenarioCount ||
+        report.effortLabel !== baseReport.effortLabel
+      ) {
+        throw new Error(`Comparison metadata mismatch for ${label}`)
+      }
+      if (
+        report.tests.length !== sampleKeys.size ||
+        new Set(report.tests.map(testKey)).size !== sampleKeys.size ||
+        report.tests.some((sample) => !sampleKeys.has(testKey(sample))) ||
+        report.summary.length !== solverNames.size ||
+        new Set(report.summary.map((row) => row.solverName)).size !==
+          solverNames.size ||
+        report.summary.some((row) => !solverNames.has(row.solverName))
+      ) {
+        throw new Error(`Comparison samples or solvers mismatch for ${label}`)
+      }
+      const expectedThreads = index < 2 ? 1 : threaded.threads
+      if (
+        report.runtime?.threadsPerSample !== undefined &&
+        report.runtime.threadsPerSample !== expectedThreads
+      ) {
+        throw new Error(`Thread count mismatch for ${label}`)
+      }
+    }
+  }
   const changedOutcomes = getChangedOutcomes(baseReport, prReport)
   const lines = [
     "## Same Machine Benchmark Results",
     "",
     `Both revisions ran sequentially in one Blacksmith job on \`${runnerName}\`.`,
+    ...(threaded
+      ? [
+          `Four independent passes ran in order: Base, PR, Base (${threaded.threads}T), PR (${threaded.threads}T). Base and PR use synchronous inline routing; threaded columns request ${threaded.threads} routing workers per sample.`,
+          ...columns.map(
+            ({ label, report }) =>
+              `${label}: effective configured threads per sample: ${report.runtime?.effectiveThreadsPerSample ?? "unavailable"}; concurrent samples: ${report.runtime?.workerCount ?? "unavailable"}.`,
+          ),
+        ]
+      : []),
     "",
     `Dataset: \`${baseReport.datasetName}\` · Scenarios: ${baseReport.scenarioCount}`,
     `Base: [\`${baseSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${baseSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
     "",
-    "| Solver | Metric | Base | PR | Delta |",
-    "| --- | --- | ---: | ---: | ---: |",
+    `| Solver | Metric | ${columns.map(({ label }) => label).join(" | ")}${threaded ? "" : " | Delta"} |`,
+    `| --- | --- | ${columns.map(() => "---:").join(" | ")}${threaded ? "" : " | ---:"} |`,
   ]
 
   for (const prSummary of prReport.summary) {
-    const baseSummary = baseSummaries.get(prSummary.solverName)
-    if (!baseSummary) {
-      throw new Error(`Base report is missing solver ${prSummary.solverName}`)
-    }
     const solver = formatSolverName(prSummary.solverName)
-    const baseTimeouts = baseReport.tests.filter(
-      (test) => test.solverName === prSummary.solverName && test.didTimeout,
-    ).length
-    const prTimeouts = prReport.tests.filter(
-      (test) => test.solverName === prSummary.solverName && test.didTimeout,
-    ).length
-    const baseDrcIssues = getDrcIssueCount(baseReport, prSummary.solverName)
-    const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
-    const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
-      const baseTime = getTimePercentile(
-        baseReport,
-        prSummary.solverName,
-        percentile / 100,
+    const summaries = columns.map(({ report, label }) => {
+      const summary = report.summary.find(
+        (row) => row.solverName === prSummary.solverName,
       )
-      const prTime = getTimePercentile(
-        prReport,
-        prSummary.solverName,
-        percentile / 100,
-      )
-      return `| ${solver} | P${percentile} time | ${formatTime(baseTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(baseTime, prTime)} |`
+      if (!summary) {
+        throw new Error(
+          `${label} report is missing solver ${prSummary.solverName}`,
+        )
+      }
+      return summary
     })
-
-    lines.push(
-      `| ${solver} | Completion | ${baseSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(baseSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
-      `| ${solver} | Relaxed DRC pass | ${baseSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(baseSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
-      `| ${solver} | DRC issues | ${baseDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(baseDrcIssues, prDrcIssues)} |`,
-      `| ${solver} | Timeouts | ${baseTimeouts} | ${prTimeouts} | ${prTimeouts - baseTimeouts > 0 ? "+" : ""}${prTimeouts - baseTimeouts} |`,
-      ...timePercentiles,
+    const appendRow = (
+      metric: string,
+      values: string[],
+      delta: string,
+    ): void => {
+      const cells = [solver, metric, ...values]
+      if (!threaded) {
+        cells.push(delta)
+      }
+      lines.push(`| ${cells.join(" | ")} |`)
+    }
+    const completion = summaries.map((row) => row.completedRateLabel)
+    const drcPass = summaries.map((row) => row.relaxedDrcRateLabel)
+    const drcIssues = columns.map(({ report }) =>
+      getDrcIssueCount(report, prSummary.solverName),
     )
-    if (
-      typeof baseSummary.p90PeakRssBytes === "number" ||
-      typeof prSummary.p90PeakRssBytes === "number"
-    ) {
-      lines.push(
-        `| ${solver} | Memory P50 | ${formatMemory(baseSummary.p50PeakRssBytes)} | ${formatMemory(prSummary.p50PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p50PeakRssBytes ?? null, prSummary.p50PeakRssBytes ?? null)} |`,
-        `| ${solver} | Memory P80 | ${formatMemory(baseSummary.p80PeakRssBytes)} | ${formatMemory(prSummary.p80PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p80PeakRssBytes ?? null, prSummary.p80PeakRssBytes ?? null)} |`,
-        `| ${solver} | Memory P90 | ${formatMemory(baseSummary.p90PeakRssBytes)} | ${formatMemory(prSummary.p90PeakRssBytes)} | ${formatRelativeDelta(baseSummary.p90PeakRssBytes ?? null, prSummary.p90PeakRssBytes ?? null)} |`,
+    const timeouts = columns.map(
+      ({ report }) =>
+        report.tests.filter(
+          (test) => test.solverName === prSummary.solverName && test.didTimeout,
+        ).length,
+    )
+    appendRow(
+      "Completion",
+      completion,
+      formatPercentPointDelta(completion[0]!, completion[1]!),
+    )
+    appendRow(
+      "Relaxed DRC pass",
+      drcPass,
+      formatPercentPointDelta(drcPass[0]!, drcPass[1]!),
+    )
+    appendRow(
+      "DRC issues",
+      drcIssues.map((value) => String(value ?? "n/a")),
+      formatCountDelta(drcIssues[0]!, drcIssues[1]!),
+    )
+    appendRow(
+      "Timeouts",
+      timeouts.map(String),
+      formatCountDelta(timeouts[0]!, timeouts[1]!),
+    )
+    for (const percentile of [50, 60, 70, 80, 90, 95]) {
+      const times = columns.map(({ report }) =>
+        getTimePercentile(report, prSummary.solverName, percentile / 100),
+      )
+      appendRow(
+        `P${percentile} time`,
+        times.map(formatTime),
+        formatRelativeDelta(times[0]!, times[1]!),
       )
     }
-    lines.push(
-      `| ${solver} | Average vias | ${formatAverage(baseSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(baseSummary.avgVia, prSummary.avgVia)} |`,
+    if (summaries.some((row) => typeof row.p90PeakRssBytes === "number")) {
+      for (const percentile of [50, 80, 90] as const) {
+        const values = summaries.map(
+          (row) => row[`p${percentile}PeakRssBytes`] ?? null,
+        )
+        appendRow(
+          `Memory P${percentile}`,
+          values.map(formatMemory),
+          formatRelativeDelta(values[0]!, values[1]!),
+        )
+      }
+    }
+    const vias = summaries.map((row) => row.avgVia)
+    appendRow(
+      "Average vias",
+      vias.map(formatAverage),
+      formatRelativeDelta(vias[0]!, vias[1]!),
     )
-    for (const type of getTraceLintTypes(baseSummary, prSummary)) {
-      const baseAverage = baseSummary.avgTraceLintIssues?.[type] ?? null
-      const prAverage = prSummary.avgTraceLintIssues?.[type] ?? null
-      lines.push(
-        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(baseAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(baseAverage, prAverage)} |`,
+    for (const type of getTraceLintTypes(...summaries)) {
+      const values = summaries.map(
+        (row) => row.avgTraceLintIssues?.[type] ?? null,
+      )
+      appendRow(
+        TRACE_LINT_LABELS[type] ?? `Avg ${type}`,
+        values.map(formatAverage),
+        formatRelativeDelta(values[0]!, values[1]!),
       )
     }
     if (
-      prSummary.solverName === "Pipeline9_Networked Cold" ||
-      prSummary.solverName === "Pipeline9_Networked Hot"
-    ) {
-      const baseCache = baseSummary.networkCache
-      const prCache = prSummary.networkCache
-      lines.push(
-        `| ${solver} | HD requests | ${baseCache?.remoteRequests ?? "n/a"} | ${prCache?.remoteRequests ?? "n/a"} | ${formatCountDelta(baseCache?.remoteRequests ?? null, prCache?.remoteRequests ?? null)} |`,
-        `| ${solver} | HD cache hits | ${baseCache ? `${baseCache.cacheHits}/${baseCache.remoteRequests}` : "n/a"} | ${prCache ? `${prCache.cacheHits}/${prCache.remoteRequests}` : "n/a"} | ${formatCountDelta(baseCache?.cacheHits ?? null, prCache?.cacheHits ?? null)} |`,
-        `| ${solver} | HD solver results | ${baseCache?.solverResults ?? "n/a"} | ${prCache?.solverResults ?? "n/a"} | ${formatCountDelta(baseCache?.solverResults ?? null, prCache?.solverResults ?? null)} |`,
-        `| ${solver} | HD local fallbacks | ${baseCache?.localFallbacks ?? "n/a"} | ${prCache?.localFallbacks ?? "n/a"} | ${formatCountDelta(baseCache?.localFallbacks ?? null, prCache?.localFallbacks ?? null)} |`,
-        `| ${solver} | HD validation retries | ${baseCache?.validationRejections ?? "n/a"} | ${prCache?.validationRejections ?? "n/a"} | ${formatCountDelta(baseCache?.validationRejections ?? null, prCache?.validationRejections ?? null)} |`,
+      ["Pipeline9_Networked Cold", "Pipeline9_Networked Hot"].includes(
+        prSummary.solverName,
       )
+    ) {
+      const caches = summaries.map((row) => row.networkCache)
+      for (const [label, key] of [
+        ["HD requests", "remoteRequests"],
+        ["HD cache hits", "cacheHits"],
+        ["HD solver results", "solverResults"],
+        ["HD local fallbacks", "localFallbacks"],
+        ["HD validation retries", "validationRejections"],
+      ] as const) {
+        const values = caches.map((cache) => cache?.[key] ?? null)
+        const cells =
+          key === "cacheHits"
+            ? caches.map((cache) =>
+                cache ? `${cache.cacheHits}/${cache.remoteRequests}` : "n/a",
+              )
+            : values.map((value) => String(value ?? "n/a"))
+        appendRow(label, cells, formatCountDelta(values[0]!, values[1]!))
+      }
     }
   }
 
@@ -279,7 +382,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing deltas are faster. Historical failures without timeout metadata make timing percentiles unavailable.`,
+    `${threaded ? "Serial outcome changes" : "Outcome changes"}: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing deltas are faster. Historical failures without timeout metadata make timing percentiles unavailable.`,
   )
 
   lines.push(
@@ -294,8 +397,9 @@ export const renderSameMachineBenchmarkResults = ({
           "HD validation retries are geometry results rejected by the existing client and rerouted locally; their cost remains in timings. Cache hits and solver results count accepted responses.",
         ]
       : []),
-    ...renderBenchmarkStageTimings(baseReport, "Base"),
-    ...renderBenchmarkStageTimings(prReport, "PR"),
+    ...columns.flatMap(({ label, report }) =>
+      renderBenchmarkStageTimings(report, label),
+    ),
   )
 
   if (changedOutcomes.length > 0) {
@@ -313,6 +417,33 @@ export const renderSameMachineBenchmarkResults = ({
       "",
       "</details>",
     )
+  }
+
+  if (threaded) {
+    const changes = getChangedOutcomes(threaded.baseReport, threaded.prReport)
+    const improved = changes.filter(
+      (change) => change.delta === "Improved",
+    ).length
+    lines.push(
+      "",
+      `Threaded outcome changes (${threaded.threads}T): **${improved} improved**, **${changes.length - improved} regressed**.`,
+    )
+    if (changes.length > 0) {
+      lines.push(
+        "",
+        "<details>",
+        `<summary>Threaded changed outcomes (${changes.length})</summary>`,
+        "",
+        `| Solver | Sample | Base (${threaded.threads}T) | PR (${threaded.threads}T) | Base time | PR time | Delta |`,
+        "| --- | ---: | --- | --- | ---: | ---: | --- |",
+        ...changes.map(
+          ({ solverName, sampleNumber, baseTest, prTest, delta }) =>
+            `| ${escapeTableCell(formatSolverName(solverName))} | ${sampleNumber} | ${escapeTableCell(outcomeLabel(baseTest))} | ${escapeTableCell(outcomeLabel(prTest))} | ${formatTime(baseTest.elapsedTimeMs)} | ${formatTime(prTest.elapsedTimeMs)} | ${delta} |`,
+        ),
+        "",
+        "</details>",
+      )
+    }
   }
 
   return `${lines.join("\n")}\n`
@@ -336,6 +467,23 @@ if (import.meta.main) {
     await readFile(prReportPath, "utf8"),
   ) as BenchmarkReport
 
+  const hasThreadedArgs = [
+    "--threads",
+    "--base-threaded-report",
+    "--pr-threaded-report",
+  ].some((name) => process.argv.includes(name))
+  const threaded = hasThreadedArgs
+    ? {
+        threads: Number(getRequiredArg("--threads")),
+        baseReport: JSON.parse(
+          await readFile(getRequiredArg("--base-threaded-report"), "utf8"),
+        ) as BenchmarkReport,
+        prReport: JSON.parse(
+          await readFile(getRequiredArg("--pr-threaded-report"), "utf8"),
+        ) as BenchmarkReport,
+      }
+    : undefined
+
   await writeFile(
     outputPath,
     renderSameMachineBenchmarkResults({
@@ -345,6 +493,7 @@ if (import.meta.main) {
       prSha: getRequiredArg("--pr-sha"),
       repository: getRequiredArg("--repository"),
       runnerName: getRequiredArg("--runner-name"),
+      threaded,
     }),
   )
 }

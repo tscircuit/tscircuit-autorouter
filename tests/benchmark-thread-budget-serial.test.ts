@@ -3,13 +3,13 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline9 } from "../
 import { solveWithProgress } from "../scripts/benchmark/benchmark-run-task"
 import type { BenchmarkTask } from "../scripts/benchmark/benchmark-types"
 
-test("serial Pipeline9 accepts a routing thread budget without changing output", async (): Promise<void> => {
+test("single-thread Pipeline9 preserves serial benchmark output", async (): Promise<void> => {
   const task: BenchmarkTask = {
     datasetName: "test",
     solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
     scenarioName: "serial-budget",
     sampleNumber: 1,
-    threads: 4,
+    threads: 1,
     scenario: {
       layerCount: 2,
       minTraceWidth: 0.1,
@@ -35,7 +35,7 @@ test("serial Pipeline9 accepts a routing thread budget without changing output",
     effort: 0.1,
     cacheProvider: null,
   })
-  expect("solveAsync" in budgeted).toBe(false)
+  expect("solveAsync" in budgeted).toBe(true)
   await solveWithProgress(task, budgeted, performance.now(), {})
   expect(budgeted.solved).toBe(true)
   expect(JSON.stringify(budgeted.getOutputSimpleRouteJson())).toBe(
