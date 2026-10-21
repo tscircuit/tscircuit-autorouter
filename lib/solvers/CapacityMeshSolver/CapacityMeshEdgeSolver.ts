@@ -134,7 +134,8 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         }
       } else {
         hasRoutingEdge = this.edges.some((edge): boolean => {
-          if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
+          if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId))
+            return false
           const otherNodeId =
             edge.nodeIds[0] === targetNode.capacityMeshNodeId
               ? edge.nodeIds[1]
