@@ -11,9 +11,10 @@ const label = process.argv[3]!
 const samplePath = kind === "joint14"
   ? "node_modules/dataset-srj18/samples/sample014.json"
   : `node_modules/@tscircuit/dataset-srj24/samples/sample${kind === "memory04" ? "004" : "024"}.json`
-const input = JSON.parse(readFileSync(samplePath, "utf8"))
+const inputBytes = readFileSync(samplePath, "utf8")
+const input = JSON.parse(inputBytes)
 const hash = (value: unknown): string => createHash("sha256").update(JSON.stringify(value)).digest("hex")
-const inputHash = hash(input)
+const inputHash = createHash("sha256").update(inputBytes).digest("hex")
 const startupMemory = { ...process.memoryUsage(), maxRssKiB: process.resourceUsage().maxRSS }
 const started = performance.now()
 const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, { effort: 1, cacheProvider: null })
@@ -60,8 +61,9 @@ while (!solver.solved && !solver.failed) {
 }
 const elapsedMs = performance.now() - started
 const memory = { ...process.memoryUsage(), maxRssKiB: process.resourceUsage().maxRSS }
+const hd = solver.highDensityRouteSolver as any
 const partialState = kind === "memory04"
-  ? { routes: solver.highDensityRouteSolver?.routes, phaseIterations: solver.activeSubSolver?.iterations }
+  ? { input: (solver as any).highDensityNodePortPoints, routes: hd.routes, remainingNodes: hd.unsolvedNodePortPoints, activeNode: hd.activeNode, updatedFixedRoutes: hd.getUpdatedFixedHdRoutes(), regularRoutes: hd.activeRegularSolver?.routes, phaseIterations: solver.activeSubSolver?.iterations }
   : { nodes: solver.edgeSolver?.nodes, edges: solver.edgeSolver?.edges, phaseIterations: solver.activeSubSolver?.iterations }
 const partialStateHash = kind === "joint14" ? undefined : hash(partialState)
 const activeChain: unknown[] = []
@@ -80,3 +82,7 @@ if (solver.solved && !solver.failed) {
 const result = { kind, label, inputHash, partialStateHash, solved: solver.solved, failed: solver.failed, error: solver.error, stopReason, elapsedMs, startupMemory, memory, outputHash, drcErrors, phases, jointPhases, activeChain, phaseTimes: solver.timeSpentOnPhase }
 writeFileSync(`diagnostic-results/${label}-result.json`, JSON.stringify(result, null, 2))
 console.log(JSON.stringify({ kind, label, stopReason, solved: solver.solved, elapsedMs, memory, drcErrorCount: drcErrors?.length }))
+
+if (kind !== "joint14" && (stopReason !== "matched-iterations" || solver.activeSubSolver?.iterations !== targetIterations)) {
+  throw new Error("Memory comparison did not reach its matched iteration boundary")
+}
