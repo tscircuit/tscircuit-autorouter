@@ -271,7 +271,11 @@ export const renderSameMachineBenchmarkResults = ({
       }
       return summary
     })
-    const appendRow = (metric: string, values: string[], delta: string): void => {
+    const appendRow = (
+      metric: string,
+      values: string[],
+      delta: string,
+    ): void => {
       const cells = [solver, metric, ...values]
       if (!threaded) {
         cells.push(delta)
@@ -338,7 +342,9 @@ export const renderSameMachineBenchmarkResults = ({
       formatRelativeDelta(vias[0]!, vias[1]!),
     )
     for (const type of getTraceLintTypes(...summaries)) {
-      const values = summaries.map((row) => row.avgTraceLintIssues?.[type] ?? null)
+      const values = summaries.map(
+        (row) => row.avgTraceLintIssues?.[type] ?? null,
+      )
       appendRow(
         TRACE_LINT_LABELS[type] ?? `Avg ${type}`,
         values.map(formatAverage),

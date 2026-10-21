@@ -91,10 +91,7 @@ test("same-machine comparisons execute four fresh passes only for threaded reque
 
     rmSync(join(directory, "passes.log"))
     runSameMachineBenchmarks(directory, ["--networked-remote"], "srj18")
-    const remotePasses = readFileSync(
-      join(directory, "passes.log"),
-      "utf8",
-    )
+    const remotePasses = readFileSync(join(directory, "passes.log"), "utf8")
       .trim()
       .split("\n")
     expect(remotePasses).toHaveLength(2)
