@@ -1674,6 +1674,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
+      clearanceKnowledgeRelatedHits: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeRelatedHits,
+      clearanceKnowledgeHits: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeHits,
+      clearanceKnowledgeMisses: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeMisses,
+
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1968,6 +1972,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      clearanceKnowledgeRelatedHits: (this.stats.clearanceKnowledgeRelatedHits ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeRelatedHits,
+      clearanceKnowledgeHits: (this.stats.clearanceKnowledgeHits ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeHits,
+      clearanceKnowledgeMisses: (this.stats.clearanceKnowledgeMisses ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeMisses,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
