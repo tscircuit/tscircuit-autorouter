@@ -562,6 +562,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
           },
+          cms.asyncRunning,
         ]
       },
     ),
@@ -1147,7 +1148,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return
       }
       while (!this.solved && !this.failed) {
-        if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
+        if (
+          this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver
+        ) {
           const phase = this.activeSubSolver
           const previousIterations = phase.iterations
           await phase.solveAsync(
