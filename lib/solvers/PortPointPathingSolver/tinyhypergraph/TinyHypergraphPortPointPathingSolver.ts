@@ -1427,23 +1427,43 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   private asyncRunning = false
 
-  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
-    if (this.asyncRunning) throw new Error("Tiny pathing solveAsync is already running")
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning)
+      throw new Error("Tiny pathing solveAsync is already running")
     const startTime = performance.now()
     this.asyncRunning = true
     try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
         if (runtime) {
           const phase = this.tinyPipelineSolver
           const previousIterations = phase.iterations
-          const budget = Math.min(this.MAX_ITERATIONS + 1, stopAtIteration) - this.iterations
+          const budget =
+            Math.min(this.MAX_ITERATIONS + 1, stopAtIteration) - this.iterations
           await phase.solveAsync(runtime, previousIterations + budget)
-          this.iterations += phase.iterations - previousIterations - (phase.solved || phase.failed ? 1 : 0)
-          if (this.iterations >= Math.min(this.MAX_ITERATIONS + 1, stopAtIteration)) break
+          this.iterations +=
+            phase.iterations -
+            previousIterations -
+            (phase.solved || phase.failed ? 1 : 0)
+          if (
+            this.iterations >=
+            Math.min(this.MAX_ITERATIONS + 1, stopAtIteration)
+          )
+            break
         }
         this.step()
       }
-      if (!this.solved && !this.failed && this.iterations > this.MAX_ITERATIONS) {
+      if (
+        !this.solved &&
+        !this.failed &&
+        this.iterations > this.MAX_ITERATIONS
+      ) {
         this.tryFinalAcceptance()
         if (!this.solved) {
           this.failed = true

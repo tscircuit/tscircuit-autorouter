@@ -26,10 +26,16 @@ test("Pipeline9 dispatches tiny-hypergraph searches and preserves serial routing
     },
   }
   try {
-    const serial = new Pipeline9(structuredClone(input), { effort: 0.1, cacheProvider: null })
+    const serial = new Pipeline9(structuredClone(input), {
+      effort: 0.1,
+      cacheProvider: null,
+    })
     serial.solve()
     for (const resume of [false, true]) {
-      const parallel = new Pipeline9(structuredClone(input), { effort: 0.1, cacheProvider: null })
+      const parallel = new Pipeline9(structuredClone(input), {
+        effort: 0.1,
+        cacheProvider: null,
+      })
       if (resume) {
         parallel.solveUntilPhase("portPointPathingSolver")
         parallel.step()
@@ -39,7 +45,9 @@ test("Pipeline9 dispatches tiny-hypergraph searches and preserves serial routing
       expect(parallel.solved).toBe(true)
       expect(parallel.failed).toBe(false)
       expect(parallel.iterations).toBe(serial.iterations)
-      expect(parallel.getOutputSimpleRouteJson()).toEqual(serial.getOutputSimpleRouteJson())
+      expect(parallel.getOutputSimpleRouteJson()).toEqual(
+        serial.getOutputSimpleRouteJson(),
+      )
     }
     expect(names).toContain("TinyHyperGraphRouteSearchSolver")
   } finally {
