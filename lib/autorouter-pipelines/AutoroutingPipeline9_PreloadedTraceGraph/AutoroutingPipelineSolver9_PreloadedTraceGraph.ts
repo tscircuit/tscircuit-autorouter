@@ -73,7 +73,6 @@ import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matchin
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
-import { getUnroutableBgaTerminalError } from "./getUnroutableBgaTerminalError"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -329,19 +328,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "componentDetectionSolver",
       ComponentDetectionSolver,
       (cms) => [{ inputSrj: cms.srj }],
-      {
-        onSolved: (cms): void => {
-          const error = getUnroutableBgaTerminalError(
-            cms.originalSrj,
-            cms.componentDetectionSolver!.getOutput(),
-            cms.connMap,
-          )
-          if (error) {
-            cms.error = error
-            cms.failed = true
-          }
-        },
-      },
     ),
     definePipelineStep(
       "escapeViaLocationSolver",
