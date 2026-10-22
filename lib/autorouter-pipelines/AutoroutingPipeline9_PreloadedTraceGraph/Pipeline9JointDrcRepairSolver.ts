@@ -34,7 +34,6 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
-import { Pipeline9ReferenceDrcCache } from "./Pipeline9ReferenceDrcCache"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1187,7 +1186,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedTraceIds: baselineEvaluatedTraceIds,
       }),
     }
-    const referenceDrcCandidateCache = new Pipeline9ReferenceDrcCache()
+    let referenceDrcCandidateCache:
+      | {
+          candidateKey: string
+          result: ReturnType<DrcEvaluator>
+        }
+      | undefined
 
     const prepareCandidateDrcInput = (
       evaluatedRoutes: HighDensityRoute[],
@@ -1401,22 +1405,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes)
-      // Regional repair may add connectivity aliases used during conversion.
-      // Never reuse a route result across a change to that evaluation context.
-      referenceDrcCandidateCache.setContext(
-        JSON.stringify(params.connMap.idToNetMap),
-      )
-      const cached = referenceDrcCandidateCache.get(candidateKey)
-      Object.assign(this.stats, referenceDrcCandidateCache.getStats())
-      if (cached !== undefined) return cached
+      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
+        return referenceDrcCandidateCache.result
+      }
       this.referenceDrcValidationCount += 1
       const result = referenceDrcEvaluator({
         traces: [],
         routes: evaluatedRoutes,
         hdRoutes: evaluatedRoutes,
       })
-      referenceDrcCandidateCache.set(candidateKey, result)
-      Object.assign(this.stats, referenceDrcCandidateCache.getStats())
+      referenceDrcCandidateCache = { candidateKey, result }
       return result
     }
     cachedReferenceDrcEvaluator.inputMode = "routes-only"
