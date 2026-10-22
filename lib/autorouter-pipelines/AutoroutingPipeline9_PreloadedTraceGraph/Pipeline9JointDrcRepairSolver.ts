@@ -1674,6 +1674,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
+      clearanceCorridorEdgeChecks: this.initialBoundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1709,6 +1712,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.stats,
       finalDrcIssueCount: 0,
       initialBoundedRegionalRepairAccepted: true,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions:
         this.initialBoundedRegionalRepairSolver.budget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
@@ -1968,6 +1973,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      clearanceCorridorEdgeChecks: (this.stats.clearanceCorridorEdgeChecks ?? 0) + this.boundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: (this.stats.clearanceCorridorSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: (this.stats.clearanceGridSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
