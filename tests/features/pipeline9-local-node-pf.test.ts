@@ -10,17 +10,20 @@ import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 test("local HD solves retain only their node metadata without changing serial or batched routes", async (): Promise<void> => {
-  const nodes = Array.from({ length: 9 }, (_, index): NodeWithPortPoints => ({
-    capacityMeshNodeId: index === 8 ? "toString" : `node_${index}`,
-    center: { x: index * 4, y: 0 },
-    width: 2,
-    height: 2,
-    availableZ: [0],
-    portPoints: [
-      { x: index * 4 - 0.6, y: 0, z: 0, connectionName: `signal_${index}` },
-      { x: index * 4 + 0.6, y: 0, z: 0, connectionName: `signal_${index}` },
-    ],
-  }))
+  const nodes = Array.from(
+    { length: 9 },
+    (_, index): NodeWithPortPoints => ({
+      capacityMeshNodeId: index === 8 ? "toString" : `node_${index}`,
+      center: { x: index * 4, y: 0 },
+      width: 2,
+      height: 2,
+      availableZ: [0],
+      portPoints: [
+        { x: index * 4 - 0.6, y: 0, z: 0, connectionName: `signal_${index}` },
+        { x: index * 4 + 0.6, y: 0, z: 0, connectionName: `signal_${index}` },
+      ],
+    }),
+  )
   const nodePfs = new Map<CapacityMeshNodeId, number | null>()
   for (let index = 0; index < 512; index++) {
     nodePfs.set(`unrelated_${index}`, 0.9)
