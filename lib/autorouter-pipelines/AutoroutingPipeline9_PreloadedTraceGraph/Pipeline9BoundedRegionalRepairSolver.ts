@@ -509,10 +509,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         allowance.maxPathSearchNodes - this.result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
-      pathGridSizeScale:
-        context.currentErrors.length > 10
-          ? this.budget.pathGridSizeScale
-          : undefined,
+      // Keep the configured grid as errors disappear. Refining only the last
+      // few crossings can exhaust the same node allowance before finding a
+      // detour, discarding regional progress and repeating the broad repair.
+      pathGridSizeScale: this.budget.pathGridSizeScale,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance:
