@@ -7,6 +7,11 @@ on:
         description: Exact revision to validate
         required: true
         type: string
+      nodes:
+        description: JSON array of test shards to validate
+        required: false
+        default: '[1,2,3,4,5,6,7,8,9]'
+        type: string
 
 # Superseded pushes to the same PR currently run to completion; three of the
 # recent PRs burned 2-3 full Bun Test runs each. Keep main runs un-cancelled.
@@ -24,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        node: ${{ fromJSON(inputs.nodes) }}
 
     steps:
       - name: Checkout code
