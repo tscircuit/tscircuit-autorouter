@@ -1674,6 +1674,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
+      copperGeometryBuildCount: this.initialBoundedRegionalRepairSolver.stats.copperGeometryBuildCount,
+      copperGeometryReuseCount: this.initialBoundedRegionalRepairSolver.stats.copperGeometryReuseCount,
+
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1968,6 +1971,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      copperGeometryBuildCount: (this.stats.copperGeometryBuildCount ?? 0) + this.boundedRegionalRepairSolver.stats.copperGeometryBuildCount,
+      copperGeometryReuseCount: (this.stats.copperGeometryReuseCount ?? 0) + this.boundedRegionalRepairSolver.stats.copperGeometryReuseCount,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
