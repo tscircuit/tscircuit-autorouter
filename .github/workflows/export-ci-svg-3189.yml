@@ -1,0 +1,83 @@
+name: Export CI SVGs for PR3189
+
+on:
+  push:
+    branches:
+      - codex/ci-svg-export-3189
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download node1 received SVGs
+        uses: actions/download-artifact@v4
+        with:
+          name: diff-png-and-snap-svg-artifacts-node1
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 39835331951
+          github-token: ${{ github.token }}
+          path: received/node1
+
+      - name: Download node6 received SVGs
+        uses: actions/download-artifact@v4
+        with:
+          name: diff-png-and-snap-svg-artifacts-node6
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 39835331951
+          github-token: ${{ github.token }}
+          path: received/node6
+
+      - name: Download node8 received SVGs
+        uses: actions/download-artifact@v4
+        with:
+          name: diff-png-and-snap-svg-artifacts-node8
+          repository: tscircuit/tscircuit-autorouter
+          run-id: 39835331951
+          github-token: ${{ github.token }}
+          path: received/node8
+
+      - name: Export the three exact received SVGs
+        run: |
+          python3 - <<'PY'
+          import base64
+          import gzip
+          import hashlib
+          import json
+          from pathlib import Path
+
+          targets = [
+              (1, 'bugreport107-board-1726-linux.received.svg', 'tests/bugs/__snapshots__/bugreport107-board-1726-linux.snap.svg'),
+              (8, 'bugreport94-56fa2e-linux.received.svg', 'tests/bugs/__snapshots__/bugreport94-56fa2e-linux.snap.svg'),
+              (6, 'pipeline9-muse-eink-via-copper-clearance.received.svg', 'tests/repro/__snapshots__/pipeline9-muse-eink-via-copper-clearance.snap.svg'),
+          ]
+          for node, received_name, expected_path in targets:
+              root = Path(f'received/node{node}')
+              matches = list(root.rglob(received_name))
+              if len(matches) != 1:
+                  raise RuntimeError(f'Expected exactly one {received_name}, found {len(matches)}')
+              data = matches[0].read_bytes()
+              if b'<svg' not in data:
+                  raise RuntimeError(f'{received_name} is not an SVG')
+              compressed = gzip.compress(data, compresslevel=9, mtime=0)
+              encoded = base64.b64encode(compressed).decode('ascii')
+              metadata = {
+                  'path': expected_path,
+                  'received_path': str(matches[0]),
+                  'artifact_node': node,
+                  'source_run_id': 39835331951,
+                  'source_head_sha': '4dd77b62d9b96c7a0ad875a112a6b472df44b1bc',
+                  'bytes': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+                  'gzip_bytes': len(compressed),
+                  'base64_chars': len(encoded),
+              }
+              print('SVG_EXPORT_BEGIN ' + json.dumps(metadata, sort_keys=True), flush=True)
+              for offset in range(0, len(encoded), 76):
+                  print(encoded[offset:offset + 76])
+              print('SVG_EXPORT_END ' + expected_path, flush=True)
+          PY
