@@ -83,7 +83,10 @@ test("Pipeline9 repairs the solar charger's terminal trace-pair collision", asyn
   // copper geometry too, so changing an error ID cannot make this repro pass.
   expect(minimumPairClearance).toBeGreaterThanOrEqual(0.1)
   await expect(
-    getBugReportSnapshotSvg(result).replace(/[ \t]+$/gm, ""),
+    getBugReportSnapshotSvg(result, { roundTraceCaps: true }).replace(
+      /[ \t]+$/gm,
+      "",
+    ),
   ).toMatchSvgSnapshot(import.meta.path)
   const detail = convertSrjToGraphicsObject(
     {
@@ -124,6 +127,7 @@ test("Pipeline9 repairs the solar charger's terminal trace-pair collision", asyn
     getBugReportSnapshotSvg(result, {
       graphics: detail,
       includeTextLabels: false,
+      roundTraceCaps: true,
     }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "terminal-detail" })
 })

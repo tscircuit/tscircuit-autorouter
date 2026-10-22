@@ -18,11 +18,12 @@ test("bug report SVG counts and draws both existing and new copper", async () =>
 
   // One crossing plus four unterminated ends under benchmark defaults.
   expect(errors).toHaveLength(5)
-  expect(svg).toContain('stroke-linecap="round"')
+  expect(svg).not.toContain('stroke-linecap="round"')
   expect(svg).toContain(`Relaxed DRC errors: ${errors.length}</text>`)
   expect(svg).toContain('data-points="-1,0 1,0"')
   expect(svg).toContain('data-points="0,-1 0,1"')
   const detailSvg = getBugReportSnapshotSvg(input, {
+    roundTraceCaps: true,
     graphics: {
       lines: [
         {
@@ -34,6 +35,7 @@ test("bug report SVG counts and draws both existing and new copper", async () =>
       ],
     },
   })
+  expect(detailSvg).toContain('stroke-linecap="round"')
   expect(detailSvg).toContain(`Relaxed DRC errors: ${errors.length}</text>`)
   expect(detailSvg).toContain('data-points="-1,0 1,0"')
   expect(detailSvg).not.toContain('data-points="0,-1 0,1"')
