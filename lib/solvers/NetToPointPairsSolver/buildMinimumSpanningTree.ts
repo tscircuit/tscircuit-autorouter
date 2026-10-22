@@ -1,4 +1,5 @@
 type Point = { x: number; y: number }
+type PointComponentId = string
 
 export class KDNode {
   point: Point
@@ -312,6 +313,42 @@ export function buildMinimumSpanningTree<T extends Point>(
         break
       }
     }
+  }
+
+  // The k-neighbor graph can leave separated terminal clusters disconnected.
+  // Join components by their nearest outgoing edges (Boruvka), preserving
+  // existing pairs and their order so connection names remain stable.
+  let roots: PointComponentId[] = pointsCopy.map((point) =>
+    disjointSet.find(point),
+  )
+  while (new Set(roots).size > 1) {
+    const nearestEdges = new Map<PointComponentId, Edge<T>>()
+    for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
+      for (
+        let toIndex = fromIndex + 1;
+        toIndex < pointsCopy.length;
+        toIndex++
+      ) {
+        if (roots[fromIndex] === roots[toIndex]) continue
+        const from = pointsCopy[fromIndex]!
+        const to = pointsCopy[toIndex]!
+        const edge: Edge<T> = {
+          from,
+          to,
+          weight: Math.sqrt((from.x - to.x) ** 2 + (from.y - to.y) ** 2),
+        }
+        for (const root of [roots[fromIndex]!, roots[toIndex]!]) {
+          const nearest = nearestEdges.get(root)
+          if (!nearest || edge.weight < nearest.weight) {
+            nearestEdges.set(root, edge)
+          }
+        }
+      }
+    }
+    for (const edge of nearestEdges.values()) {
+      if (disjointSet.union(edge.from, edge.to)) mstEdges.push(edge)
+    }
+    roots = pointsCopy.map((point) => disjointSet.find(point))
   }
 
   return mstEdges
