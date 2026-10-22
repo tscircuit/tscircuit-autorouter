@@ -356,7 +356,17 @@ export const createPipeline9RegularNodeSolver = ({
     traceWidth,
     obstacleMargin,
     effort,
-    nodePfById,
+    nodePfById: {
+      [nodeWithPortPoints.capacityMeshNodeId]:
+        (nodePfById instanceof Map
+          ? nodePfById.get(nodeWithPortPoints.capacityMeshNodeId)
+          : Object.prototype.propertyIsEnumerable.call(
+                nodePfById,
+                nodeWithPortPoints.capacityMeshNodeId,
+              )
+            ? nodePfById[nodeWithPortPoints.capacityMeshNodeId]
+            : null) ?? null,
+    },
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
