@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { sample051 } from "@tscircuit/dataset-srj33-drc-failures"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { safeTransparentize } from "lib/solvers/colors"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -24,15 +23,17 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   const { errors } = evaluateRelaxedDrc(result)
+  expect(result.routedTraces.length).toBeGreaterThan(0)
+  expect(errors).toHaveLength(2)
   expect(errors).toContainEqual(
     expect.objectContaining({
       type: "pcb_trace_error",
       pcb_trace_error_id: "overlap_source_net_25_0_source_net_2_mst1_0",
     }),
   )
-  await expect(getBugReportSnapshotSvg(result)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  await expect(
+    getBugReportSnapshotSvg(result).replace(/[ \t]+$/gm, ""),
+  ).toMatchSvgSnapshot(import.meta.path)
   const detail = convertSrjToGraphicsObject(
     {
       ...input,
@@ -69,9 +70,9 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
     circle.fill = safeTransparentize(circle.fill!, 0)
   }
   await expect(
-    getSvgFromGraphicsObject(detail, {
-      backgroundColor: "white",
+    getBugReportSnapshotSvg(result, {
+      graphics: detail,
       includeTextLabels: false,
-    }),
+    }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "terminal-detail" })
 })
