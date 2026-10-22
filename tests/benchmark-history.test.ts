@@ -111,6 +111,39 @@ test("benchmark history retains full sample records and publishes a static dashb
   const points = getDashboardPoints(runs)
   const firstReport = makeRun("1").report
   if (firstReport.version !== 1) throw new Error("Expected a single report")
+  const srj18Solvers = [
+    "AutoroutingPipelineSolver7_MultiGraph",
+    "AutoroutingPipelineSolver8",
+    "AutoroutingPipelineSolver9",
+    "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+    "AutoroutingPipelineSolver9_Networked",
+    "AutoroutingPipelineSolver90",
+  ]
+  const srj18Run: BenchmarkHistoryRun = {
+    ...makeRun("3"),
+    report: {
+      ...firstReport,
+      datasetName: "srj18",
+      summary: srj18Solvers.map((solverName) => ({
+        ...firstReport.summary[0]!,
+        solverName,
+      })),
+      tests: srj18Solvers.flatMap((solverName) =>
+        firstReport.tests.map((sample) => ({ ...sample, solverName })),
+      ),
+    },
+  }
+  const originalSrj18Run = structuredClone(srj18Run)
+  expect(
+    createBenchmarkHistoryDashboardIndex([...runs, srj18Run]).points.map(
+      ({ datasetName, solverName }) => [datasetName, solverName],
+    ),
+  ).toEqual([
+    ["dataset01", "Pipeline7"],
+    ["dataset01", "Pipeline7"],
+    ...srj18Solvers.slice(2, 5).map((solverName) => ["srj18", solverName]),
+  ])
+  expect(srj18Run).toEqual(originalSrj18Run)
   const collectionPoints = getDashboardPoints([
     {
       ...makeRun("3"),

@@ -575,7 +575,11 @@ export const getDashboardPoints = (
       }
     }
   }
-  return points
+  return points.filter(
+    ({ datasetName, solverName }) =>
+      datasetName !== "srj18" ||
+      /^AutoroutingPipelineSolver9(?:_|$)/.test(solverName),
+  )
 }
 
 export type BenchmarkHistoryDashboardIndex = {
