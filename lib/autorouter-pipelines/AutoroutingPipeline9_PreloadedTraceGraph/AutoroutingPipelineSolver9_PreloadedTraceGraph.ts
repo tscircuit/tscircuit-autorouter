@@ -91,6 +91,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9BoundaryContractSolver } from "./Pipeline9BoundaryContractSolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -278,6 +279,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
+  boundaryContractSolver?: Pipeline9BoundaryContractSolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   preloadedTraceGraphSolver?: PreloadedTraceGraphSolver
@@ -584,6 +586,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "boundaryContractSolver",
+      Pipeline9BoundaryContractSolver,
+      (cms) => [{
+        distribution: cms.uniformPortDistributionSolver!,
+        inputNodesWithPortPoints: cms.portPointPathingSolver!.getOutput().inputNodeWithPortPoints,
+        obstacles: cms.srj.obstacles,
+        layerCount: cms.srj.layerCount,
+        traceWidth: Math.max(cms.minTraceWidth, ...cms.srj.connections.map((c) => c.nominalTraceWidth ?? cms.minTraceWidth)),
+        clearance: cms.srj.defaultObstacleMargin ?? 0.15,
+        hasPreloadedCopper: Boolean(cms.originalSrj.traces?.length),
+      }],
+    ),
+    definePipelineStep(
       "highDensityRouteSolver",
       Pipeline9HighDensitySolver,
       (cms) => {
@@ -593,12 +608,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
           )
         }
-        const portPointPathingOutput = portPointPathingSolver.getOutput()
-        const uniformNodes =
-          cms.uniformPortDistributionSolver?.getOutput() ?? []
-        const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-        const nodePortPointsSource =
-          uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+        const nodePortPointsSource = cms.boundaryContractSolver!.getOutput()
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
         const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
