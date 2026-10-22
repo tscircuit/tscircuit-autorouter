@@ -37,7 +37,8 @@ test("visualize the two affected sample024 nets with their real pads", async ():
     for (const pair of solver.newConnections) {
       connected.union(pair.pointsToConnect[0]!, pair.pointsToConnect[1]!)
     }
-    const groupCount = new Set(points.map((point) => connected.find(point))).size
+    const groupCount = new Set(points.map((point) => connected.find(point)))
+      .size
     const minX = Math.min(...points.map((point) => point.x))
     const maxX = Math.max(...points.map((point) => point.x))
     const minY = Math.min(...points.map((point) => point.y))
