@@ -9,7 +9,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", async (): Promise<void> => {
-  const input = structuredClone(sample051) as SimpleRouteJson
+  const input = structuredClone(sample051) as unknown as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
     effort: 1,
@@ -50,6 +50,7 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
           ...trace,
           route: trace.route.filter(
             (point) =>
+              "x" in point &&
               point.x >= 8.3 &&
               point.x <= 10.7 &&
               point.y >= 1.5 &&
