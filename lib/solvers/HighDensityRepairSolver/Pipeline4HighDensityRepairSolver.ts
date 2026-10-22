@@ -87,8 +87,8 @@ const isSameNetMultilayerObstacleRoute = (
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route, connMap) &&
-      route.route.every((point) => isPointInsideObstacle(point, obstacle)),
+      route.route.every((point) => isPointInsideObstacle(point, obstacle)) &&
+      isObstacleConnectedToRoute(obstacle, route, connMap),
   )
 
 const findNodeIndexForRoute = (
