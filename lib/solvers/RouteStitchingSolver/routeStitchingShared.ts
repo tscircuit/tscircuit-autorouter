@@ -1,4 +1,4 @@
-import type { Point3 } from "@tscircuit/math-utils"
+import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 /**
@@ -16,6 +16,13 @@ export const MAX_STITCH_GAP_DISTANCE_3 = 1
  * Maximum distance allowed when snapping an island endpoint to a real terminal.
  */
 export const MAX_TERMINAL_STITCH_GAP_DISTANCE_3 = 1.25
+
+export const getSameLayerPointDistance = (a: Point3, b: Point3): number => {
+  if (a.z !== b.z) {
+    return Infinity
+  }
+  return distance(a, b)
+}
 
 export const compareNumbers = (a: number, b: number) => {
   if (a < b) return -1

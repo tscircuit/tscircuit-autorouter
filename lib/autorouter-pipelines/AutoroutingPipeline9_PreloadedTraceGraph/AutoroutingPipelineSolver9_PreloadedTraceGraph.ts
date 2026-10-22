@@ -400,6 +400,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             layerCount: cms.srj.layerCount,
+            minViaPadDiameter: cms.hasUnroutedInnerLayerObstacles
+              ? cms.viaDiameter
+              : undefined,
             nodeGroups: [
               {
                 groupId: "global",
@@ -535,6 +538,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            // Only the expanded via search space opts into longer unfinished
+            // searches. The native solver retains its normal completed limit.
+            initialRoutingMaxIterations:
+              cms.topologyMergingSolver!.reconstructedViaDomainCount > 0 &&
+              cms.effort >= 1
+                ? 32_000_000
+                : undefined,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -1115,6 +1125,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+  }
+
+  private get hasUnroutedInnerLayerObstacles(): boolean {
+    // Layer-specific inner copper splits the free space needed by through vias.
+    // Fixed traces still require the existing projection of their assignments.
+    return (
+      !this.originalSrj.traces?.length &&
+      this.originalSrj.obstacles.some(
+        (obstacle) =>
+          obstacle.layers.length > 0 &&
+          obstacle.layers.every(
+            (layer) => layer !== "top" && layer !== "bottom",
+          ),
+      )
+    )
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {

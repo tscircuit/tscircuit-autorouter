@@ -4,6 +4,7 @@ import {
   comparePoints,
   compareRoutes,
   DISTANCE_TIE_TOLERANCE,
+  getSameLayerPointDistance,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
@@ -183,13 +184,24 @@ export const selectIslandEndpoints = (params: {
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
   terminals: Point3[]
-}) => {
+  preferSameLayerTerminalEndpoints?: boolean
+}): Point3 => {
+  // Snapping a wire endpoint must not invent a transition to another layer.
   const sortedTerminals = [...params.terminals].sort(comparePoints)
+  const getTerminalDistance = params.preferSameLayerTerminalEndpoints
+    ? getSameLayerPointDistance
+    : distance
   let closestTerminal = sortedTerminals[0]
-  let closestDistance = distance(params.islandEndpoint, closestTerminal)
+  let closestDistance = getTerminalDistance(
+    params.islandEndpoint,
+    closestTerminal,
+  )
 
   for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = distance(params.islandEndpoint, terminal)
+    const terminalDistance = getTerminalDistance(
+      params.islandEndpoint,
+      terminal,
+    )
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&

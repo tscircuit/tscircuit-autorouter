@@ -193,10 +193,10 @@ export class CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles exte
         _containsTarget: containsTarget,
         _containsObstacle: false,
         _completelyInsideObstacle: false,
-      } as any
+      }
 
       // Store the obstacle reference for later use
-      ;(node as any)._assignedViaObstacle = obstacle
+      node._assignedViaObstacle = obstacle
 
       this.finishedNodes.push(node)
     }

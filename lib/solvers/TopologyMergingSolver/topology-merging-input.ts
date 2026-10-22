@@ -44,6 +44,15 @@ export function prepareTopologyMergingInput(
 function validateTopologyMergingInput(
   inputProblem: TopologyMergingSolverParams,
 ): void {
+  if (
+    inputProblem.minViaPadDiameter !== undefined &&
+    (!Number.isFinite(inputProblem.minViaPadDiameter) ||
+      inputProblem.minViaPadDiameter <= 0)
+  ) {
+    throw new Error(
+      "TopologyMergingSolver: minViaPadDiameter must be positive and finite",
+    )
+  }
   if (!Number.isInteger(inputProblem.layerCount)) {
     throw new Error("TopologyMergingSolver: layerCount must be an integer")
   }
