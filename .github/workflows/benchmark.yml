@@ -419,14 +419,6 @@ jobs:
             return nextArgs
           }
 
-          const withMainBranchDatasetArgs = (baseArgs, datasetName) => {
-            const nextArgs = withDataset(baseArgs, datasetName)
-            if (datasetName === 'srj18') {
-              nextArgs.push('--pipeline', '7')
-            }
-            return nextArgs
-          }
-
           const runBenchmark = (benchmarkArgs) => {
             const renderedArgs = benchmarkArgs.map((arg) => JSON.stringify(arg)).join(' ')
             console.log(`Running benchmark command: ./benchmark.sh${renderedArgs ? ` ${renderedArgs}` : ''}`)
@@ -450,7 +442,8 @@ jobs:
             const textReports = []
 
             for (const datasetName of mainBranchDatasets) {
-              runBenchmark(withMainBranchDatasetArgs(args, datasetName))
+              // Every tracked dataset uses benchmark.sh's default Pipeline 9 solver.
+              runBenchmark(withDataset(args, datasetName))
 
               const report = JSON.parse(fs.readFileSync('benchmark-result.json', 'utf8'))
               const text = fs.readFileSync('benchmark-result.txt', 'utf8').trim()
