@@ -24,6 +24,7 @@ export function allocateBoundaryLanes(
   apertures: Interval[],
   pitch: number,
 ): number[] | null {
+  if (!Number.isFinite(pitch) || pitch < 0 || lanes.some((lane) => !Number.isFinite(lane.preferred)) || apertures.some((a) => !Number.isFinite(a.min) || !Number.isFinite(a.max) || a.min > a.max)) throw new Error("Boundary lane allocation requires finite ordered geometry")
   const earliest: number[] = []
   for (let i = 0; i < lanes.length; i++) {
     const lower = i === 0 ? -Infinity : earliest[i - 1]! + pitch
@@ -91,7 +92,14 @@ export class Pipeline9BoundaryContractSolver extends BaseSolver {
   constructor(private readonly input: Input) {
     super()
     this.nodes = structuredClone(input.distribution.getOutput())
-    if (!(input.traceWidth > 0) || input.clearance < 0) throw new Error("Boundary contract requires positive width and nonnegative clearance")
+    if (!Number.isFinite(input.traceWidth) || !(input.traceWidth > 0) || !Number.isFinite(input.clearance) || input.clearance < 0 || !Number.isInteger(input.layerCount) || input.layerCount < 1) throw new Error("Boundary contract requires finite positive width, nonnegative clearance and valid layer count")
+    for (const node of this.nodes) {
+      if (![node.center.x, node.center.y, node.width, node.height].every(Number.isFinite) || node.width <= 0 || node.height <= 0 || node.portPoints.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isInteger(p.z) || p.z < 0 || p.z >= input.layerCount)) throw new Error(`Boundary contract has invalid node geometry: ${node.capacityMeshNodeId}`)
+    }
+    for (const obstacle of input.obstacles) {
+      const zs = obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, input.layerCount))
+      if (![obstacle.center.x, obstacle.center.y, obstacle.width, obstacle.height, obstacle.ccwRotationDegrees ?? 0].every(Number.isFinite) || obstacle.width < 0 || obstacle.height < 0 || zs.some((z) => !Number.isInteger(z) || z < 0 || z >= input.layerCount)) throw new Error("Boundary contract has invalid obstacle geometry")
+    }
     this.actualPorts = new Map(this.nodes.flatMap((n) => n.portPoints.flatMap((p) => p.portPointId ? [[p.portPointId, p] as const] : [])))
     const targetNodeIds = new Set(input.inputNodesWithPortPoints.filter((n) => n._containsTarget).map((n) => n.capacityMeshNodeId))
     for (const node of input.inputNodesWithPortPoints) {
@@ -107,6 +115,7 @@ export class Pipeline9BoundaryContractSolver extends BaseSolver {
       ownerPairs: [...input.distribution.mapOfOwnerPairToSharedEdge.values()].map((e) => e.ownerNodeIds),
       nodeBounds: new Map(this.nodes.map((n) => [n.capacityMeshNodeId, { minX: n.center.x - n.width / 2, maxX: n.center.x + n.width / 2, minY: n.center.y - n.height / 2, maxY: n.center.y + n.height / 2 }])),
     }).values()]
+    this.MAX_ITERATIONS = this.edges.length + 1
     this.stats = { certifiedBoundaries: 0, uncertifiedBoundaries: 0, movedPortPoints: 0 }
   }
 
