@@ -61,7 +61,10 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
   // copper geometry too, so changing an error ID cannot make this repro pass.
   expect(minimumPairClearance).toBeLessThan(0.1)
   await expect(
-    getBugReportSnapshotSvg(result).replace(/[ \t]+$/gm, ""),
+    getBugReportSnapshotSvg(result, { roundTraceCaps: true }).replace(
+      /[ \t]+$/gm,
+      "",
+    ),
   ).toMatchSvgSnapshot(import.meta.path)
   const detail = convertSrjToGraphicsObject(
     {
@@ -102,6 +105,7 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
     getBugReportSnapshotSvg(result, {
       graphics: detail,
       includeTextLabels: false,
+      roundTraceCaps: true,
     }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "terminal-detail" })
 })
