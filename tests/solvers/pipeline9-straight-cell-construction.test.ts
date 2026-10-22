@@ -91,6 +91,15 @@ test("Pipeline9 constructs clearance-proven chord families and dispatches unsupp
           connectedTo: [],
         }],
       }).applicable).toBe(false)
+      for (const badValue of [Number.NaN, Infinity, -Infinity]) {
+        const invalid = structuredClone(node)
+        invalid.portPoints[0]!.x = badValue
+        expect(() => constructPipeline9StraightCell({ ...params, node: invalid })).toThrow("invalid geometry")
+        expect(() => constructPipeline9StraightCell({ ...params, traceWidth: badValue })).toThrow("invalid geometry")
+        expect(() => constructPipeline9StraightCell({ ...params, obstacleMargin: badValue })).toThrow("invalid geometry")
+      }
+      expect(() => constructPipeline9StraightCell({ ...params, traceWidth: 0 })).toThrow("invalid geometry")
+      expect(() => constructPipeline9StraightCell({ ...params, obstacleMargin: -0.1 })).toThrow("invalid geometry")
       expect(constructPipeline9StraightCell({
         ...params,
         boardGeometry: {

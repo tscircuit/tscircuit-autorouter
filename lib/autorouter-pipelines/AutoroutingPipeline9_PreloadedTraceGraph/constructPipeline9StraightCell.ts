@@ -40,6 +40,39 @@ export const constructPipeline9StraightCell = ({
   viaDiameter,
   obstacleMargin,
 }: StraightCellParams): StraightCellConstruction => {
+  if (
+    !Number.isFinite(node.center.x) ||
+    !Number.isFinite(node.center.y) ||
+    !Number.isFinite(node.width) || node.width <= 0 ||
+    !Number.isFinite(node.height) || node.height <= 0 ||
+    !Number.isFinite(traceWidth) || traceWidth <= 0 ||
+    !Number.isFinite(viaDiameter) || viaDiameter <= 0 ||
+    !Number.isFinite(obstacleMargin) || obstacleMargin < 0 ||
+    !Number.isInteger(layerCount) || layerCount <= 0 ||
+    node.portPoints.some((port) =>
+      !Number.isFinite(port.x) || !Number.isFinite(port.y) ||
+      !Number.isInteger(port.z) || port.z < 0 || port.z >= layerCount,
+    ) ||
+    obstacles.some((obstacle) =>
+      !Number.isFinite(obstacle.center.x) ||
+      !Number.isFinite(obstacle.center.y) ||
+      !Number.isFinite(obstacle.width) || obstacle.width < 0 ||
+      !Number.isFinite(obstacle.height) || obstacle.height < 0,
+    ) ||
+    (boardGeometry !== undefined && (
+      !Object.values(boardGeometry.bounds).every(Number.isFinite) ||
+      boardGeometry.bounds.minX >= boardGeometry.bounds.maxX ||
+      boardGeometry.bounds.minY >= boardGeometry.bounds.maxY ||
+      (boardGeometry.minBoardEdgeClearance !== undefined &&
+        (!Number.isFinite(boardGeometry.minBoardEdgeClearance) ||
+          boardGeometry.minBoardEdgeClearance < 0)) ||
+      boardGeometry.outline?.some((point) =>
+        !Number.isFinite(point.x) || !Number.isFinite(point.y),
+      )
+    ))
+  ) {
+    throw new Error(`Pipeline9 straight cell "${node.capacityMeshNodeId}" has invalid geometry`)
+  }
   const groups = new Map<string, PortPoint[]>()
   for (const port of node.portPoints) {
     const ports = groups.get(port.connectionName) ?? []
