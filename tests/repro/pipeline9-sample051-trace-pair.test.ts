@@ -18,8 +18,13 @@ test("Pipeline9 repairs the solar charger's terminal trace-pair collision", asyn
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(solver.pipeline9JointDrcRepairSolver!.stats.terminalTracePairRepaired).toBeTrue()
-  expect(solver.pipeline9JointDrcRepairSolver!.stats.terminalTracePairValidationCount).toBeLessThanOrEqual(64)
+  expect(
+    solver.pipeline9JointDrcRepairSolver!.stats.terminalTracePairRepaired,
+  ).toBeTrue()
+  expect(
+    solver.pipeline9JointDrcRepairSolver!.stats
+      .terminalTracePairValidationCount,
+  ).toBeLessThanOrEqual(64)
   const result = {
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,

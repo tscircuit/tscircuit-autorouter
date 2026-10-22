@@ -1,11 +1,18 @@
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
-import type { DrcEvaluator, SimpleRouteJson as RepairSimpleRouteJson } from "high-density-repair03/lib"
+import type {
+  DrcEvaluator,
+  SimpleRouteJson as RepairSimpleRouteJson,
+} from "high-density-repair03/lib"
 import {
   applyTracePairSegmentDisplacementForError,
   cloneRoutesForIndexes,
   getTraceRoutePairForError,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
-import type { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
+import type {
+  Obstacle,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
@@ -79,9 +86,18 @@ const hasPairClearance = (
       const b1 = b.route[j - 1]!
       const b2 = b.route[j]!
       if (b1.z !== b2.z || a1.z !== b1.z) continue
-      const gap = segmentToSegmentMinDistance(a1, a2, b1, b2) -
-        Math.max(a1.traceThickness ?? a.traceThickness, a2.traceThickness ?? a.traceThickness) / 2 -
-        Math.max(b1.traceThickness ?? b.traceThickness, b2.traceThickness ?? b.traceThickness) / 2
+      const gap =
+        segmentToSegmentMinDistance(a1, a2, b1, b2) -
+        Math.max(
+          a1.traceThickness ?? a.traceThickness,
+          a2.traceThickness ?? a.traceThickness,
+        ) /
+          2 -
+        Math.max(
+          b1.traceThickness ?? b.traceThickness,
+          b2.traceThickness ?? b.traceThickness,
+        ) /
+          2
       if (gap < minimum) return false
     }
   }
@@ -126,14 +142,18 @@ export const applyPipeline9TerminalTracePairRepairs = ({
     if (initialError.type !== "pcb_trace_error") continue
     const pair = getTraceRoutePairForError(initialError, routeIndexByTraceId)
     if (!pair) continue
-    const minimumClearance = typeof initialError.minimum_clearance === "number"
-      ? initialError.minimum_clearance
-      : RELAXED_DRC_OPTIONS.traceClearance!
-    if (pair.some((i) =>
-      syntheticConnectionNames.has(routes[i]!.connectionName) ||
-      routes[i]!.jumpers?.length ||
-      routes[i]!.route.some((point) => point.toNextSegmentType),
-    )) {
+    const minimumClearance =
+      typeof initialError.minimum_clearance === "number"
+        ? initialError.minimum_clearance
+        : RELAXED_DRC_OPTIONS.traceClearance!
+    if (
+      pair.some(
+        (i) =>
+          syntheticConnectionNames.has(routes[i]!.connectionName) ||
+          routes[i]!.jumpers?.length ||
+          routes[i]!.route.some((point) => point.toNextSegmentType),
+      )
+    ) {
       continue
     }
     for (const terminalSide of [0, 1] as const) {
@@ -142,16 +162,21 @@ export const applyPipeline9TerminalTracePairRepairs = ({
       const terminalRoute = routes[terminalIndex]!
       if (terminalRoute.route.length < 2) continue
       for (const reverse of [false, true]) {
-        const ordered = reverse ? [...terminalRoute.route].reverse() : terminalRoute.route
+        const ordered = reverse
+          ? [...terminalRoute.route].reverse()
+          : terminalRoute.route
         const endpoint = ordered.at(-1)!
         if (!endpoint?.pcb_port_id) continue
         const layer = mapZToLayerName(endpoint.z, originalSrj.layerCount)
         const pad = originalSrj.obstacles.find(
           (obstacle) =>
-            !obstacle.shape && !obstacle.ccwRotationDegrees &&
-            !obstacle.isNonPlatedHole && !obstacle.isCopperPour &&
+            !obstacle.shape &&
+            !obstacle.ccwRotationDegrees &&
+            !obstacle.isNonPlatedHole &&
+            !obstacle.isCopperPour &&
             !obstacle.isFanoutSourceKeepout &&
-            obstacle.width > 0 && obstacle.height > 0 &&
+            obstacle.width > 0 &&
+            obstacle.height > 0 &&
             obstacle.layers.includes(layer) &&
             obstacle.connectedTo.includes(endpoint.pcb_port_id!) &&
             pointIsInPad(endpoint, obstacle),
@@ -162,10 +187,13 @@ export const applyPipeline9TerminalTracePairRepairs = ({
         const constrained = initialErrors.some((error) => {
           const center = error.center as Point | undefined
           return (
-            routeIndexByTraceId.get(String(error.pcb_trace_id)) === movingIndex &&
+            routeIndexByTraceId.get(String(error.pcb_trace_id)) ===
+              movingIndex &&
             String(error.pcb_trace_error_id).includes("_pcb_smtpad_") &&
-            center !== undefined && Number.isFinite(center.x) &&
-            Number.isFinite(center.y) && pointIsInPad(center, pad)
+            center !== undefined &&
+            Number.isFinite(center.x) &&
+            Number.isFinite(center.y) &&
+            pointIsInPad(center, pad)
           )
         })
         if (!constrained) continue
@@ -176,25 +204,43 @@ export const applyPipeline9TerminalTracePairRepairs = ({
         while (anchorIndex > 0) {
           const point = ordered[anchorIndex]!
           if (
-            point.z !== endpoint.z || point.pcb_port_id || point.toNextSegmentType ||
-            terminalRoute.vias.some((via) => Math.hypot(via.x - point.x, via.y - point.y) < 1e-9) ||
-            Math.hypot(point.x - pad.center.x, point.y - pad.center.y) > trimDistance
-          ) break
+            point.z !== endpoint.z ||
+            point.pcb_port_id ||
+            point.toNextSegmentType ||
+            terminalRoute.vias.some(
+              (via) => Math.hypot(via.x - point.x, via.y - point.y) < 1e-9,
+            ) ||
+            Math.hypot(point.x - pad.center.x, point.y - pad.center.y) >
+              trimDistance
+          )
+            break
           anchorIndex--
         }
         const tail = ordered.slice(anchorIndex)
-        if (tail.some((point) =>
-          point.z !== endpoint.z || point.toNextSegmentType ||
-          (point.traceThickness !== undefined && point.traceThickness !== width),
-        )) continue
-        for (const contact of getContactCandidates(pad, width, ordered[anchorIndex]!)) {
+        if (
+          tail.some(
+            (point) =>
+              point.z !== endpoint.z ||
+              point.toNextSegmentType ||
+              (point.traceThickness !== undefined &&
+                point.traceThickness !== width),
+          )
+        )
+          continue
+        for (const contact of getContactCandidates(
+          pad,
+          width,
+          ordered[anchorIndex]!,
+        )) {
           const candidate = cloneRoutesForIndexes(routes, pair)
           const replacedTail = [
             ...ordered.slice(0, anchorIndex + 1),
             { ...endpoint, ...contact.approach, pcb_port_id: undefined },
             { ...endpoint, ...contact.endpoint },
           ]
-          candidate[terminalIndex]!.route = reverse ? replacedTail.reverse() : replacedTail
+          candidate[terminalIndex]!.route = reverse
+            ? replacedTail.reverse()
+            : replacedTail
           for (let pass = 0; pass <= MAX_DISPLACEMENTS; pass++) {
             if (unchanged.validationCount >= MAX_VALIDATIONS) return unchanged
             unchanged.validationCount++
@@ -204,12 +250,24 @@ export const applyPipeline9TerminalTracePairRepairs = ({
               baselineErrors: initialErrors,
             })
             const pairError = errors.find((error) => {
-              const currentPair = getTraceRoutePairForError(error, routeIndexByTraceId)
-              return currentPair?.includes(terminalIndex) && currentPair.includes(movingIndex)
+              const currentPair = getTraceRoutePairForError(
+                error,
+                routeIndexByTraceId,
+              )
+              return (
+                currentPair?.includes(terminalIndex) &&
+                currentPair.includes(movingIndex)
+              )
             })
             if (
-              !pairError && newErrors.length === 0 && errors.length < initialErrors.length &&
-              hasPairClearance(candidate[pair[0]]!, candidate[pair[1]]!, minimumClearance)
+              !pairError &&
+              newErrors.length === 0 &&
+              errors.length < initialErrors.length &&
+              hasPairClearance(
+                candidate[pair[0]]!,
+                candidate[pair[1]]!,
+                minimumClearance,
+              )
             ) {
               return {
                 routes: candidate,
@@ -218,10 +276,19 @@ export const applyPipeline9TerminalTracePairRepairs = ({
                 remainingErrorCount: errors.length,
               }
             }
-            if (!pairError || newErrors.length > 0 || pass === MAX_DISPLACEMENTS) break
-            const currentPair = getTraceRoutePairForError(pairError, routeIndexByTraceId)!
+            if (
+              !pairError ||
+              newErrors.length > 0 ||
+              pass === MAX_DISPLACEMENTS
+            )
+              break
+            const currentPair = getTraceRoutePairForError(
+              pairError,
+              routeIndexByTraceId,
+            )!
             const displaced = applyTracePairSegmentDisplacementForError(
-              originalSrj as RepairSimpleRouteJson, candidate,
+              originalSrj as RepairSimpleRouteJson,
+              candidate,
               { ...pairError, minimum_clearance: minimumClearance + 0.001 },
               routeIndexByTraceId,
               currentPair[0] === movingIndex ? 0 : 1,
