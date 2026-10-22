@@ -123,6 +123,7 @@ export const applyPipeline9TerminalTracePairRepairs = ({
     syntheticConnectionNames,
   })
   for (const initialError of initialErrors) {
+    if (initialError.type !== "pcb_trace_error") continue
     const pair = getTraceRoutePairForError(initialError, routeIndexByTraceId)
     if (!pair) continue
     const minimumClearance = typeof initialError.minimum_clearance === "number"
@@ -139,7 +140,7 @@ export const applyPipeline9TerminalTracePairRepairs = ({
       const terminalIndex = pair[terminalSide]
       const movingIndex = pair[terminalSide === 0 ? 1 : 0]
       const terminalRoute = routes[terminalIndex]!
-      if (terminalRoute.jumpers?.length) continue
+      if (terminalRoute.route.length < 2) continue
       for (const reverse of [false, true]) {
         const ordered = reverse ? [...terminalRoute.route].reverse() : terminalRoute.route
         const endpoint = ordered.at(-1)!

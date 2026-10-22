@@ -1986,11 +1986,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ? terminalPairResult.routes
       : boundedRegionalRepairResult.routes
     this.stats = {
+      ...this.stats,
       terminalTracePairValidationCount: terminalPairResult?.validationCount ?? 0,
       terminalTracePairRepaired: terminalPairResult?.repaired ?? false,
       terminalTracePairRemainingDrcIssueCount:
         terminalPairResult?.remainingErrorCount ?? boundedRegionalRepairResult.publishedDrcIssueCount,
-      ...this.stats,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
