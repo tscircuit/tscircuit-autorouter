@@ -52,6 +52,10 @@ on:
         description: Git ref (branch, tag, or SHA) to benchmark
         required: false
         type: string
+      base_ref:
+        description: Exact base revision for reproducible comparison
+        required: false
+        type: string
       pr_number:
         description: Pull request number where this benchmark posts its result
         required: false
@@ -1619,7 +1623,13 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             })
-            const baseSha = pr.data.base.sha
+            const baseSha = inputs.base_ref
+              ? (await github.rest.repos.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: inputs.base_ref,
+                })).data.sha
+              : pr.data.base.sha
             const requestedRef = (inputs.ref || '').trim()
             const prSha = requestedRef
               ? (await github.rest.repos.getCommit({
