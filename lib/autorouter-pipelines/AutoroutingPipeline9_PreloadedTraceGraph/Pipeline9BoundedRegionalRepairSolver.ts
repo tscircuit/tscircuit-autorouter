@@ -506,6 +506,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
+      searchDirectionCount: 2,
     })
     this.state = {
       phase: "negotiate",
