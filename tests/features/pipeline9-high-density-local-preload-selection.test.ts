@@ -305,7 +305,12 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
     { node: compactNode, obstacles: [] },
   )
   nearbyAabbOnlySolver.step()
-  expect(nearbyAabbOnlySolver.activeRegularSolver).not.toBeNull()
+  expect(nearbyAabbOnlySolver.activeRegularSolver).toBeNull()
+  expect(nearbyAabbOnlySolver.stats.constructedStraightNodeCount).toBe(1)
+  expect(nearbyAabbOnlySolver.routes[0]!.route).toEqual([
+    { x: -1, y: 0, z: 0 },
+    { x: 1, y: 0, z: 0 },
+  ])
   expect(nearbyAabbOnlySolver.activeB01Solver).toBeNull()
   expect(nearbyAabbOnlySolver.stats.fixedObstacleUses).toBe(0)
 
