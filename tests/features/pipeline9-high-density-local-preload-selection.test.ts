@@ -219,11 +219,16 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
     },
   )
   innerLayerViaSolver.step()
-  expect(innerLayerViaSolver.activeRegularSolver).not.toBeNull()
+  expect(innerLayerViaSolver.activeRegularSolver).toBeNull()
+  expect(innerLayerViaSolver.stats.constructedStraightNodeCount).toBe(1)
+  expect(innerLayerViaSolver.routes[0]!.route).toEqual([
+    { x: -2, y: 0, z: 0 },
+    { x: 2, y: 0, z: 0 },
+  ])
   expect(innerLayerViaSolver.activeB01Solver).toBeNull()
   expect(innerLayerViaSolver.stats).toMatchObject({
     fixedObstacleUses: 0,
-    regularNodeCount: 1,
+    regularNodeCount: 0,
     b01NodeCount: 0,
   })
 

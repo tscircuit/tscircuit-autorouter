@@ -383,6 +383,24 @@ const getProgressKey = (solver: SolverInstance): string => {
 export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
+  const phases = solver as unknown as Record<
+    string,
+    { stats?: Record<string, unknown> } | undefined
+  >
+  const phaseStats: Record<string, Record<string, number>> = {}
+  for (const step of solver.pipelineDef) {
+    const stats = phases[step.solverName]?.stats
+    if (!stats) continue
+    const numericStats: Record<string, number> = {}
+    for (const [name, value] of Object.entries(stats)) {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        numericStats[name] = value
+      }
+    }
+    if (Object.keys(numericStats).length > 0) {
+      phaseStats[step.solverName] = numericStats
+    }
+  }
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
@@ -430,6 +448,7 @@ export const getRoutingBenchmarkMetrics = (
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
+    phaseStats,
     networkedHighDensity,
   }
 }
