@@ -16,12 +16,7 @@ test("force workers preserve actual numerical improvements and complete serial p
     baseline.sampleEntries.map(
       (entry): string => entry.node.capacityMeshNodeId,
     ),
-  ).toEqual([
-    "force-node-2",
-    "force-node-0",
-    "force-node-3",
-    "force-node-1",
-  ])
+  ).toEqual(["force-node-2", "force-node-0", "force-node-3", "force-node-1"])
   expect(baseline.getOutput()[4]).toStrictEqual(params.hdRoutes[4])
   expect(baseline.getOutput()[3]!.vias).toHaveLength(1)
   for (const workerCount of [1, 4]) {

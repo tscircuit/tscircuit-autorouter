@@ -8,7 +8,9 @@ import { expectHighDensityForceImproveState } from "../fixtures/expectHighDensit
 test("reverse-completing force jobs publish only in original sample order", async (): Promise<void> => {
   const params = createHighDensityForceImproveRuntimeFixture()
   const baseline = new HighDensityForceImproveSolver(structuredClone(params))
-  const solver = new Pipeline9HighDensityForceImproveSolver(structuredClone(params))
+  const solver = new Pipeline9HighDensityForceImproveSolver(
+    structuredClone(params),
+  )
   const { runtime, tasks } = createControlledForceImproveRuntime()
   const pending = solver.solveAsync(runtime)
   expect(tasks).toHaveLength(4)
@@ -16,12 +18,7 @@ test("reverse-completing force jobs publish only in original sample order", asyn
     tasks.map(
       (task): string => task.input.nodeWithPortPoints[0]!.capacityMeshNodeId,
     ),
-  ).toEqual([
-    "force-node-2",
-    "force-node-0",
-    "force-node-3",
-    "force-node-1",
-  ])
+  ).toEqual(["force-node-2", "force-node-0", "force-node-3", "force-node-1"])
   tasks[3]!.finish()
   tasks[2]!.finish()
   tasks[1]!.finish()

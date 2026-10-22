@@ -20,7 +20,9 @@ test("no-runtime prefixes and empty force samples retain the serial lifecycle", 
   expectHighDensityForceImproveState(solver, baseline)
   const emptyParams = createHighDensityForceImproveRuntimeFixture()
   emptyParams.nodeWithPortPoints = []
-  const emptyBaseline = new HighDensityForceImproveSolver(structuredClone(emptyParams))
+  const emptyBaseline = new HighDensityForceImproveSolver(
+    structuredClone(emptyParams),
+  )
   const emptySolver = new Pipeline9HighDensityForceImproveSolver(
     structuredClone(emptyParams),
   )
