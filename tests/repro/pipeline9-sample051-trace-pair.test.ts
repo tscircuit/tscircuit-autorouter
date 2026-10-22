@@ -30,7 +30,9 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
       pcb_trace_error_id: "overlap_source_net_25_0_source_net_2_mst1_0",
     }),
   )
-  await expect(getBugReportSnapshotSvg(result)).toMatchSvgSnapshot(import.meta.path)
+  await expect(getBugReportSnapshotSvg(result)).toMatchSvgSnapshot(
+    import.meta.path,
+  )
   const detail = convertSrjToGraphicsObject(
     {
       ...input,
@@ -40,12 +42,18 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
       ),
       traces: result.routedTraces
         .filter((trace) =>
-          ["source_net_25_0", "source_net_2_mst1_0"].includes(trace.pcb_trace_id),
+          ["source_net_25_0", "source_net_2_mst1_0"].includes(
+            trace.pcb_trace_id,
+          ),
         )
         .map((trace) => ({
           ...trace,
           route: trace.route.filter(
-            (point) => point.x >= 8.3 && point.x <= 10.7 && point.y >= 1.5 && point.y <= 4.5,
+            (point) =>
+              point.x >= 8.3 &&
+              point.x <= 10.7 &&
+              point.y >= 1.5 &&
+              point.y <= 4.5,
           ),
         })),
     },
@@ -60,6 +68,9 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
     circle.fill = safeTransparentize(circle.fill!, 0)
   }
   await expect(
-    getSvgFromGraphicsObject(detail, { backgroundColor: "white", includeTextLabels: false }),
+    getSvgFromGraphicsObject(detail, {
+      backgroundColor: "white",
+      includeTextLabels: false,
+    }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "terminal-detail" })
 })
