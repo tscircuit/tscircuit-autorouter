@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { Pipeline9HighDensityForceImproveSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSolver"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import type { SimpleRouteJson } from "lib/types"
@@ -107,7 +108,6 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   ).length
   expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
   for (const stageName of [
-    "highDensityForceImproveSolver",
     "highDensityRepairSolver",
     "highDensityStitchSolver",
     "globalDrcForceImproveSolver",
@@ -123,6 +123,11 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       (step) => step.solverName === "highDensityRouteSolver",
     )?.solverClass,
   ).toBe(Pipeline9HighDensitySolver)
+  expect(
+    solver.pipelineDef.find(
+      (step) => step.solverName === "highDensityForceImproveSolver",
+    )?.solverClass,
+  ).toBe(Pipeline9HighDensityForceImproveSolver)
   const pipeline9StageNames = solver.pipelineDef.map((step) => step.solverName)
   expect(pipeline9StageNames.indexOf("effortCleanupSolver")).toBe(
     pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1,
