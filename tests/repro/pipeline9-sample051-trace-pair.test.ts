@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { sample051 } from "@tscircuit/dataset-srj33-drc-failures"
+import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
 import { safeTransparentize } from "lib/solvers/colors"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -31,6 +32,34 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
       pcb_trace_error_id: "overlap_source_net_25_0_source_net_2_mst1_0",
     }),
   )
+  const traceA = result.routedTraces.find(
+    (trace) => trace.pcb_trace_id === "source_net_25_0",
+  )!
+  const traceB = result.routedTraces.find(
+    (trace) => trace.pcb_trace_id === "source_net_2_mst1_0",
+  )!
+  let minimumPairClearance = Number.POSITIVE_INFINITY
+  for (let i = 1; i < traceA.route.length; i++) {
+    const a = traceA.route[i - 1]!
+    const b = traceA.route[i]!
+    if (a.route_type !== "wire" || b.route_type !== "wire") continue
+    if (a.layer !== b.layer) continue
+    for (let j = 1; j < traceB.route.length; j++) {
+      const c = traceB.route[j - 1]!
+      const d = traceB.route[j]!
+      if (c.route_type !== "wire" || d.route_type !== "wire") continue
+      if (c.layer !== d.layer || a.layer !== c.layer) continue
+      minimumPairClearance = Math.min(
+        minimumPairClearance,
+        segmentToSegmentMinDistance(a, b, c, d) -
+          Math.max(a.width, b.width) / 2 -
+          Math.max(c.width, d.width) / 2,
+      )
+    }
+  }
+  // The DRC message reports the first contact, not the worst contact. Check
+  // copper geometry too, so changing an error ID cannot make this repro pass.
+  expect(minimumPairClearance).toBeLessThan(0.1)
   await expect(
     getBugReportSnapshotSvg(result).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path)
