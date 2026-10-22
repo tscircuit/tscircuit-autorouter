@@ -34,6 +34,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { constructPipeline9StraightCell } from "./constructPipeline9StraightCell"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -443,6 +444,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacleUses: 0,
       fallbackNodeCount: 0,
       regularNodeCount: 0,
+      constructedStraightNodeCount: 0,
+      constructedStraightRouteCount: 0,
       b01NodeCount: 0,
       reroutedFixedRouteCount: 0,
       reroutedFixedRouteSectionCount: 0,
@@ -585,6 +588,21 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
+    const construction = constructPipeline9StraightCell({
+      node: normalizePipeline9NodeRootConnectionNames(node, this.connMap),
+      obstacles: this.obstacles,
+      boardGeometry: this.boardGeometry,
+      layerCount: this.layerCount,
+      traceWidth: this.traceWidth,
+      viaDiameter: this.viaDiameter,
+      obstacleMargin: this.obstacleMargin,
+    })
+    if (construction.applicable) {
+      this.stats.constructedStraightNodeCount += 1
+      this.stats.constructedStraightRouteCount += construction.routes.length
+      this.finishActiveNode(construction.routes)
+      return
+    }
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
