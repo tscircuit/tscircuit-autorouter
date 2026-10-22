@@ -8,7 +8,7 @@ import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", async (): Promise<void> => {
+test("Pipeline9 repairs the solar charger's terminal trace-pair collision", async (): Promise<void> => {
   const input = structuredClone(sample051) as unknown as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
@@ -18,6 +18,8 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
+  expect(solver.pipeline9JointDrcRepairSolver!.stats.terminalTracePairRepaired).toBeTrue()
+  expect(solver.pipeline9JointDrcRepairSolver!.stats.terminalTracePairValidationCount).toBeLessThanOrEqual(64)
   const result = {
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -25,19 +27,34 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
   }
   const { errors } = evaluateRelaxedDrc(result)
   expect(result.routedTraces.length).toBeGreaterThan(0)
-  expect(errors).toHaveLength(2)
-  expect(errors).toContainEqual(
+  expect(errors).toHaveLength(1)
+  expect(errors).not.toContainEqual(
     expect.objectContaining({
       type: "pcb_trace_error",
       pcb_trace_error_id: "overlap_source_net_25_0_source_net_2_mst1_0",
     }),
   )
+  expect(errors).toEqual([
+    expect.objectContaining({
+      pcb_trace_error_id: "overlap_source_net_25_0_pcb_smtpad_9.800_2.600",
+    }),
+  ])
+  // The separate pad collision remains visible. Connectivity and the original
+  // board rules must not be traded away to eliminate the trace pair.
+  expect(input).toEqual(sample051 as unknown as SimpleRouteJson)
   const traceA = result.routedTraces.find(
     (trace) => trace.pcb_trace_id === "source_net_25_0",
   )!
   const traceB = result.routedTraces.find(
     (trace) => trace.pcb_trace_id === "source_net_2_mst1_0",
   )!
+  for (const trace of [traceA, traceB]) {
+    for (const point of trace.route) {
+      if (point.route_type === "wire") {
+        expect(point.width).toBe(input.minTraceWidth)
+      }
+    }
+  }
   let minimumPairClearance = Number.POSITIVE_INFINITY
   for (let i = 1; i < traceA.route.length; i++) {
     const a = traceA.route[i - 1]!
@@ -59,7 +76,7 @@ test("Pipeline9 reproduces the solar charger's terminal trace-pair collision", a
   }
   // The DRC message reports the first contact, not the worst contact. Check
   // copper geometry too, so changing an error ID cannot make this repro pass.
-  expect(minimumPairClearance).toBeLessThan(0.1)
+  expect(minimumPairClearance).toBeGreaterThanOrEqual(0.1)
   await expect(
     getBugReportSnapshotSvg(result).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path)
