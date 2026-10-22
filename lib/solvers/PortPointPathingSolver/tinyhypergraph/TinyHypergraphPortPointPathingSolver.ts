@@ -1120,7 +1120,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           this.duplicateCongestedPortError =
             duplicateCongestedPortSolver.error ?? "unknown error"
         } else {
-          this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+          this.duplicateCongestedPortReport =
+            duplicateCongestedPortSolver.report
           graphForTiny = duplicateCongestedPortSolver.getOutput()
           for (const port of graphForTiny.ports) {
             const metadata = asTinyPortMetadata(port.d)
@@ -1131,7 +1132,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         }
         this.duplicatedPortCount =
           this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-            (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
+            (sum, duplicatedPort) =>
+              sum + duplicatedPort.duplicatePortIds.length,
             0,
           ) ?? 0
         const tinyPipelineInput = getTinyHyperGraphPipelineInput(
@@ -1141,7 +1143,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           },
           params.effort,
           params.minViaPadDiameter,
-          !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
+          !hasPreloadedTraceOccupancy ||
+            usePartialRipRoutingWithPreloadedTraces,
           partialRipEligibilityCount,
         )
         this.tinyPipelineSolver =
