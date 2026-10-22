@@ -50,6 +50,7 @@ test("Pipeline9 dispatches tiny-hypergraph searches and preserves serial routing
       )
     }
     expect(names).toContain("TinyHyperGraphRouteSearchSolver")
+    expect(names).toContain("TinyHyperGraphIndependentRoutesSolver")
   } finally {
     await runtime.dispose()
   }

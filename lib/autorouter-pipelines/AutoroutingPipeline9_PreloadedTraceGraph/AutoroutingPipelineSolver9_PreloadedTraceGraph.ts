@@ -562,6 +562,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
           },
+          cms.asyncRunning,
         ]
       },
     ),

@@ -1030,7 +1030,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private tinyPipelineSolver!: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1042,18 +1042,26 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
-  private inputNodeWithPortPoints: InputNodeWithPortPoints[]
-  private originalRegionById: Map<
+  private inputNodeWithPortPoints!: InputNodeWithPortPoints[]
+  private originalRegionById!: Map<
     CapacityMeshNodeId,
     HgPortPointPathingSolverParams["graph"]["regions"][number]
   >
-  private originalRegionIds: Set<CapacityMeshNodeId>
+  private originalRegionIds!: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  private pendingInitialization?: {
+    solver: DuplicateCongestedPortSolver
+    complete: () => void
+  }
+
+  constructor(
+    private params: HgPortPointPathingSolverParams,
+    deferInitialization = false,
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1105,65 +1113,70 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         },
       },
     )
-    duplicateCongestedPortSolver.solve()
-    if (duplicateCongestedPortSolver.failed) {
-      this.duplicateCongestedPortError =
-        duplicateCongestedPortSolver.error ?? "unknown error"
-    } else {
-      this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
-      graphForTiny = duplicateCongestedPortSolver.getOutput()
-      for (const port of graphForTiny.ports) {
-        const metadata = asTinyPortMetadata(port.d)
-        if (typeof metadata.duplicatedFromPortId !== "string") continue
-        delete metadata._preloadedFixedNetIds
-        delete metadata._preloadedTracePortAssignments
-      }
-    }
-    this.duplicatedPortCount =
-      this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-        (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-        0,
-      ) ?? 0
-    const tinyPipelineInput = getTinyHyperGraphPipelineInput(
-      {
-        ...graphForTiny,
-        solvedRoutes: serializedGraph.solvedRoutes,
-      },
-      params.effort,
-      params.minViaPadDiameter,
-      !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
-      partialRipEligibilityCount,
-    )
-    this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-      )
-    this.primaryTinyPipelineSolver = this.tinyPipelineSolver
-    if (
-      connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
-      connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
-    ) {
-      this.alternativeTinyPipelineInput = {
-        ...tinyPipelineInput,
-        solveGraphOptions: {
-          ...tinyPipelineInput.solveGraphOptions,
-          TRACE_DENSITY_COST_FACTOR: 1,
-        },
-      }
-    }
-    this.MAX_ITERATIONS =
-      getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
-      (this.alternativeTinyPipelineInput ? 2 : 1)
+    this.pendingInitialization = {
+      solver: duplicateCongestedPortSolver,
+      complete: () => {
+        if (duplicateCongestedPortSolver.failed) {
+          this.duplicateCongestedPortError =
+            duplicateCongestedPortSolver.error ?? "unknown error"
+        } else {
+          this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
+          graphForTiny = duplicateCongestedPortSolver.getOutput()
+          for (const port of graphForTiny.ports) {
+            const metadata = asTinyPortMetadata(port.d)
+            if (typeof metadata.duplicatedFromPortId !== "string") continue
+            delete metadata._preloadedFixedNetIds
+            delete metadata._preloadedTracePortAssignments
+          }
+        }
+        this.duplicatedPortCount =
+          this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
+            (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
+            0,
+          ) ?? 0
+        const tinyPipelineInput = getTinyHyperGraphPipelineInput(
+          {
+            ...graphForTiny,
+            solvedRoutes: serializedGraph.solvedRoutes,
+          },
+          params.effort,
+          params.minViaPadDiameter,
+          !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
+          partialRipEligibilityCount,
+        )
+        this.tinyPipelineSolver =
+          new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+            tinyPipelineInput,
+            params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+          )
+        this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+        if (
+          connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
+          connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
+        ) {
+          this.alternativeTinyPipelineInput = {
+            ...tinyPipelineInput,
+            solveGraphOptions: {
+              ...tinyPipelineInput.solveGraphOptions,
+              TRACE_DENSITY_COST_FACTOR: 1,
+            },
+          }
+        }
+        this.MAX_ITERATIONS =
+          getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
+          (this.alternativeTinyPipelineInput ? 2 : 1)
 
-    this.originalRegionById = new Map(
-      params.graph.regions.map((region) => [region.regionId, region]),
-    )
-    this.originalRegionIds = new Set(this.originalRegionById.keys())
-    this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
-      params,
-      graphForTiny,
-    )
+        this.originalRegionById = new Map(
+          params.graph.regions.map((region) => [region.regionId, region]),
+        )
+        this.originalRegionIds = new Set(this.originalRegionById.keys())
+        this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
+          params,
+          graphForTiny,
+        )
+      },
+    }
+    if (!deferInitialization) this.initializeSynchronously()
     // Most routing steps have no stats consumer. Build the same snapshot when
     // it is read, so progress reporting stays current without per-step copies.
     Object.defineProperty(this, "stats", {
@@ -1175,6 +1188,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.statsSnapshotDirty = false
       },
     })
+  }
+
+  private initializeSynchronously(): void {
+    const pending = this.pendingInitialization
+    if (!pending) return
+    pending.solver.solve()
+    pending.complete()
+    this.pendingInitialization = undefined
   }
 
   getSolverName(): string {
@@ -1437,6 +1458,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const startTime = performance.now()
     this.asyncRunning = true
     try {
+      const pending = this.pendingInitialization
+      if (pending) {
+        await pending.solver.solveAsync(runtime)
+        pending.complete()
+        this.pendingInitialization = undefined
+      }
       while (
         !this.solved &&
         !this.failed &&
@@ -1480,6 +1507,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
+    this.initializeSynchronously()
     this.tinyPipelineSolver.step()
 
     if (
