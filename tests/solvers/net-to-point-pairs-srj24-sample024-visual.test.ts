@@ -39,6 +39,7 @@ test("visualize the two affected sample024 nets with their real pads", async ():
     }
     const groupCount = new Set(points.map((point) => connected.find(point)))
       .size
+    const groupLabel = groupCount === 1 ? "group" : "groups"
     const minX = Math.min(...points.map((point) => point.x))
     const maxX = Math.max(...points.map((point) => point.x))
     const minY = Math.min(...points.map((point) => point.y))
@@ -59,7 +60,7 @@ test("visualize the two affected sample024 nets with their real pads", async ():
           x: minX,
           y: maxY + fontSize * 3,
           anchorSide: "bottom_left",
-          text: `${points.length} terminals / ${solver.newConnections.length} pairs / ${groupCount} groups`,
+          text: `${points.length} terminals / ${solver.newConnections.length} pairs / ${groupCount} ${groupLabel}`,
           fontSize,
         },
       ],
