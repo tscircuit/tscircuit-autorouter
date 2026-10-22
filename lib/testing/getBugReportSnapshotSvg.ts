@@ -36,5 +36,8 @@ export const getBugReportSnapshotSvg = (
   })
   const color = errors.length === 0 ? "#166534" : "#b91c1c"
   const overlay = `<g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="${color}"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="${color}">Relaxed DRC errors: ${errors.length}</text></g>`
-  return svg.replace("</svg>", `${overlay}</svg>`)
+  // Solid trace segments have round copper caps, matching clearance geometry.
+  // Dashed lines denote other layers and retain their existing dash rendering.
+  const copperCaps = "<style>polyline:not([stroke-dasharray]) { stroke-linecap: round; }</style>"
+  return svg.replace("</svg>", `${copperCaps}${overlay}</svg>`)
 }
