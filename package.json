@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.996",
+  "version": "0.0.1000",
   "type": "module",
   "repository": {
     "type": "git",
@@ -63,9 +63,9 @@
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
-    "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#d3a8b095035f4e7d03cdb19f2fdb7a554c6c008a",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/485c785ee7b8a13e178e664c167e5a8194db593f",
-    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#404f2ab10bac05bccf9b11e6b30bdd16d0694b07",
+    "@tscircuit/rectdiff": "0.0.56",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/792d6ab1b034d95e63621b03624463cf003a231e",
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#054d77a1a9a200478736062e1abe4fdb8dc163df",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
     "@types/object-hash": "^3.0.6",
@@ -110,7 +110,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
-    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/79c9b022a678b1f0289059962bf49f253310a5dc",
+    "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/fb345bc34ff8c1cdc3a06830bfd610dc6fe3d313",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
