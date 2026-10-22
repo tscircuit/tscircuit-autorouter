@@ -1,10 +1,12 @@
-name: Bun Test
+name: Bun Test exact revision
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact revision to validate
+        required: true
+        type: string
 
 # Superseded pushes to the same PR currently run to completion; three of the
 # recent PRs burned 2-3 full Bun Test runs each. Keep main runs un-cancelled.
@@ -27,6 +29,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v1
