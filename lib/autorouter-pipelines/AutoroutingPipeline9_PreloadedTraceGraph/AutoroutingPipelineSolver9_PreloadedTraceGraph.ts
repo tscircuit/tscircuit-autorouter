@@ -708,6 +708,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          // Preserve legacy stitching outside the newly reconstructed via model.
+          strictTerminalLayerIdentity:
+            cms.topologyMergingSolver!.reconstructedViaDomainCount > 0,
         },
       ],
     ),
