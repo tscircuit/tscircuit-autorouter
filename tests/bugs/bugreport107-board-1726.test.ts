@@ -1,4 +1,3 @@
-import { Resvg } from "@resvg/resvg-js"
 import { writeFileSync } from "node:fs"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
@@ -82,8 +81,7 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  const snapshotSvg = getBugReportSnapshotSvg(drcInput)
-  console.log("REVIEW_SVG_BUG107=" + Buffer.from(Bun.gzipSync(snapshotSvg)).toString("base64"))
-  console.log("REVIEW_PNG_BUG107=" + new Resvg(snapshotSvg, { background: "white", fitTo: { mode: "width", value: 1280 } }).render().asPng().toString("base64"))
-  await expect(snapshotSvg).toMatchSvgSnapshot(snapshotPath)
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    snapshotPath,
+  )
 })

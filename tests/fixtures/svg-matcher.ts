@@ -134,6 +134,7 @@ async function toMatchSvgSnapshot(
     // If difference is too large, create diff image
     const diffPath = filePath.replace(/\.snap\.svg$/, ".diff.png")
     const receivedPath = filePath.replace(/\.snap\.svg$/, ".received.svg")
+    console.log("REVIEW_CAPTURE=" + JSON.stringify({ path: filePath, svg: Buffer.from(Bun.gzipSync(received)).toString("base64"), png: new Resvg(received, { background: "white", fitTo: { mode: "width", value: 1280 } }).render().asPng().toString("base64") }))
     fs.writeFileSync(receivedPath, received)
     await looksSame.createDiff({
       reference: existingPng,
@@ -152,7 +153,8 @@ async function toMatchSvgSnapshot(
   // Fallback if diffBounds isn't available
   const diffPath = filePath.replace(/\.snap\.svg$/, ".diff.png")
   const receivedPath = filePath.replace(/\.snap\.svg$/, ".received.svg")
-  fs.writeFileSync(receivedPath, received)
+  console.log("REVIEW_CAPTURE=" + JSON.stringify({ path: filePath, svg: Buffer.from(Bun.gzipSync(received)).toString("base64"), png: new Resvg(received, { background: "white", fitTo: { mode: "width", value: 1280 } }).render().asPng().toString("base64") }))
+    fs.writeFileSync(receivedPath, received)
   await looksSame.createDiff({
     reference: existingPng,
     current: receivedPng,
