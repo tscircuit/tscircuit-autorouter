@@ -3,10 +3,13 @@ import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObsta
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 
+export type ObstacleRouteOwnershipPredicate = (obstacle: Obstacle, route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">) => boolean
+
 type ObstacleRouteConnectivityParams = {
   obstacles: Obstacle[]
   routes: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">[]
   connMap?: ConnectivityMap
+  isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
 }
 
 export type ObstacleRouteConnectivity = {
@@ -18,6 +21,7 @@ export const getObstacleRouteConnectivity = ({
   obstacles,
   routes,
   connMap,
+  isObstacleOwnedByRoute,
 }: ObstacleRouteConnectivityParams): ObstacleRouteConnectivity => {
   const connectedRouteNamesByObstacle = obstacles.map((): string[] => [])
   const connectedObstaclesByRoute = routes.map((): Obstacle[] => [])
@@ -36,7 +40,10 @@ export const getObstacleRouteConnectivity = ({
     }
     for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
       const route = routes[routeIndex]!
-      if (!isObstacleConnectedToRoute(connectivityObstacle, route, connMap)) {
+      const owned = isObstacleOwnedByRoute
+        ? isObstacleOwnedByRoute(connectivityObstacle, route)
+        : isObstacleConnectedToRoute(connectivityObstacle, route, connMap)
+      if (!owned) {
         continue
       }
       connectedRouteNamesByObstacle[obstacleIndex]!.push(route.connectionName)
