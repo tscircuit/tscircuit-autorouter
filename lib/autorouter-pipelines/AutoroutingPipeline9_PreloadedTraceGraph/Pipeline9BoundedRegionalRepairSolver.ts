@@ -141,10 +141,13 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  private routesForFurtherRepair: HighDensityRoute[]
+  private continuationDrcIssueCount = Number.POSITIVE_INFINITY
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
     this.params = params
+    this.routesForFurtherRepair = params.routes
     this.budget = params.budget ?? PIPELINE9_BOUNDED_REPAIR_BUDGET
     this.result = {
       routes: params.routes,
@@ -226,6 +229,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.finish()
   }
 
+  private retainForFurtherRepair(context: ReferencedContext): void {
+    if (context.currentErrors.length >= this.continuationDrcIssueCount) {
+      return
+    }
+    this.routesForFurtherRepair = context.currentRoutes
+    this.continuationDrcIssueCount = context.currentErrors.length
+  }
+
   private initialize(): void {
     const { originalSrj, routes, syntheticConnectionNames } = this.params
     if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
@@ -291,6 +302,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     this.result.initialDrcIssueCount = currentErrors.length
     this.result.finalDrcIssueCount = currentErrors.length
     this.result.publishedDrcIssueCount = currentErrors.length
+    this.retainForFurtherRepair(referenced)
     if (currentErrors.length === 0) {
       this.finish()
       return
@@ -319,6 +331,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ? reference
       : reference.errors
     this.result.finalDrcIssueCount = context.currentErrors.length
+    this.retainForFurtherRepair(context)
     if (context.currentErrors.length === 0) {
       this.publish(context, true)
       return
@@ -675,6 +688,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       ]),
     )
     this.result.acceptedRegionCount++
+    this.retainForFurtherRepair(context)
     // Accepted neighboring changes can reopen an already visited region.
     if (this.budget.revisitChangedRegions) context.attemptedRegions.length = 0
     this.result.finalDrcIssueCount = candidateErrors.length
@@ -789,6 +803,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     })
     this.result.referenceValidationCount++
     const errors = Array.isArray(reference) ? reference : reference.errors
+    this.retainForFurtherRepair({
+      ...state.context,
+      currentRoutes: state.independentRoutes,
+      currentErrors: errors,
+      reference,
+    })
     this.result.routes = state.independentRoutes
     this.result.publishedDrcIssueCount = errors.length
     this.result.finalDrcIssueCount = errors.length
@@ -970,5 +990,13 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       )
     }
     return this.result
+  }
+
+  /** Reference-validated progress for another repair stage, not publication. */
+  getRoutesForFurtherRepair(): HighDensityRoute[] {
+    if (!this.solved || this.failed) {
+      throw new Error("Regional repair continuation requested before completion")
+    }
+    return this.routesForFurtherRepair
   }
 }

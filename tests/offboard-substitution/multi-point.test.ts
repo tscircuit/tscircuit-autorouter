@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import multiPointSrjData from "./srj/multi-point.srj.json"
 
 /**
@@ -19,7 +18,7 @@ import multiPointSrjData from "./srj/multi-point.srj.json"
  * optimize each edge independently. Both edges should be rerouted to the
  * more optimal B', resulting in two final traces: A -> B' and C -> B'.
  */
-test("multi-point on-board net", () => {
+test("multi-point off-board substitution rejects copper at the board edge", () => {
   const srj: SimpleRouteJson = multiPointSrjData as any
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
@@ -32,7 +31,25 @@ test("multi-point on-board net", () => {
   expect(connectionsAsPointIdPairs).toContainEqual(["A", "B_prime"].sort())
   expect(connectionsAsPointIdPairs).toContainEqual(["C", "B_prime"].sort())
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
+  // B_prime lies on the board boundary, so trace copper extends outside it.
+  expect(srj.connections[1]!.pointsToConnect[1]!.y).toBe(srj.bounds.minY)
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
+  const finalStage = solver.powerTraceExpansionSolver
+  if (!finalStage) throw new Error("The final copper stage did not complete")
+  const traces = finalStage.getOutput()
+  expect(traces).toHaveLength(2)
+  expect(
+    traces.some((trace) =>
+      trace.route.some(
+        (point) =>
+          point.route_type === "wire" &&
+          point.y - point.width / 2 < srj.bounds.minY,
+      ),
+    ),
+  ).toBe(true)
+  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
+    "Cannot get output before solving is complete",
   )
 })

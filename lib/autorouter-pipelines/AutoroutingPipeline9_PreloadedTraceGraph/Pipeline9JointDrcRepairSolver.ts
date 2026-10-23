@@ -53,6 +53,7 @@ import {
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
+import { selectPipeline9RepairProgress } from "./selectPipeline9RepairProgress"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
@@ -742,11 +743,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         if (!this.exactRepairParams) {
           throw new Error("Pipeline9 exact repair stage is missing its input")
         }
+        let hdRoutes = this.exactRepairParams.hdRoutes
+        if (this.clearanceProjectionSolver?.solved) {
+          hdRoutes = this.clearanceProjectionSolver.getOutput()
+        }
+        if (this.initialBoundedRegionalRepairSolver?.solved) {
+          hdRoutes =
+            this.initialBoundedRegionalRepairSolver.getRoutesForFurtherRepair()
+        }
         this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
           ...this.exactRepairParams,
-          hdRoutes:
-            this.clearanceProjectionSolver?.getOutput() ??
-            this.exactRepairParams.hdRoutes,
+          hdRoutes,
         })
         return this.exactRepairSolver
       },
@@ -1810,8 +1817,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         postExactReferenceDrcIssueCount = 0
       }
     }
-    if (postExactReferenceDrcIssueCount === 0) {
-      this.combinedOutput = exactOutput
+    const retainedExactProgress = this.selectRepairProgress({
+      candidates: [exactOutput],
+      preloadedRoutes: exactOutput,
+    })
+    if (retainedExactProgress.drcIssueCount === 0) {
+      this.combinedOutput = retainedExactProgress.routes
       this.stats = {
         ...this.stats,
         ...this.exactRepairSolver.stats,
@@ -1914,23 +1925,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   private finishRegionalB01Repair(): void {
-    if (!this.regionalB01RepairSolver?.solved) {
+    if (!this.regionalB01RepairSolver?.solved || !this.exactRepairSolver) {
       throw new Error(
         "Pipeline9 regional B01 stage must solve before completion",
       )
     }
     const regionalB01RepairResult = this.regionalB01RepairSolver.getResult()
-    const regionalReference = this.cachedReferenceDrcEvaluator!({
-      traces: [],
-      routes: regionalB01RepairResult.routes,
-      hdRoutes: regionalB01RepairResult.routes,
+    const retainedProgress = this.selectRepairProgress({
+      candidates: [
+        this.exactRepairSolver.getOutput(),
+        regionalB01RepairResult.routes,
+      ],
+      preloadedRoutes: regionalB01RepairResult.routes,
     })
     const regionalRepairBudget = getPipeline9BoundedRepairBudget(
-      regionalB01RepairResult.routes.length,
-      (Array.isArray(regionalReference)
-        ? regionalReference
-        : regionalReference.errors
-      ).length,
+      retainedProgress.routes.length,
+      retainedProgress.drcIssueCount,
       this.params.effort,
     )
     this.boundedRegionalParams = {
@@ -1942,7 +1952,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ...this.params.newConnections,
         ],
       },
-      routes: regionalB01RepairResult.routes,
+      routes: retainedProgress.routes,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
@@ -1955,6 +1965,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       !this.boundedRegionalRepairSolver?.solved ||
       !this.regionalB01RepairSolver?.solved ||
       !this.boundedRegionalParams?.budget ||
+      !this.exactRepairSolver ||
       this.boundedRegionalRepairStartedAt === undefined
     ) {
       throw new Error(
@@ -1965,9 +1976,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    const retainedProgress = this.selectRepairProgress({
+      candidates: [
+        this.exactRepairSolver.getOutput(),
+        boundedRegionalRepairResult.routes,
+        this.boundedRegionalRepairSolver.getRoutesForFurtherRepair(),
+      ],
+      preloadedRoutes: boundedRegionalRepairResult.routes,
+    })
+    this.combinedOutput = retainedProgress.routes
     this.stats = {
       ...this.stats,
+      finalDrcIssueCount: retainedProgress.drcIssueCount,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
@@ -2017,6 +2037,48 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.solved = true
+  }
+
+  private selectRepairProgress({
+    candidates,
+    preloadedRoutes,
+  }: {
+    candidates: HighDensityRoute[][]
+    preloadedRoutes: HighDensityRoute[]
+  }): ReturnType<typeof selectPipeline9RepairProgress> {
+    if (!this.cachedReferenceDrcEvaluator) {
+      throw new Error("Repair continuation is missing its reference evaluator")
+    }
+    if (
+      this.params.updatedPreloadedTraces.length > 0 ||
+      (this.params.originalSrj.traces?.length ?? 0) > 0
+    ) {
+      // Preloaded copper remains owned by the existing exact/preload stages.
+      return selectPipeline9RepairProgress({
+        originalSrj: this.params.originalSrj,
+        originalRoutes: preloadedRoutes,
+        candidates: [],
+        drcEvaluator: this.cachedReferenceDrcEvaluator,
+      })
+    }
+    const initialRepair = this.initialBoundedRegionalRepairSolver
+    if (!initialRepair) {
+      throw new Error("Repair continuation is missing its validated input")
+    }
+    let regionalCandidates = candidates
+    if (initialRepair.solved) {
+      regionalCandidates = [
+        initialRepair.getResult().routes,
+        initialRepair.getRoutesForFurtherRepair(),
+        ...candidates,
+      ]
+    }
+    return selectPipeline9RepairProgress({
+      originalSrj: initialRepair.params.originalSrj,
+      originalRoutes: initialRepair.params.routes,
+      candidates: regionalCandidates,
+      drcEvaluator: this.cachedReferenceDrcEvaluator,
+    })
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import fixture from "./fixtures/hole-clearance/npth.srj.json"
@@ -25,12 +26,27 @@ test("shared DRC reports preloaded trace clearance and overlap with NPTHs", (): 
       cacheProvider: null,
     })
     solver.solve()
-    expect(solver.solved).toBe(true)
+    expect(solver.solved).toBe(false)
+    expect(solver.failed).toBe(true)
+    expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
+      "Cannot get output before solving is complete",
+    )
+    const finalStage = solver.powerTraceExpansionSolver
+    if (!finalStage) throw new Error("The final copper stage did not complete")
     const { errors } = evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      routedTraces: finalStage.getOutput(),
+      includeBoardClearance: true,
+      drcOptions: {
+        includeTraceContinuity: false,
+        traceClearance:
+          srj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
+        viaClearance:
+          srj.minPadEdgeToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.viaClearance,
+      },
     })
+    expect(solver.stats.finalDrcIssueCount).toBe(errors.length)
     expect(errors).toContainEqual(
       expect.objectContaining({
         type: "pcb_trace_error",

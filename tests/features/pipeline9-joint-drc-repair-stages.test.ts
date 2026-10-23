@@ -5,7 +5,10 @@ import { Pipeline9RegionalB01RepairSolver } from "lib/autorouter-pipelines/Autor
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-const createSolver = (): Pipeline9JointDrcRepairSolver => {
+const createSolver = (): {
+  solver: Pipeline9JointDrcRepairSolver
+  restoreContinuation: () => void
+} => {
   const fixture = createBoundedRegionalRepairFixture()
   const srj = fixture.originalSrj
   const solver = new Pipeline9JointDrcRepairSolver({
@@ -30,18 +33,25 @@ const createSolver = (): Pipeline9JointDrcRepairSolver => {
   const getResult = initial.getResult.bind(initial)
   const initialResult = spyOn(initial, "getResult").mockImplementation(() => ({
     ...getResult(),
+    routes: initial.params.routes,
     publishedDrcIssueCount: undefined,
   }))
-  try {
-    while (!solver.exactRepairSolver && !solver.failed) solver.step()
-  } finally {
-    initialResult.mockRestore()
+  const continuation = spyOn(
+    initial,
+    "getRoutesForFurtherRepair",
+  ).mockImplementation((): typeof initial.params.routes => initial.params.routes)
+  while (!solver.exactRepairSolver && !solver.failed) solver.step()
+  return {
+    solver,
+    restoreContinuation: (): void => {
+      initialResult.mockRestore()
+      continuation.mockRestore()
+    },
   }
-  return solver
 }
 
 test("joint DRC repair exposes sequential child stages and propagates failures", (): void => {
-  const solver = createSolver()
+  const { solver, restoreContinuation } = createSolver()
   const exact = solver.exactRepairSolver!
   // Keep the unresolved geometry so the post-exact stages run real repairs.
   const exactStep = spyOn(exact, "step").mockImplementation((): void => {
@@ -97,9 +107,13 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
   } finally {
     exactStep.mockRestore()
     for (const spy of solveSpies) spy.mockRestore()
+    restoreContinuation()
   }
 
-  const failing = createSolver()
+  const {
+    solver: failing,
+    restoreContinuation: restoreFailingContinuation,
+  } = createSolver()
   const failingExact = failing.exactRepairSolver!
   const failureStep = spyOn(failingExact, "step").mockImplementation(
     (): void => {
@@ -117,5 +131,6 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
     expect(failing.boundedRegionalRepairSolver).toBeUndefined()
   } finally {
     failureStep.mockRestore()
+    restoreFailingContinuation()
   }
 })
