@@ -172,7 +172,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       if (
         cost.vias === this.bestCost.vias &&
         (length < bestLength - 1e-9 ||
-          (length <= bestLength + 1e-9 && cost.points < this.bestCost.points)) &&
+          (length <= bestLength + 1e-9 &&
+            cost.points < this.bestCost.points)) &&
         this.params.isValid(routes)
       ) {
         this.bestRoutes = routes
@@ -188,7 +189,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
           ...(config.otherHdRoutes ?? []),
           ...routes.filter((_, index) => index !== this.vertexRouteIndex),
         ],
-        obstacles: createObjectsWithZLayers(config.obstacles, config.layerCount),
+        obstacles: createObjectsWithZLayers(
+          config.obstacles,
+          config.layerCount,
+        ),
         connMap: config.connMap,
         colorMap: config.colorMap,
         outline: config.outline ? [...config.outline] : undefined,
