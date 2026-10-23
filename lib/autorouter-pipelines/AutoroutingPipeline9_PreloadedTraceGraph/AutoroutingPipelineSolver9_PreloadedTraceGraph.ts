@@ -620,7 +620,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             nodePortPoints: nodePortPointsSource,
-            enableThickFamilyCompilation: true,
+            enableMonotoneFamilyCompilation: true,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance,
+            traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance,
+            viaHoleClearance: Math.max(cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1, cms.originalSrj.minPlatedHoleDrillEdgeToDrillEdgeClearance ?? 0.1),
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
               outline: cms.originalSrj.outline,
