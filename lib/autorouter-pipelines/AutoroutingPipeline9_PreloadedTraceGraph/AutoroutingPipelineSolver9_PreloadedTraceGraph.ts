@@ -97,7 +97,10 @@ import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import {
+  convertPipeline7HdRoutesToSimplifiedPcbTraces,
+  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
+} from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 import {
@@ -873,17 +876,29 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const hdRoutes = canonicalizePipeline9HdRoutes(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
         )
+        const convertRoutes =
+          createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+          })
+        // Candidate geometry changes, but its declared connectivity stays fixed.
+        const connectivityMaps = {
+          source: getConnectivityMapFromSimpleRouteJson({
+            ...inputSrj,
+            connections: [
+              ...cms.srjWithPointPairs!.connections,
+              ...inputSrj.connections,
+            ],
+          }),
+          route: getConnectivityMapFromSimpleRouteJson(cms.srjWithPointPairs!),
+        }
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
-            convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
-              originalConnections: cms.originalSrj.connections,
-              hdRoutes: canonicalizePipeline9HdRoutes(routes),
-              layerCount: cms.srj.layerCount,
-              obstacles: cms.srj.obstacles,
-              defaultViaHoleDiameter: cms.viaHoleDiameter,
-              connMap: cms.connMap,
-            }),
+            convertRoutes(canonicalizePipeline9HdRoutes(routes)),
             cms.originalSrj.traces ?? [],
           )
         const getDrcErrors = (
@@ -893,6 +908,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             inputSrj,
             srjWithPointPairs: cms.srjWithPointPairs!,
             routedTraces: convert(routes),
+            connectivityMaps,
             includeBoardClearance: true,
             drcOptions: {
               traceClearance:

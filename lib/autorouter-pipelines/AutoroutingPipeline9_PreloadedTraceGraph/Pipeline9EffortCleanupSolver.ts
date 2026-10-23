@@ -107,6 +107,13 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       simplified.route[simplified.route.length - 1] = {
         ...original.route.at(-1)!,
       }
+      // Unchanged geometry cannot improve the score; avoid converting the board.
+      if (
+        JSON.stringify(simplified.route) === JSON.stringify(original.route) &&
+        JSON.stringify(simplified.vias) === JSON.stringify(original.vias)
+      ) {
+        return
+      }
       const candidate = [...this.bestRoutes]
       candidate[routeIndex] = {
         ...original,
