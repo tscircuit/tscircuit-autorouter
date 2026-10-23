@@ -1,4 +1,3 @@
-import { Resvg } from "@resvg/resvg-js"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -113,7 +112,5 @@ test("Pipeline9 honors the Muse e-paper different-net via copper clearance", asy
     },
   })
   expect(snapshot.copperGap).toBeGreaterThanOrEqual(minimumCopperGap - 1e-9)
-  console.log("REVIEW_SVG_MUSE=" + Buffer.from(Bun.gzipSync(snapshot.svg)).toString("base64"))
-  console.log("REVIEW_PNG_MUSE=" + new Resvg(snapshot.svg, { background: "white", fitTo: { mode: "width", value: 1200 } }).render().asPng().toString("base64"))
   await expect(snapshot.svg).toMatchSvgSnapshot(import.meta.path)
 })
