@@ -8,7 +8,10 @@ export function getCanonicalPipeline9PortRoot(port: Pick<PortPoint, "connectionN
     // Canonical net keys may also be ordinary aliases of some other net. The
     // registered connection owns this port; do not reinterpret its exact key.
     if (declaredRoot === undefined || declaredRoot === connectionRoot) return connectionRoot
-    if (connMap.getNetConnectedToId(declaredRoot) !== connectionRoot) throw new Error(`Pipeline9 port ${port.portPointId ?? port.connectionName} declares a foreign electrical root`)
+    // Imported preloads can carry an unregistered descriptive root label.
+    // Only a known different owner contradicts the registered connection.
+    const declaredOwner = connMap.getNetConnectedToId(declaredRoot) ?? (Object.hasOwn(connMap.netMap, declaredRoot) ? declaredRoot : undefined)
+    if (declaredOwner !== undefined && declaredOwner !== connectionRoot) throw new Error(`Pipeline9 port ${port.portPointId ?? port.connectionName} declares a foreign electrical root`)
     return connectionRoot
   }
   if (declaredRoot !== undefined && Object.hasOwn(connMap.netMap, declaredRoot)) return declaredRoot

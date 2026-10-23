@@ -3,11 +3,13 @@ import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObsta
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 
+export type ObstacleRouteOwnershipPredicate = (obstacle: Obstacle, route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">) => boolean
+
 type ObstacleRouteConnectivityParams = {
   obstacles: Obstacle[]
   routes: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">[]
   connMap?: ConnectivityMap
-  isObstacleOwnedByRoute?: (obstacle: Obstacle, route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">) => boolean
+  isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
 }
 
 export type ObstacleRouteConnectivity = {

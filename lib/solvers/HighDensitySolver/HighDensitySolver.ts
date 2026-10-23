@@ -1,3 +1,4 @@
+import type { ObstacleRouteOwnershipPredicate } from "../HyperHighDensitySolver/getObstacleRouteConnectivity"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -65,6 +66,7 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
+  isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -106,6 +108,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
     boardGeometry,
+    isObstacleOwnedByRoute,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -128,6 +131,7 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
+    isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -157,6 +161,7 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
     this.boardGeometry = boardGeometry
+    this.isObstacleOwnedByRoute = isObstacleOwnedByRoute
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -404,6 +409,7 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       boardGeometry: this.boardGeometry,
+      isObstacleOwnedByRoute: this.isObstacleOwnedByRoute,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,

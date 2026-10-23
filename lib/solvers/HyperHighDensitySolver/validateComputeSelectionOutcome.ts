@@ -3,12 +3,12 @@ import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/Autoro
 import { getCanonicalPipeline9PortRoot } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getCanonicalPipeline9PortRoot"
 import { isPipeline9ObstacleOwnedByRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9ObstacleOwnedByRoute"
 import { pointToSegmentDistance, segmentToBoundsMinDistance } from "@tscircuit/math-utils"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getDrcErrors, MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson, createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
+import type { CircuitJsonMetadata, Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -284,11 +284,52 @@ export const assessComputeSelectionOutcome = (params: ValidationParams): Compute
   }
   if (params.validationScope === "local-structure") return { structurallyValid: true, physicallyClean: false }
   if (!hasDeclaredObstacleClearance(params, obstacles, ownership.connectedObstaclesByRoute)) return { structurallyValid: true, physicallyClean: false }
+  // The physical diagnostic must preserve the authoritative owner equivalence,
+  // rather than rebuilding it from public aliases or geometric point hashes.
+  // None of these private identity strings is copied back into solver copper.
+  const diagnosticIds = new Map<string, string>()
+  const diagnosticId = (kind: string, original: string): string => {
+    const key = JSON.stringify([kind, original])
+    const previous = diagnosticIds.get(key)
+    if (previous !== undefined) return previous
+    const id = `learning_identity_${diagnosticIds.size}`
+    diagnosticIds.set(key, id)
+    return id
+  }
+  const ownerByConnection = new Map<string, string>()
+  for (const owner of [...node.portPoints, ...routes]) {
+    const canonical = connMap ? getCanonicalPipeline9PortRoot(owner, connMap)
+      : owner.rootConnectionName ?? owner.connectionName
+    const id = diagnosticId("owner", canonical)
+    const previous = ownerByConnection.get(owner.connectionName)
+    if (previous !== undefined && previous !== id) {
+      throw new Error("Physical candidate diagnostic has conflicting connection owners")
+    }
+    ownerByConnection.set(owner.connectionName, id)
+  }
+  const metadataIds = (metadata: CircuitJsonMetadata): CircuitJsonMetadata => {
+    return {
+      ...metadata,
+      ...(metadata.pcb_port_id ? { pcb_port_id: diagnosticId("port", metadata.pcb_port_id) } : {}),
+      ...(metadata.pcb_smtpad_id ? { pcb_smtpad_id: diagnosticId("smtpad", metadata.pcb_smtpad_id) } : {}),
+      ...(metadata.pcb_plated_hole_id ? { pcb_plated_hole_id: diagnosticId("plated-hole", metadata.pcb_plated_hole_id) } : {}),
+      ...(metadata.pcb_via_id ? { pcb_via_id: diagnosticId("via", metadata.pcb_via_id) } : {}),
+    }
+  }
+  const portOwners = new Map<string, string>()
   const groups = new Map<string, NodeWithPortPoints["portPoints"]>()
   for (const port of node.portPoints) {
-    const ports = groups.get(port.connectionName) ?? []
+    const owner = ownerByConnection.get(port.connectionName)!
+    if (port.pcb_port_id) {
+      const previous = portOwners.get(port.pcb_port_id)
+      if (previous !== undefined && previous !== owner) {
+        throw new Error("Physical candidate diagnostic has conflicting PCB port owners")
+      }
+      portOwners.set(port.pcb_port_id, owner)
+    }
+    const ports = groups.get(owner) ?? []
     ports.push(port)
-    groups.set(port.connectionName, ports)
+    groups.set(owner, ports)
   }
   const srj: SimpleRouteJson = {
     ...params.copperRules,
@@ -304,31 +345,62 @@ export const assessComputeSelectionOutcome = (params: ValidationParams): Compute
     ...params.boardGeometry,
     obstacles: obstacles.map((obstacle, index) => ({
       ...obstacle,
-      connectedTo: [...obstacle.connectedTo, ...ownership.connectedRouteNamesByObstacle[index]!],
+      obstacleId: diagnosticId(obstacle.obstacleId === undefined ? "obstacle-index" : "obstacle", obstacle.obstacleId ?? String(index)),
+      offBoardConnectsTo: undefined,
+      connectedTo: [...new Set([
+        ...ownership.connectedRouteNamesByObstacle[index]!.map((name) => ownerByConnection.get(name)!),
+        ...obstacle.connectedTo.flatMap((id) => {
+          const owner = portOwners.get(id)
+          return owner !== undefined && ownership.connectedRouteNamesByObstacle[index]!.some((name) =>
+            ownerByConnection.get(name) === owner) ? [diagnosticId("port", id)] : []
+        }),
+      ])],
+      ...(obstacle.circuitJsonMetadata ? { circuitJsonMetadata: metadataIds(obstacle.circuitJsonMetadata) } : {}),
     })),
     connections: [...groups].map(([name, ports]) => ({
       name,
-      rootConnectionName: ports[0]!.rootConnectionName,
       pointsToConnect: ports.map((port) => ({
         x: port.x,
         y: port.y,
         layer: mapZToLayerName(port.z, layerCount),
-        pcb_port_id: port.pcb_port_id,
+        pcb_port_id: port.pcb_port_id ? diagnosticId("port", port.pcb_port_id) : undefined,
       })),
     })),
+  }
+  const diagnosticConnectivity = new ConnectivityMap({})
+  for (const connection of srj.connections) {
+    diagnosticConnectivity.addConnections([[
+      connection.name,
+      ...connection.pointsToConnect.flatMap((point) => point.pcb_port_id ? [point.pcb_port_id] : []),
+    ]])
   }
   const traces = routes.map((route, index) => ({
     type: "pcb_trace" as const,
     pcb_trace_id: `learning_${index}`,
-    connection_name: route.connectionName,
+    connection_name: ownerByConnection.get(route.connectionName)!,
     // Local mesh interfaces have no pad ID. Carry established board ownership
     // into Circuit JSON instead of inferring a net from terminal containment.
-    connectsTo: [...new Set(ownership.connectedObstaclesByRoute[index]!.flatMap(
-      (obstacle) => [...obstacle.connectedTo, ...(obstacle.circuitJsonMetadata?.pcb_port_id ? [obstacle.circuitJsonMetadata.pcb_port_id] : [])],
-    ))],
-    route: convertHdRouteToSimplifiedRoute(route, layerCount),
+    connectsTo: [...new Set([
+      ownerByConnection.get(route.connectionName)!,
+      ...ownership.connectedObstaclesByRoute[index]!.flatMap((obstacle) => {
+        const metadata = obstacle.circuitJsonMetadata
+        if (!metadata) return []
+        const privateMetadata = metadataIds(metadata)
+        return [privateMetadata.pcb_port_id, privateMetadata.pcb_smtpad_id,
+          privateMetadata.pcb_plated_hole_id, privateMetadata.pcb_via_id]
+          .filter((id): id is string => id !== undefined)
+      }),
+    ])],
+    route: convertHdRouteToSimplifiedRoute({
+      ...route,
+      route: route.route.map((point) => point.toNextSegmentCircuitJsonMetadata
+        ? { ...point, toNextSegmentCircuitJsonMetadata: metadataIds(point.toNextSegmentCircuitJsonMetadata) }
+        : point),
+    }, layerCount),
   }))
-  const circuitJson = convertToCircuitJson(srj, traces)
+  const circuitJson = convertToCircuitJson(srj, traces, {
+    connectivityMaps: { source: diagnosticConnectivity, route: diagnosticConnectivity },
+  })
   if (params.boardGeometry) circuitJson.push(createPcbBoardElement(srj))
   const { errors } = getDrcErrors(circuitJson, {
     traceClearance: params.obstacleMargin,

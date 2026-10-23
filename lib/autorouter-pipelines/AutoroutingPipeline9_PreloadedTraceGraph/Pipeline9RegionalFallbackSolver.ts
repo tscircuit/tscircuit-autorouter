@@ -4,7 +4,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
   HighDensityRoute,
@@ -72,23 +72,7 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
   connMap: ConnectivityMap
 }): boolean => {
-  if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
-  if (!route.rootConnectionName) return false
-
-  const routeNetId =
-    connMap.getNetConnectedToId(route.connectionName) ??
-    connMap.getNetConnectedToId(route.rootConnectionName) ??
-    (connMap.netMap[route.rootConnectionName]
-      ? route.rootConnectionName
-      : undefined)
-  if (!routeNetId) return false
-
-  return obstacle.connectedTo.some((connectedId) => {
-    const connectedNetId =
-      connMap.getNetConnectedToId(connectedId) ??
-      (connMap.netMap[connectedId] ? connectedId : undefined)
-    return connectedNetId === routeNetId
-  })
+  return isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap)
 }
 
 const hasPreloadedViaToBoardObstacleConflict = ({
@@ -159,6 +143,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       layerCount: params.layerCount,
+      isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, params.connMap),
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
