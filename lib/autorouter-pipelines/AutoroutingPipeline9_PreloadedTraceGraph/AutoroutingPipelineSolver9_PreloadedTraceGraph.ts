@@ -1,3 +1,4 @@
+import { getProvenViaConflictContext } from "../../solvers/PortPointPathingSolver/tinyhypergraph/ProvenViaConflictOracle"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -534,6 +535,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            viaConflictContext: getProvenViaConflictContext(cms.srj, cms.viaDiameter),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,

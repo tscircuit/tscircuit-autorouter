@@ -1,3 +1,4 @@
+import type { ViaConflictContext } from "../tinyhypergraph/ProvenViaConflictOracle"
 import type {
   Candidate,
   Connection,
@@ -97,6 +98,7 @@ export interface HgPortPointPathingSolverParams {
   layerCount: number
   effort: number
   preserveTerminalPcbPortIds?: boolean
+  viaConflictContext?: ViaConflictContext
   minViaPadDiameter?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
