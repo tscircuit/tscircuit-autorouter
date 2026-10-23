@@ -173,8 +173,6 @@ const createTerminalCandidate = ({
   point,
   bounds,
   collapseAdjacent,
-  preserveTerminalPosition,
-  terminalObstacle,
 }: {
   routes: HighDensityRoute[]
   routeIndex: number
@@ -182,8 +180,6 @@ const createTerminalCandidate = ({
   point: Point
   bounds: SimpleRouteJson["bounds"]
   collapseAdjacent: boolean
-  preserveTerminalPosition: boolean
-  terminalObstacle: Obstacle
 }): HighDensityRoute[] | undefined => {
   const candidateRoutes = clonePipeline9HdRoutes(routes)
   const route = candidateRoutes[routeIndex]
@@ -195,20 +191,6 @@ const createTerminalCandidate = ({
   if (!endpoint || !adjacentPoint || endpoint.z !== adjacentPoint.z) {
     return undefined
   }
-  if (preserveTerminalPosition) {
-    if (route.jumpers?.length || endpoint.insideJumperPad || endpoint.toNextSegmentType ||
-      adjacentPoint.insideJumperPad || adjacentPoint.toNextSegmentType) return undefined
-    const angle = (terminalObstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
-    const cos = Math.cos(angle), sin = Math.sin(angle)
-    const contained = [endpoint, point].every((value) => {
-      const x = value.x - terminalObstacle.center.x, y = value.y - terminalObstacle.center.y
-      return terminalObstacle.shape === "circle"
-        ? Math.hypot(x, y) <= Math.min(terminalObstacle.width, terminalObstacle.height) / 2
-        : Math.abs(x * cos + y * sin) <= terminalObstacle.width / 2 &&
-          Math.abs(-x * sin + y * cos) <= terminalObstacle.height / 2
-    })
-    if (!contained) return undefined
-  }
   const radius = route.traceThickness / 2
   if (
     point.x - radius < bounds.minX ||
@@ -219,7 +201,6 @@ const createTerminalCandidate = ({
     return undefined
   }
   route.route[pointIndex] = { ...endpoint, ...point }
-  if (preserveTerminalPosition) delete route.route[pointIndex]!.pcb_port_id
   if (collapseAdjacent) {
     const nextInteriorPointIndex =
       endpointIndex === 0 ? adjacentPointIndex + 1 : adjacentPointIndex - 1
@@ -236,13 +217,6 @@ const createTerminalCandidate = ({
       return undefined
     }
     route.route[adjacentPointIndex] = { ...adjacentPoint, ...point }
-  }
-  if (preserveTerminalPosition) {
-    // The original pad is an immutable terminal of the shared graph. Its
-    // convex physical copper certifies this planar lead to an escape point;
-    // only the untagged attachment moves, preserving every incident demand.
-    if (endpointIndex === 0) route.route.unshift({ ...endpoint })
-    else route.route.push({ ...endpoint })
   }
   return candidateRoutes
 }
@@ -353,9 +327,6 @@ export const applyPipeline9TerminalEscapeRelocations = ({
               point,
               bounds: srj.bounds,
               collapseAdjacent,
-              preserveTerminalPosition: newConnections.some((connection) =>
-                connection.name === route.connectionName && connection.electricalBranch !== undefined),
-              terminalObstacle,
             })
             if (!candidateRoutes) continue
             attemptedCandidateCount++

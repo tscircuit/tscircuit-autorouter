@@ -1,4 +1,3 @@
-import { getFixedObstacleViolationsWithOwnership } from "./getFixedObstacleViolationsWithOwnership"
 import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -12,7 +11,7 @@ import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geom
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensitySolverA13WithBoundaryClearance } from "./HighDensitySolverA13WithBoundaryClearance"
-import { getObstacleRouteConnectivity, type ObstacleRouteOwnershipPredicate } from "./getObstacleRouteConnectivity"
+import { getObstacleRouteConnectivity } from "./getObstacleRouteConnectivity"
 
 type A13Params = ConstructorParameters<typeof HighDensitySolverA13>[0]
 type ValidatedA13Params = A13Params & {
@@ -20,7 +19,6 @@ type ValidatedA13Params = A13Params & {
   connMap?: ConnectivityMap
   layerCount: number
   boardGeometry?: HighDensityBoardGeometry
-  isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
 }
 
 /** A node-local search is provisional until it also clears fixed board copper. */
@@ -57,7 +55,7 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
     })
     this.stats.boardObstaclesChecked = obstacles.length
     const { connectedRouteNamesByObstacle, connectedObstaclesByRoute } =
-      getObstacleRouteConnectivity({ obstacles, routes, connMap, isObstacleOwnedByRoute: this.validationParams.isObstacleOwnedByRoute })
+      getObstacleRouteConnectivity({ obstacles, routes, connMap })
     const srj: SimpleRouteJson = {
       layerCount,
       minTraceWidth: this.traceThickness,
@@ -120,20 +118,10 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13W
       viaClearance: this.traceMargin,
       includeTraceContinuity: false,
     })
-    // Explicit physical ownership must survive the fixed kernel's alias
-    // union. Query each route separately; recognized-pad IDs also cannot skip
-    // this guard after the callback certified that a pad belongs to a foreign net.
-    const ownedObstaclesByRoute = this.validationParams.isObstacleOwnedByRoute
-      ? connectedObstaclesByRoute.map((entries) => new Set(entries))
-      : undefined
-    const fixedViolations = ownedObstaclesByRoute
-      ? getFixedObstacleViolationsWithOwnership({ srj: { ...srj, traces: undefined }, routes,
-          traceClearance: this.traceMargin, viaClearance: this.traceMargin,
-          isObstacleOwnedByRouteIndex: (routeIndex, obstacleIndex): boolean => ownedObstaclesByRoute[routeIndex]!.has(obstacles[obstacleIndex]!),
-        })
-      : getFixedObstacleViolations({ srj: { ...srj, traces: undefined }, routes })
-    this.stats.boardPhysicalOwnershipQueryCount = ownedObstaclesByRoute ? routes.length : 1
-    this.stats.boardPhysicalOwnershipObstacleSetupCount = obstacles.length * (ownedObstaclesByRoute ? routes.length : 1)
+    const fixedViolations = getFixedObstacleViolations({
+      srj: { ...srj, traces: undefined },
+      routes,
+    })
     this.stats.boardDrcIssueCount = errors.length + fixedViolations.length
     if (errors.length > 0 || fixedViolations.length > 0) {
       this.solved = false

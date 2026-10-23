@@ -2,8 +2,6 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
-import { Pipeline9ElectricalTreeRepairSolver } from "./Pipeline9ElectricalTreeRepairSolver"
-import { normalizeSharedElectricalTreeRouteEndpoints } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/normalizeSharedElectricalTreeRouteEndpoints"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -52,7 +50,6 @@ import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
-  type Pipeline9DrcError,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
@@ -101,7 +98,6 @@ type PreparedCandidateDrcInput = {
   originalTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
   routedTraces: SimplifiedPcbTrace[]
   solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
-  repairTraceIdsByEvaluationTraceId: ReadonlyMap<string, readonly string[]>
 }
 
 type NormalizedCandidateDrcResult = {
@@ -431,7 +427,6 @@ const getTraceIdsFromDrcErrors = ({
 export const remapDrcTraceIds = (
   errors: Array<Record<string, unknown>>,
   solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>,
-  repairTraceIdsByEvaluationTraceId: ReadonlyMap<string, readonly string[]> = new Map(),
 ): Array<Record<string, unknown>> =>
   errors.map((error) => {
     const explicitEvaluationTraceIds = Array.isArray(error.pcb_trace_ids)
@@ -466,9 +461,6 @@ export const remapDrcTraceIds = (
       ...explicitEvaluationTraceIds,
       encodedIdentityIsVia ? undefined : encodedOtherEvaluationTraceId,
     ].filter((traceId): traceId is string => typeof traceId === "string")
-    const repairTraceIds = [...new Set(evaluationTraceIds.flatMap((id) =>
-      repairTraceIdsByEvaluationTraceId.get(id) ?? [],
-    ))]
     const evaluationTraceIdsBySolverTraceId = new Map<string, Set<string>>()
     for (const evaluationTraceId of evaluationTraceIds) {
       const solverTraceId =
@@ -516,11 +508,10 @@ export const remapDrcTraceIds = (
           traceId !== explicitEvaluationTraceIds[traceIndex],
       ) ||
       encodedOtherSolverTraceId !== encodedOtherEvaluationTraceId
-    if (!remappingChangesIdentity && repairTraceIds.length === 0) return error
+    if (!remappingChangesIdentity) return error
 
     return {
       ...error,
-      ...(repairTraceIds.length > 0 ? { __repair_trace_ids: repairTraceIds } : {}),
       ...(primaryEvaluationTraceId
         ? { pcb_trace_id: primarySolverTraceId }
         : {}),
@@ -667,8 +658,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof GlobalDrcBranchPortfolioSolver
   >[0]
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
-  sharedTreeClearanceSolver?: Pipeline9ClearanceProjectionSolver
-  electricalTreeRepairSolver?: Pipeline9ElectricalTreeRepairSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -1110,16 +1099,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
-      electricalTreeRepairEnabled: Number(params.newConnections.some((connection) => connection.electricalBranch)),
-      electricalTreeWholeBranchTrials: 0,
-      electricalTreeWholeBranchAccepted: 0,
-      electricalTreeWholeBranchSearchFailed: 0,
-      electricalTreeWholeBranchUnavailable: 0,
-      electricalTreeJunctionRouteTrials: 0,
-      electricalTreeJunctionRouteAccepted: 0,
-      electricalTreeWholeBranchNodesPopped: 0,
-      electricalTreeWholeBranchNodeLimits: 0,
-      electricalTreeWholeBranchProtectedRoutes: 0,
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
@@ -1225,58 +1204,45 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedNewTraces,
         params.originalSrj.traces ?? [],
       )
+      const replacedOriginalTraceIds = new Set<string>()
       const originalTraceIdByEvaluationTraceId = new Map<string, string>()
-      const repairTraceIdsByEvaluationTraceId = new Map<string, readonly string[]>()
-      const sectionsByOriginalId = new Map<string, Array<{
-        section: MovablePreloadedSection
-        route: SimplifiedPcbTrace["route"]
-      }>>()
-      for (const movableSection of this.movablePreloadedSections) {
-        const evaluatedRoute = evaluatedRoutes.find(
-          (route) =>
-            route.connectionName === movableSection.syntheticConnectionName,
-        )
-        if (!evaluatedRoute) {
-          throw new Error(
-            `Pipeline9 joint DRC repair lost preloaded section "${movableSection.syntheticConnectionName}"`,
+      const evaluatedMovablePreloadedTraces = this.movablePreloadedSections.map(
+        (movableSection) => {
+          const evaluatedRoute = evaluatedRoutes.find(
+            (route) =>
+              route.connectionName === movableSection.syntheticConnectionName,
           )
-        }
-        const originalTraceId = movableSection.originalTrace.pcb_trace_id
-        const sections = sectionsByOriginalId.get(originalTraceId) ?? []
-        sections.push({
-          section: movableSection,
-          route: convertHdRouteToSimplifiedRoute(
-            evaluatedRoute,
-            params.layerCount,
-            {
-              defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-              obstacles: params.obstacles,
-              connMap: params.connMap,
-            },
-          ),
-        })
-        sectionsByOriginalId.set(originalTraceId, sections)
-      }
-      // A selected section replaces only that interval. Evaluate the same full
-      // reconstruction exported below, including fixed remainder and seams.
-      const evaluatedMovablePreloadedTraces = [...sectionsByOriginalId].map(([originalTraceId, sections]) => {
-        const first = sections[0]!.section
-        const rebuilt = rebuildPreloadedTraceFromSections({
-          originalTrace: first.originalTrace,
-          repairedSections: sections.map(({ section, route }) => ({
-            routePositionStart: section.originalRoutePositionStart,
-            routePositionEnd: section.originalRoutePositionEnd,
-            route,
-          })),
-        })
-        originalTraceIdByEvaluationTraceId.set(first.evaluationTraceId, originalTraceId)
-        // One physical trace includes every mutable interval and fixed seam.
-        // Its contact does not prove which interval is responsible: target all
-        // owned sections without duplicating the physical DRC issue.
-        repairTraceIdsByEvaluationTraceId.set(first.evaluationTraceId,
-          sections.map(({ section }) => `${section.syntheticConnectionName}_0`))
-        return { ...rebuilt, pcb_trace_id: first.evaluationTraceId, __replaces_pcb_trace_id: originalTraceId }
-      })
+          if (!evaluatedRoute) {
+            throw new Error(
+              `Pipeline9 joint DRC repair lost preloaded section "${movableSection.syntheticConnectionName}"`,
+            )
+          }
+          const originalTraceId = movableSection.originalTrace.pcb_trace_id
+          originalTraceIdByEvaluationTraceId.set(
+            movableSection.evaluationTraceId,
+            originalTraceId,
+          )
+          const replacesOriginalTrace =
+            !replacedOriginalTraceIds.has(originalTraceId)
+          replacedOriginalTraceIds.add(originalTraceId)
+          return {
+            ...movableSection.originalTrace,
+            pcb_trace_id: movableSection.evaluationTraceId,
+            ...(replacesOriginalTrace
+              ? { __replaces_pcb_trace_id: originalTraceId }
+              : { __replaces_pcb_trace_id: undefined }),
+            route: convertHdRouteToSimplifiedRoute(
+              evaluatedRoute,
+              params.layerCount,
+              {
+                defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+                obstacles: params.obstacles,
+                connMap: params.connMap,
+              },
+            ),
+          }
+        },
+      )
       const solverTraceIdByEvaluationTraceId = new Map<string, string>()
       for (
         let traceIndex = 0;
@@ -1310,7 +1276,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         originalTraceIdByEvaluationTraceId,
         routedTraces,
         solverTraceIdByEvaluationTraceId,
-        repairTraceIdsByEvaluationTraceId,
       }
     }
     const normalizeCandidateDrcResult = ({
@@ -1319,14 +1284,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson,
       movableTraceIds,
       solverTraceIdByEvaluationTraceId,
-      repairTraceIdsByEvaluationTraceId,
     }: {
       errors: Array<Record<string, unknown>>
       errorsWithCenters: Array<Record<string, unknown>>
       circuitJson: AnyCircuitElement[]
       movableTraceIds: ReadonlySet<string>
       solverTraceIdByEvaluationTraceId: ReadonlyMap<string, string>
-      repairTraceIdsByEvaluationTraceId: ReadonlyMap<string, readonly string[]>
     }): NormalizedCandidateDrcResult => {
       const remappedCircuitJson = circuitJson.map((element) => {
         if (
@@ -1343,7 +1306,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       return {
         errors: normalizePipeline9DrcErrorsForRepair({
-          errors: remapDrcTraceIds(errors, solverTraceIdByEvaluationTraceId, repairTraceIdsByEvaluationTraceId),
+          errors: remapDrcTraceIds(errors, solverTraceIdByEvaluationTraceId),
           circuitJson: remappedCircuitJson,
           newTraceIds: movableTraceIds,
         }),
@@ -1351,7 +1314,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           errors: remapDrcTraceIds(
             errorsWithCenters,
             solverTraceIdByEvaluationTraceId,
-            repairTraceIdsByEvaluationTraceId,
           ),
           circuitJson: remappedCircuitJson,
           newTraceIds: movableTraceIds,
@@ -1432,7 +1394,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
-        repairTraceIdsByEvaluationTraceId: candidateDrcInput.repairTraceIdsByEvaluationTraceId,
       })
     }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
@@ -1598,7 +1559,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
-        repairTraceIdsByEvaluationTraceId: candidateDrcInput.repairTraceIdsByEvaluationTraceId,
       })
       this.indexedDrcEvaluationTimeMs +=
         performance.now() - evaluationStartedAtMs
@@ -1648,89 +1608,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       !params.obstacles.some((obstacle) => obstacle.isNonPlatedHole)
     ) {
       this.currentPipelineStepIndex = 1
-    }
-    if (params.newConnections.some((connection) => connection.electricalBranch)) {
-      // Native route repair fixes every branch endpoint. First expose the
-      // physical tree's free vertices as coupled variables, with pads locked.
-      this.pipelineDef.splice(0, this.currentPipelineStepIndex)
-      this.pipelineDef.unshift({
-        solverName: "sharedTreeClearanceSolver",
-        createSolver: (): BaseSolver => {
-          if (!this.exactRepairParams || !this.cachedReferenceDrcEvaluator) throw new Error("Shared tree clearance requires joint repair context")
-          this.sharedTreeClearanceSolver = new Pipeline9ClearanceProjectionSolver({
-            originalSrj: this.params.originalSrj,
-            routes: this.exactRepairParams.hdRoutes,
-            sharedTreeConnections: this.params.newConnections,
-            drcEvaluator: this.cachedReferenceDrcEvaluator,
-            subdivideSegments: true,
-          })
-          return this.sharedTreeClearanceSolver
-        },
-        onSolved: (): void => {
-          if (!this.sharedTreeClearanceSolver?.solved || !this.exactRepairParams) throw new Error("Shared tree clearance is incomplete")
-          this.exactRepairParams.hdRoutes = this.sharedTreeClearanceSolver.getOutput()
-          this.stats = { ...this.stats, ...this.sharedTreeClearanceSolver.stats }
-        },
-      })
-      this.currentPipelineStepIndex = 0
-      this.pipelineDef.push({
-        solverName: "electricalTreeRepairSolver",
-        createSolver: (): BaseSolver => {
-          if (!this.regionalB01Params || !this.combinedOutput || !this.cachedReferenceDrcEvaluator) throw new Error("Electrical tree branch repair lacks final joint geometry")
-          this.electricalTreeRepairSolver = new Pipeline9ElectricalTreeRepairSolver({ ...this.regionalB01Params, preloadedTraces: this.inputUpdatedPreloadedTraces,
-            preloadedSectionTraceIndexByConnection: new Map(this.movablePreloadedSections.map((section) => {
-              const index = this.inputUpdatedPreloadedTraces.indexOf(section.originalTrace)
-              if (index < 0) throw new Error(`Electrical tree repair lost source preload for ${section.syntheticConnectionName}`)
-              return [section.syntheticConnectionName, index]
-            })), routes: this.combinedOutput, drcEvaluator: this.cachedReferenceDrcEvaluator, viaHoleDiameter: this.params.defaultViaHoleDiameter,
-            traceClearance: this.params.originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance ?? 0.1,
-            viaClearance: RELAXED_DRC_OPTIONS.viaClearance ?? 0.1,
-            viaHoleClearance: this.params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? RELAXED_DRC_OPTIONS.viaClearance ?? 0.1,
-          })
-          return this.electricalTreeRepairSolver
-        },
-        onSolved: (): void => {
-          if (!this.electricalTreeRepairSolver?.solved) throw new Error("Electrical tree branch repair did not complete")
-          const rawRoutes = this.electricalTreeRepairSolver.getOutput()
-          const normalized = normalizeSharedElectricalTreeRouteEndpoints({
-            connections: this.params.newConnections, routes: rawRoutes, layerCount: this.params.layerCount, connMap: this.params.connMap,
-          })
-          // Native arithmetic may round independent copies of one vertex.
-          // Validate the converted physical geometry before publishing it.
-          const normalizedErrors = getPipeline9DrcErrors(this.cachedReferenceDrcEvaluator!, normalized.routes)
-          const rawErrors = getPipeline9DrcErrors(this.cachedReferenceDrcEvaluator!, rawRoutes)
-          const errorIdentity = (error: Pipeline9DrcError): string => {
-            const ids = Object.entries(error).filter(([key, value]) =>
-              (key.endsWith("_id") || key.endsWith("_ids")) &&
-              (typeof value === "string" || Array.isArray(value)),
-            ).sort(([a], [b]) => a.localeCompare(b))
-            return ids.length > 0 ? JSON.stringify([error.type ?? error.error_type, ids]) : JSON.stringify(error)
-          }
-          const availableErrors = new Map<string, number>()
-          for (const error of rawErrors) {
-            const key = errorIdentity(error)
-            availableErrors.set(key, (availableErrors.get(key) ?? 0) + 1)
-          }
-          for (const error of normalizedErrors) {
-            const key = errorIdentity(error), count = availableErrors.get(key) ?? 0
-            if (count === 0) throw new Error("Shared endpoint normalization introduced a new reference DRC issue")
-            availableErrors.set(key, count - 1)
-          }
-          this.combinedOutput = normalized.routes
-          this.stats = { ...this.stats, ...this.electricalTreeRepairSolver.stats,
-            electricalTreeEndpointNormalizationChecks: normalized.endpointChecks,
-            electricalTreeNormalizedEndpoints: normalized.normalizedEndpoints,
-            electricalTreeNormalizedViaPoints: normalized.normalizedViaPoints,
-            electricalTreeNormalizedViaRecords: normalized.normalizedViaRecords,
-            electricalTreeEndpointNormalizationMaxDisplacement: normalized.maxDisplacement,
-            electricalTreeEndpointNormalizationDrcChecks: 2,
-            finalDrcIssueCount: normalizedErrors.length,
-            finalJointDrcIssueCount: normalizedErrors.length,
-            referenceDrcValidationCount: this.referenceDrcValidationCount,
-          }
-          this.solved = true
-        },
-      })
     }
     this.activeSubSolver =
       this.pipelineDef[this.currentPipelineStepIndex]!.createSolver()
@@ -2139,7 +2016,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
-    this.solved = !this.params.newConnections.some((connection) => connection.electricalBranch)
+    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

@@ -2,14 +2,11 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   RelaxTraceClearanceSolver,
-  type RelaxTraceClearanceInput,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
-import { createElectricalTreeRepairWalks } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createElectricalTreeRepairWalks"
-import { SharedElectricalTreeClearanceSolver } from "lib/solvers/SharedElectricalTreeClearanceSolver/SharedElectricalTreeClearanceSolver"
+import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
@@ -31,8 +28,6 @@ export type Pipeline9ClearanceProjectionParams = {
   subdivideSegments?: boolean
   /** Keep the same small clearance margin when validating a final coupled pass. */
   usePrecisionMargin?: boolean
-  /** Certified physical branches, whose untagged junctions move together. */
-  sharedTreeConnections?: SimpleRouteConnection[]
 }
 
 type ProjectionContext = {
@@ -47,8 +42,7 @@ type ProjectionState =
   | {
       phase: "relax"
       context: ProjectionContext
-      solver: RelaxTraceClearanceSolver | SharedElectricalTreeClearanceSolver
-      decode?: (walks: HighDensityRoute[]) => HighDensityRoute[]
+      solver: RelaxTraceClearanceSolver
     }
   | {
       phase: "select" | "physical-validation" | "reference-validation"
@@ -65,7 +59,6 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
   constructor(params: Pipeline9ClearanceProjectionParams) {
     super()
     this.params = params
-    this.stats = { sharedTreePrimitiveModeEnabled: Number(params.sharedTreeConnections !== undefined), sharedTreePrimitiveAttemptCount: 0 }
   }
 
   override _step(): void {
@@ -85,7 +78,6 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       }
       const srj = {
         ...createSrjWithBoardValidObstacleLayers(params.originalSrj),
-        connections: [...params.originalSrj.connections, ...(params.sharedTreeConnections ?? [])],
         traces: undefined,
       }
       const originalCanonicalRoutes = canonicalizePipeline9HdRoutes(
@@ -94,17 +86,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
-      const treeWalks = params.sharedTreeConnections
-        ? createElectricalTreeRepairWalks({ connections: params.sharedTreeConnections, routes: canonicalRoutes, layerCount: srj.layerCount })
-        : undefined
-      const relaxationRoutes = treeWalks?.routes ?? canonicalRoutes
-      const relaxationInput: RelaxTraceClearanceInput = {
+      const solver = new RelaxTraceClearanceSolver({
         srj,
-        routes: relaxationRoutes,
+        routes: canonicalRoutes,
         bounds: srj.bounds,
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-        lockedPointIndices: treeWalks?.lockedPointIndices ?? relaxationRoutes.map((route) =>
+        lockedPointIndices: canonicalRoutes.map((route) =>
           route.route.map(() => false),
         ),
         allowViaMovement: !params.allowPartialRepair,
@@ -118,31 +106,13 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
           (params.originalSrj.minPadEdgeToPadEdgeClearance ??
             RELAXED_DRC_OPTIONS.viaClearance!) +
           (params.usePrecisionMargin ? CLEARANCE_PRECISION_MARGIN : 0),
-      }
-      const solver = treeWalks
-        ? new SharedElectricalTreeClearanceSolver({ ...relaxationInput, segmentIdentityByRoute: treeWalks.segmentIdentityByRoute })
-        : new RelaxTraceClearanceSolver(relaxationInput)
+      })
       this.MAX_ITERATIONS = solver.MAX_ITERATIONS + 4
       this.activeSubSolver = solver
-      this.stats = {
-        ...this.stats,
-        sharedTreePrimitiveAttemptCount: Number(treeWalks !== undefined),
-        sharedTreePrimitiveInputIsRepairScene: Number(treeWalks !== undefined),
-        sharedTreePrimitiveRepairSceneSubdivided: Number(treeWalks !== undefined && params.subdivideSegments === true),
-        sharedTreeRelaxationJunctionCount: treeWalks?.junctionCount ?? 0,
-        sharedTreeRelaxationPhysicalRouteCount: canonicalRoutes.length,
-        sharedTreeRelaxationWalkCount: relaxationRoutes.length,
-        sharedTreeRelaxationPhysicalSegmentCount: canonicalRoutes.reduce((sum, route) => sum + route.route.length - 1, 0),
-        sharedTreeRelaxationWalkSegmentReferences: relaxationRoutes.reduce((sum, route) => sum + route.route.length - 1, 0),
-        sharedTreeRelaxationInputIssueCount: errors.length,
-        sharedTreeRelaxationAccepted: 0,
-        sharedTreeRelaxationMovedJunctionCount: 0,
-      }
       this.state = {
         phase: "relax",
         context: { srj, errors, originalCanonicalRoutes, canonicalRoutes },
         solver,
-        decode: treeWalks?.decode,
       }
       return
     }
@@ -153,17 +123,11 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         throw new Error(`Clearance relaxation failed: ${state.solver.error}`)
       }
       if (state.solver.solved) {
-        if (state.solver instanceof SharedElectricalTreeClearanceSolver) {
-          for (const [key, value] of Object.entries(state.solver.stats)) {
-            const name = key.startsWith("treePrimitive") ? key : `sharedTreePrimitive${key[0]!.toUpperCase()}${key.slice(1)}`
-            this.stats[name] = value
-          }
-        }
         this.activeSubSolver = null
         this.state = {
           phase: "select",
           context: state.context,
-          candidate: state.decode ? state.decode(state.solver.getOutput()) : state.solver.getOutput(),
+          candidate: state.solver.getOutput(),
         }
       }
       return
@@ -232,22 +196,6 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
     const canPublish = params.allowPartialRepair
       ? canPublishIndependentClearanceRepairs(errors, candidateErrors)
       : candidateErrors.length < errors.length
-    const movedJunctions = new Set<string>()
-    if (canPublish && params.sharedTreeConnections) {
-      const before = new Map(canonicalRoutes.map((route) => [route.connectionName, route]))
-      const after = new Map(state.candidate.map((route) => [route.connectionName, route]))
-      for (const connection of params.sharedTreeConnections) {
-        if (!connection.electricalBranch) continue
-        for (const endpoint of [0, 1] as const) {
-          if (connection.pointsToConnect[endpoint]!.pcb_port_id) continue
-          const initialRoute = before.get(connection.name)!, finalRoute = after.get(connection.name)!
-          const initial = endpoint === 0 ? initialRoute.route[0]! : initialRoute.route.at(-1)!
-          const final = endpoint === 0 ? finalRoute.route[0]! : finalRoute.route.at(-1)!
-          if (initial.x !== final.x || initial.y !== final.y) movedJunctions.add(endpoint === 0 ? connection.electricalBranch.startVertexId : connection.electricalBranch.endVertexId)
-        }
-      }
-    }
-    this.stats = { ...this.stats, sharedTreeRelaxationAccepted: Number(canPublish), sharedTreeRelaxationProposedIssueCount: candidateErrors.length, sharedTreeRelaxationMovedJunctionCount: movedJunctions.size }
     this.state = {
       phase: "finished",
       output: canPublish ? state.candidate : params.routes,

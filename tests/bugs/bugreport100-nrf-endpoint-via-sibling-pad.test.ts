@@ -105,8 +105,6 @@ const srj: SimpleRouteJson = {
     {
       name: GROUND_CONNECTION,
       rootConnectionName: "connectivity_net1",
-      // The reduced fixture rebuilds its map; preserve the original net alias.
-      __rootConnectionNames: ["connectivity_net1"],
       pointsToConnect: [
         { x: 7.47568, y: 0.4879989, layer: "top" },
         { x: 7.367499, y: -0.68, layer: "top" },
@@ -115,7 +113,6 @@ const srj: SimpleRouteJson = {
     {
       name: RF_CONNECTION,
       rootConnectionName: "connectivity_net31",
-      __rootConnectionNames: ["connectivity_net31"],
       pointsToConnect: [
         { x: 6.915, y: 0, layer: "top" },
         { x: 7.77, y: -0.68, layer: "top" },

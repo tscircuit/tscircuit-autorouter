@@ -4,8 +4,6 @@ import {
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { SimpleRouteConnection } from "lib/types"
-import { normalizeSharedElectricalTreeRouteEndpoints } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/normalizeSharedElectricalTreeRouteEndpoints"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -14,7 +12,6 @@ type CleanupParams = {
   viaRemovalPasses?: 1 | 2
   getCost: (routes: HighDensityRoute[]) => CleanupCost
   isValid: (routes: HighDensityRoute[]) => boolean
-  electricalTreeConnections?: SimpleRouteConnection[]
 }
 
 /** Post-repair cleanup commits only valid improvements, including at default effort. */
@@ -30,7 +27,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   constructor(params: CleanupParams) {
     super()
     this.params = params
-    this.bestRoutes = this.normalizeTreeCandidate(structuredClone([...params.config.hdRoutes]))
+    this.bestRoutes = structuredClone([...params.config.hdRoutes])
     this.bestCost = params.getCost(this.bestRoutes)
     this.cleanupPasses =
       params.effort <= 1
@@ -53,23 +50,6 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
     this.simplifier.simplificationPipelineLoops = 2
     this.simplifier.MAX_SIMPLIFICATION_PIPELINE_LOOPS = 2 + this.cleanupPasses
     this.simplifier.MAX_ITERATIONS = this.MAX_ITERATIONS
-  }
-
-  private normalizeTreeCandidate(routes: HighDensityRoute[]): HighDensityRoute[] {
-    if (!this.params.electricalTreeConnections) return routes
-    const layerCount = this.params.config.layerCount
-    if (!layerCount) throw new Error("Shared tree cleanup requires an explicit layer count")
-    const normalized = normalizeSharedElectricalTreeRouteEndpoints({
-      connections: this.params.electricalTreeConnections, routes, layerCount, connMap: this.params.config.connMap, preserveJunctionPositions: true,
-    })
-    this.stats = { ...this.stats,
-      electricalTreeCleanupEndpointChecks: (this.stats.electricalTreeCleanupEndpointChecks ?? 0) + normalized.endpointChecks,
-      electricalTreeCleanupNormalizedEndpoints: (this.stats.electricalTreeCleanupNormalizedEndpoints ?? 0) + normalized.normalizedEndpoints,
-      electricalTreeCleanupNormalizedViaPoints: (this.stats.electricalTreeCleanupNormalizedViaPoints ?? 0) + normalized.normalizedViaPoints,
-      electricalTreeCleanupNormalizedViaRecords: (this.stats.electricalTreeCleanupNormalizedViaRecords ?? 0) + normalized.normalizedViaRecords,
-      electricalTreeCleanupNormalizationMaxDisplacement: Math.max(this.stats.electricalTreeCleanupNormalizationMaxDisplacement ?? 0, normalized.maxDisplacement),
-    }
-    return normalized.routes
   }
 
   private createViaRemovalSolver(): UselessViaRemovalSolver {
@@ -104,9 +84,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         return
       }
       if (!remover.solved) return
-      const rawCandidate = remover.getOptimizedHdRoutes()
-      if (!rawCandidate) throw new Error("Via removal has no output")
-      const candidate = this.normalizeTreeCandidate(rawCandidate)
+      const candidate = remover.getOptimizedHdRoutes()
+      if (!candidate) throw new Error("Via removal has no output")
       const cost = this.params.getCost(candidate)
       // Validate once, after the complete via pass, rather than after every
       // phase of multiple full simplification loops.
@@ -144,7 +123,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       simplifier.currentPhase !== previousPhase ||
       simplifier.simplificationPipelineLoops !== previousLoops
     ) {
-      const candidate = this.normalizeTreeCandidate(simplifier.simplifiedHdRoutes)
+      const candidate = simplifier.simplifiedHdRoutes
       const cost = this.params.getCost(candidate)
       const improves =
         cost.vias < this.bestCost.vias ||
