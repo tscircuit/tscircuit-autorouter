@@ -2,7 +2,11 @@ name: Native port-pathing benchmark
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, edited]
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: native-port-pathing-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -24,15 +28,6 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.3
-      - name: Save matching x64 runtime for local benchmark reproduction
-        run: |
-          curl --fail --location \
-            https://github.com/oven-sh/bun/releases/download/bun-v1.4.3/bun-linux-x64.zip \
-            --output bun-linux-x64.zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: native-port-pathing-bun-linux-x64
-          path: bun-linux-x64.zip
       - name: Install both revisions
         run: |
           cd reference
@@ -41,7 +36,7 @@ jobs:
           bun install
       - name: Capture current Pipeline9 sample14 input
         working-directory: candidate
-        run: bun scripts/benchmark/capture-native-port-pathing.ts 14 native-port-pathing.json --emit-capture
+        run: bun scripts/benchmark/capture-native-port-pathing.ts 14 native-port-pathing.json
       - name: Compare isolated native searches in ABBA order
         working-directory: candidate
         run: |

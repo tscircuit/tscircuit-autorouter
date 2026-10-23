@@ -59,11 +59,3 @@ console.log(
     sha256: createHash("sha256").update(json).digest("hex"),
   }),
 )
-if (process.argv.includes("--emit-capture")) {
-  const compressed = gzipSync(json).toString("base64")
-  for (let index = 0; index < compressed.length; index += 16000) {
-    console.log(
-      `PORT_CAPTURE_CHUNK ${index}: ${compressed.slice(index, index + 16000)}`,
-    )
-  }
-}
