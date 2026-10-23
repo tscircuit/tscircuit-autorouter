@@ -646,12 +646,14 @@ export const runTask = async (
 
   try {
     // Research-only candidate: native solver unchanged, timing is not a speed
-    // comparison. Sample at 10ms to bound retained diagnostic stack memory.
+    // comparison. Sample at 50ms to bound retained diagnostic stack memory.
     const sampled = await profile(
       () => solveWithProgress(task, solver, start, options),
-      10_000,
+      50_000,
     )
-    console.log("P9_RESEARCH_CPU_PROFILE " + JSON.stringify({
+    // Worker stdout is exclusively the task/progress JSON protocol. Its parent
+    // forwards stderr diagnostics; ordinary stdout lines are discarded.
+    console.error("P9_RESEARCH_CPU_PROFILE " + JSON.stringify({
       sample: task.sampleNumber,
       scenario: task.scenarioName,
       solver: task.solverName,
