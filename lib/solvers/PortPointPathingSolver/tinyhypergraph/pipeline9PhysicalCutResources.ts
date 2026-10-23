@@ -29,6 +29,7 @@ export function createPhysicalCutTracker(): PhysicalCutTracker {
   const tracker: PhysicalCutTracker = { id: guardState.nextProblemId++, stats: {
     physicalCutSetupTimeMs: 0, physicalCutAnnotationPasses: 0, physicalCutExaminedGroups: 0,
     physicalCutTaggedGroups: 0, physicalCutTaggedPorts: 0, physicalCutSlotChoiceCount: 0,
+    physicalCutNonBindingGroups: 0, physicalCutNonBindingPorts: 0,
     physicalCutProtectedGroups: 0, physicalCutUnsupportedGroups: 0, physicalCutOwnerChecks: 0,
     physicalCutAssignmentReads: 0, physicalCutCapacityRejections: 0, physicalCutSameNetReuse: 0,
     physicalCutTopologyIndexBuilds: 0,
@@ -99,6 +100,13 @@ export function annotatePipeline9PhysicalCuts(graph: SerializedHyperGraph, rules
     // Centers may use both ends. This optimistic bound assumes no corner
     // inset, obstacles, via occupation, or wider nominal copper than minWidth.
     const capacity = 1 + Math.floor((length + EPS) / (rules.minTraceWidth + rules.clearance))
+    // A cut cannot have more distinct owners than geometric slots. Re-run
+    // this test after duplication too: new slots can make the bound binding.
+    if (capacity >= group.length) {
+      tracker.stats.physicalCutNonBindingGroups++
+      tracker.stats.physicalCutNonBindingPorts += group.length
+      continue
+    }
     const descriptor: Descriptor = { version: 1, problemId: tracker.id, cutId: key, capacity }
     for (const port of group) port.d.__pipeline9PhysicalCut = descriptor
     tracker.stats.physicalCutTaggedGroups++

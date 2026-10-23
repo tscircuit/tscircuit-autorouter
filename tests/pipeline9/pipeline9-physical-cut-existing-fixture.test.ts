@@ -6,15 +6,19 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autoro
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import srj from "../../fixtures/legacy/assets/e2e4.json"
 
-test("ordinary P9 fixture exercises physical cut constraints and retains final copper/connectivity quality", () => {
+test("ordinary P9 fixture eliminates nonbinding cut checks and retains final copper/connectivity quality", () => {
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(srj) as SimpleRouteJson)
   while (!pipeline.failed && !pipeline.portPointPathingSolver?.solved) pipeline.step()
   expect(pipeline.failed).toBe(false)
   const phase = pipeline.portPointPathingSolver!
   const stats = phase.stats
   expect(stats.physicalCutAnnotationPasses).toBe(2)
-  expect(stats.physicalCutTaggedGroups).toBeGreaterThan(0)
-  expect(stats.physicalCutOwnerChecks).toBeGreaterThan(0)
+  expect(stats.physicalCutNonBindingGroups).toBeGreaterThan(0)
+  expect(stats.physicalCutNonBindingPorts).toBeGreaterThan(0)
+  expect(stats.physicalCutTaggedGroups).toBe(0)
+  expect(stats.physicalCutTaggedPorts).toBe(0)
+  expect(stats.physicalCutOwnerChecks).toBe(0)
+  expect(stats.physicalCutAssignmentReads).toBe(0)
   expect(phase.getOutput().nodesWithPortPoints.length).toBeGreaterThan(0)
   for (const [key, value] of Object.entries(stats)) if (key.startsWith("physicalCut")) expect(Number.isFinite(value)).toBe(true)
   pipeline.solve()
