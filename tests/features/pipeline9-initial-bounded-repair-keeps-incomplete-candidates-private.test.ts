@@ -3,7 +3,7 @@ import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/Autorout
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("an unpublished initial bounded improvement continues exact repair without changing public routes", (): void => {
+test("an unpublished initial bounded improvement preserves the exact portfolio input", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
   const srj = fixture.originalSrj
   const original = structuredClone(fixture.routes)
@@ -40,7 +40,8 @@ test("an unpublished initial bounded improvement continues exact repair without 
     const continuation = initial.getRoutesForFurtherRepair()
     expect(initial.getResult().routes).toBe(initial.params.routes)
     expect(continuation).not.toEqual(original)
-    expect(solver.exactRepairSolver!.params.hdRoutes).toBe(continuation)
+    expect(solver.exactRepairSolver!.params.hdRoutes).toEqual(original)
+    expect(solver.exactRepairSolver!.params.hdRoutes).not.toBe(continuation)
     expect(fixture.routes).toEqual(original)
   } finally {
     resultSpy.mockRestore()

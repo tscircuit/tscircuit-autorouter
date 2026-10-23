@@ -743,17 +743,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         if (!this.exactRepairParams) {
           throw new Error("Pipeline9 exact repair stage is missing its input")
         }
-        let hdRoutes = this.exactRepairParams.hdRoutes
-        if (this.clearanceProjectionSolver?.solved) {
-          hdRoutes = this.clearanceProjectionSolver.getOutput()
-        }
-        if (this.initialBoundedRegionalRepairSolver?.solved) {
-          hdRoutes =
-            this.initialBoundedRegionalRepairSolver.getRoutesForFurtherRepair()
-        }
         this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
           ...this.exactRepairParams,
-          hdRoutes,
+          hdRoutes:
+            this.clearanceProjectionSolver?.getOutput() ??
+            this.exactRepairParams.hdRoutes,
         })
         return this.exactRepairSolver
       },
@@ -1696,9 +1690,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
-    // A complete bounded repair can avoid the much broader portfolio search.
-    // Keep incomplete candidates private so the existing stages see their
-    // original input, including all preload ownership and candidate budgets.
+    // Complete repairs avoid the broader portfolio search. Incomplete progress
+    // stays private until the final completed candidates are compared.
     if (result.publishedDrcIssueCount !== 0) return
     const reference = this.cachedReferenceDrcEvaluator({
       traces: [],
@@ -1819,7 +1812,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     const retainedExactProgress = this.selectRepairProgress({
       candidates: [exactOutput],
-      preloadedRoutes: exactOutput,
+      completedRoutes: exactOutput,
     })
     if (retainedExactProgress.drcIssueCount === 0) {
       this.combinedOutput = retainedExactProgress.routes
@@ -1925,22 +1918,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   private finishRegionalB01Repair(): void {
-    if (!this.regionalB01RepairSolver?.solved || !this.exactRepairSolver) {
+    if (!this.regionalB01RepairSolver?.solved) {
       throw new Error(
         "Pipeline9 regional B01 stage must solve before completion",
       )
     }
     const regionalB01RepairResult = this.regionalB01RepairSolver.getResult()
-    const retainedProgress = this.selectRepairProgress({
-      candidates: [
-        this.exactRepairSolver.getOutput(),
-        regionalB01RepairResult.routes,
-      ],
-      preloadedRoutes: regionalB01RepairResult.routes,
+    const regionalReference = this.cachedReferenceDrcEvaluator!({
+      traces: [],
+      routes: regionalB01RepairResult.routes,
+      hdRoutes: regionalB01RepairResult.routes,
     })
     const regionalRepairBudget = getPipeline9BoundedRepairBudget(
-      retainedProgress.routes.length,
-      retainedProgress.drcIssueCount,
+      regionalB01RepairResult.routes.length,
+      (Array.isArray(regionalReference)
+        ? regionalReference
+        : regionalReference.errors
+      ).length,
       this.params.effort,
     )
     this.boundedRegionalParams = {
@@ -1952,7 +1946,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ...this.params.newConnections,
         ],
       },
-      routes: retainedProgress.routes,
+      routes: regionalB01RepairResult.routes,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
@@ -1982,7 +1976,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         boundedRegionalRepairResult.routes,
         this.boundedRegionalRepairSolver.getRoutesForFurtherRepair(),
       ],
-      preloadedRoutes: boundedRegionalRepairResult.routes,
+      completedRoutes: boundedRegionalRepairResult.routes,
     })
     this.combinedOutput = retainedProgress.routes
     this.stats = {
@@ -2041,10 +2035,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   private selectRepairProgress({
     candidates,
-    preloadedRoutes,
+    completedRoutes,
   }: {
     candidates: HighDensityRoute[][]
-    preloadedRoutes: HighDensityRoute[]
+    completedRoutes: HighDensityRoute[]
   }): ReturnType<typeof selectPipeline9RepairProgress> {
     if (!this.cachedReferenceDrcEvaluator) {
       throw new Error("Repair continuation is missing its reference evaluator")
@@ -2056,7 +2050,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       // Preloaded copper remains owned by the existing exact/preload stages.
       return selectPipeline9RepairProgress({
         originalSrj: this.params.originalSrj,
-        originalRoutes: preloadedRoutes,
+        originalRoutes: completedRoutes,
         candidates: [],
         drcEvaluator: this.cachedReferenceDrcEvaluator,
       })
@@ -2075,7 +2069,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     return selectPipeline9RepairProgress({
       originalSrj: initialRepair.params.originalSrj,
-      originalRoutes: initialRepair.params.routes,
+      originalRoutes: completedRoutes,
       candidates: regionalCandidates,
       drcEvaluator: this.cachedReferenceDrcEvaluator,
     })

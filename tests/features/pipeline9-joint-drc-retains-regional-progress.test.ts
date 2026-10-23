@@ -3,7 +3,7 @@ import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/Autorout
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("exact repair continues validated regional progress without changing bounded publication", (): void => {
+test("joint repair retains validated regional progress without replacing the exact search input", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
   const srj = fixture.originalSrj
   srj.connections.push({
@@ -48,7 +48,8 @@ test("exact repair continues validated regional progress without changing bounde
   const continuation = initial.getRoutesForFurtherRepair()
   expect(published.routes).toBe(initial.params.routes)
   expect(continuation).not.toBe(published.routes)
-  expect(solver.exactRepairSolver!.inputHdRoutes).toBe(continuation)
+  expect(solver.exactRepairSolver!.inputHdRoutes).toEqual(original)
+  expect(solver.exactRepairSolver!.inputHdRoutes).not.toBe(continuation)
   expect(published.finalDrcIssueCount!).toBeLessThan(
     published.publishedDrcIssueCount!,
   )
