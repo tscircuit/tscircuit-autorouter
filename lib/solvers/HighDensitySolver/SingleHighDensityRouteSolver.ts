@@ -59,6 +59,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
+  private readonly queuedCandidates = new Map<number, Node>()
   exploredNodes: Set<number>
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
@@ -698,6 +699,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
+  private scoreQueuedAlternative(node: Node, key: number): Node | undefined {
+    const queued = this.queuedCandidates.get(key)
+    if (
+      !queued ||
+      queued.x !== node.x ||
+      queued.y !== node.y ||
+      queued.z !== node.z
+    )
+      return undefined
+    this.setNodeCosts(node)
+    return queued
+  }
+
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
@@ -724,6 +738,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         if (this.exploredNodes.has(neighborKey)) {
           continue
         }
+
+        const queued = this.scoreQueuedAlternative(neighbor, neighborKey)
+        if (queued && queued.f < neighbor.f) continue
 
         if (!queriedPlanarNeighbors) {
           sharedPlanarObstacleQuery = this.getPlanarNeighborObstacleQuery(node)
@@ -764,7 +781,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
 
-        this.setNodeCosts(neighbor)
+        if (!queued) this.setNodeCosts(neighbor)
 
         neighbors.push(neighbor)
       }
@@ -784,8 +801,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
+      const viaKey = this.getNodeKey(viaNeighbor)
+      if (this.exploredNodes.has(viaKey)) continue
+      const queued = this.scoreQueuedAlternative(viaNeighbor, viaKey)
+      if (queued && queued.f < viaNeighbor.f) continue
       if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
@@ -793,7 +813,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) &&
         !this.isNodeTooCloseToEdge(viaNeighbor, true)
       ) {
-        this.setNodeCosts(viaNeighbor)
+        if (!queued) this.setNodeCosts(viaNeighbor)
 
         neighbors.push(viaNeighbor)
       }
@@ -887,10 +907,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (!currentNode || !currentNodeKey) {
+      this.queuedCandidates.clear()
       this.failed = true
       this.error = "Ran out of candidate nodes to explore"
       return
     }
+    this.queuedCandidates.delete(currentNodeKey)
     this.exploredNodes.add(currentNodeKey)
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
@@ -930,8 +952,23 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const neighbors = this.getNeighbors(currentNode)
     for (const neighbor of neighbors) {
+      const key = this.getNodeKey(neighbor)
+      const queued = this.queuedCandidates.get(key)
+      // A strictly better queued candidate expands this exact point first.
+      // Keep ties and rounded-coordinate aliases as separate entries.
+      if (
+        queued &&
+        queued.f < neighbor.f &&
+        queued.x === neighbor.x &&
+        queued.y === neighbor.y &&
+        queued.z === neighbor.z
+      )
+        continue
+      if (!queued || neighbor.f < queued.f)
+        this.queuedCandidates.set(key, neighbor)
       this.candidates.enqueue(neighbor)
     }
+    if (this.solved) this.queuedCandidates.clear()
   }
 
   visualize(): GraphicsObject {
