@@ -576,6 +576,44 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.state = { phase: "select-region", context }
       return
     }
+    // A negotiated route that already improves the reference DRC does not
+    // need another full-board projection before the next regional search.
+    const candidateReference = this.params.drcEvaluator({
+      traces: [],
+      routes: negotiatedRoutes,
+      hdRoutes: negotiatedRoutes,
+    })
+    this.result.referenceValidationCount++
+    const candidateErrors = Array.isArray(candidateReference)
+      ? candidateReference
+      : candidateReference.errors
+    if (candidateErrors.length < context.currentErrors.length) {
+      const candidateFixedViolations = getFixedObstacleViolations({
+        srj: context.srj,
+        routes: negotiatedRoutes,
+      })
+      if (
+        candidateFixedViolations.every(
+          ({ key, severity }): boolean =>
+            context.fixedViolations.has(key) &&
+            severity <= context.fixedViolations.get(key)! + 1e-8,
+        ) &&
+        getNewViaPadViolations({
+          srj: context.srj,
+          previousRoutes: context.currentRoutes,
+          routes: negotiatedRoutes,
+        }).length === 0
+      ) {
+        this.state = {
+          phase: "accept-candidate",
+          context,
+          candidateRoutes: negotiatedRoutes,
+          candidateReference,
+          candidateFixedViolations,
+        }
+        return
+      }
+    }
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
       routes: negotiatedRoutes,
