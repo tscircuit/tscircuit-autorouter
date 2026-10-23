@@ -1,7 +1,10 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityRepairSolver, buildRepairFramesAsync } from "high-density-repair02"
+import {
+  HighDensityRepairSolver,
+  buildRepairFramesAsync,
+} from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
@@ -432,38 +435,56 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
             2,
         ),
       )
-      const pending = this.sampleEntries
+      const plannedSamples = this.sampleEntries
         .slice(
           this.activeSampleIndex,
           this.activeSampleIndex + parallelSampleCount,
         )
-        .map((entry) => {
-          const pointCount = entry.sample.nodeHdRoutes!.reduce(
+        .map((entry, index) => ({
+          entry,
+          index,
+          pointCount: entry.sample.nodeHdRoutes!.reduce(
             (count, route) => count + (route.route?.length ?? 0),
             0,
-          )
-          // Large nodes otherwise monopolize a single worker. Their independent
-          // candidate ranges use the shared pool; publication stays in node order.
-          const task = pointCount >= 512
+          ),
+        }))
+        .sort((a, b) => b.pointCount - a.pointCount || a.index - b.index)
+      const estimatedWork = plannedSamples.reduce(
+        (work, sample) => work + sample.pointCount ** 2,
+        0,
+      )
+      const pending: Array<
+        Promise<
+          | { type: "result"; result: Pipeline4HighDensityRepairSampleOutput }
+          | { type: "error"; error: unknown }
+        >
+      > = []
+      for (const { entry, index, pointCount } of plannedSamples) {
+        // Keep balanced workloads at node granularity. Split only a predicted
+        // critical node across four candidate ranges in the shared pool.
+        const task =
+          pointCount >= 512 && pointCount ** 2 >= estimatedWork / 4
             ? buildRepairFramesAsync(
                 entry.sample,
                 this.repairMargin,
                 runtime,
                 false,
                 false,
-              ).then((result): Pipeline4HighDensityRepairSampleOutput => ({
+              ).then(
+                (result): Pipeline4HighDensityRepairSampleOutput => ({
                   repairedRoutes: result.repairedRoutes,
                   clearanceStats: result.clearanceRepairStats,
-                }))
+                }),
+              )
             : runtime.executeAsync(Pipeline4HighDensityRepairSampleSolver, {
                 sample: entry.sample,
                 margin: this.repairMargin,
               })
-          return task.then(
-            (result) => ({ type: "result" as const, result }),
-            (error: unknown) => ({ type: "error" as const, error }),
-          )
-        })
+        pending[index] = task.then(
+          (result) => ({ type: "result" as const, result }),
+          (error: unknown) => ({ type: "error" as const, error }),
+        )
+      }
       for (const promise of pending) {
         // A serial sample uses one construction step and one repair step.
         if (

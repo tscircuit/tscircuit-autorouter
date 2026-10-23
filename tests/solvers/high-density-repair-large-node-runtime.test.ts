@@ -9,18 +9,25 @@ test("large-node candidate ranges preserve ordered repairs and finite prefixes b
     const start = route.route[0]!
     const end = route.route.at(-1)!
     route.route = Array.from({ length: 257 }, (_, index) => ({
-      x: start.x + (end.x - start.x) * index / 256,
+      x: start.x + ((end.x - start.x) * index) / 256,
       y: start.y,
       z: start.z,
     }))
   }
   const before = structuredClone(input)
   for (const limit of [0, 1, 2, 3, 5, Infinity]) {
-    const expected = new Pipeline4HighDensityRepairSolver(structuredClone(input))
+    const expected = new Pipeline4HighDensityRepairSolver(
+      structuredClone(input),
+    )
     const actual = new Pipeline4HighDensityRepairSolver(structuredClone(input))
     const runtime = new SolverRuntime()
     try {
-      while (!expected.solved && !expected.failed && expected.iterations < limit) expected.step()
+      while (
+        !expected.solved &&
+        !expected.failed &&
+        expected.iterations < limit
+      )
+        expected.step()
       await actual.solveAsync(runtime, limit)
       expect(actual.getOutput()).toEqual(expected.getOutput())
       expect(actual.stats).toEqual(expected.stats)
