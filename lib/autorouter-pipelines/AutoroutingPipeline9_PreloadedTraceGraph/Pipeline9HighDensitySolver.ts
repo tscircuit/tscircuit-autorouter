@@ -1,9 +1,4 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
-import { RbushIndex } from "lib/data-structures/RbushIndex"
-import { type MonotoneLaneTemplateCache } from "./compileMonotoneLaneTemplate"
-import { constructPipeline9MonotoneFamily, monotoneFamilyStatKeys, monotoneFamilyRoutesHaveDrillConflict, normalizePipeline9MonotoneRoots } from "./constructPipeline9MonotoneFamily"
-import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
   defaultB01Params,
@@ -21,7 +16,6 @@ import type {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -43,13 +37,6 @@ import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolv
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
-  /** Global reservations are retained across worker batches. */
-  monotoneFamilyScenePorts?: PortPoint[]
-  enableMonotoneFamilyCompilation?: boolean
-  viaHoleDiameter?: number
-  viaHoleClearance?: number
-  traceToPadClearance?: number
-  traceToHoleClearance?: number
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -414,6 +401,29 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
+  private readonly completedNativeGridCounters: Record<string, number> = {}
+  private submittedDiagnosticBatchCount = 0
+  private completedDiagnosticBatchCount = 0
+  private erroredDiagnosticBatchCount = 0
+
+  private addNativeGridCounters(counters: Record<string, number>): void {
+    for (const [key, value] of Object.entries(counters)) {
+      const previous = this.completedNativeGridCounters[key] ?? 0
+      this.completedNativeGridCounters[key] = previous + value
+    }
+  }
+
+  get benchmarkDiagnosticCounters(): Record<string, number> {
+    const counters = { ...this.completedNativeGridCounters }
+    for (const [key, value] of Object.entries(this.activeRegularSolver?.benchmarkDiagnosticCounters ?? {})) {
+      counters[key] = (counters[key] ?? 0) + value
+    }
+    counters.nativeGridSubmittedBatchCount = this.submittedDiagnosticBatchCount
+    counters.nativeGridCompletedBatchCount = this.completedDiagnosticBatchCount
+    counters.nativeGridErroredBatchCount = this.erroredDiagnosticBatchCount
+    counters.nativeGridPendingBatchCount = this.submittedDiagnosticBatchCount - this.completedDiagnosticBatchCount - this.erroredDiagnosticBatchCount
+    return counters
+  }
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -422,14 +432,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
-  private readonly monotoneLaneTemplateCache: MonotoneLaneTemplateCache = new Map()
-  private pendingMonotoneFamilies: Array<{ node: NodeWithPortPoints; routes: HighDensityIntraNodeRoute[] }> = []
   private asyncRunning = false
-  private readonly monotoneFamilyPortIndex?: FlatbushIndex<PortPoint>
-  private readonly monotoneFamilyRouteIndex = new RbushIndex<HighDensityIntraNodeRoute>()
-  private readonly monotoneFamilyObstacleIndex = new RbushIndex<Obstacle>()
-  // Wall-clock diagnostics are excluded from deterministic sync/async stats.
-  readonly benchmarkDiagnosticTimings = { monotoneFamilySceneSetupTimeMs: 0 }
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -454,29 +457,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
-    const monotoneSceneSetupStarted = performance.now()
-    params.monotoneFamilyScenePorts ??= params.enableMonotoneFamilyCompilation ? params.nodePortPoints.flatMap((node) => normalizePipeline9MonotoneRoots(node, params.connMap).portPoints) : []
-    if (params.monotoneFamilyScenePorts.length > 0) {
-      this.monotoneFamilyPortIndex = new FlatbushIndex(params.monotoneFamilyScenePorts.length)
-      for (const port of params.monotoneFamilyScenePorts) this.monotoneFamilyPortIndex.insert(port, port.x, port.y, port.x, port.y)
-      this.monotoneFamilyPortIndex.finish()
-    }
-    if (params.enableMonotoneFamilyCompilation) for (const obstacle of params.obstacles) {
-      const radius = Math.hypot(obstacle.width / 2, obstacle.height / 2)
-      this.monotoneFamilyObstacleIndex.insert(obstacle, obstacle.center.x - radius, obstacle.center.y - radius, obstacle.center.x + radius, obstacle.center.y + radius)
-    }
-    this.benchmarkDiagnosticTimings.monotoneFamilySceneSetupTimeMs = performance.now() - monotoneSceneSetupStarted
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
-      ...Object.fromEntries(monotoneFamilyStatKeys.map((key) => [key, 0])),
-      monotoneFamilyObstacleIndexEntries: params.enableMonotoneFamilyCompilation ? params.obstacles.length : 0,
-      monotoneFamilyCommittedSinglePairCells: 0,
-      monotoneFamilyCommittedCollectiveCells: 0,
-      monotoneFamilyDeferredCells: 0,
-      monotoneFamilySceneInvalidatedCells: 0,
-      monotoneFamilyFinalScenePredicates: 0,
-      monotoneFamilySerialSceneScheduling: Number(Boolean(params.enableMonotoneFamilyCompilation)),
-      monotoneFamilyScenePortIndexEntries: params.monotoneFamilyScenePorts.length,
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -509,8 +491,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.solved || this.failed || this.iterations >= stopAtIteration) return
     const startTime = performance.now()
     try {
-      // Certificates depend on all completed native copper, across batch boundaries.
-      if (runtime === undefined || this.stats.monotoneFamilySerialSceneScheduling === 1) {
+      if (runtime === undefined) {
         if (stopAtIteration === Infinity) this.solve()
         else this.solveUntilIteration(stopAtIteration)
         return
@@ -533,6 +514,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
+        this.submittedDiagnosticBatchCount++
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
@@ -542,8 +524,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
+              (result) => {
+                // Count every completed speculative batch, including work the
+                // serial acceptance boundary subsequently discards/replays.
+                this.completedDiagnosticBatchCount++
+                this.addNativeGridCounters(result.benchmarkDiagnosticCounters)
+                return { type: "result" as const, result }
+              },
+              (error: unknown) => {
+                this.erroredDiagnosticBatchCount++
+                return { type: "error" as const, error }
+              },
             ),
         )
       }
@@ -606,6 +597,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -614,14 +606,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
         : solvedRoutes),
     )
-    for (const route of this.params.enableMonotoneFamilyCompilation ? solvedRoutes : []) {
-      const radius = Math.max(route.traceThickness, route.viaDiameter) / 2
-      this.monotoneFamilyRouteIndex.insert(route,
-        Math.min(...route.route.map((p) => p.x)) - radius,
-        Math.min(...route.route.map((p) => p.y)) - radius,
-        Math.max(...route.route.map((p) => p.x)) + radius,
-        Math.max(...route.route.map((p) => p.y)) + radius)
-    }
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
     this.activeRegularSolver = null
@@ -1049,6 +1033,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
@@ -1080,72 +1065,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.progress,
       (Number(this.stats.solvedNodeCount) + activeProgress) / nodeCount,
     )
-  }
-
-  /** Native routes finish first. Rejected certificates may add more native copper,
-   * so recheck all remaining families until no new native solve is required. */
-  private finishPendingMonotoneFamilies(): void {
-    const pendingIndex = new RbushIndex<{ index: number; route: HighDensityIntraNodeRoute }>()
-    const completedFixedIndex = new RbushIndex<PreloadedHighDensityRoute>()
-    for (const route of this.getUpdatedFixedHdRoutes()) {
-      const geometry = getPipeline9RouteCopperGeometry(route, this)
-      const points = [...geometry.wireSegments.flatMap((segment) => [segment.start, segment.end]), ...geometry.viaSpans.map((via) => via.center)]
-      if (points.length === 0) continue
-      const radius = Math.max(0, ...geometry.wireSegments.map((segment) => segment.width / 2), ...geometry.viaSpans.map((via) => via.diameter / 2))
-      completedFixedIndex.insert(route, Math.min(...points.map((point) => point.x)) - radius, Math.min(...points.map((point) => point.y)) - radius, Math.max(...points.map((point) => point.x)) + radius, Math.max(...points.map((point) => point.y)) + radius)
-    }
-    for (let index = 0; index < this.pendingMonotoneFamilies.length; index++) {
-      for (const route of this.pendingMonotoneFamilies[index]!.routes) {
-        const radius = route.traceThickness / 2
-        pendingIndex.insert({ index, route }, Math.min(...route.route.map((p) => p.x)) - radius,
-          Math.min(...route.route.map((p) => p.y)) - radius, Math.max(...route.route.map((p) => p.x)) + radius,
-          Math.max(...route.route.map((p) => p.y)) + radius)
-      }
-    }
-    for (let index = 0; index < this.pendingMonotoneFamilies.length; index++) {
-      const family = this.pendingMonotoneFamilies[index]!
-      const bounds = getNodeBounds(family.node, Math.max(this.obstacleMargin, this.params.viaHoleClearance ?? 0, this.params.traceToPadClearance ?? 0) + Math.max(this.traceWidth, this.viaDiameter, this.params.viaHoleDiameter ?? 0))
-      const nativeRoutes = [
-        ...this.monotoneFamilyRouteIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY),
-        ...completedFixedIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY),
-      ]
-      const earlierFamilies = pendingIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
-        .filter((item) => item.index < index).map((item) => item.route)
-      let conflict = false
-      for (const route of family.routes) {
-        const owner = getCanonicalPipeline9PortRoot(route, this.connMap)
-        for (const other of [...nativeRoutes, ...earlierFamilies]) {
-          // A canonical owner key can also be a different net's ordinary alias.
-          // Match the construction certificate's registered-owner namespace.
-          const sameNet = owner === getCanonicalPipeline9PortRoot(other, this.connMap)
-          if (this.params.viaHoleDiameter !== undefined && this.params.viaHoleClearance !== undefined) {
-            this.stats.monotoneFamilyDrillPredicates++
-            if (monotoneFamilyRoutesHaveDrillConflict(route, other, this.params.viaHoleDiameter, this.params.viaHoleClearance, sameNet, this)) { conflict = true; break }
-          }
-          if (sameNet) continue
-          this.stats.monotoneFamilyFinalScenePredicates++
-          if (doPipeline9RoutesHaveCopperConflict({ left: route, right: other, clearance: Math.max(this.obstacleMargin, this.params.traceToPadClearance ?? 0) + 1e-6, layerCount: this.layerCount, allowBlindAndBuriedVias: this.allowBlindAndBuriedVias })) { conflict = true; break }
-        }
-        if (conflict) break
-      }
-      if (conflict) {
-        this.pendingMonotoneFamilies.splice(index, 1)
-        this.stats.monotoneFamilySceneInvalidatedCells++
-        this.startRegularSolver(family.node)
-        return
-      }
-    }
-    for (const family of this.pendingMonotoneFamilies) {
-      this.activeNode = family.node
-      this.finishActiveNode(family.routes)
-      this.stats.monotoneFamilySolvedCells++
-      this.stats.monotoneFamilyConstructedRoutes += family.routes.length
-      this.stats.monotoneFamilyConstructedVias += family.routes.reduce((count, route) => count + route.vias.length, 0)
-      if (family.routes.length === 1) this.stats.monotoneFamilyCommittedSinglePairCells++
-      else this.stats.monotoneFamilyCommittedCollectiveCells++
-    }
-    this.pendingMonotoneFamilies = []
-    this.solved = true
   }
 
   private stepNodeRouting(): void {
@@ -1208,8 +1127,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const node = this.unsolvedNodePortPoints.pop()
     if (!node) {
-      if (this.params.enableMonotoneFamilyCompilation) this.finishPendingMonotoneFamilies()
-      else this.solved = true
+      this.solved = true
       return
     }
 
@@ -1223,37 +1141,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {
-      if (this.params.enableMonotoneFamilyCompilation) {
-        const bounds = getNodeBounds(node, Math.max(this.traceWidth, this.viaDiameter, this.params.viaHoleDiameter ?? 0) + Math.max(this.obstacleMargin, this.viaToPadClearance ?? 0, this.params.viaHoleClearance ?? 0, this.params.traceToPadClearance ?? 0, this.params.traceToHoleClearance ?? 0) + 2e-6)
-        const construction = constructPipeline9MonotoneFamily({
-          node: normalizePipeline9MonotoneRoots(node, this.connMap),
-          traceWidth: this.traceWidth, clearance: Math.max(this.obstacleMargin, this.params.traceToPadClearance ?? 0),
-          viaDiameter: this.viaDiameter,
-          obstacles: this.monotoneFamilyObstacleIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY),
-          allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-          viaToPadClearance: this.viaToPadClearance,
-          traceToPadClearance: this.params.traceToPadClearance,
-          traceToHoleClearance: this.params.traceToHoleClearance,
-          viaHoleDiameter: this.params.viaHoleDiameter,
-          viaHoleClearance: this.params.viaHoleClearance,
-          unsupportedDrillScene: this.fixedHdRoutes.length > 0,
-          connMap: this.connMap,
-          cache: this.monotoneLaneTemplateCache,
-          boardGeometry: this.boardGeometry, layerCount: this.layerCount,
-          scenePorts: this.monotoneFamilyPortIndex?.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY) ?? [],
-          sceneRoutes: this.monotoneFamilyRouteIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY),
-        })
-        for (const [key, value] of Object.entries(construction.stats)) this.stats[key] = Number(this.stats[key]) + value
-        if (construction.applicable) {
-          this.pendingMonotoneFamilies.push({ node, routes: construction.routes })
-          this.stats.monotoneFamilyDeferredCells++
-          // Solved counters count committed certificates, not tentative geometry.
-          this.stats.monotoneFamilySolvedCells--
-          this.stats.monotoneFamilyConstructedRoutes -= construction.routes.length
-        this.stats.monotoneFamilyConstructedVias -= construction.routes.reduce((count, route) => count + route.vias.length, 0)
-          return
-        }
-      }
       this.startRegularSolver(node)
       return
     }

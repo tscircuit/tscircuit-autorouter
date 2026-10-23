@@ -34,7 +34,6 @@ type SubSolverInstance = {
 type HighDensityBenchmarkSource = {
   iterations?: number
   stats?: Record<string, unknown>
-  benchmarkDiagnosticTimings?: Record<string, unknown>
   waitForAllRemoteRequests?: () => Promise<void>
 }
 
@@ -389,6 +388,7 @@ export const getRoutingBenchmarkMetrics = (
     {
       stats?: Record<string, unknown>
       benchmarkDiagnosticTimings?: Record<string, unknown>
+      benchmarkDiagnosticCounters?: Record<string, unknown>
     } | undefined
   >
   const phaseStats: Record<string, Record<string, number>> = {}
@@ -396,7 +396,7 @@ export const getRoutingBenchmarkMetrics = (
     const phase = phases[step.solverName]
     if (!phase) continue
     const numericStats: Record<string, number> = {}
-    for (const values of [phase.stats, phase.benchmarkDiagnosticTimings]) {
+    for (const values of [phase.stats, phase.benchmarkDiagnosticTimings, phase.benchmarkDiagnosticCounters]) {
       if (!values) continue
       for (const [name, value] of Object.entries(values)) {
         if (typeof value === "number" && Number.isFinite(value)) {
