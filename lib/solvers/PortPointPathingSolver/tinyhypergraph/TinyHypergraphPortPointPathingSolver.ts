@@ -36,6 +36,8 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { installTinyCrossingIndex } from "./installTinyCrossingIndex"
+import { createTinyCrossingIndexDiagnostics, type TinyCrossingIndexDiagnostics } from "./TinyRegionCrossingIndex"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -919,6 +921,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly useExactCrossingIndex: boolean,
+    private readonly crossingIndexDiagnostics: TinyCrossingIndexDiagnostics,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -972,6 +976,17 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   override _step() {
     super._step()
     this.configureSolver(this.activeSubSolver)
+    if (this.useExactCrossingIndex) this.configureCrossingIndex(this.activeSubSolver)
+  }
+
+  private configureCrossingIndex(solver?: BaseSolver | null): void {
+    if (!solver) return
+    if (solver instanceof TinyHyperGraphSolver) {
+      installTinyCrossingIndex(solver, this.crossingIndexDiagnostics)
+    }
+    if (solver.activeSubSolver) {
+      this.configureCrossingIndex(solver.activeSubSolver)
+    }
   }
 
   override getInitialVisualizationSolver() {
@@ -1029,6 +1044,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  readonly benchmarkDiagnosticCounters = createTinyCrossingIndexDiagnostics()
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1054,6 +1070,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    this.benchmarkDiagnosticCounters.crossingIndexQueryDiagnosticsEnabled = Number(params.flags.COLLECT_EXACT_CROSSING_INDEX_WORK === true)
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1137,6 +1154,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.flags.USE_EXACT_CROSSING_INDEX === true,
+        this.benchmarkDiagnosticCounters,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1465,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.flags.USE_EXACT_CROSSING_INDEX === true,
+            this.benchmarkDiagnosticCounters,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

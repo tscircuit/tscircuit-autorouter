@@ -29,8 +29,7 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
-import { RouteColumnIntraNodeSolver } from "./RouteColumnIntraNodeSolver"
-import type { RouteColumnStats } from "./DualPriceRouteColumnSolver"
+import { createNativeGridSetupDiagnostics, deferNativeGridSetup, hasDeferredNativeGridSetup, type NativeGridSetupDiagnostics } from "./deferNativeGridSetup"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -48,7 +47,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | HighDensitySolverA13
-  | RouteColumnIntraNodeSolver
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -58,10 +56,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
-    enableRouteColumnSearch?: boolean
-    routeColumnStats?: RouteColumnStats
-    viaHoleDiameter?: number
-    minViaHoleEdgeToViaHoleEdgeClearance?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -73,8 +67,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  readonly deferNativeGridMaterialization: boolean
+  // Construction diagnostics are intentionally outside the stable stats used
+  // by serial/worker parity and cached result comparisons.
+  readonly nativeGridSetupDiagnostics: NativeGridSetupDiagnostics = createNativeGridSetupDiagnostics()
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
+  private readonly startedNativeCandidates = new WeakSet<object>()
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
@@ -119,6 +118,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       )
       return Math.min(0.99, (routedFraction + conflictFreeFraction) / 2)
     }
+    // Successful native setup leaves both the solved map and progress empty.
+    // A03's compatibility getter requires its grid-owned arrays to exist;
+    // report that same zero progress until the candidate is materialized.
+    if (hasDeferredNativeGridSetup(solver)) {
+      return 0
+    }
     const solvedSegmentCount = this.getSolvedSegmentCount(solver)
     if (solvedSegmentCount !== null) {
       return Math.min(1, solvedSegmentCount / this.getNodeSegmentCount())
@@ -134,10 +139,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      enableRouteColumnSearch?: boolean
-      routeColumnStats?: RouteColumnStats
-      viaHoleDiameter?: number
-      minViaHoleEdgeToViaHoleEdgeClearance?: number
+      deferNativeGridMaterialization?: boolean
     },
   ) {
     super()
@@ -149,6 +151,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.deferNativeGridMaterialization = opts.deferNativeGridMaterialization ?? true
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -216,7 +219,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
-      ...(this.constructorParams.enableRouteColumnSearch ? [["routeColumn"]] : []),
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
@@ -363,10 +365,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         name: "highDensityA13",
         possibleValues: [{ HIGH_DENSITY_A13: true, SHUFFLE_SEED: 0 }],
       },
-      {
-        name: "routeColumn",
-        possibleValues: [{ ROUTE_COLUMN: true }],
-      },
     ]
   }
 
@@ -378,6 +376,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
     if (solver instanceof HighDensitySolverA13) return
+    if (
+      this.deferNativeGridMaterialization &&
+      (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) &&
+      deferNativeGridSetup(solver, this.getGridSearchIterationBudget(), this.nativeGridSetupDiagnostics)
+    ) {
+      return
+    }
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
     if (
@@ -388,6 +393,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         solver.MAX_ITERATIONS,
         this.getGridSearchIterationBudget(),
       )
+      this.nativeGridSetupDiagnostics.eagerCandidateCount++
+      this.nativeGridSetupDiagnostics.eagerPlaneCellCount += solver.gridStats.cells
+      this.nativeGridSetupDiagnostics.eagerLayerCellCount += solver.gridStats.states
     }
   }
 
@@ -398,7 +406,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       (total, { solver }) => {
         // A13 negotiates route orders internally. Its larger budget must not
         // delay expansion of the existing A01 ordering search.
-        if (!(solver instanceof HighDensitySolverA13) && !(solver instanceof RouteColumnIntraNodeSolver)) {
+        if (!(solver instanceof HighDensitySolverA13)) {
           this.totalCandidateWork += solver.iterations
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
@@ -509,8 +517,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
-    if (solver instanceof RouteColumnIntraNodeSolver) {
-      return (solver.engine?.iterations ?? 0) / 1_000_000
+    if (
+      ((solver as any) instanceof HighDensitySolverA01 || (solver as any) instanceof HighDensityA03Solver) &&
+      solver.iterations > 0 && !this.startedNativeCandidates.has(solver)
+    ) {
+      this.startedNativeCandidates.add(solver)
+      this.nativeGridSetupDiagnostics.selectedCandidateCount++
     }
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
@@ -525,7 +537,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         accountedWork.maxIterations = solver.MAX_ITERATIONS
         this.dynamicExpansionWorkBudget = 1
         for (const { solver: candidate } of this.supervisedSolvers ?? []) {
-          if (candidate instanceof HighDensitySolverA13 || candidate instanceof RouteColumnIntraNodeSolver) continue
+          if (candidate instanceof HighDensitySolverA13) continue
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
             candidate.MAX_ITERATIONS,
@@ -569,13 +581,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
-    if (hyperParameters.ROUTE_COLUMN) {
-      return new RouteColumnIntraNodeSolver({
-        ...this.constructorParams,
-        nodeWithPortPoints: this.nodeWithPortPoints,
-        effort: this.effort,
-      }) as any
-    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
