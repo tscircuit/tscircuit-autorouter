@@ -3,12 +3,19 @@ import { ClearancePathHeap } from "./ClearancePathHeap"
 import { REGION_EPSILON } from "./repairRegionGeometry"
 import { getClearanceCapsuleSupportOrientation, type ClearanceCorridorStats, type ClearanceCostSupport, type CorridorSearchInput } from "./createClearanceCorridorSearch"
 import type { RepairRoutePoint } from "./repairRegionTypes"
+import { SparseHistoryWitnessIndex } from "./SparseHistoryWitnessIndex"
 
 type Point = RepairRoutePoint
 type Site = { x: number; y: number; gx?: number; gy?: number }
+type PortalPoint = Site & { angle: number }
 type Vertex = { id: number; site: number; point: Point }
 type State = { id: number; vertex: Vertex; sites: number[]; key: string; cost: number; parent?: State }
-type Support = ClearanceCostSupport & { portals: number[]; angles: number[]; soft: boolean }
+type PortalFrame = { x: number; y: number; cos: number; sin: number; halfWidth: number; halfHeight: number }
+type Support = ClearanceCostSupport & {
+  portals: { state: "unmaterialized" } | { state: "ready"; ids: number[]; angles: number[] }
+  frame?: PortalFrame
+  soft: boolean
+}
 type Interval = { enter: number; exit: number }
 export type SparseClearanceEventStats = ClearanceCorridorStats & {
   corridorSparsePolicy: number
@@ -32,6 +39,17 @@ export type SparseClearanceEventStats = ClearanceCorridorStats & {
   corridorSparseHistoryCopies: number
   corridorSparseHistoryCopyElements: number
   corridorSparseHistoryKeyCharacters: number
+  corridorSparseDominanceBucketLookups: number
+  corridorSparsePortalIndexEntries: number
+  corridorSparsePortalMaterializations: number
+  corridorSparsePortalIncidenceQueries: number
+  corridorSparsePortalIncidenceCandidates: number
+  corridorSparsePortalIncidenceChecks: number
+  corridorSparsePortalIncidenceMatches: number
+  corridorSparsePortalFormulaPoints: number
+  corridorRetainedSparsePortalIncidences: number
+  corridorRetainedSparseMaterializedSupports: number
+  corridorRetainedSparsePortalIndexEntries: number
   corridorRetainedSparseSites: number
   corridorRetainedSparseVertices: number
   corridorRetainedSparseNeighborReferences: number
@@ -108,6 +126,12 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
     corridorSparseBoundaryReferences: 0, corridorSparseBoundaryIntervals: 0, corridorSparseSiteLookups: 0,
     corridorSparseSetupKeyCharacters: 0, corridorSparseVertexLookups: 0, corridorSparseHistoryCopies: 0,
     corridorSparseHistoryCopyElements: 0, corridorSparseHistoryKeyCharacters: 0,
+    corridorSparseDominanceBucketLookups: 0,
+    corridorSparsePortalIndexEntries: 0, corridorSparsePortalMaterializations: 0,
+    corridorSparsePortalIncidenceQueries: 0, corridorSparsePortalIncidenceCandidates: 0,
+    corridorSparsePortalIncidenceChecks: 0, corridorSparsePortalIncidenceMatches: 0,
+    corridorSparsePortalFormulaPoints: 0, corridorRetainedSparsePortalIncidences: 0,
+    corridorRetainedSparseMaterializedSupports: 0, corridorRetainedSparsePortalIndexEntries: 0,
     corridorRetainedSparseSites: 0, corridorRetainedSparseVertices: 0, corridorRetainedSparseNeighborReferences: 0,
     corridorRetainedSparseBoundaryReferences: 0, corridorRetainedSparseHistoryArrays: 0, corridorRetainedSparseHistoryElements: 0,
   }
@@ -115,11 +139,14 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
   const siteByXY = new Map<string, number>(), vertexBySite = new Map<string, Vertex>(), stateByKey = new Map<string, State>()
   const neighborCache = new Map<number, Vertex[]>(), edgeCosts = new Map<number, Map<number, number>>()
   const witnesses = new Map<number, State[]>(), singles = new Map<number, Map<number, State>>(), empty = new Map<number, State>()
+  const witnessIndices = new Map<number, SparseHistoryWitnessIndex<State>>()
   const hintNeighbors = new Map<number, Set<number>>()
   const boundaryNeighbors = new Map<number, Set<number>>()
+  const completePortalIncidences = new Set<number>()
   const retainedHistories = new WeakSet<number[]>()
   const heap = new ClearancePathHeap()
-  let index: Flatbush | undefined, popped = 0, edgeChecks = 0, finished = false, popCheckpoint = false
+  let index: Flatbush | undefined, portalIndex: Flatbush | undefined
+  let popped = 0, edgeChecks = 0, finished = false, popCheckpoint = false
   const addSite = (x: number, y: number, force = false, gx?: number, gy?: number): number | undefined => {
     stats.corridorSparseSetupCandidates++
     stats.corridorWorkUnits++
@@ -135,6 +162,7 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
     }
     const id = sites.length
     sites.push({ x, y, gx, gy })
+    if (sites.length > siteBound) throw new Error("Sparse event site capacity was undercounted")
     siteByXY.set(key, id)
     stats.corridorSparseSites = sites.length
     stats.corridorRetainedSparseSites = sites.length
@@ -180,18 +208,29 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
       const single = singles.get(vertex.id)?.get(site)
       if (single && single !== self && single.cost <= cost) return true
     }
-    for (const witness of witnesses.get(vertex.id) ?? []) {
-      stats.corridorDominanceWitnessChecks++
+    // A multi-site subset must start at one of this query's sites. Index only
+    // the same bounded expanded-witness bank; queued or evicted labels do not
+    // become dominance witnesses. Current costs and full subsets still decide.
+    if (history.length < 2) return false
+    const index = witnessIndices.get(vertex.id)
+    if (!index) return false
+    for (const firstSite of history) {
+      stats.corridorDominanceIndexWork++
+      stats.corridorSparseDominanceBucketLookups++
       yield
-      if (witness === self || witness.cost > cost || witness.sites.length > history.length) continue
-      let cursor = 0, subset = true
-      for (const site of witness.sites) {
-        while (cursor < history.length && history[cursor]! < site) { cursor++; stats.corridorDominanceSubsetChecks++; yield }
-        stats.corridorDominanceSubsetChecks++
+      for (const witness of index.get(firstSite) ?? []) {
+        stats.corridorDominanceWitnessChecks++
         yield
-        if (history[cursor] !== site) { subset = false; break }
+        if (witness === self || witness.cost > cost || witness.sites.length > history.length) continue
+        let cursor = 0, subset = true
+        for (const site of witness.sites) {
+          while (cursor < history.length && history[cursor]! < site) { cursor++; stats.corridorDominanceSubsetChecks++; yield }
+          stats.corridorDominanceSubsetChecks++
+          yield
+          if (history[cursor] !== site) { subset = false; break }
+        }
+        if (subset) return true
       }
-      if (subset) return true
     }
     return false
   }
@@ -304,23 +343,111 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
     }
     return nearest
   }
+  const portalPoints = function* (support: Support): Generator<void, PortalPoint[]> {
+    const r = support.frame
+    if (!r) throw new Error("Sparse support has no validated portal frame")
+    const local: Site[] = []
+    for (const x of [-r.halfWidth, 0, r.halfWidth]) for (const y of [-r.halfHeight, 0, r.halfHeight]) {
+      if (x !== 0 || y !== 0) local.push({ x, y })
+    }
+    for (const anchor of [start, end]) {
+      const x = (anchor.x - r.x) * r.cos + (anchor.y - r.y) * r.sin
+      const y = -(anchor.x - r.x) * r.sin + (anchor.y - r.y) * r.cos
+      for (const sx of [-r.halfWidth, r.halfWidth]) local.push({ x: sx, y: Math.max(-r.halfHeight, Math.min(r.halfHeight, y)) })
+      for (const sy of [-r.halfHeight, r.halfHeight]) local.push({ x: Math.max(-r.halfWidth, Math.min(r.halfWidth, x)), y: sy })
+    }
+    const result: PortalPoint[] = []
+    for (const p of local) {
+      result.push({ x: r.x + p.x * r.cos - p.y * r.sin, y: r.y + p.x * r.sin + p.y * r.cos, angle: Math.atan2(p.y, p.x) })
+      stats.corridorSparsePortalFormulaPoints++
+      yield
+    }
+    return result
+  }
+  const materializePortals = function* (support: Support, points?: PortalPoint[]): Generator<void> {
+    if (support.portals.state === "ready") return
+    const r = support.frame
+    if (!r) throw new Error("Sparse support has no validated portal frame")
+    const portals = new Map<number, number>()
+    for (const p of points ?? (yield* portalPoints(support))) {
+      const site = addSite(p.x, p.y)
+      if (site !== undefined) portals.set(site, p.angle)
+      yield
+    }
+    const ordered = [...portals].sort(([a, aa], [b, ba]) => {
+      stats.corridorIntervalSortChecks++
+      stats.corridorWorkUnits++
+      return aa - ba || a - b
+    })
+    const ids = ordered.map(([id]) => id)
+    support.portals = { state: "ready", ids, angles: ordered.map(([, angle]) => angle) }
+    stats.corridorSparsePortalMaterializations++
+    stats.corridorRetainedSparseMaterializedSupports = stats.corridorSparsePortalMaterializations
+    for (let i = 0; i < ids.length; i++) {
+      const a = ids[i]!, b = ids[(i + 1) % ids.length]!
+      if (a === b) continue
+      for (const [from, to] of [[a, b], [b, a]]) {
+        const adjacent = boundaryNeighbors.get(from!) ?? new Set<number>()
+        if (!adjacent.has(to!)) {
+          if (completePortalIncidences.has(from!)) throw new Error("Sparse lazy portal incidence changed after completion")
+          adjacent.add(to!)
+          stats.corridorSparseBoundaryReferences++
+        }
+        boundaryNeighbors.set(from!, adjacent)
+        yield
+      }
+    }
+    stats.corridorRetainedSparseBoundaryReferences = stats.corridorSparseBoundaryReferences
+  }
+  const completePortalIncidence = function* (site: number): Generator<void> {
+    if (completePortalIncidences.has(site)) return
+    const point = sites[site]!
+    if (supports.length > 0) {
+      if (!portalIndex) throw new Error("Sparse supports have no portal extent index")
+      stats.corridorSparsePortalIncidenceQueries++
+      yield
+      for (const id of portalIndex.search(point.x, point.y, point.x, point.y)) {
+        stats.corridorSparsePortalIncidenceCandidates++
+        yield
+        const support = supports[id]!
+        if (support.portals.state === "ready") continue
+        const points = yield* portalPoints(support)
+        let matches = false
+        for (const p of points) {
+          stats.corridorSparsePortalIncidenceChecks++
+          yield
+          if (p.x === point.x && p.y === point.y) matches = true
+        }
+        if (!matches) continue
+        stats.corridorSparsePortalIncidenceMatches++
+        yield* materializePortals(support, points)
+      }
+    }
+    completePortalIncidences.add(site)
+    stats.corridorRetainedSparsePortalIncidences = completePortalIncidences.size
+  }
   let goal: Vertex, sourceNeighborhood: number[], goalNeighborhood: number[], boundarySites: number[]
   const neighbors = function* (vertex: Vertex): Generator<void, Vertex[]> {
     const cached = neighborCache.get(vertex.id)
     if (cached) { stats.corridorSparseNeighborCacheHits++; yield; return cached }
+    // Every coincident support must contribute its boundary edges before this
+    // site's neighbors can be cached or any of its history labels expanded.
+    yield* completePortalIncidence(vertex.site)
     const ids = new Set<number>([...goalNeighborhood, ...boundarySites, ...(hintNeighbors.get(vertex.site) ?? []), ...(boundaryNeighbors.get(vertex.site) ?? [])])
     const expose = function* (target: Point, count: number): Generator<void> {
       for (const event of yield* firstSupports(vertex.point, target, count)) {
         const support = supports[event.id]!
-        if (support.portals.length === 0) continue
+        yield* materializePortals(support)
+        if (support.portals.state !== "ready") throw new Error("Sparse event portals were not materialized")
+        if (support.portals.ids.length === 0) continue
         const r = support.orientation ?? { x: (support.minX + support.maxX) / 2, y: (support.minY + support.maxY) / 2, cos: 1, sin: 0 }
         const t = event.enter > 0 ? event.enter : event.exit
         const x = vertex.point.x + (target.x - vertex.point.x) * t - r.x, y = vertex.point.y + (target.y - vertex.point.y) * t - r.y
         const angle = Math.atan2(-x * r.sin + y * r.cos, x * r.cos + y * r.sin)
-        let lo = 0, hi = support.angles.length
-        while (lo < hi) { const middle = Math.floor((lo + hi) / 2); stats.corridorIntervalSearchChecks++; yield; if (support.angles[middle]! < angle) lo = middle + 1; else hi = middle }
-        ids.add(support.portals[lo % support.portals.length]!)
-        ids.add(support.portals[(lo + support.portals.length - 1) % support.portals.length]!)
+        let lo = 0, hi = support.portals.angles.length
+        while (lo < hi) { const middle = Math.floor((lo + hi) / 2); stats.corridorIntervalSearchChecks++; yield; if (support.portals.angles[middle]! < angle) lo = middle + 1; else hi = middle }
+        ids.add(support.portals.ids[lo % support.portals.ids.length]!)
+        ids.add(support.portals.ids[(lo + support.portals.ids.length - 1) % support.portals.ids.length]!)
         stats.corridorSparseBoundaryIntervals++
       }
     }
@@ -400,10 +527,11 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
       const reach = barrier.viaOnly ? input.viaReach : input.wireReach
       let orientation = barrier.rect && barrier.a ? { x: barrier.a.x, y: barrier.a.y, cos: Math.cos(barrier.rect.rotation), sin: Math.sin(barrier.rect.rotation), halfWidth: barrier.rect.width / 2 + reach, halfHeight: barrier.rect.height / 2 + reach } : barrier.a && barrier.b && barrier.radius !== undefined ? getClearanceCapsuleSupportOrientation(barrier.a, barrier.b, barrier.radius + reach) : undefined
       supports.push({ minX: barrier.minX - reach, maxX: barrier.maxX + reach, minY: barrier.minY - reach, maxY: barrier.maxY + reach,
-        minZ: barrier.minZ ?? 0, maxZ: barrier.maxZ ?? layerCount - 1, orientation, portals: [], angles: [], soft: false })
+        minZ: barrier.minZ ?? 0, maxZ: barrier.maxZ ?? layerCount - 1, orientation, portals: { state: "unmaterialized" }, soft: false })
       yield
     }
-    for (const support of input.additionalCostSupports) { supports.push({ ...support, portals: [], angles: [], soft: true }); yield }
+    for (const support of input.additionalCostSupports) { supports.push({ ...support, portals: { state: "unmaterialized" }, soft: true }); yield }
+    if (supports.length > 0) portalIndex = new Flatbush(supports.length)
     for (const support of supports) {
       if (![support.minX, support.maxX, support.minY, support.maxY, support.minZ, support.maxZ].every(Number.isFinite) || support.minX > support.maxX || support.minY > support.maxY || !Number.isInteger(support.minZ) || !Number.isInteger(support.maxZ) || support.minZ < 0 || support.maxZ >= layerCount || support.minZ > support.maxZ) throw new Error("Sparse clearance support has invalid geometry/layers")
       const r = support.orientation ?? { x: (support.minX + support.maxX) / 2, y: (support.minY + support.maxY) / 2, cos: 1, sin: 0, halfWidth: (support.maxX - support.minX) / 2, halfHeight: (support.maxY - support.minY) / 2 }
@@ -411,34 +539,27 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
       if (support.orientation) stats.corridorOrientedSupports++
       const padding = 64 * Number.EPSILON * Math.max(1, Math.abs(r.x), Math.abs(r.y), r.halfWidth, r.halfHeight)
       const w = r.halfWidth + padding, h = r.halfHeight + padding
-      const local: Site[] = []
-      for (const x of [-w, 0, w]) for (const y of [-h, 0, h]) if (x !== 0 || y !== 0) local.push({ x, y })
-      for (const anchor of [start, end]) {
-        const x = (anchor.x - r.x) * r.cos + (anchor.y - r.y) * r.sin, y = -(anchor.x - r.x) * r.sin + (anchor.y - r.y) * r.cos
-        for (const sx of [-w, w]) local.push({ x: sx, y: Math.max(-h, Math.min(h, y)) })
-        for (const sy of [-h, h]) local.push({ x: Math.max(-w, Math.min(w, x)), y: sy })
+      support.frame = { ...r, halfWidth: w, halfHeight: h }
+      // The portal rectangle can extend outside the physical support's AABB.
+      // Enclose its actual transformed corners, then pad arithmetic roundoff;
+      // clipped anchor projections lie within this same finite rectangle.
+      const corners: Site[] = []
+      for (const x of [-w, w]) for (const y of [-h, h]) {
+        corners.push({ x: r.x + x * r.cos - y * r.sin, y: r.y + x * r.sin + y * r.cos })
+        yield
       }
-      const portals = new Map<number, number>()
-      for (const p of local) {
-        const site = addSite(r.x + p.x * r.cos - p.y * r.sin, r.y + p.x * r.sin + p.y * r.cos)
-        if (site !== undefined) portals.set(site, Math.atan2(p.y, p.x))
+      if (!portalIndex) throw new Error("Sparse support portal index was not created")
+      const extent = [Math.min(...corners.map((p) => p.x)) - padding, Math.min(...corners.map((p) => p.y)) - padding,
+        Math.max(...corners.map((p) => p.x)) + padding, Math.max(...corners.map((p) => p.y)) + padding]
+      if (!corners.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y)) || !extent.every(Number.isFinite)) {
+        throw new Error("Sparse support portal extent is nonfinite")
       }
-      const ordered = [...portals].sort(([a, aa], [b, ba]) => { stats.corridorIntervalSortChecks++; stats.corridorWorkUnits++; return aa - ba || a - b })
-      support.portals = ordered.map(([id]) => id)
-      support.angles = ordered.map(([, angle]) => angle)
-      for (let i = 0; i < support.portals.length; i++) {
-        const a = support.portals[i]!, b = support.portals[(i + 1) % support.portals.length]!
-        if (a === b) continue
-        for (const [from, to] of [[a, b], [b, a]]) {
-          const adjacent = boundaryNeighbors.get(from!) ?? new Set<number>()
-          if (!adjacent.has(to!)) { adjacent.add(to!); stats.corridorSparseBoundaryReferences++ }
-          boundaryNeighbors.set(from!, adjacent)
-          stats.corridorWorkUnits++
-        }
-      }
-      stats.corridorRetainedSparseBoundaryReferences = stats.corridorSparseBoundaryReferences
+      portalIndex.add(extent[0]!, extent[1]!, extent[2]!, extent[3]!)
+      stats.corridorSparsePortalIndexEntries++
+      stats.corridorRetainedSparsePortalIndexEntries = stats.corridorSparsePortalIndexEntries
       yield
     }
+    portalIndex?.finish()
     if (sites.length > siteBound) throw new Error("Sparse event site capacity was undercounted")
     if (supports.length > 0) {
       index = new Flatbush(supports.length)
@@ -476,13 +597,16 @@ export function createSparseClearanceEventSearch(input: CorridorSearchInput & { 
         const previous = singles.get(state.vertex.id) ?? new Map<number, State>(); previous.set(state.sites[0]!, state); singles.set(state.vertex.id, previous)
       } else {
         const previous = witnesses.get(state.vertex.id) ?? []
-        if (!previous.includes(state)) previous.push(state)
+        const index = witnessIndices.get(state.vertex.id) ?? new SparseHistoryWitnessIndex<State>()
+        if (!previous.includes(state)) { previous.push(state); index.add(state) }
         if (previous.length > 32) {
           let worst = 0
           for (let i = 1; i < previous.length; i++) { stats.corridorDominanceIndexWork++; yield; if (previous[i]!.sites.length > previous[worst]!.sites.length || previous[i]!.sites.length === previous[worst]!.sites.length && previous[i]!.cost > previous[worst]!.cost) worst = i }
+          index.remove(previous[worst]!)
           previous.splice(worst, 1)
         }
         witnesses.set(state.vertex.id, previous)
+        witnessIndices.set(state.vertex.id, index)
       }
     }
     return null
