@@ -32,6 +32,8 @@ const connectionLabel = (
     .filter(Boolean)
     .join("\n")
 
+const MAX_CACHED_PLANAR_POINTS = 4096
+
 export class SingleHighDensityRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleHighDensityRouteSolver"
@@ -400,6 +402,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     if (pointKey !== undefined) {
+      // Keep large searches from retaining every free point they have visited.
+      if (this.freePlanarObstaclePoints.size >= MAX_CACHED_PLANAR_POINTS) {
+        this.freePlanarObstaclePoints.clear()
+      }
       this.freePlanarObstaclePoints.set(pointKey, {
         x: node.x,
         y: node.y,
