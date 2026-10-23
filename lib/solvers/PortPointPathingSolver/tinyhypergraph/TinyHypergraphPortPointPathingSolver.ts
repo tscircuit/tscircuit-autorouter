@@ -63,25 +63,6 @@ export type ChangedPreloadedTraceSection = {
   connection: SimpleRouteConnection
 }
 
-export type PreloadedTraceSectionEndpointWitness = {
-  connectionName: string
-  traceId: string
-  endpointIndex: 0 | 1
-  routePosition: number
-  point: { x: number; y: number; z: number }
-  rootConnectionName: string
-  portPointId: string
-  sourcePortPointId: string
-  sourcePortPoint: { x: number; y: number; z: number }
-  incidentCapacityMeshNodeIds: string[]
-}
-
-type OriginalPreloadedPort = {
-  point: { x: number; y: number; z: number }
-  regionIds: string[]
-  assignments: PreloadedTracePortAssignment[]
-}
-
 type SerializedTinyConnection = NonNullable<
   SerializedHyperGraph["connections"]
 >[number]
@@ -1068,23 +1049,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
-  private readonly originalPreloadedPortsById: Map<string, OriginalPreloadedPort>
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    this.originalPreloadedPortsById = new Map(
-      params.graph.ports.flatMap((port) =>
-        port.d._preloadedTracePortAssignments?.length
-          ? [[port.d.portId, {
-              point: { x: port.d.x, y: port.d.y, z: port.d.z },
-              regionIds: [port.region1.d.capacityMeshNodeId, port.region2.d.capacityMeshNodeId].sort(),
-              assignments: structuredClone(port.d._preloadedTracePortAssignments),
-            }] as const]
-          : [],
-      ),
-    )
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1648,60 +1617,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           ? portMetadata.nextPortPointId
           : undefined,
     }
-  }
-
-  /** Bind each mutable seam to its original serialized trace crossing. */
-  getChangedPreloadedTraceSectionEndpointWitnesses(): PreloadedTraceSectionEndpointWitness[] {
-    const solver = this.getSolvedTinySolver()
-    const witnesses: PreloadedTraceSectionEndpointWitness[] = []
-    const metadataById = new Map<string, TinyPortMetadata>()
-    for (const metadata of solver.topology.portMetadata ?? []) {
-      const id = metadata.serializedPortId ?? metadata.portId
-      if (typeof id === "string") metadataById.set(id, metadata)
-    }
-    for (const routeId of this.getChangedPreloadedRouteIds(solver)) {
-      const metadata = this.getRouteMetadata(solver, routeId)
-      if (!hasPreloadedTraceSectionMetadata(metadata)) throw new Error("Preloaded endpoint witness lost section metadata")
-      for (const endpointIndex of [0, 1] as const) {
-        const portId = endpointIndex === 0 ? solver.problem.routeStartPort[routeId]! : solver.problem.routeEndPort[routeId]!
-        const port = this.createAssignedPortPoint(solver, routeId, portId)
-        if (!port.portPointId) throw new Error("Preloaded endpoint witness lost serialized port identity")
-        let sourceId = port.portPointId
-        const visited = new Set<string>()
-        while (!this.originalPreloadedPortsById.has(sourceId)) {
-          if (visited.has(sourceId)) throw new Error("Preloaded endpoint witness has cyclic port ancestry")
-          visited.add(sourceId)
-          const ancestor = metadataById.get(sourceId)?.duplicatedFromPortId
-          if (!ancestor) throw new Error(`Preloaded endpoint witness has no source port: ${sourceId}`)
-          sourceId = ancestor
-        }
-        const source = this.originalPreloadedPortsById.get(sourceId)!
-        const section = metadata.preloadedTraceSection
-        const point = endpointIndex === 0 ? section.startPoint : section.endPoint
-        const routePosition = endpointIndex === 0 ? section.startRoutePosition : section.endRoutePosition
-        const assignments = source.assignments.filter((assignment) =>
-          assignment.traceId === section.traceId && assignment.routePosition === routePosition &&
-          assignment.fixedNetId === metadata.mutuallyConnectedNetworkId && assignment.z === point.z &&
-          assignment.tracePoint.x === point.x && assignment.tracePoint.y === point.y,
-        )
-        const incidentIds = solver.topology.incidentPortRegion[portId]!.map((regionId) =>
-          solver.topology.regionMetadata?.[regionId]?.capacityMeshNodeId,
-        ).sort()
-        if (assignments.length !== 1 || port.z !== point.z ||
-          JSON.stringify(incidentIds) !== JSON.stringify(source.regionIds)) {
-          throw new Error(`Preloaded endpoint witness disagrees with source ownership or incidence: ${port.portPointId}`)
-        }
-        witnesses.push({
-          connectionName: metadata.connectionId, traceId: section.traceId,
-          endpointIndex, routePosition, point: { ...point },
-          rootConnectionName: metadata.mutuallyConnectedNetworkId,
-          portPointId: port.portPointId, sourcePortPointId: sourceId,
-          sourcePortPoint: { ...source.point },
-          incidentCapacityMeshNodeIds: [...source.regionIds],
-        })
-      }
-    }
-    return witnesses
   }
 
   getOutput(): {

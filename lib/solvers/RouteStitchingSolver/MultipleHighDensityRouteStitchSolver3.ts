@@ -10,7 +10,6 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
-import { getDeclaredTerminalStitchRoutes } from "./getDeclaredTerminalStitchRoutes"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -45,7 +44,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
-  private readonly useDeclaredConnectionEndpoints: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
@@ -147,8 +145,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
-    useDeclaredConnectionEndpoints?: boolean
-    preconnectedConnectionNames?: ReadonlySet<string>
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -158,7 +154,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
-    this.useDeclaredConnectionEndpoints = params.useDeclaredConnectionEndpoints === true
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -169,17 +164,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.defaultTraceThickness = firstRoute?.traceThickness ?? 0.15
     this.defaultViaDiameter =
       firstRoute?.viaDiameter ?? params.defaultViaDiameter ?? 0.3
-
-    if (params.useDeclaredConnectionEndpoints) {
-      this.unsolvedRoutes = getDeclaredTerminalStitchRoutes({
-        connections: params.connections,
-        hdRoutes: canonicalHdRoutes,
-        layerCount: params.layerCount,
-        preconnectedConnectionNames: params.preconnectedConnectionNames,
-      })
-      this.MAX_ITERATIONS = 100e3
-      return
-    }
 
     const routeIslandConnectivityMap = new ConnectivityMap({})
     const routeIslandConnections: Array<string[]> = []
@@ -422,24 +406,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (this.activeSolver) {
       this.activeSolver.step()
       if (this.activeSolver.solved) {
-        if (this.useDeclaredConnectionEndpoints) {
-          const route = this.activeSolver.mergedHdRoute.route
-          const start = route[0]
-          const end = route.at(-1)
-          if (!start || !end || start.z !== this.activeSolver.start.z || end.z !== this.activeSolver.end.z ||
-            distance(start, this.activeSolver.start) > 1e-6 || distance(end, this.activeSolver.end) > 1e-6) {
-            throw new Error(`Declared terminal stitching disconnected ${this.activeSolver.mergedHdRoute.connectionName}`)
-          }
-          for (const [point, terminal] of [[start, this.activeSolver.start], [end, this.activeSolver.end]] as const) {
-            if (point.x !== terminal.x || point.y !== terminal.y || point.z !== terminal.z) {
-              throw new Error(`Declared terminal stitching lost exact endpoint of ${this.activeSolver.mergedHdRoute.connectionName}`)
-            }
-            if (point.pcb_port_id !== undefined && point.pcb_port_id !== terminal.pcb_port_id) {
-              throw new Error(`Declared terminal stitching has conflicting PCB terminal ${point.pcb_port_id} for ${this.activeSolver.mergedHdRoute.connectionName}`)
-            }
-            if (this.preserveTerminalPcbPortIds && terminal.pcb_port_id) point.pcb_port_id = terminal.pcb_port_id
-          }
-        }
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
           this.clearanceValidator.addRoute(this.activeSolver.mergedHdRoute)
           this.mergedHdRoutes.push(this.activeSolver.mergedHdRoute)
@@ -485,7 +451,6 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",
-      preserveExactEndpoints: this.useDeclaredConnectionEndpoints,
     })
   }
 

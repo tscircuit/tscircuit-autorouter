@@ -1,4 +1,3 @@
-import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -221,7 +220,18 @@ export const arePipeline9RoutesOnSameNet = (
   right: HighDensityRoute,
   connMap: ConnectivityMap,
 ): boolean => {
-  return getCanonicalPipeline9PortRoot(left, connMap) === getCanonicalPipeline9PortRoot(right, connMap)
+  const leftIds = [left.connectionName, left.rootConnectionName].filter(
+    (id): id is string => typeof id === "string",
+  )
+  const rightIds = [right.connectionName, right.rootConnectionName].filter(
+    (id): id is string => typeof id === "string",
+  )
+  return leftIds.some((leftId) =>
+    rightIds.some(
+      (rightId) =>
+        leftId === rightId || connMap.areIdsConnected(leftId, rightId),
+    ),
+  )
 }
 
 const boundsOverlap = (

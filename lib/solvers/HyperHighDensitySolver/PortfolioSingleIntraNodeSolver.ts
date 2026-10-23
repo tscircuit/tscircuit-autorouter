@@ -1,4 +1,3 @@
-import type { ObstacleRouteOwnershipPredicate } from "./getObstacleRouteConnectivity"
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
@@ -56,7 +55,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
-    isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -129,7 +127,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
     },
   ) {
     super()
@@ -588,7 +585,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       const solver = new HighDensitySolverA13WithDrcValidation({
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
-        isObstacleOwnedByRoute: this.constructorParams.isObstacleOwnedByRoute,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount ?? 2,
         nodeWithPortPoints: this.nodeWithPortPoints,

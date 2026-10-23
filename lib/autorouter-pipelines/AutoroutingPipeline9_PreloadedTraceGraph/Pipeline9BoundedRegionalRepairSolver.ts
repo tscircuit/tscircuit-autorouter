@@ -375,10 +375,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const centeredErrors = Array.isArray(context.reference)
       ? context.reference
       : (context.reference.errorsWithCenters ?? context.reference.errors)
-    const centers = centeredErrors.flatMap(
-      (error): Array<{ x: number; y: number }> => {
-        // Reference centers locate the physical contact. Resolving a pad's
-        // provenance must not replace that contact with the pad body center.
+    const centers = centeredErrors
+      .map((error) => {
+        // Crop around the physical pad when its display marker is far away.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
         const padId =
           typeof error.pcb_pad_id === "string"
@@ -387,26 +386,23 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
                 error.pcb_trace_error_id.startsWith(pairPrefix)
               ? error.pcb_trace_error_id.slice(pairPrefix.length)
               : undefined
-        for (const point of [
-          error.center,
-          error.pcb_center,
-          padId ? context.obstacleCenterById.get(padId) : undefined,
-        ]) {
-          if (
-            point !== null &&
-            typeof point === "object" &&
-            "x" in point &&
-            "y" in point &&
-            typeof point.x === "number" &&
-            typeof point.y === "number" &&
-            Number.isFinite(point.x) &&
-            Number.isFinite(point.y)
-          )
-            return [{ x: point.x, y: point.y }]
-        }
-        return []
-      },
-    )
+        return (
+          (padId ? context.obstacleCenterById.get(padId) : undefined) ??
+          error.center ??
+          error.pcb_center
+        )
+      })
+      .filter(
+        (point): point is { x: number; y: number } =>
+          point !== null &&
+          typeof point === "object" &&
+          "x" in point &&
+          "y" in point &&
+          typeof point.x === "number" &&
+          typeof point.y === "number" &&
+          Number.isFinite(point.x) &&
+          Number.isFinite(point.y),
+      )
     let nextRegion:
       | { center: { x: number; y: number }; size: number }
       | undefined

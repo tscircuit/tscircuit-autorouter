@@ -3,7 +3,6 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
-import { Pipeline9TraceSimplificationSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9TraceSimplificationSolver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
   type: "json",
@@ -106,16 +105,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 5)
-  const distributionIndex = solver.pipelineDef.findIndex(
-    (step) => step.solverName === "uniformPortDistributionSolver",
-  )
-  expect(solver.pipelineDef[distributionIndex + 1]!.solverName).toBe(
-    "boundaryContractSolver",
-  )
-  expect(solver.pipelineDef[distributionIndex + 2]!.solverName).toBe(
-    "highDensityRouteSolver",
-  )
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -144,9 +134,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",
   )
   expect(mutatedPreloadSimplificationStep?.solverClass).toBe(
-    Pipeline9TraceSimplificationSolver,
+    TraceSimplificationSolver,
   )
-  expect(Pipeline9TraceSimplificationSolver.prototype).toBeInstanceOf(TraceSimplificationSolver)
   expect(
     pipeline9StageNames.indexOf("mutatedPreloadedTraceSimplificationSolver"),
   ).toBe(pipeline9StageNames.indexOf("traceSimplificationSolver") + 1)

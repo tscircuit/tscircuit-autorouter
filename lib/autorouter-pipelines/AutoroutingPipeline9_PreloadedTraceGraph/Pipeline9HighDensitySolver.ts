@@ -1,5 +1,7 @@
-import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
+import { RbushIndex } from "lib/data-structures/RbushIndex"
+import { constructPipeline9ThickFamily, thickFamilyStatKeys } from "./constructPipeline9ThickFamily"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
   defaultB01Params,
@@ -17,6 +19,7 @@ import type {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
   NodeWithPortPoints,
+  PortPoint,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -35,12 +38,12 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
-import { createBoundaryInterfaceIndex, getBoundaryFixedCopperKey, getBoundaryInterfaceKey, getBoundaryInterfaceSceneKey, getBoundaryPhysicalRulesKey, type BoundaryRouteCertificates } from "./boundaryRouteCertificates"
-import type { Pipeline9ParametricInterfaceIndex, Pipeline9ParametricInterfacePort } from "./Pipeline9ParametricInterfaceIndex"
-import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
+  /** Global reservations are retained across worker batches. */
+  thickFamilyScenePorts?: PortPoint[]
+  enableThickFamilyCompilation?: boolean
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -52,11 +55,6 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
-  traceToPadClearance?: number
-  traceToHoleClearance?: number
-  traceWidthByConnection?: Readonly<Record<string, number>>
-  boundaryCertificates?: BoundaryRouteCertificates
-  boundaryInterfacePortPoints?: readonly Pipeline9ParametricInterfacePort[]
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -293,7 +291,11 @@ export const normalizePipeline9NodeRootConnectionNames = (
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
     rootConnectionName:
-      getCanonicalPipeline9PortRoot(portPoint, connMap),
+      connMap.getNetConnectedToId(
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ) ??
+      portPoint.rootConnectionName ??
+      portPoint.connectionName,
   })
   return {
     ...node,
@@ -370,8 +372,6 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
-    // Recreate this acceptance predicate after host/worker JSON reconstruction.
-    isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap),
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -416,9 +416,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
+  private pendingThickFamilies: Array<{ node: NodeWithPortPoints; routes: HighDensityIntraNodeRoute[] }> = []
   private asyncRunning = false
-  private readonly boundaryContextValid: boolean
-  private readonly boundaryInterfaceIndex?: Pipeline9ParametricInterfaceIndex
+  private readonly thickFamilyPortIndex?: FlatbushIndex<PortPoint>
+  private readonly thickFamilyRouteIndex = new RbushIndex<HighDensityIntraNodeRoute>()
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -443,14 +444,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
-    if (params.boundaryCertificates) this.boundaryInterfaceIndex = createBoundaryInterfaceIndex(params.nodePortPoints, params, this.connMap, params.boundaryInterfacePortPoints)
-    this.boundaryContextValid = params.boundaryCertificates !== undefined &&
-      params.boundaryCertificates.context.rulesKey === getBoundaryPhysicalRulesKey(params) &&
-      params.boundaryCertificates.context.fixedCopperKey === getBoundaryFixedCopperKey(params.fixedHdRoutes) &&
-      this.boundaryInterfaceIndex !== undefined &&
-      params.boundaryCertificates.context.interfaceSceneKey === getBoundaryInterfaceSceneKey(this.boundaryInterfaceIndex.ports)
+    params.thickFamilyScenePorts ??= params.enableThickFamilyCompilation ? params.nodePortPoints.flatMap((node) => normalizePipeline9NodeRootConnectionNames(node, params.connMap).portPoints) : []
+    if (params.thickFamilyScenePorts.length > 0) {
+      this.thickFamilyPortIndex = new FlatbushIndex(params.thickFamilyScenePorts.length)
+      for (const port of params.thickFamilyScenePorts) this.thickFamilyPortIndex.insert(port, port.x, port.y, port.x, port.y)
+      this.thickFamilyPortIndex.finish()
+    }
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
+      ...Object.fromEntries(thickFamilyStatKeys.map((key) => [key, 0])),
+      thickFamilyDeferredCells: 0,
+      thickFamilySceneInvalidatedCells: 0,
+      thickFamilyFinalScenePredicates: 0,
+      thickFamilySerialSceneScheduling: Number(Boolean(params.enableThickFamilyCompilation)),
+      thickFamilyScenePortIndexEntries: params.thickFamilyScenePorts.length,
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -466,12 +473,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
-      boundaryCertificateCount: Object.keys(params.boundaryCertificates?.cells ?? {}).length,
-      boundaryCertificateContextValid: Number(this.boundaryContextValid),
-      boundaryCertificateConsumed: 0,
-      boundaryCertificateInvalidated: 0,
-      boundaryCertificateSkippedSearches: 0,
-      boundaryCertificateSkippedRoutes: 0,
     }
   }
 
@@ -489,7 +490,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.solved || this.failed || this.iterations >= stopAtIteration) return
     const startTime = performance.now()
     try {
-      if (runtime === undefined) {
+      // Certificates depend on all completed native copper, across batch boundaries.
+      if (runtime === undefined || this.stats.thickFamilySerialSceneScheduling === 1) {
         if (stopAtIteration === Infinity) this.solve()
         else this.solveUntilIteration(stopAtIteration)
         return
@@ -512,21 +514,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
-        const batchNodes = nodes.slice(offset, offset + 4).reverse()
-        const boundaryCertificates = params.boundaryCertificates ? {
-          context: params.boundaryCertificates.context,
-          cells: Object.fromEntries(batchNodes.flatMap((node) => {
-            const certificate = params.boundaryCertificates!.cells[node.capacityMeshNodeId]
-            return certificate ? [[node.capacityMeshNodeId, certificate]] : []
-          })),
-        } : undefined
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
-              nodePortPoints: batchNodes,
-              boundaryCertificates,
-              boundaryInterfacePortPoints: this.boundaryInterfaceIndex?.ports,
+              nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
             })
@@ -553,7 +545,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount" && key !== "boundaryCertificateCount" && key !== "boundaryCertificateContextValid")
+          if (key !== "nodeCount" && key !== "fixedObstacleCount")
             this.stats[key] += value
         }
         this.unsolvedNodePortPoints.splice(
@@ -603,6 +595,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
         : solvedRoutes),
     )
+    for (const route of this.params.enableThickFamilyCompilation ? solvedRoutes : []) {
+      const radius = Math.max(route.traceThickness, route.viaDiameter) / 2
+      this.thickFamilyRouteIndex.insert(route,
+        Math.min(...route.route.map((p) => p.x)) - radius,
+        Math.min(...route.route.map((p) => p.y)) - radius,
+        Math.max(...route.route.map((p) => p.x)) + radius,
+        Math.max(...route.route.map((p) => p.y)) + radius)
+    }
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
     this.activeRegularSolver = null
@@ -1063,6 +1063,50 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
   }
 
+  /** Native routes finish first. Rejected certificates may add more native copper,
+   * so recheck all remaining families until no new native solve is required. */
+  private finishPendingThickFamilies(): void {
+    const pendingIndex = new RbushIndex<{ index: number; route: HighDensityIntraNodeRoute }>()
+    for (let index = 0; index < this.pendingThickFamilies.length; index++) {
+      for (const route of this.pendingThickFamilies[index]!.routes) {
+        const radius = route.traceThickness / 2
+        pendingIndex.insert({ index, route }, Math.min(...route.route.map((p) => p.x)) - radius,
+          Math.min(...route.route.map((p) => p.y)) - radius, Math.max(...route.route.map((p) => p.x)) + radius,
+          Math.max(...route.route.map((p) => p.y)) + radius)
+      }
+    }
+    for (let index = 0; index < this.pendingThickFamilies.length; index++) {
+      const family = this.pendingThickFamilies[index]!
+      const bounds = getNodeBounds(family.node, this.obstacleMargin + this.traceWidth)
+      const nativeRoutes = this.thickFamilyRouteIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+      const earlierFamilies = pendingIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+        .filter((item) => item.index < index).map((item) => item.route)
+      let conflict = false
+      for (const route of family.routes) {
+        for (const other of [...nativeRoutes, ...earlierFamilies]) {
+          if (arePipeline9RoutesOnSameNet(route, other, this.connMap)) continue
+          this.stats.thickFamilyFinalScenePredicates++
+          if (doPipeline9RoutesHaveCopperConflict({ left: route, right: other, clearance: this.obstacleMargin + 1e-6, layerCount: this.layerCount, allowBlindAndBuriedVias: this.allowBlindAndBuriedVias })) { conflict = true; break }
+        }
+        if (conflict) break
+      }
+      if (conflict) {
+        this.pendingThickFamilies.splice(index, 1)
+        this.stats.thickFamilySceneInvalidatedCells++
+        this.startRegularSolver(family.node)
+        return
+      }
+    }
+    for (const family of this.pendingThickFamilies) {
+      this.activeNode = family.node
+      this.finishActiveNode(family.routes)
+      this.stats.thickFamilySolvedCells++
+      this.stats.thickFamilyConstructedRoutes += family.routes.length
+    }
+    this.pendingThickFamilies = []
+    this.solved = true
+  }
+
   private stepNodeRouting(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
@@ -1123,25 +1167,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const node = this.unsolvedNodePortPoints.pop()
     if (!node) {
-      this.solved = true
+      if (this.params.enableThickFamilyCompilation) this.finishPendingThickFamilies()
+      else this.solved = true
       return
-    }
-
-    const certificate = this.params.boundaryCertificates?.cells[node.capacityMeshNodeId]
-    if (certificate) {
-      // Regional preload repair changes the proof's fixed-copper assumptions.
-      // Test validity before choosing any ordinary/B01 solver for this node.
-      if (this.boundaryContextValid && this.fixedRouteReplacements.size === 0 && this.removedFixedRouteConnectionNames.size === 0 &&
-        certificate.interfaceKey === getBoundaryInterfaceKey(node, this.connMap)) {
-        if (certificate.routeKey !== JSON.stringify(certificate.routes)) throw new Error(`Boundary certificate route geometry was mutated for ${node.capacityMeshNodeId}`)
-        this.activeNode = node
-        this.stats.boundaryCertificateConsumed++
-        this.stats.boundaryCertificateSkippedSearches++
-        this.stats.boundaryCertificateSkippedRoutes += certificate.routes.length
-        this.finishActiveNode(structuredClone(certificate.routes))
-        return
-      }
-      this.stats.boundaryCertificateInvalidated++
     }
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
@@ -1154,6 +1182,26 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {
+      if (this.params.enableThickFamilyCompilation) {
+        const bounds = getNodeBounds(node, this.traceWidth + this.obstacleMargin + 2e-6)
+        const construction = constructPipeline9ThickFamily({
+          node: normalizePipeline9NodeRootConnectionNames(node, this.connMap),
+          traceWidth: this.traceWidth, clearance: this.obstacleMargin,
+          viaDiameter: this.viaDiameter, obstacles: this.obstacles,
+          boardGeometry: this.boardGeometry, layerCount: this.layerCount,
+          scenePorts: this.thickFamilyPortIndex?.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY) ?? [],
+          sceneRoutes: this.thickFamilyRouteIndex.search(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY),
+        })
+        for (const [key, value] of Object.entries(construction.stats)) this.stats[key] = Number(this.stats[key]) + value
+        if (construction.applicable) {
+          this.pendingThickFamilies.push({ node, routes: construction.routes })
+          this.stats.thickFamilyDeferredCells++
+          // Solved counters count committed certificates, not tentative geometry.
+          this.stats.thickFamilySolvedCells--
+          this.stats.thickFamilyConstructedRoutes -= construction.routes.length
+          return
+        }
+      }
       this.startRegularSolver(node)
       return
     }
