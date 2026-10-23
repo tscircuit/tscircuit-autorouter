@@ -98,11 +98,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
-  /** Coupled length and bus requirements need a bundle allocator, outside the strand compiler. */
-  symbolicCorridorHasCoupledConstraints?: boolean
+  physicalCutResourceRules?: { minTraceWidth: number; clearance: number }
   flags: {
-    /** Compile capacity corridors and symbolic lane orders before geometric-slot search. */
-    USE_SYMBOLIC_CORRIDOR_COMPILER?: boolean
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean

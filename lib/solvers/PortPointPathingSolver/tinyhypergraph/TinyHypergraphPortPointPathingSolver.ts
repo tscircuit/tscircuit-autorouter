@@ -35,7 +35,7 @@ import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
-import { compileSymbolicCorridors } from "./compileSymbolicCorridors"
+import { annotatePipeline9PhysicalCuts, createPhysicalCutTracker, type PhysicalCutTracker } from "./pipeline9PhysicalCutResources"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -1050,8 +1050,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
-  private symbolicOutput?: NodeWithPortPoints[]
-  private symbolicStats: Record<string, number> = {}
+  private physicalCutTracker?: PhysicalCutTracker
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
@@ -1072,56 +1071,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
       ]),
     )
-    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const rawSerializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    this.physicalCutTracker = params.physicalCutResourceRules ? createPhysicalCutTracker() : undefined
+    const serializedGraph = params.physicalCutResourceRules && this.physicalCutTracker
+      ? annotatePipeline9PhysicalCuts(rawSerializedGraph, params.physicalCutResourceRules, this.physicalCutTracker)
+      : rawSerializedGraph
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
-    const symbolicCompileStarted = performance.now()
-    const symbolic = params.flags.USE_SYMBOLIC_CORRIDOR_COMPILER ? compileSymbolicCorridors(serializedGraph, params.symbolicCorridorHasCoupledConstraints) : { applicable: false, nodes: [] as NodeWithPortPoints[], stats: {} as Record<string, number> }
-    this.symbolicStats = params.flags.USE_SYMBOLIC_CORRIDOR_COMPILER ? { ...symbolic.stats, symbolicCorridorCompileTimeMs: performance.now() - symbolicCompileStarted } : symbolic.stats
-    if (symbolic.applicable) {
-      this.symbolicOutput = symbolic.nodes
-      this.originalRegionById = new Map(params.graph.regions.map((region) => [region.regionId, region]))
-      this.originalRegionIds = new Set(this.originalRegionById.keys())
-      const positionById = new Map(symbolic.nodes.flatMap((node) => node.portPoints.map((point) => [point.portPointId!, point] as const)))
-      const connectionIdByName = new Map(connections.map((connection) => [connection.simpleRouteConnection.name, connection.connectionId]))
-      const nodeById = new Map(symbolic.nodes.map((node) => [node.capacityMeshNodeId, node]))
-      // Keep the existing debug renderer usable without initializing or stepping
-      // any search engine. Its lazy initial view replays these assignments.
-      const replayGraph: SerializedHyperGraph = {
-        ...serializedGraph,
-        ports: serializedGraph.ports.map((port) => {
-          const point = positionById.get(port.portId)
-          return point ? { ...port, d: { ...port.d, x: point.x, y: point.y } } : port
-        }),
-        regions: serializedGraph.regions.map((region) => ({
-          ...region,
-          assignments: nodeById.get(region.d.capacityMeshNodeId)?.portPointsInPairs?.map(([a, b]) => {
-            const connectionId = connectionIdByName.get(a.connectionName)
-            if (!connectionId || !a.portPointId || !b.portPointId) throw new Error("Symbolic corridor replay identity is missing")
-            return { connectionId, regionPort1Id: a.portPointId, regionPort2Id: b.portPointId }
-          }),
-        })),
-      }
-      this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(params, replayGraph)
-      this.tinyPipelineSolver = new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        getTinyHyperGraphPipelineInput(replayGraph, params.effort, params.minViaPadDiameter, false),
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-      )
-      this.stats = {
-        ...this.symbolicStats,
-        symbolicCorridorReplaySetupTimeMs: performance.now() - symbolicCompileStarted - this.symbolicStats.symbolicCorridorCompileTimeMs,
-        symbolicCorridorSkippedDuplicatePortSolveProblems: 1,
-        symbolicCorridorSkippedTinySearchProblems: 1,
-        changedPreloadedTraceSectionCount: 0,
-      }
-      this.solved = true
-      this.progress = 1
-      return
-    }
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
@@ -1169,6 +1129,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
+    if (params.physicalCutResourceRules && this.physicalCutTracker) graphForTiny = annotatePipeline9PhysicalCuts(graphForTiny, params.physicalCutResourceRules, this.physicalCutTracker)
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -1554,7 +1515,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
-      ...this.symbolicStats,
+      ...(this.physicalCutTracker?.stats ?? {}),
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,
@@ -1671,11 +1632,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
     changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
   } {
-    if (this.symbolicOutput) return {
-      nodesWithPortPoints: this.symbolicOutput,
-      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
-      changedPreloadedTraceSections: [],
-    }
     const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments

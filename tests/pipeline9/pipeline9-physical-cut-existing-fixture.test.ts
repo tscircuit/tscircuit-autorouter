@@ -6,17 +6,17 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autoro
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import srj from "../../fixtures/legacy/assets/e2e4.json"
 
-test("ordinary P9 fixture retains phase correctness and reports symbolic compiler eligibility", () => {
+test("ordinary P9 fixture exercises physical cut constraints and retains final copper/connectivity quality", () => {
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(srj) as SimpleRouteJson)
   while (!pipeline.failed && !pipeline.portPointPathingSolver?.solved) pipeline.step()
   expect(pipeline.failed).toBe(false)
   const phase = pipeline.portPointPathingSolver!
   const stats = phase.stats
-  expect(stats.symbolicCorridorAttempts).toBe(1)
-  const reasons = ["symbolicCorridorAcceptedProblems", "symbolicCorridorUnsupportedCoupledConstraints", "symbolicCorridorUnsupportedPreloads", "symbolicCorridorUnsupportedAssignments", "symbolicCorridorUnsupportedLayers", "symbolicCorridorCapacityRejectedProblems", "symbolicCorridorOrderRejectedProblems"]
-  expect(reasons.reduce((count, key) => count + Number(stats[key]), 0)).toBe(1)
+  expect(stats.physicalCutAnnotationPasses).toBe(2)
+  expect(stats.physicalCutTaggedGroups).toBeGreaterThan(0)
+  expect(stats.physicalCutOwnerChecks).toBeGreaterThan(0)
   expect(phase.getOutput().nodesWithPortPoints.length).toBeGreaterThan(0)
-  for (const [key, value] of Object.entries(stats)) if (key.startsWith("symbolic")) expect(Number.isFinite(value)).toBe(true)
+  for (const [key, value] of Object.entries(stats)) if (key.startsWith("physicalCut")) expect(Number.isFinite(value)).toBe(true)
   pipeline.solve()
   expect(pipeline.solved).toBe(true)
   expect(pipeline.failed).toBe(false)
@@ -35,5 +35,5 @@ test("ordinary P9 fixture retains phase correctness and reports symbolic compile
     for (const endpoint of connection.pointsToConnect) expect(routes.some((route) => [route.route[0]!, route.route.at(-1)!].some((point) => Math.hypot(point.x - endpoint.x, point.y - endpoint.y) < 1e-6))).toBe(true)
   }
   expect(getDrcErrors(circuitJson, { includeTraceContinuity: false }).errors).toEqual([])
-  console.log("existing-fixture symbolic scope", Object.fromEntries(Object.entries(stats).filter(([key]) => key.startsWith("symbolic"))))
+  console.log("existing-fixture physical cut scope", Object.fromEntries(Object.entries(stats).filter(([key]) => key.startsWith("physicalCut"))))
 })
