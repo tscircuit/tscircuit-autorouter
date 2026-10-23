@@ -34,7 +34,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
-import { ClearanceSearchTaskWorklist } from "./clearance/ClearanceSearchTaskWorklist"
+import { mergeClearanceCorridorStats } from "./clearance/createClearanceCorridorSearch"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -648,7 +648,6 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
-  readonly searchTaskWorklist = new ClearanceSearchTaskWorklist()
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
@@ -728,7 +727,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
             syntheticConnectionNames: this.syntheticConnectionNames,
             drcEvaluator: this.cachedReferenceDrcEvaluator,
-            searchTaskWorklist: this.searchTaskWorklist,
             budget: getPipeline9BoundedRepairBudget(
               this.exactRepairParams.hdRoutes.length,
               this.stats.initialJointDrcIssueCount,
@@ -1674,13 +1672,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       throw new Error("Pipeline9 initial regional repair is not complete")
     }
     const result = this.initialBoundedRegionalRepairSolver.getResult()
+    mergeClearanceCorridorStats(this.stats, this.initialBoundedRegionalRepairSolver.stats)
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
-      ...this.searchTaskWorklist.getStats(),
-      copperGeometryBuildCount: this.initialBoundedRegionalRepairSolver.stats.copperGeometryBuildCount,
-      copperGeometryReuseCount: this.initialBoundedRegionalRepairSolver.stats.copperGeometryReuseCount,
-
+      clearanceCorridorEdgeChecks: this.initialBoundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1716,6 +1714,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.stats,
       finalDrcIssueCount: 0,
       initialBoundedRegionalRepairAccepted: true,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions:
         this.initialBoundedRegionalRepairSolver.budget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
@@ -1954,7 +1954,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
       budget: regionalRepairBudget,
-      searchTaskWorklist: this.searchTaskWorklist,
     }
   }
 
@@ -1973,12 +1972,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    mergeClearanceCorridorStats(this.stats, this.boundedRegionalRepairSolver.stats)
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
-      copperGeometryBuildCount: (this.stats.copperGeometryBuildCount ?? 0) + this.boundedRegionalRepairSolver.stats.copperGeometryBuildCount,
-      ...this.searchTaskWorklist.getStats(),
-      copperGeometryReuseCount: (this.stats.copperGeometryReuseCount ?? 0) + this.boundedRegionalRepairSolver.stats.copperGeometryReuseCount,
+      clearanceCorridorEdgeChecks: (this.stats.clearanceCorridorEdgeChecks ?? 0) + this.boundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: (this.stats.clearanceCorridorSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: (this.stats.clearanceGridSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,

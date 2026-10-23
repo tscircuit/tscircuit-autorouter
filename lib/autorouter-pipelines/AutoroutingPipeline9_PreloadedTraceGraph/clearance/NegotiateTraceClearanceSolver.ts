@@ -5,9 +5,9 @@ import type {
   NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { FindClearancePathSolver } from "@tscircuit/repair04"
+import { FindClearancePathSolver } from "./FindClearancePathSolver"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
-import RBush from "rbush"
+import Flatbush from "flatbush"
 import type {
   HighDensityRoute,
   SimpleRouteJson,
@@ -17,21 +17,7 @@ import { getNetRepresentatives } from "./getNetRepresentatives"
 import { getRepairCopperLayerSpan } from "./getRepairCopperLayerSpan"
 import { REGION_EPSILON } from "./repairRegionGeometry"
 import type { Bounds, RepairRoutePoint } from "./repairRegionTypes"
-import {
-  ClearanceSearchTaskWorklist,
-  type ClearanceSearchTask,
-  type ClearanceTaskCostRead,
-} from "./ClearanceSearchTaskWorklist"
-
-type NegotiationTaskInput = NegotiatedClearanceInput & {
-  searchTaskWorklist?: ClearanceSearchTaskWorklist
-}
-type NegotiationSourceData = Omit<NegotiatedClearanceInput, "isLocked" | "onSearch">
-type NegotiationSourceContract = {
-  data: NegotiationSourceData
-  locks: boolean[][]
-  signature: string
-}
+import { getClearanceCapsuleSupportOrientation, mergeClearanceCorridorStats, type ClearanceCostSupport } from "./createClearanceCorridorSearch"
 
 type Span = {
   routeIndex: number
@@ -55,8 +41,6 @@ type Copper = {
   cellY: number
   immutable: boolean
 }
-type CopperBox = { minX: number; minY: number; maxX: number; maxY: number; copper: Copper }
-
 function withPoints({
   route,
   points,
@@ -86,16 +70,9 @@ type NegotiationPhase =
 
 /** Negotiates span space while exposing each bounded A* search as a child solver. */
 export class NegotiateTraceClearanceSolver extends BaseSolver {
-  readonly input: NegotiationTaskInput
-  readonly searchTaskWorklist: ClearanceSearchTaskWorklist
-  private activeSearchTask?: ClearanceSearchTask
-  private activeTaskContext?: () => string
-  private activeCostReads?: Map<string, ClearanceTaskCostRead> | null
-  private originalSourceSignature?: string
-  private originalLockReader?: NegotiatedClearanceInput["isLocked"]
+  readonly input: NegotiatedClearanceInput
   private phase: NegotiationPhase = "initialize"
   private routeCursor = 0
-  private ownedRouteCount = 0
   private copperCursor = 0
   private spanCount = 0
   private output?: NegotiatedClearanceResult
@@ -108,10 +85,9 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
   private applyPath?: (path: RepairRoutePoint[] | null) => void
   private updateWorkStats!: () => void
 
-  constructor(input: NegotiationTaskInput) {
+  constructor(input: NegotiatedClearanceInput) {
     super()
     this.input = input
-    this.searchTaskWorklist = input.searchTaskWorklist ?? new ClearanceSearchTaskWorklist()
     this.stats = {
       pathSearchNodes: 0,
       pathSearchCalls: 0,
@@ -133,10 +109,10 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
       return
     }
     if (this.phase === "spans") {
-      const stopAt = Math.min(this.routeCursor + 32, this.ownedRouteCount)
+      const stopAt = Math.min(this.routeCursor + 32, this.input.routes.length)
       for (; this.routeCursor < stopAt; this.routeCursor++)
         this.prepareRoute(this.routeCursor)
-      if (this.routeCursor === this.ownedRouteCount) this.phase = "setup"
+      if (this.routeCursor === this.input.routes.length) this.phase = "setup"
       return
     }
     if (this.phase === "setup") {
@@ -164,22 +140,12 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
       if (!child)
         throw new Error("repair04: negotiated search child is missing")
       child.step()
+      this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS,
+        this.iterations + child.MAX_ITERATIONS - child.iterations + 3)
       if (child.failed) {
         this.failed = true
         this.error = child.error
       } else if (child.solved) {
-        if (!this.activeSearchTask || !this.activeTaskContext) {
-          throw new Error("Completed clearance search lost its dependency task")
-        }
-        if (this.activeTaskContext() !== this.activeSearchTask.context) {
-          throw new Error("Repair search inputs changed during an active dependency task")
-        }
-        this.searchTaskWorklist.complete(this.activeSearchTask, {
-          path: child.getOutput(), stats: child.stats,
-        }, this.activeCostReads ? [...this.activeCostReads.values()] : null)
-        this.activeSearchTask = undefined
-        this.activeTaskContext = undefined
-        this.activeCostReads = undefined
         this.activeSubSolver = null
         this.phase = "apply-path"
       }
@@ -200,34 +166,8 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
     throw new Error("repair04: negotiated clearance stepped after completion")
   }
 
-  private captureSourceContract(): NegotiationSourceContract {
-    const { searchTaskWorklist: _worklist, isLocked, onSearch: _onSearch, ...data } = this.input
-    if (this.originalLockReader && this.originalLockReader !== isLocked) {
-      throw new Error("Repair search inputs changed during an active dependency task")
-    }
-    const locks = data.routes.map((route, ri): boolean[] =>
-      route.route.map((_point, pi): boolean => {
-        this.searchTaskWorklist.overheadStats.searchTaskLockDependencyChecks++
-        return Boolean(isLocked(ri, pi))
-      }),
-    )
-    return { data, locks, signature: this.searchTaskWorklist.serializeDependencies([data, locks]) }
-  }
-
   private initialize(): void {
-    const source = this.captureSourceContract()
-    this.originalSourceSignature = source.signature
-    this.originalLockReader = this.input.isLocked
-    // The child and cost closures read owned data. Even a caller that changes
-    // and restores a field between checks cannot alter an active search.
-    const input: NegotiatedClearanceInput = {
-      ...structuredClone(source.data),
-      isLocked: (ri, pi): boolean => source.locks[ri]![pi]!,
-      onSearch: this.input.onSearch,
-    }
-    this.ownedRouteCount = input.routes.length
-    this.searchTaskWorklist.overheadStats.searchTaskSnapshotRoutePoints +=
-      input.routes.reduce((count, route): number => count + route.route.length, 0)
+    const input = this.input
     for (const value of [input.maxPathSearchNodes, input.maxPathSearchCalls]) {
       if (!Number.isSafeInteger(value) || value < 0)
         throw new Error(
@@ -401,15 +341,6 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
         }
         return length
       })
-      // A span's spatial records depend only on its own route geometry. Keep
-      // those dependencies across negotiation passes and rebuild the dirty
-      // worklist after a displaced span changes, rather than scanning every
-      // segment and bulk-loading a fresh index for every selected route.
-      const copperIndex = new RBush<CopperBox>()
-      const copperByLayer = Array.from({ length: input.srj.layerCount }, (): RBush<CopperBox> => new RBush<CopperBox>())
-      const copperBySpan: CopperBox[][] = spans.map((): CopperBox[] => [])
-      const dirtyCopperSpans = new Set(spans.map((_, index): number => index))
-      let copperGeometryBuildCount = 0, copperGeometryReuseCount = 0
       const frozen = new Set<number>()
       const dirty = new Set(input.dirtyRouteIndices)
       const queue: number[] = []
@@ -423,18 +354,28 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
       spans.forEach((span, index): void => {
         if (dirty.has(span.routeIndex)) enqueue(index)
       })
+      let corridorSearchCalls = 0, gridSearchCalls = 0, corridorEdgeChecks = 0
+      const corridorTotals: Record<string, number> = {}
+      let setupCopperEntries = 0, setupIndexEntries = 0, setupLayerTests = 0, setupSupportTests = 0
       let pathSearchNodes = 0,
         pathSearchCalls = 0,
         cursor = 0
 
       this.spanCount = spans.length
       this.updateWorkStats = (): void => {
+        const liveCorridorStats: Record<string, unknown> = { ...corridorTotals }
+        if (this.pathSolver) mergeClearanceCorridorStats(liveCorridorStats, this.pathSolver.stats)
         this.stats = {
           pathSearchNodes:
             pathSearchNodes + (this.pathSolver?.stats.nodesPopped ?? 0),
           pathSearchCalls,
-          copperGeometryBuildCount, copperGeometryReuseCount,
-          ...this.searchTaskWorklist.getStats(),
+          corridorSearchCalls, gridSearchCalls, corridorEdgeChecks,
+          ...liveCorridorStats,
+          corridorSetupCopperEntries: setupCopperEntries,
+          corridorSetupCopperIndexEntries: setupIndexEntries,
+          corridorSetupLayerTests: setupLayerTests,
+          corridorSetupSupportTests: setupSupportTests,
+          corridorNegotiationSetupWorkUnits: setupCopperEntries + setupIndexEntries + setupLayerTests + setupSupportTests,
           unresolvedSpanCount: queued.size + frozen.size,
         }
         this.progress = this.solved
@@ -480,48 +421,85 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
         queued.delete(index)
         const route = current[index]!
         const selectedOwner = owner(route)
-        const changedSpans = [...dirtyCopperSpans]
-        dirtyCopperSpans.clear()
-        copperGeometryReuseCount += spans.length - changedSpans.length
-        this.spanCount = changedSpans.length
+        const coppers: Copper[] = []
+
         this.copperCursor = 0
-        this.prepareCopper = (workIndex): void => {
-          const si = changedSpans[workIndex]!
-          for (const box of copperBySpan[si]!) {
-            copperIndex.remove(box)
-            for (let z = box.copper.minZ; z <= box.copper.maxZ; z++) copperByLayer[z]!.remove(box)
-          }
-          const boxes: CopperBox[] = []
-          const other = current[si]!, otherOwner = owner(other)
+        this.prepareCopper = (si): void => {
+          if (si === index) return
+          const other = current[si]!,
+            otherOwner = owner(other)
           for (let pi = 1; pi < other.route.length; pi++) {
-            const a = other.route[pi - 1]! as RepairRoutePoint, b = other.route[pi]! as RepairRoutePoint
+            const a = other.route[pi - 1]! as RepairRoutePoint,
+              b = other.route[pi]! as RepairRoutePoint
             if (a.toNextSegmentType === "through_obstacle") continue
-            const radius = (a.z !== b.z ? other.viaDiameter : Math.max(a.traceThickness ?? other.traceThickness, b.traceThickness ?? other.traceThickness)) / 2
+            // Same-net wires can share copper. Distinct drill holes still require
+            // clearance, including holes in otherwise immutable spans.
+            const immutable = !spans[si]!.mutable || frozen.has(si)
+            if (a.z === b.z && (otherOwner === selectedOwner || immutable))
+              continue
+            const radius =
+              (a.z !== b.z
+                ? other.viaDiameter
+                : Math.max(
+                    a.traceThickness ?? other.traceThickness,
+                    b.traceThickness ?? other.traceThickness,
+                  )) / 2
             const copper: Copper = {
-              a, b, radius,
-              minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x),
-              minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y),
+              a,
+              b,
+              radius,
+              minX: Math.min(a.x, b.x),
+              maxX: Math.max(a.x, b.x),
+              minY: Math.min(a.y, b.y),
+              maxY: Math.max(a.y, b.y),
               ...getRepairCopperLayerSpan(input.srj, a, b),
-              spanIndex: si, owner: otherOwner, index: pi,
+              spanIndex: si,
+              owner: otherOwner,
+              index: coppers.length,
               cellX: Math.floor(Math.min(a.x, b.x) - radius),
               cellY: Math.floor(Math.min(a.y, b.y) - radius),
-              immutable: !spans[si]!.mutable || frozen.has(si),
+              immutable,
             }
-            const box: CopperBox = {
-              minX: copper.minX - radius - REGION_EPSILON,
-              minY: copper.minY - radius - REGION_EPSILON,
-              maxX: copper.maxX + radius + REGION_EPSILON,
-              maxY: copper.maxY + radius + REGION_EPSILON,
-              copper,
-            }
-            boxes.push(box)
-            copperIndex.insert(box)
-            for (let z = copper.minZ; z <= copper.maxZ; z++) copperByLayer[z]!.insert(box)
+            coppers.push(copper)
+            setupCopperEntries++
           }
-          copperBySpan[si] = boxes
-          copperGeometryBuildCount++
         }
         this.startPath = (): void => {
+          const createCopperIndex = (
+            indexedCopper: Copper[],
+          ): { index: Flatbush; copper: Copper[] } | undefined => {
+            if (!indexedCopper.length) return undefined
+            const index = new Flatbush(indexedCopper.length)
+            for (const copper of indexedCopper) {
+              index.add(
+                copper.minX - copper.radius - REGION_EPSILON,
+                copper.minY - copper.radius - REGION_EPSILON,
+                copper.maxX + copper.radius + REGION_EPSILON,
+                copper.maxY + copper.radius + REGION_EPSILON,
+              )
+              setupIndexEntries++
+            }
+            index.finish()
+            return { index, copper: indexedCopper }
+          }
+          const copperIndex = createCopperIndex(coppers)
+          const copperByLayer = new Map<
+            number,
+            { index: Flatbush; copper: Copper[] } | undefined
+          >()
+          for (let z = 0; z < input.srj.layerCount; z++) {
+            copperByLayer.set(
+              z,
+              createCopperIndex(
+                coppers.filter(
+                  (copper): boolean => {
+                    setupLayerTests++
+                    return copper.minZ <= z && copper.maxZ >= z
+                  },
+                ),
+              ),
+            )
+          }
           const query = (
             a: RepairRoutePoint,
             b: RepairRoutePoint,
@@ -536,19 +514,17 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               Math.max(input.traceClearance, input.viaClearance)
             const hits: Array<{ copper: Copper; ratio: number }> = []
             const span = getRepairCopperLayerSpan(input.srj, a, b)
-            const activeIndex = via ? copperIndex : copperByLayer[a.z]!
-            const candidates = activeIndex.search({
-              minX: minX - reach - REGION_EPSILON,
-              minY: minY - reach - REGION_EPSILON,
-              maxX: maxX + reach + REGION_EPSILON,
-              maxY: maxY + reach + REGION_EPSILON,
-            })
+            const activeIndex = via ? copperIndex : copperByLayer.get(a.z)
+            const candidates =
+              activeIndex?.index.search(
+                minX - reach - REGION_EPSILON,
+                minY - reach - REGION_EPSILON,
+                maxX + reach + REGION_EPSILON,
+                maxY + reach + REGION_EPSILON,
+              ) ?? []
             for (const candidate of candidates) {
-              this.searchTaskWorklist.overheadStats.searchTaskCopperCandidateChecks++
-              const copper = candidate.copper
-              if (copper.spanIndex === index) continue
-              copper.immutable = !spans[copper.spanIndex]!.mutable || frozen.has(copper.spanIndex)
-              if (copper.a.z === copper.b.z && (copper.owner === selectedOwner || copper.immutable)) continue
+              additionalEdgeWork++
+              const copper = activeIndex!.copper[candidate]!
               const bothVias = via && copper.minZ !== copper.maxZ
               const sharedLayers =
                 copper.minZ <= span.maxZ && copper.maxZ >= span.minZ
@@ -584,7 +560,6 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
                 maxY + required + REGION_EPSILON < copper.minY
               )
                 continue
-              this.searchTaskWorklist.overheadStats.searchTaskNarrowPhaseChecks++
               const distance = segmentToSegmentMinDistance(
                 a,
                 b,
@@ -602,6 +577,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
             const firstCellX = Math.floor(minX - reach)
             const firstCellY = Math.floor(minY - reach)
             hits.sort((left, right): number => {
+              additionalEdgeWork++
               const x =
                 Math.max(firstCellX, left.copper.cellX) -
                 Math.max(firstCellX, right.copper.cellX)
@@ -609,7 +585,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               const y =
                 Math.max(firstCellY, left.copper.cellY) -
                 Math.max(firstCellY, right.copper.cellY)
-              return y || left.copper.spanIndex - right.copper.spanIndex || left.copper.index - right.copper.index
+              return y || left.copper.index - right.copper.index
             })
             return hits
           }
@@ -646,6 +622,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
           // electrical layers the search connects. Copper and weights are fixed
           // during this search, so reuse their congestion cost across transitions.
           const viaCosts = new Map<number, Map<number, number>>()
+          let additionalEdgeWork = 0
           const getAdditionalEdgeCost = (
             a: RepairRoutePoint,
             b: RepairRoutePoint,
@@ -673,41 +650,69 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
             nodesPopped: 0,
             completionReason: "no-path",
           }
-          const gridSize = Math.min(
-            0.1, (route.traceThickness * (input.pathGridSizeScale ?? 1)) / 2,
+          const additionalCostSupports: ClearanceCostSupport[] = coppers
+            .filter((copper): boolean => {
+              setupSupportTests++
+              return !copper.immutable && copper.owner !== selectedOwner
+            })
+            .map((copper): ClearanceCostSupport => {
+              setupSupportTests++
+              const reach = route.traceThickness / 2 + input.traceClearance + copper.radius + REGION_EPSILON
+              return { minX: copper.minX - reach, maxX: copper.maxX + reach,
+                minY: copper.minY - reach, maxY: copper.maxY + reach,
+                minZ: copper.minZ, maxZ: copper.maxZ,
+                orientation: getClearanceCapsuleSupportOrientation(copper.a, copper.b, reach) }
+            })
+          // The midpoint boundary penalty is the only cost not owned by copper.
+          const epsilon = REGION_EPSILON * 4
+          additionalCostSupports.push(
+            { ...input.bounds, maxX: input.bounds.minX + epsilon, minZ: 0, maxZ: input.srj.layerCount - 1 },
+            { ...input.bounds, minX: input.bounds.maxX - epsilon, minZ: 0, maxZ: input.srj.layerCount - 1 },
+            { ...input.bounds, maxY: input.bounds.minY + epsilon, minZ: 0, maxZ: input.srj.layerCount - 1 },
+            { ...input.bounds, minY: input.bounds.maxY - epsilon, minZ: 0, maxZ: input.srj.layerCount - 1 },
           )
-          const maxNodes = Math.min(
-            input.maxPathSearchNodesPerCall ?? input.maxPathSearchNodes,
-            input.maxPathSearchNodes - pathSearchNodes,
+          const solver = new FindClearancePathSolver({
+            srj: input.srj,
+            routes: [...fixed, route],
+            routeIndex: fixed.length,
+            start: route.route[0]!,
+            end: route.route.at(-1)!,
+            bounds: input.bounds,
+            traceThickness: route.traceThickness,
+            traceClearance: input.traceClearance,
+            viaClearance: input.viaClearance,
+            gridSize: Math.min(
+              0.1,
+              (route.traceThickness * (input.pathGridSizeScale ?? 1)) / 2,
+            ),
+            allowLayerChanges: input.allowLayerChanges,
+            maxNodes: Math.min(
+              input.maxPathSearchNodesPerCall ?? input.maxPathSearchNodes,
+              input.maxPathSearchNodes - pathSearchNodes,
+            ),
+            heuristicWeight: input.pathHeuristicWeight,
+            stats,
+            getAdditionalEdgeCost,
+            additionalCostSupports,
+            getAdditionalEdgeWork: (): number => additionalEdgeWork,
+            existingPath: route.route,
+            viaHoleDiameter: input.viaHoleDiameter,
+          })
+
+          this.pathSolver = solver
+          this.activeSubSolver = solver
+          // Fixed/preloaded geometry can make setup exceed the original estimate.
+          // Reserve the actual child limit plus apply/queue completion steps.
+          this.MAX_ITERATIONS = Math.max(
+            this.MAX_ITERATIONS,
+            this.iterations + solver.MAX_ITERATIONS + 3,
           )
-          const taskContext = (): string => this.searchTaskWorklist.serializeDependencies([
-            input.srj,
-            fixed,
-            // Hard barriers and ownership are fixed native search inputs.
-            // Movable geometry/weights are certified by actual cost reads.
-            current.map((other) => [other.connectionName, other.rootConnectionName, owner(other)]),
-          ])
-          const originalInputSignature = this.captureSourceContract().signature
-          if (originalInputSignature !== this.originalSourceSignature) {
-            throw new Error("Repair search inputs changed during an active dependency task")
-          }
-          const task: ClearanceSearchTask = {
-            identity: this.searchTaskWorklist.serializeDependencies([
-              route.connectionName, route.rootConnectionName,
-              spans[index]!.routeIndex, index, input.bounds,
-              route.route[0], route.route.at(-1),
-              route.traceThickness, route.viaDiameter,
-            ]),
-            context: taskContext(),
-            dependencies: this.searchTaskWorklist.serializeDependencies([
-              route, maxNodes, gridSize,
-              input.traceClearance, input.viaClearance,
-              input.allowLayerChanges, input.pathHeuristicWeight,
-              input.viaHoleDiameter,
-            ]),
-            maxNodes, layerCount: input.srj.layerCount,
-          }
+          this.phase = "path"
           this.applyPath = (path): void => {
+            if ((stats as ClearancePathSearchStats & { searchGraph?: string }).searchGraph === "corridors") corridorSearchCalls++
+            else if ((stats as ClearancePathSearchStats & { searchGraph?: string }).searchGraph === "grid") gridSearchCalls++
+            corridorEdgeChecks += (stats as ClearancePathSearchStats & { corridorEdgeChecks?: number }).corridorEdgeChecks ?? 0
+            mergeClearanceCorridorStats(corridorTotals, stats)
             pathSearchCalls++
             pathSearchNodes += stats.nodesPopped
             input.onSearch?.(stats)
@@ -723,7 +728,6 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               points: path,
               mutableBounds: input.bounds,
             })
-            dirtyCopperSpans.add(index)
             const conflicts = new Set<number>()
             for (let pi = 1; pi < path.length; pi++)
               for (const { copper } of query(path[pi - 1]!, path[pi]!))
@@ -739,73 +743,6 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
             this.phase = "select"
             this.pathSolver = undefined
           }
-          const completed = this.searchTaskWorklist.lookup(task, getAdditionalEdgeCost)
-          if (completed) {
-            // Keep native effort/queue coverage identical: logical work is
-            // charged exactly once even though the completed task is skipped.
-            Object.assign(stats, completed.stats)
-            this.applyPath(completed.path)
-            this.applyPath = undefined
-            this.activeSubSolver = null
-            return
-          }
-          this.activeCostReads = new Map()
-          const trackedEdgeCost = (a: RepairRoutePoint, b: RepairRoutePoint): number => {
-            const cost = getAdditionalEdgeCost(a, b)
-            if (Number.isNaN(cost) || cost < 0) throw new Error("Repair task dependency returned an invalid edge cost")
-            const reads = this.activeCostReads
-            if (reads) {
-              const key = `${a.x},${a.y},${a.z}|${b.x},${b.y},${b.z}`
-              if (!reads.has(key)) {
-                if (reads.size >= Math.floor(this.searchTaskWorklist.maxRetainedPoints / 2)) {
-                  // This task still receives its full native search allowance.
-                  // Only retaining/replaying an incomplete certificate is forbidden.
-                  this.activeCostReads = null
-                } else reads.set(key, {
-                  a: { x: a.x, y: a.y, z: a.z },
-                  b: { x: b.x, y: b.y, z: b.z }, cost,
-                })
-              }
-            }
-            return cost
-          }
-          const solver = new FindClearancePathSolver({
-            srj: input.srj,
-            routes: [...fixed, route],
-            routeIndex: fixed.length,
-            start: route.route[0]!,
-            end: route.route.at(-1)!,
-            bounds: input.bounds,
-            traceThickness: route.traceThickness,
-            traceClearance: input.traceClearance,
-            viaClearance: input.viaClearance,
-            gridSize,
-            allowLayerChanges: input.allowLayerChanges,
-            maxNodes,
-            heuristicWeight: input.pathHeuristicWeight,
-            stats,
-            getAdditionalEdgeCost: trackedEdgeCost,
-            existingPath: route.route,
-            viaHoleDiameter: input.viaHoleDiameter,
-          })
-
-          this.pathSolver = solver
-          this.activeSearchTask = task
-          this.activeTaskContext = (): string => {
-            if (this.captureSourceContract().signature !== originalInputSignature) {
-              throw new Error("Repair search inputs changed during an active dependency task")
-            }
-            return taskContext()
-          }
-          this.activeSubSolver = solver
-          // Fixed/preloaded geometry can make setup exceed the original estimate.
-          // Reserve the actual child limit plus apply/queue completion steps.
-          this.MAX_ITERATIONS = Math.max(
-            this.MAX_ITERATIONS,
-            this.iterations + solver.MAX_ITERATIONS + 3,
-          )
-          this.phase = "path"
-
         }
         this.phase = "coppers"
       }
