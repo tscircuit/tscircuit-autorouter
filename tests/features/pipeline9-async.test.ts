@@ -2,6 +2,7 @@ import { createPipeline9TestRuntime } from "../fixtures/createPipeline9TestRunti
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import { getPipeline9LogicalStats } from "../fixtures/getPipeline9LogicalStats"
 
 const input: SimpleRouteJson = {
   layerCount: 2,
@@ -51,8 +52,8 @@ test("Pipeline9 solveAsync resumes synchronous steps and preserves complete outp
   expect(JSON.stringify(solver.getOutputSimpleRouteJson())).toBe(
     JSON.stringify(baseline.getOutputSimpleRouteJson()),
   )
-  expect(solver.highDensityRouteSolver!.stats).toEqual(
-    baseline.highDensityRouteSolver!.stats,
+  expect(getPipeline9LogicalStats(solver.highDensityRouteSolver!.stats)).toEqual(
+    getPipeline9LogicalStats(baseline.highDensityRouteSolver!.stats),
   )
   expect(solver.iterations).toBe(baseline.iterations)
   expect(solver.progress).toBe(1)

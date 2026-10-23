@@ -21,6 +21,7 @@ import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import type { ContextualComputeSelectionModel } from "../HyperHighDensitySolver/ContextualComputeSelectionModel"
+import type { CacheProvider } from "lib/cache/types"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -73,6 +74,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
   computeSelectionModel?: ContextualComputeSelectionModel
+  cacheProvider: CacheProvider | null
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -115,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     computeSelectionModel,
+    cacheProvider,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -140,6 +143,7 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     computeSelectionModel?: ContextualComputeSelectionModel
+    cacheProvider?: CacheProvider | null
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -172,6 +176,7 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.computeSelectionModel = computeSelectionModel
+    this.cacheProvider = cacheProvider === undefined ? getGlobalInMemoryCache() : cacheProvider
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -425,6 +430,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
       computeSelectionModel: this.computeSelectionModel,
+      cacheProvider: this.cacheProvider,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
@@ -433,9 +439,8 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private updateCacheStats() {
-    const cacheProvider = getGlobalInMemoryCache()
-    this.stats.intraNodeCacheHits = cacheProvider.cacheHits
-    this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
+    this.stats.intraNodeCacheHits = this.cacheProvider?.cacheHits ?? 0
+    this.stats.intraNodeCacheMisses = this.cacheProvider?.cacheMisses ?? 0
   }
 
   visualize(): GraphicsObject {

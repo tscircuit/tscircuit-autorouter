@@ -37,9 +37,11 @@ import {
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 import { ContextualComputeSelectionModel } from "lib/solvers/HyperHighDensitySolver/ContextualComputeSelectionModel"
+import type { CacheProvider } from "lib/cache/types"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
+  cacheProvider?: CacheProvider | null
   enableComputeSelection?: boolean
   computeSelectionCopperRules?: ContextualComputeSelectionModel["copperRules"]
   fixedHdRoutes: PreloadedHighDensityRoute[]
@@ -313,6 +315,7 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
+  cacheProvider?: CacheProvider | null
   computeSelectionModel?: ContextualComputeSelectionModel
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
@@ -347,6 +350,7 @@ export const createPipeline9RegularNodeSolver = ({
   boardGeometry,
   layerCount,
   computeSelectionModel,
+  cacheProvider,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -373,6 +377,7 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     computeSelectionModel,
+    cacheProvider,
   })
 
 /**
@@ -481,7 +486,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      if (this.params.enableComputeSelection || this.fixedHdRoutes.length > 0) {
+      // Caller-owned providers have process-local methods and state. Keep them
+      // on the host before constructing any JSON worker input.
+      if (
+        this.params.enableComputeSelection ||
+        this.fixedHdRoutes.length > 0 ||
+        (this.params.cacheProvider !== undefined && this.params.cacheProvider !== null)
+      ) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -496,13 +507,14 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
-      const { connMap, nodePortPoints: _, ...params } = this.params
+      const { connMap, nodePortPoints: _, cacheProvider, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
+              cacheProvider: cacheProvider === null ? null : undefined,
               nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
@@ -607,6 +619,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
       computeSelectionModel: this.params.enableComputeSelection ? this.computeSelectionModel : undefined,
+      cacheProvider: this.params.cacheProvider,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -683,6 +696,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      cacheProvider: this.params.cacheProvider,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =

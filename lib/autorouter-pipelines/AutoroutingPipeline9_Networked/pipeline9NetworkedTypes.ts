@@ -17,6 +17,8 @@ export const PIPELINE9_NETWORKED_SOLVE_POLICY =
  * helper can run in the cache service.
  */
 export type Pipeline9NetworkedHighDensityNodeInput = {
+  /** Native kernel cache policy; the service response cache is independent. */
+  cacheProvider?: null
   solvePolicy: typeof PIPELINE9_NETWORKED_SOLVE_POLICY
   enableRegionalFallback: boolean
   nodeWithPortPoints: NodeWithPortPoints

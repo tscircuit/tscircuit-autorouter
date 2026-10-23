@@ -9,8 +9,9 @@ import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
 
 export type Pipeline9HighDensityBatchInput = Omit<
   Pipeline9HighDensitySolverParams,
-  "connMap"
+  "connMap" | "cacheProvider"
 > & {
+  cacheProvider?: null
   connectivityNetMap: Record<string, string[]>
   maxIterations: number
 }

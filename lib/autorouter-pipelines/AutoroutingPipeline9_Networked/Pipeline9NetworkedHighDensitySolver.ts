@@ -19,6 +19,7 @@ import {
 } from "./pipeline9NetworkedInputProjection"
 import type { Pipeline9NetworkedHighDensityNodeInput } from "./pipeline9NetworkedTypes"
 import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import type { CacheProvider } from "lib/cache/types"
 
 export { DEFAULT_HD_CACHE2_SERVER_URL } from "./HdCache2Client"
 
@@ -54,6 +55,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
   private readonly hdCache2Client: HdCache2Client
   private launchedRemoteSolves = false
+  private readonly nativeCacheProvider: CacheProvider | null | undefined
   private waitingForRemoteNode: NodeWithPortPoints | null = null
   private readonly remoteRequestByNode = new Map<
     NodeWithPortPoints,
@@ -73,6 +75,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     ...pipeline9Params
   }: Pipeline9NetworkedHighDensitySolverParams) {
     super(pipeline9Params)
+    this.nativeCacheProvider = pipeline9Params.cacheProvider
     if (pipeline9Params.effort !== 1) {
       throw new Error(
         `Pipeline9 networked high-density routing requires effort=1, received ${pipeline9Params.effort}`,
@@ -167,6 +170,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       viaDiameter: this.viaDiameter,
     })
     return {
+      cacheProvider: this.nativeCacheProvider === null ? null : undefined,
       solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
       enableRegionalFallback: this.enableRegionalFallback,
       nodeWithPortPoints: node,
@@ -387,6 +391,12 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   }
 
   override _step(): void {
+    // An opaque caller-owned native provider must stay in this process. This
+    // choice precedes service requests; it does not change failure handling.
+    if (this.nativeCacheProvider !== undefined && this.nativeCacheProvider !== null) {
+      super._step()
+      return
+    }
     this.syncClientStats()
     if (!this.launchedRemoteSolves) {
       this.launchedRemoteSolves = true

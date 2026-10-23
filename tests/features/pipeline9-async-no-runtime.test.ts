@@ -2,6 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import { SolverRuntime } from "@tscircuit/solver-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline9 } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import { getPipeline9LogicalStats } from "../fixtures/getPipeline9LogicalStats"
 
 const input: SimpleRouteJson = {
   layerCount: 2,
@@ -51,8 +52,8 @@ test("Pipeline9 without a runtime uses synchronous solving with exact resumed ou
         JSON.stringify(baseline.getOutputSimpleRouteJson()),
       )
       expect(solver.iterations).toBe(baseline.iterations)
-      expect(solver.highDensityRouteSolver!.stats).toEqual(
-        baseline.highDensityRouteSolver!.stats,
+      expect(getPipeline9LogicalStats(solver.highDensityRouteSolver!.stats)).toEqual(
+        getPipeline9LogicalStats(baseline.highDensityRouteSolver!.stats),
       )
       solve.mockRestore()
     }

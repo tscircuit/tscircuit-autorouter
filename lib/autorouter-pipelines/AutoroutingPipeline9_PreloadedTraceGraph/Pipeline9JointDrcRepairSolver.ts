@@ -3,6 +3,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9OwnedRouteClearanceSolver } from "./Pipeline9OwnedRouteClearanceSolver"
+import type { CacheProvider } from "lib/cache/types"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
@@ -62,6 +63,7 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 type Pipeline9JointDrcRepairSolverParams = {
+  cacheProvider?: CacheProvider | null
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -1936,6 +1938,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
     this.regionalB01Params = {
+      cacheProvider: this.params.cacheProvider,
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,

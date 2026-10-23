@@ -3,6 +3,7 @@ import "../../scripts/build-solver-workers"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline } from "../../lib"
 import { solveWithProgress } from "../../scripts/benchmark/benchmark-run-task"
 import type { BenchmarkTask } from "../../scripts/benchmark/benchmark-types"
+import { getPipeline9LogicalStats } from "./getPipeline9LogicalStats"
 
 const task: BenchmarkTask = {
   datasetName: "test",
@@ -42,8 +43,8 @@ assert.equal(
   JSON.stringify(serial.getOutputSimpleRouteJson()),
 )
 assert.deepEqual(
-  parallel.highDensityRouteSolver!.stats,
-  serial.highDensityRouteSolver!.stats,
+  getPipeline9LogicalStats(parallel.highDensityRouteSolver!.stats),
+  getPipeline9LogicalStats(serial.highDensityRouteSolver!.stats),
 )
 assert.equal(parallel.iterations, serial.iterations)
 await assert.rejects(

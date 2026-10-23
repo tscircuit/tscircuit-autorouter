@@ -638,6 +638,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             nodePortPoints: nodePortPointsSource,
             enableComputeSelection: true,
+            cacheProvider: cms.opts.cacheProvider,
             computeSelectionCopperRules: {
               defaultObstacleMargin: cms.srj.defaultObstacleMargin,
               minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
@@ -876,6 +877,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             originalSrj: cms.originalSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            cacheProvider: cms.opts.cacheProvider,
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
             mutatedPreloadedTraceIds: new Set(
