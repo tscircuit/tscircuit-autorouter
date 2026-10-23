@@ -1,7 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityRepairSolver } from "high-density-repair02"
+import { HighDensityRepairSolver, buildRepairFramesAsync } from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
@@ -437,17 +437,33 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           this.activeSampleIndex,
           this.activeSampleIndex + parallelSampleCount,
         )
-        .map((entry) =>
-          runtime
-            .executeAsync(Pipeline4HighDensityRepairSampleSolver, {
-              sample: entry.sample,
-              margin: this.repairMargin,
-            })
-            .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
-        )
+        .map((entry) => {
+          const pointCount = entry.sample.nodeHdRoutes!.reduce(
+            (count, route) => count + (route.route?.length ?? 0),
+            0,
+          )
+          // Large nodes otherwise monopolize a single worker. Their independent
+          // candidate ranges use the shared pool; publication stays in node order.
+          const task = pointCount >= 512
+            ? buildRepairFramesAsync(
+                entry.sample,
+                this.repairMargin,
+                runtime,
+                false,
+                false,
+              ).then((result): Pipeline4HighDensityRepairSampleOutput => ({
+                  repairedRoutes: result.repairedRoutes,
+                  clearanceStats: result.clearanceRepairStats,
+                }))
+            : runtime.executeAsync(Pipeline4HighDensityRepairSampleSolver, {
+                sample: entry.sample,
+                margin: this.repairMargin,
+              })
+          return task.then(
+            (result) => ({ type: "result" as const, result }),
+            (error: unknown) => ({ type: "error" as const, error }),
+          )
+        })
       for (const promise of pending) {
         // A serial sample uses one construction step and one repair step.
         if (
