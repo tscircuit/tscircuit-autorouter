@@ -1959,7 +1959,26 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   computeNodePfMap(): Map<string, number | null> {
     const solvedNodeById = new Map(
-      (this.params.flags.USE_ELECTRICAL_TREE_TARGETS ? this.getRoutingOutput() : this.getOutput()).nodesWithPortPoints.map((node) => [
+      this.getOutput().nodesWithPortPoints.map((node) => [
+        node.capacityMeshNodeId,
+        node,
+      ]),
+    )
+    return new Map(
+      this.inputNodeWithPortPoints.map((node) => [
+        node.capacityMeshNodeId,
+        this.computeSolvedNodePf(
+          node.capacityMeshNodeId,
+          solvedNodeById.get(node.capacityMeshNodeId),
+        ),
+      ]),
+    )
+  }
+
+  /** Detailed branch routing needs the physical graph, not logical demand copies. */
+  computeRoutingNodePfMap(): Map<string, number | null> {
+    const solvedNodeById = new Map(
+      this.getRoutingOutput().nodesWithPortPoints.map((node) => [
         node.capacityMeshNodeId,
         node,
       ]),

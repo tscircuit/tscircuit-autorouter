@@ -80,6 +80,7 @@ import {
 } from "./materializeHypergraphPreloadedTraceSections"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import { getElectricalTreeTerminalWitness } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/getElectricalTreeTerminalWitness"
 import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import {
   type PreparedPipeline9MutationSections,
@@ -623,7 +624,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
           )
         }
-        const portPointPathingOutput = portPointPathingSolver.getRoutingOutput()
+        // An empty scene supports constructor/protocol inspection without a
+        // completed physical graph. Nonempty routing still requires that IR.
+        const emptyScene = cms.srj.connections.length === 0 && !cms.originalSrj.traces?.length
+        const portPointPathingOutput = emptyScene
+          ? { ...portPointPathingSolver.getOutput(), connections: [] }
+          : portPointPathingSolver.getRoutingOutput()
         for (const connection of portPointPathingOutput.connections) {
           const branch = connection.electricalBranch
           if (!branch) throw new Error(`Pipeline9 lacks physical branch ownership for ${connection.name}`)
@@ -677,7 +683,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
-            nodePfById: portPointPathingSolver.computeNodePfMap(),
+            nodePfById: emptyScene ? portPointPathingSolver.computeNodePfMap() : portPointPathingSolver.computeRoutingNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },
         ]
@@ -1689,6 +1695,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   getRoutingConnections(): SimpleRouteConnection[] {
+    if (!this.portPointPathingSolver && this.highDensityRouteSolver && this.netToPointPairsSolver) {
+      // Direct high-density export is also a public API. Its already supplied
+      // ordinary connections do not claim shared-tree compilation provenance.
+      const connections = this.netToPointPairsSolver.newConnections
+      if (connections.some((connection) => connection.electricalBranch)) throw new Error("Pipeline9 physical branches require their solved pathing provenance")
+      return connections
+    }
     if (!this.portPointPathingSolver?.solved) {
       throw new Error("Pipeline9 physical routing connections require solved pathing")
     }
@@ -1719,7 +1732,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const route = byName.get(connection.name)
         if (!route) throw new Error(`Pipeline9 lost repaired electrical branch ${connection.name}`)
         for (const index of [0, 1] as const) {
-          if (connection.pointsToConnect[index]!.pcb_port_id) continue
+          if (connection.pointsToConnect[index]!.pcb_port_id || getElectricalTreeTerminalWitness(connection, index, this.srj.layerCount)) continue
           const vertex = index === 0 ? connection.electricalBranch.startVertexId : connection.electricalBranch.endVertexId
           const point = index === 0 ? route.route[0] : route.route.at(-1)
           if (!point || ![point.x, point.y, point.z].every(Number.isFinite)) throw new Error(`Pipeline9 electrical junction ${vertex} has no finite repaired position`)
@@ -1732,7 +1745,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     return branchConnections.map((connection) => ({
       ...connection,
-      pointsToConnect: connection.pointsToConnect.map((point) => {
+      pointsToConnect: connection.pointsToConnect.map((point, index) => {
+        if ((index === 0 || index === 1) && getElectricalTreeTerminalWitness(connection, index, this.srj.layerCount)) return point
         const moved = point.pointId ? positions.get(point.pointId) : undefined
         return moved ? { ...point, x: moved.x, y: moved.y } : point
       }),
@@ -1746,7 +1760,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
     const connections = this.getRoutingConnections()
     const hdRoutes = canonicalizePipeline9HdRoutes(this._getOutputHdRoutes())
-    assertSharedElectricalTreeRoutes({ connections, routes: hdRoutes, layerCount: this.srj.layerCount })
+    if (connections.some((connection) => connection.electricalBranch)) {
+      assertSharedElectricalTreeRoutes({ connections, routes: hdRoutes, layerCount: this.srj.layerCount })
+    }
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections,
       originalConnections: this.originalSrj.connections,

@@ -1,7 +1,6 @@
-import type { Obstacle, SimpleRouteConnection } from "lib/types"
+import type { ElectricalTreeTerminalWitness, Obstacle, SimpleRouteConnection } from "lib/types"
 import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getConnectionPointLayers } from "lib/types/srj-types"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { certifyElectricalTreePadAttachment } from "./certifyElectricalTreePadAttachment"
 
@@ -144,6 +143,24 @@ export function compileSharedElectricalTrees(input: {
   }
   const usedNames = new Set(input.connections.map((connection) => connection.name))
   for (const [netId, net] of nets) {
+    const originalTerminals = new Map<string, ElectricalTreeTerminalWitness>()
+    for (const demand of net.demands) {
+      const endpointIds = input.demandEndpoints.get(demand.name)
+      if (!endpointIds || demand.pointsToConnect.length !== 2) throw new Error(`Electrical tree lost original terminal provenance for ${demand.name}`)
+      for (const endpoint of [0, 1] as const) {
+        const vertex = net.vertices.get(endpointIds[endpoint]), source = demand.pointsToConnect[endpoint]!
+        if (!vertex) throw new Error(`Electrical tree cannot resolve terminal (original SRJ witness) of ${demand.name}`)
+        const layer = mapZToLayerName(vertex.point.z, input.layerCount)
+        if (source.x !== vertex.point.x || source.y !== vertex.point.y || !getConnectionPointLayers(source).includes(layer) ||
+          (source.pcb_port_id !== undefined && source.pcb_port_id !== vertex.point.electricalTerminalId)) throw new Error(`Electrical tree changed original terminal of ${demand.name}`)
+        if (vertex.point.electricalTerminalId !== undefined) continue
+        const witness: ElectricalTreeTerminalWitness = { sourceConnectionName: demand.name, sourceEndpointIndex: endpoint,
+          sourcePointId: source.pointId ?? null, x: source.x, y: source.y, z: vertex.point.z, layer }
+        const previous = originalTerminals.get(vertex.id)
+        if (previous && (previous.x !== witness.x || previous.y !== witness.y || previous.layer !== witness.layer)) throw new Error(`Electrical tree original terminals disagree at ${vertex.id}`)
+        if (!previous) originalTerminals.set(vertex.id, Object.freeze(witness))
+      }
+    }
     const padAliases = new Map<string, Vertex>()
     const padWitnesses = new Map<string, SharedElectricalTreeOutput["padAttachmentWitnesses"][number]>()
     const ambiguousAttachments = new Set<string>()
@@ -274,7 +291,7 @@ export function compileSharedElectricalTrees(input: {
     for (const vertex of net.vertices.values()) vertex.edges = vertex.edges.filter((edge) => edge.owners.length > 0)
     const visited = new Set<string>()
     const branchVertices = [...net.vertices.values()].filter((vertex) =>
-      vertex.edges.length !== 2 || vertex.point.electricalTerminalId !== undefined ||
+      vertex.edges.length !== 2 || vertex.point.electricalTerminalId !== undefined || originalTerminals.has(vertex.id) ||
       JSON.stringify(vertex.edges[0]!.owners) !== JSON.stringify(vertex.edges[1]!.owners),
     ).sort((a, b) => a.id.localeCompare(b.id))
     for (const start of branchVertices) {
@@ -290,7 +307,7 @@ export function compileSharedElectricalTrees(input: {
           visited.add(edge.id)
           end = edge.a.id === from.id ? edge.b : edge.a
           path.push({ edge, from, to: end })
-          if (end.edges.length !== 2 || end.point.electricalTerminalId !== undefined ||
+          if (end.edges.length !== 2 || end.point.electricalTerminalId !== undefined || originalTerminals.has(end.id) ||
             JSON.stringify(end.edges[0]!.owners) !== JSON.stringify(end.edges[1]!.owners)) break
           const next = end.edges.find((candidate) => candidate.id !== edge.id)
           if (!next) throw new Error(`Electrical tree lost continuation at ${end.id}`)
@@ -311,7 +328,7 @@ export function compileSharedElectricalTrees(input: {
           x: vertex.point.x,
           y: vertex.point.y,
           layer: mapZToLayerName(vertex.point.z, input.layerCount),
-          pointId: vertex.point.electricalTerminalId ?? vertex.id,
+          pointId: vertex.point.electricalTerminalId ?? originalTerminals.get(vertex.id)?.sourcePointId ?? vertex.id,
           ...(vertex.point.electricalTerminalId ? { pcb_port_id: vertex.point.electricalTerminalId } : {}),
         }))
         const widths = owners.map((owner) => {
@@ -324,7 +341,12 @@ export function compileSharedElectricalTrees(input: {
           .filter((width): width is number => width !== undefined)
         connections.push({ ...source, name, pointsToConnect,
           ...(widths.length > 0 ? { nominalTraceWidth: Math.max(...widths) } : {}),
-          electricalBranch: { netId, startVertexId: start.id, endVertexId: end!.id, logicalConnectionNames: owners },
+          electricalBranch: { netId, startVertexId: start.id, endVertexId: end!.id, logicalConnectionNames: owners,
+            ...((originalTerminals.has(start.id) || originalTerminals.has(end!.id)) ? { originalTerminals: {
+              ...(originalTerminals.has(start.id) ? { start: originalTerminals.get(start.id)! } : {}),
+              ...(originalTerminals.has(end!.id) ? { end: originalTerminals.get(end!.id)! } : {}),
+            } } : {}),
+          },
         })
         for (const segment of path) {
           const startPoint: PortPoint = { ...segment.from.point, connectionName: name, pcb_port_id: segment.from.point.electricalTerminalId }
@@ -357,14 +379,29 @@ export function compileSharedElectricalTrees(input: {
     if (!reached.has(endpointIds[1])) throw new Error(`Native electrical path disconnects original demand ${name}`)
     for (const endpoint of [0, 1] as const) {
       const expected = demand.pointsToConnect[endpoint]!, actual = graph.get(endpointIds[endpoint])!.point
-      if (actual.x !== expected.x || actual.y !== expected.y || actual.z !== mapLayerNameToZ(getConnectionPointLayer(expected), input.layerCount) ||
+      if (actual.x !== expected.x || actual.y !== expected.y || !getConnectionPointLayers(expected).includes(mapZToLayerName(actual.z, input.layerCount)) ||
         (expected.pcb_port_id !== undefined && actual.electricalTerminalId !== expected.pcb_port_id)) throw new Error(`Native electrical path changed original terminal of ${name}`)
     }
     const netId = input.netByConnection.get(name)!
     nativeNets.add(netId)
-    // Original name, endpoints, width and all declared path-level constraints
-    // stay intact. This is an independent native path, never a shared branch.
-    connections.push({ ...demand, electricalBranch: { netId, startVertexId: endpointIds[0], endVertexId: endpointIds[1], logicalConnectionNames: [name], nativeLogicalPath: true } })
+    // Original name, width and all declared path-level constraints stay
+    // intact. Bind only the physical view to the selected legal layer; the
+    // original logical demand retains its full allowed-layer declaration.
+    const originalTerminals: NonNullable<NonNullable<SimpleRouteConnection["electricalBranch"]>["originalTerminals"]> = {}
+    for (const endpoint of [0, 1] as const) {
+      const source = demand.pointsToConnect[endpoint]!, actual = graph.get(endpointIds[endpoint])!.point
+      if (source.pcb_port_id !== undefined) continue
+      originalTerminals[endpoint === 0 ? "start" : "end"] = Object.freeze({ sourceConnectionName: name, sourceEndpointIndex: endpoint,
+        sourcePointId: source.pointId ?? null, x: source.x, y: source.y, z: actual.z,
+        layer: mapZToLayerName(actual.z, input.layerCount) })
+    }
+    const pointsToConnect = demand.pointsToConnect.map((source, endpoint) => {
+      const { layers: _allowedLayers, ...point } = source
+      return { ...point, layer: mapZToLayerName(graph.get(endpointIds[endpoint]!)!.point.z, input.layerCount) }
+    })
+    connections.push({ ...demand, pointsToConnect, electricalBranch: { netId, startVertexId: endpointIds[0], endVertexId: endpointIds[1], logicalConnectionNames: [name], nativeLogicalPath: true,
+      ...(Object.keys(originalTerminals).length ? { originalTerminals } : {}),
+    } })
     stats.electricalTreeNativePathDemandCount++
     stats.electricalTreeVerifiedDemandCount++
   }

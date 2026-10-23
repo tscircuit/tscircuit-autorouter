@@ -1,10 +1,12 @@
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getElectricalTreeTerminalWitness } from "./getElectricalTreeTerminalWitness"
 
 /** Translate one free physical vertex and all incident branch/via copies. */
 export function moveElectricalTreeJunction(input: {
   connections: SimpleRouteConnection[]
   routes: HighDensityRoute[]
+  layerCount?: number
   vertexId: string
   dx: number
   dy: number
@@ -40,7 +42,7 @@ export function moveElectricalTreeJunction(input: {
     for (const index of [0, 1] as const) {
       const id = index === 0 ? branch.startVertexId : branch.endVertexId
       if (!vertices.has(id)) continue
-      if (connection.pointsToConnect[index]!.pcb_port_id) return undefined
+      if (connection.pointsToConnect[index]!.pcb_port_id || getElectricalTreeTerminalWitness(connection, index, input.layerCount)) return undefined
       const endpoints = incident.get(connection.name) ?? []
       endpoints.push(index)
       incident.set(connection.name, endpoints)

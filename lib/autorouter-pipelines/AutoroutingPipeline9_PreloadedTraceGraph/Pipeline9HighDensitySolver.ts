@@ -1,3 +1,5 @@
+import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -283,12 +285,7 @@ export const normalizePipeline9NodeRootConnectionNames = (
     portPoint: NodeWithPortPoints["portPoints"][number],
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
-    rootConnectionName:
-      connMap.getNetConnectedToId(
-        portPoint.rootConnectionName ?? portPoint.connectionName,
-      ) ??
-      portPoint.rootConnectionName ??
-      portPoint.connectionName,
+    rootConnectionName: getCanonicalPipeline9PortRoot(portPoint, connMap),
   })
   return {
     ...node,
@@ -365,6 +362,8 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
+    // Recreate this acceptance predicate after host/worker JSON reconstruction.
+    isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap),
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,

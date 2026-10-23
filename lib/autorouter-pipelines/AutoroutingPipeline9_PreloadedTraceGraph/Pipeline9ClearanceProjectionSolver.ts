@@ -92,7 +92,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
       const treeWalks = params.sharedTreeConnections
-        ? createElectricalTreeRepairWalks({ connections: params.sharedTreeConnections, routes: canonicalRoutes })
+        ? createElectricalTreeRepairWalks({ connections: params.sharedTreeConnections, routes: canonicalRoutes, layerCount: srj.layerCount })
         : undefined
       const relaxationRoutes = treeWalks?.routes ?? canonicalRoutes
       const solver = new RelaxTraceClearanceSolver({
@@ -101,7 +101,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         bounds: srj.bounds,
         boundaryMargin: 0,
         boardEdgeClearance: params.originalSrj.minBoardEdgeClearance ?? 0,
-        lockedPointIndices: relaxationRoutes.map((route) =>
+        lockedPointIndices: treeWalks?.lockedPointIndices ?? relaxationRoutes.map((route) =>
           route.route.map(() => false),
         ),
         allowViaMovement: !params.allowPartialRepair,

@@ -2,6 +2,7 @@ import { BaseSolver } from "lib/solvers/BaseSolver"
 import { FindClearancePathSolver } from "@tscircuit/repair04"
 import { assertSharedElectricalTreeRoutes } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/assertSharedElectricalTreeRoutes"
 import { moveElectricalTreeJunction } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/moveElectricalTreeJunction"
+import { getElectricalTreeTerminalWitness } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/getElectricalTreeTerminalWitness"
 import { createPipeline9ClearanceSearchOwnershipContext } from "./createPipeline9ClearanceSearchOwnershipContext"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -58,7 +59,7 @@ export class Pipeline9ElectricalTreeRepairSolver extends BaseSolver {
       if (!center) continue
       const reach = 2 * (route.viaDiameter + route.traceThickness + this.params.obstacleMargin)
       for (const endpoint of [0, 1] as const) {
-        if (connection.pointsToConnect[endpoint]!.pcb_port_id) continue
+        if (connection.pointsToConnect[endpoint]!.pcb_port_id || getElectricalTreeTerminalWitness(connection, endpoint, this.params.srj.layerCount)) continue
         const point = endpoint === 0 ? route.route[0]! : route.route.at(-1)!
         const distance = Math.hypot(point.x - center.x, point.y - center.y)
         if (distance > reach || distance < 1e-9) continue
@@ -103,7 +104,7 @@ export class Pipeline9ElectricalTreeRepairSolver extends BaseSolver {
       let candidateRoutes = this.routes
       if (move) {
         this.stats.electricalTreeJunctionRouteTrials++
-        const moved = moveElectricalTreeJunction({ connections: this.params.newConnections, routes: this.routes, ...move })
+        const moved = moveElectricalTreeJunction({ connections: this.params.newConnections, routes: this.routes, layerCount: this.params.srj.layerCount, ...move })
         if (!moved) {
           this.stats.electricalTreeWholeBranchUnavailable++
           return

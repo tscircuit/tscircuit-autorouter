@@ -1,6 +1,7 @@
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { reverseRoutePoints } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
+import { getElectricalTreeTerminalWitness } from "./getElectricalTreeTerminalWitness"
 
 type Occurrence = { walk: number; point: number }
 type Branch = { index: number; start: string; end: string }
@@ -9,16 +10,28 @@ type Branch = { index: number; start: string; end: string }
 export function createElectricalTreeRepairWalks(input: {
   connections: SimpleRouteConnection[]
   routes: HighDensityRoute[]
-}): { routes: HighDensityRoute[]; decode: (walks: HighDensityRoute[]) => HighDensityRoute[]; junctionCount: number } {
+  /** Required when validating source SRJ terminal witnesses without pad IDs. */
+  layerCount?: number
+}): { routes: HighDensityRoute[]; lockedPointIndices: boolean[][]; decode: (walks: HighDensityRoute[]) => HighDensityRoute[]; junctionCount: number } {
   const connectionByName = new Map(input.connections.map((connection) => [connection.name, connection]))
   const occurrences: Occurrence[][][] = input.routes.map((route) => route.route.map(() => []))
   const branches: Branch[] = []
   const incident = new Map<string, Branch[]>()
   const pads = new Set<string>()
+  const immutableEndpoints = new Set<string>()
   const walks: HighDensityRoute[] = []
   for (let index = 0; index < input.routes.length; index++) {
     const route = input.routes[index]!
     const connection = connectionByName.get(route.connectionName)
+    if (connection?.electricalBranch?.nativeLogicalPath) {
+      for (const endpoint of [0, 1] as const) {
+        const witness = getElectricalTreeTerminalWitness(connection, endpoint, input.layerCount)
+        const pointIndex = endpoint === 0 ? 0 : route.route.length - 1
+        const actual = route.route[pointIndex]
+        if (witness && (!actual || actual.x !== witness.x || actual.y !== witness.y || actual.z !== witness.z)) throw new Error(`Electrical tree repair received a moved original terminal on ${connection.name}`)
+        if (witness || connection.pointsToConnect[endpoint]!.pcb_port_id) immutableEndpoints.add(`${index}:${pointIndex}`)
+      }
+    }
     if (!connection?.electricalBranch || connection.electricalBranch.nativeLogicalPath) {
       const walk = walks.length
       walks.push(structuredClone(route))
@@ -31,7 +44,14 @@ export function createElectricalTreeRepairWalks(input: {
       const edges = incident.get(vertex) ?? []
       edges.push(branch)
       incident.set(vertex, edges)
-      if (connection.pointsToConnect[endpoint]!.pcb_port_id) pads.add(vertex)
+      const point = connection.pointsToConnect[endpoint]!, witness = getElectricalTreeTerminalWitness(connection, endpoint, input.layerCount)
+      if (point.pcb_port_id || witness) {
+        pads.add(vertex)
+        const pointIndex = endpoint === 0 ? 0 : route.route.length - 1
+        const actual = route.route[pointIndex]
+        if (witness && (!actual || actual.x !== witness.x || actual.y !== witness.y || actual.z !== witness.z)) throw new Error(`Electrical tree repair received a moved original terminal on ${connection.name}`)
+        immutableEndpoints.add(`${index}:${pointIndex}`)
+      }
     }
   }
   const visited = new Set<number>()
@@ -46,7 +66,7 @@ export function createElectricalTreeRepairWalks(input: {
       for (const edge of incident.get(vertex)!) pending.push(edge.start === vertex ? edge.end : edge.start)
     }
     const root = [...component].find((vertex) => pads.has(vertex))
-    if (!root) throw new Error("Electrical tree repair component has no certified physical pad")
+    if (!root) throw new Error("Electrical tree repair component has no immutable declared terminal")
     const routePoints: HighDensityRoute["route"] = []
     const walkIndex = walks.length
     const append = (edge: Branch, forward: boolean): void => {
@@ -92,8 +112,8 @@ export function createElectricalTreeRepairWalks(input: {
           const copy = outputWalks[ref.walk]!.route[ref.point]
           return !copy || copy.x !== moved.x || copy.y !== moved.y || copy.z !== moved.z
         })) throw new Error("Electrical tree repair moved shared occurrences inconsistently")
-        if (point.pcb_port_id && (point.x !== moved.x || point.y !== moved.y || moved.pcb_port_id !== point.pcb_port_id)) {
-          throw new Error(`Electrical tree repair moved physical pad ${point.pcb_port_id}`)
+        if ((point.pcb_port_id || immutableEndpoints.has(`${index}:${pointIndex}`)) && (point.x !== moved.x || point.y !== moved.y || (point.pcb_port_id !== undefined && moved.pcb_port_id !== point.pcb_port_id))) {
+          throw new Error(`Electrical tree repair moved immutable terminal on ${route.connectionName}`)
         }
         return { ...point, x: moved.x, y: moved.y }
       })
@@ -123,5 +143,10 @@ export function createElectricalTreeRepairWalks(input: {
     }
     return output
   }
-  return { routes: walks, decode, junctionCount: [...incident].filter(([vertex, edges]) => edges.length > 1 && !pads.has(vertex)).length }
+  const lockedPointIndices = walks.map((route) => route.route.map(() => false))
+  for (const key of immutableEndpoints) {
+    const [route, point] = key.split(":").map(Number)
+    for (const occurrence of occurrences[route!]![point!]!) lockedPointIndices[occurrence.walk]![occurrence.point] = true
+  }
+  return { routes: walks, lockedPointIndices, decode, junctionCount: [...incident].filter(([vertex, edges]) => edges.length > 1 && !pads.has(vertex)).length }
 }

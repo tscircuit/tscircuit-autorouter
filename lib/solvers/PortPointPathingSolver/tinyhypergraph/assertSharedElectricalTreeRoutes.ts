@@ -2,6 +2,7 @@ import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { getElectricalTreeTerminalWitness } from "./getElectricalTreeTerminalWitness"
 
 /** Every branch still joins the same pad/junction graph after geometric repair. */
 export function assertSharedElectricalTreeRoutes(input: {
@@ -26,6 +27,7 @@ export function assertSharedElectricalTreeRoutes(input: {
       const point = endpoints[index]
       const expected = connection.pointsToConnect[index]
       const vertexId = index === 0 ? branch.startVertexId : branch.endVertexId
+      const terminal = getElectricalTreeTerminalWitness(connection, index, input.layerCount)
       if (!point || !expected || ![point.x, point.y, point.z].every(Number.isFinite) ||
         point.z !== mapLayerNameToZ(getConnectionPointLayer(expected), input.layerCount)) {
         throw new Error(`Electrical tree lost endpoint layer of ${connection.name}`)
@@ -34,6 +36,7 @@ export function assertSharedElectricalTreeRoutes(input: {
         point.pcb_port_id !== expected.pcb_port_id)) {
         throw new Error(`Electrical tree moved physical pad ${expected.pcb_port_id}`)
       }
+      if (terminal && (point.x !== terminal.x || point.y !== terminal.y)) throw new Error(`Electrical tree moved original terminal of ${terminal.sourceConnectionName}`)
       const previous = positions.get(vertexId)
       if (previous && (Math.hypot(previous.x - point.x, previous.y - point.y) > 1e-6 || previous.z !== point.z)) {
         throw new Error(`Electrical tree disconnected shared junction ${vertexId}`)

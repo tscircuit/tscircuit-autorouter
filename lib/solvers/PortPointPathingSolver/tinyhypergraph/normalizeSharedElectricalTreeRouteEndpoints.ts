@@ -3,9 +3,10 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getElectricalTreeTerminalWitness } from "./getElectricalTreeTerminalWitness"
 
 type Position = { x: number; y: number }
-type Reference = { routeIndex: number; pointIndex: number; padId?: string; expected: Position; z: number }
+type Reference = { routeIndex: number; pointIndex: number; padId?: string; originalTerminal: boolean; expected: Position; z: number }
 type Vertex = { netId: string; refs: Reference[] }
 
 /** Convert native roundoff copies back to one exact shared coordinate variable. */
@@ -70,7 +71,7 @@ export function normalizeSharedElectricalTreeRouteEndpoints(input: {
       const vertex = vertices.get(id) ?? { netId: branch.netId, refs: [] }
       if (vertex.netId !== branch.netId) throw new Error(`Shared endpoint normalization joins different roots at ${id}`)
       if (vertex.refs[0] && vertex.refs[0].z !== z) throw new Error(`Shared endpoint normalization has conflicting vertex layers at ${id}`)
-      vertex.refs.push({ routeIndex, pointIndex, padId: expected.pcb_port_id, expected, z })
+      vertex.refs.push({ routeIndex, pointIndex, padId: expected.pcb_port_id, originalTerminal: getElectricalTreeTerminalWitness(connection, endpoint, input.layerCount) !== undefined, expected, z })
       vertices.set(id, vertex)
       parent.set(id, id)
     }
@@ -85,7 +86,7 @@ export function normalizeSharedElectricalTreeRouteEndpoints(input: {
   const targets = new Map<string, Position>()
   for (const [id, vertex] of vertices) {
     for (const ref of vertex.refs) {
-      if (!ref.padId && !input.preserveJunctionPositions) continue
+      if (!ref.padId && !ref.originalTerminal && !input.preserveJunctionPositions) continue
       const root = find(id), previous = targets.get(root)
       if (previous && (previous.x !== ref.expected.x || previous.y !== ref.expected.y)) throw new Error(`Shared endpoint normalization has conflicting fixed positions at ${id}`)
       targets.set(root, ref.expected)
@@ -108,7 +109,7 @@ export function normalizeSharedElectricalTreeRouteEndpoints(input: {
       const scale = Math.max(1, Math.abs(point.x), Math.abs(point.y), Math.abs(target.x), Math.abs(target.y))
       const limit = Math.min(1e-9, 64 * Number.EPSILON * scale, sourceRoute.traceThickness * 1e-9)
       if (!Number.isFinite(limit) || limit <= 0 || displacement > limit) throw new Error(`Shared endpoint normalization exceeds roundoff at ${id}`)
-      if (ref.padId && (target.x !== ref.expected.x || target.y !== ref.expected.y)) throw new Error(`Shared endpoint normalization moved immutable pad ${ref.padId}`)
+      if ((ref.padId || ref.originalTerminal) && (target.x !== ref.expected.x || target.y !== ref.expected.y)) throw new Error(`Shared endpoint normalization moved immutable terminal on ${sourceRoute.connectionName}`)
       const routeTag = ref.pointIndex === 0 ? sourceRoute.startPcbPortId : sourceRoute.endPcbPortId
       if (displacement === 0 && point.pcb_port_id === ref.padId && routeTag === ref.padId) continue
       if (!owned.has(ref.routeIndex)) {

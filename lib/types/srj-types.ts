@@ -187,12 +187,29 @@ export interface SimpleRouteConnection {
     startVertexId: string
     endVertexId: string
     logicalConnectionNames: string[]
+    /** Source-derived original demand terminals that have no PCB pad identity. */
+    originalTerminals?: {
+      start?: ElectricalTreeTerminalWitness
+      end?: ElectricalTreeTerminalWitness
+    }
     /** Original logical path kept outside shared-tree compilation. */
     nativeLogicalPath?: true
   }
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]
+}
+
+/** Exact original SRJ terminal provenance; this does not declare a PCB pad. */
+export type ElectricalTreeTerminalWitness = {
+  sourceConnectionName: string
+  sourceEndpointIndex: 0 | 1
+  /** Explicit null records a genuinely unnamed original terminal. */
+  sourcePointId: string | null
+  x: number
+  y: number
+  z: number
+  layer: string
 }
 
 export interface SimplifiedPcbTrace {
