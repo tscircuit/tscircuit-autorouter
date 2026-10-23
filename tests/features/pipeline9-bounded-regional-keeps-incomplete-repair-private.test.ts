@@ -21,6 +21,9 @@ test("a regional improvement stays private while a reference connectivity error 
       }
     },
   })
+  expect(() => solver.getBestCandidateRoutes()).toThrow(
+    "Regional repair candidate requested before completion",
+  )
   while (!solver.solved && !solver.failed) solver.step()
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
@@ -31,6 +34,18 @@ test("a regional improvement stays private while a reference connectivity error 
   expect(result.publishedDrcIssueCount).toBe(result.initialDrcIssueCount)
   expect(result.repaired).toBeFalse()
   expect(result.routes).toBe(fixture.routes)
+  const candidateRoutes = solver.getBestCandidateRoutes()
+  expect(candidateRoutes).not.toBe(fixture.routes)
+  const candidateReference = fixture.drcEvaluator({
+    traces: [],
+    routes: candidateRoutes,
+    hdRoutes: candidateRoutes,
+  })
+  if (Array.isArray(candidateReference)) {
+    expect(candidateReference).toHaveLength(0)
+  } else {
+    expect(candidateReference.errors).toHaveLength(0)
+  }
   expect(fixture.routes).toEqual(original)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)

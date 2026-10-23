@@ -53,6 +53,7 @@ import {
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
+import { selectPipeline9RepairProgress } from "./selectPipeline9RepairProgress"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
@@ -1689,9 +1690,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
-    // A complete bounded repair can avoid the much broader portfolio search.
-    // Keep incomplete candidates private so the existing stages see their
-    // original input, including all preload ownership and candidate budgets.
+    // Complete repairs avoid the broader portfolio search. Incomplete progress
+    // stays private until the final completed candidates are compared.
     if (result.publishedDrcIssueCount !== 0) return
     const reference = this.cachedReferenceDrcEvaluator({
       traces: [],
@@ -1955,6 +1955,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       !this.boundedRegionalRepairSolver?.solved ||
       !this.regionalB01RepairSolver?.solved ||
       !this.boundedRegionalParams?.budget ||
+      !this.exactRepairSolver ||
+      !this.cachedReferenceDrcEvaluator ||
       this.boundedRegionalRepairStartedAt === undefined
     ) {
       throw new Error(
@@ -1965,9 +1967,32 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    let candidates: HighDensityRoute[][] = []
+    if (
+      this.params.updatedPreloadedTraces.length === 0 &&
+      (this.params.originalSrj.traces?.length ?? 0) === 0
+    ) {
+      const initialRepair = this.initialBoundedRegionalRepairSolver
+      if (!initialRepair?.solved || initialRepair.failed) {
+        throw new Error("Repair continuation is missing its completed input")
+      }
+      candidates = [
+        initialRepair.getResult().routes,
+        initialRepair.getBestCandidateRoutes(),
+        this.exactRepairSolver.getOutput(),
+        this.boundedRegionalRepairSolver.getBestCandidateRoutes(),
+      ]
+    }
+    const retainedProgress = selectPipeline9RepairProgress({
+      originalSrj: this.boundedRegionalParams.originalSrj,
+      originalRoutes: boundedRegionalRepairResult.routes,
+      candidates,
+      drcEvaluator: this.cachedReferenceDrcEvaluator,
+    })
+    this.combinedOutput = retainedProgress.routes
     this.stats = {
       ...this.stats,
+      finalDrcIssueCount: retainedProgress.drcIssueCount,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
