@@ -99,7 +99,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#e76e25a4c965b2c3099c85350a8f8b523bc97bd4",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#6c1b2a50dd5ca4b932cf2421e44fb873bdfb857c",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
