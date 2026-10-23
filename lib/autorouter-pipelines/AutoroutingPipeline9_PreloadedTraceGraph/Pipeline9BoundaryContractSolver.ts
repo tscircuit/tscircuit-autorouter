@@ -4,7 +4,7 @@ import type { Obstacle } from "../../types/srj-types"
 import type { UniformPortDistributionSolver } from "../../solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import type { InputNodeWithPortPoints } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import type { SharedEdge } from "../../solvers/UniformPortDistributionSolver/types"
-import { getOwnerPairKey } from "../../solvers/UniformPortDistributionSolver/getOwnerPairKey"
+import { getOwnerPairKey, normalizeOwnerPair } from "../../solvers/UniformPortDistributionSolver/getOwnerPairKey"
 import { precomputeSharedEdges } from "../../solvers/UniformPortDistributionSolver/precomputeSharedEdges"
 import { mapLayerNameToZ } from "../../utils/mapLayerNameToZ"
 
@@ -104,7 +104,7 @@ export class Pipeline9BoundaryContractSolver extends BaseSolver {
     const targetNodeIds = new Set(input.inputNodesWithPortPoints.filter((n) => n._containsTarget).map((n) => n.capacityMeshNodeId))
     for (const node of input.inputNodesWithPortPoints) {
       for (const port of node.portPoints) {
-        const edgeKey = getOwnerPairKey(port.connectionNodeIds)
+        const edgeKey = getOwnerPairKey(normalizeOwnerPair(...port.connectionNodeIds))
         const ids = this.portIdsByEdge.get(edgeKey) ?? new Set<string>()
         if (this.actualPorts.has(port.portPointId)) ids.add(port.portPointId)
         this.portIdsByEdge.set(edgeKey, ids)
