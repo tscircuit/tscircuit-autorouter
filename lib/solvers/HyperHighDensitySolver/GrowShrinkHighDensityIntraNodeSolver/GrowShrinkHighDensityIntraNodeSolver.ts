@@ -205,8 +205,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
-      enableFrontierInterfaceSearch:
-        this.scaleFactor === 1 && portfolioParams.enableFrontierInterfaceSearch,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),

@@ -106,8 +106,8 @@ export type TinyHypergraphBenchmarkMetrics = {
 export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
-  phaseStats?: Record<string, Record<string, number>>
   phaseTimeMs?: Record<string, number>
+  phaseStats?: Record<string, Record<string, number>>
   networkedHighDensity?: {
     remoteRequestsStarted: number
     remoteRequestsCompleted: number
