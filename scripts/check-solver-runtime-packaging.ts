@@ -130,6 +130,24 @@ try {
 import { strict as assert } from "node:assert"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline9 } from "@tscircuit/capacity-autorouter"
 import { createAutorouterSolverRuntime } from "@tscircuit/capacity-autorouter/runtime/${platform}"
+function deterministicStats(stats: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...stats }
+  // Timing remains observable, but separate serial/worker runs cannot match it.
+  for (const key of [
+    "learnedComputeElapsedMs",
+    "learnedComputePredictionElapsedMs",
+    "learnedComputeValidationElapsedMs",
+    "learnedComputePortfolioOverheadMs",
+  ]) {
+    assert.ok(
+      typeof result[key] === "number" &&
+        Number.isFinite(result[key]) &&
+        result[key] >= 0,
+    )
+    delete result[key]
+  }
+  return result
+}
 async function verify() {
 const input = ${JSON.stringify(input)}
 const serial = new Pipeline9(structuredClone(input), {effort: 0.1, cacheProvider: null})
@@ -147,7 +165,10 @@ try {
   assert.ok(dispatchCount > 0, "Test must actually dispatch registered solver tasks")
   assert.equal(JSON.stringify(solver.getOutputSimpleRouteJson()), JSON.stringify(serial.getOutputSimpleRouteJson()))
   assert.equal(solver.iterations, serial.iterations)
-  assert.deepEqual(solver.highDensityRouteSolver.stats, serial.highDensityRouteSolver.stats)
+  assert.deepEqual(
+    deterministicStats(solver.highDensityRouteSolver.stats),
+    deterministicStats(serial.highDensityRouteSolver.stats),
+  )
 } finally { await runtime.dispose() }
 }
 verify().catch(error => { console.error(error); process.exitCode = 1 })
