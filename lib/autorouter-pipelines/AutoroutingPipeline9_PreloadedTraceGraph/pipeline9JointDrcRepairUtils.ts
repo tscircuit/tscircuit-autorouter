@@ -9,6 +9,8 @@ export type Pipeline9CollapsedTraceParticipant = {
 
 export type Pipeline9DrcError = Record<string, unknown> & {
   __collapsed_trace_participants?: Pipeline9CollapsedTraceParticipant[]
+  /** Conservative owned repair targets for one reconstructed physical trace. */
+  __repair_trace_ids?: string[]
 }
 
 export type Pipeline9PreloadRepairTraceIds = ReadonlySet<string> & {
@@ -80,7 +82,7 @@ const getPipeline9DrcErrorParticipantTraceIds = (
 export const getPipeline9DrcErrorTraceIds = (
   error: Pipeline9DrcError,
 ): string[] => {
-  return getPipeline9DrcErrorParticipantTraceIds(error).filter(
+  return [...getPipeline9DrcErrorParticipantTraceIds(error), ...(error.__repair_trace_ids ?? [])].filter(
     (traceId, traceIndex, allTraceIds) =>
       allTraceIds.indexOf(traceId) === traceIndex,
   )
@@ -93,7 +95,7 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   error: Pipeline9DrcError
   preloadRepairTraceIds: Pipeline9PreloadRepairTraceIds
 }): boolean => {
-  const participantTraceIds = getPipeline9DrcErrorParticipantTraceIds(error)
+  const participantTraceIds = getPipeline9DrcErrorTraceIds(error)
   if (
     participantTraceIds.some((traceId) => preloadRepairTraceIds.has(traceId))
   ) {

@@ -11,6 +11,7 @@ import type {
 import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
+  Obstacle,
   SimpleRouteConnection,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -98,10 +99,15 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Original physical copper bodies for certifying electrical pad attachments. */
+  electricalTreeObstacles?: readonly Obstacle[]
+  /** Whole canonical nets whose path-level contracts stay native. */
+  electricalTreeNativeNetIds?: readonly string[]
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
+    USE_ELECTRICAL_TREE_TARGETS?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }

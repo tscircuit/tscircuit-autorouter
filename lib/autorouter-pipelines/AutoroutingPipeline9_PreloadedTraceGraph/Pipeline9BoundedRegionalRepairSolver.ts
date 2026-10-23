@@ -3,12 +3,11 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
+  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
-import { NegotiateTraceClearanceSolver } from "./clearance/NegotiateTraceClearanceSolver"
-import { mergePersistentClearanceStats } from "./clearance/PersistentClearanceSearch"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -142,7 +141,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
-  private readonly clearanceWorkStats: Record<string, number> = { clearanceKnowledgeHits: 0, clearanceKnowledgeMisses: 0, clearanceKnowledgeRelatedHits: 0 }
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -181,12 +179,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         : 0
     this.stats = {
       ...this.result,
-      ...this.clearanceWorkStats,
       routes: undefined,
       phase: this.state.phase,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
       pathSearchNodeCount: this.result.pathSearchNodeCount + liveNodes,
-      pathSearchBudgetUnit: "popped_nodes_with_separate_maintenance_cap",
       allowedRegionCount: allowance.maxRegions,
       allowedCandidateAttemptCount: allowance.maxCandidateAttempts,
       allowedPathSearchNodeCount: allowance.maxPathSearchNodes,
@@ -523,10 +519,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "negotiate" }>,
   ): void {
     const repair = state.solver.getOutput()
-    mergePersistentClearanceStats(this.clearanceWorkStats, state.solver.stats)
-    for (const key of ["clearanceKnowledgeHits", "clearanceKnowledgeMisses", "clearanceKnowledgeRelatedHits"]) {
-      this.clearanceWorkStats[key] += state.solver.stats[key]
-    }
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
     if (

@@ -38,6 +38,13 @@ import type {
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import { ElectricalTreeTinyHyperGraphSolver } from "./ElectricalTreeTinyHyperGraphSolver"
+import {
+  createElectricalTreeTerminalWitnesses,
+  type ElectricalTreeTerminalWitness,
+} from "./createElectricalTreeTerminalWitnesses"
+import { resolveElectricalTreeTerminalRole } from "./resolveElectricalTreeTerminalRole"
+import { compileSharedElectricalTrees, type SharedElectricalTreeOutput } from "./compileSharedElectricalTrees"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -53,6 +60,7 @@ type RouteMetadata = {
   endRegionId?: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
   preloadedTraceSection?: PreloadedTraceSectionMetadata
+  electricalTreeNativePath?: true
 }
 
 export type ChangedPreloadedTraceSection = {
@@ -61,6 +69,25 @@ export type ChangedPreloadedTraceSection = {
   startRoutePosition: number
   endRoutePosition: number
   connection: SimpleRouteConnection
+}
+
+export type PreloadedTraceSectionEndpointWitness = {
+  connectionName: string
+  traceId: string
+  endpointIndex: 0 | 1
+  routePosition: number
+  point: { x: number; y: number; z: number }
+  rootConnectionName: string
+  portPointId: string
+  sourcePortPointId: string
+  sourcePortPoint: { x: number; y: number; z: number }
+  incidentCapacityMeshNodeIds: string[]
+}
+
+type OriginalPreloadedPort = {
+  point: { x: number; y: number; z: number }
+  regionIds: string[]
+  assignments: PreloadedTracePortAssignment[]
 }
 
 type SerializedTinyConnection = NonNullable<
@@ -495,6 +522,7 @@ const buildSerializedTinyGraph = (
       startRegionId: connection.startRegion.regionId,
       endRegionId: connection.endRegion.regionId,
       simpleRouteConnection: connection.simpleRouteConnection,
+      ...(params.electricalTreeNativeNetIds?.includes(connection.mutuallyConnectedNetworkId) ? { electricalTreeNativePath: true } : {}),
     }),
   )
 
@@ -915,13 +943,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  readonly useElectricalTreeTargets: boolean
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useElectricalTreeTargets = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.useElectricalTreeTargets = useElectricalTreeTargets
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
@@ -938,7 +969,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        useElectricalTreeTargets
+          ? ElectricalTreeTinyHyperGraphSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -979,8 +1012,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
+      const Solver = this.useElectricalTreeTargets
+        ? ElectricalTreeTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
       this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+        new Solver(
           topology,
           problem,
           this.getSolveGraphOptions(),
@@ -1049,11 +1085,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
+  private readonly originalTreeTerminals: Map<string, ElectricalTreeTerminalWitness>
+  private readonly originalTreePcbPortsByConnectionId = new Map<string, string[]>()
+  private sharedElectricalTree?: SharedElectricalTreeOutput
+  private sharedChangedPreloadedTraceSections: ChangedPreloadedTraceSection[] = []
+  private readonly originalPreloadedPortsById: Map<string, OriginalPreloadedPort>
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    this.originalPreloadedPortsById = new Map(
+      params.graph.ports.flatMap((port) =>
+        port.d._preloadedTracePortAssignments?.length
+          ? [[port.d.portId, {
+              point: { x: port.d.x, y: port.d.y, z: port.d.z },
+              regionIds: [port.region1.d.capacityMeshNodeId, port.region2.d.capacityMeshNodeId].sort(),
+              assignments: structuredClone(port.d._preloadedTracePortAssignments),
+            }] as const]
+          : [],
+      ),
+    )
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1070,6 +1122,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    this.originalTreeTerminals = params.flags.USE_ELECTRICAL_TREE_TARGETS
+      ? createElectricalTreeTerminalWitnesses(serializedGraph, params.layerCount)
+      : new Map()
+    for (const witness of this.originalTreeTerminals.values()) {
+      const pcbPorts = this.originalTreePcbPortsByConnectionId.get(witness.connectionId) ?? []
+      pcbPorts.push(witness.pcbPortId)
+      this.originalTreePcbPortsByConnectionId.set(witness.connectionId, pcbPorts)
+    }
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1137,6 +1197,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.flags.USE_ELECTRICAL_TREE_TARGETS === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1356,6 +1417,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.solved = this.tinyPipelineSolver.solved
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
+    if (this.solved && this.params.flags.USE_ELECTRICAL_TREE_TARGETS) this.getRoutingOutput()
   }
 
   getSolveGraphBenchmarkMetrics() {
@@ -1388,6 +1450,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
+      electricalTreeTargetCount: solveGraphStats.electricalTreeTargetCount,
+      electricalTreeSuffixSegmentCount: solveGraphStats.electricalTreeSuffixSegmentCount,
+      electricalTreeAliasConnectorCount: solveGraphStats.electricalTreeAliasConnectorCount,
+      electricalTreeIndexSegmentReads: solveGraphStats.electricalTreeIndexSegmentReads,
+      electricalTreeSearchStepCount: solveGraphStats.electricalTreeSearchStepCount,
+      electricalTreeRemovedRetracedSegmentCount:
+        solveGraphStats.electricalTreeRemovedRetracedSegmentCount,
+      electricalTreeSharedCacheReferenceCount: solveGraphStats.electricalTreeSharedCacheReferenceCount,
+      electricalTreePhysicalCacheEdgeCount: solveGraphStats.electricalTreePhysicalCacheEdgeCount,
+      ...(this.sharedElectricalTree?.stats ?? {}),
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
       partiallyRippedSegmentCount: solveGraphStats.partiallyRippedSegmentCount,
@@ -1446,6 +1518,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.flags.USE_ELECTRICAL_TREE_TARGETS === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1507,6 +1580,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         "optimizeSection",
       )
     const currentTinySolver = this.getCurrentTinySolver()
+    const solveGraphStats = this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")?.stats
+    const electricalTreeStats = Object.fromEntries(Object.entries(solveGraphStats ?? {})
+      .filter(([key, value]) => key.startsWith("electricalTree") && typeof value === "number" && Number.isFinite(value)))
     this.statsSnapshot = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
@@ -1533,6 +1609,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
+      ...electricalTreeStats,
+      ...(this.sharedElectricalTree?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
@@ -1592,22 +1670,58 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const serializedPortId = String(
+      portMetadata?.serializedPortId ?? portMetadata?.portId ?? `tiny-port-${portId}`,
+    )
+    let pcbPortId = this.params.preserveTerminalPcbPortIds &&
+      typeof portMetadata?.pcb_port_id === "string"
+      ? portMetadata.pcb_port_id
+      : undefined
+    const originalPortId = typeof portMetadata?.duplicatedFromPortId === "string"
+      ? portMetadata.duplicatedFromPortId
+      : serializedPortId
+    const physicalWitness = this.originalTreeTerminals.get(originalPortId)
+    const physicalTerminal = physicalWitness && routeMetadata &&
+      physicalWitness.netId === routeMetadata.mutuallyConnectedNetworkId &&
+      physicalWitness.x === solvedTinySolver.topology.portX[portId] &&
+      physicalWitness.y === solvedTinySolver.topology.portY[portId] &&
+      physicalWitness.z === solvedTinySolver.topology.portZ[portId]
+      ? physicalWitness : undefined
+    if (pcbPortId !== undefined && this.params.flags.USE_ELECTRICAL_TREE_TARGETS) {
+      if (!routeMetadata) {
+        throw new Error(`Electrical tree lost route ${routeId}'s terminal metadata`)
+      }
+      const role = resolveElectricalTreeTerminalRole({
+        connectionId: routeMetadata.connectionId,
+        netId: routeMetadata.mutuallyConnectedNetworkId,
+        expectedPcbPortIds: this.originalTreePcbPortsByConnectionId
+          .get(routeMetadata.connectionId) ?? [],
+        pcbPortId,
+        position: {
+          x: solvedTinySolver.topology.portX[portId]!,
+          y: solvedTinySolver.topology.portY[portId]!,
+          z: solvedTinySolver.topology.portZ[portId]!,
+        },
+        witness: this.originalTreeTerminals.get(originalPortId),
+        preloaded: hasPreloadedTraceSectionMetadata(routeMetadata),
+      })
+      // The pair's endpoint tags retain their locking role. A certified pad
+      // crossed inside its owned copper path remains an ordinary junction.
+      if (role === "junction") pcbPortId = undefined
+    }
 
     return {
-      portPointId: String(
-        portMetadata?.serializedPortId ??
-          portMetadata?.portId ??
-          `tiny-port-${portId}`,
-      ),
+      portPointId: serializedPortId,
       x: solvedTinySolver.topology.portX[portId],
       y: solvedTinySolver.topology.portY[portId],
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
-      ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
-        : {}),
+      ...(pcbPortId !== undefined ? { pcb_port_id: pcbPortId } : {}),
+      electricalVertexId: physicalTerminal
+        ? JSON.stringify([physicalTerminal.netId, "pad", physicalTerminal.pcbPortId, physicalTerminal.x, physicalTerminal.y, physicalTerminal.z])
+        : JSON.stringify([routeMetadata?.mutuallyConnectedNetworkId, "port", serializedPortId]),
+      electricalTerminalId: physicalTerminal?.pcbPortId,
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
           ? portMetadata.prevPortPointId
@@ -1617,6 +1731,60 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           ? portMetadata.nextPortPointId
           : undefined,
     }
+  }
+
+  /** Bind each mutable seam to its original serialized trace crossing. */
+  getChangedPreloadedTraceSectionEndpointWitnesses(): PreloadedTraceSectionEndpointWitness[] {
+    const solver = this.getSolvedTinySolver()
+    const witnesses: PreloadedTraceSectionEndpointWitness[] = []
+    const metadataById = new Map<string, TinyPortMetadata>()
+    for (const metadata of solver.topology.portMetadata ?? []) {
+      const id = metadata.serializedPortId ?? metadata.portId
+      if (typeof id === "string") metadataById.set(id, metadata)
+    }
+    for (const routeId of this.getChangedPreloadedRouteIds(solver)) {
+      const metadata = this.getRouteMetadata(solver, routeId)
+      if (!hasPreloadedTraceSectionMetadata(metadata)) throw new Error("Preloaded endpoint witness lost section metadata")
+      for (const endpointIndex of [0, 1] as const) {
+        const portId = endpointIndex === 0 ? solver.problem.routeStartPort[routeId]! : solver.problem.routeEndPort[routeId]!
+        const port = this.createAssignedPortPoint(solver, routeId, portId)
+        if (!port.portPointId) throw new Error("Preloaded endpoint witness lost serialized port identity")
+        let sourceId = port.portPointId
+        const visited = new Set<string>()
+        while (!this.originalPreloadedPortsById.has(sourceId)) {
+          if (visited.has(sourceId)) throw new Error("Preloaded endpoint witness has cyclic port ancestry")
+          visited.add(sourceId)
+          const ancestor = metadataById.get(sourceId)?.duplicatedFromPortId
+          if (!ancestor) throw new Error(`Preloaded endpoint witness has no source port: ${sourceId}`)
+          sourceId = ancestor
+        }
+        const source = this.originalPreloadedPortsById.get(sourceId)!
+        const section = metadata.preloadedTraceSection
+        const point = endpointIndex === 0 ? section.startPoint : section.endPoint
+        const routePosition = endpointIndex === 0 ? section.startRoutePosition : section.endRoutePosition
+        const assignments = source.assignments.filter((assignment) =>
+          assignment.traceId === section.traceId && assignment.routePosition === routePosition &&
+          assignment.fixedNetId === metadata.mutuallyConnectedNetworkId && assignment.z === point.z &&
+          assignment.tracePoint.x === point.x && assignment.tracePoint.y === point.y,
+        )
+        const incidentIds = solver.topology.incidentPortRegion[portId]!.map((regionId) =>
+          solver.topology.regionMetadata?.[regionId]?.capacityMeshNodeId,
+        ).sort()
+        if (assignments.length !== 1 || port.z !== point.z ||
+          JSON.stringify(incidentIds) !== JSON.stringify(source.regionIds)) {
+          throw new Error(`Preloaded endpoint witness disagrees with source ownership or incidence: ${port.portPointId}`)
+        }
+        witnesses.push({
+          connectionName: metadata.connectionId, traceId: section.traceId,
+          endpointIndex, routePosition, point: { ...point },
+          rootConnectionName: metadata.mutuallyConnectedNetworkId,
+          portPointId: port.portPointId, sourcePortPointId: sourceId,
+          sourcePortPoint: { ...source.point },
+          incidentCapacityMeshNodeIds: [...source.regionIds],
+        })
+      }
+    }
+    return witnesses
   }
 
   getOutput(): {
@@ -1731,6 +1899,57 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  getRoutingOutput(): ReturnType<TinyHypergraphPortPointPathingSolver["getOutput"]> & {
+    connections: SimpleRouteConnection[]
+    sharedEdges: SharedElectricalTreeOutput["edges"]
+  } {
+    if (!this.sharedElectricalTree) {
+      const logical = this.getOutput()
+      const solver = this.getSolvedTinySolver()
+      const excludedConnections = new Set<string>()
+      const netByConnection = new Map<string, string>()
+      const demandEndpoints = new Map<string, readonly [string, string]>()
+      for (let routeId = 0; routeId < solver.problem.routeCount; routeId++) {
+        const metadata = this.getRouteMetadata(solver, routeId)
+        if (!metadata) throw new Error(`Electrical tree lost metadata for route ${routeId}`)
+        const name = getRouteConnectionName(metadata)
+        if (hasPreloadedTraceSectionMetadata(metadata)) {
+          excludedConnections.add(name)
+          continue
+        }
+        netByConnection.set(name, metadata.mutuallyConnectedNetworkId)
+        const start = this.createAssignedPortPoint(solver, routeId, solver.problem.routeStartPort[routeId]!)
+        const end = this.createAssignedPortPoint(solver, routeId, solver.problem.routeEndPort[routeId]!)
+        if (!start.electricalVertexId || !end.electricalVertexId) throw new Error(`Electrical tree lost endpoints of ${name}`)
+        for (const point of [start, end]) {
+          if (point.pcb_port_id !== undefined && point.electricalTerminalId !== point.pcb_port_id) {
+            throw new Error(`Electrical tree lost immutable physical pad witness of ${name}`)
+          }
+        }
+        demandEndpoints.set(name, [start.electricalVertexId, end.electricalVertexId])
+      }
+      this.sharedElectricalTree = compileSharedElectricalTrees({
+        nodes: logical.nodesWithPortPoints,
+        connections: this.params.connections.map((connection) => {
+          if (!connection.simpleRouteConnection) throw new Error(`Electrical tree lost input connection ${connection.connectionId}`)
+          return connection.simpleRouteConnection
+        }),
+        excludedConnections,
+        netByConnection,
+        demandEndpoints,
+        layerCount: this.params.layerCount,
+        obstacles: this.params.electricalTreeObstacles,
+        nativeNetIds: new Set(this.params.electricalTreeNativeNetIds ?? []),
+      })
+      this.sharedChangedPreloadedTraceSections = logical.changedPreloadedTraceSections
+      this.statsSnapshotDirty = true
+    }
+    return { nodesWithPortPoints: this.sharedElectricalTree.nodesWithPortPoints,
+      inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      changedPreloadedTraceSections: this.sharedChangedPreloadedTraceSections,
+      connections: this.sharedElectricalTree.connections, sharedEdges: this.sharedElectricalTree.edges }
+  }
+
   computeNodePf(node: InputNodeWithPortPoints): number | null {
     const solvedNode = this.getOutput().nodesWithPortPoints.find(
       (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
@@ -1740,7 +1959,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   computeNodePfMap(): Map<string, number | null> {
     const solvedNodeById = new Map(
-      this.getOutput().nodesWithPortPoints.map((node) => [
+      (this.params.flags.USE_ELECTRICAL_TREE_TARGETS ? this.getRoutingOutput() : this.getOutput()).nodesWithPortPoints.map((node) => [
         node.capacityMeshNodeId,
         node,
       ]),
