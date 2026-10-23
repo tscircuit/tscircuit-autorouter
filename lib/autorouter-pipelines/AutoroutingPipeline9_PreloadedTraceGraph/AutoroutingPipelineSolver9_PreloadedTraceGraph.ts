@@ -620,6 +620,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             nodePortPoints: nodePortPointsSource,
+            enableComputeSelection: true,
+            computeSelectionCopperRules: {
+              defaultObstacleMargin: cms.srj.defaultObstacleMargin,
+              minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+              minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+              minViaEdgeToPadEdgeClearance: cms.srj.minViaEdgeToPadEdgeClearance,
+              allowViaInPad: cms.srj.allowViaInPad,
+            },
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
               outline: cms.originalSrj.outline,

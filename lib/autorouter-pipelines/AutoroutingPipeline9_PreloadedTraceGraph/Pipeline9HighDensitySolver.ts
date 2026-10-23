@@ -38,6 +38,8 @@ import { ContextualComputeSelectionModel } from "lib/solvers/HyperHighDensitySol
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
+  enableComputeSelection?: boolean
+  computeSelectionCopperRules?: ContextualComputeSelectionModel["copperRules"]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -398,7 +400,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
-  readonly computeSelectionModel = new ContextualComputeSelectionModel()
+  readonly computeSelectionModel: ContextualComputeSelectionModel
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -418,6 +420,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
+    this.computeSelectionModel = new ContextualComputeSelectionModel({ ...params.computeSelectionCopperRules, allowBlindAndBuriedVias: params.allowBlindAndBuriedVias })
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
@@ -464,7 +467,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     return "Pipeline9HighDensitySolver"
   }
 
-  /** Independent batches use the host runtime; preloaded repairs retain serial visibility. */
+  /** Board-local adaptive decisions and preload visibility require serial host state. */
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
     stopAtIteration = Infinity,
@@ -479,7 +482,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      if (this.fixedHdRoutes.length > 0) {
+      if (this.params.enableComputeSelection || this.fixedHdRoutes.length > 0) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -604,7 +607,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
-      computeSelectionModel: this.computeSelectionModel,
+      computeSelectionModel: this.params.enableComputeSelection ? this.computeSelectionModel : undefined,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

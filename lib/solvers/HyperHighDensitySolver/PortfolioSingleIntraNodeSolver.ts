@@ -35,7 +35,7 @@ import {
   type ComputeSelectionObservation,
   type ComputeSelectionPrediction,
 } from "./ContextualComputeSelectionModel"
-import { validateComputeSelectionOutcome } from "./validateComputeSelectionOutcome"
+import { assessComputeSelectionOutcome } from "./validateComputeSelectionOutcome"
 
 type LearnedPortfolioCandidate = NonNullable<
   PortfolioSingleIntraNodeSolver["supervisedSolvers"]
@@ -97,6 +97,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private readonly computePredictions = new Map<string, ComputeSelectionPrediction>()
   private readonly computeWorkBySolver = new Map<BaseSolver, CandidateComputeWork>()
   private computeOutcomesRecorded = false
+  private readonly computeValidationBySolver = new Map<BaseSolver, {
+    valid: boolean
+    physicallyClean: boolean
+    elapsedMs: number
+  }>()
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -533,9 +538,42 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         candidate.h = this.computeH(candidate.solver as IntraNodeRouteSolver)
         candidate.f = this.computeF(candidate.g, candidate.h)
         if (candidate.solver.solved) {
-          this.solved = true
-          this.winningSolver = candidate.solver
           this.onSolve(candidate as SupervisedSolver<IntraNodeRouteSolver>)
+          const validationStartedAt = performance.now()
+          const validationParams = {
+            routes: this.solvedRoutes,
+            node: this.nodeWithPortPoints,
+            connMap: this.connMap,
+            obstacles: this.constructorParams.obstacles ?? [],
+            layerCount: this.constructorParams.layerCount ?? 2,
+            traceWidth: this.constructorParams.traceWidth ?? 0.15,
+            viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+            obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
+            boardGeometry: this.constructorParams.boardGeometry,
+            copperRules: this.computeSelectionModel.copperRules,
+          }
+          const assessment = assessComputeSelectionOutcome(validationParams)
+          const valid = assessment.structurallyValid
+          const physicallyClean = assessment.physicallyClean
+          const elapsedMs = performance.now() - validationStartedAt
+          this.computeValidationBySolver.set(candidate.solver, { valid, physicallyClean, elapsedMs })
+          this.computeSelectionModel.recordValidation(elapsedMs)
+          if (valid) {
+            // Local interfaces can carry inherited clearance debt that only the
+            // later global repair may move. Keep the native acceptance contract;
+            // do not train a physically-clean event from this provisional result.
+            if (!physicallyClean) this.stats.learnedComputePendingPhysicalWinnerCount = Number(this.stats.learnedComputePendingPhysicalWinnerCount ?? 0) + 1
+            this.solved = true
+            this.winningSolver = candidate.solver
+          } else {
+            // An invalid candidate is an explicit rejected search outcome. It
+            // cannot become pipeline copper merely because a kernel stopped.
+            candidate.solver.solved = false
+            candidate.solver.failed = true
+            candidate.solver.error = "Portfolio candidate violates required connectivity or physical copper constraints"
+            this.solvedRoutes = []
+            this.stats.learnedComputeRejectedCandidateCount = Number(this.stats.learnedComputeRejectedCandidateCount ?? 0) + 1
+          }
         }
       }
     }
@@ -595,6 +633,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.computeSelectionModel || !this.learnedComputeSelection) {
       return super.getSupervisedSolverWithBestFitness()
     }
+    // Algebraic applicability/constructors are a deterministic preflight, not
+    // a noisy millisecond-scale race against a detailed grid search. Learning
+    // allocates the substantial search only after these domains are exhausted.
+    for (const candidate of this.supervisedSolvers ?? []) {
+      if (candidate.solver.solved) return candidate
+      if (!candidate.solver.failed && (
+        candidate.hyperParameters.THROUGH_OBSTACLE ||
+        candidate.hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS ||
+        candidate.hyperParameters.CLOSED_FORM_SINGLE_TRANSITION
+      )) return candidate
+    }
     let selected: LearnedPortfolioCandidate | null = null
     let bestScore = Infinity
     for (const candidate of this.supervisedSolvers ?? []) {
@@ -606,10 +655,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         prediction = this.computeSelectionModel.predict(this.computeFeatures, strategy)
         this.computePredictions.set(strategy, prediction)
       }
-      const currentWork = this.computeWorkBySolver.get(candidate.solver)?.work ?? 0
       // Live exposure lowers a stalled candidate's estimated event rate. All
       // live candidates retain finite scores and their original full budgets.
-      const score = (prediction.exposure + currentWork) / prediction.validEvents
+      const elapsedMs = this.computeWorkBySolver.get(candidate.solver)?.elapsedMs ?? 0
+      const score = (prediction.exposure + elapsedMs) / prediction.validEvents
       if (score < bestScore) {
         bestScore = score
         selected = candidate
@@ -621,40 +670,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private recordComputeOutcomes(): void {
     if (!this.computeSelectionModel || this.computeOutcomesRecorded) return
     this.computeOutcomesRecorded = true
-    const validationStartedAt = performance.now()
-    const valid =
-      this.solved &&
-      validateComputeSelectionOutcome({
-        routes: this.solvedRoutes,
-        node: this.nodeWithPortPoints,
-        connMap: this.connMap,
-        obstacles: this.constructorParams.obstacles ?? [],
-        layerCount: this.constructorParams.layerCount ?? 2,
-        traceWidth: this.constructorParams.traceWidth ?? 0.15,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
-        boardGeometry: this.constructorParams.boardGeometry,
-      })
-    const validationElapsedMs = performance.now() - validationStartedAt
-    if (this.solved) {
-      this.computeSelectionModel.recordValidation(validationElapsedMs)
-    }
-    // Labels do not cancel an existing winner or skip its normal cleanup.
-    // Final board validity remains the responsibility of the existing pipeline.
+    const winnerValidation = this.winningSolver ? this.computeValidationBySolver.get(this.winningSolver) : undefined
+    if (this.solved && winnerValidation?.valid !== true) throw new Error("Learned portfolio accepted an unvalidated winner")
     this.computeSelectionModel.observeNode(
       (this.supervisedSolvers ?? []).flatMap((candidate): ComputeSelectionObservation[] => {
         const work = this.computeWorkBySolver.get(candidate.solver)
-        if (!work || work.work === 0) return []
+        if (!work || work.work === 0 && work.elapsedMs === 0) return []
         const winner = candidate.solver === this.winningSolver
+        const validation = this.computeValidationBySolver.get(candidate.solver)
         let outcome: ComputeSelectionObservation["outcome"]
-        if (winner) outcome = valid ? "valid" : "invalid"
+        if (winner) outcome = validation?.physicallyClean ? "valid" : "censored"
+        else if (validation?.valid === false) outcome = "invalid"
         else outcome = candidate.solver.failed ? "failed" : "censored"
         return [{
           nodeId: this.nodeWithPortPoints.capacityMeshNodeId,
           features: this.computeFeatures,
           strategy: this.getComputeStrategy(candidate.hyperParameters),
-          work: work.work,
-          elapsedMs: work.elapsedMs + (winner ? validationElapsedMs : 0),
+          work: Math.max(1 / this.MIN_SUBSTEPS, work.work),
+          elapsedMs: work.elapsedMs + (validation?.elapsedMs ?? 0),
           outcome,
         }]
       }),
@@ -715,6 +748,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    const startedAt = performance.now()
+    const solver = this.generateRoutingCandidate(hyperParameters)
+    if (this.computeSelectionModel) this.computeWorkBySolver.set(solver, { iterations: 0, work: 0, elapsedMs: performance.now() - startedAt })
+    return solver
+  }
+
+  private generateRoutingCandidate(hyperParameters: any): IntraNodeRouteSolver {
     // Each grow/shrink attempt owns a distinct node and portfolio. Keep this
     // shared data local so later attempts and caller edits are recomputed.
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(

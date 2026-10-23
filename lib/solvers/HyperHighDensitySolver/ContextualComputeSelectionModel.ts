@@ -1,3 +1,4 @@
+import type { SimpleRouteJson } from "lib/types/srj-types"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
@@ -65,16 +66,20 @@ export const getComputeSelectionFeatures = (
 }
 
 /**
- * A board-local, kernel-weighted survival model. A validated solution is an
- * event; exhausted, invalid, and interrupted candidates contribute observed
- * work without pretending that their time-to-valid-solution was observed.
- * Gamma(1, 1) supplies the same finite prior for every strategy. Wall time is
- * retained as evidence but never changes deterministic work-based decisions.
+ * A board-local, kernel-weighted survival model. A physically clean local
+ * solution is an event. Structurally valid native winners awaiting global
+ * clearance repair are censored, not rejected. Exhausted, invalid, and
+ * interrupted candidates contribute observed
+ * time without pretending that their time-to-valid-solution was observed.
+ * Gamma(1, 1ms) supplies the same finite prior for every strategy. Observations
+ * include candidate construction, execution and physical acceptance costs.
  * Only the 64 most recent records of each strategy support predictions; total
  * outcome and cost counters retain every observation from this board.
- * This tests node-local work to valid output, a surrogate for board solve time.
+ * The objective is elapsed time to physically usable node output. Full-board
+ * repair and export remain separate measured costs, not fabricated labels.
  */
 export class ContextualComputeSelectionModel {
+  constructor(readonly copperRules: Readonly<Pick<SimpleRouteJson, "allowBlindAndBuriedVias" | "allowViaInPad" | "defaultObstacleMargin" | "minTraceToPadEdgeClearance" | "minTraceToHoleEdgeClearance" | "minViaEdgeToPadEdgeClearance">> = {}) {}
   private readonly supportByStrategy = new Map<string, ComputeSelectionObservation[]>()
   private observationCount = 0
   private observedNodeCount = 0
@@ -133,7 +138,7 @@ export class ContextualComputeSelectionModel {
         squaredDistance += (features[index]! - observation.features[index]!) ** 2
       }
       const weight = Math.exp(-squaredDistance / 2)
-      exposure += weight * observation.work
+      exposure += weight * Math.max(0.001, observation.elapsedMs)
       if (observation.outcome === "valid") validEvents += weight
     }
     this.predictionCount += 1
@@ -220,12 +225,12 @@ export class ContextualComputeSelectionModel {
     stats: Record<string, number>
   } {
     return {
-      objective: "node-local work to valid output; a surrogate for full-board time",
+      objective: "elapsed time to physically clean local node output, including construction and validation; native winners awaiting global clearance repair are censored; later board repair measured separately",
       workUnit: "search iterations (A13: routingIterations) / MIN_SUBSTEPS; constructor-only outcomes charge one acceptance unit",
       oracleScope: "observed valid winner alone; censored competitors' completion costs are unknown",
       supportPerStrategy: COMPUTE_SELECTION_SUPPORT_PER_STRATEGY,
       observationRetention: "most recent per strategy; aggregate counters include all observations",
-      modelScope: "one serial high-density solve; runtime workers have independent batch-local models",
+      modelScope: "one board-local host model; adaptive detailed routing stays serial across runtime entrypoints",
       featureNames: computeSelectionFeatureNames,
       observations: [...this.supportByStrategy.values()].flat().map((observation) => ({
         ...observation,

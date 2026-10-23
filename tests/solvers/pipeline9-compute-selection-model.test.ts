@@ -1,4 +1,5 @@
-import { expect, test } from "bun:test"
+import { createPipeline9TestRuntime } from "../fixtures/createPipeline9TestRuntime"
+import { expect, spyOn, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -9,7 +10,12 @@ import {
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("compute selection learns deterministic contextual rates from validated solver outcomes without changing candidates", () => {
+test("compute selection learns contextual elapsed costs from accepted solver outcomes without changing candidates", async (): Promise<void> => {
+  // Replaying identical CPU observations must reproduce exact decisions. The
+  // production clock remains real; observed costs may differ between runs.
+  let observedClock = 0
+  const clock = spyOn(performance, "now").mockImplementation(() => observedClock += 0.125)
+  try {
   const nodes: NodeWithPortPoints[] = Array.from({ length: 3 }, (_, index) => ({
     capacityMeshNodeId: `node-${index}`,
     center: { x: index * 8, y: 0 },
@@ -27,6 +33,7 @@ test("compute selection learns deterministic contextual rates from validated sol
     getGlobalInMemoryCache().clearCache()
     const solver = new Pipeline9HighDensitySolver({
       nodePortPoints: nodes,
+      enableComputeSelection: true,
       fixedHdRoutes: [],
       connMap: new ConnectivityMap({}),
       obstacles: [],
@@ -37,7 +44,11 @@ test("compute selection learns deterministic contextual rates from validated sol
       effort: 1,
     })
     expect(solver.computeSelectionModel.getEvidence().observations).toHaveLength(0)
-    solver.solve()
+    if (repeat === 0) solver.solve()
+    else {
+      const runtime = createPipeline9TestRuntime(4)
+      try { await solver.solveAsync(runtime) } finally { await runtime.dispose() }
+    }
     expect(solver.solved).toBe(true)
     const evidence = solver.computeSelectionModel.getEvidence()
     expect(evidence.stats.learnedComputeValidOutcomeCount).toBe(3)
@@ -63,7 +74,8 @@ test("compute selection learns deterministic contextual rates from validated sol
     { nodeId: "observed", features: [0, 0, 0, 0, 0, 0], strategy: "C", work: 3, elapsedMs: 1, outcome: "failed" },
     { nodeId: "observed", features: [0, 0, 0, 0, 0, 0], strategy: "D", work: 3, elapsedMs: 1, outcome: "invalid" },
   ])
-  expect(model.predict([0, 0, 0, 0, 0, 0], "A").score).toBeLessThan(model.predict([0, 0, 0, 0, 0, 0], "B").score)
+  // Strategy A uses fewer iterations but hundreds of times more CPU time.
+  expect(model.predict([0, 0, 0, 0, 0, 0], "A").score).toBeGreaterThan(model.predict([0, 0, 0, 0, 0, 0], "B").score)
   expect(model.predict([0, 0, 0, 0, 0, 0], "B").validEvents).toBe(1)
   expect(model.predict([0, 0, 0, 0, 0, 0], "C").validEvents).toBe(1)
   expect(model.predict([0, 0, 0, 0, 0, 0], "D").validEvents).toBe(1)
@@ -100,4 +112,7 @@ test("compute selection learns deterministic contextual rates from validated sol
   expect(bounded.getEvidence().observations).toHaveLength(COMPUTE_SELECTION_SUPPORT_PER_STRATEGY)
   bounded.predict([0, 0, 0, 0, 0, 0], "A")
   expect(bounded.getStats().learnedComputeKernelEvaluationCount).toBe(COMPUTE_SELECTION_SUPPORT_PER_STRATEGY)
+  } finally {
+    clock.mockRestore()
+  }
 })
