@@ -3,11 +3,12 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
-  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
+import { NegotiateTraceClearanceSolver } from "./clearance/NegotiateTraceClearanceSolver"
+import { mergeClearanceCorridorStats } from "./clearance/createClearanceCorridorSearch"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -141,6 +142,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  private corridorSearchCalls = 0
+  private corridorEdgeChecks = 0
+  private readonly corridorWorkStats: Record<string, unknown> = {}
+  private gridSearchCalls = 0
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -177,8 +182,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       typeof negotiation?.stats.pathSearchNodes === "number"
         ? negotiation.stats.pathSearchNodes
         : 0
+    const liveCorridorStats = { ...this.corridorWorkStats }
+    if (negotiation) mergeClearanceCorridorStats(liveCorridorStats, negotiation.stats)
     this.stats = {
       ...this.result,
+      ...liveCorridorStats,
+      corridorEdgeChecks: this.corridorEdgeChecks + (negotiation?.stats.corridorEdgeChecks ?? 0),
+      corridorSearchCalls: this.corridorSearchCalls + (negotiation?.stats.corridorSearchCalls ?? 0),
+      gridSearchCalls: this.gridSearchCalls + (negotiation?.stats.gridSearchCalls ?? 0),
       routes: undefined,
       phase: this.state.phase,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
@@ -519,6 +530,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "negotiate" }>,
   ): void {
     const repair = state.solver.getOutput()
+    this.corridorEdgeChecks += state.solver.stats.corridorEdgeChecks
+    mergeClearanceCorridorStats(this.corridorWorkStats, state.solver.stats)
+    this.corridorSearchCalls += state.solver.stats.corridorSearchCalls
+    this.gridSearchCalls += state.solver.stats.gridSearchCalls
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
     if (

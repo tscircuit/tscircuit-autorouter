@@ -38,7 +38,6 @@ import type {
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
-import { SelectiveReripTinyHyperGraphSolverWithCandidatePool } from "./SelectiveReripTinyHyperGraphSolverWithCandidatePool"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -920,8 +919,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly useJointCandidateAllocation = false,
-    private readonly hasOriginalPreloadedCopper = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -941,9 +938,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        useJointCandidateAllocation
-          ? SelectiveReripTinyHyperGraphSolverWithCandidatePool
-          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -985,9 +980,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         this.inputProblem.serializedHyperGraph,
       )
       this.initialVisualizationSolver =
-        new (this.useJointCandidateAllocation
-          ? SelectiveReripTinyHyperGraphSolverWithCandidatePool
-          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments)(
+        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
           topology,
           problem,
           this.getSolveGraphOptions(),
@@ -1031,10 +1024,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
-    if (solver instanceof SelectiveReripTinyHyperGraphSolverWithCandidatePool) {
-      solver.configureCandidatePool(this.hasOriginalPreloadedCopper)
-    }
-
     this.configuredSolvers.add(solver)
   }
 }
@@ -1060,8 +1049,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
-  private readonly hasPreloadedTraceCopper: boolean
-  private jointCandidateStats: Record<string, number> = { jointCandidateAvailableBoards: 0, jointCandidateEligibleBoards: 0, jointCandidateTrials: 0, jointCandidateAcceptedExchanges: 0, jointCandidateHybridNetCount: 0 }
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
@@ -1087,10 +1074,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
       getSerializedPreloadedTraceStats(serializedGraph)
-    this.hasPreloadedTraceCopper =
-      preloadedTraceStats.preloadedTraceCount > 0 ||
-      preloadedTraceStats.preloadedPortCount > 0 ||
-      preloadedTraceStats.preloadedAssignmentCount > 0
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
     const usePartialRipRoutingWithPreloadedTraces =
@@ -1154,8 +1137,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_JOINT_ROUTE_CANDIDATE_ALLOCATION === true,
-        this.hasPreloadedTraceCopper,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1375,28 +1356,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.solved = this.tinyPipelineSolver.solved
     this.failed = this.tinyPipelineSolver.failed
     this.error = this.tinyPipelineSolver.error ?? null
-    const selectedSolver = this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (selectedSolver instanceof SelectiveReripTinyHyperGraphSolverWithCandidatePool) {
-      // Output measurements describe the selected graph; work counters below
-      // include every candidate the existing portfolio actually evaluated.
-      for (const name of ["jointCandidateHybridNetCount", "jointCandidateMixedBoards", "jointCandidateInitialDensity", "jointCandidateFinalDensity"]) {
-        this.jointCandidateStats[name] = Number(selectedSolver.stats[name] ?? 0)
-      }
-      this.jointCandidateStats.jointCandidateSelectedAcceptedExchanges = Number(selectedSolver.stats.jointCandidateAcceptedExchanges ?? 0)
-    }
-  }
-
-  private collectJointCandidateStats(pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds): void {
-    const solver = pipeline.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (!(solver instanceof SelectiveReripTinyHyperGraphSolverWithCandidatePool)) return
-    for (const [name, value] of Object.entries(solver.stats)) {
-      if (name.startsWith("jointCandidate") && typeof value === "number") {
-        const previous = this.jointCandidateStats[name] ?? 0
-        this.jointCandidateStats[name] = name.endsWith("Boards") || name === "jointCandidateRetainedCandidates" || name === "jointCandidatePeakRetainedCandidates" || name === "jointCandidateMaximumExchangeSize"
-          ? Math.max(previous, value)
-          : previous + value
-      }
-    }
   }
 
   getSolveGraphBenchmarkMetrics() {
@@ -1404,10 +1363,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (!solveGraphSolver) return undefined
 
-    const finalAssignmentSolver = this.jointCandidateStats.jointCandidateAcceptedExchanges > 0
-      ? this.tinyPipelineSolver.getSolvedTinySolver()
-      : solveGraphSolver
-    const regionSegmentCounts = finalAssignmentSolver.state.regionSegments.map(
+    const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
       (segments) => segments.length,
     )
     const selectedCandidateSummary =
@@ -1475,14 +1431,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.candidatePortfolioPhase === "primary" &&
       this.primaryTinyPipelineSolver!.failed
     ) {
-      this.collectJointCandidateStats(this.primaryTinyPipelineSolver!)
       this.alternativeTinyPipelineInput = undefined
       this.finishCandidatePortfolio()
     } else if (
       this.candidatePortfolioPhase === "primary" &&
       this.primaryTinyPipelineSolver!.solved
     ) {
-      this.collectJointCandidateStats(this.primaryTinyPipelineSolver!)
       this.primaryCandidateSummary = this.summarizePipelineCandidate(
         this.primaryTinyPipelineSolver!,
       )
@@ -1492,8 +1446,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_JOINT_ROUTE_CANDIDATE_ALLOCATION === true,
-            this.hasPreloadedTraceCopper,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1505,7 +1457,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.candidatePortfolioPhase === "alternative" &&
       (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed)
     ) {
-      this.collectJointCandidateStats(this.tinyPipelineSolver)
       if (this.tinyPipelineSolver.solved && !this.tinyPipelineSolver.failed) {
         this.alternativeCandidateSummary = this.summarizePipelineCandidate(
           this.tinyPipelineSolver,
@@ -1582,8 +1533,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
-      jointCandidateEnabled: Number(this.params.flags.USE_JOINT_ROUTE_CANDIDATE_ALLOCATION === true),
-      ...this.jointCandidateStats,
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }

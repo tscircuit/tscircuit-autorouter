@@ -34,6 +34,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
+import { mergeClearanceCorridorStats } from "./clearance/createClearanceCorridorSearch"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1671,9 +1672,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       throw new Error("Pipeline9 initial regional repair is not complete")
     }
     const result = this.initialBoundedRegionalRepairSolver.getResult()
+    mergeClearanceCorridorStats(this.stats, this.initialBoundedRegionalRepairSolver.stats)
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
+      clearanceCorridorEdgeChecks: this.initialBoundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1709,6 +1714,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.stats,
       finalDrcIssueCount: 0,
       initialBoundedRegionalRepairAccepted: true,
+      clearanceCorridorSearchCalls: this.initialBoundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: this.initialBoundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions:
         this.initialBoundedRegionalRepairSolver.budget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
@@ -1965,9 +1972,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    mergeClearanceCorridorStats(this.stats, this.boundedRegionalRepairSolver.stats)
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      clearanceCorridorEdgeChecks: (this.stats.clearanceCorridorEdgeChecks ?? 0) + this.boundedRegionalRepairSolver.stats.corridorEdgeChecks,
+      clearanceCorridorSearchCalls: (this.stats.clearanceCorridorSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.corridorSearchCalls,
+      clearanceGridSearchCalls: (this.stats.clearanceGridSearchCalls ?? 0) + this.boundedRegionalRepairSolver.stats.gridSearchCalls,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
