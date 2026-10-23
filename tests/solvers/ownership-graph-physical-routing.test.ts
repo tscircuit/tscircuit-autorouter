@@ -22,6 +22,7 @@ test("shared graph output preserves endpoints, roots, actual clearance and layer
   expect(solver.solvedRoutes[0]!.startPcbPortId).toBe("a-start")
   expect(solver.solvedRoutes[0]!.endPcbPortId).toBe("a-end")
   expect(solver.solvedRoutes.map((route) => route.rootConnectionName)).toEqual(["root-a", "root-b"])
+  expect(solver.solvedRoutes.every((route) => route.regionId === node.capacityMeshNodeId)).toBe(true)
   expect(doPipeline9RoutesHaveCopperConflict({ left: solver.solvedRoutes[0]!, right: solver.solvedRoutes[1]!, clearance: 0.1, layerCount: 2 })).toBe(false)
   expect(solver.solvedRoutes.reduce((sum, route) => sum + route.vias.length, 0)).toBeGreaterThan(0)
   for (const [index, route] of solver.solvedRoutes.entries()) {

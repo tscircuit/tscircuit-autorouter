@@ -78,6 +78,10 @@ export class SharedOwnershipGraphSolver extends BaseSolver {
     tasks: readonly OwnershipGraphTask[]
     primitivesConflict: (left: number, right: number) => boolean
     permanentlyBlocked: (task: number, primitive: number) => boolean
+    ownerIndependentConflicts?: {
+      primitiveIds: ReadonlySet<number>
+      conflict: (left: number, right: number) => boolean
+    }
     maxIterations: number
     counters?: OwnershipGraphStats
   }) {
@@ -167,8 +171,23 @@ export class SharedOwnershipGraphSolver extends BaseSolver {
     if (fixed) return { owners: [], exclusions: [] }
     const task = this.tasks[search.task]!
     for (let ownerTask = 0; ownerTask < branch.owned.length; ownerTask++) {
-      if (this.tasks[ownerTask]!.owner === task.owner) continue
+      const sameOwner = this.tasks[ownerTask]!.owner === task.owner
       for (const occupied of branch.owned[ownerTask]!) {
+        const independent = this.params.ownerIndependentConflicts
+        if (independent?.primitiveIds.has(primitive) && independent.primitiveIds.has(occupied)) {
+          const independentKey = primitive < occupied ? `independent:${primitive}:${occupied}` : `independent:${occupied}:${primitive}`
+          let independentConflict = this.pairConflicts.get(independentKey)
+          if (independentConflict === undefined) {
+            this.count("ownershipGraphDrillGeometryCheckCount")
+            independentConflict = independent.conflict(primitive, occupied)
+            this.pairConflicts.set(independentKey, independentConflict)
+            if (independentConflict) this.count("ownershipGraphDrillGeometryConflictCount")
+          } else {
+            this.count("ownershipGraphDrillGeometryReuseCount")
+          }
+          if (independentConflict) return { owners: [{ task: ownerTask, primitive: occupied }], exclusions: [] }
+        }
+        if (sameOwner) continue
         const key = primitive < occupied ? `${primitive}:${occupied}` : `${occupied}:${primitive}`
         let conflict = this.pairConflicts.get(key)
         if (conflict === undefined) {

@@ -60,6 +60,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     boardGeometry?: HighDensityBoardGeometry
     enableOwnershipGraphSearch?: boolean
     ownershipGraphStats?: OwnershipGraphStats
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -134,6 +136,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       boardGeometry?: HighDensityBoardGeometry
       enableOwnershipGraphSearch?: boolean
       ownershipGraphStats?: OwnershipGraphStats
+      viaHoleDiameter?: number
+      minViaHoleEdgeToViaHoleEdgeClearance?: number
     },
   ) {
     super()

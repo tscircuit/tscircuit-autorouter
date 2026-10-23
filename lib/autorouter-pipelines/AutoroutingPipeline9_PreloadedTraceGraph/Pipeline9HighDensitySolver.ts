@@ -46,6 +46,8 @@ export type Pipeline9HighDensitySolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
@@ -319,6 +321,8 @@ export type Pipeline9RegularNodeSolverParams = {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -341,6 +345,8 @@ export const createPipeline9RegularNodeSolver = ({
   connMap,
   colorMap,
   viaDiameter,
+  viaHoleDiameter,
+  minViaHoleEdgeToViaHoleEdgeClearance,
   traceWidth,
   obstacleMargin,
   effort,
@@ -356,6 +362,8 @@ export const createPipeline9RegularNodeSolver = ({
     colorMap,
     connMap,
     viaDiameter,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -390,6 +398,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
+  readonly viaHoleDiameter?: number
+  readonly minViaHoleEdgeToViaHoleEdgeClearance?: number
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
@@ -427,6 +437,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
+    this.viaHoleDiameter = params.viaHoleDiameter
+    this.minViaHoleEdgeToViaHoleEdgeClearance = params.minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
@@ -600,6 +612,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,

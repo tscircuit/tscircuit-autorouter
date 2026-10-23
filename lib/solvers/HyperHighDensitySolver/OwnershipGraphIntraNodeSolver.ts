@@ -19,6 +19,8 @@ type OwnershipGraphParams = {
   connMap?: ConnectivityMap
   traceWidth?: number
   viaDiameter?: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   obstacleMargin?: number
   obstacles?: Obstacle[]
   layerCount?: number
@@ -38,6 +40,8 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
   readonly pairs: [PortPoint, PortPoint][]
   readonly traceWidth: number
   readonly viaDiameter: number
+  readonly viaHoleDiameter: number
+  readonly minViaHoleEdgeToViaHoleEdgeClearance: number
   readonly clearance: number
   readonly layerCount: number
   readonly maxConnectivityIterations: number
@@ -52,6 +56,8 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.viaDiameter = params.viaDiameter ?? 0.3
     this.clearance = params.obstacleMargin ?? 0.1
+    this.viaHoleDiameter = params.viaHoleDiameter ?? this.viaDiameter * 0.5
+    this.minViaHoleEdgeToViaHoleEdgeClearance = params.minViaHoleEdgeToViaHoleEdgeClearance ?? this.clearance
     this.layerCount = params.layerCount ?? 2
     const grouped = new Map<string, PortPoint[]>()
     for (const point of params.nodeWithPortPoints.portPoints) {
@@ -65,8 +71,8 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     const endpoints = this.pairs.flat()
     const layers = node.availableZ ?? Array.from({ length: this.layerCount }, (_, z) => z)
     if (!Number.isInteger(this.layerCount) || this.layerCount < 1 ||
-      ![node.center.x, node.center.y, node.width, node.height, this.traceWidth, this.viaDiameter, this.clearance, ...endpoints.flatMap((point) => [point.x, point.y, point.z])].every(Number.isFinite) ||
-      node.width <= 0 || node.height <= 0 || this.traceWidth <= 0 || this.viaDiameter <= 0 || this.clearance < 0 ||
+      ![node.center.x, node.center.y, node.width, node.height, this.traceWidth, this.viaDiameter, this.viaHoleDiameter, this.minViaHoleEdgeToViaHoleEdgeClearance, this.clearance, ...endpoints.flatMap((point) => [point.x, point.y, point.z])].every(Number.isFinite) ||
+      node.width <= 0 || node.height <= 0 || this.traceWidth <= 0 || this.viaDiameter <= 0 || this.viaHoleDiameter <= 0 || this.viaHoleDiameter > this.viaDiameter || this.clearance < 0 || this.minViaHoleEdgeToViaHoleEdgeClearance < 0 ||
       [...layers, ...endpoints.map((point) => point.z)].some((z) => !Number.isInteger(z) || z < 0 || z >= this.layerCount)) {
       throw new Error("Ownership graph requires finite node geometry and valid board layer indices")
     }
@@ -114,6 +120,8 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       layerCount: this.layerCount,
       minTraceWidth: this.traceWidth,
       minViaDiameter: this.viaDiameter,
+      minViaHoleDiameter: this.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       defaultObstacleMargin: this.clearance,
       bounds: {
         minX: node.center.x - node.width / 2, maxX: node.center.x + node.width / 2,
@@ -208,6 +216,16 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     }))
     this.engine = new SharedOwnershipGraphSolver({
       graph, tasks, maxIterations: this.maxConnectivityIterations, counters: this.counters,
+      ownerIndependentConflicts: {
+        primitiveIds: new Set(this.primitives.flatMap((route, primitive) => route.vias.length > 0 ? [primitive] : [])),
+        conflict: (left, right): boolean => {
+          const a = this.primitives[left]!.vias[0]!, b = this.primitives[right]!.vias[0]!
+          const distance = Math.hypot(a.x - b.x, a.y - b.y)
+          // Same-site, same-net vias are one physical drill. Foreign-net
+          // coincidence is still rejected by the copper predicate below.
+          return distance > 1e-9 && distance < this.viaHoleDiameter + this.minViaHoleEdgeToViaHoleEdgeClearance - 1e-9
+        },
+      },
       primitivesConflict: (left, right): boolean => doPipeline9RoutesHaveCopperConflict({
         left: this.primitives[left]!, right: this.primitives[right]!, clearance: this.clearance,
         layerCount: this.layerCount, allowBlindAndBuriedVias: false,
@@ -246,6 +264,7 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       }
       return {
         connectionName: start.connectionName, rootConnectionName: start.rootConnectionName,
+        regionId: this.params.nodeWithPortPoints.capacityMeshNodeId,
         startPcbPortId: start.pcb_port_id, endPcbPortId: end.pcb_port_id,
         traceThickness: this.traceWidth, viaDiameter: this.viaDiameter,
         route: compact, vias: [...vias.values()],
@@ -253,15 +272,25 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     })
     const traces = routes.map((route, index) => ({
       type: "pcb_trace" as const, pcb_trace_id: `ownership_${index}`, connection_name: route.connectionName,
-      route: convertHdRouteToSimplifiedRoute(route, this.layerCount),
+      route: convertHdRouteToSimplifiedRoute(route, this.layerCount, { defaultViaHoleDiameter: this.viaHoleDiameter }),
     }))
     const circuitJson = convertToCircuitJson(this.validationSrj, traces)
     if (this.params.boardGeometry) circuitJson.push(createPcbBoardElement(this.validationSrj))
-    const { errors } = getDrcErrors(circuitJson, { traceClearance: this.clearance, viaClearance: this.clearance, includeTraceContinuity: false })
+    const { errors } = getDrcErrors(circuitJson, { traceClearance: this.clearance, viaClearance: Math.max(this.clearance, this.minViaHoleEdgeToViaHoleEdgeClearance), includeTraceContinuity: false })
     const fixed = getFixedObstacleViolations({ srj: { ...this.validationSrj, traces: undefined }, routes, traceClearance: this.clearance, viaClearance: this.clearance })
+    const drillSites = routes.flatMap((route) => route.vias)
+    let drillIssueCount = 0
+    for (let i = 0; i < drillSites.length; i++) for (let j = i + 1; j < drillSites.length; j++) {
+      const a = drillSites[i]!, b = drillSites[j]!
+      const distance = Math.hypot(a.x - b.x, a.y - b.y)
+      if (distance > 1e-9 && distance < this.viaHoleDiameter + this.minViaHoleEdgeToViaHoleEdgeClearance - 1e-9) drillIssueCount++
+    }
+    // A path label does not carry its own visited drill set. Check within-task
+    // sites as well as cross-task sites before accepting any route witness.
+    this.counters.ownershipGraphFinalDrillIssueCount = (this.counters.ownershipGraphFinalDrillIssueCount ?? 0) + drillIssueCount
     this.counters.ownershipGraphFinalValidationCount = (this.counters.ownershipGraphFinalValidationCount ?? 0) + 1
-    this.counters.ownershipGraphValidationIssueCount = (this.counters.ownershipGraphValidationIssueCount ?? 0) + errors.length + fixed.length
-    if (errors.length || fixed.length) {
+    this.counters.ownershipGraphValidationIssueCount = (this.counters.ownershipGraphValidationIssueCount ?? 0) + errors.length + fixed.length + drillIssueCount
+    if (errors.length || fixed.length || drillIssueCount) {
       this.failed = true
       this.error = `Ownership graph candidate fails board copper validation: ${errors[0]?.message ?? "fixed obstacle clearance violation"}`
       return
