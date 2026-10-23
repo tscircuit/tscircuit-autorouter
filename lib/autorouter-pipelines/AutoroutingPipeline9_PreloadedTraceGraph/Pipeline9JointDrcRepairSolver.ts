@@ -34,6 +34,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
+import { mergePersistentClearanceStats } from "./clearance/PersistentClearanceSearch"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1671,9 +1672,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       throw new Error("Pipeline9 initial regional repair is not complete")
     }
     const result = this.initialBoundedRegionalRepairSolver.getResult()
+    mergePersistentClearanceStats(this.stats, this.initialBoundedRegionalRepairSolver.stats)
     this.stats = {
       ...this.stats,
       initialBoundedRegionalRepairAccepted: false,
+      clearanceKnowledgeRelatedHits: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeRelatedHits,
+      clearanceKnowledgeHits: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeHits,
+      clearanceKnowledgeMisses: this.initialBoundedRegionalRepairSolver.stats.clearanceKnowledgeMisses,
+
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
       initialBoundedRegionalRepairAcceptedRegionCount:
@@ -1965,9 +1971,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    mergePersistentClearanceStats(this.stats, this.boundedRegionalRepairSolver.stats)
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      clearanceKnowledgeRelatedHits: (this.stats.clearanceKnowledgeRelatedHits ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeRelatedHits,
+      clearanceKnowledgeHits: (this.stats.clearanceKnowledgeHits ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeHits,
+      clearanceKnowledgeMisses: (this.stats.clearanceKnowledgeMisses ?? 0) + this.boundedRegionalRepairSolver.stats.clearanceKnowledgeMisses,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,

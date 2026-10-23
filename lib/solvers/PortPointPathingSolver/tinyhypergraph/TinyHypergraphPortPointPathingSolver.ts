@@ -1,5 +1,3 @@
-import { DetailedRoutingConflictCosts } from "./DetailedRoutingConflictCosts"
-import { captureDetailedRoutingIncumbent, createDetailedRoutingAnytimeSolverClass, type DetailedRoutingIncumbent } from "./DetailedRoutingIncumbent"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -921,9 +919,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly detailedConflictCosts?: DetailedRoutingConflictCosts,
-    incumbent?: DetailedRoutingIncumbent,
-    penalties: readonly import("../../../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9DetailedRoutingFeedback").DetailedRoutingRegionPenalty[] = [],
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -944,20 +939,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
-    }
-    if (detailedConflictCosts) {
-      const oracle = detailedConflictCosts
-      const solveStep = this.pipelineDef.find((step) => step.solverName === "solveGraph")
-      const sectionStep = this.pipelineDef.find((step) => step.solverName === "optimizeSection")
-      if (!solveStep || !sectionStep) throw new Error("Detailed conflict feedback requires solveGraph and optimizeSection stages")
-      const SolveClass = solveStep.solverClass as typeof TinyHyperGraphSolver
-      solveStep.solverClass = createDetailedRoutingAnytimeSolverClass(SolveClass, oracle, incumbent, penalties)
-      sectionStep.solverClass = class extends TinyHyperGraphSectionSolver {
-        override _setup(): void {
-          super._setup()
-          if (this.sectionSolver) oracle.install(this.sectionSolver)
-        }
-      }
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1043,14 +1024,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
-    if (solver instanceof TinyHyperGraphSolver) this.detailedConflictCosts?.install(solver)
     this.configuredSolvers.add(solver)
   }
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private readonly detailedConflictCosts?: DetailedRoutingConflictCosts
-  private readonly detailedIncumbentSourceKey: string
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1076,7 +1054,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    this.detailedConflictCosts = params.detailedRoutingPenalties?.length ? new DetailedRoutingConflictCosts(params.detailedRoutingPenalties) : undefined
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1156,19 +1133,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
-    this.detailedIncumbentSourceKey = JSON.stringify({ graph: tinyPipelineInput.serializedHyperGraph,
-      layerCount: params.layerCount, minViaPadDiameter: params.minViaPadDiameter,
-      flags: params.flags, weights: params.weights })
-    if (params.detailedRoutingIncumbent && params.detailedRoutingIncumbent.sourceKey !== this.detailedIncumbentSourceKey) {
-      throw new Error("Detailed incumbent no longer matches the original topology, rules and preload witnesses")
-    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        this.detailedConflictCosts,
-        params.detailedRoutingIncumbent,
-        params.detailedRoutingPenalties,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1206,7 +1174,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.statsSnapshotDirty = false
       },
     })
-    this.statsSnapshotDirty = params.detailedRoutingCumulativeStats !== undefined
   }
 
   getSolverName(): string {
@@ -1479,9 +1446,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.detailedConflictCosts,
-            this.params.detailedRoutingIncumbent,
-            this.params.detailedRoutingPenalties,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1538,7 +1502,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   private getStatsSnapshot(): Record<string, any> {
     if (!this.statsSnapshotDirty) return this.statsSnapshot
-    const solveGraphStats = this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")?.stats
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
@@ -1570,12 +1533,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
-      ...(this.detailedConflictCosts?.stats ?? {}),
-      ...Object.fromEntries(Object.entries(solveGraphStats ?? {}).filter(([key]) => key.startsWith("detailedIncumbent"))),
-      ...(this.params.detailedRoutingCumulativeStats ?? {}),
-      ...(this.params.detailedRoutingCumulativeStats ? {
-        detailedFeedbackTotalPathingIterations: (this.params.detailedRoutingCumulativeStats.detailedFeedbackTotalPathingIterations ?? 0) + this.iterations,
-      } : {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
@@ -1609,11 +1566,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   private getSolvedTinySolver(): TinyHyperGraphSolver {
     return this.tinyPipelineSolver.getSolvedTinySolver()
-  }
-
-  getDetailedRoutingIncumbent(): DetailedRoutingIncumbent {
-    if (!this.solved || this.failed) throw new Error("Detailed refinement requires a completed compatible pathing assignment")
-    return captureDetailedRoutingIncumbent(this.detailedIncumbentSourceKey, this.getSolvedTinySolver())
   }
 
   private getRouteMetadata(

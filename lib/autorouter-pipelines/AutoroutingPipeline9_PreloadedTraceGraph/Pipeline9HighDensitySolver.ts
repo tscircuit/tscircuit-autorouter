@@ -21,8 +21,6 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { GrowShrinkHighDensityIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver"
-import type { Pipeline9DetailedRoutingConflict } from "./Pipeline9DetailedRoutingFeedback"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -58,22 +56,7 @@ export type Pipeline9HighDensitySolverParams = {
   includeBoardObstacles?: boolean
   enableRegionalFallback?: boolean
   maxB01Rips?: number
-  collectDetailedRoutingFeedback?: boolean
-  pauseForUpstreamRefinement?: boolean
-  detailedCopperRules?: Pick<SimpleRouteJson,
-    "defaultObstacleMargin" | "minTraceToPadEdgeClearance" |
-    "minTraceToHoleEdgeClearance" | "minViaEdgeToPadEdgeClearance" |
-    "allowBlindAndBuriedVias"
-  >
 }
-
-export type Pipeline9DetailedRefinementState =
-  | { status: "routing" }
-  | {
-      status: "awaiting-upstream-refinement"
-      conflicts: Pipeline9DetailedRoutingConflict[]
-      reason: string
-    }
 
 type NodeBounds = {
   minX: number
@@ -412,14 +395,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
   readonly failedSolvers: HighDensitySolverB01[] = []
-  readonly detailedRoutingConflicts: Pipeline9DetailedRoutingConflict[] = []
-  refinementState: Pipeline9DetailedRefinementState = { status: "routing" }
-  private ordinaryPassCompleted = false
-  private readonly deferredRegionalRecoveries: Array<{
-    node: NodeWithPortPoints
-    reason: string
-    promotedFixedRouteConnectionNames: ReadonlySet<string>
-  }> = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
   readonly removedFixedRouteConnectionNames = new Set<string>()
@@ -435,7 +410,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private readonly feedbackGeometryContext?: string
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -459,20 +433,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
-    if (params.collectDetailedRoutingFeedback) {
-      this.feedbackGeometryContext = JSON.stringify({
-        detailedCopperRules: params.detailedCopperRules,
-        layerCount: params.layerCount,
-        allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
-        traceWidth: params.traceWidth,
-        viaDiameter: params.viaDiameter,
-        obstacleMargin: params.obstacleMargin,
-        viaToPadClearance: params.viaToPadClearance,
-        boardGeometry: params.boardGeometry,
-        obstacles: params.obstacles,
-        netMap: params.connMap.netMap,
-      })
-    }
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -491,22 +451,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
-      detailedFeedbackTypedFailedAttemptCount: 0,
-      detailedFeedbackDeferredRegionalRecoveryCount: 0,
-      detailedFeedbackPendingRegionalRecoveryCount: 0,
-      detailedFeedbackHostRefinementEnabled:
-        params.pauseForUpstreamRefinement ? 1 : 0,
     }
   }
 
   override getSolverName(): string {
     return "Pipeline9HighDensitySolver"
-  }
-
-  override solve(): void {
-    const startTime = performance.now()
-    this.solveUntilIteration(Infinity)
-    this.timeToSolve = performance.now() - startTime
   }
 
   /** Independent batches use the host runtime; preloaded repairs retain serial visibility. */
@@ -524,10 +473,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      // Paused native searches carry a live frontier and remaining budget.
-      // Keep refinement rounds on the host; the final complete round retains
-      // ordinary worker dispatch without serializing or replaying search state.
-      if (this.fixedHdRoutes.length > 0 || this.params.pauseForUpstreamRefinement) {
+      if (this.fixedHdRoutes.length > 0) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -535,12 +481,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.activeNode &&
         !this.solved &&
         !this.failed &&
-        this.refinementState.status !== "awaiting-upstream-refinement" &&
         this.iterations < stopAtIteration
       )
         this.step()
-      if (this.solved || this.failed || this.iterations >= stopAtIteration ||
-        this.refinementState.status === "awaiting-upstream-refinement")
+      if (this.solved || this.failed || this.iterations >= stopAtIteration)
         return
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
@@ -577,7 +521,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         }
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
-        this.detailedRoutingConflicts.push(...result.detailedRoutingConflicts)
         for (const [key, value] of Object.entries(result.stats)) {
           if (key !== "nodeCount" && key !== "fixedObstacleCount")
             this.stats[key] += value
@@ -587,9 +530,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           result.consumedNodeCount,
         )
         this.progress = this.computeProgress()
-        if (result.refinementState.status === "awaiting-upstream-refinement") {
-          throw new Error("Resumable detailed refinement must retain its native state on the host")
-        }
         if (!result.solved) {
           this.error = result.error
           this.failed = true
@@ -609,8 +549,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   private solveUntilIteration(stopAtIteration: number): void {
-    while (!this.solved && !this.failed && this.iterations < stopAtIteration &&
-      this.refinementState.status !== "awaiting-upstream-refinement") {
+    while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
       this.step()
     }
   }
@@ -669,19 +608,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       throw new Error(
         "Pipeline9 cannot start a regional fallback without an active node",
       )
-    }
-
-    if (this.params.pauseForUpstreamRefinement && !this.ordinaryPassCompleted) {
-      this.deferredRegionalRecoveries.push({
-        node: this.activeNode,
-        reason: this.activeFallbackReason ?? "regional routing requested",
-        promotedFixedRouteConnectionNames: new Set(promotedFixedRouteConnectionNames),
-      })
-      this.stats.detailedFeedbackDeferredRegionalRecoveryCount++
-      this.stats.detailedFeedbackPendingRegionalRecoveryCount = this.deferredRegionalRecoveries.length
-      this.activeNode = null
-      this.activeFallbackReason = null
-      return
     }
 
     const normalizedNode = normalizePipeline9NodeRootConnectionNames(
@@ -1074,33 +1000,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected finishRegularSolverFailure(error: string): void {
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
-    if (this.feedbackGeometryContext && this.activeNode) {
-      const failedSolver = this.activeRegularSolver?.failedSolvers.find(
-        (solver) =>
-          solver instanceof GrowShrinkHighDensityIntraNodeSolver &&
-          solver.detailedRoutingFailureKind !== undefined,
-      )
-      if (
-        failedSolver instanceof GrowShrinkHighDensityIntraNodeSolver &&
-        failedSolver.detailedRoutingFailureKind
-      ) {
-        if (!failedSolver.error) {
-          throw new Error("A typed detailed routing failure must retain its error")
-        }
-        const conflict: Pipeline9DetailedRoutingConflict = {
-          kind: failedSolver.detailedRoutingFailureKind,
-          node: structuredClone(this.activeNode),
-          geometryContext: JSON.stringify([
-            this.feedbackGeometryContext,
-            this.getUpdatedFixedHdRoutes(),
-          ]),
-          solverIterations: failedSolver.iterations,
-          error: failedSolver.error,
-        }
-        this.detailedRoutingConflicts.push(conflict)
-        this.stats.detailedFeedbackTypedFailedAttemptCount++
-      }
-    }
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
       this.error = `Pipeline9 ${this.activeFallbackReason}`
@@ -1112,24 +1011,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.refinementState.status === "awaiting-upstream-refinement") {
-      throw new Error("Detailed routing is awaiting an upstream refinement decision")
-    }
     this.stepNodeRouting()
     this.activeSubSolver =
       this.activeFallbackSolver ??
       this.activeRegularSolver ??
       this.activeB01Solver
-  }
-
-  resumeDetailedRoutingAfterRefinement(): void {
-    if (this.refinementState.status !== "awaiting-upstream-refinement" ||
-      this.solved || this.failed || !this.ordinaryPassCompleted || this.activeNode) {
-      throw new Error("Detailed routing has no completed ordinary pass to resume")
-    }
-    // The same instance retains all solved ordinary routes, failed-node tasks,
-    // fixed copper and consumed effort. Resuming never replays detailed search.
-    this.refinementState = { status: "routing" }
   }
 
   computeProgress(): number {
@@ -1206,29 +1092,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const node = this.unsolvedNodePortPoints.pop()
     if (!node) {
-      if (!this.ordinaryPassCompleted) {
-        this.ordinaryPassCompleted = true
-        if (this.params.pauseForUpstreamRefinement &&
-          this.detailedRoutingConflicts.length > 0) {
-          // Gather the native ordinary failures before paying for regional
-          // recoveries. One batch keeps the broad conflict information that a
-          // full late pass provides, while its expensive recovery work waits.
-          this.refinementState = {
-            status: "awaiting-upstream-refinement",
-            conflicts: structuredClone(this.detailedRoutingConflicts),
-            reason: `${this.detailedRoutingConflicts.length} ordinary detailed routing attempts failed`,
-          }
-          return
-        }
-      }
-      const deferred = this.deferredRegionalRecoveries.shift()
-      if (deferred) {
-        this.activeNode = deferred.node
-        this.activeFallbackReason = deferred.reason
-        this.stats.detailedFeedbackPendingRegionalRecoveryCount = this.deferredRegionalRecoveries.length
-        this.startRegionalFallback(deferred.promotedFixedRouteConnectionNames)
-        return
-      }
       this.solved = true
       return
     }

@@ -18,10 +18,6 @@ type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
-export type DetailedRoutingFailureKind =
-  | "single-layer-crossing"
-  | "search-exhausted"
-
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
@@ -112,7 +108,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   nodeWithPortPoints: NodeWithPortPoints
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   failedSolvers: PortfolioSingleIntraNodeSolver[] = []
-  detailedRoutingFailureKind?: DetailedRoutingFailureKind
   activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
   winningSolver?: PortfolioSingleIntraNodeSolver
   scaleFactor = 1
@@ -181,7 +176,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       if (!params.fallbackToInvalidGeometryOnFailure) {
-        this.detailedRoutingFailureKind = "single-layer-crossing"
         this.failed = true
         this.progress = 1
         this.error =
@@ -304,7 +298,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       }
 
       this.failed = true
-      this.detailedRoutingFailureKind = "search-exhausted"
       this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
       return
     }

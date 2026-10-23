@@ -4,10 +4,8 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import {
   Pipeline9HighDensitySolver,
   type Pipeline9HighDensitySolverParams,
-  type Pipeline9DetailedRefinementState,
 } from "./Pipeline9HighDensitySolver"
 import type { HighDensityIntraNodeRoute } from "../../types/high-density-types"
-import type { Pipeline9DetailedRoutingConflict } from "./Pipeline9DetailedRoutingFeedback"
 
 export type Pipeline9HighDensityBatchInput = Omit<
   Pipeline9HighDensitySolverParams,
@@ -24,8 +22,6 @@ export type Pipeline9HighDensityBatchOutput = {
   consumedNodeCount: number
   solved: boolean
   error: string | null
-  detailedRoutingConflicts: Pipeline9DetailedRoutingConflict[]
-  refinementState: Pipeline9DetailedRefinementState
 }
 
 /** Evaluate an independent serial batch; the parent owns ordered outcome acceptance. */
@@ -48,10 +44,7 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
       connMap: new ConnectivityMap(this.input.connectivityNetMap),
     })
     solver.MAX_ITERATIONS = this.input.maxIterations
-    while (!solver.solved && !solver.failed &&
-      solver.refinementState.status !== "awaiting-upstream-refinement") {
-      solver.step()
-    }
+    solver.solve()
     // Algorithmic failure is an evaluated outcome, consumed in serial node order.
     // Infrastructure/implementation exceptions still reject runtime execution.
     this.output = {
@@ -62,8 +55,6 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         this.input.nodePortPoints.length - solver.unsolvedNodePortPoints.length,
       solved: solver.solved,
       error: solver.error,
-      detailedRoutingConflicts: solver.detailedRoutingConflicts,
-      refinementState: solver.refinementState,
     }
     this.solved = true
   }
