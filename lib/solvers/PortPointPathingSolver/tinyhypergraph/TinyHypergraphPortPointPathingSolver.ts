@@ -38,6 +38,7 @@ import type {
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
+import { ElectricalTreeTinyHyperGraphSolver } from "./ElectricalTreeTinyHyperGraphSolver"
 import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
@@ -915,13 +916,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  readonly useElectricalTreeTargets: boolean
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useElectricalTreeTargets = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.useElectricalTreeTargets = useElectricalTreeTargets
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
@@ -938,7 +942,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        useElectricalTreeTargets
+          ? ElectricalTreeTinyHyperGraphSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -979,8 +985,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
+      const Solver = this.useElectricalTreeTargets
+        ? ElectricalTreeTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
       this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+        new Solver(
           topology,
           problem,
           this.getSolveGraphOptions(),
@@ -1137,6 +1146,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.flags.USE_ELECTRICAL_TREE_TARGETS === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1388,6 +1398,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
+      electricalTreeTargetCount: solveGraphStats.electricalTreeTargetCount,
+      electricalTreeSuffixSegmentCount: solveGraphStats.electricalTreeSuffixSegmentCount,
+      electricalTreeIndexSegmentReads: solveGraphStats.electricalTreeIndexSegmentReads,
+      electricalTreeSearchStepCount: solveGraphStats.electricalTreeSearchStepCount,
+      electricalTreeRemovedRetracedSegmentCount:
+        solveGraphStats.electricalTreeRemovedRetracedSegmentCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
       partiallyRippedSegmentCount: solveGraphStats.partiallyRippedSegmentCount,
@@ -1446,6 +1462,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.flags.USE_ELECTRICAL_TREE_TARGETS === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
