@@ -38,6 +38,7 @@ export type Pipeline9BoundedRepairBudget = {
   pathHeuristicWeight?: number
   revisitChangedRegions?: boolean
   regionSizes?: readonly number[]
+  localRegionSize?: number
 }
 
 export const getPipeline9BoundedRepairBudget = (
@@ -70,6 +71,7 @@ export const getPipeline9BoundedRepairBudget = (
     pathHeuristicWeight: 3,
     revisitChangedRegions: true,
     regionSizes: [16, 32],
+    localRegionSize: 12,
   }
 }
 

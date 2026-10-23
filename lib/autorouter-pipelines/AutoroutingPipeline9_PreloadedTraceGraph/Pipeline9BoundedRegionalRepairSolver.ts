@@ -45,6 +45,7 @@ type ReferencedContext = InitialContext & {
 }
 
 type RegionalContext = ReferencedContext & {
+  allowLocalRepairs: boolean
   srj: SimpleRouteJson & { traces: undefined }
   obstacleCenterById: Map<string, { x: number; y: number }>
   attemptedRegions: Array<{ bounds: Bounds; size: number }>
@@ -344,8 +345,29 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       }
     }
     const currentRoutes = canonicalizePipeline9HdRoutes(context.currentRoutes)
+    const localRegionSize = this.budget.localRegionSize
+    // Trace-to-board conflicts need the established coupled detours around
+    // the fixed boundary, even when only a few errors remain.
+    const allowLocalRepairs =
+      localRegionSize !== undefined &&
+      !context.currentErrors.some(
+        (error): boolean => error.drcCheck === "board-clearance",
+      )
     const regional: RegionalContext = {
       ...context,
+      allowLocalRepairs,
+      // Add a compact first choice only for local errors, preserving the
+      // configured region order for coupled conflicts and custom budgets.
+      regionSizes:
+        allowLocalRepairs &&
+        context.currentErrors.length <= 10 &&
+        localRegionSize !== undefined &&
+        localRegionSize > 2 * context.boundaryMargin
+          ? [
+              localRegionSize,
+              ...context.regionSizes.filter((size) => size !== localRegionSize),
+            ]
+          : context.regionSizes,
       srj,
       obstacleCenterById,
       currentRoutes,
@@ -499,7 +521,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
       pathGridSizeScale:
-        context.currentErrors.length > 10
+        context.currentErrors.length > 10 ||
+        (this.budget.localRegionSize !== undefined &&
+          !context.allowLocalRepairs &&
+          context.initialErrors.length <= 10)
           ? this.budget.pathGridSizeScale
           : undefined,
       allowLayerChanges: true,
@@ -569,6 +594,46 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     ) {
       this.state = { phase: "select-region", context }
       return
+    }
+    // A local improvement needs no further full-board projection once all
+    // reference and physical checks pass. Keep coupled projection for dense sets.
+    if (context.allowLocalRepairs && context.currentErrors.length <= 10) {
+      const candidateReference = this.params.drcEvaluator({
+        traces: [],
+        routes: negotiatedRoutes,
+        hdRoutes: negotiatedRoutes,
+      })
+      this.result.referenceValidationCount++
+      const candidateErrors = Array.isArray(candidateReference)
+        ? candidateReference
+        : candidateReference.errors
+      if (candidateErrors.length < context.currentErrors.length) {
+        const candidateFixedViolations = getFixedObstacleViolations({
+          srj: context.srj,
+          routes: negotiatedRoutes,
+        })
+        if (
+          candidateFixedViolations.every(
+            ({ key, severity }): boolean =>
+              context.fixedViolations.has(key) &&
+              severity <= context.fixedViolations.get(key)! + 1e-8,
+          ) &&
+          getNewViaPadViolations({
+            srj: context.srj,
+            previousRoutes: context.currentRoutes,
+            routes: negotiatedRoutes,
+          }).length === 0
+        ) {
+          this.state = {
+            phase: "accept-candidate",
+            context,
+            candidateRoutes: negotiatedRoutes,
+            candidateReference,
+            candidateFixedViolations,
+          }
+          return
+        }
+      }
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
       originalSrj: this.params.originalSrj,
