@@ -20,11 +20,15 @@ const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario, {
 pipeline.solveUntilPhase("portPointPathingSolver")
 if (!pipeline.portPointPathingSolver) pipeline.step()
 if (pipeline.failed || !pipeline.portPointPathingSolver) {
-  throw new Error(pipeline.error ?? "Pipeline9 did not reach port-point pathing")
+  throw new Error(
+    pipeline.error ?? "Pipeline9 did not reach port-point pathing",
+  )
 }
-const phase = (pipeline.portPointPathingSolver as unknown as {
-  tinyPipelineSolver: NativePhase
-}).tinyPipelineSolver
+const phase = (
+  pipeline.portPointPathingSolver as unknown as {
+    tinyPipelineSolver: NativePhase
+  }
+).tinyPipelineSolver
 const loaded = phase.loadHyperGraph(phase.inputProblem.serializedHyperGraph)
 const input = {
   captureKind: "native-pipeline9-solveGraph-input",
@@ -35,6 +39,9 @@ const input = {
   options: phase.getSolveGraphOptions(),
 }
 const json = JSON.stringify(input, (_key, value) => {
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    return { $number: String(value) }
+  }
   if (ArrayBuffer.isView(value)) {
     return {
       $typed: value.constructor.name,
@@ -44,15 +51,19 @@ const json = JSON.stringify(input, (_key, value) => {
   return value
 })
 writeFileSync(outputPath, json)
-writeFileSync(`${outputPath}.gz`, gzipSync(json))
-console.log(JSON.stringify({
-  outputPath,
-  bytes: Buffer.byteLength(json),
-  sha256: createHash("sha256").update(json).digest("hex"),
-}))
+writeFileSync(`${outputPath}.gz`, new Uint8Array(gzipSync(json)))
+console.log(
+  JSON.stringify({
+    outputPath,
+    bytes: Buffer.byteLength(json),
+    sha256: createHash("sha256").update(json).digest("hex"),
+  }),
+)
 if (process.argv.includes("--emit-capture")) {
   const compressed = gzipSync(json).toString("base64")
   for (let index = 0; index < compressed.length; index += 16000) {
-    console.log(`PORT_CAPTURE_CHUNK ${index}: ${compressed.slice(index, index + 16000)}`)
+    console.log(
+      `PORT_CAPTURE_CHUNK ${index}: ${compressed.slice(index, index + 16000)}`,
+    )
   }
 }
