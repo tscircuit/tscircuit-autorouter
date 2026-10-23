@@ -428,6 +428,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   private readonly monotoneFamilyPortIndex?: FlatbushIndex<PortPoint>
   private readonly monotoneFamilyRouteIndex = new RbushIndex<HighDensityIntraNodeRoute>()
   private readonly monotoneFamilyObstacleIndex = new RbushIndex<Obstacle>()
+  // Wall-clock diagnostics are excluded from deterministic sync/async stats.
+  readonly benchmarkDiagnosticTimings = { monotoneFamilySceneSetupTimeMs: 0 }
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -463,10 +465,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const radius = Math.hypot(obstacle.width / 2, obstacle.height / 2)
       this.monotoneFamilyObstacleIndex.insert(obstacle, obstacle.center.x - radius, obstacle.center.y - radius, obstacle.center.x + radius, obstacle.center.y + radius)
     }
+    this.benchmarkDiagnosticTimings.monotoneFamilySceneSetupTimeMs = performance.now() - monotoneSceneSetupStarted
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       ...Object.fromEntries(monotoneFamilyStatKeys.map((key) => [key, 0])),
-      monotoneFamilySceneSetupTimeMs: performance.now() - monotoneSceneSetupStarted,
       monotoneFamilyObstacleIndexEntries: params.enableMonotoneFamilyCompilation ? params.obstacles.length : 0,
       monotoneFamilyCommittedSinglePairCells: 0,
       monotoneFamilyCommittedCollectiveCells: 0,
