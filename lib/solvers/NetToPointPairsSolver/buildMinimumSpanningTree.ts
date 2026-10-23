@@ -1,120 +1,5 @@
 type Point = { x: number; y: number }
-type PointComponentId = string
 
-export class KDNode {
-  point: Point
-  left: KDNode | null = null
-  right: KDNode | null = null
-
-  constructor(point: Point) {
-    this.point = point
-  }
-}
-
-class KDTree {
-  root: KDNode | null = null
-
-  constructor(points: Point[]) {
-    if (points.length > 0) {
-      this.root = this.buildTree(points, 0)
-    }
-  }
-
-  private buildTree(points: Point[], depth: number): KDNode {
-    const axis = depth % 2 === 0 ? "x" : "y"
-
-    // Sort points by the current axis
-    points.sort((a, b) => a[axis] - b[axis])
-
-    // Choose median as the pivot element
-    const medianIndex = Math.floor(points.length / 2)
-    const node = new KDNode(points[medianIndex])
-
-    // Recursively build left and right subtrees
-    if (medianIndex > 0) {
-      node.left = this.buildTree(points.slice(0, medianIndex), depth + 1)
-    }
-
-    if (medianIndex < points.length - 1) {
-      node.right = this.buildTree(points.slice(medianIndex + 1), depth + 1)
-    }
-
-    return node
-  }
-
-  // Find k nearest neighbors
-  findKNearestNeighbors(queryPoint: Point, k: number): Point[] {
-    if (!this.root) {
-      return []
-    }
-
-    const neighbors: Array<{ point: Point; distance: number }> = []
-
-    this.kNearestNeighborSearch(this.root, queryPoint, 0, neighbors, k)
-
-    return neighbors
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, k)
-      .map((n) => n.point)
-  }
-
-  private kNearestNeighborSearch(
-    node: KDNode | null,
-    queryPoint: Point,
-    depth: number,
-    neighbors: Array<{ point: Point; distance: number }>,
-    k: number,
-  ): void {
-    if (!node) {
-      return
-    }
-
-    const axis = depth % 2 ? "x" : "y"
-    const currentDistance = this.distance(queryPoint, node.point)
-
-    // Add current node to neighbors
-    neighbors.push({ point: node.point, distance: currentDistance })
-
-    // Determine which subtree to search first
-    const axisDiff = queryPoint[axis] - node.point[axis]
-    const firstBranch = axisDiff <= 0 ? node.left : node.right
-    const secondBranch = axisDiff <= 0 ? node.right : node.left
-
-    // Recursively search the first branch
-    this.kNearestNeighborSearch(
-      firstBranch,
-      queryPoint,
-      depth + 1,
-      neighbors,
-      k,
-    )
-
-    // Get the kth distance if we have k neighbors
-    let kthDistance = Infinity
-    if (neighbors.length >= k) {
-      neighbors.sort((a, b) => a.distance - b.distance)
-      kthDistance = neighbors[k - 1]?.distance || Infinity
-    }
-
-    // Search the other branch if necessary
-    if (Math.abs(axisDiff) < kthDistance || neighbors.length < k) {
-      this.kNearestNeighborSearch(
-        secondBranch,
-        queryPoint,
-        depth + 1,
-        neighbors,
-        k,
-      )
-    }
-  }
-
-  // Calculate Euclidean distance between two points
-  private distance(a: Point, b: Point): number {
-    return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
-  }
-}
-
-// Disjoint Set (Union-Find) data structure for Kruskal's algorithm
 export class DisjointSet {
   private parent: Map<string, string> = new Map()
   private rank: Map<string, number> = new Map()
@@ -182,7 +67,6 @@ export class DisjointSet {
   }
 }
 
-// Edge representation for Kruskal's algorithm
 interface Edge<T extends Point> {
   from: T
   to: T
@@ -193,102 +77,66 @@ interface BuildMinimumSpanningTreeOptions<T extends Point> {
   extraEdges?: Edge<T>[]
 }
 
-// Main function to build a minimum spanning tree using Kruskal's algorithm
+type IndexedEdge<T extends Point> = { toIndex: number; edge: Edge<T> }
+
+// Dense Prim considers every terminal pair, so separated clusters stay connected.
 export function buildMinimumSpanningTree<T extends Point>(
   points: T[],
   opts: BuildMinimumSpanningTreeOptions<T> = {},
 ): Edge<T>[] {
-  if (points.length <= 1) {
-    return []
-  }
-
-  // Prevent in-place KD-tree sorting from mutating caller-owned arrays.
-  const pointsCopy = [...points]
-
-  // Build KD-Tree for efficient nearest neighbor search
-  const kdTree = new KDTree(pointsCopy)
-
-  // Generate edges with k-nearest neighbors for each point
-  // This is an optimization to avoid generating all possible n(n-1)/2 edges
-  const edges: Edge<T>[] = []
-  const k = Math.min(10, points.length - 1) // Consider k nearest neighbors
-
-  for (const point of pointsCopy) {
-    const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
-
-    for (const neighbor of neighbors) {
-      // Skip self
-      if (point.x === neighbor.x && point.y === neighbor.y) {
-        continue
-      }
-
-      const distance = Math.sqrt(
-        (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
-      )
-
-      edges.push({
-        from: point,
-        to: neighbor as T,
-        weight: distance,
-      })
+  // Coincident terminals share a vertex; keep the caller's original objects.
+  const uniquePoints = [
+    ...new Map(points.map((point) => [`${point.x},${point.y}`, point] as const)).values(),
+  ]
+  if (uniquePoints.length <= 1) return []
+  const pointIndices = new Map(
+    uniquePoints.map((point, index) => [`${point.x},${point.y}`, index]),
+  )
+  const extraEdges: IndexedEdge<T>[][] = uniquePoints.map(() => [])
+  for (const edge of opts.extraEdges ?? []) {
+    const fromIndex = pointIndices.get(`${edge.from.x},${edge.from.y}`)
+    const toIndex = pointIndices.get(`${edge.to.x},${edge.to.y}`)
+    if (fromIndex === undefined || toIndex === undefined) {
+      throw new Error("Extra edge endpoints must be present in points")
     }
+    extraEdges[fromIndex]!.push({ toIndex, edge })
+    extraEdges[toIndex]!.push({ toIndex: fromIndex, edge })
   }
 
-  if (opts.extraEdges) {
-    edges.push(...opts.extraEdges)
-  }
-
-  // Sort edges by weight (distance)
-  edges.sort((a, b) => a.weight - b.weight)
-
-  // Apply Kruskal's algorithm
-  const disjointSet = new DisjointSet(pointsCopy)
+  const visited = new Uint8Array(uniquePoints.length)
+  const distances = new Float64Array(uniquePoints.length).fill(Infinity)
+  const nearestEdges: (Edge<T> | undefined)[] = new Array(uniquePoints.length)
   const mstEdges: Edge<T>[] = []
+  distances[0] = 0
 
-  for (const edge of edges) {
-    if (disjointSet.union(edge.from, edge.to)) {
-      mstEdges.push(edge)
+  for (let count = 0; count < uniquePoints.length; count++) {
+    let next = -1
+    for (let index = 0; index < uniquePoints.length; index++) {
+      if (!visited[index] && (next === -1 || distances[index]! < distances[next]!)) {
+        next = index
+      }
+    }
+    visited[next] = 1
+    const nearest = nearestEdges[next]
+    if (nearest) mstEdges.push(nearest)
+    const from = uniquePoints[next]!
 
-      // MST has n-1 edges for n points
-      if (mstEdges.length === pointsCopy.length - 1) {
-        break
+    for (let index = 0; index < uniquePoints.length; index++) {
+      if (visited[index]) continue
+      const to = uniquePoints[index]!
+      const weight = Math.sqrt((from.x - to.x) ** 2 + (from.y - to.y) ** 2)
+      if (weight < distances[index]!) {
+        distances[index] = weight
+        nearestEdges[index] = { from, to, weight }
+      }
+    }
+    // Supplied edges win ties, retaining zero-weight preconnections and metadata.
+    for (const { toIndex, edge } of extraEdges[next]!) {
+      if (!visited[toIndex] && edge.weight <= distances[toIndex]!) {
+        distances[toIndex] = edge.weight
+        nearestEdges[toIndex] = edge
       }
     }
   }
-
-  // The k-neighbor graph can leave separated terminal clusters disconnected.
-  // Join their nearest outgoing edges without changing existing pairs or order.
-  while (disjointSet.componentCount > 1) {
-    const roots: PointComponentId[] = pointsCopy.map((point) =>
-      disjointSet.find(point),
-    )
-    const nearestEdges = new Map<PointComponentId, Edge<T>>()
-    for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
-      for (
-        let toIndex = fromIndex + 1;
-        toIndex < pointsCopy.length;
-        toIndex++
-      ) {
-        if (roots[fromIndex] === roots[toIndex]) continue
-        const from = pointsCopy[fromIndex]!
-        const to = pointsCopy[toIndex]!
-        const edge: Edge<T> = {
-          from,
-          to,
-          weight: Math.sqrt((from.x - to.x) ** 2 + (from.y - to.y) ** 2),
-        }
-        for (const root of [roots[fromIndex]!, roots[toIndex]!]) {
-          const nearest = nearestEdges.get(root)
-          if (!nearest || edge.weight < nearest.weight) {
-            nearestEdges.set(root, edge)
-          }
-        }
-      }
-    }
-    for (const edge of nearestEdges.values()) {
-      if (disjointSet.union(edge.from, edge.to)) mstEdges.push(edge)
-    }
-  }
-
-  return mstEdges
+  return mstEdges.sort((a, b) => a.weight - b.weight)
 }
