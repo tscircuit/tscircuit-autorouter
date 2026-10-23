@@ -29,6 +29,8 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { RouteColumnIntraNodeSolver } from "./RouteColumnIntraNodeSolver"
+import type { RouteColumnStats } from "./DualPriceRouteColumnSolver"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -46,6 +48,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | HighDensitySolverA13
+  | RouteColumnIntraNodeSolver
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -55,6 +58,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    enableRouteColumnSearch?: boolean
+    routeColumnStats?: RouteColumnStats
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -127,6 +134,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      enableRouteColumnSearch?: boolean
+      routeColumnStats?: RouteColumnStats
+      viaHoleDiameter?: number
+      minViaHoleEdgeToViaHoleEdgeClearance?: number
     },
   ) {
     super()
@@ -205,6 +216,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
+      ...(this.constructorParams.enableRouteColumnSearch ? [["routeColumn"]] : []),
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
@@ -351,6 +363,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         name: "highDensityA13",
         possibleValues: [{ HIGH_DENSITY_A13: true, SHUFFLE_SEED: 0 }],
       },
+      {
+        name: "routeColumn",
+        possibleValues: [{ ROUTE_COLUMN: true }],
+      },
     ]
   }
 
@@ -382,7 +398,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       (total, { solver }) => {
         // A13 negotiates route orders internally. Its larger budget must not
         // delay expansion of the existing A01 ordering search.
-        if (!(solver instanceof HighDensitySolverA13)) {
+        if (!(solver instanceof HighDensitySolverA13) && !(solver instanceof RouteColumnIntraNodeSolver)) {
           this.totalCandidateWork += solver.iterations
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
@@ -493,6 +509,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
+    if (solver instanceof RouteColumnIntraNodeSolver) {
+      return (solver.engine?.iterations ?? 0) / 1_000_000
+    }
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
     }
@@ -506,7 +525,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         accountedWork.maxIterations = solver.MAX_ITERATIONS
         this.dynamicExpansionWorkBudget = 1
         for (const { solver: candidate } of this.supervisedSolvers ?? []) {
-          if (candidate instanceof HighDensitySolverA13) continue
+          if (candidate instanceof HighDensitySolverA13 || candidate instanceof RouteColumnIntraNodeSolver) continue
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
             candidate.MAX_ITERATIONS,
@@ -550,6 +569,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
+    if (hyperParameters.ROUTE_COLUMN) {
+      return new RouteColumnIntraNodeSolver({
+        ...this.constructorParams,
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        effort: this.effort,
+      }) as any
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(

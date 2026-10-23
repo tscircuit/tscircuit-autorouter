@@ -634,6 +634,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            minViaHoleEdgeToViaHoleEdgeClearance: cms.srj.minViaHoleEdgeToViaHoleEdgeClearance,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,

@@ -21,6 +21,7 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import type { RouteColumnStats } from "../../solvers/HyperHighDensitySolver/DualPriceRouteColumnSolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -45,6 +46,8 @@ export type Pipeline9HighDensitySolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
@@ -313,10 +316,13 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
+  routeColumnStats?: RouteColumnStats
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -334,10 +340,13 @@ export type Pipeline9RegularNodeSolverParams = {
  * remote algorithm configuration cannot drift.
  */
 export const createPipeline9RegularNodeSolver = ({
+  routeColumnStats,
   nodeWithPortPoints,
   connMap,
   colorMap,
   viaDiameter,
+  viaHoleDiameter,
+  minViaHoleEdgeToViaHoleEdgeClearance,
   traceWidth,
   obstacleMargin,
   effort,
@@ -353,6 +362,8 @@ export const createPipeline9RegularNodeSolver = ({
     colorMap,
     connMap,
     viaDiameter,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -361,6 +372,8 @@ export const createPipeline9RegularNodeSolver = ({
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     enableNegotiatedSearch: true,
+    enableRouteColumnSearch: true,
+    routeColumnStats,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
@@ -376,6 +389,7 @@ export const createPipeline9RegularNodeSolver = ({
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
+  readonly routeColumnStats: RouteColumnStats = {}
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
@@ -384,6 +398,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
+  readonly viaHoleDiameter?: number
+  readonly minViaHoleEdgeToViaHoleEdgeClearance?: number
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
@@ -421,6 +437,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
+    this.viaHoleDiameter = params.viaHoleDiameter
+    this.minViaHoleEdgeToViaHoleEdgeClearance = params.minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
@@ -522,8 +540,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount")
-            this.stats[key] += value
+          if (key === "nodeCount" || key === "fixedObstacleCount") continue
+          const maximum = key.startsWith("routeColumnMax")
+          this.stats[key] = maximum ? Math.max(Number(this.stats[key] ?? 0), value) : Number(this.stats[key] ?? 0) + value
+          if (key.startsWith("routeColumn")) {
+            this.routeColumnStats[key] = maximum ? Math.max(this.routeColumnStats[key] ?? 0, value) : (this.routeColumnStats[key] ?? 0) + value
+          }
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,
@@ -586,10 +608,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
+      routeColumnStats: this.routeColumnStats,
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
@@ -1012,6 +1037,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override _step(): void {
     this.stepNodeRouting()
+    Object.assign(this.stats, this.routeColumnStats)
     this.activeSubSolver =
       this.activeFallbackSolver ??
       this.activeRegularSolver ??

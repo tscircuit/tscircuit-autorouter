@@ -16,6 +16,7 @@ import {
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import type { RouteColumnStats } from "../HyperHighDensitySolver/DualPriceRouteColumnSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -53,6 +54,8 @@ export class HighDensitySolver extends BaseSolver {
   readonly defaultViaDiameter = 0.3
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -60,6 +63,8 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
+  enableRouteColumnSearch: boolean
+  routeColumnStats: RouteColumnStats
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
@@ -92,6 +97,8 @@ export class HighDensitySolver extends BaseSolver {
     colorMap,
     connMap,
     viaDiameter,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -100,6 +107,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
+    enableRouteColumnSearch = false,
+    routeColumnStats = {},
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
@@ -114,6 +123,8 @@ export class HighDensitySolver extends BaseSolver {
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
     viaDiameter?: number
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
     traceWidth?: number
     obstacleMargin?: number
     effort?: number
@@ -121,6 +132,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
+    enableRouteColumnSearch?: boolean
+    routeColumnStats?: RouteColumnStats
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
@@ -144,11 +157,15 @@ export class HighDensitySolver extends BaseSolver {
     this.failedSolvers = []
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
+    this.viaHoleDiameter = viaHoleDiameter
+    this.minViaHoleEdgeToViaHoleEdgeClearance = minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.enableRouteColumnSearch = enableRouteColumnSearch
+    this.routeColumnStats = routeColumnStats
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
@@ -395,6 +412,8 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
+      enableRouteColumnSearch: this.enableRouteColumnSearch,
+      routeColumnStats: this.routeColumnStats,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
@@ -402,6 +421,8 @@ export class HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
@@ -421,6 +442,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private updateCacheStats() {
+    Object.assign(this.stats, this.routeColumnStats)
     const cacheProvider = getGlobalInMemoryCache()
     this.stats.intraNodeCacheHits = cacheProvider.cacheHits
     this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
