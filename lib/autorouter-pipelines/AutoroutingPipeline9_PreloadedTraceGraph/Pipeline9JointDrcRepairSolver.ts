@@ -1627,7 +1627,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (this.activeSubSolver) {
       const child = this.activeSubSolver
       child.step()
-      Object.assign(this.stats, this.getExperimentalClearanceStats())
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
         this.iterations + child.MAX_ITERATIONS - child.iterations + 2,
@@ -1674,7 +1673,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const result = this.initialBoundedRegionalRepairSolver.getResult()
     this.stats = {
       ...this.stats,
-      ...this.getExperimentalClearanceStats(),
       initialBoundedRegionalRepairAccepted: false,
       initialBoundedRegionalRepairAttemptedRegionCount:
         result.attemptedRegionCount,
@@ -1970,7 +1968,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
-      ...this.getExperimentalClearanceStats(),
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
@@ -2020,18 +2017,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.solved = true
-  }
-
-  private getExperimentalClearanceStats(): Record<string, number> {
-    const result: Record<string, number> = {}
-    for (const child of [this.initialBoundedRegionalRepairSolver, this.boundedRegionalRepairSolver]) {
-      if (!child) continue
-      for (const [key, value] of Object.entries(child.stats)) {
-        if (!key.startsWith("experimental") || typeof value !== "number") continue
-        result[key] = key.includes("Maximum") ? Math.max(result[key] ?? 0, value) : (result[key] ?? 0) + value
-      }
-    }
-    return result
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

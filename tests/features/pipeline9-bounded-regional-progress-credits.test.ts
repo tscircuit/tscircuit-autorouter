@@ -20,11 +20,9 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
     },
   })
   const observedAllowances: number[] = []
-  const observedNodeAllowances: number[] = []
   while (!adaptive.solved && !adaptive.failed) {
     adaptive.step()
     observedAllowances.push(adaptive.stats.allowedRegionCount)
-    observedNodeAllowances.push(adaptive.stats.allowedPathSearchNodeCount)
   }
   expect(adaptive.error).toBeNull()
   expect(adaptive.failed).toBeFalse()
@@ -36,10 +34,7 @@ test("accepted whole-board repairs earn work while explicit budgets keep their h
   expect(repaired.acceptedRegionCount).toBe(2)
   expect(repaired.attemptedRegionCount).toBe(2)
   expect(repaired.candidateAttemptCount).toBe(2)
-  expect(observedNodeAllowances).toContain(5_000)
-  expect(observedNodeAllowances).toContain(10_000)
-  expect(repaired.pathSearchNodeCount).toBeGreaterThan(0)
-  expect(adaptive.stats.experimentalEventPrimitiveTests).toBeGreaterThan(0)
+  expect(repaired.pathSearchNodeCount).toBeGreaterThan(5_000)
   expect(repaired.pathSearchNodeCount).toBeLessThanOrEqual(10_000)
   expect(repaired.publishedDrcIssueCount).toBe(0)
   const validation = adaptiveFixture.drcEvaluator({

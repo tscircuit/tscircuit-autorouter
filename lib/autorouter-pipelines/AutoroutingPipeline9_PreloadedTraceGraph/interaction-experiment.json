@@ -1,0 +1,43 @@
+{
+  "theory": 9,
+  "mechanism": "Actual-interaction independence detection and component coupling as one ordinary P9 high-density portfolio candidate.",
+  "control": "b9d32a05c76af701d518f6a78a3114e68addd144",
+  "dispatch": "P9 regular-node factory enables the additional candidate; all other HighDensitySolver callers default disabled. Children explicitly disable grouping to prevent recursion. Native candidates retain their existing parameter combinations, per-candidate budgets, acceptance policy and postprocessors. Grouping is eligible only at outer grow/shrink scaleFactor=1; board proofs cannot be reused across a fictitious coordinate scaling.",
+  "algorithm": [
+    "Start with each complete root/net family as an independent group, retaining explicit connection pairs.",
+    "Use the ordinary native HighDensitySolver portfolio for each group's initial proposal at original effort and geometry settings.",
+    "Check actual proposed copper using capsule distances, actual wire widths and full electrical through-via span by default. Distinct drills use resolved physical hole diameter plus the caller hole-edge clearance, even for same-net or disjoint blind/buried electrical spans. Foreign annulus clearance is a separate check only where electrical copper spans overlap; exact same-site reuse is allowed only on the same net.",
+    "Merge connected components of observed route conflicts, replan only merged groups, retain all unaffected route objects and work.",
+    "Audit every group pair after each changed proposal, including changed versus retained paths. Retained paths are exact post-proposal reservations, not constraints fed into native children and not a proof of permanent independence.",
+    "Accept only guarded proposals. Candidate-level fixed-obstacle, via-pad, board DRC, nominal-width, root identity and required pair guards remain in force. Native compressed planar-plus-via edges are expanded on guard-only copies with the existing P9 endpoint resolver; original route objects are retained. Missing or ambiguous via ownership remains a loud invariant. Expected root metadata must be present and electrically match the node root before acceptance.",
+    "At most initialGroupCount minus one groups can be eliminated by merging; any child failure or allowance exhaustion is an unknown candidate/policy failure, never physical UNSAT. Existing ordinary candidates continue competing when grouping fails."
+  ],
+  "budgetPolicy": "Same native child HighDensitySolver effort/MAX policy and search options. The added group candidate has the ordinary portfolio's initial 20000000*effort allowance and competes on its existing fitness schedule. ChildAllocatedIterations sums direct native child MAX values, ChildIterations counts their actual outer steps, NodeIterationAllowance records group candidate allowance. These are wrapper steps/allocations, not fine A-star state counts or a bound on total nested work. Adding a candidate changes total possible work and scheduling; equality of total search effort with control is not claimed. Grouping is excluded from the original A01 adaptive-order expansion accounting so its nested budget cannot delay that expansion.",
+  "qualityPolicy": "Grouping's strict early physical guards may reject native repairable proposals. That restriction applies only this candidate; ordinary candidates retain the original acceptance policy and the complete P9 downstream quality/repair path remains mandatory. This is an explicit candidate policy change, not a whole-node strengthening or equal-policy proof.",
+  "counterSemantics": "Experimental numeric counters aggregate through portfolio, grow/shrink, native HighDensitySolver and the P9 phase wrapper, including failures. Maximum fields max-merge; other fields add per candidate/query/node. CopperPrimitiveTests counts executed native segment/disk distance checks. GroupPairChecks, RoutePairChecks, ObstacleChecks and BoardDrcChecks count logical checks/invocations; dependency-internal DRC primitive work is not instrumented. RetainedIterationsAtMerge is work retained per merge event and may count one unchanged group's work on several events; it is not a measured speedup. Child allocations can exceed the outer candidate allowance and are not treated as free. DrillPrimitiveTests and DrillConflicts separately count hole-pair checks/conflicts; copper checks no longer stand in for drill manufacturing rules.",
+  "falsifiers": [
+    "Most nodes form one conflict component quickly, so decomposition adds work without retaining useful independent routes.",
+    "Independent native proposals use incompatible corridors; repeated merges duplicate nearly all planning.",
+    "Strict early grouping guards reject useful repairable proposals; ordinary native candidates win, leaving only overhead.",
+    "Distance checks and full physical validation dominate the saved child planning.",
+    "Blacksmith paired runs show quality, completion, wall time or total work regressions under unchanged input and final quality rules."
+  ],
+  "localValidation": {
+    "physicalAndIntegration": "Fifteen focused mechanism tests pass, plus previously validated no-invalid-fallback, progress, through-obstacle reconstruction and async worker parity tests. Exhaustive finite axis-capsule oracle and all 64 four-group conflict graphs included; actual drill rule, large hole gap, root/pair/PCB/region identity and guard-only geometry equivalence tested.",
+    "environmentLimitation": "Networked input-projection HTTP test reaches Bun.serve and fails to bind local port 0 (EADDRINUSE), identically on control and experiment; no HTTP parity success claimed.",
+    "performance": "No local benchmarks and no speedup conclusion. Parent owns Blacksmith paired runs."
+  },
+  "witnessMetadataFollowup": {
+    "correction": "Candidate validation now requires the owning capacityMeshNodeId on every route and checks PCB endpoint identities against requested terminals at that actual connection and exact XYZ. Reversing a route reverses its expected terminal order; all legitimate same-position IDs are retained as possible matches.",
+    "nativeContract": "HighDensitySolver attaches route-level PCB endpoint IDs after grow/shrink validation. The early validator therefore checks region and any supplied IDs; the completed child proposal additionally requires requested IDs when preserveTerminalPcbPortIds is enabled. When preservation is disabled, native absent metadata remains valid but supplied foreign metadata is rejected. Native optional IDs use undefined, not null. Native portfolio candidates and budgets are unchanged.",
+    "regression": "Controlled missing/foreign region, missing/wrong/reversed PCB IDs, colocated terminal identity, wrong inline endpoint ID and optional terminal metadata cases are covered; the ordinary positive path and merged root-family route regions remain valid."
+  },
+  "physicalRuleFollowup": {
+    "parent": "b03df287c701d53d229a726ebec86316f818e565",
+    "correction": "Annulus diameter plus obstacle margin is not a conservative drill bound under an arbitrarily large required hole-edge gap. The actual P9 resolved hole diameter and SRJ hole-gap rule now propagate through factory, native HD and portfolio into grouping and guard Circuit JSON conversion.",
+    "defaults": "For direct lower-level callers omitting dimensions, hole diameter defaults to half pad diameter (same getViaDimensions convention); hole-edge clearance defaults to 0.1mm. The application P9 path supplies its resolved hole diameter explicitly. getDrcErrors retains its existing 0.1mm minimum check floor, so sub-0.1mm caller gaps may still be rejected conservatively by that final candidate guard.",
+    "coordinateFrame": "Outer grow/shrink scaled attempts omit grouping; ordinary candidates and original attempts remain. Nested native group solvers can grow/shrink and return unscaled proposals, which are validated in the owning original coordinate frame.",
+    "metadata": "Missing expected root metadata is now an explicit candidate guard rejection; valid root/pair/PCB identity is tested through coupling.",
+    "tests": "Large gap 0.6mm with 0.2mm holes and 0.3mm annulus demonstrates old 0.4mm annulus+margin threshold misses forbidden 0.5mm centers. Separate tests cover own-path pair rejection, actual phase parameter propagation, unscaled dispatch, foreign annulus versus drill distinction, and same-site reuse."
+  }
+}

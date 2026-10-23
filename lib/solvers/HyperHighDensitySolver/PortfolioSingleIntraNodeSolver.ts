@@ -1,3 +1,4 @@
+import { Pipeline9InteractionGroupedHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9InteractionGroupedHighDensitySolver"
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
@@ -55,6 +56,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    enableInteractionGrouping?: boolean
+    allowBlindAndBuriedVias?: boolean
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -100,6 +105,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
+    if (solver instanceof Pipeline9InteractionGroupedHighDensitySolver) {
+      return solver.solved ? 1 : solver.progress
+    }
     if (solver instanceof HighDensitySolverA13) {
       if (solver.solved) return 1
       const connectionCount = solver.connections.length
@@ -127,6 +135,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      enableInteractionGrouping?: boolean
+      allowBlindAndBuriedVias?: boolean
+      viaHoleDiameter?: number
+      minViaHoleEdgeToViaHoleEdgeClearance?: number
     },
   ) {
     super()
@@ -197,6 +209,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getCombinationDefs() {
     return [
+      ...(this.constructorParams.enableInteractionGrouping ? [["interactionGrouping"]] : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -214,6 +227,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getHyperParameterDefs() {
     return [
+      { name: "interactionGrouping", possibleValues: [{ INTERACTION_GROUPING: true }] },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -382,7 +396,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       (total, { solver }) => {
         // A13 negotiates route orders internally. Its larger budget must not
         // delay expansion of the existing A01 ordering search.
-        if (!(solver instanceof HighDensitySolverA13)) {
+        if (!(solver instanceof HighDensitySolverA13) && !(solver instanceof Pipeline9InteractionGroupedHighDensitySolver)) {
           this.totalCandidateWork += solver.iterations
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
@@ -478,6 +492,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
 
     super._step()
+    const totals: Record<string, number> = {}
+    for (const { solver } of this.supervisedSolvers ?? []) if (solver instanceof Pipeline9InteractionGroupedHighDensitySolver) {
+      for (const [key, value] of Object.entries(solver.stats)) if (key.startsWith("experimentalInteraction") && typeof value === "number") {
+        totals[key] = key.includes("Maximum") ? Math.max(totals[key] ?? 0, value) : (totals[key] ?? 0) + value
+      }
+    }
+    Object.assign(this.stats, totals)
 
     if (
       !this.negotiatedSearchStarted &&
@@ -496,6 +517,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA13) {
       return solver.routingIterations / 1_000_000
     }
+    // Nested group allowances must not delay the native A01 order expansion.
+    if (solver instanceof Pipeline9InteractionGroupedHighDensitySolver) {
+      return solver.iterations / 10_000
+    }
     // The supervisor advances one candidate before recomputing its fitness.
     // Account for that candidate's actual work without rescanning the portfolio.
     const accountedWork = this.candidateWorkBySolver.get(solver)
@@ -506,7 +531,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         accountedWork.maxIterations = solver.MAX_ITERATIONS
         this.dynamicExpansionWorkBudget = 1
         for (const { solver: candidate } of this.supervisedSolvers ?? []) {
-          if (candidate instanceof HighDensitySolverA13) continue
+          if (candidate instanceof HighDensitySolverA13 || candidate instanceof Pipeline9InteractionGroupedHighDensitySolver) continue
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
             candidate.MAX_ITERATIONS,
@@ -550,6 +575,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
       this.nodeWithPortPoints,
     )
+    if (hyperParameters.INTERACTION_GROUPING) {
+      return new Pipeline9InteractionGroupedHighDensitySolver({
+        ...this.constructorParams,
+        nodePortPoints: [this.nodeWithPortPoints],
+        useGrowShrinkHighDensityIntraNodeSolver: true,
+        enableNegotiatedSearch: this.enableNegotiatedSearch,
+        gridSearchSegmentWork: this.gridSearchSegmentWork,
+        gridSearchWorkScale: this.gridSearchWorkScale,
+        rejectOverlappingTerminals: this.rejectOverlappingTerminals,
+        enableInteractionGrouping: false,
+        effort: this.effort,
+        growShrinkFallbackToInvalidGeometryOnFailure: false,
+      })
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(

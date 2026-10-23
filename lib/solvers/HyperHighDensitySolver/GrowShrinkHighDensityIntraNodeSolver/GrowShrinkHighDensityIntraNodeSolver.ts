@@ -205,6 +205,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      enableInteractionGrouping:
+        this.scaleFactor === 1 && portfolioParams.enableInteractionGrouping,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),
@@ -261,6 +263,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
 
     this.activeSubSolver!.step()
+    const candidates = [...this.failedSolvers, this.activeSubSolver!]
+    const totals: Record<string, number> = {}
+    for (const candidate of candidates) for (const [key, value] of Object.entries(candidate.stats)) {
+      if (!key.startsWith("experimentalInteraction") || typeof value !== "number") continue
+      totals[key] = key.includes("Maximum") ? Math.max(totals[key] ?? 0, value) : (totals[key] ?? 0) + value
+    }
+    Object.assign(this.stats, totals)
 
     if (this.activeSubSolver!.solved) {
       if (this.acceptSolution(this.activeSubSolver!)) {

@@ -53,6 +53,8 @@ export class HighDensitySolver extends BaseSolver {
   readonly defaultViaDiameter = 0.3
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -69,6 +71,8 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
+  enableInteractionGrouping: boolean
+  allowBlindAndBuriedVias?: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -92,6 +96,8 @@ export class HighDensitySolver extends BaseSolver {
     colorMap,
     connMap,
     viaDiameter,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -109,11 +115,15 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    enableInteractionGrouping = false,
+    allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
     viaDiameter?: number
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
     traceWidth?: number
     obstacleMargin?: number
     effort?: number
@@ -132,6 +142,8 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    enableInteractionGrouping?: boolean
+    allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -144,6 +156,8 @@ export class HighDensitySolver extends BaseSolver {
     this.failedSolvers = []
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
+    this.viaHoleDiameter = viaHoleDiameter
+    this.minViaHoleEdgeToViaHoleEdgeClearance = minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
@@ -162,6 +176,8 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.enableInteractionGrouping = enableInteractionGrouping
+    this.allowBlindAndBuriedVias = allowBlindAndBuriedVias
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -239,6 +255,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private getConcreteSolverTypeName(solver: BaseSolver): string {
+    if (solver.getSolverName() === "Pipeline9InteractionGroupedHighDensitySolver") return solver.getSolverName()
     if (solver instanceof CachedIntraNodeRouteSolver) {
       const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
       return solver.cacheHit ? `${concreteName} [cached]` : concreteName
@@ -354,6 +371,7 @@ export class HighDensitySolver extends BaseSolver {
     this.updateCacheStats()
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
+      for (const [key, value] of Object.entries(this.activeSubSolver.stats)) if (key.startsWith("experimentalInteraction") && typeof value === "number") this.stats[key] = value
       if (this.activeSubSolver.solved) {
         this.routes.push(
           ...(this.preserveTerminalPcbPortIds
@@ -394,6 +412,8 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      enableInteractionGrouping: this.enableInteractionGrouping,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
@@ -402,6 +422,8 @@ export class HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
+      viaHoleDiameter: this.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
