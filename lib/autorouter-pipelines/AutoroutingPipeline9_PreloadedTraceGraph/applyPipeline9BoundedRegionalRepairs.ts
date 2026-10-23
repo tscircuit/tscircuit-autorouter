@@ -38,6 +38,7 @@ export type Pipeline9BoundedRepairBudget = {
   pathHeuristicWeight?: number
   revisitChangedRegions?: boolean
   regionSizes?: readonly number[]
+  localRegionSize?: number
 }
 
 export const getPipeline9BoundedRepairBudget = (
@@ -69,9 +70,8 @@ export const getPipeline9BoundedRepairBudget = (
     pathGridSizeScale: 2,
     pathHeuristicWeight: 3,
     revisitChangedRegions: true,
-    // Repair local contacts before extracting larger, more congested regions.
-    // Keep both established sizes available when the compact region cannot solve.
-    regionSizes: [12, 16, 32],
+    regionSizes: [16, 32],
+    localRegionSize: 12,
   }
 }
 

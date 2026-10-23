@@ -344,19 +344,19 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       }
     }
     const currentRoutes = canonicalizePipeline9HdRoutes(context.currentRoutes)
+    const localRegionSize = this.budget.localRegionSize
     const regional: RegionalContext = {
       ...context,
-      // Coupled conflicts need room for negotiated detours. Keep compact
-      // regions first when a broad square would exceed the board's width
-      // or height and include unnecessary fixed geometry.
+      // Add a compact first choice only for local errors, preserving the
+      // configured region order for coupled conflicts and custom budgets.
       regionSizes:
-        context.currentErrors.length > 10 &&
-        Math.max(...context.regionSizes) <=
-          Math.min(
-            srj.bounds.maxX - srj.bounds.minX,
-            srj.bounds.maxY - srj.bounds.minY,
-          )
-          ? [...context.regionSizes].sort((a, b) => b - a)
+        context.currentErrors.length <= 10 &&
+        localRegionSize !== undefined &&
+        localRegionSize > 2 * context.boundaryMargin
+          ? [
+              localRegionSize,
+              ...context.regionSizes.filter((size) => size !== localRegionSize),
+            ]
           : context.regionSizes,
       srj,
       obstacleCenterById,
