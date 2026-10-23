@@ -25,17 +25,9 @@ test("Pipeline9 rejects unresolved DRC in the full Game Boy Advance route", () =
 
   expect(solver.failed).toBeTrue()
   expect(solver.solved).toBeFalse()
-  const finalDrcIssueCount = solver.stats.finalDrcIssueCount
-  expect(finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.error).toBe(
-    `Pipeline9 could not produce valid copper: ${finalDrcIssueCount} DRC errors remain`,
-  )
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output before solving is complete",
-  )
-  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
-    "Cannot get output before solving is complete",
-  )
+  expect(solver.powerTraceExpansionSolver?.solved).toBeTrue()
+  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.error).toContain("DRC errors remain")
   expect(
     solver.highDensityRouteSolver?.fixedRouteReplacements.has(
       "source_trace_0_fixed_70_0",

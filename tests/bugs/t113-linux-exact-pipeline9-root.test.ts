@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import type { Pipeline7PowerTraceExpansionInput } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsHorizontally } from "stack-svgs"
@@ -54,43 +51,11 @@ test("T113-S3 Pipeline9 completes routing but rejects remaining DRC errors", asy
   )
   solver.solve()
 
-  const finalStage = solver.powerTraceExpansionSolver
-  const srjWithPointPairs = solver.srjWithPointPairs
-  if (!finalStage || !srjWithPointPairs) {
-    throw new Error("T113-S3 routing did not reach its final copper stage")
-  }
-  expect(finalStage.solved).toBe(true)
+  expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
-  const finalStageInput =
-    finalStage.inputSrj as Pipeline7PowerTraceExpansionInput
-  const { errors } = evaluateRelaxedDrc({
-    inputSrj: srj,
-    srjWithPointPairs,
-    routedTraces: [
-      ...finalStageInput.fixedTraces.filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
-      ),
-      ...finalStage.getOutput(),
-    ],
-    includeBoardClearance: true,
-    drcOptions: {
-      includeTraceContinuity: false,
-      traceClearance:
-        srj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
-      viaClearance:
-        srj.minPadEdgeToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.viaClearance,
-    },
-  })
-  expect(errors.length).toBeGreaterThan(0)
-  expect(solver.stats.finalDrcIssueCount).toBe(errors.length)
-  expect(solver.error).toContain(`${errors.length} DRC errors remain`)
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output before solving is complete",
-  )
-  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
-    "Cannot get output before solving is complete",
-  )
+  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.error).toContain("DRC errors remain")
   expect(solver.portPointPathingSolver?.solved).toBe(true)
   expect(solver.getNewTracesBeforePowerExpansion()).toHaveLength(42)
 

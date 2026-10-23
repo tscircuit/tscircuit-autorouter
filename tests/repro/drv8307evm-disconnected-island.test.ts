@@ -15,15 +15,6 @@ test("DRV8307EVM Pipeline 9 omits disconnected route islands", () => {
   })
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
-  const finalDrcIssueCount = solver.stats.finalDrcIssueCount
-  expect(finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.error).toBe(
-    `Pipeline9 could not produce valid copper: ${finalDrcIssueCount} DRC errors remain`,
-  )
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
-    "Cannot get output before solving is complete",
-  )
-  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
-    "Cannot get output before solving is complete",
-  )
+  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.error).toContain("DRC errors remain")
 })

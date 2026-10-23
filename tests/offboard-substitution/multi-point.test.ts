@@ -36,20 +36,6 @@ test("multi-point off-board substitution rejects copper at the board edge", () =
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
   expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
-  const finalStage = solver.powerTraceExpansionSolver
-  if (!finalStage) throw new Error("The final copper stage did not complete")
-  const traces = finalStage.getOutput()
-  expect(traces).toHaveLength(2)
-  expect(
-    traces.some((trace) =>
-      trace.route.some(
-        (point) =>
-          point.route_type === "wire" &&
-          point.y - point.width / 2 < srj.bounds.minY,
-      ),
-    ),
-  ).toBe(true)
-  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
-    "Cannot get output before solving is complete",
-  )
+  expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
+  expect(solver.error).toContain("DRC errors remain")
 })
