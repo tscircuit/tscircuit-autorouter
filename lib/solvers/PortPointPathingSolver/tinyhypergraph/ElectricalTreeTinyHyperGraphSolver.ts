@@ -30,7 +30,9 @@ type TreeTarget = {
  * the same remote terminal. The destination's connected component is rebuilt
  * from live route ownership at a route boundary, so selective/global rips can
  * never leave a stale tree target. The reused suffix is also committed under
- * the new route owner: ripping its former owner cannot disconnect this pair.
+ * the new route's logical ownership view. Physical edge geometry is counted
+ * once by the regional cache and compiled once for detailed routing; removing
+ * one owner retains copper referenced by another live demand.
  */
 export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments {
   private treeTarget?: TreeTarget
@@ -38,6 +40,7 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
   private readonly initiallyAssignedRouteIds: Set<number>
   private readonly physicalTerminalKeyByPort = new Map<number, string>()
   private readonly terminalPortsByPhysicalKey = new Map<string, number[]>()
+  declare private physicalCacheKeys?: WeakMap<object, Set<string>>
 
   constructor(
     topology: TinyHyperGraphTopology,
@@ -94,6 +97,35 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
     this.stats.electricalTreeIndexSegmentReads = 0
     this.stats.electricalTreeSearchStepCount = 0
     this.stats.electricalTreeRemovedRetracedSegmentCount = 0
+    this.stats.electricalTreeSharedCacheReferenceCount = 0
+    this.stats.electricalTreePhysicalCacheEdgeCount = 0
+  }
+
+  override appendSegmentToRegionCache(regionId: number, fromPortId: number, toPortId: number): void {
+    const cache = this.state.regionIntersectionCaches[regionId]!
+    const indices = this.physicalCacheKeys ??= new WeakMap<object, Set<string>>()
+    let keys = indices.get(cache)
+    if (!keys) {
+      if (cache.existingSegmentCount !== 0) {
+        throw new Error(`Electrical tree lost physical cache ownership in region ${regionId}`)
+      }
+      keys = new Set<string>()
+      indices.set(cache, keys)
+    }
+    const from = [this.topology.portX[fromPortId], this.topology.portY[fromPortId], this.topology.portZ[fromPortId]]
+    const to = [this.topology.portX[toPortId], this.topology.portY[toPortId], this.topology.portZ[toPortId]]
+    const netId = this.state.currentRouteNetId
+    const knownNet = typeof netId === "number" && netId >= 0
+    if (knownNet && from.every((coordinate, index) => coordinate === to[index])) return
+    const key = JSON.stringify([netId, ...[JSON.stringify(from), JSON.stringify(to)].sort()])
+    if (knownNet && keys.has(key)) {
+      this.stats.electricalTreeSharedCacheReferenceCount = (this.stats.electricalTreeSharedCacheReferenceCount ?? 0) + 1
+      return
+    }
+    super.appendSegmentToRegionCache(regionId, fromPortId, toPortId)
+    keys.add(key)
+    indices.set(this.state.regionIntersectionCaches[regionId]!, keys)
+    this.stats.electricalTreePhysicalCacheEdgeCount = (this.stats.electricalTreePhysicalCacheEdgeCount ?? 0) + 1
   }
 
   protected override getRouteStartPortId(routeId: number): number {

@@ -5,6 +5,10 @@ export type PortPoint = {
   rootConnectionName?: string
   portPointId?: string
   pcb_port_id?: string
+  /** Stable physical vertex, distinct from a logical point-pair endpoint role. */
+  electricalVertexId?: string
+  /** Certified real pad at that vertex, including pads interior to a demand. */
+  electricalTerminalId?: string
   x: number
   y: number
   z: number

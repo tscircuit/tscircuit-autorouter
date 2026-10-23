@@ -181,6 +181,13 @@ export interface SimpleRouteConnection {
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number
   pointsToConnect: Array<ConnectionPoint>
+  /** A physical branch shared by the original logical electrical demands. */
+  electricalBranch?: {
+    netId: string
+    startVertexId: string
+    endVertexId: string
+    logicalConnectionNames: string[]
+  }
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]

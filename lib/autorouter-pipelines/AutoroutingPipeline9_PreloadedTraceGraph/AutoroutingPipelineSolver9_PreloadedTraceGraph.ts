@@ -67,7 +67,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { Pipeline9TraceSimplificationSolver as TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -99,6 +99,7 @@ import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/Po
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
+import { assertSharedElectricalTreeRoutes } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/assertSharedElectricalTreeRoutes"
 import {
   preparePipeline7PowerTraceExpansionInput,
   type Pipeline7PowerTraceExpansionInput,
@@ -572,7 +573,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+            cms.portPointPathingSolver?.getRoutingOutput().nodesWithPortPoints ?? [],
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
@@ -594,7 +595,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
           )
         }
-        const portPointPathingOutput = portPointPathingSolver.getOutput()
+        const portPointPathingOutput = portPointPathingSolver.getRoutingOutput()
+        for (const connection of portPointPathingOutput.connections) {
+          const branch = connection.electricalBranch
+          if (!branch) throw new Error(`Pipeline9 lacks physical branch ownership for ${connection.name}`)
+          const ownerNets = new Set(branch.logicalConnectionNames.map((name) => cms.connMap.getNetConnectedToId(name)))
+          if (ownerNets.size !== 1 || ownerNets.has(undefined)) {
+            throw new Error(`Pipeline9 physical branch joins unrelated logical owners: ${connection.name}`)
+          }
+          cms.connMap.addConnections([[connection.name, ...branch.logicalConnectionNames,
+            branch.startVertexId, branch.endVertexId]])
+        }
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
@@ -685,7 +696,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           connections: [
-            ...cms.srjWithPointPairs!.connections,
+            ...cms.getRoutingConnections(),
             ...cms
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
@@ -699,6 +710,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          useDeclaredConnectionEndpoints: true,
         },
       ],
     ),
@@ -748,6 +760,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            preserveRouteEndpoints: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -801,7 +814,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         connMap: cms.connMap,
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
-        connection: cms.srjWithPointPairs!.connections,
+        connection: cms.getRoutingConnections(),
         obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
         minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
         layerCount: cms.srj.layerCount,
@@ -820,7 +833,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               hdRoutes: canonicalizePipeline9HdRoutes(
                 cms.traceWidthSolver!.getHdRoutesWithWidths(),
               ),
-              connections: cms.netToPointPairsSolver?.newConnections ?? [],
+              connections: cms.getRoutingConnections(),
             }),
             connMap: cms.connMap,
             effort: Math.min(1, cms.effort),
@@ -844,7 +857,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             srj: srjWithMaterializedPreloadedTraces,
             srjWithPointPairs: srjWithMaterializedPreloadedTraces,
             originalSrj: cms.originalSrj,
-            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
+            newConnections: cms.getRoutingConnections(),
             newHdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
@@ -876,7 +889,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const convert = (routes: HighDensityRoute[]): SimplifiedPcbTraces =>
           assignUniquePcbTraceIdsToNewTraces(
             convertPipeline7HdRoutesToSimplifiedPcbTraces({
-              connections: cms.netToPointPairsSolver!.newConnections,
+              connections: cms.getRoutingConnections(),
               originalConnections: cms.originalSrj.connections,
               hdRoutes: canonicalizePipeline9HdRoutes(routes),
               layerCount: cms.srj.layerCount,
@@ -966,7 +979,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           throw new Error(
             "Pipeline9: length-matching post-processing requires NetToPointPairsSolver output",
           )
-        const connections = netToPointPairsSolver.newConnections
+        const connections = cms.getRoutingConnections()
         const finalHdConnectionNames = new Map<string, string>()
         for (const pair of cms.srj.differentialPairs ?? []) {
           for (const connectionName of pair.connectionNames) {
@@ -1637,15 +1650,69 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  getRoutingConnections(): SimpleRouteConnection[] {
+    if (!this.portPointPathingSolver?.solved) {
+      throw new Error("Pipeline9 physical routing connections require solved pathing")
+    }
+    const positions = new Map<string, { x: number; y: number; z: number }>()
+    for (const node of this.highDensityNodePortPoints ?? this.uniformPortDistributionSolver?.getOutput() ?? []) {
+      for (const point of node.portPoints) {
+        if (!point.electricalVertexId) continue
+        const previous = positions.get(point.electricalVertexId)
+        if (previous && (previous.x !== point.x || previous.y !== point.y || previous.z !== point.z)) {
+          throw new Error(`Pipeline9 shared electrical vertex moved inconsistently: ${point.electricalVertexId}`)
+        }
+        positions.set(point.electricalVertexId, point)
+      }
+    }
+    const branchConnections = this.portPointPathingSolver.getRoutingOutput().connections
+    // After coupled repair, a free vertex's coordinates are a shared variable;
+    // the original port allocation is only its initial position.
+    const repairedRoutes = this.effortCleanupSolver?.solved
+      ? this.effortCleanupSolver.getOutput()
+      : this.pipeline9JointDrcRepairSolver?.solved
+        ? this.pipeline9JointDrcRepairSolver.getOutput()
+        : undefined
+    if (repairedRoutes) {
+      const byName = new Map(repairedRoutes.map((route) => [route.connectionName, route]))
+      const livePositions = new Map<string, { x: number; y: number; z: number }>()
+      for (const connection of branchConnections) {
+        if (!connection.electricalBranch) continue
+        const route = byName.get(connection.name)
+        if (!route) throw new Error(`Pipeline9 lost repaired electrical branch ${connection.name}`)
+        for (const index of [0, 1] as const) {
+          if (connection.pointsToConnect[index]!.pcb_port_id) continue
+          const vertex = index === 0 ? connection.electricalBranch.startVertexId : connection.electricalBranch.endVertexId
+          const point = index === 0 ? route.route[0] : route.route.at(-1)
+          if (!point || ![point.x, point.y, point.z].every(Number.isFinite)) throw new Error(`Pipeline9 electrical junction ${vertex} has no finite repaired position`)
+          const previous = livePositions.get(vertex)
+          if (previous && (previous.x !== point.x || previous.y !== point.y || previous.z !== point.z)) throw new Error(`Pipeline9 electrical junction ${vertex} moved inconsistently during repair`)
+          livePositions.set(vertex, point)
+        }
+      }
+      for (const [vertex, point] of livePositions) positions.set(vertex, point)
+    }
+    return branchConnections.map((connection) => ({
+      ...connection,
+      pointsToConnect: connection.pointsToConnect.map((point) => {
+        const moved = point.pointId ? positions.get(point.pointId) : undefined
+        return moved ? { ...point, x: moved.x, y: moved.y } : point
+      }),
+    }))
+  }
+
   getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
     if (!this.highDensityRouteSolver) {
       throw new Error("Cannot get new traces before high-density routing")
     }
 
+    const connections = this.getRoutingConnections()
+    const hdRoutes = canonicalizePipeline9HdRoutes(this._getOutputHdRoutes())
+    assertSharedElectricalTreeRoutes({ connections, routes: hdRoutes, layerCount: this.srj.layerCount })
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: this.netToPointPairsSolver?.newConnections ?? [],
+      connections,
       originalConnections: this.originalSrj.connections,
-      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
+      hdRoutes,
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
