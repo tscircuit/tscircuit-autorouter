@@ -4,7 +4,7 @@ import { TinyHyperGraphSectionSolver } from "tiny-hypergraph/lib/section-solver"
 import { TinyHyperGraphSectionPipelineSolver } from "tiny-hypergraph/lib/section-solver/TinyHyperGraphSectionPipelineSolver"
 import { allocateCompatibleTinyRouteCandidates } from "../../lib/solvers/PortPointPathingSolver/tinyhypergraph/allocateCompatibleTinyRouteCandidates"
 
-test("ordinary section reconstruction remains eligible while original physical preloads exclude mixing", () => {
+test("ordinary section reconstruction remains eligible independently of board-wide preload presence", () => {
   const original = new TinyHyperGraphSolver({
     portCount: 2,
     regionCount: 2,
@@ -42,8 +42,9 @@ test("ordinary section reconstruction remains eligible while original physical p
   expect(selected.problem.initialAssignments!.length).toBeGreaterThan(0)
   expect(selected.problem.routeMetadata!.some((route) => route.preloadedTraceSection)).toBe(false)
   const before = structuredClone(selected.state.regionSegments)
-  const blocked = allocateCompatibleTinyRouteCandidates(selected, selected, { hasPreloadedCopper: true })
-  expect(blocked.jointCandidatePreloadedUnavailable).toBe(1)
+  const withBoardCopper = allocateCompatibleTinyRouteCandidates(selected, selected, { hasPreloadedCopper: true })
+  expect(withBoardCopper.jointCandidatePreloadedUnavailable).toBe(0)
+  expect(withBoardCopper.jointCandidateEligibleBoards).toBe(1)
   const ordinary = allocateCompatibleTinyRouteCandidates(selected, selected, { hasPreloadedCopper: false })
   expect(ordinary.jointCandidatePreloadedUnavailable).toBe(0)
   expect(ordinary.jointCandidateEligibleBoards).toBe(1)

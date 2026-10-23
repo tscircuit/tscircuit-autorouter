@@ -4,7 +4,7 @@ import { computeRegionCost } from "tiny-hypergraph/lib/computeRegionCost"
 
 type Segment = { region: number; route: number; from: number; to: number; net: number; lo: number; hi: number; mask: number; changes: number; length: number }
 type Candidate = { segments: Segment[]; ports: Set<number>; key: string }
-type Group = { net: number; candidates: [Candidate, Candidate] }
+type Group = { net: number; candidates: Candidate[] }
 type Score = { max: number; total: number; density: number; length: number; changes: number; singleLayerCrossings: number }
 export type JointCandidateAllocationStats = {
   jointCandidateAvailableBoards: number
@@ -20,6 +20,18 @@ export type JointCandidateAllocationStats = {
   jointCandidateMixedBoards: number
   jointCandidateInitialDensity: number
   jointCandidateFinalDensity: number
+  jointCandidatePreloadedLockedNetCount: number
+  jointCandidateMasterStates: number
+  jointCandidateMaximumExchangeSize: number
+  jointCandidateDistinctCandidateCount: number
+  jointCandidateScoredRegions: number
+  jointCandidateScoredSegmentPairs: number
+  jointCandidateAllocationElapsedMs: number
+  jointCandidateMasterStateLimit: number
+  jointCandidateMasterBudgetExhausted: number
+  jointCandidateMasterComponents: number
+  jointCandidateCompleteComponents: number
+  jointCandidateComponentStates: number
 }
 
 const sameNumbers = (a: ArrayLike<number>, b: ArrayLike<number>): boolean => {
@@ -61,6 +73,7 @@ function haveIdenticalCandidateTopology(a: TinyHyperGraphSolver, b: TinyHyperGra
     const first = a.problem.routeMetadata?.[i]?.connectionId
     if (typeof first !== "string" || first !== b.problem.routeMetadata?.[i]?.connectionId || JSON.stringify(a.problem.routeMetadata?.[i]) !== JSON.stringify(b.problem.routeMetadata?.[i])) return false
   }
+  if (JSON.stringify(a.problem.initialAssignments) !== JSON.stringify(b.problem.initialAssignments)) return false
   return true
 }
 
@@ -110,14 +123,14 @@ function getCandidatesByNet(solver: TinyHyperGraphSolver): Map<number, Candidate
   return byNet
 }
 
-function scoreSelection(groups: Group[], choices: number[], solver: TinyHyperGraphSolver): Score | null {
+function scoreSelection(groups: Group[], choices: number[], solver: TinyHyperGraphSolver, work: JointCandidateAllocationStats): Score | null {
   const owners = new Map<number, number>()
   const regions = Array.from({ length: solver.topology.regionCount }, () => [] as Segment[])
   let length = 0
   let changes = 0
   for (let i = 0; i < groups.length; i++) {
     const group = groups[i]!
-    const candidate = group.candidates[choices[i] as 0 | 1]
+    const candidate = group.candidates[choices[i]!]!
     for (const port of candidate.ports) {
       const owner = owners.get(port)
       if (owner !== undefined && owner !== group.net) return null
@@ -132,6 +145,7 @@ function scoreSelection(groups: Group[], choices: number[], solver: TinyHyperGra
   for (let region = 0; region < regions.length; region++) {
     const segments = regions[region]!
     if (segments.length === 0) continue
+    work.jointCandidateScoredRegions++
     let same = 0
     let cross = 0
     let transitions = 0
@@ -139,6 +153,7 @@ function scoreSelection(groups: Group[], choices: number[], solver: TinyHyperGra
       const a = segments[i]!
       transitions += a.changes
       for (let j = 0; j < i; j++) {
+        work.jointCandidateScoredSegmentPairs++
         const b = segments[j]!
         if (a.net === b.net || (a.lo < b.lo && b.lo < a.hi) === (a.lo < b.hi && b.hi < a.hi)) continue
         if ((a.mask & b.mask) !== 0) same++
@@ -170,56 +185,200 @@ function getNativePressure(solver: TinyHyperGraphSolver): { max: number; total: 
   return { max, total }
 }
 
-/** Two-net exchanges can resolve ownership conflicts that no legal one-net switch can cross. */
-export function allocateCompatibleTinyRouteCandidates(baseline: TinyHyperGraphSolver, alternative: TinyHyperGraphSolver, provenance: { hasPreloadedCopper: boolean }): JointCandidateAllocationStats {
-  const stats: JointCandidateAllocationStats = { jointCandidateAvailableBoards: 1, jointCandidateEligibleBoards: 0, jointCandidateTopologyMismatch: 0, jointCandidatePreloadedUnavailable: 0, jointCandidateNetGroups: 0, jointCandidateDistinctNetGroups: 0, jointCandidateTrials: 0, jointCandidateAcceptedExchanges: 0, jointCandidateSimultaneousExchanges: 0, jointCandidateHybridNetCount: 0, jointCandidateMixedBoards: 0, jointCandidateInitialDensity: 0, jointCandidateFinalDensity: 0 }
-  // Section optimization reconstructs ordinary solved routes as initial
-  // assignments. Only original physical copper provenance makes mixing unsafe.
-  if (provenance.hasPreloadedCopper || baseline.problem.routeMetadata?.some((r) => r?.preloadedTraceSection) || alternative.problem.routeMetadata?.some((r) => r?.preloadedTraceSection)) { stats.jointCandidatePreloadedUnavailable++; return stats }
-  if (!haveIdenticalCandidateTopology(baseline, alternative)) { stats.jointCandidateTopologyMismatch++; return stats }
+/** Joint allocation over complete whole-net alternatives from native rounds.
+ * Physical preload owners are locked to the final native candidate; other nets
+ * may exchange arbitrary conflict-connected chains, not just one/two flips.
+ */
+export function allocateCompatibleTinyRouteCandidates(baseline: TinyHyperGraphSolver, alternative: TinyHyperGraphSolver | TinyHyperGraphSolver[], provenance: { hasPreloadedCopper: boolean }): JointCandidateAllocationStats {
+  const stats: JointCandidateAllocationStats = { jointCandidateAvailableBoards: 1, jointCandidateEligibleBoards: 0, jointCandidateTopologyMismatch: 0, jointCandidatePreloadedUnavailable: 0, jointCandidateNetGroups: 0, jointCandidateDistinctNetGroups: 0, jointCandidateTrials: 0, jointCandidateAcceptedExchanges: 0, jointCandidateSimultaneousExchanges: 0, jointCandidateHybridNetCount: 0, jointCandidateMixedBoards: 0, jointCandidateInitialDensity: 0, jointCandidateFinalDensity: 0, jointCandidatePreloadedLockedNetCount: 0, jointCandidateMasterStates: 0, jointCandidateMaximumExchangeSize: 0, jointCandidateDistinctCandidateCount: 0, jointCandidateScoredRegions: 0, jointCandidateScoredSegmentPairs: 0, jointCandidateAllocationElapsedMs: 0, jointCandidateMasterStateLimit: 8192, jointCandidateMasterBudgetExhausted: 0, jointCandidateMasterComponents: 0, jointCandidateCompleteComponents: 0, jointCandidateComponentStates: 0 }
+  const startedAt = performance.now()
+  try {
+  if (!baseline.solved || baseline.failed) throw new Error("Joint allocation requires a completed native baseline")
+  const alternatives = Array.isArray(alternative) ? alternative : [alternative]
+  if (alternatives.some((candidate) => !candidate.solved || candidate.failed)) throw new Error("Joint allocation requires complete native alternatives")
+  if (alternatives.some((candidate) => !haveIdenticalCandidateTopology(baseline, candidate))) { stats.jointCandidateTopologyMismatch++; return stats }
   const first = getCandidatesByNet(baseline)
-  const second = getCandidatesByNet(alternative)
+  const otherCandidates = alternatives.map(getCandidatesByNet)
+  // Actual physical sections are identifiable independently of reconstructed
+  // ordinary initial assignments. Keep every route of their electrical net
+  // byte-for-byte in its final native state, so allocation cannot move copper.
+  const pinnedNets = new Set<number>()
+  baseline.problem.routeMetadata?.forEach((metadata, route) => {
+    if (metadata?.preloadedTraceSection) pinnedNets.add(baseline.problem.routeNet[route]!)
+  })
+  stats.jointCandidatePreloadedLockedNetCount = pinnedNets.size
   const groups: Group[] = [...first].map(([net, candidate]) => {
-    const other = second.get(net)
-    if (!other) throw new Error("Joint candidate allocation lost an electrical net")
-    return { net, candidates: [candidate, other] }
+    const candidates = [candidate]
+    if (!pinnedNets.has(net)) {
+      for (const other of otherCandidates) {
+        const value = other.get(net)
+        if (!value) throw new Error("Joint candidate allocation lost an electrical net")
+        if (!candidates.some((existing) => existing.key === value.key)) candidates.push(value)
+      }
+    }
+    return { net, candidates }
   })
   stats.jointCandidateEligibleBoards = 1
   stats.jointCandidateNetGroups = groups.length
-  stats.jointCandidateDistinctNetGroups = groups.filter((g) => g.candidates[0].key !== g.candidates[1].key).length
+  stats.jointCandidateDistinctNetGroups = groups.filter((g) => g.candidates.length > 1).length
+  stats.jointCandidateDistinctCandidateCount = groups.reduce((sum, g) => sum + g.candidates.length, 0)
   let choices = groups.map(() => 0)
-  const original = scoreSelection(groups, choices, baseline)
+  const original = scoreSelection(groups, choices, baseline, stats)
   if (!original) throw new Error("Joint allocation baseline violates shared-port ownership")
   const nativePressure = getNativePressure(baseline)
   const maximumPressure = Math.min(original.max, nativePressure.max)
   const totalPressure = Math.min(original.total, nativePressure.total)
   let current = original
   stats.jointCandidateInitialDensity = original.density
-  for (let sweep = 0; sweep < 2; sweep++) {
+  const isBetter = (score: Score, previous: Score): boolean => score.max < previous.max - 1e-9 || Math.abs(score.max - previous.max) <= 1e-9 && (score.total < previous.total - 1e-9 || Math.abs(score.total - previous.total) <= 1e-9 && (score.density < previous.density || score.density === previous.density && (score.changes < previous.changes || score.changes === previous.changes && score.length < previous.length - 1e-7)))
+  // The master has its own explicit finite work allowance. Native route search
+  // budgets and completed solutions are unchanged. Every visited assignment,
+  // including rejected ownership states, is charged and exported as evidence.
+  const maximumMasterStates = 4096
+  for (let sweep = 0; sweep < 3 && stats.jointCandidateMasterStates < maximumMasterStates; sweep++) {
     let improved = false
-    for (let i = 0; i < groups.length; i++) {
-      const group = groups[i]!
-      if (group.candidates[0].key === group.candidates[1].key) continue
-      const proposed = [...choices]
-      proposed[i] = 1 - proposed[i]!
-      const desired = group.candidates[proposed[i] as 0 | 1]
-      const blockers = groups.flatMap((other, j) => j !== i && [...desired.ports].some((p) => other.candidates[choices[j] as 0 | 1].ports.has(p)) ? [j] : [])
-      if (blockers.length > 1) continue
-      if (blockers.length === 1) proposed[blockers[0]!] = 1 - proposed[blockers[0]!]!
-      stats.jointCandidateTrials++
-      const score = scoreSelection(groups, proposed, baseline)
-      if (!score || score.length > original.length + 1e-7 || score.changes > original.changes || score.singleLayerCrossings > 0 || score.max > maximumPressure + 1e-9 || score.total > totalPressure + 1e-9 || score.density > original.density) continue
-      const better = score.max < current.max - 1e-9 || Math.abs(score.max - current.max) <= 1e-9 && (score.total < current.total - 1e-9 || Math.abs(score.total - current.total) <= 1e-9 && score.density < current.density)
-      if (!better) continue
-      choices = proposed
-      current = score
-      improved = true
-      stats.jointCandidateAcceptedExchanges++
-      if (blockers.length === 1) stats.jointCandidateSimultaneousExchanges++
+    for (let seed = 0; seed < groups.length; seed++) {
+      for (let candidateIndex = 0; candidateIndex < groups[seed]!.candidates.length; candidateIndex++) {
+        if (candidateIndex === choices[seed] || stats.jointCandidateMasterStates >= maximumMasterStates) continue
+        const proposed = [...choices]
+        proposed[seed] = candidateIndex
+        const visited = new Set<string>()
+        let bestChoices: number[] | undefined
+        let bestScore = current
+        const repairOwnership = (selection: number[], changed: Set<number>): void => {
+          if (stats.jointCandidateMasterStates >= maximumMasterStates) return
+          const key = selection.join(",")
+          if (visited.has(key)) return
+          visited.add(key)
+          stats.jointCandidateMasterStates++
+          const owner = new Map<number, number>()
+          let conflict: [number, number] | undefined
+          for (let i = 0; i < groups.length && !conflict; i++) {
+            for (const port of groups[i]!.candidates[selection[i]!]!.ports) {
+              const other = owner.get(port)
+              if (other !== undefined && other !== i) { conflict = [other, i]; break }
+              owner.set(port, i)
+            }
+          }
+          if (conflict) {
+            const [a, b] = conflict
+            if (changed.has(a) && changed.has(b)) return
+            const blocker = changed.has(a) ? b : a
+            for (let index = 0; index < groups[blocker]!.candidates.length; index++) {
+              if (index === selection[blocker]) continue
+              const next = [...selection]
+              next[blocker] = index
+              repairOwnership(next, new Set([...changed, blocker]))
+            }
+            return
+          }
+          stats.jointCandidateTrials++
+          const score = scoreSelection(groups, selection, baseline, stats)
+          if (!score) throw new Error("Joint master ownership proof disagrees with physical candidate scoring")
+          if (score.singleLayerCrossings > original.singleLayerCrossings || score.max > maximumPressure + 1e-9 || score.total > totalPressure + 1e-9 || !isBetter(score, bestScore)) return
+          bestChoices = selection
+          bestScore = score
+        }
+        repairOwnership(proposed, new Set([seed]))
+        if (!bestChoices) continue
+        const changedCount = choices.filter((choice, i) => choice !== bestChoices![i]).length
+        choices = bestChoices
+        current = bestScore
+        improved = true
+        stats.jointCandidateAcceptedExchanges++
+        if (changedCount > 1) stats.jointCandidateSimultaneousExchanges++
+        stats.jointCandidateMaximumExchangeSize = Math.max(stats.jointCandidateMaximumExchangeSize, changedCount)
+      }
     }
     if (!improved) break
   }
-  stats.jointCandidateHybridNetCount = choices.filter((c) => c === 1).length
+  // A conflict-chain primal is fast, but cannot cross pressure barriers when
+  // independent portals need to change together. Enumerate finite whole-net
+  // candidate domains within components coupled by ANY possible region/port.
+  // Components share no regional terms or ownership constraints, but the
+  // global max/total objective still couples their choices. Completion means
+  // exhaustive conditional enumeration with other components fixed, not a
+  // globally optimal master or globally optimal detailed routing.
+  const mutable = groups.flatMap((group, i) => group.candidates.length > 1 ? [i] : [])
+  const parent = groups.map((_, i) => i)
+  const root = (i: number): number => {
+    while (parent[i] !== i) { parent[i] = parent[parent[i]!]!; i = parent[i]! }
+    return i
+  }
+  const incidence = new Map<string, number>()
+  for (const i of mutable) {
+    for (const candidate of groups[i]!.candidates) {
+      const keys = [...candidate.ports].map((port) => `p${port}`)
+      keys.push(...candidate.segments.map((segment) => `r${segment.region}`))
+      for (const key of keys) {
+        const other = incidence.get(key)
+        if (other === undefined) incidence.set(key, i)
+        else parent[root(i)] = root(other)
+      }
+    }
+  }
+  const components = new Map<number, number[]>()
+  for (const i of mutable) {
+    const id = root(i)
+    const component = components.get(id) ?? []
+    component.push(i)
+    components.set(id, component)
+  }
+  stats.jointCandidateMasterComponents = components.size
+  let remainingComponents = components.size
+  for (const component of components.values()) {
+    const componentSet = new Set(component)
+    const owners = new Map<number, number>()
+    for (let i = 0; i < groups.length; i++) {
+      if (componentSet.has(i)) continue
+      for (const port of groups[i]!.candidates[choices[i]!]!.ports) owners.set(port, i)
+    }
+    const order = [...component].sort((a, b) => groups[a]!.candidates.length - groups[b]!.candidates.length || a - b)
+    const quota = Math.floor((8192 - stats.jointCandidateMasterStates) / remainingComponents--)
+    let visitedStates = 0, complete = true
+    const selection = [...choices]
+    let bestChoices = choices, bestScore = current
+    const enumerate = (depth: number): void => {
+      if (visitedStates >= quota) { complete = false; return }
+      visitedStates++
+      stats.jointCandidateMasterStates++
+      stats.jointCandidateComponentStates++
+      if (depth === order.length) {
+        stats.jointCandidateTrials++
+        const score = scoreSelection(groups, selection, baseline, stats)
+        if (!score) throw new Error("Finite candidate master ownership proof disagrees with scoring")
+        if (score.singleLayerCrossings <= original.singleLayerCrossings && score.max <= maximumPressure + 1e-9 && score.total <= totalPressure + 1e-9 && isBetter(score, bestScore)) {
+          bestChoices = [...selection]
+          bestScore = score
+        }
+        return
+      }
+      const groupIndex = order[depth]!
+      const indices = groups[groupIndex]!.candidates.map((_, i) => i)
+      indices.sort((a, b) => Number(b === choices[groupIndex]) - Number(a === choices[groupIndex]) || a - b)
+      for (const index of indices) {
+        const candidate = groups[groupIndex]!.candidates[index]!
+        if ([...candidate.ports].some((port) => owners.has(port))) continue
+        for (const port of candidate.ports) owners.set(port, groupIndex)
+        selection[groupIndex] = index
+        enumerate(depth + 1)
+        for (const port of candidate.ports) owners.delete(port)
+        if (!complete) break
+      }
+    }
+    enumerate(0)
+    if (complete) stats.jointCandidateCompleteComponents++
+    if (bestChoices !== choices) {
+      const changedCount = choices.filter((choice, i) => choice !== bestChoices[i]).length
+      choices = bestChoices
+      current = bestScore
+      stats.jointCandidateAcceptedExchanges++
+      if (changedCount > 1) stats.jointCandidateSimultaneousExchanges++
+      stats.jointCandidateMaximumExchangeSize = Math.max(stats.jointCandidateMaximumExchangeSize, changedCount)
+    }
+  }
+  stats.jointCandidateMasterBudgetExhausted = Number(stats.jointCandidateCompleteComponents < stats.jointCandidateMasterComponents)
+  stats.jointCandidateHybridNetCount = choices.filter((c) => c !== 0).length
   stats.jointCandidateMixedBoards = Number(stats.jointCandidateHybridNetCount > 0 && stats.jointCandidateHybridNetCount < groups.length)
   stats.jointCandidateFinalDensity = current.density
   if (stats.jointCandidateAcceptedExchanges === 0) return stats
@@ -232,7 +391,7 @@ export function allocateCompatibleTinyRouteCandidates(baseline: TinyHyperGraphSo
   baseline.state.goalPortId = -1
   for (let i = 0; i < groups.length; i++) {
     const group = groups[i]!
-    const candidate = group.candidates[choices[i] as 0 | 1]
+    const candidate = group.candidates[choices[i]!]!
     for (const port of candidate.ports) baseline.state.portAssignment[port] = group.net
     for (const s of candidate.segments) {
       baseline.state.currentRouteNetId = group.net
@@ -246,4 +405,7 @@ export function allocateCompatibleTinyRouteCandidates(baseline: TinyHyperGraphSo
   const acceptedPressure = getNativePressure(baseline)
   if (acceptedPressure.max > maximumPressure + 1e-9 || acceptedPressure.total > totalPressure + 1e-9) throw new Error("Joint candidate replay violated its native pressure constraint")
   return stats
+  } finally {
+    stats.jointCandidateAllocationElapsedMs = performance.now() - startedAt
+  }
 }

@@ -31,7 +31,7 @@ test("joint allocation refuses mismatched stable identity, metadata, geometry, p
   }
   const preloaded = createCandidate()
   preloaded.problem.routeMetadata![0].preloadedTraceSection = { traceId: "immutable" }
-  expect(allocateCompatibleTinyRouteCandidates(createCandidate(), preloaded, { hasPreloadedCopper: false }).jointCandidatePreloadedUnavailable).toBe(1)
+  expect(allocateCompatibleTinyRouteCandidates(createCandidate(), preloaded, { hasPreloadedCopper: false }).jointCandidateTopologyMismatch).toBe(1)
   const disconnected = createCandidate()
   disconnected.state.regionSegments[0] = []
   expect(() => allocateCompatibleTinyRouteCandidates(disconnected, createCandidate(), { hasPreloadedCopper: false })).toThrow("connected solved candidate")

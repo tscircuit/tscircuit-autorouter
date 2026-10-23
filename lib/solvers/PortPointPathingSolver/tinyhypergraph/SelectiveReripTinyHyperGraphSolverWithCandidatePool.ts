@@ -46,6 +46,7 @@ export class SelectiveReripTinyHyperGraphSolverWithCandidatePool extends Selecti
       jointCandidateCompleteRounds: 0,
       jointCandidateDistinctCaptures: 0,
       jointCandidateRetainedCandidates: 0,
+      jointCandidatePeakRetainedCandidates: 0,
       jointCandidateFinalizationCount: 0,
     }
   }
@@ -64,11 +65,11 @@ export class SelectiveReripTinyHyperGraphSolverWithCandidatePool extends Selecti
     }
     this.completeRoundCount++
     // The superclass may immediately clear these segments for another rerip.
-    // Physical preloads remain outside this experiment's mixing contract.
-    if (!this.originalPreloadedCopper) {
+    // The master pins physical preload-owning nets to the final native state.
+    {
       const key = this.getCandidateKey()
       if (!this.completeCandidates.some((candidate) => candidate.key === key)) {
-        if (this.completeCandidates.length === 2) this.completeCandidates.shift()
+        if (this.completeCandidates.length === 8) this.completeCandidates.shift()
         this.completeCandidates.push({
           key,
           regionSegments: structuredClone(this.state.regionSegments),
@@ -83,6 +84,7 @@ export class SelectiveReripTinyHyperGraphSolverWithCandidatePool extends Selecti
       jointCandidateCompleteRounds: this.completeRoundCount,
       jointCandidateDistinctCaptures: this.distinctCaptureCount,
       jointCandidateRetainedCandidates: this.completeCandidates.length,
+      jointCandidatePeakRetainedCandidates: Math.max(Number(this.stats.jointCandidatePeakRetainedCandidates ?? 0), this.completeCandidates.length),
     }
   }
 
@@ -123,14 +125,14 @@ export class SelectiveReripTinyHyperGraphSolverWithCandidatePool extends Selecti
     }
     if (!this.allocationComplete) {
       const finalKey = this.getCandidateKey()
-      const alternative = [...this.completeCandidates].reverse().find(
+      const alternatives = [...this.completeCandidates].reverse().filter(
         (candidate) => candidate.key !== finalKey,
       )
-      if (alternative) {
+      if (alternatives.length > 0) {
         try {
           const allocationStats = allocateCompatibleTinyRouteCandidates(
             this,
-            this.replayCandidate(alternative),
+            alternatives.map((candidate) => this.replayCandidate(candidate)),
             { hasPreloadedCopper: this.originalPreloadedCopper },
           )
           this.stats = { ...this.stats, ...allocationStats }
@@ -144,12 +146,13 @@ export class SelectiveReripTinyHyperGraphSolverWithCandidatePool extends Selecti
       this.stats = {
         ...this.stats,
         jointCandidatePreloadedUnavailable: Math.max(
-          Number(this.originalPreloadedCopper),
+          0,
           Number(this.stats.jointCandidatePreloadedUnavailable ?? 0),
         ),
         jointCandidateFinalizationCount: 1,
       }
       this.completeCandidates.length = 0
+      this.stats.jointCandidateRetainedCandidates = 0
       this.allocationComplete = true
     }
     return super.getOutput()

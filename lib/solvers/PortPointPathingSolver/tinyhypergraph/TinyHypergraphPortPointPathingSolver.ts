@@ -1392,7 +1392,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     for (const [name, value] of Object.entries(solver.stats)) {
       if (name.startsWith("jointCandidate") && typeof value === "number") {
         const previous = this.jointCandidateStats[name] ?? 0
-        this.jointCandidateStats[name] = name.endsWith("Boards") || name === "jointCandidateRetainedCandidates"
+        this.jointCandidateStats[name] = name.endsWith("Boards") || name === "jointCandidateRetainedCandidates" || name === "jointCandidatePeakRetainedCandidates" || name === "jointCandidateMaximumExchangeSize"
           ? Math.max(previous, value)
           : previous + value
       }
