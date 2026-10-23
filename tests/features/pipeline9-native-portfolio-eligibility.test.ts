@@ -1,3 +1,4 @@
+import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
@@ -17,15 +18,14 @@ const initialNativeSolver = (
   return (port as unknown as PortInternals).tinyPipelineSolver.activeSubSolver
 }
 
-test("Pipeline9 enables parallel native search for fresh unconstrained boards", () => {
+test("Pipeline9 enables parallel native search for fresh unconstrained boards", async (): Promise<void> => {
   for (const mode of ["fresh", "preloaded", "length-matched"] as const) {
     const input = createPipeline9LengthMatchingPreloadedInput(-2)
     if (mode !== "preloaded") input.traces = []
     if (mode !== "length-matched") input.buses = []
-    const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      input,
-      { cacheProvider: null },
-    )
+    const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+      cacheProvider: null,
+    })
     pipeline.solveUntilPhase("portPointPathingSolver")
     if (!pipeline.portPointPathingSolver) pipeline.step()
     expect(pipeline.failed).toBe(false)
@@ -45,4 +45,19 @@ test("Pipeline9 enables parallel native search for fresh unconstrained boards", 
       ).toBe(false)
     }
   }
+  for (let sampleNumber = 1; sampleNumber <= 16; sampleNumber++) {
+    const { scenario } = await loadScenarioBySampleNumber("srj18", sampleNumber)
+    const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      scenario,
+      { cacheProvider: null },
+    )
+    pipeline.solveUntilPhase("portPointPathingSolver")
+    if (!pipeline.portPointPathingSolver) pipeline.step()
+    expect(pipeline.failed).toBe(false)
+    expect(
+      initialNativeSolver(pipeline.portPointPathingSolver!) instanceof
+        ParallelSelectiveReripTinyHyperGraphSolver,
+    ).toBe(true)
+  }
+
 })
