@@ -61,6 +61,15 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     }
     this.pairs = params.nodeWithPortPoints.portPointsInPairs ??
       [...grouped.values()].flatMap((points) => getConnectionPortPointPairs(points))
+    const node = params.nodeWithPortPoints
+    const endpoints = this.pairs.flat()
+    const layers = node.availableZ ?? Array.from({ length: this.layerCount }, (_, z) => z)
+    if (!Number.isInteger(this.layerCount) || this.layerCount < 1 ||
+      ![node.center.x, node.center.y, node.width, node.height, this.traceWidth, this.viaDiameter, this.clearance, ...endpoints.flatMap((point) => [point.x, point.y, point.z])].every(Number.isFinite) ||
+      node.width <= 0 || node.height <= 0 || this.traceWidth <= 0 || this.viaDiameter <= 0 || this.clearance < 0 ||
+      [...layers, ...endpoints.map((point) => point.z)].some((z) => !Number.isInteger(z) || z < 0 || z >= this.layerCount)) {
+      throw new Error("Ownership graph requires finite node geometry and valid board layer indices")
+    }
     this.validationSrj = this.createValidationSrj()
     this.maxConnectivityIterations = Math.max(1, Math.round(40_000 * Math.max(1, this.pairs.length) * (params.effort ?? 1)))
     this.MAX_ITERATIONS = Math.ceil(this.maxConnectivityIterations / 32) + 2
@@ -68,6 +77,20 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       this.failed = true
       this.error = "Ownership graph candidate supports two to twelve pair tasks"
       this.counters.ownershipGraphIneligibleCount = (this.counters.ownershipGraphIneligibleCount ?? 0) + 1
+      return
+    }
+    const outsideDomain = endpoints.filter((point) => !layers.includes(point.z) ||
+      point.x < node.center.x - node.width / 2 - 1e-8 || point.x > node.center.x + node.width / 2 + 1e-8 ||
+      point.y < node.center.y - node.height / 2 - 1e-8 || point.y > node.center.y + node.height / 2 + 1e-8)
+    if (outsideDomain.length > 0) {
+      // Mesh interfaces may legitimately overhang their nominal rectangle.
+      // This prototype's fixed graph cannot represent those interfaces; its
+      // ineligibility is distinct from malformed input or graph corruption.
+      this.failed = true
+      this.error = "Ownership graph candidate is ineligible: terminal outside its fixed node/layer domain"
+      this.counters.ownershipGraphIneligibleCount = (this.counters.ownershipGraphIneligibleCount ?? 0) + 1
+      this.counters.ownershipGraphOutOfDomainNodeCount = (this.counters.ownershipGraphOutOfDomainNodeCount ?? 0) + 1
+      this.counters.ownershipGraphUnsupportedPortCount = (this.counters.ownershipGraphUnsupportedPortCount ?? 0) + outsideDomain.length
     }
   }
 
