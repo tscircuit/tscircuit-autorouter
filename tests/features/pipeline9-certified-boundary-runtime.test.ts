@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { constructPipeline9ParametricCell } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/constructPipeline9ParametricCell"
-import { getBoundaryInterfaceKey, getBoundaryPhysicalRulesKey, getBoundaryFixedCopperKey, type BoundaryRouteCertificates } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/boundaryRouteCertificates"
+import { createBoundaryInterfaceIndex, getBoundaryInterfaceKey, getBoundaryInterfaceSceneKey, getBoundaryPhysicalRulesKey, getBoundaryFixedCopperKey, normalizeBoundaryNodeRoots, type BoundaryRouteCertificates } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/boundaryRouteCertificates"
 import { createPipeline9TestRuntime } from "../fixtures/createPipeline9TestRuntime"
 
 test("certificate geometry and native iteration accounting survive the one-worker runtime boundary", async (): Promise<void> => {
@@ -11,9 +11,11 @@ test("certificate geometry and native iteration accounting survive the one-worke
   const nodes = Array.from({ length: 13 }, (_, index) => ({ capacityMeshNodeId: `cell${index}`, center: { x: index * 4, y: 0 }, width: 3, height: 3, availableZ: [0],
     portPoints: [{ connectionName: `signal${index}`, x: index * 4 - 1, y: -0.5, z: 0 }, { connectionName: `signal${index}`, x: index * 4 + 1, y: 0.5, z: 0 }] }))
   connMap.addConnections(nodes.map((_, index) => [`signal${index}`, `pad${index}`]))
-  const certificates: BoundaryRouteCertificates = { context: { rulesKey: getBoundaryPhysicalRulesKey(rules), fixedCopperKey: getBoundaryFixedCopperKey([]) }, cells: {} }
+  const reservations = createBoundaryInterfaceIndex(nodes, rules, connMap).ports
+  const certificates: BoundaryRouteCertificates = { context: { rulesKey: getBoundaryPhysicalRulesKey(rules), fixedCopperKey: getBoundaryFixedCopperKey([]), interfaceSceneKey: getBoundaryInterfaceSceneKey(reservations) }, cells: {} }
   for (const node of nodes) {
-    const construction = constructPipeline9ParametricCell({ ...rules, node, connMap })
+    const construction = constructPipeline9ParametricCell({ ...rules, node: normalizeBoundaryNodeRoots(node, connMap), connMap,
+      interfacePolicy: "owned-normal-escapes", interfacePortPoints: reservations })
     expect(construction.applicable).toBe(true)
     certificates.cells[node.capacityMeshNodeId] = { interfaceKey: getBoundaryInterfaceKey(node, connMap), routeKey: JSON.stringify(construction.routes), routes: construction.routes }
   }

@@ -34,7 +34,9 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
-import { getBoundaryFixedCopperKey, getBoundaryInterfaceKey, getBoundaryPhysicalRulesKey, type BoundaryRouteCertificates } from "./boundaryRouteCertificates"
+import { createBoundaryInterfaceIndex, getBoundaryFixedCopperKey, getBoundaryInterfaceKey, getBoundaryInterfaceSceneKey, getBoundaryPhysicalRulesKey, type BoundaryRouteCertificates } from "./boundaryRouteCertificates"
+import type { Pipeline9ParametricInterfaceIndex, Pipeline9ParametricInterfacePort } from "./Pipeline9ParametricInterfaceIndex"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -53,6 +55,7 @@ export type Pipeline9HighDensitySolverParams = {
   traceToHoleClearance?: number
   traceWidthByConnection?: Readonly<Record<string, number>>
   boundaryCertificates?: BoundaryRouteCertificates
+  boundaryInterfacePortPoints?: readonly Pipeline9ParametricInterfacePort[]
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -289,11 +292,7 @@ export const normalizePipeline9NodeRootConnectionNames = (
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
     rootConnectionName:
-      connMap.getNetConnectedToId(
-        portPoint.rootConnectionName ?? portPoint.connectionName,
-      ) ??
-      portPoint.rootConnectionName ??
-      portPoint.connectionName,
+      getCanonicalPipeline9PortRoot(portPoint, connMap),
   })
   return {
     ...node,
@@ -416,6 +415,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   private asyncRunning = false
   private readonly boundaryContextValid: boolean
+  private readonly boundaryInterfaceIndex?: Pipeline9ParametricInterfaceIndex
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -440,9 +440,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    if (params.boundaryCertificates) this.boundaryInterfaceIndex = createBoundaryInterfaceIndex(params.nodePortPoints, params, this.connMap, params.boundaryInterfacePortPoints)
     this.boundaryContextValid = params.boundaryCertificates !== undefined &&
       params.boundaryCertificates.context.rulesKey === getBoundaryPhysicalRulesKey(params) &&
-      params.boundaryCertificates.context.fixedCopperKey === getBoundaryFixedCopperKey(params.fixedHdRoutes)
+      params.boundaryCertificates.context.fixedCopperKey === getBoundaryFixedCopperKey(params.fixedHdRoutes) &&
+      this.boundaryInterfaceIndex !== undefined &&
+      params.boundaryCertificates.context.interfaceSceneKey === getBoundaryInterfaceSceneKey(this.boundaryInterfaceIndex.ports)
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -520,6 +523,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               ...params,
               nodePortPoints: batchNodes,
               boundaryCertificates,
+              boundaryInterfacePortPoints: this.boundaryInterfaceIndex?.ports,
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
             })

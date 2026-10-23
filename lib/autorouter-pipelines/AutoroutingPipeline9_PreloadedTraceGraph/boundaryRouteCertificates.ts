@@ -3,6 +3,8 @@ import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geom
 import type { HighDensityRoute, NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import Flatbush from "flatbush"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
+import { Pipeline9ParametricInterfaceIndex, type Pipeline9ParametricInterfacePort } from "./Pipeline9ParametricInterfaceIndex"
 
 export type BoundaryPhysicalRules = {
   obstacles: Obstacle[]
@@ -39,8 +41,38 @@ export function indexBoundaryCopper(routes: readonly HighDensityRoute[], layerCo
 
 /** The context is stored once; every cell proof refers to these exact inputs. */
 export type BoundaryRouteCertificates = {
-  context: { rulesKey: string; fixedCopperKey: string }
+  context: { rulesKey: string; fixedCopperKey: string; interfaceSceneKey: string }
   cells: Record<string, BoundaryRouteCertificate>
+}
+
+export function createBoundaryInterfaceIndex(
+  nodes: readonly NodeWithPortPoints[],
+  rules: Pick<BoundaryPhysicalRules, "traceWidth" | "traceWidthByConnection" | "layerCount">,
+  connMap: ConnectivityMap,
+  suppliedPorts?: readonly Pipeline9ParametricInterfacePort[],
+): Pipeline9ParametricInterfaceIndex {
+  const ports = suppliedPorts ?? nodes.flatMap((node) => normalizeBoundaryNodeRoots(node, connMap).portPoints.map((port) => ({
+    capacityMeshNodeId: node.capacityMeshNodeId, port,
+    traceWidth: Math.max(rules.traceWidth, rules.traceWidthByConnection?.[port.connectionName] ?? rules.traceWidth),
+  })))
+  for (const entry of ports) {
+    if (getCanonicalPipeline9PortRoot(entry.port, connMap) !== entry.port.rootConnectionName || entry.traceWidth !== Math.max(rules.traceWidth, rules.traceWidthByConnection?.[entry.port.connectionName] ?? rules.traceWidth)) throw new Error("Boundary reservation has a foreign owner or incorrect nominal width")
+  }
+  const index = new Pipeline9ParametricInterfaceIndex(ports, rules.layerCount)
+  for (const node of nodes) for (const port of normalizeBoundaryNodeRoots(node, connMap).portPoints) {
+    const width = Math.max(rules.traceWidth, rules.traceWidthByConnection?.[port.connectionName] ?? rules.traceWidth)
+    if (!index.hasSourceTerminal(node.capacityMeshNodeId, port, width)) throw new Error("Boundary reservation is missing an exact source terminal")
+  }
+  return index
+}
+
+export function getBoundaryInterfaceSceneKey(ports: readonly Pipeline9ParametricInterfacePort[]): string {
+  // Canonical primitive witness rows survive worker serialization. Ordering is
+  // irrelevant to this scene identity; no approximate geometry hash is used.
+  return ports.map(({ capacityMeshNodeId, port, traceWidth }) => JSON.stringify([
+    capacityMeshNodeId, port.portPointId, port.pcb_port_id, port.connectionName,
+    port.rootConnectionName, port.x, port.y, port.z, traceWidth,
+  ])).sort().join("\n")
 }
 
 export function getBoundaryPhysicalRulesKey(rules: BoundaryPhysicalRules): string {
@@ -66,7 +98,7 @@ export function getBoundaryFixedCopperKey(routes: readonly HighDensityRoute[]): 
 
 export function getBoundaryInterfaceKey(node: NodeWithPortPoints, connMap: ConnectivityMap): string {
   const pointKey = (point: PortPoint): unknown[] => [point.portPointId, point.connectionName,
-    connMap.getNetConnectedToId(point.rootConnectionName ?? point.connectionName) ?? point.rootConnectionName ?? point.connectionName,
+    getCanonicalPipeline9PortRoot(point, connMap),
     point.x, point.y, point.z, point.pcb_port_id, point.prevPortPointId, point.nextPortPointId]
   return JSON.stringify({
     id: node.capacityMeshNodeId, center: node.center, width: node.width, height: node.height,
@@ -78,7 +110,7 @@ export function getBoundaryInterfaceKey(node: NodeWithPortPoints, connMap: Conne
 
 export function normalizeBoundaryNodeRoots(node: NodeWithPortPoints, connMap: ConnectivityMap): NodeWithPortPoints {
   const normalize = (point: PortPoint): PortPoint => ({ ...point,
-    rootConnectionName: connMap.getNetConnectedToId(point.rootConnectionName ?? point.connectionName) ?? point.rootConnectionName ?? point.connectionName })
+    rootConnectionName: getCanonicalPipeline9PortRoot(point, connMap) })
   return { ...node, portPoints: node.portPoints.map(normalize),
     portPointsInPairs: node.portPointsInPairs?.map(([a, b]) => [normalize(a), normalize(b)]) }
 }

@@ -642,7 +642,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            ...cms.getBoundaryPhysicalRules(),
+            ...cms.getBoundaryPhysicalRules(nodePortPointsSource.length > 0),
             boundaryCertificates: cms.boundaryContractSolver!.certificates,
             nodePortPoints: nodePortPointsSource,
             boardGeometry: {
@@ -1537,12 +1537,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getBoundaryPhysicalRules(): BoundaryPhysicalRules {
+  private getBoundaryPhysicalRules(hasRoutingJobs = true): BoundaryPhysicalRules {
+    // Networked tooling inspects an empty routing stage before preprocessing.
+    // Real jobs must derive widths from the completed point-pair scene.
+    if (hasRoutingJobs && !this.srjWithPointPairs) throw new Error("Pipeline9 boundary physical rules require the completed point-pair scene for nonempty routing jobs")
+    const connections = hasRoutingJobs ? this.srjWithPointPairs!.connections : []
     return {
       obstacles: this.srj.obstacles,
       boardGeometry: { bounds: this.originalSrj.bounds, outline: this.originalSrj.outline, minBoardEdgeClearance: this.originalSrj.minBoardEdgeClearance },
       layerCount: this.srj.layerCount, traceWidth: this.minTraceWidth, viaDiameter: this.viaDiameter,
-      traceWidthByConnection: Object.fromEntries([...this.srjWithPointPairs!.connections, ...this.getChangedPreloadedTraceSections().map((section) => section.connection)]
+      traceWidthByConnection: Object.fromEntries([...connections, ...this.getChangedPreloadedTraceSections().map((section) => section.connection)]
         .map((connection) => [connection.name, Math.max(this.minTraceWidth, connection.nominalTraceWidth ?? this.minTraceWidth)])),
       obstacleMargin: this.srj.defaultObstacleMargin ?? 0.15,
       viaToPadClearance: this.srj.minViaEdgeToPadEdgeClearance,

@@ -4,10 +4,13 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityRoute, NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
 import { Pipeline9BoundaryContractSolver, type BoundaryContractInput } from "./Pipeline9BoundaryContractSolver"
 import { constructPipeline9ParametricCell } from "./constructPipeline9ParametricCell"
-import { arePipeline9RoutesOnSameNet, doPipeline9RoutesHaveCopperConflict, getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { doPipeline9RoutesHaveCopperConflict, getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
+import type { Pipeline9ParametricInterfaceIndex } from "./Pipeline9ParametricInterfaceIndex"
 import {
   getBoundaryFixedCopperKey, getBoundaryInterfaceKey, getBoundaryPhysicalRulesKey,
   indexBoundaryCopper, normalizeBoundaryNodeRoots,
+  createBoundaryInterfaceIndex, getBoundaryInterfaceSceneKey,
   type BoundaryPhysicalRules, type BoundaryRouteCertificates,
 } from "./boundaryRouteCertificates"
 
@@ -38,8 +41,8 @@ function getImmutablePortIds(params: Params): { ids: Set<string>; positions: Map
       if (![original.x, original.y, original.z].every(Number.isFinite) || !Number.isInteger(original.z) || original.z < 0 || original.z >= params.layerCount) throw new Error(`Boundary attachment witness has invalid geometry: ${point.portPointId}`)
       for (const candidate of index?.search(original.x - 1e-7, original.y - 1e-7, original.x + 1e-7, original.y + 1e-7) ?? []) {
         const fixed = params.fixedHdRoutes[candidate]!
-        const pointNet = params.connMap.getNetConnectedToId(point.rootConnectionName ?? point.connectionName) ?? point.rootConnectionName ?? point.connectionName
-        const fixedNet = params.connMap.getNetConnectedToId(fixed.rootConnectionName ?? fixed.connectionName) ?? fixed.rootConnectionName ?? fixed.connectionName
+        const pointNet = getCanonicalPipeline9PortRoot(point, params.connMap)
+        const fixedNet = getCanonicalPipeline9PortRoot(fixed, params.connMap)
         if (pointNet !== fixedNet) continue
         const copper = getPipeline9RouteCopperGeometry(fixed, params.rules)
         if (copper.wireSegments.some((segment) => segment.z === original.z && pointToSegmentDistance(original, segment.start, segment.end) <= segment.width / 2 + 1e-7) ||
@@ -68,6 +71,7 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
   private nodeIndex?: Flatbush
   private readonly fixedIndex?: Flatbush
   private readonly restoredAttachments: number
+  private interfaceIndex?: Pipeline9ParametricInterfaceIndex
   readonly certificates: BoundaryRouteCertificates
 
   constructor(params: Params) {
@@ -77,7 +81,7 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     this.originalNodes = structuredClone(this.nodes)
     this.restoredAttachments = immutable.restored
     this.fixedIndex = indexBoundaryCopper(params.fixedHdRoutes, params.rules.layerCount)
-    this.certificates = { context: { rulesKey: getBoundaryPhysicalRulesKey(params.rules), fixedCopperKey: getBoundaryFixedCopperKey(params.fixedHdRoutes) }, cells: {} }
+    this.certificates = { context: { rulesKey: getBoundaryPhysicalRulesKey(params.rules), fixedCopperKey: getBoundaryFixedCopperKey(params.fixedHdRoutes), interfaceSceneKey: "" }, cells: {} }
     // Allocation uses a conservative common lane width; physical proofs retain
     // each demand's declared width, including mutable preloaded sections.
     const physicalWidths = [params.rules.traceWidth, ...Object.values(params.rules.traceWidthByConnection ?? {})]
@@ -119,25 +123,44 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     }
     this.stats = { ...this.stats, boundaryProofAttempts: 0, boundaryProofAcceptedVersions: 0, boundaryProofUnsupported: 0,
       boundaryProofCopperChecks: 0, boundaryProofRollbacks: 0, boundaryProofMovedPorts: this.moves.size,
-      boundaryProofRetainedMovedPorts: 0, boundaryProofCellCount: 0, boundaryProofRouteCount: 0 }
+      boundaryProofRetainedMovedPorts: 0, boundaryProofCellCount: 0, boundaryProofRouteCount: 0,
+      boundaryProofSceneVersions: 0, boundaryProofReservationBuildRows: 0, boundaryProofReservationRowsScanned: 0,
+      boundaryProofReservationRowsRetained: 0, boundaryProofPeakReservationRows: 0, boundaryProofPeakReservationKeyCodeUnits: 0,
+      boundaryProofDependencyQueries: 0, boundaryProofDependencyCandidates: 0, boundaryProofInvalidatedCertificates: 0 }
     this.stats.boundaryProofRestoredAttachments = this.restoredAttachments
     if (this.output.length > 0) {
       this.nodeIndex = new Flatbush(this.output.length)
       for (const node of this.output) this.nodeIndex.add(node.center.x - node.width / 2, node.center.y - node.height / 2, node.center.x + node.width / 2, node.center.y + node.height / 2)
       this.nodeIndex.finish()
     }
+    this.rebuildReservations()
     for (const move of this.moves.values()) for (const owner of move.owners) this.enqueue(owner)
-    this.MAX_ITERATIONS = this.iterations + this.output.length + 2 * [...this.moves.values()].reduce((sum, move) => sum + move.owners.size, 0) + 4
+    // Each rollback removes at least one live move. In every resulting scene
+    // the deduplicated queue can contain at most every cell once. This bounds
+    // proof maintenance, without changing any detailed routing search budget.
+    this.MAX_ITERATIONS = this.iterations + (this.moves.size + 1) * (this.output.length + 1) + 4
     this.solved = false
     this.phase = "prove"
+  }
+
+  private rebuildReservations(): void {
+    this.interfaceIndex = createBoundaryInterfaceIndex(this.output, this.params.rules, this.params.connMap)
+    this.stats.boundaryProofSceneVersions++
+    this.stats.boundaryProofReservationBuildRows += this.interfaceIndex.ports.length
+    this.stats.boundaryProofPeakReservationRows = Math.max(this.stats.boundaryProofPeakReservationRows, this.interfaceIndex.ports.length)
+    this.stats.boundaryProofPeakReservationKeyCodeUnits = Math.max(this.stats.boundaryProofPeakReservationKeyCodeUnits, this.interfaceIndex.retainedKeyCodeUnits)
   }
 
   private rollback(nodeIds: ReadonlySet<string>): void {
     const restore = new Map<string, { x: number; y: number }>()
     const changedOwners = new Set<string>()
+    const changedPositions: Array<{ x: number; y: number }> = []
     for (const [id, move] of this.moves) {
       if (![...move.owners].some((owner) => nodeIds.has(owner))) continue
       restore.set(id, move.original)
+      const current = this.nodeById.get([...move.owners][0]!)!.portPoints.find((point) => point.portPointId === id)
+      if (!current) throw new Error(`Boundary rollback lost current terminal ${id}`)
+      changedPositions.push({ x: current.x, y: current.y }, move.original)
       for (const owner of move.owners) changedOwners.add(owner)
       this.moves.delete(id)
       this.stats.boundaryProofRollbacks++
@@ -147,6 +170,25 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
       const update = (point: PortPoint): PortPoint => point.portPointId && restore.has(point.portPointId) ? { ...point, ...restore.get(point.portPointId)! } : point
       node.portPoints = node.portPoints.map(update)
       node.portPointsInPairs = node.portPointsInPairs?.map(([a, b]) => [update(a), update(b)])
+    }
+    if (restore.size === 0) return
+    this.rebuildReservations()
+    const maximumWidth = Math.max(this.params.rules.traceWidth, ...Object.values(this.params.rules.traceWidthByConnection ?? {}))
+    const reach = Math.max(maximumWidth, this.params.rules.viaDiameter) / 2 + maximumWidth / 2 + Math.max(this.params.rules.obstacleMargin, 0.1) + 1e-6 + 1e-9
+    const affected = new Set(changedOwners)
+    for (const point of changedPositions) {
+      this.stats.boundaryProofDependencyQueries++
+      for (const index of this.nodeIndex?.search(point.x - reach, point.y - reach, point.x + reach, point.y + reach) ?? []) {
+        this.stats.boundaryProofDependencyCandidates++
+        const id = this.output[index]!.capacityMeshNodeId
+        if (this.certificates.cells[id]) affected.add(id)
+      }
+    }
+    // A certified centerline is contained in its cell. Beyond this expanded
+    // old/new terminal influence, its exact reservation predicates cannot
+    // change. Pending cells always use the freshly rebuilt complete scene.
+    for (const owner of affected) {
+      if (this.certificates.cells[owner]) this.stats.boundaryProofInvalidatedCertificates++
       this.enqueue(owner)
     }
   }
@@ -157,7 +199,8 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     const left = getPipeline9RouteCopperGeometry(route, this.params.rules)
     const right = getPipeline9RouteCopperGeometry(other, this.params.rules)
     if (left.viaSpans.some((a) => right.viaSpans.some((b) => (a.center.x !== b.center.x || a.center.y !== b.center.y) && Math.hypot(a.center.x - b.center.x, a.center.y - b.center.y) < a.diameter / 2 + b.diameter / 2 + clearance))) return true
-    if (arePipeline9RoutesOnSameNet(route, other, this.params.connMap)) return false
+    const owner = (candidate: HighDensityRoute): string => getCanonicalPipeline9PortRoot(candidate, this.params.connMap)
+    if (owner(route) === owner(other)) return false
     return doPipeline9RoutesHaveCopperConflict({ left: route, right: other, clearance, layerCount: this.params.rules.layerCount, allowBlindAndBuriedVias: this.params.rules.allowBlindAndBuriedVias })
   }
 
@@ -181,6 +224,8 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
       this.stats.boundaryProofRetainedMovedPorts = this.moves.size
       this.stats.boundaryProofCellCount = Object.keys(this.certificates.cells).length
       this.stats.boundaryProofRouteCount = Object.values(this.certificates.cells).reduce((sum, cell) => sum + cell.routes.length, 0)
+      if (!this.interfaceIndex) throw new Error("Boundary proof lost its final reservation scene")
+      this.certificates.context.interfaceSceneKey = getBoundaryInterfaceSceneKey(this.interfaceIndex.ports)
       this.phase = "done"
       this.solved = true
       return
@@ -188,7 +233,13 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     this.queued.delete(nodeId)
     const node = this.nodeById.get(nodeId)!
     this.stats.boundaryProofAttempts++
-    const construction = constructPipeline9ParametricCell({ ...this.params.rules, node: normalizeBoundaryNodeRoots(node, this.params.connMap), connMap: this.params.connMap })
+    if (!this.interfaceIndex) throw new Error("Boundary proof has no current reservation scene")
+    const radius = Math.max(this.params.rules.traceWidth, this.params.rules.viaDiameter, ...Object.values(this.params.rules.traceWidthByConnection ?? {})) / 2
+    const reservations = this.interfaceIndex.query(node, radius, Math.max(this.params.rules.obstacleMargin, 0.1))
+    this.stats.boundaryProofReservationRowsScanned += this.interfaceIndex.ports.length
+    this.stats.boundaryProofReservationRowsRetained += reservations.length
+    const construction = constructPipeline9ParametricCell({ ...this.params.rules, node: normalizeBoundaryNodeRoots(node, this.params.connMap), connMap: this.params.connMap,
+      interfacePolicy: "owned-normal-escapes", interfacePortPoints: reservations })
     for (const [key, value] of Object.entries(construction.stats)) this.stats[key] = Number(this.stats[key] ?? 0) + value
     if (!construction.applicable || construction.routes.length === 0) {
       this.stats.boundaryProofUnsupported++

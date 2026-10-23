@@ -9,6 +9,9 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { doPipeline9RoutesHaveCopperConflict, getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { createPipeline9CellInterfaceSupport } from "./createPipeline9CellInterfaceSupport"
+import type { Pipeline9ParametricInterfacePort } from "./Pipeline9ParametricInterfaceIndex"
+import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
 
 type Point = HighDensityRoute["route"][number]
 type Params = {
@@ -25,6 +28,8 @@ type Params = {
   viaDiameter: number
   obstacleMargin: number
   allowBlindAndBuriedVias?: boolean
+  interfacePolicy?: "owned-normal-escapes"
+  interfacePortPoints?: readonly Pipeline9ParametricInterfacePort[]
 }
 type Formula = { name: string; points: Point[] }
 type Stats = {
@@ -36,6 +41,17 @@ type Stats = {
   parametricElbowRouteCount: number
   parametricSignatureCount: number
   parametricExhaustedAssignments: number
+  parametricObstacleDistanceChecks: number
+  parametricInterfacePairChecks: number
+  parametricInterfaceUnsupportedPairs: number
+  parametricInterfaceCandidateChecks: number
+  parametricInterfaceCandidateRejections: number
+  parametricInterfaceNormalEscapeFormulas: number
+  parametricInterfaceCertifiedRoutes: number
+  parametricInterfacePolicyNodeCount: number
+  parametricInterfaceTerminalEscapes: number
+  parametricInterfaceReservationChecks: number
+  parametricInterfaceInheritedTerminalContacts: number
 }
 export type ParametricCellConstruction = {
   applicable: boolean
@@ -69,7 +85,7 @@ function instantiatePlanarFormulas(a: Point, b: Point): Formula[] {
   return [...unique.values()]
 }
 
-function instantiateFormulas(a: PortPoint, b: PortPoint): Formula[] {
+function instantiateFormulas(a: PortPoint, b: PortPoint, viaCore?: { minX: number; maxX: number; minY: number; maxY: number } | null): Formula[] {
   const start = { x: a.x, y: a.y, z: a.z }
   const end = { x: b.x, y: b.y, z: b.z }
   if (a.z === b.z) return instantiatePlanarFormulas(start, end)
@@ -80,7 +96,8 @@ function instantiateFormulas(a: PortPoint, b: PortPoint): Formula[] {
     { x: a.x, y: (a.y + b.y) / 2 },
     { x: b.x, y: (a.y + b.y) / 2 },
   ]
-  return sites.flatMap((site, i) => {
+  return sites.flatMap((rawSite, i) => {
+    const site = viaCore ? { x: Math.max(viaCore.minX, Math.min(viaCore.maxX, rawSite.x)), y: Math.max(viaCore.minY, Math.min(viaCore.maxY, rawSite.y)) } : rawSite
     const before = { ...site, z: a.z }
     const after = { ...site, z: b.z }
     const first = instantiatePlanarFormulas(start, before).slice(0, 2)
@@ -108,7 +125,7 @@ function distanceToObstacle(start: Point, end: Point, obstacle: Obstacle): numbe
   return Math.min(...corners.map((p, i) => minimumDistanceBetweenSegments(a, b, p, corners[(i + 1) % 4]!)))
 }
 
-function satisfiesPhysicalDomain(route: HighDensityRoute, params: Params): boolean {
+function satisfiesPhysicalDomain(route: HighDensityRoute, params: Params, stats: Stats): boolean {
   const { node, boardGeometry, layerCount, allowBlindAndBuriedVias } = params
   const copper = getPipeline9RouteCopperGeometry(route, { layerCount, allowBlindAndBuriedVias })
   const polygon = boardGeometry ? boardGeometry.outline && boardGeometry.outline.length >= 3 ? boardGeometry.outline : [
@@ -127,8 +144,9 @@ function satisfiesPhysicalDomain(route: HighDensityRoute, params: Params): boole
     for (const obstacle of params.obstacles) {
       const layers = obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
       if (!layers.some((z) => z >= primitive.minZ && z <= primitive.maxZ)) continue
-      if (!primitive.via && !obstacle.isNonPlatedHole && isObstacleConnectedToRoute(obstacle, route, params.connMap)) continue
+      if (!primitive.via && !obstacle.isNonPlatedHole && (params.interfacePolicy ? isPipeline9ObstacleOwnedByRoute(obstacle, route, params.connMap) : isObstacleConnectedToRoute(obstacle, route, params.connMap))) continue
       const clearance = Math.max(params.obstacleMargin, obstacle.isNonPlatedHole ? params.traceToHoleClearance ?? 0 : primitive.via ? params.viaToPadClearance ?? 0 : params.traceToPadClearance ?? 0)
+      stats.parametricObstacleDistanceChecks++
       if (distanceToObstacle(primitive.start, primitive.end, obstacle) < primitive.radius + clearance + 1e-6) return false
     }
   }
@@ -138,10 +156,16 @@ function satisfiesPhysicalDomain(route: HighDensityRoute, params: Params): boole
 /** Compile a compatible family, including elbow and layer-transition domains. */
 export function constructPipeline9ParametricCell(params: Params): ParametricCellConstruction {
   const { node, layerCount, traceWidth, viaDiameter, obstacleMargin } = params
+  if (params.interfacePolicy !== undefined && params.interfacePolicy !== "owned-normal-escapes") throw new Error("Parametric cell has an unknown interface policy")
+  if (params.interfacePolicy && !params.interfacePortPoints) throw new Error("Parametric cell interface policy requires immutable scene reservations")
   if (![node.center.x, node.center.y, node.width, node.height, traceWidth, viaDiameter, obstacleMargin].every(Number.isFinite) || node.width <= 0 || node.height <= 0 || traceWidth <= 0 || viaDiameter <= 0 || obstacleMargin < 0 || !Number.isInteger(layerCount) || layerCount < 1 || node.portPoints.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isInteger(p.z) || p.z < 0 || p.z >= layerCount) || params.obstacles.some((o) => ![o.center.x, o.center.y, o.width, o.height, o.ccwRotationDegrees ?? 0].every(Number.isFinite) || o.width < 0 || o.height < 0)) throw new Error(`Pipeline9 parametric cell ${node.capacityMeshNodeId} has invalid geometry`)
   if (params.boardGeometry && (!Object.values(params.boardGeometry.bounds).every(Number.isFinite) || params.boardGeometry.bounds.minX >= params.boardGeometry.bounds.maxX || params.boardGeometry.bounds.minY >= params.boardGeometry.bounds.maxY || !Number.isFinite(params.boardGeometry.minBoardEdgeClearance ?? 0.15) || (params.boardGeometry.minBoardEdgeClearance ?? 0.15) < 0 || params.boardGeometry.outline?.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y)))) throw new Error("Pipeline9 parametric cell has invalid board geometry")
   if (Object.values(params.traceWidthByConnection ?? {}).some((width) => !Number.isFinite(width) || width <= 0) || [params.viaToPadClearance, params.traceToHoleClearance, params.traceToPadClearance].some((gap) => gap !== undefined && (!Number.isFinite(gap) || gap < 0))) throw new Error("Pipeline9 parametric cell has invalid physical rules")
-  const stats: Stats = { parametricFormulaCount: 0, parametricDomainChecks: 0, parametricAssignmentChecks: 0, parametricCompiledRouteCount: 0, parametricCompiledViaCount: 0, parametricElbowRouteCount: 0, parametricSignatureCount: 0, parametricExhaustedAssignments: 0 }
+  const stats: Stats = { parametricFormulaCount: 0, parametricDomainChecks: 0, parametricAssignmentChecks: 0, parametricCompiledRouteCount: 0, parametricCompiledViaCount: 0, parametricElbowRouteCount: 0, parametricSignatureCount: 0, parametricExhaustedAssignments: 0, parametricObstacleDistanceChecks: 0,
+    parametricInterfacePairChecks: 0, parametricInterfaceUnsupportedPairs: 0, parametricInterfaceCandidateChecks: 0,
+    parametricInterfaceCandidateRejections: 0, parametricInterfaceNormalEscapeFormulas: 0, parametricInterfaceCertifiedRoutes: 0,
+    parametricInterfacePolicyNodeCount: Number(params.interfacePolicy !== undefined), parametricInterfaceTerminalEscapes: 0,
+    parametricInterfaceReservationChecks: 0, parametricInterfaceInheritedTerminalContacts: 0 }
   const byConnection = new Map<string, PortPoint[]>()
   for (const port of node.portPoints) {
     const ports = byConnection.get(port.connectionName) ?? []
@@ -172,12 +196,40 @@ export function constructPipeline9ParametricCell(params: Params): ParametricCell
     const dy = b.y - a.y
     signatures.add(`${Math.sign(dx)}:${Math.sign(dy)}:${Math.sign(Math.abs(dx) - Math.abs(dy))}:${a.z === b.z}`)
     const candidates: HighDensityRoute[] = []
-    for (const formula of instantiateFormulas(a, b)) {
+    const width = Math.max(traceWidth, params.traceWidthByConnection?.[a.connectionName] ?? traceWidth)
+    const support = params.interfacePolicy === "owned-normal-escapes" ? createPipeline9CellInterfaceSupport({ ...params, interfacePortPoints: params.interfacePortPoints!, pair: [a, b], traceWidth: width, clearance: Math.max(obstacleMargin, 0.1) }) : undefined
+    if (params.interfacePolicy) {
+      stats.parametricInterfacePairChecks++
+      if (!support) { stats.parametricInterfaceUnsupportedPairs++; return candidates }
+      stats.parametricInterfaceTerminalEscapes += support.terminalEscapeCount
+    }
+    const formulas = instantiateFormulas(a, b)
+    if (support) {
+      const [coreA, coreB] = support.coreEndpoints
+      for (const formula of instantiateFormulas({ ...a, ...coreA }, { ...b, ...coreB }, support.viaCore)) {
+        const points = [{ x: a.x, y: a.y, z: a.z }, ...formula.points, { x: b.x, y: b.y, z: b.z }].filter((point, i, all) => i === 0 || point.x !== all[i - 1]!.x || point.y !== all[i - 1]!.y || point.z !== all[i - 1]!.z)
+        formulas.push({ name: `normal-escape:${formula.name}`, points })
+        stats.parametricInterfaceNormalEscapeFormulas++
+      }
+    }
+    const formulaKeys = new Set<string>()
+    for (const formula of formulas) {
+      const key = formula.points.map((point) => `${point.x},${point.y},${point.z}`).join(";")
+      if (support && formulaKeys.has(key)) continue
+      formulaKeys.add(key)
       stats.parametricFormulaCount++
       if (formula.points.length < 2) continue
-      const route: HighDensityRoute = { connectionName: a.connectionName, rootConnectionName: a.rootConnectionName ?? a.connectionName, regionId: node.capacityMeshNodeId, traceThickness: Math.max(traceWidth, params.traceWidthByConnection?.[a.connectionName] ?? traceWidth), viaDiameter, route: formula.points, vias: formula.points.flatMap((p, i, all) => i > 0 && p.z !== all[i - 1]!.z ? [{ x: p.x, y: p.y }] : []) }
+      const route: HighDensityRoute = { connectionName: a.connectionName, rootConnectionName: a.rootConnectionName ?? a.connectionName, regionId: node.capacityMeshNodeId, traceThickness: width, viaDiameter, route: formula.points, vias: formula.points.flatMap((p, i, all) => i > 0 && p.z !== all[i - 1]!.z ? [{ x: p.x, y: p.y }] : []) }
+      if (support) {
+        stats.parametricInterfaceCandidateChecks++
+        const beforeChecks = support.reservationChecks, beforeInherited = support.inheritedTerminalContacts
+        const certified = support.certify(route)
+        stats.parametricInterfaceReservationChecks += support.reservationChecks - beforeChecks
+        stats.parametricInterfaceInheritedTerminalContacts += support.inheritedTerminalContacts - beforeInherited
+        if (!certified) { stats.parametricInterfaceCandidateRejections++; continue }
+      }
       stats.parametricDomainChecks++
-      if (satisfiesPhysicalDomain(route, params)) candidates.push(route)
+      if (satisfiesPhysicalDomain(route, params, stats)) candidates.push(route)
     }
     candidates.sort((a, b) => a.vias.length - b.vias.length || a.route.reduce((sum, p, i, all) => sum + (i ? Math.hypot(p.x - all[i - 1]!.x, p.y - all[i - 1]!.y) : 0), 0) - b.route.reduce((sum, p, i, all) => sum + (i ? Math.hypot(p.x - all[i - 1]!.x, p.y - all[i - 1]!.y) : 0), 0) || a.route.length - b.route.length)
     return candidates
@@ -208,6 +260,7 @@ export function constructPipeline9ParametricCell(params: Params): ParametricCell
   }
   if (!assign(0)) return { applicable: false, routes: [], stats }
   stats.parametricCompiledRouteCount = selected.length
+  stats.parametricInterfaceCertifiedRoutes = params.interfacePolicy ? selected.length : 0
   stats.parametricCompiledViaCount = selected.reduce((n, r) => n + r.vias.length, 0)
   stats.parametricElbowRouteCount = selected.filter((r) => r.route.length > 2).length
   return { applicable: true, routes: selected, stats }
