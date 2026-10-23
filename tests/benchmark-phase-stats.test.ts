@@ -28,5 +28,7 @@ test("benchmark phase counters exclude invalid values and retained solver state"
   })
   expect(metrics.highDensityIterations).toBe(3)
   expect(metrics.phaseTimeMs).toEqual(solver.timeSpentOnPhase)
-  expect(JSON.parse(JSON.stringify(metrics)).phaseStats).toEqual(metrics.phaseStats)
+  expect(JSON.parse(JSON.stringify(metrics)).phaseStats).toEqual(
+    metrics.phaseStats,
+  )
 })
