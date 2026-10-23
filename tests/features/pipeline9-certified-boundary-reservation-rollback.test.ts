@@ -37,7 +37,17 @@ test("rollback rebuilds reservations and rechecks nearby foreign certificates wh
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.stats.boundaryProofMovedPorts).toBe(3)
-  expect(solver.stats.boundaryProofRollbacks).toBe(1)
+  expect(solver.stats.boundaryProofRollbacks, JSON.stringify({
+    stats: solver.stats,
+    originalNodes: nodes,
+    originalInputNodes: inputNodes,
+    distributedNodes: distribution.getOutput(),
+    outputNodes: solver.getOutput(),
+    contracts: solver.contracts,
+    certificateCellIds: Object.keys(solver.certificates.cells).sort(),
+    certificates: solver.certificates,
+    outputInterfaceSceneKey: getBoundaryInterfaceSceneKey(createBoundaryInterfaceIndex(solver.getOutput(), rules, connMap).ports),
+  }, null, 2)).toBe(1)
   expect(solver.stats.boundaryProofRetainedMovedPorts).toBe(2)
   expect(solver.stats.boundaryProofSceneVersions).toBe(2)
   expect(solver.stats.boundaryProofInvalidatedCertificates).toBe(3)
