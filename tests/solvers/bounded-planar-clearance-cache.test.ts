@@ -16,7 +16,10 @@ test("bounded planar clearance cache preserves geometry after eviction and inval
         connectionName: "barrier",
         traceThickness: 0.1,
         viaDiameter: 0.3,
-        route: [{ x: 0, y: -3, z: 0 }, { x: 0, y: 3, z: 0 }],
+        route: [
+          { x: 0, y: -3, z: 0 },
+          { x: 0, y: 3, z: 0 },
+        ],
         vias: [],
       },
     ],
