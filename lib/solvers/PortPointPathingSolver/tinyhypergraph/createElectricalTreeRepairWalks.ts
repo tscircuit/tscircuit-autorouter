@@ -6,13 +6,18 @@ import { getElectricalTreeTerminalWitness } from "./getElectricalTreeTerminalWit
 type Occurrence = { walk: number; point: number }
 type Branch = { index: number; start: string; end: string }
 
+/** Producer-owned adjacency identity; coordinate coincidence never creates one. */
+export type ElectricalTreeRepairSegmentIdentity =
+  | { kind: "physical"; sourceRouteIndex: number; sourceSegmentIndex: number; reversed: boolean }
+  | { kind: "adapter-seam" }
+
 /** A temporary closed walk makes a free tree junction an interior variable. */
 export function createElectricalTreeRepairWalks(input: {
   connections: SimpleRouteConnection[]
   routes: HighDensityRoute[]
   /** Required when validating source SRJ terminal witnesses without pad IDs. */
   layerCount?: number
-}): { routes: HighDensityRoute[]; lockedPointIndices: boolean[][]; decode: (walks: HighDensityRoute[]) => HighDensityRoute[]; junctionCount: number } {
+}): { routes: HighDensityRoute[]; lockedPointIndices: boolean[][]; segmentIdentityByRoute: ElectricalTreeRepairSegmentIdentity[][]; decode: (walks: HighDensityRoute[]) => HighDensityRoute[]; junctionCount: number } {
   const connectionByName = new Map(input.connections.map((connection) => [connection.name, connection]))
   const occurrences: Occurrence[][][] = input.routes.map((route) => route.route.map(() => []))
   const branches: Branch[] = []
@@ -20,6 +25,7 @@ export function createElectricalTreeRepairWalks(input: {
   const pads = new Set<string>()
   const immutableEndpoints = new Set<string>()
   const walks: HighDensityRoute[] = []
+  const segmentIdentityByRoute: ElectricalTreeRepairSegmentIdentity[][] = []
   for (let index = 0; index < input.routes.length; index++) {
     const route = input.routes[index]!
     const connection = connectionByName.get(route.connectionName)
@@ -35,6 +41,7 @@ export function createElectricalTreeRepairWalks(input: {
     if (!connection?.electricalBranch || connection.electricalBranch.nativeLogicalPath) {
       const walk = walks.length
       walks.push(structuredClone(route))
+      segmentIdentityByRoute.push(route.route.slice(1).map((_, sourceSegmentIndex) => ({ kind: "physical", sourceRouteIndex: index, sourceSegmentIndex, reversed: false })))
       route.route.forEach((_, point) => occurrences[index]![point]!.push({ walk, point }))
       continue
     }
@@ -68,6 +75,7 @@ export function createElectricalTreeRepairWalks(input: {
     const root = [...component].find((vertex) => pads.has(vertex))
     if (!root) throw new Error("Electrical tree repair component has no immutable declared terminal")
     const routePoints: HighDensityRoute["route"] = []
+    const segmentIdentities: ElectricalTreeRepairSegmentIdentity[] = []
     const walkIndex = walks.length
     const append = (edge: Branch, forward: boolean): void => {
       const route = input.routes[edge.index]!
@@ -80,6 +88,13 @@ export function createElectricalTreeRepairWalks(input: {
           throw new Error(`Electrical tree repair walk has a disconnected branch ${route.connectionName}`)
         }
         const outputPoint = routePoints.length
+        if (previous) {
+          segmentIdentities.push(point === 0
+            ? { kind: "adapter-seam" }
+            : { kind: "physical", sourceRouteIndex: edge.index,
+              sourceSegmentIndex: forward ? point - 1 : route.route.length - point - 1,
+              reversed: !forward })
+        }
         routePoints.push({ ...value, traceThickness: value.traceThickness ?? route.traceThickness })
         const sourcePoint = forward ? point : route.route.length - point - 1
         occurrences[edge.index]![sourcePoint]!.push({ walk: walkIndex, point: outputPoint })
@@ -100,6 +115,7 @@ export function createElectricalTreeRepairWalks(input: {
     const componentEdges = new Set([...component].flatMap((vertex) => incident.get(vertex)!.map((edge) => edge.index)))
     const viaDiameter = [...componentEdges].reduce((maximum, index) => Math.max(maximum, input.routes[index]!.viaDiameter), 0)
     walks.push({ ...example, viaDiameter, route: routePoints, vias: [], startPcbPortId: routePoints[0]?.pcb_port_id, endPcbPortId: routePoints.at(-1)?.pcb_port_id })
+    segmentIdentityByRoute.push(segmentIdentities)
   }
   const decode = (outputWalks: HighDensityRoute[]): HighDensityRoute[] => {
     if (outputWalks.length !== walks.length) throw new Error("Electrical tree repair lost a walk")
@@ -148,5 +164,5 @@ export function createElectricalTreeRepairWalks(input: {
     const [route, point] = key.split(":").map(Number)
     for (const occurrence of occurrences[route!]![point!]!) lockedPointIndices[occurrence.walk]![occurrence.point] = true
   }
-  return { routes: walks, lockedPointIndices, decode, junctionCount: [...incident].filter(([vertex, edges]) => edges.length > 1 && !pads.has(vertex)).length }
+  return { routes: walks, lockedPointIndices, segmentIdentityByRoute, decode, junctionCount: [...incident].filter(([vertex, edges]) => edges.length > 1 && !pads.has(vertex)).length }
 }
