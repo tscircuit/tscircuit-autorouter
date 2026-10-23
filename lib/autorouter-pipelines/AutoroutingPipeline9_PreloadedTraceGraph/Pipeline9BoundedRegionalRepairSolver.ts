@@ -348,11 +348,11 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const localRegionSize = this.budget.localRegionSize
     // Trace-to-board conflicts need the established coupled detours around
     // the fixed boundary, even when only a few errors remain.
-    const allowLocalRepairs = !context.currentErrors.some(
-      (error): boolean =>
-        typeof error.pcb_trace_error_id === "string" &&
-        error.pcb_trace_error_id.startsWith("trace_too_close_to_board_"),
-    )
+    const allowLocalRepairs =
+      localRegionSize !== undefined &&
+      !context.currentErrors.some(
+        (error): boolean => error.drcCheck === "board-clearance",
+      )
     const regional: RegionalContext = {
       ...context,
       allowLocalRepairs,
@@ -521,7 +521,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       maxPathSearchNodesPerCall: this.budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: this.budget.pathHeuristicWeight,
       pathGridSizeScale:
-        context.currentErrors.length > 10
+        context.currentErrors.length > 10 ||
+        (this.budget.localRegionSize !== undefined &&
+          !context.allowLocalRepairs &&
+          context.initialErrors.length <= 10)
           ? this.budget.pathGridSizeScale
           : undefined,
       allowLayerChanges: true,

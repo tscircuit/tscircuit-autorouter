@@ -30,7 +30,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
 }
 
 type DrcError =
-  | PcbTraceError
+  | (PcbTraceError & { drcCheck?: "board-clearance" })
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
@@ -114,7 +114,9 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
-    ...checkPcbTracesOutOfBoard(circuitJson),
+    ...checkPcbTracesOutOfBoard(circuitJson).map(
+      (error): DrcError => ({ ...error, drcCheck: "board-clearance" }),
+    ),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),

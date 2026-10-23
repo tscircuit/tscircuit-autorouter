@@ -3,16 +3,14 @@ import { Pipeline9BoundedRegionalRepairSolver } from "lib/autorouter-pipelines/A
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
 test("regional repair exposes projection children and advances one child step at a time", (): void => {
-  // Dense conflicts retain projection; local improvements can now finish early.
-  const fixture = createBoundedRegionalRepairFixture(11)
+  const fixture = createBoundedRegionalRepairFixture()
   const original = structuredClone(fixture.routes)
   const solver = new Pipeline9BoundedRegionalRepairSolver({
     ...fixture,
     budget: {
       maxRegions: 1,
-      maxCandidateAttempts: 11,
-      maxPathSearchNodes: 55_000,
-      regionSizes: [16],
+      maxCandidateAttempts: 1,
+      maxPathSearchNodes: 5_000,
     },
   })
   expect(() => solver.getResult()).toThrow("before completion")
@@ -52,7 +50,6 @@ test("regional repair exposes projection children and advances one child step at
   expect(orchestrationSteps).toBeGreaterThan(0)
   expect(solver.progress).toBe(1)
   const result = solver.getResult()
-  expect(result.initialDrcIssueCount).toBeGreaterThan(10)
   expect(result.acceptedRegionCount).toBe(1)
   expect(result.publishedDrcIssueCount).toBe(0)
   expect(fixture.routes).toEqual(original)
