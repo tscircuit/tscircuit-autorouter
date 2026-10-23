@@ -15,13 +15,18 @@ test("root-family grouping retains explicit pairs and PCB terminal identities th
     { connectionName: "b", rootConnectionName: "root-b", pcb_port_id: "b-end", x: 0, y: 2, z: 0 },
   ]
   const node: NodeWithPortPoints = { capacityMeshNodeId: "identity", center: { x: 0, y: 0 }, width: 6, height: 6, availableZ: [0, 1], portPoints: points, portPointsInPairs: [[points[0]!, points[1]!], [points[2]!, points[3]!], [points[4]!, points[5]!]] }
-  const srj: SimpleRouteJson = { layerCount: 2, minTraceWidth: 0.1, bounds: { minX: -3, maxX: 3, minY: -3, maxY: 3 }, obstacles: [], connections: ["a1", "a2", "b"].map(name => ({ name, rootConnectionName: name === "b" ? "root-b" : "root-a", pointsToConnect: points.filter(p => p.connectionName === name).map(p => ({ x: p.x, y: p.y, layer: "top", pcb_port_id: p.pcb_port_id })) })) }
-  const solver = new Pipeline9InteractionGroupedHighDensitySolver({ nodePortPoints: [node], connMap: getConnectivityMapFromSimpleRouteJson(srj), viaDiameter: 0.3, traceWidth: 0.1, obstacleMargin: 0.1, effort: 1, obstacles: [], layerCount: 2, useGrowShrinkHighDensityIntraNodeSolver: true, enableNegotiatedSearch: true, gridSearchSegmentWork: 500, preserveTerminalPcbPortIds: true, growShrinkFallbackToInvalidGeometryOnFailure: false })
+  // The SRJ connectivity builder registers __rootConnectionNames. A descriptive
+  // rootConnectionName alone must not override different registered owners.
+  const srj: SimpleRouteJson = { layerCount: 2, minTraceWidth: 0.1, bounds: { minX: -3, maxX: 3, minY: -3, maxY: 3 }, obstacles: [], connections: ["a1", "a2", "b"].map(name => ({ name, rootConnectionName: name === "b" ? "root-b" : "root-a", __rootConnectionNames: [name === "b" ? "root-b" : "root-a"], pointsToConnect: points.filter(p => p.connectionName === name).map(p => ({ x: p.x, y: p.y, layer: "top", pcb_port_id: p.pcb_port_id })) })) }
+  const connMap=getConnectivityMapFromSimpleRouteJson(srj)
+  const originalOwnership=JSON.stringify(connMap.netMap)
+  const solver = new Pipeline9InteractionGroupedHighDensitySolver({ nodePortPoints: [node], connMap, viaDiameter: 0.3, traceWidth: 0.1, obstacleMargin: 0.1, effort: 1, obstacles: [], layerCount: 2, useGrowShrinkHighDensityIntraNodeSolver: true, enableNegotiatedSearch: true, gridSearchSegmentWork: 500, preserveTerminalPcbPortIds: true, growShrinkFallbackToInvalidGeometryOnFailure: false })
   solver.solve()
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.stats.experimentalInteractionInitialGroups).toBe(2)
   expect(solver.stats.experimentalInteractionMergeEvents).toBe(1)
   expect(areNodePortPointPairsConnectedByRoutes(solver.routes, node)).toBe(true)
+  expect(JSON.stringify(connMap.netMap)).toBe(originalOwnership)
   for (const route of solver.routes) {
     const terminals = points.filter(p => p.connectionName === route.connectionName)
     expect(route.regionId).toBe(node.capacityMeshNodeId)

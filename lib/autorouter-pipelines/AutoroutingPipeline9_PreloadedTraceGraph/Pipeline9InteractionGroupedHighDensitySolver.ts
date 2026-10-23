@@ -13,8 +13,9 @@ import type { SimpleRouteJson } from "lib/types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import { arePipeline9RoutesOnSameNet, getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 import { getPipeline9LayerTransitionViaEndpoint } from "./getPipeline9LayerTransitionViaEndpoint"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 
 type NativeParams = ConstructorParameters<typeof HighDensitySolver>[0]
 type Params = NativeParams & { allowBlindAndBuriedVias?: boolean }
@@ -133,7 +134,7 @@ export class Pipeline9InteractionGroupedHighDensitySolver extends IntraNodeRoute
   private initializeGroups():void{
     const groups=new Map<string,Set<string>>()
     for(const point of this.node.portPoints){
-      const root=this.connectivity.getNetConnectedToId(point.rootConnectionName??point.connectionName)??point.rootConnectionName??point.connectionName
+      const root=getCanonicalPipeline9PortRoot(point,this.connectivity)
       let names=groups.get(root);if(!names){names=new Set();groups.set(root,names)}names.add(point.connectionName)
     }
     this.groups=[...groups.values()].map((names,id)=>({id,names,work:0,changed:true}))
@@ -143,7 +144,9 @@ export class Pipeline9InteractionGroupedHighDensitySolver extends IntraNodeRoute
 
   private haveConflict(left:HighDensityRoute,right:HighDensityRoute):boolean{
     this.stats.experimentalInteractionRoutePairChecks++
-    return doInteractionRoutesConflict({left,right,sameNet:arePipeline9RoutesOnSameNet(left,right,this.connectivity),clearance:this.obstacleMargin,layerCount:this.layerCount,allowBlindAndBuriedVias:this.interactionParams.allowBlindAndBuriedVias,viaHoleDiameter:this.viaHoleDiameter,minViaHoleEdgeToViaHoleEdgeClearance:this.minViaHoleEdgeToViaHoleEdgeClearance,stats:this.stats})
+    const leftOwner=this.connectivity.getNetConnectedToId(left.connectionName)??getCanonicalPipeline9PortRoot(left,this.connectivity)
+    const rightOwner=this.connectivity.getNetConnectedToId(right.connectionName)??getCanonicalPipeline9PortRoot(right,this.connectivity)
+    return doInteractionRoutesConflict({left,right,sameNet:leftOwner===rightOwner,clearance:this.obstacleMargin,layerCount:this.layerCount,allowBlindAndBuriedVias:this.interactionParams.allowBlindAndBuriedVias,viaHoleDiameter:this.viaHoleDiameter,minViaHoleEdgeToViaHoleEdgeClearance:this.minViaHoleEdgeToViaHoleEdgeClearance,stats:this.stats})
   }
 
   private hasExpectedRouteMetadata(route:HighDensityRoute,node:NodeWithPortPoints,terminalMetadataAttached:boolean):boolean{
@@ -172,8 +175,11 @@ export class Pipeline9InteractionGroupedHighDensitySolver extends IntraNodeRoute
         const point=route.route[i]!
         if(!Number.isFinite(point.x)||!Number.isFinite(point.y)||!Number.isInteger(point.z)||point.z<0||point.z>=this.layerCount||(node.availableZ&&!node.availableZ.includes(point.z))||(point.traceThickness!==undefined&&Math.abs(point.traceThickness-this.traceWidth)>1e-8))valid=false
       }
-      const expectedRoot=node.portPoints.find(p=>p.connectionName===route.connectionName)?.rootConnectionName
-      if(expectedRoot&&(!route.rootConnectionName||(route.rootConnectionName!==expectedRoot&&!this.connectivity.areIdsConnected(route.rootConnectionName,expectedRoot))))valid=false
+      const expectedPoint=node.portPoints.find(p=>p.connectionName===route.connectionName)
+      if(expectedPoint?.rootConnectionName){
+        const expectedRoot=getCanonicalPipeline9PortRoot(expectedPoint,this.connectivity)
+        if(!route.rootConnectionName||(route.rootConnectionName!==expectedPoint.rootConnectionName&&route.rootConnectionName!==expectedRoot&&this.connectivity.getNetConnectedToId(route.rootConnectionName)!==expectedRoot))valid=false
+      }
     }
     for(let i=0;i<routes.length;i++)for(let j=i+1;j<routes.length;j++)if(this.haveConflict(routes[i]!,routes[j]!))valid=false
     // Also check distinct drills within one routed connection.
@@ -187,12 +193,27 @@ export class Pipeline9InteractionGroupedHighDensitySolver extends IntraNodeRoute
       }
     }
     if(!valid){this.lastValidationFailure="port pair, identity, nominal width, layer or internal copper/drill guard";this.stats.experimentalInteractionCandidateRejections++;return false}
-    const guardRoutes=getInteractionGuardRoutes(routes,this.stats)
-    const {connectedRouteNamesByObstacle,connectedObstaclesByRoute}=getObstacleRouteConnectivity({obstacles:this.obstacles,routes,connMap:this.connectivity})
+    // External guards compare plain strings. Give guard-only copies a fresh
+    // canonical namespace so an ordinary alias cannot impersonate another
+    // net's canonical root key. Native routes and imported obstacles stay intact.
+    const sourceIds=JSON.stringify([routes,this.obstacles,node])
+    let prefix="pipeline9_interaction_guard_"
+    while(sourceIds.includes(prefix))prefix=`_${prefix}`
+    const ownerNames=new Map<string,string>()
+    const guardOwner=(owner:string):string=>{
+      const existing=ownerNames.get(owner)
+      if(existing!==undefined)return existing
+      const name=`${prefix}net_${ownerNames.size}`
+      ownerNames.set(owner,name)
+      return name
+    }
+    const guardRoutes=getInteractionGuardRoutes(routes,this.stats).map((route,index)=>({...route,connectionName:`${prefix}route_${index}`,rootConnectionName:guardOwner(getCanonicalPipeline9PortRoot(route,this.connectivity))}))
+    const guardObstacles=this.obstacles.map(obstacle=>({...obstacle,connectedTo:[...new Set(obstacle.connectedTo.map(id=>guardOwner(this.connectivity.getNetConnectedToId(id)??id)))]}))
+    const {connectedRouteNamesByObstacle,connectedObstaclesByRoute}=getObstacleRouteConnectivity({obstacles:guardObstacles,routes:guardRoutes})
     const srj:SimpleRouteJson={layerCount:this.layerCount,minTraceWidth:this.traceWidth,minViaDiameter:this.viaDiameter,minViaHoleDiameter:this.viaHoleDiameter,minViaHoleEdgeToViaHoleEdgeClearance:this.minViaHoleEdgeToViaHoleEdgeClearance,allowBlindAndBuriedVias:this.interactionParams.allowBlindAndBuriedVias,
       bounds:{minX:this.node.center.x-this.node.width/2,maxX:this.node.center.x+this.node.width/2,minY:this.node.center.y-this.node.height/2,maxY:this.node.center.y+this.node.height/2},...this.boardGeometry,
-      obstacles:this.obstacles.map((obstacle,i)=>({...obstacle,connectedTo:[...obstacle.connectedTo,...connectedRouteNamesByObstacle[i]!]})),
-      connections:routes.map((route,i)=>({name:route.connectionName,rootConnectionName:route.rootConnectionName,__netConnectionName:route.rootConnectionName??route.connectionName,pointsToConnect:[...[route.route[0]!,route.route.at(-1)!].map(p=>({x:p.x,y:p.y,layer:mapZToLayerName(p.z,this.layerCount)})),...connectedObstaclesByRoute[i]!.flatMap(obstacle=>{const id=obstacle.circuitJsonMetadata?.pcb_port_id;return id?[{...obstacle.center,layer:"top",pcb_port_id:id}]:[]})]}))}
+      obstacles:guardObstacles.map((obstacle,i)=>({...obstacle,connectedTo:[...obstacle.connectedTo,...connectedRouteNamesByObstacle[i]!]})),
+      connections:guardRoutes.map((route,i)=>({name:route.connectionName,rootConnectionName:route.rootConnectionName,__netConnectionName:route.rootConnectionName??route.connectionName,pointsToConnect:[...[route.route[0]!,route.route.at(-1)!].map(p=>({x:p.x,y:p.y,layer:mapZToLayerName(p.z,this.layerCount)})),...connectedObstaclesByRoute[i]!.flatMap(obstacle=>{const id=obstacle.circuitJsonMetadata?.pcb_port_id;return id?[{...obstacle.center,layer:"top",pcb_port_id:id}]:[]})]}))}
     this.stats.experimentalInteractionObstacleChecks+=this.obstacles.length*routes.length
     const fixed=getFixedObstacleViolations({srj:{...srj,traces:undefined},routes:guardRoutes,traceClearance:this.obstacleMargin,viaClearance:this.obstacleMargin})
     const viaPads=getNewViaPadViolations({srj:{...srj,traces:undefined},previousRoutes:guardRoutes.map(route=>({...route,route:[],vias:[]})),routes:guardRoutes,viaClearance:this.obstacleMargin})

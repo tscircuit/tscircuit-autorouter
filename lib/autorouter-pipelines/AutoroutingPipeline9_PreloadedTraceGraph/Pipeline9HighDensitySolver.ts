@@ -541,8 +541,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount")
+          if (key !== "nodeCount" && key !== "fixedObstacleCount") {
             this.stats[key] = key.includes("Maximum") ? Math.max(Number(this.stats[key] ?? 0), Number(value)) : Number(this.stats[key] ?? 0) + Number(value)
+            // A later budget-bound serial prefix starts after these committed
+            // batches. Keep its accumulation base aligned with published totals.
+            if (key.startsWith("experimentalInteraction")) this.interactionTotals[key] = Number(this.stats[key])
+          }
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,

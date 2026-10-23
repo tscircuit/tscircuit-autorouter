@@ -371,7 +371,7 @@ export class HighDensitySolver extends BaseSolver {
     this.updateCacheStats()
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-      for (const [key, value] of Object.entries(this.activeSubSolver.stats)) if (key.startsWith("experimentalInteraction") && typeof value === "number") this.stats[key] = value
+      if (this.enableInteractionGrouping) for (const [key, value] of Object.entries(this.activeSubSolver.stats)) if (key.startsWith("experimentalInteraction") && typeof value === "number") this.stats[key] = value
       if (this.activeSubSolver.solved) {
         this.routes.push(
           ...(this.preserveTerminalPcbPortIds

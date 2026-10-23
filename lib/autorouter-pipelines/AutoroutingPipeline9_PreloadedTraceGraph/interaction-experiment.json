@@ -23,9 +23,14 @@
     "Blacksmith paired runs show quality, completion, wall time or total work regressions under unchanged input and final quality rules."
   ],
   "localValidation": {
-    "physicalAndIntegration": "Fifteen focused mechanism tests pass, plus previously validated no-invalid-fallback, progress, through-obstacle reconstruction and async worker parity tests. Exhaustive finite axis-capsule oracle and all 64 four-group conflict graphs included; actual drill rule, large hole gap, root/pair/PCB/region identity and guard-only geometry equivalence tested.",
+    "physicalAndIntegration": "Sixteen focused mechanism tests pass. Existing exact async/partial-budget parity and four native grow/shrink contract tests also pass without assertion changes. Exhaustive finite axis-capsule oracle and all 64 four-group conflict graphs included; actual drill rule, large hole gap, root/pair/PCB/region identity, alias/canonical namespace separation and guard-only geometry equivalence tested.",
     "environmentLimitation": "Networked input-projection HTTP test reaches Bun.serve and fails to bind local port 0 (EADDRINUSE), identically on control and experiment; no HTTP parity success claimed.",
     "performance": "No local benchmarks and no speedup conclusion. Parent owns Blacksmith paired runs."
+  },
+  "ownershipAndIntegrationFollowup": {
+    "correction": "A canonical owner key can also be an ordinary alias belonging to another net. Registered connection ownership controls grouping and current-route copper comparisons, even when different registered names share an unregistered descriptive root label. A descriptive label identifies a family only when registered connection ownership is absent. Neither the caller map nor the native child map is modified. The positive root-family fixture explicitly registers its shared root via the SRJ builder's __rootConnectionNames contract; all identity/pair/merge assertions remain.",
+    "guardNamespace": "Guard-only route and obstacle copies use a fresh synthetic canonical-owner namespace before external repair04 and Circuit JSON guards, whose raw string comparison would otherwise exempt a foreign pad. Original route identities, requested metadata and imported obstacles remain unchanged. The old foreign-pad false acceptance is covered by a direct regression and positive own-pad case.",
+    "counterReplay": "Accepted asynchronous batches now update the committed interaction total before any budget-bound serial prefix is replayed. Missing that update lost earlier batch work in exposed counters. Native grow/shrink telemetry aggregation runs only when grouping is enabled, preserving the original unflagged partial-solver contract. No native solver limits, candidate parameters or parity assertions changed."
   },
   "witnessMetadataFollowup": {
     "correction": "Candidate validation now requires the owning capacityMeshNodeId on every route and checks PCB endpoint identities against requested terminals at that actual connection and exact XYZ. Reversing a route reverses its expected terminal order; all legitimate same-position IDs are retained as possible matches.",
