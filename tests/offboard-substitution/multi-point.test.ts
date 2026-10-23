@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
 import type { SimpleRouteJson } from "lib/types"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import multiPointSrjData from "./srj/multi-point.srj.json"
 
 /**
@@ -38,4 +39,7 @@ test("multi-point off-board substitution rejects copper at the board edge", () =
   expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
   expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
   expect(solver.error).toContain("DRC errors remain")
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })

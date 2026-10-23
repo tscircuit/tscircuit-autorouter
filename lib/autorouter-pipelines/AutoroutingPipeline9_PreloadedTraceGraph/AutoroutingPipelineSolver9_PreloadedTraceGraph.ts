@@ -1445,7 +1445,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       pipeline9JointDrcRepairViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
-      this.solved
+      this.powerTraceExpansionSolver?.solved
         ? combineVisualizations(
             { lines: problemLines },
             getPresuppliedTraceVisualization({
@@ -1472,8 +1472,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   visualizeFinalOutput(): GraphicsObject {
+    if (!this.powerTraceExpansionSolver?.solved) {
+      throw new Error("Cannot visualize final copper before routing is complete")
+    }
     const traceColorMode = this.visualizationTraceColorMode
-    const outputSrj = this.getOutputSimpleRouteJson()
+    // Completed copper remains visible when final DRC rejects publication.
+    const outputSrj: SimpleRouteJson = {
+      ...this.originalSrj,
+      traces: [
+        ...this.getPowerTraceExpansionFixedTraces(),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ],
+    }
     const graphics = convertSrjToGraphicsObject(outputSrj, {
       traceColorMode,
     })

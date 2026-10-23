@@ -38,4 +38,11 @@ test("Pipeline9 rejects unresolved DRC in the full Game Boy Advance route", () =
       ?.getUpdatedFixedHdRoutes()
       .some((route) => route.connectionName === "source_trace_0_fixed_70_0"),
   ).toBeTrue()
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath, {
+    svgName: "routed",
+  })
 }, 600_000)
