@@ -112,6 +112,5 @@ test("Pipeline9 honors the Muse e-paper different-net via copper clearance", asy
     },
   })
   expect(snapshot.copperGap).toBeGreaterThanOrEqual(minimumCopperGap - 1e-9)
-  console.log("REVIEW_SVG_MUSE=" + Buffer.from(Bun.gzipSync(snapshot.svg)).toString("base64"))
   await expect(snapshot.svg).toMatchSvgSnapshot(import.meta.path)
 })
