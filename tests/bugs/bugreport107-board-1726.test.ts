@@ -81,7 +81,7 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
-  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
-    snapshotPath,
-  )
+  const snapshotSvg = getBugReportSnapshotSvg(drcInput)
+  console.log("REVIEW_SVG_BUG107=" + Buffer.from(Bun.gzipSync(snapshotSvg)).toString("base64"))
+  await expect(snapshotSvg).toMatchSvgSnapshot(snapshotPath)
 })
