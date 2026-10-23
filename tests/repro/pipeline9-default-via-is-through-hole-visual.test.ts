@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 routes across a preloaded default via's missing bottom obstacle", (): void => {
+test("Pipeline9 rejects copper crossing a preloaded default via's missing bottom obstacle", (): void => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.1,
@@ -55,13 +56,40 @@ test("Pipeline9 routes across a preloaded default via's missing bottom obstacle"
 
   solver.solve()
 
-  expect(solver.solved).toBeTrue()
-  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeFalse()
+  expect(solver.failed).toBeTrue()
+  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
+    "Cannot get output before solving is complete",
+  )
+  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
+    "Cannot get output before solving is complete",
+  )
+  const finalStage = solver.powerTraceExpansionSolver
+  expect(finalStage?.solved).toBeTrue()
+  const routedTraces = [
+    ...solver.getMutatedPreloadedTraces(),
+    ...finalStage!.getOutput(),
+  ]
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: solver.originalSrj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces,
+    includeBoardClearance: true,
+    drcOptions: {
+      includeTraceContinuity: false,
+      traceClearance: inputSrj.minTraceToPadEdgeClearance,
+    },
+  })
+  expect(errors.length).toBeGreaterThan(0)
+  expect(solver.stats.finalDrcIssueCount).toBe(errors.length)
+  expect(solver.error).toBe(
+    `Pipeline9 could not produce valid copper: ${errors.length} DRC errors remain`,
+  )
   expect(
     getBugReportSnapshotSvg({
       inputSrj,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      routedTraces,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

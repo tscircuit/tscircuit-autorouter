@@ -6,7 +6,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/bugreport96-full-gameboy
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", () => {
+test("Pipeline9 rejects unresolved DRC in the full Game Boy Advance route", () => {
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -23,9 +23,19 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
 
   solver.solve()
 
-  expect(solver.error).toBeNull()
-  expect(solver.failed).toBeFalse()
-  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeTrue()
+  expect(solver.solved).toBeFalse()
+  const finalDrcIssueCount = solver.stats.finalDrcIssueCount
+  expect(finalDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.error).toBe(
+    `Pipeline9 could not produce valid copper: ${finalDrcIssueCount} DRC errors remain`,
+  )
+  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
+    "Cannot get output before solving is complete",
+  )
+  expect(() => solver.getOutputSimpleRouteJson()).toThrow(
+    "Cannot get output before solving is complete",
+  )
   expect(
     solver.highDensityRouteSolver?.fixedRouteReplacements.has(
       "source_trace_0_fixed_70_0",
@@ -36,11 +46,4 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
       ?.getUpdatedFixedHdRoutes()
       .some((route) => route.connectionName === "source_trace_0_fixed_70_0"),
   ).toBeTrue()
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath, {
-    svgName: "routed",
-  })
 }, 600_000)

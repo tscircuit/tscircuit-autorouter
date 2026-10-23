@@ -1,9 +1,11 @@
 import { writeFileSync } from "node:fs"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import type { Pipeline7PowerTraceExpansionInput } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 import bugReport from "../../fixtures/bug-reports/bugreport107-board-1726/bugreport107-board-1726.json" with {
   type: "json",
 }
@@ -15,6 +17,87 @@ test("bugreport107-board-1726.json with Pipeline 9", async (): Promise<void> => 
     structuredClone(srj),
   )
   solver.solve()
+
+  if (solver.failed) {
+    const finalStage = solver.powerTraceExpansionSolver
+    const srjWithPointPairs = solver.srjWithPointPairs
+    const joint = solver.pipeline9JointDrcRepairSolver
+    if (!finalStage?.solved || !srjWithPointPairs || !joint?.solved) {
+      throw new Error(`Board 1726 failed before final copper: ${solver.error}`)
+    }
+    const finalStageInput =
+      finalStage.inputSrj as Pipeline7PowerTraceExpansionInput
+    const finalTraces = [
+      ...finalStageInput.fixedTraces.filter(
+        (trace) => trace.__replaces_pcb_trace_id !== undefined,
+      ),
+      ...finalStage.getOutput(),
+    ]
+    const { errors } = evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs,
+      routedTraces: finalTraces,
+      includeBoardClearance: true,
+      drcOptions: {
+        includeTraceContinuity: false,
+        traceClearance: srj.minTraceToPadEdgeClearance,
+        viaClearance: srj.minPadEdgeToPadEdgeClearance,
+      },
+    })
+    const repairCandidates: {
+      initialPublished?: HighDensityRoute[]
+      initialPrivate?: HighDensityRoute[]
+      exact?: HighDensityRoute[]
+      regionalB01?: HighDensityRoute[]
+      finalPublished?: HighDensityRoute[]
+      finalPrivate?: HighDensityRoute[]
+    } = {}
+    const initial = joint.initialBoundedRegionalRepairSolver
+    if (initial?.solved && !initial.failed) {
+      repairCandidates.initialPublished = initial.getResult().routes
+      repairCandidates.initialPrivate = initial.getRoutesForFurtherRepair()
+    }
+    if (joint.exactRepairSolver?.solved && !joint.exactRepairSolver.failed) {
+      repairCandidates.exact = joint.exactRepairSolver.getOutput()
+    }
+    const regionalB01 = joint.regionalB01RepairSolver
+    if (regionalB01?.solved && !regionalB01.failed) {
+      repairCandidates.regionalB01 = regionalB01.getResult().routes
+    }
+    const bounded = joint.boundedRegionalRepairSolver
+    if (bounded?.solved && !bounded.failed) {
+      repairCandidates.finalPublished = bounded.getResult().routes
+      repairCandidates.finalPrivate = bounded.getRoutesForFurtherRepair()
+    }
+    writeFileSync(
+      new URL(
+        "./__snapshots__/bugreport107-declared-drc.received.json",
+        import.meta.url,
+      ),
+      JSON.stringify(
+        {
+          input: srj,
+          pointPairs: srjWithPointPairs,
+          newConnections: solver.netToPointPairsSolver!.newConnections,
+          jointInput: {
+            ...joint.params,
+            connMap: undefined,
+            mutatedPreloadedTraceIds: [...joint.params.mutatedPreloadedTraceIds],
+          },
+          jointRoutes: joint.getOutput(),
+          beforePowerTraces: solver.getNewTracesBeforePowerExpansion(),
+          finalTraces,
+          errors,
+          stats: solver.stats,
+          jointStats: joint.stats,
+          phaseTimesMs: solver.timeSpentOnPhase,
+          repairCandidates,
+        },
+        null,
+        2,
+      ),
+    )
+  }
 
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
