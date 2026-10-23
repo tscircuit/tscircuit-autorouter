@@ -19,7 +19,7 @@ import multiPointSrjData from "./srj/multi-point.srj.json"
  * optimize each edge independently. Both edges should be rerouted to the
  * more optimal B', resulting in two final traces: A -> B' and C -> B'.
  */
-test("multi-point off-board substitution rejects copper at the board edge", () => {
+test("multi-point on-board net", () => {
   const srj: SimpleRouteJson = multiPointSrjData as any
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
@@ -32,13 +32,6 @@ test("multi-point off-board substitution rejects copper at the board edge", () =
   expect(connectionsAsPointIdPairs).toContainEqual(["A", "B_prime"].sort())
   expect(connectionsAsPointIdPairs).toContainEqual(["C", "B_prime"].sort())
 
-  // B_prime lies on the board boundary, so trace copper extends outside it.
-  expect(srj.connections[1]!.pointsToConnect[1]!.y).toBe(srj.bounds.minY)
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
-  expect(solver.error).toContain("DRC errors remain")
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

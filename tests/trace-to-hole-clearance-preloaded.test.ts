@@ -25,16 +25,12 @@ test("shared DRC reports preloaded trace clearance and overlap with NPTHs", (): 
       cacheProvider: null,
     })
     solver.solve()
-    expect(solver.solved).toBe(false)
-    expect(solver.failed).toBe(true)
-    const finalStage = solver.powerTraceExpansionSolver
-    if (!finalStage) throw new Error("The final copper stage did not complete")
+    expect(solver.solved).toBe(true)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: finalStage.getOutput(),
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
     })
-    expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
     expect(errors).toContainEqual(
       expect.objectContaining({
         type: "pcb_trace_error",

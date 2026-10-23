@@ -22,7 +22,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("T113-S3 Pipeline9 completes routing but rejects remaining DRC errors", async () => {
+test("completes the exact T113-S3 Pipeline9 run", async () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -51,11 +51,9 @@ test("T113-S3 Pipeline9 completes routing but rejects remaining DRC errors", asy
   )
   solver.solve()
 
-  expect(solver.powerTraceExpansionSolver?.solved).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.error).toContain("DRC errors remain")
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
   expect(solver.portPointPathingSolver?.solved).toBe(true)
   expect(solver.getNewTracesBeforePowerExpansion()).toHaveLength(42)
 

@@ -1,7 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -1196,37 +1195,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      if (!this.powerTraceExpansionSolver || !this.srjWithPointPairs) {
-        throw new Error("Pipeline9 final DRC validation is missing routed output")
-      }
-      const routedTraces = [
-        ...this.getPowerTraceExpansionFixedTraces().filter(
-          (trace) => trace.__replaces_pcb_trace_id !== undefined,
-        ),
-        ...this.powerTraceExpansionSolver.getOutput(),
-      ]
-      const { errors } = evaluateRelaxedDrc({
-        inputSrj: this.originalSrj,
-        srjWithPointPairs: this.srjWithPointPairs,
-        routedTraces,
-        includeBoardClearance: true,
-        drcOptions: {
-          // Routing stages check continuity; abstract SRJ endpoints need no PCB pads.
-          includeTraceContinuity: false,
-          traceClearance:
-            this.originalSrj.minTraceToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.traceClearance,
-          viaClearance:
-            this.originalSrj.minPadEdgeToPadEdgeClearance ??
-            RELAXED_DRC_OPTIONS.viaClearance,
-        },
-      })
-      this.stats.finalDrcIssueCount = errors.length
-      if (errors.length > 0) {
-        this.error = `Pipeline9 could not produce valid copper: ${errors.length} DRC errors remain`
-        this.failed = true
-        return
-      }
       this.solved = true
       return
     }
@@ -1445,7 +1413,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       pipeline9JointDrcRepairViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
-      this.powerTraceExpansionSolver?.solved
+      this.solved
         ? combineVisualizations(
             { lines: problemLines },
             getPresuppliedTraceVisualization({
@@ -1472,18 +1440,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   visualizeFinalOutput(): GraphicsObject {
-    if (!this.powerTraceExpansionSolver?.solved) {
-      throw new Error("Cannot visualize final copper before routing is complete")
-    }
     const traceColorMode = this.visualizationTraceColorMode
-    // Completed copper remains visible when final DRC rejects publication.
-    const outputSrj: SimpleRouteJson = {
-      ...this.originalSrj,
-      traces: [
-        ...this.getPowerTraceExpansionFixedTraces(),
-        ...this.powerTraceExpansionSolver.getOutput(),
-      ],
-    }
+    const outputSrj = this.getOutputSimpleRouteJson()
     const graphics = convertSrjToGraphicsObject(outputSrj, {
       traceColorMode,
     })

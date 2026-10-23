@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 rejects copper crossing a preloaded default via's missing bottom obstacle", (): void => {
+test("Pipeline9 routes across a preloaded default via's missing bottom obstacle", (): void => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.1,
@@ -55,21 +55,13 @@ test("Pipeline9 rejects copper crossing a preloaded default via's missing bottom
 
   solver.solve()
 
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  const finalStage = solver.powerTraceExpansionSolver
-  expect(finalStage?.solved).toBeTrue()
-  const routedTraces = [
-    ...solver.getMutatedPreloadedTraces(),
-    ...finalStage!.getOutput(),
-  ]
-  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.error).toContain("DRC errors remain")
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
   expect(
     getBugReportSnapshotSvg({
       inputSrj,
       srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

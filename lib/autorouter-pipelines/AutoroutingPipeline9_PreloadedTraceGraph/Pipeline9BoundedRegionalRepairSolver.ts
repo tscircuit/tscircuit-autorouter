@@ -992,7 +992,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     return this.result
   }
 
-  /** Reference-validated progress for another repair stage, not publication. */
+  /** Reference-validated partial candidate; may still contain DRC errors. */
   getRoutesForFurtherRepair(): HighDensityRoute[] {
     if (!this.solved || this.failed) {
       throw new Error("Regional repair continuation requested before completion")

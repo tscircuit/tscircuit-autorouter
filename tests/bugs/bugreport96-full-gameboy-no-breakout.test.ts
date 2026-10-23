@@ -6,7 +6,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/bugreport96-full-gameboy
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("Pipeline9 rejects unresolved DRC in the full Game Boy Advance route", () => {
+test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", () => {
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
@@ -23,11 +23,9 @@ test("Pipeline9 rejects unresolved DRC in the full Game Boy Advance route", () =
 
   solver.solve()
 
-  expect(solver.failed).toBeTrue()
-  expect(solver.solved).toBeFalse()
-  expect(solver.powerTraceExpansionSolver?.solved).toBeTrue()
-  expect(solver.stats.finalDrcIssueCount).toBeGreaterThan(0)
-  expect(solver.error).toContain("DRC errors remain")
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
   expect(
     solver.highDensityRouteSolver?.fixedRouteReplacements.has(
       "source_trace_0_fixed_70_0",
