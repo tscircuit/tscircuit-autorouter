@@ -747,6 +747,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            enableVertexShortcuts: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
