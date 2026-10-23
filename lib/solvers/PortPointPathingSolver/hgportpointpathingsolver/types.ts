@@ -1,4 +1,5 @@
 import type { DetailedRoutingRegionPenalty } from "../../../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9DetailedRoutingFeedback"
+import type { DetailedRoutingIncumbent } from "../tinyhypergraph/DetailedRoutingIncumbent"
 import type {
   Candidate,
   Connection,
@@ -99,6 +100,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   detailedRoutingPenalties?: DetailedRoutingRegionPenalty[]
+  detailedRoutingIncumbent?: DetailedRoutingIncumbent
+  detailedRoutingCumulativeStats?: Readonly<Record<string, number>>
   minViaPadDiameter?: number
   flags: {
     FORCE_CENTER_FIRST: boolean

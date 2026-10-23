@@ -21,6 +21,7 @@ import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import type { DetailedRoutingIncumbent } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/DetailedRoutingIncumbent"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -251,6 +252,7 @@ function definePipelineStep<
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   readonly detailedRoutingFeedback = new Pipeline9DetailedRoutingFeedback()
+  private detailedRoutingIncumbent?: DetailedRoutingIncumbent
   readonly detailedRoutingRounds: Array<{
     status: "complete" | "refined"
     failedAttemptCount: number
@@ -550,6 +552,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             detailedRoutingPenalties: cms.detailedRoutingFeedback.getPenalties(),
+            detailedRoutingIncumbent: cms.detailedRoutingIncumbent,
+            // Preserve completed/discarded work even when a new upstream
+            // search is active and the previous detailed instance is released.
+            detailedRoutingCumulativeStats: Object.fromEntries(Object.entries({ ...cms.stats, ...cms.detailedRoutingFeedback.stats })
+              .filter(([key, value]) => key.startsWith("detailedFeedback") && typeof value === "number")),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -1366,6 +1373,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // Each refinement starts from the immutable topology and original copper.
     // Partial detailed routes and preload mutations from the previous round are
     // discarded together. Failures in the new round still propagate normally.
+    this.detailedRoutingIncumbent = pathing.getDetailedRoutingIncumbent()
     this.activeSubSolver = null
     this.portPointPathingSolver = undefined
     this.uniformPortDistributionSolver = undefined
