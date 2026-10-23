@@ -1,4 +1,7 @@
-import { getProvenViaConflictContext } from "../../solvers/PortPointPathingSolver/tinyhypergraph/ProvenViaConflictOracle"
+import {
+  Pipeline9DetailedRoutingFeedback,
+  type Pipeline9DetailedRoutingConflict,
+} from "./Pipeline9DetailedRoutingFeedback"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -247,6 +250,17 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
+  readonly detailedRoutingFeedback = new Pipeline9DetailedRoutingFeedback()
+  readonly detailedRoutingRounds: Array<{
+    status: "complete" | "refined"
+    failedAttemptCount: number
+    pathingIterations: number
+    detailedIterations: number
+    ordinaryNodeAttemptCount: number
+    regionalRecoveryCount: number
+    deferredRegionalRecoveryCount: number
+    conflicts: Pipeline9DetailedRoutingConflict[]
+  }> = []
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
@@ -535,7 +549,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
-            viaConflictContext: getProvenViaConflictContext(cms.srj, cms.viaDiameter),
+            detailedRoutingPenalties: cms.detailedRoutingFeedback.getPenalties(),
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -641,6 +655,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            collectDetailedRoutingFeedback: true,
+            detailedCopperRules: {
+              defaultObstacleMargin: cms.srj.defaultObstacleMargin,
+              minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+              minTraceToHoleEdgeClearance: cms.srj.minTraceToHoleEdgeClearance,
+              minViaEdgeToPadEdgeClearance: cms.srj.minViaEdgeToPadEdgeClearance,
+              allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
+            },
+            pauseForUpstreamRefinement:
+              cms.detailedRoutingFeedback.stats.detailedFeedbackReplanCount < 2,
           },
         ]
       },
@@ -1157,7 +1181,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             previousIterations +
               Math.max(0, this.MAX_ITERATIONS - this.iterations),
           )
-          const terminal = phase.solved || phase.failed
+          const terminal = phase.solved || phase.failed ||
+            phase.refinementState.status === "awaiting-upstream-refinement"
           this.iterations += Math.max(
             0,
             phase.iterations - previousIterations - (terminal ? 1 : 0),
@@ -1198,12 +1223,25 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
 
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      if (!(this.activeSubSolver instanceof Pipeline9HighDensitySolver) ||
+        this.activeSubSolver.refinementState.status !== "awaiting-upstream-refinement") {
+        this.activeSubSolver.step()
+      }
+      if (this.activeSubSolver instanceof Pipeline9HighDensitySolver &&
+        !this.activeSubSolver.failed &&
+        this.activeSubSolver.refinementState.status === "awaiting-upstream-refinement") {
+        this.recordPhaseInterval(pipelineStepDef.solverName)
+        this.replanFromDetailedRoutingConflicts()
+        return
+      }
       if (this.activeSubSolver.solved) {
-        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
-        this.timeSpentOnPhase[pipelineStepDef.solverName] =
-          this.endTimeOfPhase[pipelineStepDef.solverName] -
-          this.startTimeOfPhase[pipelineStepDef.solverName]
+        this.recordPhaseInterval(pipelineStepDef.solverName)
+        if (
+          pipelineStepDef.solverName === "highDensityRouteSolver" &&
+          this.replanFromDetailedRoutingConflicts()
+        ) {
+          return
+        }
         pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
@@ -1234,8 +1272,107 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
       )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
-    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
+    if (this.activeSubSolver instanceof Pipeline9HighDensitySolver) {
+      Object.assign(this.activeSubSolver.stats, this.detailedRoutingFeedback.stats)
+    }
+    this.timeSpentOnPhase[pipelineStepDef.solverName] ??= 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+  }
+
+  private recordPhaseInterval(phaseName: string): void {
+    const now = performance.now()
+    this.endTimeOfPhase[phaseName] = now
+    this.timeSpentOnPhase[phaseName] += now - this.startTimeOfPhase[phaseName]
+    // A declined refinement resumes this same detailed instance. Start its
+    // next interval here so the prefix is counted exactly once.
+    this.startTimeOfPhase[phaseName] = now
+  }
+
+  private replanFromDetailedRoutingConflicts(): boolean {
+    const detailed = this.highDensityRouteSolver
+    const pathing = this.portPointPathingSolver
+    const awaiting = detailed?.refinementState.status === "awaiting-upstream-refinement"
+    if (!detailed || (!detailed.solved && !awaiting) ||
+      !pathing?.solved || !this.highDensityNodePortPoints) {
+      throw new Error("Detailed feedback requires complete pathing and a completed or explicitly paused detailed attempt")
+    }
+    const feedback = this.detailedRoutingFeedback
+    // Typed search failures pause before regional recovery while refinement is
+    // available. They are soft evidence, not a board infeasibility deduction.
+    const failedAttemptCount = detailed.detailedRoutingConflicts.length
+    const learned = feedback.learn(detailed.detailedRoutingConflicts)
+    const shouldReplan = learned > 0 && feedback.stats.detailedFeedbackReplanCount < 2
+    if (awaiting) feedback.stats.detailedFeedbackPausedAttemptCount++
+    if (awaiting && !shouldReplan) {
+      feedback.stats.detailedFeedbackResumedAttemptCount++
+      detailed.resumeDetailedRoutingAfterRefinement()
+      Object.assign(this.stats, feedback.stats)
+      Object.assign(detailed.stats, feedback.stats)
+      return true
+    }
+    this.detailedRoutingRounds.push({
+      status: awaiting ? "refined" : "complete",
+      failedAttemptCount,
+      pathingIterations: pathing.iterations,
+      detailedIterations: detailed.iterations,
+      ordinaryNodeAttemptCount: detailed.stats.regularNodeCount,
+      regionalRecoveryCount: detailed.stats.fallbackNodeCount,
+      deferredRegionalRecoveryCount: detailed.stats.detailedFeedbackPendingRegionalRecoveryCount,
+      conflicts: structuredClone(detailed.detailedRoutingConflicts),
+    })
+    feedback.recordAssignments(this.highDensityNodePortPoints)
+    if (this.detailedRoutingRounds.length === 1) {
+      feedback.stats.detailedFeedbackInitialFailedAttemptCount = failedAttemptCount
+    }
+    feedback.stats.detailedFeedbackFinalFailedAttemptCount = failedAttemptCount
+    if (shouldReplan) {
+      feedback.stats.detailedFeedbackReplanCount++
+      if (awaiting) feedback.stats.detailedFeedbackEarlyReplanCount++
+    }
+    else if (learned > 0) feedback.stats.detailedFeedbackRoundLimitReached = 1
+    const accumulatedStats = {
+      ...feedback.stats,
+      detailedFeedbackRoundCount: this.detailedRoutingRounds.length,
+      detailedFeedbackCompletedRoundCount: this.detailedRoutingRounds.filter(
+        (round) => round.status === "complete",
+      ).length,
+      detailedFeedbackTotalPathingIterations: this.detailedRoutingRounds.reduce(
+        (sum, round) => sum + round.pathingIterations, 0,
+      ),
+      detailedFeedbackTotalDetailedIterations: this.detailedRoutingRounds.reduce(
+        (sum, round) => sum + round.detailedIterations, 0,
+      ),
+      detailedFeedbackTotalOrdinaryNodeAttemptCount: this.detailedRoutingRounds.reduce(
+        (sum, round) => sum + round.ordinaryNodeAttemptCount, 0,
+      ),
+      detailedFeedbackTotalRegionalRecoveryCount: this.detailedRoutingRounds.reduce(
+        (sum, round) => sum + round.regionalRecoveryCount, 0,
+      ),
+      detailedFeedbackAvoidedRegionalRecoveryCount: this.detailedRoutingRounds.reduce(
+        (sum, round) => sum + (round.status === "refined"
+          ? round.deferredRegionalRecoveryCount : 0), 0,
+      ),
+    }
+    Object.assign(this.stats, accumulatedStats)
+    Object.assign(detailed.stats, accumulatedStats)
+    if (!shouldReplan) return false
+
+    const pathingIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "portPointPathingSolver",
+    )
+    if (pathingIndex < 0) {
+      throw new Error("Detailed feedback cannot find the upstream pathing stage")
+    }
+    // Each refinement starts from the immutable topology and original copper.
+    // Partial detailed routes and preload mutations from the previous round are
+    // discarded together. Failures in the new round still propagate normally.
+    this.activeSubSolver = null
+    this.portPointPathingSolver = undefined
+    this.uniformPortDistributionSolver = undefined
+    this.highDensityRouteSolver = undefined
+    this.highDensityNodePortPoints = undefined
+    this.currentPipelineStepIndex = pathingIndex
+    return true
   }
 
   solveUntilPhase(phase: string) {

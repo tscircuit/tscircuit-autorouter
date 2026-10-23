@@ -1,4 +1,4 @@
-import { ProvenViaConflictOracle } from "./ProvenViaConflictOracle"
+import { DetailedRoutingConflictCosts } from "./DetailedRoutingConflictCosts"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -920,7 +920,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly viaConflictOracle?: ProvenViaConflictOracle,
+    private readonly detailedConflictCosts?: DetailedRoutingConflictCosts,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -942,11 +942,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
-    if (viaConflictOracle) {
-      const oracle = viaConflictOracle
+    if (detailedConflictCosts) {
+      const oracle = detailedConflictCosts
       const solveStep = this.pipelineDef.find((step) => step.solverName === "solveGraph")
       const sectionStep = this.pipelineDef.find((step) => step.solverName === "optimizeSection")
-      if (!solveStep || !sectionStep) throw new Error("Via conflict feedback requires solveGraph and optimizeSection stages")
+      if (!solveStep || !sectionStep) throw new Error("Detailed conflict feedback requires solveGraph and optimizeSection stages")
       const SolveClass = solveStep.solverClass as typeof TinyHyperGraphSolver
       solveStep.solverClass = class extends SolveClass {
         constructor(...args: ConstructorParameters<typeof TinyHyperGraphSolver>) {
@@ -1045,13 +1045,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
-    if (solver instanceof TinyHyperGraphSolver) this.viaConflictOracle?.install(solver)
+    if (solver instanceof TinyHyperGraphSolver) this.detailedConflictCosts?.install(solver)
     this.configuredSolvers.add(solver)
   }
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private readonly viaConflictOracle?: ProvenViaConflictOracle
+  private readonly detailedConflictCosts?: DetailedRoutingConflictCosts
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1077,7 +1077,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    this.viaConflictOracle = params.viaConflictContext ? new ProvenViaConflictOracle(params.viaConflictContext) : undefined
+    this.detailedConflictCosts = params.detailedRoutingPenalties?.length ? new DetailedRoutingConflictCosts(params.detailedRoutingPenalties) : undefined
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1161,7 +1161,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        this.viaConflictOracle,
+        this.detailedConflictCosts,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1471,7 +1471,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.viaConflictOracle,
+            this.detailedConflictCosts,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1559,7 +1559,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
-      ...(this.viaConflictOracle?.stats ?? {}),
+      ...(this.detailedConflictCosts?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }

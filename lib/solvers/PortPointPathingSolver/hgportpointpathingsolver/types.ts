@@ -1,4 +1,4 @@
-import type { ViaConflictContext } from "../tinyhypergraph/ProvenViaConflictOracle"
+import type { DetailedRoutingRegionPenalty } from "../../../autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9DetailedRoutingFeedback"
 import type {
   Candidate,
   Connection,
@@ -98,7 +98,7 @@ export interface HgPortPointPathingSolverParams {
   layerCount: number
   effort: number
   preserveTerminalPcbPortIds?: boolean
-  viaConflictContext?: ViaConflictContext
+  detailedRoutingPenalties?: DetailedRoutingRegionPenalty[]
   minViaPadDiameter?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
