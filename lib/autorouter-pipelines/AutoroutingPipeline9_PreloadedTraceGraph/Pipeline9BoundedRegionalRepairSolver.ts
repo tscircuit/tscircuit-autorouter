@@ -346,6 +346,12 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const currentRoutes = canonicalizePipeline9HdRoutes(context.currentRoutes)
     const regional: RegionalContext = {
       ...context,
+      // Coupled conflicts need room for negotiated detours. Prefer compact
+      // regions after projection has reduced the remaining error set.
+      regionSizes:
+        context.currentErrors.length > 10
+          ? [...context.regionSizes].sort((a, b) => b - a)
+          : context.regionSizes,
       srj,
       obstacleCenterById,
       currentRoutes,
