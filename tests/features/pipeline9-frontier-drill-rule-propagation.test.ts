@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { OwnershipGraphIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/OwnershipGraphIntraNodeSolver"
+import { FrontierIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/FrontierIntraNodeSolver"
 
 test("Pipeline9 passes the actual drill diameter and hole gap to the ordinary graph candidate", () => {
   const phase = new Pipeline9HighDensitySolver({
@@ -27,7 +27,7 @@ test("Pipeline9 passes the actual drill diameter and hole gap to the ordinary gr
   growShrink.step()
   const portfolio = growShrink.activeSubSolver ?? growShrink.winningSolver!
   if (!portfolio.supervisedSolvers) portfolio.initializeSolvers()
-  const graph = portfolio.supervisedSolvers!.find(({ solver }) => solver instanceof OwnershipGraphIntraNodeSolver)!.solver as OwnershipGraphIntraNodeSolver
+  const graph = portfolio.supervisedSolvers!.find(({ solver }) => solver instanceof FrontierIntraNodeSolver)!.solver as FrontierIntraNodeSolver
   expect(graph.viaHoleDiameter).toBe(0.2)
   expect(graph.minViaHoleEdgeToViaHoleEdgeClearance).toBe(0.2)
   expect(graph.validationSrj.minViaHoleDiameter).toBe(0.2)

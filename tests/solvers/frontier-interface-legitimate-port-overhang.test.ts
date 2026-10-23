@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import { OwnershipGraphIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/OwnershipGraphIntraNodeSolver"
+import { FrontierIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/FrontierIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
 
-test("the exact bugreport107 interface overhang is ineligible before ownership graph construction", () => {
+test("the exact bugreport107 interface overhang is ineligible before frontier interface construction", () => {
   const pairs: [PortPoint, PortPoint][] = [
     [
       { portPointId: "ce12406_pp2_z3::3", x: 4.75, y: 2.75, z: 3, connectionName: "source_trace_1__source_net_1_mst64", rootConnectionName: "connectivity_net189", nextPortPointId: "ce12509_pp0_z3::3" },
@@ -28,21 +28,21 @@ test("the exact bugreport107 interface overhang is ineligible before ownership g
   }
   const before = structuredClone(node)
   const params = { nodeWithPortPoints: node, traceWidth: 0.095, viaDiameter: 0.3, obstacleMargin: 0.15, layerCount: 4 }
-  const candidate = new OwnershipGraphIntraNodeSolver(params)
+  const candidate = new FrontierIntraNodeSolver(params)
   expect(candidate.failed).toBe(true)
   expect(candidate.error).toContain("ineligible")
   expect(candidate.engine).toBeNull()
   candidate.step()
   expect(candidate.engine).toBeNull()
-  expect(candidate.stats.ownershipGraphOutOfDomainNodeCount).toBe(1)
-  expect(candidate.stats.ownershipGraphUnsupportedPortCount).toBe(1)
-  expect(candidate.stats.ownershipGraphCandidateCount).toBeUndefined()
-  const portfolio = new PortfolioSingleIntraNodeSolver({ ...params, enableOwnershipGraphSearch: true })
+  expect(candidate.stats.frontierInterfaceOutOfDomainNodeCount).toBe(1)
+  expect(candidate.stats.frontierInterfaceUnsupportedPortCount).toBe(1)
+  expect(candidate.stats.frontierInterfaceCandidateCount).toBeUndefined()
+  const portfolio = new PortfolioSingleIntraNodeSolver({ ...params, enableFrontierInterfaceSearch: true })
   portfolio.initializeSolvers()
-  const graphCandidate = portfolio.supervisedSolvers!.find(({ solver }) => solver instanceof OwnershipGraphIntraNodeSolver)!.solver as OwnershipGraphIntraNodeSolver
+  const graphCandidate = portfolio.supervisedSolvers!.find(({ solver }) => solver instanceof FrontierIntraNodeSolver)!.solver as FrontierIntraNodeSolver
   expect(graphCandidate.failed).toBe(true)
   expect(graphCandidate.engine).toBeNull()
-  expect(portfolio.supervisedSolvers!.some(({ solver }) => !(solver instanceof OwnershipGraphIntraNodeSolver) && !solver.failed)).toBe(true)
+  expect(portfolio.supervisedSolvers!.some(({ solver }) => !(solver instanceof FrontierIntraNodeSolver) && !solver.failed)).toBe(true)
   expect(node).toEqual(before)
-  expect(() => new OwnershipGraphIntraNodeSolver({ ...params, nodeWithPortPoints: { ...node, center: { x: NaN, y: 2.75 } } })).toThrow("finite node geometry")
+  expect(() => new FrontierIntraNodeSolver({ ...params, nodeWithPortPoints: { ...node, center: { x: NaN, y: 2.75 } } })).toThrow("finite node geometry")
 })

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
-import { OwnershipGraphIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/OwnershipGraphIntraNodeSolver"
+import { FrontierIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/FrontierIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
 
@@ -15,7 +15,7 @@ test("shared graph output preserves endpoints, roots, actual clearance and layer
       { connectionName: "b", rootConnectionName: "root-b", x: 0, y: 3, z: 0 },
     ],
   }
-  const solver = new OwnershipGraphIntraNodeSolver({ nodeWithPortPoints: node, traceWidth: 0.15, viaDiameter: 0.3, obstacleMargin: 0.1, layerCount: 2 })
+  const solver = new FrontierIntraNodeSolver({ nodeWithPortPoints: node, traceWidth: 0.15, viaDiameter: 0.3, obstacleMargin: 0.1, layerCount: 2 })
   solver.solve()
   expect(solver.solved, solver.error ?? "failed").toBe(true)
   expect(solver.solvedRoutes).toHaveLength(2)
@@ -38,9 +38,9 @@ test("shared graph output preserves endpoints, roots, actual clearance and layer
     }
   }
   const obstacle: Obstacle = { type: "rect", layers: ["top", "bottom"], center: { x: 0, y: 0 }, width: 1, height: 1, ccwRotationDegrees: 30, connectedTo: [] }
-  const obstructed = new OwnershipGraphIntraNodeSolver({ nodeWithPortPoints: node, obstacles: [obstacle], traceWidth: 0.15, viaDiameter: 0.3, obstacleMargin: 0.1, layerCount: 2 })
+  const obstructed = new FrontierIntraNodeSolver({ nodeWithPortPoints: node, obstacles: [obstacle], traceWidth: 0.15, viaDiameter: 0.3, obstacleMargin: 0.1, layerCount: 2 })
   obstructed.solve()
   expect(obstructed.solved, obstructed.error ?? "failed").toBe(true)
   expect(getFixedObstacleViolations({ srj: { ...obstructed.validationSrj, traces: undefined }, routes: obstructed.solvedRoutes, traceClearance: 0.1, viaClearance: 0.1 })).toHaveLength(0)
-  expect(obstructed.counters.ownershipGraphFixedGeometryCheckCount).toBeGreaterThan(0)
+  expect(obstructed.counters.frontierInterfaceFixedGeometryCheckCount).toBeGreaterThan(0)
 })

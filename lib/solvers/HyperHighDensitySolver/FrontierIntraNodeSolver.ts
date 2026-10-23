@@ -11,10 +11,10 @@ import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPai
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { BaseSolver } from "../BaseSolver"
 import { getObstacleRouteConnectivity } from "./getObstacleRouteConnectivity"
-import { SharedOwnershipGraphSolver, type OwnershipGraph, type OwnershipGraphStats } from "./SharedOwnershipGraphSolver"
+import { FrontierRouteDomainSolver, type FrontierGraph, type FrontierStats } from "./FrontierRouteDomainSolver"
 
 type Point = { x: number; y: number; z: number }
-type OwnershipGraphParams = {
+type FrontierParams = {
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   traceWidth?: number
@@ -26,16 +26,16 @@ type OwnershipGraphParams = {
   layerCount?: number
   effort?: number
   boardGeometry?: HighDensityBoardGeometry
-  ownershipGraphStats?: OwnershipGraphStats
+  frontierInterfaceStats?: FrontierStats
 }
 
 /**
  * One explicit portfolio candidate. All tasks share immutable copper primitives;
- * decisions change ownership, and exhausted searches learn reusable cut clauses.
+ * fixed finite route domains are solved by an exact future-interface diagram.
  * Its finite graph is a candidate family, never a board infeasibility oracle.
  */
-export class OwnershipGraphIntraNodeSolver extends BaseSolver {
-  readonly counters: OwnershipGraphStats
+export class FrontierIntraNodeSolver extends BaseSolver {
+  readonly counters: FrontierStats
   readonly primitives: HighDensityRoute[] = []
   readonly pairs: [PortPoint, PortPoint][]
   readonly traceWidth: number
@@ -46,12 +46,12 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
   readonly layerCount: number
   readonly maxConnectivityIterations: number
   readonly validationSrj: SimpleRouteJson
-  engine: SharedOwnershipGraphSolver | null = null
+  engine: FrontierRouteDomainSolver | null = null
   solvedRoutes: HighDensityRoute[] = []
 
-  constructor(readonly params: OwnershipGraphParams) {
+  constructor(readonly params: FrontierParams) {
     super()
-    this.counters = params.ownershipGraphStats ?? {}
+    this.counters = params.frontierInterfaceStats ?? {}
     this.stats = this.counters
     this.traceWidth = params.traceWidth ?? 0.15
     this.viaDiameter = params.viaDiameter ?? 0.3
@@ -74,15 +74,15 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       ![node.center.x, node.center.y, node.width, node.height, this.traceWidth, this.viaDiameter, this.viaHoleDiameter, this.minViaHoleEdgeToViaHoleEdgeClearance, this.clearance, ...endpoints.flatMap((point) => [point.x, point.y, point.z])].every(Number.isFinite) ||
       node.width <= 0 || node.height <= 0 || this.traceWidth <= 0 || this.viaDiameter <= 0 || this.viaHoleDiameter <= 0 || this.viaHoleDiameter > this.viaDiameter || this.clearance < 0 || this.minViaHoleEdgeToViaHoleEdgeClearance < 0 ||
       [...layers, ...endpoints.map((point) => point.z)].some((z) => !Number.isInteger(z) || z < 0 || z >= this.layerCount)) {
-      throw new Error("Ownership graph requires finite node geometry and valid board layer indices")
+      throw new Error("Frontier interface requires finite node geometry and valid board layer indices")
     }
     this.validationSrj = this.createValidationSrj()
     this.maxConnectivityIterations = Math.max(1, Math.round(40_000 * Math.max(1, this.pairs.length) * (params.effort ?? 1)))
-    this.MAX_ITERATIONS = Math.ceil(this.maxConnectivityIterations / 32) + 2
+    this.MAX_ITERATIONS = Math.ceil(this.maxConnectivityIterations / 64) + 2
     if (this.pairs.length < 2 || this.pairs.length > 12) {
       this.failed = true
-      this.error = "Ownership graph candidate supports two to twelve pair tasks"
-      this.counters.ownershipGraphIneligibleCount = (this.counters.ownershipGraphIneligibleCount ?? 0) + 1
+      this.error = "Frontier interface candidate supports two to twelve pair tasks"
+      this.counters.frontierInterfaceIneligibleCount = (this.counters.frontierInterfaceIneligibleCount ?? 0) + 1
       return
     }
     const outsideDomain = endpoints.filter((point) => !layers.includes(point.z) ||
@@ -93,10 +93,10 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       // This prototype's fixed graph cannot represent those interfaces; its
       // ineligibility is distinct from malformed input or graph corruption.
       this.failed = true
-      this.error = "Ownership graph candidate is ineligible: terminal outside its fixed node/layer domain"
-      this.counters.ownershipGraphIneligibleCount = (this.counters.ownershipGraphIneligibleCount ?? 0) + 1
-      this.counters.ownershipGraphOutOfDomainNodeCount = (this.counters.ownershipGraphOutOfDomainNodeCount ?? 0) + 1
-      this.counters.ownershipGraphUnsupportedPortCount = (this.counters.ownershipGraphUnsupportedPortCount ?? 0) + outsideDomain.length
+      this.error = "Frontier interface candidate is ineligible: terminal outside its fixed node/layer domain"
+      this.counters.frontierInterfaceIneligibleCount = (this.counters.frontierInterfaceIneligibleCount ?? 0) + 1
+      this.counters.frontierInterfaceOutOfDomainNodeCount = (this.counters.frontierInterfaceOutOfDomainNodeCount ?? 0) + 1
+      this.counters.frontierInterfaceUnsupportedPortCount = (this.counters.frontierInterfaceUnsupportedPortCount ?? 0) + outsideDomain.length
     }
   }
 
@@ -155,14 +155,14 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     const endpoints = this.pairs.flat()
     const layers = [...new Set(node.availableZ ?? Array.from({ length: this.layerCount }, (_, z) => z))].sort((a, b) => a - b)
     if (endpoints.some((p) => !layers.includes(p.z) || p.x < bounds.minX - 1e-8 || p.x > bounds.maxX + 1e-8 || p.y < bounds.minY - 1e-8 || p.y > bounds.maxY + 1e-8)) {
-      throw new Error("Ownership graph endpoints must lie on an available layer inside their node")
+      throw new Error("Frontier interface endpoints must lie on an available layer inside their node")
     }
     const spacing = Math.max(0.25, this.viaDiameter + this.clearance)
     const nx = Math.max(2, Math.min(12, Math.ceil(node.width / spacing)))
     const ny = Math.max(2, Math.min(12, Math.ceil(node.height / spacing)))
     const xs = [...new Set([...endpoints.map((p) => p.x), ...Array.from({ length: nx + 1 }, (_, i) => bounds.minX + node.width * i / nx)])].sort((a, b) => a - b)
     const ys = [...new Set([...endpoints.map((p) => p.y), ...Array.from({ length: ny + 1 }, (_, i) => bounds.minY + node.height * i / ny)])].sort((a, b) => a - b)
-    const graph: OwnershipGraph = { vertices: [], adjacency: [] }
+    const graph: FrontierGraph = { vertices: [], adjacency: [] }
     const indices = new Map<string, number>()
     for (const z of layers) for (const y of ys) for (const x of xs) {
       indices.set(`${x}:${y}:${z}`, graph.vertices.length)
@@ -214,7 +214,7 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       owner: this.params.connMap?.getNetConnectedToId(start.rootConnectionName ?? start.connectionName) ?? start.rootConnectionName ?? start.connectionName,
       start: indices.get(`${start.x}:${start.y}:${start.z}`)!, end: indices.get(`${end.x}:${end.y}:${end.z}`)!,
     }))
-    this.engine = new SharedOwnershipGraphSolver({
+    this.engine = new FrontierRouteDomainSolver({
       graph, tasks, maxIterations: this.maxConnectivityIterations, counters: this.counters,
       ownerIndependentConflicts: {
         primitiveIds: new Set(this.primitives.flatMap((route, primitive) => route.vias.length > 0 ? [primitive] : [])),
@@ -240,7 +240,7 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       },
     })
     this.activeSubSolver = this.engine
-    this.counters.ownershipGraphPrimitiveCount = (this.counters.ownershipGraphPrimitiveCount ?? 0) + this.primitives.length
+    this.counters.frontierInterfacePrimitiveCount = (this.counters.frontierInterfacePrimitiveCount ?? 0) + this.primitives.length
   }
 
   private acceptGeometry(): void {
@@ -271,7 +271,7 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
       }
     })
     const traces = routes.map((route, index) => ({
-      type: "pcb_trace" as const, pcb_trace_id: `ownership_${index}`, connection_name: route.connectionName,
+      type: "pcb_trace" as const, pcb_trace_id: `frontier_${index}`, connection_name: route.connectionName,
       route: convertHdRouteToSimplifiedRoute(route, this.layerCount, { defaultViaHoleDiameter: this.viaHoleDiameter }),
     }))
     const circuitJson = convertToCircuitJson(this.validationSrj, traces)
@@ -287,25 +287,25 @@ export class OwnershipGraphIntraNodeSolver extends BaseSolver {
     }
     // A path label does not carry its own visited drill set. Check within-task
     // sites as well as cross-task sites before accepting any route witness.
-    this.counters.ownershipGraphFinalDrillIssueCount = (this.counters.ownershipGraphFinalDrillIssueCount ?? 0) + drillIssueCount
-    this.counters.ownershipGraphFinalValidationCount = (this.counters.ownershipGraphFinalValidationCount ?? 0) + 1
-    this.counters.ownershipGraphValidationIssueCount = (this.counters.ownershipGraphValidationIssueCount ?? 0) + errors.length + fixed.length + drillIssueCount
+    this.counters.frontierInterfaceFinalDrillIssueCount = (this.counters.frontierInterfaceFinalDrillIssueCount ?? 0) + drillIssueCount
+    this.counters.frontierInterfaceFinalValidationCount = (this.counters.frontierInterfaceFinalValidationCount ?? 0) + 1
+    this.counters.frontierInterfaceValidationIssueCount = (this.counters.frontierInterfaceValidationIssueCount ?? 0) + errors.length + fixed.length + drillIssueCount
     if (errors.length || fixed.length || drillIssueCount) {
       this.failed = true
-      this.error = `Ownership graph candidate fails board copper validation: ${errors[0]?.message ?? "fixed obstacle clearance violation"}`
+      this.error = `Frontier interface candidate fails board copper validation: ${errors[0]?.message ?? "fixed obstacle clearance violation"}`
       return
     }
     this.solvedRoutes = routes
     this.solved = true
     this.progress = 1
-    this.counters.ownershipGraphAcceptedCount = (this.counters.ownershipGraphAcceptedCount ?? 0) + 1
+    this.counters.frontierInterfaceAcceptedCount = (this.counters.frontierInterfaceAcceptedCount ?? 0) + 1
   }
 
   override _step(): void {
     if (!this.engine) this.initializeGraph()
     // Match the portfolio's batched grid kernels without changing the finite
     // search work cap. Counters and fitness use actual engine expansions.
-    for (let i = 0; i < 32 && !this.engine!.solved && !this.engine!.failed; i++) {
+    for (let i = 0; i < 64 && !this.engine!.solved && !this.engine!.failed; i++) {
       this.engine!.step()
     }
     this.progress = this.engine!.progress

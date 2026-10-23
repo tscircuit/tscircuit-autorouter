@@ -16,7 +16,7 @@ import {
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import type { OwnershipGraphStats } from "../HyperHighDensitySolver/SharedOwnershipGraphSolver"
+import type { FrontierStats } from "../HyperHighDensitySolver/FrontierRouteDomainSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -63,8 +63,8 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
-  enableOwnershipGraphSearch: boolean
-  ownershipGraphStats: OwnershipGraphStats
+  enableFrontierInterfaceSearch: boolean
+  frontierInterfaceStats: FrontierStats
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
@@ -107,8 +107,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
-    enableOwnershipGraphSearch = false,
-    ownershipGraphStats = {},
+    enableFrontierInterfaceSearch = false,
+    frontierInterfaceStats = {},
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
@@ -132,8 +132,8 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
-    enableOwnershipGraphSearch?: boolean
-    ownershipGraphStats?: OwnershipGraphStats
+    enableFrontierInterfaceSearch?: boolean
+    frontierInterfaceStats?: FrontierStats
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
@@ -164,8 +164,8 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
-    this.enableOwnershipGraphSearch = enableOwnershipGraphSearch
-    this.ownershipGraphStats = ownershipGraphStats
+    this.enableFrontierInterfaceSearch = enableFrontierInterfaceSearch
+    this.frontierInterfaceStats = frontierInterfaceStats
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
@@ -412,8 +412,8 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
-      enableOwnershipGraphSearch: this.enableOwnershipGraphSearch,
-      ownershipGraphStats: this.ownershipGraphStats,
+      enableFrontierInterfaceSearch: this.enableFrontierInterfaceSearch,
+      frontierInterfaceStats: this.frontierInterfaceStats,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
@@ -442,7 +442,7 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private updateCacheStats() {
-    Object.assign(this.stats, this.ownershipGraphStats)
+    Object.assign(this.stats, this.frontierInterfaceStats)
     const cacheProvider = getGlobalInMemoryCache()
     this.stats.intraNodeCacheHits = cacheProvider.cacheHits
     this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses

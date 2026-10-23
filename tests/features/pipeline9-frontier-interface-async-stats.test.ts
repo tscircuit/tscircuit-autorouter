@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver, type Pipeline9HighDensitySolverParams } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { createPipeline9TestRuntime } from "../fixtures/createPipeline9TestRuntime"
 
-test("async batches preserve new ownership counters across multiple activated graph candidates", async () => {
+test("async batches preserve new frontier counters across multiple activated graph candidates", async () => {
   const params: Pipeline9HighDensitySolverParams = {
     nodePortPoints: Array.from({ length: 5 }, (_, i) => ({
       capacityMeshNodeId: `cross-${i}`, center: { x: i * 8, y: 0 }, width: 6, height: 6, availableZ: [0, 1],
@@ -27,10 +27,10 @@ test("async batches preserve new ownership counters across multiple activated gr
   }
   expect(parallel.solved).toBe(true)
   expect(parallel.stats).toEqual(serial.stats)
-  expect(parallel.routes).toEqual(serial.routes)
-  expect(parallel.stats.ownershipGraphCandidateCount).toBe(5)
-  expect(parallel.stats.ownershipGraphCopperGeometryCheckCount).toBeGreaterThan(0)
+  expect(JSON.stringify(parallel.routes)).toBe(JSON.stringify(serial.routes))
+  expect(parallel.stats.frontierInterfaceCandidateCount).toBe(5)
+  expect(parallel.stats.frontierInterfaceCopperGeometryCheckCount).toBeGreaterThan(0)
   for (const [key, value] of Object.entries(parallel.stats)) {
-    if (key.startsWith("ownershipGraph")) expect(Number.isFinite(value)).toBe(true)
+    if (key.startsWith("frontierInterface")) expect(Number.isFinite(value)).toBe(true)
   }
 })

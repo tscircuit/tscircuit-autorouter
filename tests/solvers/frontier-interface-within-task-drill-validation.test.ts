@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { OwnershipGraphIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/OwnershipGraphIntraNodeSolver"
+import { FrontierIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/FrontierIntraNodeSolver"
 
 test("a within-task close drill pair is rejected by actual hole geometry without learning a cut", () => {
-  const candidate = new OwnershipGraphIntraNodeSolver({
+  const candidate = new FrontierIntraNodeSolver({
     nodeWithPortPoints: {
       capacityMeshNodeId: "two-vias", center: { x: 0, y: 0 }, width: 2, height: 2, availableZ: [0, 1],
       portPoints: [
@@ -17,11 +17,11 @@ test("a within-task close drill pair is rejected by actual hole geometry without
     graph.vertices.findIndex((point) => point.x === x && point.y === y && point.z === z))
   expect(vertices.every((vertex) => vertex >= 0)).toBe(true)
   candidate.engine!.paths = [{ vertices: vertices.slice(0, 4), primitives: [] }, { vertices: vertices.slice(4), primitives: [] }]
-  const before = structuredClone(candidate.engine!.learnedClauses)
+  const before = structuredClone(candidate.engine!.domains)
   ;(candidate as unknown as { acceptGeometry: () => void }).acceptGeometry()
   expect(candidate.failed).toBe(true)
   expect(candidate.solved).toBe(false)
-  expect(candidate.counters.ownershipGraphFinalDrillIssueCount).toBe(1)
-  expect(candidate.engine!.learnedClauses).toEqual(before)
+  expect(candidate.counters.frontierInterfaceFinalDrillIssueCount).toBe(1)
+  expect(candidate.engine!.domains).toEqual(before)
   expect(candidate.error).toContain("board copper validation")
 })
