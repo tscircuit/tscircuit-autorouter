@@ -1,3 +1,5 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { Pipeline9JointDrcRepairTailSolver } from "./Pipeline9JointDrcRepairTailSolver"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -76,6 +78,28 @@ type Pipeline9JointDrcRepairSolverParams = {
   effort: number
   colorMap: Record<string, string>
 }
+
+type DrcWorkCounters = {
+  referenceDrcValidationCount: number
+  referenceDrcFalseNegativeCount: number
+  indexedDrcEvaluationCount: number
+  indexedDrcCacheHitCount: number
+  indexedDrcEvaluationTimeMs: number
+}
+
+export type Pipeline9JointDrcRepairTailResult =
+  | { type: "cancelled" }
+  | { type: "failed"; error: string }
+  | {
+      type: "solved"
+      routes: HighDensityRoute[]
+      iterations: number
+      maxIterations: number
+      pipelineStepIndex: number
+      stats: Record<string, unknown>
+      work: DrcWorkCounters
+      visualization: GraphicsObject
+    }
 
 type MovablePreloadedSection = {
   originalTrace: SimplifiedPcbTrace
@@ -673,6 +697,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  private asyncRunning = false
+  private completedTailVisualization?: GraphicsObject
   currentPipelineStepIndex = 0
   private regionalB01Params?: ConstructorParameters<
     typeof Pipeline9RegionalB01RepairSolver
@@ -1614,6 +1640,197 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.MAX_ITERATIONS = this.activeSubSolver.MAX_ITERATIONS + 1
   }
 
+  private getDrcWorkCounters(): DrcWorkCounters {
+    return {
+      referenceDrcValidationCount: this.referenceDrcValidationCount,
+      referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+      indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
+      indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
+      indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
+    }
+  }
+
+  /** Worker entry: the incomplete bounded proposal never changes these inputs. */
+  static solveSpeculativeTail(
+    params: Pipeline9JointDrcRepairSolverParams,
+    cancellation: Int32Array,
+  ): Pipeline9JointDrcRepairTailResult {
+    if (Atomics.load(cancellation, 0) !== 0) return { type: "cancelled" }
+    if (
+      params.updatedPreloadedTraces.length ||
+      params.originalSrj.traces?.length
+    ) {
+      throw new Error(
+        "Speculative joint repair cannot replace preloaded copper",
+      )
+    }
+    const solver = new Pipeline9JointDrcRepairSolver(params)
+    if (solver.solved) return { type: "cancelled" }
+    const constructorStatKeys = new Set(Object.keys(solver.stats))
+    const initialWork = solver.getDrcWorkCounters()
+    solver.currentPipelineStepIndex = solver.pipelineDef.findIndex(
+      (phase): boolean => phase.solverName === "exactRepairSolver",
+    )
+    solver.activeSubSolver = null
+    solver.MAX_ITERATIONS = 0
+    while (!solver.solved && !solver.failed) {
+      if (
+        (solver.iterations & 127) === 0 &&
+        Atomics.load(cancellation, 0) !== 0
+      ) {
+        return { type: "cancelled" }
+      }
+      solver.step()
+    }
+    if (solver.failed) return { type: "failed", error: solver.error! }
+    const finalWork = solver.getDrcWorkCounters()
+    const work = Object.fromEntries(
+      Object.entries(finalWork).map(([key, value]) => [
+        key,
+        value - initialWork[key as keyof DrcWorkCounters],
+      ]),
+    ) as DrcWorkCounters
+    return {
+      type: "solved",
+      routes: solver.getCombinedOutput(),
+      iterations: solver.iterations,
+      maxIterations: solver.MAX_ITERATIONS,
+      pipelineStepIndex: solver.currentPipelineStepIndex,
+      stats: Object.fromEntries(
+        Object.entries(solver.stats).filter(
+          ([key]): boolean => !constructorStatKeys.has(key),
+        ),
+      ),
+      work,
+      visualization: solver.visualize(),
+    }
+  }
+
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning)
+      throw new Error("Joint repair solveAsync is already running")
+    if (this.solved || this.failed || this.iterations >= stopAtIteration) return
+    this.asyncRunning = true
+    const started = performance.now()
+    let lastYield = started
+    let cancellation: Int32Array | undefined
+    let pending:
+      | Promise<
+          | { type: "result"; result: Pipeline9JointDrcRepairTailResult }
+          | { type: "error"; error: unknown }
+        >
+      | undefined
+    try {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
+        if (
+          runtime &&
+          !pending &&
+          typeof SharedArrayBuffer !== "undefined" &&
+          this.getCurrentPhase() === "initialBoundedRegionalRepairSolver" &&
+          this.activeSubSolver?.iterations === 0 &&
+          this.params.updatedPreloadedTraces.length === 0 &&
+          !this.params.originalSrj.traces?.length
+        ) {
+          cancellation = new Int32Array(new SharedArrayBuffer(4))
+          const { connMap, ...params } = this.params
+          pending = runtime
+            .executeAsync(Pipeline9JointDrcRepairTailSolver, {
+              params: {
+                ...params,
+                newHdRoutes:
+                  this.clearanceProjectionSolver?.getOutput() ??
+                  params.newHdRoutes,
+              },
+              netMap: connMap.netMap,
+              cancellation,
+            })
+            .then(
+              (result) => ({ type: "result" as const, result }),
+              (error: unknown) => ({ type: "error" as const, error }),
+            )
+        }
+        this.step()
+        if (
+          pending &&
+          !this.solved &&
+          !this.failed &&
+          this.getCurrentPhase() === "exactRepairSolver" &&
+          !this.activeSubSolver
+        ) {
+          const outcome = await pending
+          if (outcome.type === "error") throw outcome.error
+          const result = outcome.result
+          if (result.type === "failed") throw new Error(result.error)
+          if (result.type === "cancelled")
+            throw new Error("Selected joint repair tail was cancelled")
+          if (
+            this.iterations + result.iterations <= stopAtIteration &&
+            Math.max(
+              this.MAX_ITERATIONS,
+              this.iterations + result.maxIterations,
+            ) >=
+              this.iterations + result.iterations
+          ) {
+            this.MAX_ITERATIONS = Math.max(
+              this.MAX_ITERATIONS,
+              this.iterations + result.maxIterations,
+            )
+            this.iterations += result.iterations
+            this.combinedOutput = result.routes
+            this.completedTailVisualization = result.visualization
+            this.currentPipelineStepIndex = result.pipelineStepIndex
+            this.referenceDrcValidationCount +=
+              result.work.referenceDrcValidationCount
+            this.referenceDrcFalseNegativeCount +=
+              result.work.referenceDrcFalseNegativeCount
+            this.indexedDrcEvaluationCount +=
+              result.work.indexedDrcEvaluationCount
+            this.indexedDrcCacheHitCount += result.work.indexedDrcCacheHitCount
+            this.indexedDrcEvaluationTimeMs +=
+              result.work.indexedDrcEvaluationTimeMs
+            this.stats = {
+              ...this.stats,
+              ...result.stats,
+              ...this.getDrcWorkCounters(),
+            }
+            this.solved = true
+            this.progress = this.computeProgress()
+          }
+          // A finite caller can resume the ordinary synchronous tail when the
+          // completed checkpoint would pass its requested stopping boundary.
+          pending = undefined
+        }
+        if (
+          (this.iterations & 127) === 0 &&
+          performance.now() - lastYield >= 16
+        ) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 0))
+          lastYield = performance.now()
+        }
+      }
+      if (pending) {
+        Atomics.store(cancellation!, 0, 1)
+        const outcome = await pending
+        if (outcome.type === "error") throw outcome.error
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Joint repair asynchronous solve error: ${error}`
+      throw error
+    } finally {
+      if (cancellation) Atomics.store(cancellation, 0, 1)
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - started
+    }
+  }
+
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
   }
@@ -2111,6 +2328,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    return this.exactRepairSolver?.visualize() ?? {}
+    return (
+      this.completedTailVisualization ??
+      this.exactRepairSolver?.visualize() ??
+      {}
+    )
   }
 }

@@ -3,4 +3,6 @@ import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/
 import "../../lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSampleSolver"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"
 
+import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairTailSolver"
+
 SolverRuntime.listen()
