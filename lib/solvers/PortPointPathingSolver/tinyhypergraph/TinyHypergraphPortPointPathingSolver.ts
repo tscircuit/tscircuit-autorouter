@@ -1426,25 +1426,31 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
     if (this.asyncRunning)
       throw new Error("Tiny port-point pathing solveAsync is already running")
     const start = performance.now()
     this.asyncRunning = true
     try {
-      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
         const phase = this.tinyPipelineSolver
         const remaining =
           Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations
-        if (
-          runtime &&
-          remaining >= phase.MAX_ITERATIONS - phase.iterations
-        ) {
+        if (runtime && remaining >= phase.MAX_ITERATIONS - phase.iterations) {
           const previous = phase.iterations
           await phase.solveAsync(runtime)
           this.iterations += Math.max(
             0,
-            phase.iterations - previous - (phase.solved || phase.failed ? 1 : 0),
+            phase.iterations -
+              previous -
+              (phase.solved || phase.failed ? 1 : 0),
           )
         }
         this.step()
