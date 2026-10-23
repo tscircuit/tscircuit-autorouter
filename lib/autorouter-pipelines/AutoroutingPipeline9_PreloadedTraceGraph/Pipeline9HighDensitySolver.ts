@@ -34,6 +34,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { getBoundaryFixedCopperKey, getBoundaryInterfaceKey, getBoundaryPhysicalRulesKey, type BoundaryRouteCertificates } from "./boundaryRouteCertificates"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -48,6 +49,10 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
+  traceToPadClearance?: number
+  traceToHoleClearance?: number
+  traceWidthByConnection?: Readonly<Record<string, number>>
+  boundaryCertificates?: BoundaryRouteCertificates
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -410,6 +415,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
+  private readonly boundaryContextValid: boolean
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -434,6 +440,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    this.boundaryContextValid = params.boundaryCertificates !== undefined &&
+      params.boundaryCertificates.context.rulesKey === getBoundaryPhysicalRulesKey(params) &&
+      params.boundaryCertificates.context.fixedCopperKey === getBoundaryFixedCopperKey(params.fixedHdRoutes)
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -451,6 +460,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
+      boundaryCertificateCount: Object.keys(params.boundaryCertificates?.cells ?? {}).length,
+      boundaryCertificateContextValid: Number(this.boundaryContextValid),
+      boundaryCertificateConsumed: 0,
+      boundaryCertificateInvalidated: 0,
+      boundaryCertificateSkippedSearches: 0,
+      boundaryCertificateSkippedRoutes: 0,
     }
   }
 
@@ -491,11 +506,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
+        const batchNodes = nodes.slice(offset, offset + 4).reverse()
+        const boundaryCertificates = params.boundaryCertificates ? {
+          context: params.boundaryCertificates.context,
+          cells: Object.fromEntries(batchNodes.flatMap((node) => {
+            const certificate = params.boundaryCertificates!.cells[node.capacityMeshNodeId]
+            return certificate ? [[node.capacityMeshNodeId, certificate]] : []
+          })),
+        } : undefined
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
-              nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
+              nodePortPoints: batchNodes,
+              boundaryCertificates,
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
             })
@@ -522,7 +546,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount")
+          if (key !== "nodeCount" && key !== "fixedObstacleCount" && key !== "boundaryCertificateCount" && key !== "boundaryCertificateContextValid")
             this.stats[key] += value
         }
         this.unsolvedNodePortPoints.splice(
@@ -1094,6 +1118,23 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (!node) {
       this.solved = true
       return
+    }
+
+    const certificate = this.params.boundaryCertificates?.cells[node.capacityMeshNodeId]
+    if (certificate) {
+      // Regional preload repair changes the proof's fixed-copper assumptions.
+      // Test validity before choosing any ordinary/B01 solver for this node.
+      if (this.boundaryContextValid && this.fixedRouteReplacements.size === 0 && this.removedFixedRouteConnectionNames.size === 0 &&
+        certificate.interfaceKey === getBoundaryInterfaceKey(node, this.connMap)) {
+        if (certificate.routeKey !== JSON.stringify(certificate.routes)) throw new Error(`Boundary certificate route geometry was mutated for ${node.capacityMeshNodeId}`)
+        this.activeNode = node
+        this.stats.boundaryCertificateConsumed++
+        this.stats.boundaryCertificateSkippedSearches++
+        this.stats.boundaryCertificateSkippedRoutes += certificate.routes.length
+        this.finishActiveNode(structuredClone(certificate.routes))
+        return
+      }
+      this.stats.boundaryCertificateInvalidated++
     }
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)

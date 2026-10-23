@@ -3,6 +3,7 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { Pipeline9TraceSimplificationSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9TraceSimplificationSolver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
   type: "json",
@@ -143,8 +144,9 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",
   )
   expect(mutatedPreloadSimplificationStep?.solverClass).toBe(
-    TraceSimplificationSolver,
+    Pipeline9TraceSimplificationSolver,
   )
+  expect(Pipeline9TraceSimplificationSolver.prototype).toBeInstanceOf(TraceSimplificationSolver)
   expect(
     pipeline9StageNames.indexOf("mutatedPreloadedTraceSimplificationSolver"),
   ).toBe(pipeline9StageNames.indexOf("traceSimplificationSolver") + 1)

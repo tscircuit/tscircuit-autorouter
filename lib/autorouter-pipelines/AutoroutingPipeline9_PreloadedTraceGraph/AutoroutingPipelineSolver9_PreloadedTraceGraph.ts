@@ -67,7 +67,7 @@ import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPo
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
-import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
+import { Pipeline9TraceSimplificationSolver as TraceSimplificationSolver } from "./Pipeline9TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -91,7 +91,8 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { Pipeline9BoundaryContractSolver } from "./Pipeline9BoundaryContractSolver"
+import { Pipeline9CertifiedBoundarySolver } from "./Pipeline9CertifiedBoundarySolver"
+import type { BoundaryPhysicalRules } from "./boundaryRouteCertificates"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -279,7 +280,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
-  boundaryContractSolver?: Pipeline9BoundaryContractSolver
+  boundaryContractSolver?: Pipeline9CertifiedBoundarySolver
   traceWidthSolver?: TraceWidthSolver
   necessaryCrampedPortPointSolver?: MultiTargetNecessaryCrampedPortPointSolver
   preloadedTraceGraphSolver?: PreloadedTraceGraphSolver
@@ -587,7 +588,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "boundaryContractSolver",
-      Pipeline9BoundaryContractSolver,
+      Pipeline9CertifiedBoundarySolver,
       (cms) => [{
         distribution: cms.uniformPortDistributionSolver!,
         inputNodesWithPortPoints: cms.portPointPathingSolver!.getOutput().inputNodeWithPortPoints,
@@ -596,6 +597,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         traceWidth: Math.max(cms.minTraceWidth, ...cms.srj.connections.map((c) => c.nominalTraceWidth ?? cms.minTraceWidth)),
         clearance: cms.srj.defaultObstacleMargin ?? 0.15,
         hasPreloadedCopper: Boolean(cms.originalSrj.traces?.length),
+        connMap: cms.connMap,
+        rules: cms.getBoundaryPhysicalRules(),
+        fixedHdRoutes: cms.getBoundaryFixedHdRoutes(),
+        immutableConnectionNames: new Set(cms.getChangedPreloadedTraceSections().map((section) => section.connection.name)),
       }],
     ),
     definePipelineStep(
@@ -611,24 +616,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const nodePortPointsSource = cms.boundaryContractSolver!.getOutput()
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
-        const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
-          (trace, traceIndex) =>
-            convertPreloadedTraceToHdRoutes(
-              trace,
-              traceIndex,
-              cms.originalSrj.layerCount,
-              cms.viaDiameter,
-              cms.connMap,
-            ),
-        )
-        const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
-          traces: cms.originalSrj.traces ?? [],
-          fixedHdRoutes: originalFixedHdRoutes,
-          sections: cms.getChangedPreloadedTraceSections(),
-        })
+        const fixedHdRoutes = cms.getBoundaryFixedHdRoutes()
 
         return [
           {
+            ...cms.getBoundaryPhysicalRules(),
+            boundaryCertificates: cms.boundaryContractSolver!.certificates,
             nodePortPoints: nodePortPointsSource,
             boardGeometry: {
               bounds: cms.originalSrj.bounds,
@@ -708,6 +701,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          useDeclaredConnectionEndpoints: true,
         },
       ],
     ),
@@ -1514,6 +1508,29 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
+  }
+
+  private getBoundaryPhysicalRules(): BoundaryPhysicalRules {
+    return {
+      obstacles: this.srj.obstacles,
+      boardGeometry: { bounds: this.originalSrj.bounds, outline: this.originalSrj.outline, minBoardEdgeClearance: this.originalSrj.minBoardEdgeClearance },
+      layerCount: this.srj.layerCount, traceWidth: this.minTraceWidth, viaDiameter: this.viaDiameter,
+      traceWidthByConnection: Object.fromEntries([...this.srjWithPointPairs!.connections, ...this.getChangedPreloadedTraceSections().map((section) => section.connection)]
+        .map((connection) => [connection.name, Math.max(this.minTraceWidth, connection.nominalTraceWidth ?? this.minTraceWidth)])),
+      obstacleMargin: this.srj.defaultObstacleMargin ?? 0.15,
+      viaToPadClearance: this.srj.minViaEdgeToPadEdgeClearance,
+      traceToPadClearance: this.srj.minTraceToPadEdgeClearance,
+      traceToHoleClearance: this.srj.minTraceToHoleEdgeClearance,
+      allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+    }
+  }
+
+  private getBoundaryFixedHdRoutes(): PreloadedHighDensityRoute[] {
+    const fixedHdRoutes = this.getOriginalFixedHdRoutes()
+    return removeChangedSectionsFromFixedHdRoutes({
+      traces: this.originalSrj.traces ?? [], fixedHdRoutes,
+      sections: this.getChangedPreloadedTraceSections(),
+    })
   }
 
   private getOriginalFixedHdRoutes(): PreloadedHighDensityRoute[] {

@@ -69,7 +69,7 @@ export function allocateBoundaryLanes(
   return positions
 }
 
-type Input = {
+export type BoundaryContractInput = {
   distribution: UniformPortDistributionSolver
   obstacles: Obstacle[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
@@ -77,21 +77,33 @@ type Input = {
   traceWidth: number
   clearance: number
   hasPreloadedCopper: boolean
+  immutablePortIds?: ReadonlySet<string>
+  immutablePortPositions?: ReadonlyMap<string, { x: number; y: number }>
 }
 
 /** A constructive boundary contract, not a claim of whole-cell routability. */
 export class Pipeline9BoundaryContractSolver extends BaseSolver {
   readonly contracts: BoundaryLaneContract[] = []
-  private readonly nodes: NodeWithPortPoints[]
+  protected readonly nodes: NodeWithPortPoints[]
   private readonly edges: SharedEdge[]
   private readonly actualPorts: Map<string, PortPoint>
   private readonly fixedPortIds = new Set<string>()
   private readonly portIdsByEdge = new Map<string, Set<string>>()
   private readonly positions = new Map<string, { x: number; y: number }>()
 
-  constructor(private readonly input: Input) {
+  constructor(private readonly input: BoundaryContractInput) {
     super()
     this.nodes = structuredClone(input.distribution.getOutput())
+    if (input.immutablePortPositions) {
+      for (const node of this.nodes) {
+        const update = (point: PortPoint): PortPoint => {
+          const position = point.portPointId ? input.immutablePortPositions!.get(point.portPointId) : undefined
+          return position ? { ...point, ...position } : point
+        }
+        node.portPoints = node.portPoints.map(update)
+        node.portPointsInPairs = node.portPointsInPairs?.map(([a, b]) => [update(a), update(b)])
+      }
+    }
     if (!Number.isFinite(input.traceWidth) || !(input.traceWidth > 0) || !Number.isFinite(input.clearance) || input.clearance < 0 || !Number.isInteger(input.layerCount) || input.layerCount < 1) throw new Error("Boundary contract requires finite positive width, nonnegative clearance and valid layer count")
     for (const node of this.nodes) {
       if (![node.center.x, node.center.y, node.width, node.height].every(Number.isFinite) || node.width <= 0 || node.height <= 0 || node.portPoints.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isInteger(p.z) || p.z < 0 || p.z >= input.layerCount)) throw new Error(`Boundary contract has invalid node geometry: ${node.capacityMeshNodeId}`)
@@ -101,6 +113,7 @@ export class Pipeline9BoundaryContractSolver extends BaseSolver {
       if (![obstacle.center.x, obstacle.center.y, obstacle.width, obstacle.height, obstacle.ccwRotationDegrees ?? 0].every(Number.isFinite) || obstacle.width < 0 || obstacle.height < 0 || zs.some((z) => !Number.isInteger(z) || z < 0 || z >= input.layerCount)) throw new Error("Boundary contract has invalid obstacle geometry")
     }
     this.actualPorts = new Map(this.nodes.flatMap((n) => n.portPoints.flatMap((p) => p.portPointId ? [[p.portPointId, p] as const] : [])))
+    for (const id of input.immutablePortIds ?? []) this.fixedPortIds.add(id)
     const targetNodeIds = new Set(input.inputNodesWithPortPoints.filter((n) => n._containsTarget).map((n) => n.capacityMeshNodeId))
     for (const node of input.inputNodesWithPortPoints) {
       for (const port of node.portPoints) {
