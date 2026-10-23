@@ -59,5 +59,4 @@ test("Pipeline9 enables parallel native search for fresh unconstrained boards", 
         ParallelSelectiveReripTinyHyperGraphSolver,
     ).toBe(true)
   }
-
 })
