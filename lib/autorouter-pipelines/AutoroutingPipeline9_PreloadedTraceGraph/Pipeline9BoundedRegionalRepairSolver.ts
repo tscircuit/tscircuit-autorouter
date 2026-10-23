@@ -346,10 +346,16 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const currentRoutes = canonicalizePipeline9HdRoutes(context.currentRoutes)
     const regional: RegionalContext = {
       ...context,
-      // Coupled conflicts need room for negotiated detours. Prefer compact
-      // regions after projection has reduced the remaining error set.
+      // Coupled conflicts need room for negotiated detours. Keep compact
+      // regions first when a broad square would exceed the board's width
+      // or height and include unnecessary fixed geometry.
       regionSizes:
-        context.currentErrors.length > 10
+        context.currentErrors.length > 10 &&
+        Math.max(...context.regionSizes) <=
+          Math.min(
+            srj.bounds.maxX - srj.bounds.minX,
+            srj.bounds.maxY - srj.bounds.minY,
+          )
           ? [...context.regionSizes].sort((a, b) => b - a)
           : context.regionSizes,
       srj,
@@ -576,42 +582,44 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       this.state = { phase: "select-region", context }
       return
     }
-    // A negotiated route that already improves the reference DRC does not
-    // need another full-board projection before the next regional search.
-    const candidateReference = this.params.drcEvaluator({
-      traces: [],
-      routes: negotiatedRoutes,
-      hdRoutes: negotiatedRoutes,
-    })
-    this.result.referenceValidationCount++
-    const candidateErrors = Array.isArray(candidateReference)
-      ? candidateReference
-      : candidateReference.errors
-    if (candidateErrors.length < context.currentErrors.length) {
-      const candidateFixedViolations = getFixedObstacleViolations({
-        srj: context.srj,
+    // A local improvement needs no further full-board projection once all
+    // reference and physical checks pass. Keep coupled projection for dense sets.
+    if (context.currentErrors.length <= 10) {
+      const candidateReference = this.params.drcEvaluator({
+        traces: [],
         routes: negotiatedRoutes,
+        hdRoutes: negotiatedRoutes,
       })
-      if (
-        candidateFixedViolations.every(
-          ({ key, severity }): boolean =>
-            context.fixedViolations.has(key) &&
-            severity <= context.fixedViolations.get(key)! + 1e-8,
-        ) &&
-        getNewViaPadViolations({
+      this.result.referenceValidationCount++
+      const candidateErrors = Array.isArray(candidateReference)
+        ? candidateReference
+        : candidateReference.errors
+      if (candidateErrors.length < context.currentErrors.length) {
+        const candidateFixedViolations = getFixedObstacleViolations({
           srj: context.srj,
-          previousRoutes: context.currentRoutes,
           routes: negotiatedRoutes,
-        }).length === 0
-      ) {
-        this.state = {
-          phase: "accept-candidate",
-          context,
-          candidateRoutes: negotiatedRoutes,
-          candidateReference,
-          candidateFixedViolations,
+        })
+        if (
+          candidateFixedViolations.every(
+            ({ key, severity }): boolean =>
+              context.fixedViolations.has(key) &&
+              severity <= context.fixedViolations.get(key)! + 1e-8,
+          ) &&
+          getNewViaPadViolations({
+            srj: context.srj,
+            previousRoutes: context.currentRoutes,
+            routes: negotiatedRoutes,
+          }).length === 0
+        ) {
+          this.state = {
+            phase: "accept-candidate",
+            context,
+            candidateRoutes: negotiatedRoutes,
+            candidateReference,
+            candidateFixedViolations,
+          }
+          return
         }
-        return
       }
     }
     const solver = new Pipeline9ClearanceProjectionSolver({
