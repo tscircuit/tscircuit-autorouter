@@ -35,7 +35,6 @@ import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
-import { annotatePipeline9PhysicalCuts, createPhysicalCutTracker, type PhysicalCutTracker } from "./pipeline9PhysicalCutResources"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -1050,7 +1049,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
-  private physicalCutTracker?: PhysicalCutTracker
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
@@ -1071,11 +1069,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
       ]),
     )
-    const rawSerializedGraph = buildSerializedTinyGraph({ ...params, connections })
-    this.physicalCutTracker = params.physicalCutResourceRules ? createPhysicalCutTracker() : undefined
-    const serializedGraph = params.physicalCutResourceRules && this.physicalCutTracker
-      ? annotatePipeline9PhysicalCuts(rawSerializedGraph, params.physicalCutResourceRules, this.physicalCutTracker)
-      : rawSerializedGraph
+    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1129,7 +1123,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
-    if (params.physicalCutResourceRules && this.physicalCutTracker) graphForTiny = annotatePipeline9PhysicalCuts(graphForTiny, params.physicalCutResourceRules, this.physicalCutTracker)
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -1515,7 +1508,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       )
     const currentTinySolver = this.getCurrentTinySolver()
     this.statsSnapshot = {
-      ...(this.physicalCutTracker?.stats ?? {}),
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount: this.duplicatedPortCount,

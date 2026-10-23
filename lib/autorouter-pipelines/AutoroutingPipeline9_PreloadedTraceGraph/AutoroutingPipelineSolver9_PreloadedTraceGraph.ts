@@ -68,7 +68,6 @@ import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitch
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
@@ -536,7 +535,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
-            physicalCutResourceRules: { minTraceWidth: cms.minTraceWidth, clearance: cms.srj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance! },
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
