@@ -45,6 +45,7 @@ type ReferencedContext = InitialContext & {
 }
 
 type RegionalContext = ReferencedContext & {
+  allowLocalRepairs: boolean
   srj: SimpleRouteJson & { traces: undefined }
   obstacleCenterById: Map<string, { x: number; y: number }>
   attemptedRegions: Array<{ bounds: Bounds; size: number }>
@@ -345,11 +346,20 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     const currentRoutes = canonicalizePipeline9HdRoutes(context.currentRoutes)
     const localRegionSize = this.budget.localRegionSize
+    // Trace-to-board conflicts need the established coupled detours around
+    // the fixed boundary, even when only a few errors remain.
+    const allowLocalRepairs = !context.currentErrors.some(
+      (error): boolean =>
+        typeof error.pcb_trace_error_id === "string" &&
+        error.pcb_trace_error_id.startsWith("trace_too_close_to_board_"),
+    )
     const regional: RegionalContext = {
       ...context,
+      allowLocalRepairs,
       // Add a compact first choice only for local errors, preserving the
       // configured region order for coupled conflicts and custom budgets.
       regionSizes:
+        allowLocalRepairs &&
         context.currentErrors.length <= 10 &&
         localRegionSize !== undefined &&
         localRegionSize > 2 * context.boundaryMargin
@@ -584,7 +594,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     // A local improvement needs no further full-board projection once all
     // reference and physical checks pass. Keep coupled projection for dense sets.
-    if (context.currentErrors.length <= 10) {
+    if (context.allowLocalRepairs && context.currentErrors.length <= 10) {
       const candidateReference = this.params.drcEvaluator({
         traces: [],
         routes: negotiatedRoutes,
