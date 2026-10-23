@@ -40,6 +40,11 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import { ElectricalTreeTinyHyperGraphSolver } from "./ElectricalTreeTinyHyperGraphSolver"
 import {
+  createElectricalTreeTerminalWitnesses,
+  type ElectricalTreeTerminalWitness,
+} from "./createElectricalTreeTerminalWitnesses"
+import { resolveElectricalTreeTerminalRole } from "./resolveElectricalTreeTerminalRole"
+import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
@@ -1058,6 +1063,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
+  private readonly originalTreeTerminals: Map<string, ElectricalTreeTerminalWitness>
+  private readonly originalTreePcbPortsByConnectionId = new Map<string, string[]>()
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
@@ -1079,6 +1086,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    this.originalTreeTerminals = params.flags.USE_ELECTRICAL_TREE_TARGETS
+      ? createElectricalTreeTerminalWitnesses(serializedGraph, params.layerCount)
+      : new Map()
+    for (const witness of this.originalTreeTerminals.values()) {
+      const pcbPorts = this.originalTreePcbPortsByConnectionId.get(witness.connectionId) ?? []
+      pcbPorts.push(witness.pcbPortId)
+      this.originalTreePcbPortsByConnectionId.set(witness.connectionId, pcbPorts)
+    }
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1610,22 +1625,47 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const serializedPortId = String(
+      portMetadata?.serializedPortId ?? portMetadata?.portId ?? `tiny-port-${portId}`,
+    )
+    let pcbPortId = this.params.preserveTerminalPcbPortIds &&
+      typeof portMetadata?.pcb_port_id === "string"
+      ? portMetadata.pcb_port_id
+      : undefined
+    if (pcbPortId !== undefined && this.params.flags.USE_ELECTRICAL_TREE_TARGETS) {
+      if (!routeMetadata) {
+        throw new Error(`Electrical tree lost route ${routeId}'s terminal metadata`)
+      }
+      const originalPortId = typeof portMetadata?.duplicatedFromPortId === "string"
+        ? portMetadata.duplicatedFromPortId
+        : serializedPortId
+      const role = resolveElectricalTreeTerminalRole({
+        connectionId: routeMetadata.connectionId,
+        netId: routeMetadata.mutuallyConnectedNetworkId,
+        expectedPcbPortIds: this.originalTreePcbPortsByConnectionId
+          .get(routeMetadata.connectionId) ?? [],
+        pcbPortId,
+        position: {
+          x: solvedTinySolver.topology.portX[portId]!,
+          y: solvedTinySolver.topology.portY[portId]!,
+          z: solvedTinySolver.topology.portZ[portId]!,
+        },
+        witness: this.originalTreeTerminals.get(originalPortId),
+        preloaded: hasPreloadedTraceSectionMetadata(routeMetadata),
+      })
+      // The pair's endpoint tags retain their locking role. A certified pad
+      // crossed inside its owned copper path remains an ordinary junction.
+      if (role === "junction") pcbPortId = undefined
+    }
 
     return {
-      portPointId: String(
-        portMetadata?.serializedPortId ??
-          portMetadata?.portId ??
-          `tiny-port-${portId}`,
-      ),
+      portPointId: serializedPortId,
       x: solvedTinySolver.topology.portX[portId],
       y: solvedTinySolver.topology.portY[portId],
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
-      ...(this.params.preserveTerminalPcbPortIds &&
-      typeof portMetadata?.pcb_port_id === "string"
-        ? { pcb_port_id: portMetadata.pcb_port_id }
-        : {}),
+      ...(pcbPortId !== undefined ? { pcb_port_id: pcbPortId } : {}),
       prevPortPointId:
         typeof portMetadata?.prevPortPointId === "string"
           ? portMetadata.prevPortPointId
