@@ -8,7 +8,7 @@ import {
   type NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import { NegotiateTraceClearanceSolver } from "./clearance/NegotiateTraceClearanceSolver"
-import { mergeClearanceCorridorStats } from "./clearance/createClearanceCorridorSearch"
+import { ClearanceSearchTaskWorklist } from "./clearance/ClearanceSearchTaskWorklist"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -139,17 +139,16 @@ const REGION_SIZES = [10, 16] as const
 export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   readonly params: Pipeline9BoundedRegionalRepairParams
   readonly budget: Pipeline9BoundedRepairBudget
+  readonly searchTaskWorklist: ClearanceSearchTaskWorklist
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
-  private corridorSearchCalls = 0
-  private corridorEdgeChecks = 0
-  private readonly corridorWorkStats: Record<string, unknown> = {}
-  private gridSearchCalls = 0
+  private readonly clearanceWorkStats: Record<string, number> = { copperGeometryBuildCount: 0, copperGeometryReuseCount: 0 }
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
     this.params = params
+    this.searchTaskWorklist = params.searchTaskWorklist ?? new ClearanceSearchTaskWorklist()
     this.budget = params.budget ?? PIPELINE9_BOUNDED_REPAIR_BUDGET
     this.result = {
       routes: params.routes,
@@ -182,14 +181,10 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       typeof negotiation?.stats.pathSearchNodes === "number"
         ? negotiation.stats.pathSearchNodes
         : 0
-    const liveCorridorStats = { ...this.corridorWorkStats }
-    if (negotiation) mergeClearanceCorridorStats(liveCorridorStats, negotiation.stats)
     this.stats = {
       ...this.result,
-      ...liveCorridorStats,
-      corridorEdgeChecks: this.corridorEdgeChecks + (negotiation?.stats.corridorEdgeChecks ?? 0),
-      corridorSearchCalls: this.corridorSearchCalls + (negotiation?.stats.corridorSearchCalls ?? 0),
-      gridSearchCalls: this.gridSearchCalls + (negotiation?.stats.gridSearchCalls ?? 0),
+      ...this.clearanceWorkStats,
+      ...this.searchTaskWorklist.getStats(),
       routes: undefined,
       phase: this.state.phase,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
@@ -517,6 +512,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
+      searchTaskWorklist: this.searchTaskWorklist,
     })
     this.state = {
       phase: "negotiate",
@@ -530,10 +526,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "negotiate" }>,
   ): void {
     const repair = state.solver.getOutput()
-    this.corridorEdgeChecks += state.solver.stats.corridorEdgeChecks
-    mergeClearanceCorridorStats(this.corridorWorkStats, state.solver.stats)
-    this.corridorSearchCalls += state.solver.stats.corridorSearchCalls
-    this.gridSearchCalls += state.solver.stats.gridSearchCalls
+    for (const key of Object.keys(this.clearanceWorkStats)) this.clearanceWorkStats[key] += state.solver.stats[key]
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
     if (

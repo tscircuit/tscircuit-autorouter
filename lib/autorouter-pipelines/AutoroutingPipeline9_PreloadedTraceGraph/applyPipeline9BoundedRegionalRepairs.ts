@@ -2,6 +2,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { ClearanceSearchTaskWorklist } from "./clearance/ClearanceSearchTaskWorklist"
 
 export type Pipeline9BoundedRegionalRepairResult = {
   routes: HighDensityRoute[]
@@ -81,6 +82,7 @@ export type Pipeline9BoundedRegionalRepairParams = {
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
   budget?: Pipeline9BoundedRepairBudget
+  searchTaskWorklist?: ClearanceSearchTaskWorklist
 }
 
 type RepairAllowance = {
