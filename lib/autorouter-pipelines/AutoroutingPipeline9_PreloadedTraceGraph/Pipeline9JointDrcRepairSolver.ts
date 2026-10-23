@@ -1978,9 +1978,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       candidates = [
         initialRepair.getResult().routes,
-        initialRepair.getRoutesForFurtherRepair(),
+        initialRepair.getBestCandidateRoutes(),
         this.exactRepairSolver.getOutput(),
-        this.boundedRegionalRepairSolver.getRoutesForFurtherRepair(),
+        this.boundedRegionalRepairSolver.getBestCandidateRoutes(),
       ]
     }
     const retainedProgress = selectPipeline9RepairProgress({

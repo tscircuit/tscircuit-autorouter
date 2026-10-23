@@ -6,6 +6,10 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
+type FixedObstacleViolationKey = ReturnType<
+  typeof getFixedObstacleViolations
+>[number]["key"]
+
 const PHYSICAL_CLEARANCE_TOLERANCE_MM = 1e-8
 
 /** Retains DRC improvements while guarding fixed obstacles and via-pad contacts. */
@@ -21,7 +25,7 @@ export const selectPipeline9RepairProgress = ({
   drcEvaluator: DrcEvaluator
 }): { routes: HighDensityRoute[]; drcIssueCount: number } => {
   const srj = { ...originalSrj, traces: undefined }
-  const fixedViolations = new Map(
+  const fixedViolations = new Map<FixedObstacleViolationKey, number>(
     getFixedObstacleViolations({ srj, routes: originalRoutes }).map(
       ({ key, severity }) => [key, severity],
     ),
