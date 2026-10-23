@@ -1,3 +1,4 @@
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -1029,6 +1030,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  private asyncRunning = false
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1421,6 +1423,39 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solveGraphStats.outsideInForwardExpansionCount,
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
+    }
+  }
+
+  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    if (this.asyncRunning)
+      throw new Error("Tiny port-point pathing solveAsync is already running")
+    const start = performance.now()
+    this.asyncRunning = true
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const phase = this.tinyPipelineSolver
+        const remaining =
+          Math.min(this.MAX_ITERATIONS, stopAtIteration) - this.iterations
+        if (
+          runtime &&
+          remaining >= phase.MAX_ITERATIONS - phase.iterations
+        ) {
+          const previous = phase.iterations
+          await phase.solveAsync(runtime)
+          this.iterations += Math.max(
+            0,
+            phase.iterations - previous - (phase.solved || phase.failed ? 1 : 0),
+          )
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Tiny port-point pathing asynchronous solve error: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+      this.timeToSolve = performance.now() - start
     }
   }
 

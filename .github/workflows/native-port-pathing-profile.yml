@@ -37,13 +37,13 @@ jobs:
       - name: Capture current Pipeline9 sample14 input
         working-directory: candidate
         run: bun scripts/benchmark/capture-native-port-pathing.ts 14 native-port-pathing.json
-      - name: Compare isolated native searches in ABBA order
+      - name: Compare four-worker searches and verify serial parity
         working-directory: candidate
         run: |
-          bun node_modules/tiny-hypergraph/scripts/benchmarking/native-port-point-pathing.ts \
+          bun node_modules/tiny-hypergraph/scripts/benchmarking/native-port-point-portfolio.ts \
             --input native-port-pathing.json \
             --reference ../reference/node_modules/tiny-hypergraph \
-            --repeat 2 | tee native-port-pathing-results.jsonl
+            --threads 4 --repeat 2 | tee native-port-pathing-results.jsonl
       - uses: actions/upload-artifact@v4
         if: always()
         with:
