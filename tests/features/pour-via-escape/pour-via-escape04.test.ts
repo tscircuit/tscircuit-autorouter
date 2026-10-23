@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
+import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape04.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -33,7 +33,5 @@ test("pour-via-escape04.json", () => {
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
 })
