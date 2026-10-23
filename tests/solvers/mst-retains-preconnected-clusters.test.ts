@@ -23,9 +23,11 @@ test("honor preconnections and coincident terminals", (): void => {
   })
 
   expect(edges).toHaveLength(points.length - 2)
-  expect(edges[0]).toBe(preconnection)
-  expect(edges.filter((edge) => edge.weight > 1)).toHaveLength(1)
-  expect(edges.at(-1)!.weight).toBe(99)
+  expect(edges).toContain(preconnection)
+  expect(
+    edges.filter((edge): boolean => edge.weight > 1).map((edge): number => edge.weight),
+  ).toEqual([99])
+  expect(edges.reduce((sum, edge): number => sum + edge.weight, 0)).toBeCloseTo(102)
   expect(edges.every((edge) => points.includes(edge.from))).toBe(true)
   expect(edges.every((edge) => points.includes(edge.to))).toBe(true)
 })
