@@ -179,6 +179,7 @@ class KDTree {
 export class DisjointSet {
   private parent: Map<string, string> = new Map()
   private rank: Map<string, number> = new Map()
+  componentCount: number
 
   constructor(points: Point[]) {
     // Initialize each point as a separate set
@@ -187,6 +188,7 @@ export class DisjointSet {
       this.parent.set(key, key)
       this.rank.set(key, 0)
     }
+    this.componentCount = this.parent.size
   }
 
   private pointToKey(point: Point): string {
@@ -236,6 +238,7 @@ export class DisjointSet {
       this.rank.set(rootA, rankA + 1)
     }
 
+    this.componentCount -= 1
     return true
   }
 }
@@ -268,51 +271,57 @@ export function buildMinimumSpanningTree<T extends Point>(
 
   // Generate edges with k-nearest neighbors for each point
   // This is an optimization to avoid generating all possible n(n-1)/2 edges
-  const edges: Edge<T>[] = []
-  const k = Math.min(10, points.length - 1) // Consider k nearest neighbors
+  let k = Math.min(10, points.length - 1)
 
-  for (const point of pointsCopy) {
-    const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
+  // The neighbor limit must not turn a spanning tree into disconnected groups.
+  while (true) {
+    const edges: Edge<T>[] = []
+    for (const point of pointsCopy) {
+      const neighbors = kdTree.findKNearestNeighbors(point, k + 1) // +1 because it includes the point itself
 
-    for (const neighbor of neighbors) {
-      // Skip self
-      if (point.x === neighbor.x && point.y === neighbor.y) {
-        continue
-      }
+      for (const neighbor of neighbors) {
+        // Skip self
+        if (point.x === neighbor.x && point.y === neighbor.y) {
+          continue
+        }
 
-      const distance = Math.sqrt(
-        (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
-      )
+        const distance = Math.sqrt(
+          (point.x - neighbor.x) ** 2 + (point.y - neighbor.y) ** 2,
+        )
 
-      edges.push({
-        from: point,
-        to: neighbor as T,
-        weight: distance,
-      })
-    }
-  }
-
-  if (opts.extraEdges) {
-    edges.push(...opts.extraEdges)
-  }
-
-  // Sort edges by weight (distance)
-  edges.sort((a, b) => a.weight - b.weight)
-
-  // Apply Kruskal's algorithm
-  const disjointSet = new DisjointSet(pointsCopy)
-  const mstEdges: Edge<T>[] = []
-
-  for (const edge of edges) {
-    if (disjointSet.union(edge.from, edge.to)) {
-      mstEdges.push(edge)
-
-      // MST has n-1 edges for n points
-      if (mstEdges.length === pointsCopy.length - 1) {
-        break
+        edges.push({
+          from: point,
+          to: neighbor as T,
+          weight: distance,
+        })
       }
     }
-  }
 
-  return mstEdges
+    if (opts.extraEdges) {
+      edges.push(...opts.extraEdges)
+    }
+
+    // Sort edges by weight (distance)
+    edges.sort((a, b) => a.weight - b.weight)
+
+    // Apply Kruskal's algorithm
+    const disjointSet = new DisjointSet(pointsCopy)
+    const mstEdges: Edge<T>[] = []
+
+    for (const edge of edges) {
+      if (disjointSet.union(edge.from, edge.to)) {
+        mstEdges.push(edge)
+
+        // MST has n-1 edges for n points
+        if (mstEdges.length === pointsCopy.length - 1) {
+          break
+        }
+      }
+    }
+
+    if (disjointSet.componentCount === 1) {
+      return mstEdges
+    }
+    k = Math.min(k * 2, points.length - 1)
+  }
 }
