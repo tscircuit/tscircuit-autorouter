@@ -489,21 +489,56 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
       const { connMap, nodePortPoints: _, ...params } = this.params
-      const pending = []
-      for (let offset = 0; offset < nodes.length; offset += 4) {
-        pending.push(
-          runtime
-            .executeAsync(Pipeline9HighDensityBatchSolver, {
-              ...params,
-              nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
-              connectivityNetMap: connMap.netMap,
-              maxIterations: this.MAX_ITERATIONS,
-            })
-            .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
+      // Keep the expensive board context to a bounded number of messages.
+      // Assign crowded nodes first so a difficult node does not start only
+      // after hundreds of inexpensive nodes have passed through the pool.
+      const batches = Array.from(
+        { length: Math.min(16, nodes.length) },
+        () => ({
+          work: 0,
+          nodes: [] as { node: NodeWithPortPoints; index: number }[],
+        }),
+      )
+      const plannedNodes = nodes
+        .map((node, index) => ({ node, index }))
+        .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
+      for (const entry of plannedNodes) {
+        const batch = batches.reduce((best, candidate) =>
+          candidate.work < best.work ? candidate : best,
         )
+        batch.nodes.push(entry)
+        batch.work += Math.max(1, entry.node.portPoints.length) ** 3
+      }
+      const pending = []
+      for (const batch of batches) {
+        const nodePfById = new Map(
+          batch.nodes.map(({ node }) => [
+            node.capacityMeshNodeId,
+            this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+          ]),
+        )
+        const promise = runtime
+          .executeAsync(Pipeline9HighDensityBatchSolver, {
+            ...params,
+            nodePortPoints: batch.nodes.map(({ node }) => node),
+            nodePfById,
+            connectivityNetMap: connMap.netMap,
+            maxIterations: this.MAX_ITERATIONS,
+          })
+          .then(
+            (results) => ({ type: "result" as const, results }),
+            (error: unknown) => ({ type: "error" as const, error }),
+          )
+        for (const [batchIndex, { index }] of batch.nodes.entries()) {
+          pending[index] = promise.then((outcome) =>
+            outcome.type === "error"
+              ? outcome
+              : {
+                  type: "result" as const,
+                  result: outcome.results[batchIndex]!,
+                },
+          )
+        }
       }
       for (const promise of pending) {
         const outcome = await promise
