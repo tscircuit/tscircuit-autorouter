@@ -65,9 +65,9 @@ test("only strictly dominated exact points skip collision checks", (): void => {
       expect(collisions.mock.calls.some(([node]) => matches(node))).toBe(
         mode !== "dominated",
       )
-      expect(
-        scoring.mock.calls.filter(([node]) => matches(node)),
-      ).toHaveLength(1)
+      expect(scoring.mock.calls.filter(([node]) => matches(node))).toHaveLength(
+        1,
+      )
       collisions.mockRestore()
       scoring.mockRestore()
     }
