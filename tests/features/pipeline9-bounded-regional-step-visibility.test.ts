@@ -12,6 +12,7 @@ test("regional repair exposes projection children and advances one child step at
       maxRegions: 1,
       maxCandidateAttempts: 11,
       maxPathSearchNodes: 55_000,
+      regionSizes: [16],
     },
   })
   expect(() => solver.getResult()).toThrow("before completion")
