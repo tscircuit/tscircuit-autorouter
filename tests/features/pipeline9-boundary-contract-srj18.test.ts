@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { sample001 } from "dataset-srj18"
+import { dataset } from "dataset-srj18"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 
 test("boundary contracts complete on a real board with reversed owner metadata", () => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(sample001),
+    structuredClone(dataset.sample001),
   )
   while (
     !solver.failed &&

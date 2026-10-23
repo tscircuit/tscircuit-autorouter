@@ -23,6 +23,7 @@ test("boundary families use the same canonical owner identity as distribution", 
   for (const owners of [["left", "right"], ["right", "left"]] as const) {
     const inputs: InputNodeWithPortPoints[] = nodes.map((node) => ({
       ...node,
+      availableZ: [0],
       portPoints: node.portPoints.map((port) => ({
         ...port,
         portPointId: port.portPointId!,
