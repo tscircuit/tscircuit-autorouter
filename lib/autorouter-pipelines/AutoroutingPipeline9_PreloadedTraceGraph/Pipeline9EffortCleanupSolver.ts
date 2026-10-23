@@ -1,4 +1,5 @@
 import {
+  MultiSimplifiedPathSolver,
   TraceSimplificationSolver,
   UselessViaRemovalSolver,
 } from "@tscircuit/trace-simplification-solver"
@@ -22,6 +23,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly cleanupPasses: number
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
+  vertexShortcutSolver?: MultiSimplifiedPathSolver
+  private vertexShortcutRouteIndex = 0
   readonly params: CleanupParams
 
   constructor(params: CleanupParams) {
@@ -75,6 +78,54 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.vertexShortcutSolver) {
+      const solver = this.vertexShortcutSolver
+      solver.step()
+      if (solver.failed) {
+        this.failed = true
+        this.error = solver.error
+        return
+      }
+      if (!solver.solved) return
+      if (this.vertexShortcutRouteIndex === solver.simplifiedHdRoutes.length) {
+        this.solved = true
+        return
+      }
+      const routeIndex = this.vertexShortcutRouteIndex++
+      const original = this.bestRoutes[routeIndex]!
+      if (
+        original.route.some(
+          (point) =>
+            point.traceThickness !== undefined &&
+            point.traceThickness !== original.traceThickness,
+        )
+      ) {
+        return
+      }
+      const simplified = solver.simplifiedHdRoutes[routeIndex]!
+      simplified.route[0] = { ...original.route[0]! }
+      simplified.route[simplified.route.length - 1] = {
+        ...original.route.at(-1)!,
+      }
+      const candidate = [...this.bestRoutes]
+      candidate[routeIndex] = {
+        ...original,
+        route: simplified.route,
+        vias: simplified.vias,
+      }
+      const cost = this.params.getCost(candidate)
+      if (
+        cost.vias === this.bestCost.vias &&
+        cost.points < this.bestCost.points &&
+        this.params.isValid(candidate)
+      ) {
+        this.bestRoutes = structuredClone(candidate)
+        this.bestCost = cost
+      }
+      this.solved =
+        this.vertexShortcutRouteIndex === solver.simplifiedHdRoutes.length
+      return
+    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -101,6 +152,16 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
       // stop as soon as a complete sweep produces no valid improvement.
       if (improves && this.completedPasses < this.cleanupPasses) {
         this.viaRemovalSolver = this.createViaRemovalSolver()
+        return
+      }
+      if (this.params.config.enableVertexShortcuts) {
+        this.viaRemovalSolver = undefined
+        this.vertexShortcutSolver = new MultiSimplifiedPathSolver({
+          ...this.params.config,
+          unsimplifiedHdRoutes: structuredClone(this.bestRoutes),
+          obstacles: [...this.params.config.obstacles],
+          outline: this.params.config.outline?.slice(),
+        })
         return
       }
       this.solved = true

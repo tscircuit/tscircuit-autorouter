@@ -1,4 +1,5 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import stringify from "fast-json-stable-stringify"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -732,8 +733,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           [...newHdRoutes, ...preloadedHdRoutes],
           cms.connMap,
         )
-        // Keep fixed-copper phases on their existing cleanup path.
-        const enableVertexShortcuts = preloadedHdRoutes.length === 0
 
         return [
           {
@@ -749,8 +748,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
-            enableVertexShortcuts,
-            useTraceWidthAwareClearance: enableVertexShortcuts,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -889,6 +886,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             }),
             cms.originalSrj.traces ?? [],
           )
+        const getDrcErrors = (
+          routes: HighDensityRoute[],
+        ): ReturnType<typeof evaluateRelaxedDrc>["errors"] =>
+          evaluateRelaxedDrc({
+            inputSrj,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            routedTraces: convert(routes),
+            includeBoardClearance: true,
+            drcOptions: {
+              traceClearance:
+                cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+              viaClearance:
+                cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
+            },
+          }).errors
+        let acceptedDrcErrors = stringify(
+          getDrcErrors(hdRoutes)
+            .map((error) => stringify(error))
+            .sort(),
+        )
         return [
           {
             effort: cms.effort,
@@ -918,6 +935,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               ),
               enableCrossingViaReduction: true,
+              enableVertexShortcuts: true,
+              useTraceWidthAwareClearance: true,
               terminalLayerIndicesByPcbPortId:
                 getTerminalLayerIndicesByPcbPortId(
                   cms.srj.connections,
@@ -943,19 +962,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 ),
               }
             },
-            isValid: (routes: HighDensityRoute[]): boolean =>
-              evaluateRelaxedDrc({
-                inputSrj,
-                srjWithPointPairs: cms.srjWithPointPairs!,
-                routedTraces: convert(routes),
-                includeBoardClearance: true,
-                drcOptions: {
-                  traceClearance:
-                    cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
-                  viaClearance:
-                    cms.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
-                },
-              }).errors.length === 0,
+            isValid: (routes: HighDensityRoute[]): boolean => {
+              const errors = getDrcErrors(routes)
+              const signature = stringify(
+                errors.map((error) => stringify(error)).sort(),
+              )
+              if (errors.length !== 0 && signature !== acceptedDrcErrors) {
+                return false
+              }
+              acceptedDrcErrors = signature
+              return true
+            },
           },
         ]
       },

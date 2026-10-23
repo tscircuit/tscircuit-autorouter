@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import type { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { Pipeline9EffortCleanupSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9EffortCleanupSolver"
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
@@ -15,20 +15,23 @@ test("bugreport110: simplifies flex sensor traces without changing terminals or 
     cacheProvider: null,
   })
   const step = baseline.pipelineDef.find(
-    (step) => step.solverName === "traceSimplificationSolver",
+    (step) => step.solverName === "effortCleanupSolver",
   )!
   const getConstructorParams = step.getConstructorParams
   step.getConstructorParams = (
     pipeline,
-  ): ConstructorParameters<typeof TraceSimplificationSolver> => {
+  ): ConstructorParameters<typeof Pipeline9EffortCleanupSolver> => {
     const [params] = getConstructorParams(
       pipeline,
-    ) as ConstructorParameters<typeof TraceSimplificationSolver>
+    ) as ConstructorParameters<typeof Pipeline9EffortCleanupSolver>
     return [
       {
         ...params,
-        enableVertexShortcuts: false,
-        useTraceWidthAwareClearance: false,
+        config: {
+          ...params.config,
+          enableVertexShortcuts: false,
+          useTraceWidthAwareClearance: false,
+        },
       },
     ]
   }
@@ -83,17 +86,21 @@ test("bugreport110: simplifies flex sensor traces without changing terminals or 
       .filter((point) => point.route_type === "via").length,
   )
   expect(
-    evaluateRelaxedDrc({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }).errors,
+    new Set(
+      evaluateRelaxedDrc({
+        inputSrj: input,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces,
+      }).errors,
+    ),
   ).toEqual(
-    evaluateRelaxedDrc({
-      inputSrj: input,
-      srjWithPointPairs: baseline.srjWithPointPairs!,
-      routedTraces: baselineTraces,
-    }).errors,
+    new Set(
+      evaluateRelaxedDrc({
+        inputSrj: input,
+        srjWithPointPairs: baseline.srjWithPointPairs!,
+        routedTraces: baselineTraces,
+      }).errors,
+    ),
   )
   expect(input).toEqual(bugReport.simple_route_json)
   await expect(
