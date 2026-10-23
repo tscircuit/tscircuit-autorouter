@@ -22,6 +22,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
+  ParallelSelectiveReripTinyHyperGraphSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -920,6 +921,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useParallelNativeSearch = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -938,8 +940,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = useParallelNativeSearch
+        ? ParallelSelectiveReripTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1029,7 +1032,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 }
 
+export interface TinyHypergraphPortPointPathingSolverOptions {
+  parallelNativeSearch?: boolean
+}
+
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  private readonly useParallelNativeSearch: boolean
   private asyncRunning = false
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1054,7 +1062,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams,
+    options: TinyHypergraphPortPointPathingSolverOptions = {},
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1078,6 +1089,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
+    this.useParallelNativeSearch =
+      options.parallelNativeSearch === true && !hasPreloadedTraceOccupancy
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
@@ -1139,6 +1152,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        this.useParallelNativeSearch,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1487,6 +1501,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.useParallelNativeSearch,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

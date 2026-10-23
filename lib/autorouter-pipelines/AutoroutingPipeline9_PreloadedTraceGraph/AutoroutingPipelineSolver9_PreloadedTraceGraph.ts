@@ -562,6 +562,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               MIN_ALLOWED_BOARD_SCORE: -10000,
             },
           },
+          {
+            parallelNativeSearch:
+              (cms.srj.traces?.length ?? 0) === 0 &&
+              (cms.srj.differentialPairs?.length ?? 0) === 0 &&
+              !(cms.srj.buses ?? []).some(
+                (bus) => bus.maxLengthSkew !== undefined,
+              ),
+          },
         ]
       },
     ),
