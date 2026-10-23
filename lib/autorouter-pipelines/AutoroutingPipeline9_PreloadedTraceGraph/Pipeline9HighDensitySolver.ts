@@ -21,6 +21,7 @@ import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import type { OwnershipGraphStats } from "../../solvers/HyperHighDensitySolver/SharedOwnershipGraphSolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -313,6 +314,7 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
+  ownershipGraphStats?: OwnershipGraphStats
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -334,6 +336,7 @@ export type Pipeline9RegularNodeSolverParams = {
  * remote algorithm configuration cannot drift.
  */
 export const createPipeline9RegularNodeSolver = ({
+  ownershipGraphStats,
   nodeWithPortPoints,
   connMap,
   colorMap,
@@ -361,6 +364,8 @@ export const createPipeline9RegularNodeSolver = ({
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     enableNegotiatedSearch: true,
+    enableOwnershipGraphSearch: true,
+    ownershipGraphStats,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
@@ -376,6 +381,7 @@ export const createPipeline9RegularNodeSolver = ({
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
+  readonly ownershipGraphStats: OwnershipGraphStats = {}
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
@@ -522,8 +528,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount")
-            this.stats[key] += value
+          if (key === "nodeCount" || key === "fixedObstacleCount") continue
+          this.stats[key] = Number(this.stats[key] ?? 0) + value
+          if (key.startsWith("ownershipGraph")) {
+            this.ownershipGraphStats[key] = (this.ownershipGraphStats[key] ?? 0) + value
+          }
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,
@@ -586,6 +595,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
+      ownershipGraphStats: this.ownershipGraphStats,
       nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
@@ -1012,6 +1022,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   override _step(): void {
     this.stepNodeRouting()
+    Object.assign(this.stats, this.ownershipGraphStats)
     this.activeSubSolver =
       this.activeFallbackSolver ??
       this.activeRegularSolver ??
