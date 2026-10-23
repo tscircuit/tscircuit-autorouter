@@ -14,6 +14,7 @@ import type { BaseSolver } from "../BaseSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
+import { ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
@@ -876,7 +877,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }) as any
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
-      return new MultiHeadPolyLineIntraNodeSolver3({
+      const PolylineSolver = this.computeSelectionModel
+        ? ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver
+        : MultiHeadPolyLineIntraNodeSolver3
+      return new PolylineSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
         hyperParameters: hyperParameters,

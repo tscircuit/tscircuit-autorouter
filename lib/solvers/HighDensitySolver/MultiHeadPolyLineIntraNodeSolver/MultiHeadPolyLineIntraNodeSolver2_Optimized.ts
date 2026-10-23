@@ -234,6 +234,58 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     }
   }
 
+  /** Legacy integration remains available to the frozen force-reference kernel. */
+  protected integrateViaBoundary(
+    point: MHPoint2,
+    currentForceX: number,
+    currentForceY: number,
+  ): { x: number; y: number; fx: number; fy: number } {
+    const BOUNDARY_FORCE_STRENGTH = 0.008
+    const radius = this.viaDiameter / 2
+    let boundaryForceX = 0
+    let boundaryForceY = 0
+
+    // Use a margin appropriate for vias pushing away from the edge
+    const baseForceMargin = this.viaDiameter / 2
+    const forceMargin = baseForceMargin + this.BOUNDARY_PADDING
+
+    const minX = this.bounds.minX + forceMargin
+    const maxX = this.bounds.maxX - forceMargin
+    const minY = this.bounds.minY + forceMargin
+    const maxY = this.bounds.maxY - forceMargin
+
+    const distOutsideMinX = minX + radius - point.x // How far the via *center* is past the allowed edge
+    const distOutsideMaxX = point.x - (maxX - radius)
+    const distOutsideMinY = minY + radius - point.y
+    const distOutsideMaxY = point.y - (maxY - radius)
+
+    if (distOutsideMinX > 0) {
+      boundaryForceX =
+        BOUNDARY_FORCE_STRENGTH *
+        (Math.exp(distOutsideMinX / (this.obstacleMargin * 2)) - 1)
+    } else if (distOutsideMaxX > 0) {
+      boundaryForceX =
+        -BOUNDARY_FORCE_STRENGTH *
+        (Math.exp(distOutsideMaxX / (this.obstacleMargin * 2)) - 1)
+    }
+
+    if (distOutsideMinY > 0) {
+      boundaryForceY =
+        BOUNDARY_FORCE_STRENGTH *
+        (Math.exp(distOutsideMinY / (this.obstacleMargin * 2)) - 1)
+    } else if (distOutsideMaxY > 0) {
+      boundaryForceY =
+        -BOUNDARY_FORCE_STRENGTH *
+        (Math.exp(distOutsideMaxY / (this.obstacleMargin * 2)) - 1)
+    }
+
+    // Add boundary force to the current force being considered for this step
+    currentForceX += boundaryForceX
+    currentForceY += boundaryForceY
+
+    return { x: point.x + currentForceX, y: point.y + currentForceY, fx: currentForceX, fy: currentForceY }
+  }
+
   /**
    * Applies repulsive forces between polylines (segments and vias) and boundary forces
    * directly modifying the input polyLines array.
@@ -251,7 +303,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     const SEGMENT_FORCE_MULTIPLIER = 1.0
     // const FORCE_DECAY_RATE = 1.0 / this.cellSize // Controls how quickly force falls off with distance (adjust as needed)
     const FORCE_DECAY_RATE = 6
-    const BOUNDARY_FORCE_STRENGTH = 0.008 // How strongly points are pushed back into bounds
     const EPSILON = 1e-6 // To avoid division by zero
 
     // 1. Initialize net forces structure: netForces[lineIdx][mPointIdx] = {fx, fy}
@@ -592,54 +643,11 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         let newY = mPoint.y + currentForceY
 
         if (isVia) {
-          // Apply exponential boundary force ONLY to vias
-          const radius = this.viaDiameter / 2
-          let boundaryForceX = 0
-          let boundaryForceY = 0
-
-          // Use a margin appropriate for vias pushing away from the edge
-          const baseForceMargin = this.viaDiameter / 2
-          const forceMargin = baseForceMargin + this.BOUNDARY_PADDING
-
-          const minX = this.bounds.minX + forceMargin
-          const maxX = this.bounds.maxX - forceMargin
-          const minY = this.bounds.minY + forceMargin
-          const maxY = this.bounds.maxY - forceMargin
-
-          const distOutsideMinX = minX + radius - mPoint.x // How far the via *center* is past the allowed edge
-          const distOutsideMaxX = mPoint.x - (maxX - radius)
-          const distOutsideMinY = minY + radius - mPoint.y
-          const distOutsideMaxY = mPoint.y - (maxY - radius)
-
-          if (distOutsideMinX > 0) {
-            boundaryForceX =
-              BOUNDARY_FORCE_STRENGTH *
-              (Math.exp(distOutsideMinX / (this.obstacleMargin * 2)) - 1)
-          } else if (distOutsideMaxX > 0) {
-            boundaryForceX =
-              -BOUNDARY_FORCE_STRENGTH *
-              (Math.exp(distOutsideMaxX / (this.obstacleMargin * 2)) - 1)
-          }
-
-          if (distOutsideMinY > 0) {
-            boundaryForceY =
-              BOUNDARY_FORCE_STRENGTH *
-              (Math.exp(distOutsideMinY / (this.obstacleMargin * 2)) - 1)
-          } else if (distOutsideMaxY > 0) {
-            boundaryForceY =
-              -BOUNDARY_FORCE_STRENGTH *
-              (Math.exp(distOutsideMaxY / (this.obstacleMargin * 2)) - 1)
-          }
-
-          // Add boundary force to the current force being considered for this step
-          currentForceX += boundaryForceX
-          currentForceY += boundaryForceY
-          newX = mPoint.x + currentForceX
-          newY = mPoint.y + currentForceY
-
-          // Optional: Clamp via position as a hard stop if force isn't enough?
-          // newX = Math.max(this.bounds.minX + radius, Math.min(this.bounds.maxX - radius, newX));
-          // newY = Math.max(this.bounds.minY + radius, Math.min(this.bounds.maxY - radius, newY));
+          const projected = this.integrateViaBoundary(mPoint, currentForceX, currentForceY)
+          currentForceX = projected.fx
+          currentForceY = projected.fy
+          newX = projected.x
+          newY = projected.y
         } else {
           // For regular points, CLAMP position to bounds + traceWidth/2 padding
           const basePadding = this.traceWidth / 2

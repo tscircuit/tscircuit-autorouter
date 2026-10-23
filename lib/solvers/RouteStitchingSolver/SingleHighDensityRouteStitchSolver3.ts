@@ -25,7 +25,7 @@ export {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
-const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
+export const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
     const { toNextSegmentType, ...rest } = point
     return rest
@@ -57,6 +57,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+  readonly preserveExactEndpoints: boolean
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -77,16 +78,37 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preserveExactEndpoints?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
     super()
-    const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
+    const canonicalHdRoutes = opts.preserveExactEndpoints
+      ? [...opts.hdRoutes] : [...opts.hdRoutes].sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
+    this.preserveExactEndpoints = opts.preserveExactEndpoints === true
+    this.start = opts.start
+    this.end = opts.end
+
+    for (const route of canonicalHdRoutes) {
+      if (!("generatedStitchBridge" in route) || route.generatedStitchBridge !== true) continue
+      const start = route.route[0]
+      const end = route.route.at(-1)
+      if (!start || !end || route.route.length !== 2 || start.z !== end.z || route.vias.length !== 0) {
+        throw new Error(`SingleHighDensityRouteStitchSolver3 received invalid planar stitch bridge for "${opts.connectionName}"`)
+      }
+      if (this.stitchClearanceMode === "require_clear" && !opts.isStitchSegmentClear({
+        connectionName: opts.connectionName, start, end, traceThickness: route.traceThickness,
+      })) {
+        this.failed = true
+        this.error = `Route stitch for "${opts.connectionName}" violates copper clearance`
+        return
+      }
+    }
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -184,16 +206,18 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let firstRoute = canonicalHdRoutes[0]
     let orientation: "start-to-end" | "end-to-start" = "start-to-end"
 
-    for (const route of canonicalHdRoutes) {
+    for (const route of this.preserveExactEndpoints ? canonicalHdRoutes.slice(0, 1) : canonicalHdRoutes) {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
+      const distStartToFirst = !this.preserveExactEndpoints || opts.start.z === firstPoint.z
+        ? distance(opts.start, firstPoint) : Number.POSITIVE_INFINITY
+      const distStartToLast = !this.preserveExactEndpoints || opts.start.z === lastPoint.z
+        ? distance(opts.start, lastPoint) : Number.POSITIVE_INFINITY
       const distEndToFirst = distance(opts.end, firstPoint)
       const distEndToLast = distance(opts.end, lastPoint)
 
-      const minDist = Math.min(
+      const minDist = this.preserveExactEndpoints ? Math.min(distStartToFirst, distStartToLast) : Math.min(
         distStartToFirst,
         distStartToLast,
         distEndToFirst,
@@ -207,7 +231,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       ) {
         bestDist = minDist
         firstRoute = route
-        if (
+        if (!this.preserveExactEndpoints && (
           Math.min(distEndToFirst, distEndToLast) <
             Math.min(distStartToFirst, distStartToLast) -
               DISTANCE_TIE_TOLERANCE ||
@@ -216,12 +240,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
               Math.min(distStartToFirst, distStartToLast),
           ) <= DISTANCE_TIE_TOLERANCE &&
             comparePoints(opts.end, opts.start) < 0)
-        ) {
+        )) {
           orientation = "end-to-start"
         } else {
           orientation = "start-to-end"
         }
       }
+    }
+
+    if (this.preserveExactEndpoints && !Number.isFinite(bestDist)) {
+      throw new Error(`SingleHighDensityRouteStitchSolver3 cannot reach declared start layer for "${opts.connectionName}"`)
     }
 
     if (orientation === "start-to-end") {
@@ -234,9 +262,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
+    const distToFirst = !this.preserveExactEndpoints || this.start.z === firstRouteFirstPoint.z
+      ? distance(this.start, firstRouteFirstPoint) : Number.POSITIVE_INFINITY
+    const distToLast = !this.preserveExactEndpoints || this.start.z === firstRouteLastPoint.z
+      ? distance(this.start, firstRouteLastPoint) : Number.POSITIVE_INFINITY
+    const closestFirstRoutePoint = this.preserveExactEndpoints ? firstRouteFirstPoint :
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
         comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
@@ -311,7 +341,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   _step() {
     const endpoint = this.mergedHdRoute.route.at(-1)!
-    const reachedTerminal =
+    const reachedTerminal = !this.preserveExactEndpoints &&
       this.mergedHdRoute.endPcbPortId !== undefined &&
       endpoint.z === this.end.z &&
       distance(endpoint, this.end) < GEOMETRIC_TOLERANCE
@@ -324,7 +354,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
-        terminalDistance > GEOMETRIC_TOLERANCE &&
+        terminalDistance > (this.preserveExactEndpoints ? 0 : this.mergedHdRoute.endPcbPortId ? 1e-9 : GEOMETRIC_TOLERANCE) &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
         if (
@@ -354,7 +384,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestScore = Infinity
     let blockedByCollision = false
 
-    for (let i = 0; i < this.remainingHdRoutes.length; i++) {
+    const candidateCount = this.preserveExactEndpoints ? Math.min(1, this.remainingHdRoutes.length) : this.remainingHdRoutes.length
+    const gapLimit = this.preserveExactEndpoints && this.mergedHdRoute.route.length === 1
+      ? MAX_TERMINAL_STITCH_GAP_DISTANCE_3 : MAX_STITCH_GAP_DISTANCE_3
+    for (let i = 0; i < candidateCount; i++) {
       const hdRoute = this.remainingHdRoutes[i]
       const firstPointInCandidate = hdRoute.route[0]
       const lastPointInCandidate = hdRoute.route[hdRoute.route.length - 1]
@@ -366,7 +399,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       if (lastMergedPoint.z === firstPointInCandidate.z) {
         if (distToFirst < GEOMETRIC_TOLERANCE) {
           scoreFirst = distToFirst
-        } else if (distToFirst <= MAX_STITCH_GAP_DISTANCE_3) {
+        } else if (distToFirst <= gapLimit) {
           const isClear = this.isPlanarStitchClear(
             lastMergedPoint,
             firstPointInCandidate,
@@ -378,13 +411,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
             blockedByCollision = true
           }
         }
-      } else if (
+      } else if (!this.preserveExactEndpoints && (
         distToFirst < GEOMETRIC_TOLERANCE &&
         (!this.allowedLayerTransitionPointKeys ||
           this.allowedLayerTransitionPointKeys.has(
             getXyPointKey(firstPointInCandidate),
           ))
-      ) {
+      )) {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
@@ -420,7 +453,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreLast = VIA_PENALTY + distToLast
       }
 
-      if (scoreLast < bestScore) {
+      if (!this.preserveExactEndpoints && scoreLast < bestScore) {
         bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
@@ -428,6 +461,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      if (this.preserveExactEndpoints) {
+        throw new Error(`SingleHighDensityRouteStitchSolver3 cannot join next selected fragment for "${this.mergedHdRoute.connectionName}"`)
+      }
       if (blockedByCollision) {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
