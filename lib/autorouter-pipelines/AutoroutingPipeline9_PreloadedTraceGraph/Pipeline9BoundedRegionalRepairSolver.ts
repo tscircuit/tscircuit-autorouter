@@ -1,9 +1,9 @@
+import { NegotiateTraceClearanceSolver } from "./clearanceExperimental/NegotiateTraceClearanceSolver"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
-  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
@@ -141,6 +141,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  private experimentalTotals: Record<string, number> = {}
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -179,6 +180,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         : 0
     this.stats = {
       ...this.result,
+      ...this.experimentalTotals,
+      ...Object.fromEntries(Object.entries(negotiation?.stats ?? {}).filter(([key, value]) => key.startsWith("experimental") && typeof value === "number").map(([key, value]) => [key, key.includes("Maximum") ? Math.max(this.experimentalTotals[key] ?? 0, Number(value)) : (this.experimentalTotals[key] ?? 0) + Number(value)])),
       routes: undefined,
       phase: this.state.phase,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
@@ -375,10 +378,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const centeredErrors = Array.isArray(context.reference)
       ? context.reference
       : (context.reference.errorsWithCenters ?? context.reference.errors)
-    const centers = centeredErrors.flatMap(
-      (error): Array<{ x: number; y: number }> => {
-        // Reference centers locate the physical contact. Resolving a pad's
-        // provenance must not replace that contact with the pad body center.
+    const centers = centeredErrors
+      .map((error) => {
+        // Crop around the physical pad when its display marker is far away.
         const pairPrefix = `overlap_${error.pcb_trace_id}_`
         const padId =
           typeof error.pcb_pad_id === "string"
@@ -387,26 +389,23 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
                 error.pcb_trace_error_id.startsWith(pairPrefix)
               ? error.pcb_trace_error_id.slice(pairPrefix.length)
               : undefined
-        for (const point of [
-          error.center,
-          error.pcb_center,
-          padId ? context.obstacleCenterById.get(padId) : undefined,
-        ]) {
-          if (
-            point !== null &&
-            typeof point === "object" &&
-            "x" in point &&
-            "y" in point &&
-            typeof point.x === "number" &&
-            typeof point.y === "number" &&
-            Number.isFinite(point.x) &&
-            Number.isFinite(point.y)
-          )
-            return [{ x: point.x, y: point.y }]
-        }
-        return []
-      },
-    )
+        return (
+          (padId ? context.obstacleCenterById.get(padId) : undefined) ??
+          error.center ??
+          error.pcb_center
+        )
+      })
+      .filter(
+        (point): point is { x: number; y: number } =>
+          point !== null &&
+          typeof point === "object" &&
+          "x" in point &&
+          "y" in point &&
+          typeof point.x === "number" &&
+          typeof point.y === "number" &&
+          Number.isFinite(point.x) &&
+          Number.isFinite(point.y),
+      )
     let nextRegion:
       | { center: { x: number; y: number }; size: number }
       | undefined
@@ -522,6 +521,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private completeNegotiation(
     state: Extract<BoundedRepairState, { phase: "negotiate" }>,
   ): void {
+    for (const [key, value] of Object.entries(state.solver.stats)) {
+      if (key.startsWith("experimental") && typeof value === "number") this.experimentalTotals[key] = key.includes("Maximum") ? Math.max(this.experimentalTotals[key] ?? 0, value) : (this.experimentalTotals[key] ?? 0) + value
+    }
     const repair = state.solver.getOutput()
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair

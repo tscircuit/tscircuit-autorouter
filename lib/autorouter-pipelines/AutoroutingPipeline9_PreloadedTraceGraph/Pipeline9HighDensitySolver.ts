@@ -1,4 +1,3 @@
-import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -35,15 +34,9 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
-import { constructPipeline9ParametricCell } from "./constructPipeline9ParametricCell"
-import { Pipeline9ParametricInterfaceIndex, type Pipeline9ParametricInterfacePort } from "./Pipeline9ParametricInterfaceIndex"
-import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
-  enableParametricConstruction?: boolean
-  /** Full-scene immutable witness rows, retained when worker batches slice nodes. */
-  parametricInterfacePortPoints?: readonly Pipeline9ParametricInterfacePort[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -53,9 +46,6 @@ export type Pipeline9HighDensitySolverParams = {
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
-  traceWidthByConnection?: Readonly<Record<string, number>>
-  traceToHoleClearance?: number
-  traceToPadClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -293,7 +283,12 @@ export const normalizePipeline9NodeRootConnectionNames = (
     portPoint: NodeWithPortPoints["portPoints"][number],
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
-    rootConnectionName: getCanonicalPipeline9PortRoot(portPoint, connMap),
+    rootConnectionName:
+      connMap.getNetConnectedToId(
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ) ??
+      portPoint.rootConnectionName ??
+      portPoint.connectionName,
   })
   return {
     ...node,
@@ -370,8 +365,6 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
-    // Recreate this acceptance predicate after host/worker JSON reconstruction.
-    isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap),
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -417,7 +410,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private readonly parametricInterfaceIndex?: Pipeline9ParametricInterfaceIndex
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -442,18 +434,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
-    if (params.enableParametricConstruction) {
-      const ports = params.parametricInterfacePortPoints ?? params.nodePortPoints.flatMap((node) => normalizePipeline9NodeRootConnectionNames(node, this.connMap).portPoints.map((port) => ({ capacityMeshNodeId: node.capacityMeshNodeId, port, traceWidth: Math.max(params.traceWidth, params.traceWidthByConnection?.[port.connectionName] ?? params.traceWidth) })))
-      if (ports.some((entry) => getCanonicalPipeline9PortRoot(entry.port, this.connMap) !== (entry.port.rootConnectionName ?? entry.port.connectionName))) throw new Error("Parametric scene reservation has a noncanonical electrical owner")
-      this.parametricInterfaceIndex = new Pipeline9ParametricInterfaceIndex(ports, params.layerCount)
-      // Supplied rows are internal serialized full-scene witnesses. Every node
-      // consumed by this instance must still match its actual owned terminals,
-      // widths and layers, including after worker reconstruction.
-      for (const node of params.nodePortPoints) for (const port of normalizePipeline9NodeRootConnectionNames(node, this.connMap).portPoints) {
-        const width = Math.max(params.traceWidth, params.traceWidthByConnection?.[port.connectionName] ?? params.traceWidth)
-        if (!this.parametricInterfaceIndex.hasSourceTerminal(node.capacityMeshNodeId, port, width)) throw new Error("Parametric scene reservation does not match an owned source terminal")
-      }
-    }
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
       nodeCount: params.nodePortPoints.length,
@@ -463,13 +443,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacleUses: 0,
       fallbackNodeCount: 0,
       regularNodeCount: 0,
-      constructedStraightNodeCount: 0,
-      constructedStraightRouteCount: 0,
-      parametricCompiledNodeCount: 0,
-      parametricInterfaceReservationRowsScanned: 0,
-      parametricInterfaceReservationRowsRetained: 0,
-      parametricPeakInterfaceScenePorts: this.parametricInterfaceIndex?.ports.length ?? 0,
-      parametricPeakInterfaceKeyCodeUnits: this.parametricInterfaceIndex?.retainedKeyCodeUnits ?? 0,
       b01NodeCount: 0,
       reroutedFixedRouteCount: 0,
       reroutedFixedRouteSectionCount: 0,
@@ -522,7 +495,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
-              parametricInterfacePortPoints: this.parametricInterfaceIndex?.ports,
               nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
@@ -551,7 +523,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
           if (key !== "nodeCount" && key !== "fixedObstacleCount")
-            this.stats[key] = key.startsWith("parametricPeak") ? Math.max(Number(this.stats[key] ?? 0), value) : Number(this.stats[key] ?? 0) + value
+            this.stats[key] += value
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,
@@ -613,45 +585,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
-    if (this.params.enableParametricConstruction) {
-    if (!this.parametricInterfaceIndex) throw new Error("Enabled parametric compiler has no immutable scene reservations")
-    const maximumRadius = Math.max(this.viaDiameter, this.traceWidth, ...Object.values(this.params.traceWidthByConnection ?? {})) / 2
-    const interfacePortPoints = this.parametricInterfaceIndex.query(node, maximumRadius, Math.max(this.obstacleMargin, 0.1))
-    this.stats.parametricInterfaceReservationRowsScanned += this.parametricInterfaceIndex.ports.length
-    this.stats.parametricInterfaceReservationRowsRetained += interfacePortPoints.length
-    const construction = constructPipeline9ParametricCell({
-      // The local-domain API remains available for historical geometry oracles.
-      // Every production compiler invocation, including runtime batches, must
-      // certify optional copper support and exact owned normal escapes.
-      interfacePolicy: "owned-normal-escapes",
-      interfacePortPoints,
-      node: normalizePipeline9NodeRootConnectionNames(node, this.connMap),
-      connMap: this.connMap,
-      obstacles: this.obstacles,
-      boardGeometry: this.boardGeometry,
-      layerCount: this.layerCount,
-      traceWidth: this.traceWidth,
-      traceWidthByConnection: this.params.traceWidthByConnection,
-      viaToPadClearance: this.viaToPadClearance,
-      traceToHoleClearance: this.params.traceToHoleClearance,
-      traceToPadClearance: this.params.traceToPadClearance,
-      viaDiameter: this.viaDiameter,
-      obstacleMargin: this.obstacleMargin,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-    })
-    for (const [key, value] of Object.entries(construction.stats)) {
-      this.stats[key] = key.startsWith("parametricPeak") ? Math.max(Number(this.stats[key] ?? 0), value) : Number(this.stats[key] ?? 0) + value
-    }
-    if (construction.applicable) {
-      this.stats.parametricCompiledNodeCount += 1
-      if (construction.routes.every((route) => route.route.length <= 2 && route.vias.length === 0)) {
-        this.stats.constructedStraightNodeCount += 1
-        this.stats.constructedStraightRouteCount += construction.routes.length
-      }
-      this.finishActiveNode(construction.routes)
-      return
-    }
-    }
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,

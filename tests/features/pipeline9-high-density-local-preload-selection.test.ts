@@ -219,16 +219,11 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
     },
   )
   innerLayerViaSolver.step()
-  expect(innerLayerViaSolver.activeRegularSolver).toBeNull()
-  expect(innerLayerViaSolver.stats.constructedStraightNodeCount).toBe(1)
-  expect(innerLayerViaSolver.routes[0]!.route).toEqual([
-    { x: -2, y: 0, z: 0 },
-    { x: 2, y: 0, z: 0 },
-  ])
+  expect(innerLayerViaSolver.activeRegularSolver).not.toBeNull()
   expect(innerLayerViaSolver.activeB01Solver).toBeNull()
   expect(innerLayerViaSolver.stats).toMatchObject({
     fixedObstacleUses: 0,
-    regularNodeCount: 0,
+    regularNodeCount: 1,
     b01NodeCount: 0,
   })
 
@@ -305,12 +300,7 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
     { node: compactNode, obstacles: [] },
   )
   nearbyAabbOnlySolver.step()
-  expect(nearbyAabbOnlySolver.activeRegularSolver).toBeNull()
-  expect(nearbyAabbOnlySolver.stats.constructedStraightNodeCount).toBe(1)
-  expect(nearbyAabbOnlySolver.routes[0]!.route).toEqual([
-    { x: -1, y: 0, z: 0 },
-    { x: 1, y: 0, z: 0 },
-  ])
+  expect(nearbyAabbOnlySolver.activeRegularSolver).not.toBeNull()
   expect(nearbyAabbOnlySolver.activeB01Solver).toBeNull()
   expect(nearbyAabbOnlySolver.stats.fixedObstacleUses).toBe(0)
 

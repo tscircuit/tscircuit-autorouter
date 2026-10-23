@@ -3,8 +3,6 @@ import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { reverseRoutePoints } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 type ApplyFixedRouteReplacementsParams = {
@@ -12,8 +10,6 @@ type ApplyFixedRouteReplacementsParams = {
   originalFixedRoutes: PreloadedHighDensityRoute[]
   updatedFixedRoutes: PreloadedHighDensityRoute[]
   replacedConnectionNames: ReadonlySet<string>
-  /** Explicit unedited source intervals, excluding deliberate HD replacements. */
-  unchangedFixedRouteConnectionNames?: ReadonlySet<string>
   layerCount: number
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
@@ -33,8 +29,6 @@ type OrdinaryTraceSection = {
 type ConvertUpdatedTraceRoutesParams = {
   trace: SimplifiedPcbTrace
   updatedTraceRoutes: PreloadedHighDensityRoute[]
-  originalTraceRoutes: PreloadedHighDensityRoute[]
-  unchangedFixedRouteConnectionNames?: ReadonlySet<string>
   layerCount: number
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
@@ -58,68 +52,25 @@ const pointsAreEqual = (
 const appendConnectedRoute = (
   combinedPoints: HighDensityRoute["route"],
   route: HighDensityRoute,
-): void => {
+) => {
   if (combinedPoints.length === 0) {
     combinedPoints.push(...route.route)
     return
   }
 
   const previousEnd = combinedPoints.at(-1)!
-  const points = route.route[0] && pointsAreEqual(previousEnd, route.route[0])
-    ? route.route : route.route.at(-1) && pointsAreEqual(previousEnd, route.route.at(-1)!)
-      ? reverseRoutePoints(route.route) : undefined
-  if (!points) throw new Error(`Pipeline9 could not reconnect mutated preloaded segment "${route.connectionName}"`)
-  for (const key of ["traceThickness", "toNextSegmentType", "toNextSegmentCircuitJsonMetadata"] as const) {
-    if (points[0]![key] === undefined) delete previousEnd[key]
+  if (route.route[0] && pointsAreEqual(previousEnd, route.route[0])) {
+    combinedPoints.push(...route.route.slice(1))
+    return
   }
-  Object.assign(previousEnd, {
-    ...(points[0]!.traceThickness !== undefined ? { traceThickness: points[0]!.traceThickness } : {}),
-    ...(points[0]!.toNextSegmentType ? { toNextSegmentType: points[0]!.toNextSegmentType } : {}),
-    ...(points[0]!.toNextSegmentCircuitJsonMetadata ? { toNextSegmentCircuitJsonMetadata: points[0]!.toNextSegmentCircuitJsonMetadata } : {}),
-  })
-  combinedPoints.push(...points.slice(1))
-}
+  if (route.route.at(-1) && pointsAreEqual(previousEnd, route.route.at(-1)!)) {
+    combinedPoints.push(...route.route.slice(0, -1).reverse())
+    return
+  }
 
-/** Preserve source widths only for an unchanged, provenance-bound wire interval. */
-const materializeRebuiltRouteWidths = (
-  route: PreloadedHighDensityRoute,
-  original: PreloadedHighDensityRoute | undefined,
-  trace: SimplifiedPcbTrace,
-  layerCount: number,
-  unchanged: boolean,
-): PreloadedHighDensityRoute => {
-  const start = route.preloadedRoutePositionStart
-  const end = route.preloadedRoutePositionEnd
-  let sourceWidths: [number, number] | undefined
-  if (unchanged && original && original.preloadedTraceIndex === route.preloadedTraceIndex &&
-    original.rootConnectionName === route.rootConnectionName &&
-    original.traceThickness === route.traceThickness && !route.isThroughObstacle &&
-    start !== undefined && end !== undefined && Number.isFinite(start) && Number.isFinite(end) && start <= end &&
-    original.preloadedRoutePositionStart !== undefined && original.preloadedRoutePositionEnd !== undefined &&
-    start >= original.preloadedRoutePositionStart && end <= original.preloadedRoutePositionEnd && route.route.length === 2) {
-    const index = original.preloadedRoutePositionStart
-    const a = Number.isInteger(index) ? trace.route[index] : undefined
-    const b = Number.isInteger(index) ? trace.route[index + 1] : undefined
-    if (a?.route_type === "wire" && b?.route_type === "wire" && a.layer === b.layer &&
-      original.preloadedRoutePositionEnd === index + 1 &&
-      [a.x, a.y, b.x, b.y, a.width, b.width].every(Number.isFinite) && a.width > 0 && b.width > 0) {
-      const z = mapLayerNameToZ(a.layer, layerCount)
-      const expected = [start, end].map((position) => ({
-        x: a.x + (b.x - a.x) * (position - index),
-        y: a.y + (b.y - a.y) * (position - index), z,
-      }))
-      const scale = Math.max(1, Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y))
-      const tolerance = Math.min(1e-9, 64 * Number.EPSILON * scale)
-      if (route.route.every((point, pointIndex) => point.z === z &&
-        Math.abs(point.x - expected[pointIndex]!.x) <= tolerance && Math.abs(point.y - expected[pointIndex]!.y) <= tolerance)) {
-        sourceWidths = [a.width, end === index + 1 ? b.width : a.width]
-      }
-    }
-  }
-  return { ...route, route: route.route.map((point, index) => ({ ...point,
-    ...(point.traceThickness === undefined && sourceWidths
-      ? { traceThickness: sourceWidths[index] } : {}),
-  })) }
+  throw new Error(
+    `Pipeline9 could not reconnect mutated preloaded segment "${route.connectionName}"`,
+  )
 }
 
 const comparePreloadedRouteOrder = (
@@ -154,8 +105,6 @@ const getMaximumOriginalTraceThickness = (
 const convertUpdatedTraceRoutes = ({
   trace,
   updatedTraceRoutes,
-  originalTraceRoutes,
-  unchangedFixedRouteConnectionNames,
   layerCount,
   defaultViaHoleDiameter,
   obstacles,
@@ -170,14 +119,10 @@ const convertUpdatedTraceRoutes = ({
   let traceThickness = 0
   let viaDiameter = 0
   let rootConnectionName: string | undefined
-  const originalByIndex = new Map(originalTraceRoutes.map((route) => [route.preloadedRouteIndex, route]))
   for (const updatedTraceRoute of [...updatedTraceRoutes].sort(
     comparePreloadedRouteOrder,
   )) {
-    appendConnectedRoute(combinedPoints, materializeRebuiltRouteWidths(
-      updatedTraceRoute, originalByIndex.get(updatedTraceRoute.preloadedRouteIndex), trace, layerCount,
-      unchangedFixedRouteConnectionNames?.has(updatedTraceRoute.connectionName) === true,
-    ))
+    appendConnectedRoute(combinedPoints, updatedTraceRoute)
     traceThickness = Math.max(traceThickness, updatedTraceRoute.traceThickness)
     viaDiameter = Math.max(viaDiameter, updatedTraceRoute.viaDiameter)
     rootConnectionName ??= updatedTraceRoute.rootConnectionName
@@ -262,7 +207,6 @@ const rebuildThroughObstacleTrace = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
-  unchangedFixedRouteConnectionNames,
 }: RebuildThroughObstacleTraceParams): SimplifiedPcbTrace["route"] => {
   if (updatedTraceRoutes.length === 0) {
     throw new Error(
@@ -310,8 +254,6 @@ const rebuildThroughObstacleTrace = ({
         ? convertUpdatedTraceRoutes({
             trace,
             updatedTraceRoutes: sectionRoutes,
-            originalTraceRoutes: originalSectionRoutes,
-            unchangedFixedRouteConnectionNames,
             layerCount,
             defaultViaHoleDiameter,
             obstacles,
@@ -337,7 +279,6 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
   originalFixedRoutes,
   updatedFixedRoutes,
   replacedConnectionNames,
-  unchangedFixedRouteConnectionNames,
   layerCount,
   defaultViaHoleDiameter,
   obstacles,
@@ -397,7 +338,6 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
         ? rebuildThroughObstacleTrace({
             trace,
             originalTraceRoutes,
-            unchangedFixedRouteConnectionNames,
             updatedTraceRoutes,
             layerCount,
             defaultViaHoleDiameter,
@@ -407,8 +347,6 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
         : convertUpdatedTraceRoutes({
             trace,
             updatedTraceRoutes,
-            originalTraceRoutes,
-            unchangedFixedRouteConnectionNames,
             layerCount,
             defaultViaHoleDiameter,
             obstacles,
