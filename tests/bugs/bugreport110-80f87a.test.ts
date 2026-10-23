@@ -24,7 +24,13 @@ test("bugreport110: simplifies flex sensor traces without changing terminals or 
     const [params] = getConstructorParams(
       pipeline,
     ) as ConstructorParameters<typeof TraceSimplificationSolver>
-    return [{ ...params, enableVertexShortcuts: false }]
+    return [
+      {
+        ...params,
+        enableVertexShortcuts: false,
+        useTraceWidthAwareClearance: false,
+      },
+    ]
   }
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,

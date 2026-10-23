@@ -732,6 +732,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           [...newHdRoutes, ...preloadedHdRoutes],
           cms.connMap,
         )
+        // Keep fixed-copper phases on their existing cleanup path.
+        const enableVertexShortcuts = preloadedHdRoutes.length === 0
 
         return [
           {
@@ -747,7 +749,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
-            enableVertexShortcuts: true,
+            enableVertexShortcuts,
+            useTraceWidthAwareClearance: enableVertexShortcuts,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
