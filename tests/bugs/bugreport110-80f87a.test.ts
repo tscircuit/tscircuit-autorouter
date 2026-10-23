@@ -3,7 +3,9 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
-import bugReport from "../../fixtures/bug-reports/bugreport110-80f87a/bugreport110-80f87a.json" with { type: "json" }
+import bugReport from "../../fixtures/bug-reports/bugreport110-80f87a/bugreport110-80f87a.json" with {
+  type: "json",
+}
 
 test("bugreport110: flex sensor routing with overlapping same-net vias", async (): Promise<void> => {
   const input = structuredClone(bugReport.simple_route_json) as SimpleRouteJson
