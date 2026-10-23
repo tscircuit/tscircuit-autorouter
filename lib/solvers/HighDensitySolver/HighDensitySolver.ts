@@ -19,6 +19,7 @@ import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/Portfo
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import type { ContextualComputeSelectionModel } from "../HyperHighDensitySolver/ContextualComputeSelectionModel"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -69,6 +70,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
+  computeSelectionModel?: ContextualComputeSelectionModel
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -109,6 +111,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    computeSelectionModel,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -132,6 +135,7 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    computeSelectionModel?: ContextualComputeSelectionModel
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -162,6 +166,7 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.computeSelectionModel = computeSelectionModel
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -413,6 +418,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      computeSelectionModel: this.computeSelectionModel,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

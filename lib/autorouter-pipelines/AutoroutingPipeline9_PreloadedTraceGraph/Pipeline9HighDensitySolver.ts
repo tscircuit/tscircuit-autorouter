@@ -34,6 +34,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { ContextualComputeSelectionModel } from "lib/solvers/HyperHighDensitySolver/ContextualComputeSelectionModel"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -313,6 +314,7 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
+  computeSelectionModel?: ContextualComputeSelectionModel
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -345,6 +347,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  computeSelectionModel,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -368,6 +371,7 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    computeSelectionModel,
   })
 
 /**
@@ -394,6 +398,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
+  readonly computeSelectionModel = new ContextualComputeSelectionModel()
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -436,6 +441,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
+      ...this.computeSelectionModel.getStats(),
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -564,6 +570,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    Object.assign(this.stats, this.computeSelectionModel.getStats())
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -597,6 +604,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      computeSelectionModel: this.computeSelectionModel,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -999,6 +1007,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    Object.assign(this.stats, this.computeSelectionModel.getStats())
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {

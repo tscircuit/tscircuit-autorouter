@@ -29,6 +29,23 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import {
+  ContextualComputeSelectionModel,
+  getComputeSelectionFeatures,
+  type ComputeSelectionObservation,
+  type ComputeSelectionPrediction,
+} from "./ContextualComputeSelectionModel"
+import { validateComputeSelectionOutcome } from "./validateComputeSelectionOutcome"
+
+type LearnedPortfolioCandidate = NonNullable<
+  PortfolioSingleIntraNodeSolver["supervisedSolvers"]
+>[number]
+
+type CandidateComputeWork = {
+  iterations: number
+  work: number
+  elapsedMs: number
+}
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -74,6 +91,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     BaseSolver,
     { iterations: number; maxIterations: number }
   >()
+  private readonly computeSelectionModel?: ContextualComputeSelectionModel
+  private readonly learnedComputeSelection: boolean
+  private readonly computeFeatures: number[]
+  private readonly computePredictions = new Map<string, ComputeSelectionPrediction>()
+  private readonly computeWorkBySolver = new Map<BaseSolver, CandidateComputeWork>()
+  private computeOutcomesRecorded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -127,12 +150,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      computeSelectionModel?: ContextualComputeSelectionModel
     },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    this.computeSelectionModel = opts.computeSelectionModel
+    this.learnedComputeSelection =
+      (opts.computeSelectionModel?.getStats().learnedComputeObservationCount ?? 0) > 0
+    this.computeFeatures = opts.computeSelectionModel
+      ? getComputeSelectionFeatures(
+          opts.nodeWithPortPoints,
+          opts.traceWidth ?? 0.15,
+          opts.obstacleMargin ?? 0.15,
+        )
+      : []
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -468,6 +502,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override _step() {
+    const startedAt = this.computeSelectionModel ? performance.now() : 0
+    let candidateElapsedMs = 0
+    let computeCandidate: BaseSolver | undefined
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
@@ -477,7 +514,52 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    super._step()
+    if (!this.computeSelectionModel) {
+      super._step()
+    } else {
+      const candidate = this.getSupervisedSolverWithBestFitness()
+      if (!candidate) {
+        // Keep the base supervisor's normal exhausted-portfolio error path.
+        super._step()
+      } else {
+        computeCandidate = candidate.solver
+        const candidateStartedAt = performance.now()
+        for (let index = 0; index < this.MIN_SUBSTEPS; index++) {
+          candidate.solver.step()
+        }
+        candidateElapsedMs = performance.now() - candidateStartedAt
+        this.activeSubSolver = candidate.solver
+        candidate.g = this.computeG(candidate.solver as IntraNodeRouteSolver)
+        candidate.h = this.computeH(candidate.solver as IntraNodeRouteSolver)
+        candidate.f = this.computeF(candidate.g, candidate.h)
+        if (candidate.solver.solved) {
+          this.solved = true
+          this.winningSolver = candidate.solver
+          this.onSolve(candidate as SupervisedSolver<IntraNodeRouteSolver>)
+        }
+      }
+    }
+
+    if (this.computeSelectionModel && computeCandidate) {
+      const solver = computeCandidate
+      const work = this.computeWorkBySolver.get(solver) ?? {
+        iterations: 0,
+        work: 0,
+        elapsedMs: 0,
+      }
+      const iterations = solver instanceof HighDensitySolverA13
+        ? solver.routingIterations
+        : solver.iterations
+      const advancedIterations = Math.max(0, iterations - work.iterations)
+      // Some exact constructors finish before their first step. Their terminal
+      // acceptance is one observed unit, rather than a zero-cost success event.
+      const acceptanceWork = advancedIterations === 0 && solver.solved ? 1 : 0
+      work.work += (advancedIterations + acceptanceWork) / this.MIN_SUBSTEPS
+      work.iterations = iterations
+      work.elapsedMs += candidateElapsedMs
+      this.computeWorkBySolver.set(solver, work)
+      if (this.learnedComputeSelection) this.computeSelectionModel.recordDecision()
+    }
 
     if (
       !this.negotiatedSearchStarted &&
@@ -490,6 +572,94 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
+    if (this.computeSelectionModel) {
+      this.computeSelectionModel.recordPortfolioOverhead(
+        Math.max(0, performance.now() - startedAt - candidateElapsedMs),
+      )
+    }
+    if (this.solved || this.failed) this.recordComputeOutcomes()
+  }
+
+  private getComputeStrategy(hyperParameters: Record<string, unknown>): string {
+    if (hyperParameters.HIGH_DENSITY_A01) return "A01"
+    if (hyperParameters.HIGH_DENSITY_A03) return "A03"
+    if (hyperParameters.HIGH_DENSITY_A13) return "A13"
+    if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) return "polyline"
+    if (hyperParameters.THROUGH_OBSTACLE) return "throughObstacle"
+    if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) return "singleTransition"
+    if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) return "singleLayer"
+    return "grid"
+  }
+
+  override getSupervisedSolverWithBestFitness(): LearnedPortfolioCandidate | null {
+    if (!this.computeSelectionModel || !this.learnedComputeSelection) {
+      return super.getSupervisedSolverWithBestFitness()
+    }
+    let selected: LearnedPortfolioCandidate | null = null
+    let bestScore = Infinity
+    for (const candidate of this.supervisedSolvers ?? []) {
+      if (candidate.solver.solved) return candidate
+      if (candidate.solver.failed) continue
+      const strategy = this.getComputeStrategy(candidate.hyperParameters)
+      let prediction = this.computePredictions.get(strategy)
+      if (!prediction) {
+        prediction = this.computeSelectionModel.predict(this.computeFeatures, strategy)
+        this.computePredictions.set(strategy, prediction)
+      }
+      const currentWork = this.computeWorkBySolver.get(candidate.solver)?.work ?? 0
+      // Live exposure lowers a stalled candidate's estimated event rate. All
+      // live candidates retain finite scores and their original full budgets.
+      const score = (prediction.exposure + currentWork) / prediction.validEvents
+      if (score < bestScore) {
+        bestScore = score
+        selected = candidate
+      }
+    }
+    return selected
+  }
+
+  private recordComputeOutcomes(): void {
+    if (!this.computeSelectionModel || this.computeOutcomesRecorded) return
+    this.computeOutcomesRecorded = true
+    const validationStartedAt = performance.now()
+    const valid =
+      this.solved &&
+      validateComputeSelectionOutcome({
+        routes: this.solvedRoutes,
+        node: this.nodeWithPortPoints,
+        connMap: this.connMap,
+        obstacles: this.constructorParams.obstacles ?? [],
+        layerCount: this.constructorParams.layerCount ?? 2,
+        traceWidth: this.constructorParams.traceWidth ?? 0.15,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
+        boardGeometry: this.constructorParams.boardGeometry,
+      })
+    const validationElapsedMs = performance.now() - validationStartedAt
+    if (this.solved) {
+      this.computeSelectionModel.recordValidation(validationElapsedMs)
+    }
+    // Labels do not cancel an existing winner or skip its normal cleanup.
+    // Final board validity remains the responsibility of the existing pipeline.
+    this.computeSelectionModel.observeNode(
+      (this.supervisedSolvers ?? []).flatMap((candidate): ComputeSelectionObservation[] => {
+        const work = this.computeWorkBySolver.get(candidate.solver)
+        if (!work || work.work === 0) return []
+        const winner = candidate.solver === this.winningSolver
+        let outcome: ComputeSelectionObservation["outcome"]
+        if (winner) outcome = valid ? "valid" : "invalid"
+        else outcome = candidate.solver.failed ? "failed" : "censored"
+        return [{
+          nodeId: this.nodeWithPortPoints.capacityMeshNodeId,
+          features: this.computeFeatures,
+          strategy: this.getComputeStrategy(candidate.hyperParameters),
+          work: work.work,
+          elapsedMs: work.elapsedMs + (winner ? validationElapsedMs : 0),
+          outcome,
+        }]
+      }),
+    )
+    Object.assign(this.stats, this.computeSelectionModel.getStats())
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
