@@ -238,28 +238,35 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     const reservations = this.interfaceIndex.query(node, radius, Math.max(this.params.rules.obstacleMargin, 0.1))
     this.stats.boundaryProofReservationRowsScanned += this.interfaceIndex.ports.length
     this.stats.boundaryProofReservationRowsRetained += reservations.length
+    // Build the mandatory copper domain before selecting a formula. Equal
+    // length formulas can have different fixed/neighbor clearance, so choosing
+    // one first and rejecting it afterward can discard a feasible cell move.
+    const margin = this.params.rules.obstacleMargin + Math.max(this.params.traceWidth, this.params.rules.viaDiameter, ...Object.values(this.params.rules.traceWidthByConnection ?? {}))
+    const bounds = [node.center.x - node.width / 2 - margin, node.center.y - node.height / 2 - margin, node.center.x + node.width / 2 + margin, node.center.y + node.height / 2 + margin] as const
+    const fixed = (this.fixedIndex?.search(...bounds) ?? []).map((index) => this.params.fixedHdRoutes[index]!)
+    const neighbors = (this.nodeIndex?.search(...bounds) ?? []).flatMap((index) => {
+      const otherId = this.output[index]!.capacityMeshNodeId
+      const certificate = otherId === nodeId ? undefined : this.certificates.cells[otherId]
+      return certificate ? [{ nodeId: otherId, routes: certificate.routes }] : []
+    })
     const construction = constructPipeline9ParametricCell({ ...this.params.rules, node: normalizeBoundaryNodeRoots(node, this.params.connMap), connMap: this.params.connMap,
-      interfacePolicy: "owned-normal-escapes", interfacePortPoints: reservations })
+      interfacePolicy: "owned-normal-escapes", interfacePortPoints: reservations,
+      isCompatibleWithMandatoryCopper: (route): boolean => !fixed.some((other) => this.copperConflict(route, other)) && !neighbors.some((neighbor) => neighbor.routes.some((other) => this.copperConflict(route, other))) })
     for (const [key, value] of Object.entries(construction.stats)) this.stats[key] = Number(this.stats[key] ?? 0) + value
     if (!construction.applicable || construction.routes.length === 0) {
       this.stats.boundaryProofUnsupported++
       this.rollback(new Set([nodeId]))
       return
     }
-    // The cell index encloses centerlines. Expand by both incident copper
-    // radii, using every declared nominal width, before the exact predicate.
-    const margin = this.params.rules.obstacleMargin + Math.max(this.params.traceWidth, this.params.rules.viaDiameter, ...Object.values(this.params.rules.traceWidthByConnection ?? {}))
-    const bounds = [node.center.x - node.width / 2 - margin, node.center.y - node.height / 2 - margin, node.center.x + node.width / 2 + margin, node.center.y + node.height / 2 + margin] as const
-    const fixed = (this.fixedIndex?.search(...bounds) ?? []).map((index) => this.params.fixedHdRoutes[index]!)
+    // Verify the selected assignment against the same immutable invocation
+    // snapshot; neither domain filtering nor this check mutates published
+    // routes. A later rollback creates and checks a fresh snapshot.
     const conflictingCells = new Set<string>()
     let fixedConflict = false
     for (const route of construction.routes) {
       if (fixed.some((other) => this.copperConflict(route, other))) fixedConflict = true
-      for (const index of this.nodeIndex?.search(...bounds) ?? []) {
-        const otherId = this.output[index]!.capacityMeshNodeId
-        if (otherId === nodeId) continue
-        const certificate = this.certificates.cells[otherId]
-        if (certificate?.routes.some((other) => this.copperConflict(route, other))) conflictingCells.add(otherId)
+      for (const neighbor of neighbors) {
+        if (neighbor.routes.some((other) => this.copperConflict(route, other))) conflictingCells.add(neighbor.nodeId)
       }
     }
     if (fixedConflict || conflictingCells.size > 0) {

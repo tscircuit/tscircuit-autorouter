@@ -30,6 +30,9 @@ type Params = {
   allowBlindAndBuriedVias?: boolean
   interfacePolicy?: "owned-normal-escapes"
   interfacePortPoints?: readonly Pipeline9ParametricInterfacePort[]
+  // Host-local eligibility for this invocation's published copper scene. It
+  // is neither a serialized certificate field nor a cached formula result.
+  isCompatibleWithMandatoryCopper?: (route: HighDensityRoute) => boolean
 }
 type Formula = { name: string; points: Point[] }
 type Stats = {
@@ -52,6 +55,8 @@ type Stats = {
   parametricInterfaceTerminalEscapes: number
   parametricInterfaceReservationChecks: number
   parametricInterfaceInheritedTerminalContacts: number
+  parametricMandatoryCopperChecks: number
+  parametricMandatoryCopperRejections: number
 }
 export type ParametricCellConstruction = {
   applicable: boolean
@@ -165,7 +170,8 @@ export function constructPipeline9ParametricCell(params: Params): ParametricCell
     parametricInterfacePairChecks: 0, parametricInterfaceUnsupportedPairs: 0, parametricInterfaceCandidateChecks: 0,
     parametricInterfaceCandidateRejections: 0, parametricInterfaceNormalEscapeFormulas: 0, parametricInterfaceCertifiedRoutes: 0,
     parametricInterfacePolicyNodeCount: Number(params.interfacePolicy !== undefined), parametricInterfaceTerminalEscapes: 0,
-    parametricInterfaceReservationChecks: 0, parametricInterfaceInheritedTerminalContacts: 0 }
+    parametricInterfaceReservationChecks: 0, parametricInterfaceInheritedTerminalContacts: 0,
+    parametricMandatoryCopperChecks: 0, parametricMandatoryCopperRejections: 0 }
   const byConnection = new Map<string, PortPoint[]>()
   for (const port of node.portPoints) {
     const ports = byConnection.get(port.connectionName) ?? []
@@ -229,7 +235,15 @@ export function constructPipeline9ParametricCell(params: Params): ParametricCell
         if (!certified) { stats.parametricInterfaceCandidateRejections++; continue }
       }
       stats.parametricDomainChecks++
-      if (satisfiesPhysicalDomain(route, params, stats)) candidates.push(route)
+      if (!satisfiesPhysicalDomain(route, params, stats)) continue
+      if (params.isCompatibleWithMandatoryCopper) {
+        stats.parametricMandatoryCopperChecks++
+        if (!params.isCompatibleWithMandatoryCopper(route)) {
+          stats.parametricMandatoryCopperRejections++
+          continue
+        }
+      }
+      candidates.push(route)
     }
     candidates.sort((a, b) => a.vias.length - b.vias.length || a.route.reduce((sum, p, i, all) => sum + (i ? Math.hypot(p.x - all[i - 1]!.x, p.y - all[i - 1]!.y) : 0), 0) - b.route.reduce((sum, p, i, all) => sum + (i ? Math.hypot(p.x - all[i - 1]!.x, p.y - all[i - 1]!.y) : 0), 0) || a.route.length - b.route.length)
     return candidates
