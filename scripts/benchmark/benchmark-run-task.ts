@@ -1,4 +1,6 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { profile } from "bun:jsc"
+import { summarizeBenchmarkCpuProfile } from "./summarizeBenchmarkCpuProfile"
 import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
@@ -383,31 +385,6 @@ const getProgressKey = (solver: SolverInstance): string => {
 export const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
-  const phases = solver as unknown as Record<
-    string,
-    {
-      stats?: Record<string, unknown>
-      benchmarkDiagnosticTimings?: Record<string, unknown>
-      benchmarkDiagnosticCounters?: Record<string, unknown>
-    } | undefined
-  >
-  const phaseStats: Record<string, Record<string, number>> = {}
-  for (const step of solver.pipelineDef) {
-    const phase = phases[step.solverName]
-    if (!phase) continue
-    const numericStats: Record<string, number> = {}
-    for (const values of [phase.stats, phase.benchmarkDiagnosticTimings, phase.benchmarkDiagnosticCounters]) {
-      if (!values) continue
-      for (const [name, value] of Object.entries(values)) {
-        if (typeof value === "number" && Number.isFinite(value)) {
-          numericStats[name] = value
-        }
-      }
-    }
-    if (Object.keys(numericStats).length > 0) {
-      phaseStats[step.solverName] = numericStats
-    }
-  }
   const networkedStats = [
     solver.highDensityRouteSolver?.stats,
     solver.highDensityRepairSolver?.stats,
@@ -455,7 +432,6 @@ export const getRoutingBenchmarkMetrics = (
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
-    phaseStats,
     networkedHighDensity,
   }
 }
@@ -669,7 +645,18 @@ export const runTask = async (
   let solveError: string | undefined
 
   try {
-    await solveWithProgress(task, solver, start, options)
+    // Research-only candidate: native solver unchanged, timing is not a speed
+    // comparison. Sample at 10ms to bound retained diagnostic stack memory.
+    const sampled = await profile(
+      () => solveWithProgress(task, solver, start, options),
+      10_000,
+    )
+    console.log("P9_RESEARCH_CPU_PROFILE " + JSON.stringify({
+      sample: task.sampleNumber,
+      scenario: task.scenarioName,
+      solver: task.solverName,
+      ...summarizeBenchmarkCpuProfile(sampled),
+    }))
   } catch (error) {
     solver.solved = false
     solveError = getErrorMessage(error)

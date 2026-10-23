@@ -102,10 +102,6 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
-    /** Exact crossing-count representation for owned native P9 solvers. */
-    USE_EXACT_CROSSING_INDEX?: boolean
-    /** Operation-count probes only; disabled in normal routing/benchmarks. */
-    COLLECT_EXACT_CROSSING_INDEX_WORK?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }
