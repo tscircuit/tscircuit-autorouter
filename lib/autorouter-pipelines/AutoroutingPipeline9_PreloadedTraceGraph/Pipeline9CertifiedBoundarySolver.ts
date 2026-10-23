@@ -78,7 +78,10 @@ export class Pipeline9CertifiedBoundarySolver extends Pipeline9BoundaryContractS
     this.restoredAttachments = immutable.restored
     this.fixedIndex = indexBoundaryCopper(params.fixedHdRoutes, params.rules.layerCount)
     this.certificates = { context: { rulesKey: getBoundaryPhysicalRulesKey(params.rules), fixedCopperKey: getBoundaryFixedCopperKey(params.fixedHdRoutes) }, cells: {} }
-    if (params.layerCount !== params.rules.layerCount || params.traceWidth !== params.rules.traceWidth || params.clearance < params.rules.obstacleMargin) throw new Error("Boundary allocation and physical proof rules disagree")
+    // Allocation uses a conservative common lane width; physical proofs retain
+    // each demand's declared width, including mutable preloaded sections.
+    const physicalWidths = [params.rules.traceWidth, ...Object.values(params.rules.traceWidthByConnection ?? {})]
+    if (params.layerCount !== params.rules.layerCount || physicalWidths.some((width) => !Number.isFinite(width) || width <= 0) || params.traceWidth < Math.max(...physicalWidths) || !Number.isFinite(params.rules.obstacleMargin) || params.rules.obstacleMargin < 0 || params.clearance < params.rules.obstacleMargin) throw new Error("Boundary allocation and physical proof rules disagree")
   }
 
   private enqueue(nodeId: string): void {

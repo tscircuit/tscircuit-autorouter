@@ -27,19 +27,21 @@ export {
 
 export const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   const reversed = [...points].reverse().map((point) => {
-    const { toNextSegmentType, ...rest } = point
+    const { toNextSegmentType, toNextSegmentCircuitJsonMetadata, traceThickness, ...rest } = point
     return rest
   }) as RoutePoint[]
 
   for (let i = 0; i < points.length - 1; i++) {
-    const segmentType = points[i]?.toNextSegmentType
-    if (!segmentType) continue
+    const source = points[i]!
     const reversedStartIndex = points.length - i - 2
     reversed[reversedStartIndex] = {
       ...reversed[reversedStartIndex]!,
-      toNextSegmentType: segmentType,
+      ...(source.toNextSegmentType ? { toNextSegmentType: source.toNextSegmentType } : {}),
+      ...(source.toNextSegmentCircuitJsonMetadata ? { toNextSegmentCircuitJsonMetadata: source.toNextSegmentCircuitJsonMetadata } : {}),
+      ...(source.traceThickness !== undefined ? { traceThickness: source.traceThickness } : {}),
     }
   }
+  if (reversed.length > 0 && points[0]!.traceThickness !== undefined) reversed[reversed.length - 1]!.traceThickness = points[0]!.traceThickness
 
   return reversed
 }
@@ -83,8 +85,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     stitchClearanceMode: StitchClearanceMode
   }) {
     super()
-    const canonicalHdRoutes = opts.preserveExactEndpoints
+    let canonicalHdRoutes = opts.preserveExactEndpoints
       ? [...opts.hdRoutes] : [...opts.hdRoutes].sort(compareRoutes)
+    const preserveFragmentWidths = opts.preserveExactEndpoints &&
+      (new Set(canonicalHdRoutes.map((route) => route.traceThickness)).size > 1 ||
+        canonicalHdRoutes.some((route) => route.route.some((point) => point.traceThickness !== undefined)))
+    if (preserveFragmentWidths) {
+      canonicalHdRoutes = canonicalHdRoutes.map((route) => ({ ...route,
+        route: route.route.map((point) => ({ ...point, traceThickness: point.traceThickness ?? route.traceThickness })),
+      }))
+    }
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
@@ -300,12 +310,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           x: this.start.x,
           y: this.start.y,
           z: closestFirstRoutePoint.z,
+          ...(preserveFragmentWidths ? { traceThickness: closestFirstRoutePoint.traceThickness } : {}),
         },
       ],
       vias: [],
       jumpers: [],
       viaDiameter: firstRoute.viaDiameter,
-      traceThickness: firstRoute.traceThickness,
+      traceThickness: preserveFragmentWidths ? Math.max(...canonicalHdRoutes.map((route) => route.traceThickness)) : firstRoute.traceThickness,
     }
   }
 
@@ -354,7 +365,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
-        terminalDistance > (this.preserveExactEndpoints || this.mergedHdRoute.endPcbPortId ? 1e-9 : GEOMETRIC_TOLERANCE) &&
+        terminalDistance > (this.preserveExactEndpoints ? 0 : this.mergedHdRoute.endPcbPortId ? 1e-9 : GEOMETRIC_TOLERANCE) &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
         if (
@@ -491,6 +502,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       if (pointsToAdd[0].toNextSegmentType) {
         lastMergedPoint.toNextSegmentType = pointsToAdd[0].toNextSegmentType
       }
+      if (pointsToAdd[0].toNextSegmentCircuitJsonMetadata) lastMergedPoint.toNextSegmentCircuitJsonMetadata = pointsToAdd[0].toNextSegmentCircuitJsonMetadata
+      if (pointsToAdd[0].traceThickness !== undefined) lastMergedPoint.traceThickness = pointsToAdd[0].traceThickness
       this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
     } else {
       this.mergedHdRoute.route.push(...pointsToAdd)

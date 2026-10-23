@@ -30,6 +30,8 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Source-proven physical attachments cannot move during redistribution. */
+  immutablePortIds?: ReadonlySet<string>
 }
 
 /**
@@ -143,7 +145,17 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
     const family: PortPointWithOwnerPair[] = []
+    const immutableLayers = new Set(familyRaw.filter((point) =>
+      point.portPointId && this.input.immutablePortIds?.has(point.portPointId),
+    ).map((point) => point.z))
+    this.stats.immutableLayerFamiliesPreserved = Number(this.stats.immutableLayerFamiliesPreserved ?? 0) + immutableLayers.size
+    this.stats.immutableLayerMovablePortsPreserved = Number(this.stats.immutableLayerMovablePortsPreserved ?? 0) +
+      familyRaw.filter((point) => immutableLayers.has(point.z) &&
+        (!point.portPointId || !this.input.immutablePortIds?.has(point.portPointId))).length
     for (const portPoint of familyRaw) {
+      // Uniform spacing has no fixed-slot model. Keep this layer's existing
+      // placements rather than placing a movable crossing on its anchor.
+      if (immutableLayers.has(portPoint.z)) continue
       // A solitary crossing already has all the available spacing. Preserve
       // its obstacle-aligned placement rather than moving it into fixed copper.
       if (
