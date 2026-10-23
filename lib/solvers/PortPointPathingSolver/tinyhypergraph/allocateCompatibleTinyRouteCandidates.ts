@@ -106,7 +106,7 @@ function getCandidatesByNet(solver: TinyHyperGraphSolver): Map<number, Candidate
     }
     if (!visited.has(solver.problem.routeEndPort[route]!) || [...routeAdjacency[route]!.keys()].some((port) => !visited.has(port))) throw new Error(`Joint allocation requires connected solved candidate route ${route}`)
   }
-  for (const candidate of byNet.values()) candidate.key = candidate.segments.map((s) => `${s.region}:${s.route}:${s.from}:${s.to}`).sort().join("|")
+  for (const candidate of byNet.values()) candidate.key = candidate.segments.map((s) => `${s.region}:${s.route}:${Math.min(s.from, s.to)}:${Math.max(s.from, s.to)}`).sort().join("|")
   return byNet
 }
 
