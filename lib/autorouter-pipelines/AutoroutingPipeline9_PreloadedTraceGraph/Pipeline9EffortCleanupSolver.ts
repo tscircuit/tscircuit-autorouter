@@ -1,9 +1,11 @@
 import {
   TraceSimplificationSolver,
   UselessViaRemovalSolver,
+  VertexShortcutPathSolver,
 } from "@tscircuit/trace-simplification-solver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 
 type CleanupCost = { vias: number; points: number }
 type CleanupParams = {
@@ -22,6 +24,9 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   readonly cleanupPasses: number
   simplifier?: TraceSimplificationSolver
   viaRemovalSolver?: UselessViaRemovalSolver
+  private vertexRoutes?: HighDensityRoute[]
+  private vertexRouteIndex = 0
+  private vertexSolver?: VertexShortcutPathSolver
   readonly params: CleanupParams
 
   constructor(params: CleanupParams) {
@@ -35,8 +40,8 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         : Math.ceil(2 * params.effort)
     this.MAX_ITERATIONS = 100e6 * Math.max(1, this.cleanupPasses)
     if (params.effort <= 1) {
-      // Path sampling already ran before repair. Only revisit removable vias
-      // at default effort; repeated path and crossing searches are expensive.
+      // Path sampling already ran before repair. Start with removable vias,
+      // then a vertex-only sweep, without repeating path/crossing searches.
       this.viaRemovalSolver = this.createViaRemovalSolver()
       return
     }
@@ -75,6 +80,10 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.vertexRoutes) {
+      this.stepVertexCleanup()
+      return
+    }
     if (this.viaRemovalSolver) {
       const remover = this.viaRemovalSolver
       remover.step()
@@ -103,7 +112,7 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.viaRemovalSolver = this.createViaRemovalSolver()
         return
       }
-      this.solved = true
+      this.vertexRoutes = structuredClone(this.bestRoutes)
       return
     }
     const simplifier = this.simplifier
@@ -133,7 +142,74 @@ export class Pipeline9EffortCleanupSolver extends BaseSolver {
         this.bestCost = cost
       }
     }
-    this.solved = simplifier.solved
+    if (simplifier.solved) {
+      this.vertexRoutes = structuredClone(this.bestRoutes)
+    }
+  }
+
+  private getRouteLength(hdRoute: HighDensityRoute): number {
+    return hdRoute.route.reduce((length, point, index, route) => {
+      if (index === 0) return length
+      const previous = route[index - 1]!
+      return length + Math.hypot(point.x - previous.x, point.y - previous.y)
+    }, 0)
+  }
+
+  private stepVertexCleanup(): void {
+    const routes = this.vertexRoutes!
+    const config = this.params.config
+    const route = routes[this.vertexRouteIndex]
+    if (!route) {
+      const length = routes.reduce(
+        (sum, hdRoute) => sum + this.getRouteLength(hdRoute),
+        0,
+      )
+      const bestLength = this.bestRoutes.reduce(
+        (sum, hdRoute) => sum + this.getRouteLength(hdRoute),
+        0,
+      )
+      const cost = this.params.getCost(routes)
+      if (
+        cost.vias === this.bestCost.vias &&
+        (length < bestLength - 1e-9 ||
+          (length <= bestLength + 1e-9 && cost.points < this.bestCost.points)) &&
+        this.params.isValid(routes)
+      ) {
+        this.bestRoutes = routes
+        this.bestCost = cost
+      }
+      this.solved = true
+      return
+    }
+    if (!this.vertexSolver) {
+      this.vertexSolver = new VertexShortcutPathSolver({
+        inputRoute: route,
+        otherHdRoutes: [
+          ...(config.otherHdRoutes ?? []),
+          ...routes.filter((_, index) => index !== this.vertexRouteIndex),
+        ],
+        obstacles: createObjectsWithZLayers(config.obstacles, config.layerCount),
+        connMap: config.connMap,
+        colorMap: config.colorMap,
+        outline: config.outline ? [...config.outline] : undefined,
+        minBoardEdgeClearance: config.minBoardEdgeClearance,
+        useTraceWidthAwareClearance: true,
+      })
+      this.vertexSolver.MAX_ITERATIONS = Math.max(
+        this.vertexSolver.MAX_ITERATIONS,
+        2 * route.route.length,
+      )
+    }
+    this.vertexSolver.step()
+    if (this.vertexSolver.failed) {
+      this.failed = true
+      this.error = this.vertexSolver.error
+      return
+    }
+    if (!this.vertexSolver.solved) return
+    routes[this.vertexRouteIndex] = this.vertexSolver.simplifiedRoute
+    this.vertexRouteIndex++
+    this.vertexSolver = undefined
   }
 
   getOutput(): HighDensityRoute[] {

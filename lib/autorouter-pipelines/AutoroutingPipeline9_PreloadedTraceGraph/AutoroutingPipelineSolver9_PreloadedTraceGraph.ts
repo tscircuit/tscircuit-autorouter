@@ -747,7 +747,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
-            enableVertexShortcuts: true,
+            // Vertex cleanup runs after joint repair, so shortcut choices do
+            // not increase the regional repair search budget.
             useTraceWidthAwareClearance: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
