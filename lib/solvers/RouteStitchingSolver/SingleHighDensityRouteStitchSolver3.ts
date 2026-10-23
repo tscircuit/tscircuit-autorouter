@@ -354,7 +354,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
       if (
-        terminalDistance > (this.preserveExactEndpoints || this.mergedHdRoute.endPcbPortId ? 1e-9 : GEOMETRIC_TOLERANCE) &&
+        terminalDistance > (this.preserveExactEndpoints ? 0 : this.mergedHdRoute.endPcbPortId ? 1e-9 : GEOMETRIC_TOLERANCE) &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
         if (

@@ -34,9 +34,11 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { constructPipeline9ParametricCell } from "./constructPipeline9ParametricCell"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
+  enableParametricConstruction?: boolean
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -46,6 +48,9 @@ export type Pipeline9HighDensitySolverParams = {
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
+  traceWidthByConnection?: Readonly<Record<string, number>>
+  traceToHoleClearance?: number
+  traceToPadClearance?: number
   obstacleMargin: number
   viaToPadClearance?: number
   effort: number
@@ -443,6 +448,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacleUses: 0,
       fallbackNodeCount: 0,
       regularNodeCount: 0,
+      constructedStraightNodeCount: 0,
+      constructedStraightRouteCount: 0,
+      parametricCompiledNodeCount: 0,
       b01NodeCount: 0,
       reroutedFixedRouteCount: 0,
       reroutedFixedRouteSectionCount: 0,
@@ -523,7 +531,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
           if (key !== "nodeCount" && key !== "fixedObstacleCount")
-            this.stats[key] += value
+            this.stats[key] = Number(this.stats[key] ?? 0) + value
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,
@@ -585,6 +593,35 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
+    if (this.params.enableParametricConstruction) {
+    const construction = constructPipeline9ParametricCell({
+      node: normalizePipeline9NodeRootConnectionNames(node, this.connMap),
+      connMap: this.connMap,
+      obstacles: this.obstacles,
+      boardGeometry: this.boardGeometry,
+      layerCount: this.layerCount,
+      traceWidth: this.traceWidth,
+      traceWidthByConnection: this.params.traceWidthByConnection,
+      viaToPadClearance: this.viaToPadClearance,
+      traceToHoleClearance: this.params.traceToHoleClearance,
+      traceToPadClearance: this.params.traceToPadClearance,
+      viaDiameter: this.viaDiameter,
+      obstacleMargin: this.obstacleMargin,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+    })
+    for (const [key, value] of Object.entries(construction.stats)) {
+      this.stats[key] = Number(this.stats[key] ?? 0) + value
+    }
+    if (construction.applicable) {
+      this.stats.parametricCompiledNodeCount += 1
+      if (construction.routes.every((route) => route.route.length <= 2 && route.vias.length === 0)) {
+        this.stats.constructedStraightNodeCount += 1
+        this.stats.constructedStraightRouteCount += construction.routes.length
+      }
+      this.finishActiveNode(construction.routes)
+      return
+    }
+    }
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
       colorMap: this.colorMap,

@@ -430,6 +430,15 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             distance(start, this.activeSolver.start) > 1e-6 || distance(end, this.activeSolver.end) > 1e-6) {
             throw new Error(`Declared terminal stitching disconnected ${this.activeSolver.mergedHdRoute.connectionName}`)
           }
+          for (const [point, terminal] of [[start, this.activeSolver.start], [end, this.activeSolver.end]] as const) {
+            if (point.x !== terminal.x || point.y !== terminal.y || point.z !== terminal.z) {
+              throw new Error(`Declared terminal stitching lost exact endpoint of ${this.activeSolver.mergedHdRoute.connectionName}`)
+            }
+            if (point.pcb_port_id !== undefined && point.pcb_port_id !== terminal.pcb_port_id) {
+              throw new Error(`Declared terminal stitching has conflicting PCB terminal ${point.pcb_port_id} for ${this.activeSolver.mergedHdRoute.connectionName}`)
+            }
+            if (this.preserveTerminalPcbPortIds && terminal.pcb_port_id) point.pcb_port_id = terminal.pcb_port_id
+          }
         }
         if (this.activeSolver instanceof SingleHighDensityRouteStitchSolver3) {
           this.clearanceValidator.addRoute(this.activeSolver.mergedHdRoute)
