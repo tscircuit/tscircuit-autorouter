@@ -1400,6 +1400,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ripCount: solveGraphStats.ripCount,
       electricalTreeTargetCount: solveGraphStats.electricalTreeTargetCount,
       electricalTreeSuffixSegmentCount: solveGraphStats.electricalTreeSuffixSegmentCount,
+      electricalTreeAliasConnectorCount: solveGraphStats.electricalTreeAliasConnectorCount,
       electricalTreeIndexSegmentReads: solveGraphStats.electricalTreeIndexSegmentReads,
       electricalTreeSearchStepCount: solveGraphStats.electricalTreeSearchStepCount,
       electricalTreeRemovedRetracedSegmentCount:

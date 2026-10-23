@@ -11,14 +11,17 @@ type TreeSegment = {
   regionId: number
   fromPortId: number
   toPortId: number
+  physicalTerminalConnector?: true
 }
 
 type TreeTarget = {
   routeId: number
   startPortId: number
+  endPortId: number
   targetPortId: number
   suffix: TreeSegment[]
   materializedSuffixSegmentCount?: number
+  materializedAliasConnectorCount?: number
   removedRetracedSegmentCount?: number
 }
 
@@ -33,6 +36,8 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
   private treeTarget?: TreeTarget
   private readonly routeCountByNet = new Map<number, number>()
   private readonly initiallyAssignedRouteIds: Set<number>
+  private readonly physicalTerminalKeyByPort = new Map<number, string>()
+  private readonly terminalPortsByPhysicalKey = new Map<string, number[]>()
 
   constructor(
     topology: TinyHyperGraphTopology,
@@ -46,8 +51,46 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
     for (const netId of problem.routeNet) {
       this.routeCountByNet.set(netId, (this.routeCountByNet.get(netId) ?? 0) + 1)
     }
+    const excludedPorts = new Set<number>()
+    for (const assignment of problem.initialAssignments ?? []) {
+      excludedPorts.add(assignment.fromPortId)
+      excludedPorts.add(assignment.toPortId)
+    }
+    for (let routeId = 0; routeId < problem.routeCount; routeId++) {
+      if (!hasPreloadedTraceSectionMetadata(problem.routeMetadata?.[routeId])) {
+        continue
+      }
+      excludedPorts.add(problem.routeStartPort[routeId]!)
+      excludedPorts.add(problem.routeEndPort[routeId]!)
+    }
+    for (let portId = 0; portId < topology.portCount; portId++) {
+      const metadata = topology.portMetadata?.[portId]
+      const pcbPortId = metadata?.pcb_port_id
+      const x = topology.portX[portId]!
+      const y = topology.portY[portId]!
+      const z = topology.portZ[portId]!
+      if (
+        excludedPorts.has(portId) ||
+        metadata?._tinyTerminal !== true ||
+        typeof pcbPortId !== "string" ||
+        pcbPortId.length === 0 ||
+        ![x, y, z].every(Number.isFinite) ||
+        (Array.isArray(metadata._preloadedFixedNetIds) &&
+          metadata._preloadedFixedNetIds.length > 0) ||
+        (Array.isArray(metadata._preloadedTracePortAssignments) &&
+          metadata._preloadedTracePortAssignments.length > 0)
+      ) {
+        continue
+      }
+      const key = JSON.stringify([pcbPortId, x, y, z])
+      this.physicalTerminalKeyByPort.set(portId, key)
+      const ports = this.terminalPortsByPhysicalKey.get(key) ?? []
+      ports.push(portId)
+      this.terminalPortsByPhysicalKey.set(key, ports)
+    }
     this.stats.electricalTreeTargetCount = 0
     this.stats.electricalTreeSuffixSegmentCount = 0
+    this.stats.electricalTreeAliasConnectorCount = 0
     this.stats.electricalTreeIndexSegmentReads = 0
     this.stats.electricalTreeSearchStepCount = 0
     this.stats.electricalTreeRemovedRetracedSegmentCount = 0
@@ -85,8 +128,77 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
     return this.treeTarget
   }
 
+  private getPhysicalAliasSegments(
+    portId: number,
+    rootPortId: number,
+    adjacency: Map<number, TreeSegment[]>,
+  ): TreeSegment[] {
+    const key = this.physicalTerminalKeyByPort.get(portId)
+    if (key === undefined) return []
+    const segments: TreeSegment[] = []
+    const x = this.topology.portX[portId]!
+    const y = this.topology.portY[portId]!
+    const z = this.topology.portZ[portId]!
+    for (const aliasPortId of this.terminalPortsByPhysicalKey.get(key)!) {
+      if (
+        aliasPortId === portId ||
+        (!adjacency.has(aliasPortId) && aliasPortId !== rootPortId)
+      ) {
+        continue
+      }
+      for (const regionId of this.topology.incidentPortRegion[portId]!) {
+        const availableZMask = this.topology.regionAvailableZMask?.[regionId]
+        if (
+          !this.topology.incidentPortRegion[aliasPortId]!.includes(regionId) ||
+          this.topology.regionMetadata?.[regionId]?._tinyTerminal === true ||
+          availableZMask === undefined || (availableZMask & (1 << z)) === 0
+        ) {
+          continue
+        }
+        const width = this.topology.regionWidth[regionId]!
+        const height = this.topology.regionHeight[regionId]!
+        const centerX = this.topology.regionCenterX[regionId]!
+        const centerY = this.topology.regionCenterY[regionId]!
+        if (
+          ![width, height, centerX, centerY].every(Number.isFinite) ||
+          width <= 0 ||
+          height <= 0 ||
+          x < centerX - width / 2 - 1e-9 ||
+          x > centerX + width / 2 + 1e-9 ||
+          y < centerY - height / 2 - 1e-9 ||
+          y > centerY + height / 2 + 1e-9 ||
+          (adjacency.has(portId) && !adjacency.get(portId)!.some(
+            (segment) => segment.regionId === regionId,
+          )) ||
+          (adjacency.has(aliasPortId) && !adjacency.get(aliasPortId)!.some(
+            (segment) => segment.regionId === regionId,
+          ))
+        ) {
+          continue
+        }
+        // Both committed sides belong to this route's verified same-net copper
+        // index. The current root may be new, but must be the same physical pad.
+        segments.push({
+          regionId,
+          fromPortId: portId,
+          toPortId: aliasPortId,
+          physicalTerminalConnector: true,
+        })
+        break
+      }
+    }
+    return segments
+  }
+
+  private isPhysicalTerminalConnector(segment: TreeSegment): boolean {
+    const fromKey = this.physicalTerminalKeyByPort.get(segment.fromPortId)
+    const toKey = this.physicalTerminalKeyByPort.get(segment.toPortId)
+    return segment.fromPortId !== segment.toPortId &&
+      fromKey !== undefined && fromKey === toKey
+  }
+
   private buildTreeTarget(routeId: number, startPortId: number, endPortId: number): TreeTarget {
-    const target: TreeTarget = { routeId, startPortId, targetPortId: endPortId, suffix: [] }
+    const target: TreeTarget = { routeId, startPortId, endPortId, targetPortId: endPortId, suffix: [] }
     const netId = this.problem.routeNet[routeId]!
     const z = this.topology.portZ[endPortId]!
     if (this.topology.portZ[startPortId] !== z) return target
@@ -110,11 +222,15 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
         ) {
           continue
         }
+        const segment: TreeSegment = { regionId, fromPortId, toPortId }
+        if (this.isPhysicalTerminalConnector(segment)) {
+          segment.physicalTerminalConnector = true
+        }
         const forward = adjacency.get(fromPortId) ?? []
-        forward.push({ regionId, fromPortId, toPortId })
+        forward.push(segment)
         adjacency.set(fromPortId, forward)
         const reverse = adjacency.get(toPortId) ?? []
-        reverse.push({ regionId, fromPortId: toPortId, toPortId: fromPortId })
+        reverse.push({ ...segment, fromPortId: toPortId, toPortId: fromPortId })
         adjacency.set(toPortId, reverse)
       }
     }
@@ -125,7 +241,8 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
     // Either terminal may already belong to the routed tree. Search from the
     // new terminal toward that component, independent of input pair direction.
     for (const [sourcePortId, rootPortId] of [[startPortId, endPortId], [endPortId, startPortId]]) {
-      if (!adjacency.has(rootPortId)) continue
+      const rootAliases = this.getPhysicalAliasSegments(rootPortId, rootPortId, adjacency)
+      if (!adjacency.has(rootPortId) && rootAliases.length === 0) continue
       const towardEnd = new Map<number, TreeSegment>()
       const visited = new Set<number>([rootPortId])
       const queue = [rootPortId]
@@ -142,10 +259,14 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
           selectedPortId = portId
           selected = true
         }
-        for (const segment of adjacency.get(portId) ?? []) {
+        for (const segment of [
+          ...(adjacency.get(portId) ?? []),
+          ...this.getPhysicalAliasSegments(portId, rootPortId, adjacency),
+        ]) {
           if (visited.has(segment.toPortId)) continue
           visited.add(segment.toPortId)
           towardEnd.set(segment.toPortId, {
+            ...segment,
             regionId: segment.regionId,
             fromPortId: segment.toPortId,
             toPortId: portId,
@@ -155,6 +276,7 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
       }
       if (!selected) continue
       target.startPortId = sourcePortId
+      target.endPortId = rootPortId
       target.targetPortId = selectedPortId
       target.suffix = []
       let cursor = selectedPortId
@@ -207,9 +329,24 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
         break
       }
     }
-    target.materializedSuffixSegmentCount = target.suffix.length - suffixStart
+    const ownedSegments = [...segments.slice(0, prefixLength), ...target.suffix.slice(suffixStart)]
+    if (
+      target.suffix.length > 0 && (
+        ownedSegments[0]?.fromPortId !== target.startPortId ||
+        ownedSegments.at(-1)?.toPortId !== target.endPortId ||
+        ownedSegments.some((segment, index) =>
+          index > 0 && ownedSegments[index - 1]!.toPortId !== segment.fromPortId,
+        )
+      )
+    ) {
+      throw new Error(`Electrical tree lost route ${target.routeId}'s original terminal path`)
+    }
+    target.materializedSuffixSegmentCount = target.suffix.slice(suffixStart)
+      .filter((segment) => !segment.physicalTerminalConnector).length
+    target.materializedAliasConnectorCount = ownedSegments
+      .filter((segment) => this.isPhysicalTerminalConnector(segment)).length
     target.removedRetracedSegmentCount = segments.length - prefixLength + suffixStart
-    return [...segments.slice(0, prefixLength), ...target.suffix.slice(suffixStart)]
+    return ownedSegments
   }
 
   override onPathFound(finalCandidate: Candidate): void {
@@ -221,6 +358,7 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
       if (target.suffix.length > 0) {
         if (
           target.materializedSuffixSegmentCount === undefined ||
+          target.materializedAliasConnectorCount === undefined ||
           target.removedRetracedSegmentCount === undefined
         ) {
           throw new Error("Electrical tree committed without materializing its suffix")
@@ -228,6 +366,8 @@ export class ElectricalTreeTinyHyperGraphSolver extends SelectiveReripTinyHyperG
         this.stats.electricalTreeTargetCount += 1
         this.stats.electricalTreeSuffixSegmentCount +=
           target.materializedSuffixSegmentCount
+        this.stats.electricalTreeAliasConnectorCount +=
+          target.materializedAliasConnectorCount
         this.stats.electricalTreeRemovedRetracedSegmentCount +=
           target.removedRetracedSegmentCount
       }
