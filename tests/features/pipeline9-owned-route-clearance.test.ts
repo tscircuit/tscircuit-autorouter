@@ -12,9 +12,12 @@ test("whole-route clearance preserves exact owned endpoints and excludes unsuppo
     route: [{ x: -1, y: 0, z: 0, pcb_port_id: "A" }, { x: 1, y: 0, z: 0, pcb_port_id: "B" }], vias: [] }
   const fixed = { connectionName: "foreign", rootConnectionName: "foreign", preloadedTraceIndex: 0, preloadedRouteIndex: 0,
     traceThickness: 0.1, viaDiameter: 0.3, route: [{ x: 0, y: -1, z: 0 }, { x: 0, y: 1, z: 0 }], vias: [] }
+  const originalSrj: SimpleRouteJson = { ...srj, traces: [{ type: "pcb_trace", pcb_trace_id: "fixed_foreign", connection_name: "foreign", route: [
+    { route_type: "wire", x: 0, y: -1, layer: "top", width: 0.1 }, { route_type: "wire", x: 0, y: 1, layer: "top", width: 0.1 },
+  ] }] }
   const conflict = (routes: HighDensityRoute[]): boolean => doPipeline9RoutesHaveCopperConflict({ left: routes[0]!, right: fixed, clearance: 0.1, layerCount: 2 })
-  const params = { srj, routes: [route], newConnections: [connection], fixedObstacleRoutes: [fixed], syntheticConnectionNames: new Set<string>(), preloadRepairTraceIds: new Set<string>(),
-    connMap: getConnectivityMapFromSimpleRouteJson(srj), colorMap: {}, viaDiameter: 0.3, viaHoleDiameter: 0.2, traceWidth: 0.1, obstacleMargin: 0.1, effort: 1,
+  const params = { srj, preloadedTraces: originalSrj.traces!, traceClearance: 0.1, viaClearance: 0.1, viaHoleClearance: 0.1, routes: [route], newConnections: [connection], fixedObstacleRoutes: [fixed], syntheticConnectionNames: new Set<string>(), preloadRepairTraceIds: new Set<string>(),
+    connMap: getConnectivityMapFromSimpleRouteJson(originalSrj), colorMap: {}, viaDiameter: 0.3, viaHoleDiameter: 0.2, traceWidth: 0.1, obstacleMargin: 0.1, effort: 1,
     drcEvaluator: ({ routes, hdRoutes }: { routes?: HighDensityRoute[]; hdRoutes?: HighDensityRoute[] }) => ({ errors: conflict((routes ?? hdRoutes)!) ? [{ type: "pcb_trace_error", pcb_trace_id: "ab_0", pcb_trace_error_id: "overlap_ab_0_foreign_0" }] : [] }) }
   const solver = new Pipeline9OwnedRouteClearanceSolver(params)
   solver.solve()

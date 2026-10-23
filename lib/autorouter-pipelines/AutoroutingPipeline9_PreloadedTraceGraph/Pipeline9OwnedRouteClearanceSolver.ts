@@ -1,10 +1,19 @@
 import { FindClearancePathSolver } from "@tscircuit/repair04"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { SimplifiedPcbTrace } from "lib/types"
 import type { Pipeline9RegionalB01RepairParams } from "./applyPipeline9RegionalB01Repairs"
+import { createPipeline9ClearanceSearchOwnershipContext } from "./createPipeline9ClearanceSearchOwnershipContext"
 import { getPipeline9DrcErrors, getPipeline9DrcErrorTraceIds, getPipeline9RouteIndexByTraceId, isPipeline9DrcCandidateBetter, type Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
-type Params = Pipeline9RegionalB01RepairParams & { viaHoleDiameter: number }
+type Params = Pipeline9RegionalB01RepairParams & {
+  preloadedTraces: readonly SimplifiedPcbTrace[]
+  preloadedSectionTraceIndexByConnection?: ReadonlyMap<string, number>
+  viaHoleDiameter: number
+  traceClearance: number
+  viaClearance: number
+  viaHoleClearance: number
+}
 type Problem = { solver: FindClearancePathSolver; routeIndex: number }
 
 /** Complete owned-route candidates preserve the already certified endpoints. */
@@ -20,9 +29,13 @@ export class Pipeline9OwnedRouteClearanceSolver extends BaseSolver {
 
   constructor(private readonly params: Params) {
     super()
+    if (![params.traceClearance, params.viaClearance, params.viaHoleClearance].every((gap) => Number.isFinite(gap) && gap >= 0)) throw new Error("Owned route search requires explicit nonnegative reference clearances")
     this.routes = params.routes
     this.MAX_ITERATIONS = 32 + 8 * params.routes.length
-    this.stats = { ownedRouteRepairTrials: 0, ownedRouteRepairAccepted: 0, ownedRouteRepairNullSearches: 0, ownedRouteRepairNodesPopped: 0, ownedRouteRepairNodeLimits: 0, ownedRouteRepairProtectedRoutes: 0 }
+    this.stats = { ownedRouteRepairTrials: 0, ownedRouteRepairAccepted: 0, ownedRouteRepairNullSearches: 0, ownedRouteRepairNodesPopped: 0, ownedRouteRepairNodeLimits: 0, ownedRouteRepairProtectedRoutes: 0,
+      ownedRouteSearchRouteOwnerReads: 0, ownedRouteSearchObstacleOwnerReads: 0, ownedRouteSearchMaxCanonicalNets: 0,
+      ownedRouteSearchConservativeCoupledViaGap: Number(params.viaClearance !== params.viaHoleClearance),
+    }
   }
 
   private preparePass(): void {
@@ -73,17 +86,24 @@ export class Pipeline9OwnedRouteClearanceSolver extends BaseSolver {
       const margin = 2 * scale * (this.params.obstacleMargin + Math.max(route.traceThickness, route.viaDiameter))
       const bounds = { minX: Math.max(this.params.srj.bounds.minX, Math.min(...xs) - margin), maxX: Math.min(this.params.srj.bounds.maxX, Math.max(...xs) + margin),
         minY: Math.max(this.params.srj.bounds.minY, Math.min(...ys) - margin), maxY: Math.min(this.params.srj.bounds.maxY, Math.max(...ys) + margin) }
+      const context = createPipeline9ClearanceSearchOwnershipContext({
+        srj: { ...this.params.srj, defaultObstacleMargin: undefined }, preloadedTraces: this.params.preloadedTraces,
+        preloadedSectionTraceIndexByConnection: this.params.preloadedSectionTraceIndexByConnection,
+        routes: this.routes, fixedObstacleRoutes: this.params.fixedObstacleRoutes, connMap: this.params.connMap,
+      })
+      this.stats.ownedRouteSearchRouteOwnerReads = (this.stats.ownedRouteSearchRouteOwnerReads ?? 0) + context.routeOwnerReads
+      this.stats.ownedRouteSearchObstacleOwnerReads = (this.stats.ownedRouteSearchObstacleOwnerReads ?? 0) + context.obstacleOwnerReads
+      this.stats.ownedRouteSearchMaxCanonicalNets = Math.max(this.stats.ownedRouteSearchMaxCanonicalNets ?? 0, context.canonicalNetCount)
+      // Native Find uses one gap for both via annuli and drill spacing. A
+      // distinct declared hole gap therefore conservatively narrows coverage;
+      // full-reference acceptance still uses the separate physical rules.
+      const coupledViaGap = Math.max(this.params.viaClearance, this.params.viaHoleClearance)
+      this.stats.ownedRouteSearchConservativeCoupledViaGap = Number(this.params.viaClearance !== this.params.viaHoleClearance)
       const solver = new FindClearancePathSolver({
-        // Fixed preload HD roots use ConnectivityMap's canonical IDs. Carry
-        // that certified alias into this private search, whose net union also
-        // sees the original PCB pad/connection names.
-        srj: { ...this.params.srj, traces: undefined, connections: [...this.params.srj.connections, ...this.params.newConnections].map((connection) => {
-          const canonical = this.params.connMap.getNetConnectedToId(connection.name)
-          return canonical ? { ...connection, __rootConnectionNames: [...new Set([...(connection.__rootConnectionNames ?? []), canonical])] } : connection
-        }) },
-        routes: [...this.routes, ...this.params.fixedObstacleRoutes], routeIndex, start: route.route[0]!, end: route.route.at(-1)!, bounds,
-        traceThickness: route.traceThickness, traceClearance: this.params.srj.minTraceToPadEdgeClearance ?? this.params.obstacleMargin,
-        viaClearance: this.params.srj.minPadEdgeToPadEdgeClearance ?? this.params.obstacleMargin,
+        srj: context.srj,
+        routes: context.routes, routeIndex, start: route.route[0]!, end: route.route.at(-1)!, bounds,
+        traceThickness: route.traceThickness, traceClearance: this.params.traceClearance,
+        viaClearance: coupledViaGap,
         // Resolve the board's narrowest declared routing geometry, including
         // when this particular route is wider than the minimum-width copper.
         gridSize: Math.min(0.1, route.traceThickness / 2, this.params.srj.minTraceWidth / 2), viaHoleDiameter: this.params.viaHoleDiameter,

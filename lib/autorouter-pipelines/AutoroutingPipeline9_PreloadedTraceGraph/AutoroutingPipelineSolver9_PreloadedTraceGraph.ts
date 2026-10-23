@@ -91,6 +91,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { pinPipeline9PreloadedSectionEndpoints } from "./pinPipeline9PreloadedSectionEndpoints"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -121,6 +122,7 @@ type Pipeline9PreloadedFixedRouteState = {
   originalFixedRoutes: PreloadedHighDensityRoute[]
   updatedFixedRoutes: PreloadedHighDensityRoute[]
   replacedConnectionNames: Set<string>
+  unchangedFixedRouteConnectionNames: Set<string>
   mutationMasks: Map<string, boolean[]>
 }
 
@@ -306,6 +308,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  private preloadedSectionEndpointPins?: ReturnType<typeof pinPipeline9PreloadedSectionEndpoints>
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -568,10 +571,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+      (cms) => {
+        const pathing = cms.portPointPathingSolver
+        const output = pathing?.getOutput()
+        const sections = output?.changedPreloadedTraceSections ?? []
+        if (sections.length > 0 && typeof pathing?.getChangedPreloadedTraceSectionEndpointWitnesses !== "function") {
+          throw new Error("Pipeline9 mutable preload seams require serialized endpoint provenance")
+        }
+        const pins = pinPipeline9PreloadedSectionEndpoints({
+          sourceSrj: cms.srjWithPointPairs,
+          sections,
+          witnesses: sections.length > 0 ? pathing!.getChangedPreloadedTraceSectionEndpointWitnesses() : [],
+          nodes: output?.nodesWithPortPoints ?? [],
+          viaDiameter: cms.viaDiameter,
+        })
+        cms.preloadedSectionEndpointPins = pins
+        return [{
+          nodeWithPortPoints: pins.nodes,
+          immutablePortIds: pins.immutablePortIds,
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
@@ -580,8 +597,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
           preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
-        },
-      ],
+        }]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
@@ -689,26 +706,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "highDensityStitchSolver",
       MultipleHighDensityRouteStitchSolver3,
-      (cms) => [
-        {
+      (cms) => {
+        const sections = cms.getChangedPreloadedTraceSections()
+        if (sections.length > 0 && !cms.preloadedSectionEndpointPins) {
+          throw new Error("Pipeline9 mutable preload stitching requires certified seam pins")
+        }
+        return [{
           connections: [
             ...cms.srjWithPointPairs!.connections,
-            ...cms
-              .getChangedPreloadedTraceSections()
-              .map((section) => section.connection),
+            ...sections.map((section) => section.connection),
           ] as SimpleRouteConnection[],
-          hdRoutes:
+          hdRoutes: [
+            ...(cms.preloadedSectionEndpointPins?.ownedConnectors ?? []),
+            ...(
             cms.highDensityRepairSolver?.getOutput() ??
             cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+            cms.highDensityRouteSolver!.routes),
+          ] as HighDensityRoute[],
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
           useDeclaredConnectionEndpoints: true,
-        },
-      ],
+        }]
+      },
     ),
     definePipelineStep(
       "traceSimplificationSolver",
@@ -1575,6 +1597,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ...(this.highDensityRouteSolver?.fixedRouteReplacements.keys() ?? []),
         ...materializedOriginalRouteNames,
       ]),
+      unchangedFixedRouteConnectionNames: new Set(fixedRoutesWithoutChangedSections
+        .filter((route) => !this.highDensityRouteSolver?.fixedRouteReplacements.has(route.connectionName))
+        .map((route) => route.connectionName)),
       mutationMasks: new Map([
         ...(this.highDensityRouteSolver?.preloadedTraceMutationMasks ?? []),
         ...materializedSectionRoutes.map(
@@ -1616,6 +1641,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       originalFixedRoutes: fixedRouteState.originalFixedRoutes,
       updatedFixedRoutes,
       replacedConnectionNames: fixedRouteState.replacedConnectionNames,
+      unchangedFixedRouteConnectionNames: fixedRouteState.unchangedFixedRouteConnectionNames,
       layerCount: this.originalSrj.layerCount,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       obstacles: this.originalSrj.obstacles,
