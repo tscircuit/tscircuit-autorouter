@@ -1,4 +1,3 @@
-import { interactionCounterNames } from "./Pipeline9InteractionGroupedHighDensitySolver"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -46,8 +45,6 @@ export type Pipeline9HighDensitySolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
-  viaHoleDiameter?: number
-  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
@@ -320,8 +317,6 @@ export type Pipeline9RegularNodeSolverParams = {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
-  viaHoleDiameter?: number
-  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -331,7 +326,6 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
-  allowBlindAndBuriedVias?: boolean
 }
 
 /**
@@ -344,8 +338,6 @@ export const createPipeline9RegularNodeSolver = ({
   connMap,
   colorMap,
   viaDiameter,
-  viaHoleDiameter,
-  minViaHoleEdgeToViaHoleEdgeClearance,
   traceWidth,
   obstacleMargin,
   effort,
@@ -353,19 +345,14 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-  allowBlindAndBuriedVias,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
-    enableInteractionGrouping: true,
-    allowBlindAndBuriedVias,
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
     colorMap,
     connMap,
     viaDiameter,
-    viaHoleDiameter,
-    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -397,8 +384,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
-  readonly viaHoleDiameter?: number
-  readonly minViaHoleEdgeToViaHoleEdgeClearance?: number
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
@@ -416,6 +401,29 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
+  private readonly completedNativeGridCounters: Record<string, number> = {}
+  private submittedDiagnosticBatchCount = 0
+  private completedDiagnosticBatchCount = 0
+  private erroredDiagnosticBatchCount = 0
+
+  private addNativeGridCounters(counters: Record<string, number>): void {
+    for (const [key, value] of Object.entries(counters)) {
+      const previous = this.completedNativeGridCounters[key] ?? 0
+      this.completedNativeGridCounters[key] = previous + value
+    }
+  }
+
+  get benchmarkDiagnosticCounters(): Record<string, number> {
+    const counters = { ...this.completedNativeGridCounters }
+    for (const [key, value] of Object.entries(this.activeRegularSolver?.benchmarkDiagnosticCounters ?? {})) {
+      counters[key] = (counters[key] ?? 0) + value
+    }
+    counters.nativeGridSubmittedBatchCount = this.submittedDiagnosticBatchCount
+    counters.nativeGridCompletedBatchCount = this.completedDiagnosticBatchCount
+    counters.nativeGridErroredBatchCount = this.erroredDiagnosticBatchCount
+    counters.nativeGridPendingBatchCount = this.submittedDiagnosticBatchCount - this.completedDiagnosticBatchCount - this.erroredDiagnosticBatchCount
+    return counters
+  }
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -425,7 +433,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private interactionTotals: Record<string, number> = {}
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -437,8 +444,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.layerCount = params.layerCount
     this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
-    this.viaHoleDiameter = params.viaHoleDiameter
-    this.minViaHoleEdgeToViaHoleEdgeClearance = params.minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
@@ -454,7 +459,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
-      ...Object.fromEntries(interactionCounterNames.map(key => [key, 0])),
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -510,6 +514,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
+        this.submittedDiagnosticBatchCount++
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
@@ -519,8 +524,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => ({ type: "result" as const, result }),
-              (error: unknown) => ({ type: "error" as const, error }),
+              (result) => {
+                // Count every completed speculative batch, including work the
+                // serial acceptance boundary subsequently discards/replays.
+                this.completedDiagnosticBatchCount++
+                this.addNativeGridCounters(result.benchmarkDiagnosticCounters)
+                return { type: "result" as const, result }
+              },
+              (error: unknown) => {
+                this.erroredDiagnosticBatchCount++
+                return { type: "error" as const, error }
+              },
             ),
         )
       }
@@ -541,12 +555,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
-          if (key !== "nodeCount" && key !== "fixedObstacleCount") {
-            this.stats[key] = key.includes("Maximum") ? Math.max(Number(this.stats[key] ?? 0), Number(value)) : Number(this.stats[key] ?? 0) + Number(value)
-            // A later budget-bound serial prefix starts after these committed
-            // batches. Keep its accumulation base aligned with published totals.
-            if (key.startsWith("experimentalInteraction")) this.interactionTotals[key] = Number(this.stats[key])
-          }
+          if (key !== "nodeCount" && key !== "fixedObstacleCount")
+            this.stats[key] += value
         }
         this.unsolvedNodePortPoints.splice(
           -result.consumedNodeCount,
@@ -587,7 +597,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
-    if (this.activeRegularSolver) this.updateInteractionStats(true)
+    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -607,18 +617,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
-  private updateInteractionStats(commit: boolean): void {
-    const child = this.activeRegularSolver
-    if (!child) return
-    for (const key of interactionCounterNames) {
-      const value = Number(child.stats[key] ?? 0)
-      const total = Number(this.interactionTotals[key] ?? 0)
-      const combined = key.includes("Maximum") ? Math.max(total, value) : total + value
-      this.stats[key] = combined
-      if (commit) this.interactionTotals[key] = combined
-    }
-  }
-
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
@@ -626,8 +624,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      viaHoleDiameter: this.viaHoleDiameter,
-      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
@@ -635,7 +631,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -1038,7 +1033,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
-    this.updateInteractionStats(true)
+    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
@@ -1097,7 +1092,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
-      this.updateInteractionStats(false)
       if (this.activeRegularSolver.failed) {
         this.finishRegularSolverFailure(
           this.activeRegularSolver.error ?? "unknown error",

@@ -53,8 +53,6 @@ export class HighDensitySolver extends BaseSolver {
   readonly defaultViaDiameter = 0.3
   readonly defaultTraceThickness = 0.15
   viaDiameter: number
-  viaHoleDiameter?: number
-  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -71,8 +69,6 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
-  enableInteractionGrouping: boolean
-  allowBlindAndBuriedVias?: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -90,14 +86,45 @@ export class HighDensitySolver extends BaseSolver {
       error?: string
     }
   >
+  private readonly completedNativeGridCounters: Record<string, number> = {}
+  private readonly recordedNativeGridSolvers = new WeakSet<HighDensityIntraNodeSolver>()
+
+  private addNativeGridDiagnostics(
+    target: Record<string, number>,
+    solver: HighDensityIntraNodeSolver,
+  ): void {
+    const portfolios = solver instanceof GrowShrinkHighDensityIntraNodeSolver
+      ? new Set([...solver.failedSolvers, ...(solver.winningSolver ? [solver.winningSolver] : []), ...(solver.activeSubSolver ? [solver.activeSubSolver] : [])])
+      : new Set(solver instanceof PortfolioSingleIntraNodeSolver ? [solver] : [])
+    for (const portfolio of portfolios) {
+      const diagnostics = portfolio.nativeGridSetupDiagnostics
+      for (const [key, value] of Object.entries(diagnostics)) {
+        const name = `nativeGrid${key[0]!.toUpperCase()}${key.slice(1)}`
+        target[name] = (target[name] ?? 0) + value
+      }
+      const unmaterialized = diagnostics.deferredCandidateCount - diagnostics.materializedCandidateCount
+      target.nativeGridUnmaterializedCandidateCount = (target.nativeGridUnmaterializedCandidateCount ?? 0) + unmaterialized
+      if (portfolio.solved || portfolio.failed) {
+        target.nativeGridAvoidedCandidateCount = (target.nativeGridAvoidedCandidateCount ?? 0) + unmaterialized
+        target.nativeGridAvoidedPlaneCellCount = (target.nativeGridAvoidedPlaneCellCount ?? 0) + diagnostics.deferredPlaneCellCount - diagnostics.materializedPlaneCellCount
+        target.nativeGridAvoidedLayerCellCount = (target.nativeGridAvoidedLayerCellCount ?? 0) + diagnostics.deferredLayerCellCount - diagnostics.materializedLayerCellCount
+      }
+    }
+  }
+
+  get benchmarkDiagnosticCounters(): Record<string, number> {
+    const counters = { ...this.completedNativeGridCounters }
+    if (this.activeSubSolver && !this.recordedNativeGridSolvers.has(this.activeSubSolver)) {
+      this.addNativeGridDiagnostics(counters, this.activeSubSolver)
+    }
+    return counters
+  }
 
   constructor({
     nodePortPoints,
     colorMap,
     connMap,
     viaDiameter,
-    viaHoleDiameter,
-    minViaHoleEdgeToViaHoleEdgeClearance,
     traceWidth,
     obstacleMargin,
     effort,
@@ -115,15 +142,11 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    enableInteractionGrouping = false,
-    allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
     viaDiameter?: number
-    viaHoleDiameter?: number
-    minViaHoleEdgeToViaHoleEdgeClearance?: number
     traceWidth?: number
     obstacleMargin?: number
     effort?: number
@@ -142,8 +165,6 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
-    enableInteractionGrouping?: boolean
-    allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -156,8 +177,6 @@ export class HighDensitySolver extends BaseSolver {
     this.failedSolvers = []
     this.effort = effort ?? 1
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
-    this.viaHoleDiameter = viaHoleDiameter
-    this.minViaHoleEdgeToViaHoleEdgeClearance = minViaHoleEdgeToViaHoleEdgeClearance
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
@@ -176,8 +195,6 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.enableInteractionGrouping = enableInteractionGrouping
-    this.allowBlindAndBuriedVias = allowBlindAndBuriedVias
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -216,6 +233,10 @@ export class HighDensitySolver extends BaseSolver {
     solver: HighDensityIntraNodeSolver,
     status: "solved" | "failed",
   ) {
+    if (!this.recordedNativeGridSolvers.has(solver)) {
+      this.addNativeGridDiagnostics(this.completedNativeGridCounters, solver)
+      this.recordedNativeGridSolvers.add(solver)
+    }
     const node = solver.nodeWithPortPoints
     const nodePf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
     this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
@@ -255,7 +276,6 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private getConcreteSolverTypeName(solver: BaseSolver): string {
-    if (solver.getSolverName() === "Pipeline9InteractionGroupedHighDensitySolver") return solver.getSolverName()
     if (solver instanceof CachedIntraNodeRouteSolver) {
       const concreteName = this.getIntraNodeStrategyName(solver.hyperParameters)
       return solver.cacheHit ? `${concreteName} [cached]` : concreteName
@@ -371,7 +391,6 @@ export class HighDensitySolver extends BaseSolver {
     this.updateCacheStats()
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
-      if (this.enableInteractionGrouping) for (const [key, value] of Object.entries(this.activeSubSolver.stats)) if (key.startsWith("experimentalInteraction") && typeof value === "number") this.stats[key] = value
       if (this.activeSubSolver.solved) {
         this.routes.push(
           ...(this.preserveTerminalPcbPortIds
@@ -412,8 +431,6 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
-      enableInteractionGrouping: this.enableInteractionGrouping,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
@@ -422,8 +439,6 @@ export class HighDensitySolver extends BaseSolver {
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
-      viaHoleDiameter: this.viaHoleDiameter,
-      minViaHoleEdgeToViaHoleEdgeClearance: this.minViaHoleEdgeToViaHoleEdgeClearance,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
