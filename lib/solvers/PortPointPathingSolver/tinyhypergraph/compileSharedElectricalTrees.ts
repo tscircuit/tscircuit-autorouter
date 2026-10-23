@@ -2,7 +2,7 @@ import type { ElectricalTreeTerminalWitness, Obstacle, SimpleRouteConnection } f
 import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { certifyElectricalTreePadAttachment } from "./certifyElectricalTreePadAttachment"
+import { certifyElectricalTreePadAttachment, type ElectricalTreePadSourceTerminal } from "./certifyElectricalTreePadAttachment"
 
 export type SharedElectricalEdge = {
   id: string
@@ -144,6 +144,7 @@ export function compileSharedElectricalTrees(input: {
   const usedNames = new Set(input.connections.map((connection) => connection.name))
   for (const [netId, net] of nets) {
     const originalTerminals = new Map<string, ElectricalTreeTerminalWitness>()
+    const originalPadTerminals = new Map<string, ElectricalTreePadSourceTerminal>()
     for (const demand of net.demands) {
       const endpointIds = input.demandEndpoints.get(demand.name)
       if (!endpointIds || demand.pointsToConnect.length !== 2) throw new Error(`Electrical tree lost original terminal provenance for ${demand.name}`)
@@ -153,7 +154,13 @@ export function compileSharedElectricalTrees(input: {
         const layer = mapZToLayerName(vertex.point.z, input.layerCount)
         if (source.x !== vertex.point.x || source.y !== vertex.point.y || !getConnectionPointLayers(source).includes(layer) ||
           (source.pcb_port_id !== undefined && source.pcb_port_id !== vertex.point.electricalTerminalId)) throw new Error(`Electrical tree changed original terminal of ${demand.name}`)
-        if (vertex.point.electricalTerminalId !== undefined) continue
+        if (vertex.point.electricalTerminalId !== undefined) {
+          if (source.pcb_port_id !== undefined) originalPadTerminals.set(vertex.id, {
+            netId, sourceConnectionName: demand.name, sourceEndpointIndex: endpoint,
+            point: { ...source },
+          })
+          continue
+        }
         const witness: ElectricalTreeTerminalWitness = { sourceConnectionName: demand.name, sourceEndpointIndex: endpoint,
           sourcePointId: source.pointId ?? null, x: source.x, y: source.y, z: vertex.point.z, layer }
         const previous = originalTerminals.get(vertex.id)
@@ -171,7 +178,8 @@ export function compileSharedElectricalTrees(input: {
       for (const [terminal, attachment] of [[edge.a, edge.b], [edge.b, edge.a]] as const) {
         if (ambiguousAttachments.has(attachment.id)) continue
         const obstacleIndex = certifyElectricalTreePadAttachment({ terminal: terminal.point,
-          attachment: attachment.point, obstacles: input.obstacles ?? [], layerCount: input.layerCount })
+          attachment: attachment.point, obstacles: input.obstacles ?? [], layerCount: input.layerCount,
+          netId, sourceTerminal: originalPadTerminals.get(terminal.id) })
         if (obstacleIndex === undefined) continue
         const previous = padAliases.get(attachment.id)
         if (previous && previous.id !== terminal.id) {
