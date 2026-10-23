@@ -138,5 +138,5 @@ export function buildMinimumSpanningTree<T extends Point>(
       }
     }
   }
-  return mstEdges
+  return mstEdges.sort((a, b) => a.weight - b.weight)
 }
