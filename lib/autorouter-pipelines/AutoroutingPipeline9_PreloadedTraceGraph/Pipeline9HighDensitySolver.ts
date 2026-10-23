@@ -34,6 +34,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
 import { ContextualComputeSelectionModel } from "lib/solvers/HyperHighDensitySolver/ContextualComputeSelectionModel"
 
 export type Pipeline9HighDensitySolverParams = {
@@ -286,12 +287,7 @@ export const normalizePipeline9NodeRootConnectionNames = (
     portPoint: NodeWithPortPoints["portPoints"][number],
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
-    rootConnectionName:
-      connMap.getNetConnectedToId(
-        portPoint.rootConnectionName ?? portPoint.connectionName,
-      ) ??
-      portPoint.rootConnectionName ??
-      portPoint.connectionName,
+    rootConnectionName: getCanonicalPipeline9PortRoot(portPoint, connMap),
   })
   return {
     ...node,

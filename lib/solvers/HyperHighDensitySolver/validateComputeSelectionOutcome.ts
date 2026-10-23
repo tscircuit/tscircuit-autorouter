@@ -1,5 +1,7 @@
 import RBush from "rbush"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
+import { getCanonicalPipeline9PortRoot } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getCanonicalPipeline9PortRoot"
+import { isPipeline9ObstacleOwnedByRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9ObstacleOwnedByRoute"
 import { pointToSegmentDistance, segmentToBoundsMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getDrcErrors, MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
@@ -113,7 +115,7 @@ const hasRequiredPortConnectivity = ({
   layerCount,
   copperRules,
 }: ValidationParams): boolean => {
-  const getRoot = (name: string): string => connMap?.getNetConnectedToId(name) ?? name
+  const getRoot = (owner: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">): string => connMap ? getCanonicalPipeline9PortRoot(owner, connMap) : owner.rootConnectionName ?? owner.connectionName
   // Every polyline is internally connected by construction. Union route
   // components only where distinct same-net copper actually touches; expanding
   // every pair of segments of one long grid path is unnecessary quadratic work.
@@ -126,7 +128,7 @@ const hasRequiredPortConnectivity = ({
     }
   }
   const segments: CopperSegment[] = routes.flatMap((route, routeIndex) => {
-    const root = getRoot(route.rootConnectionName ?? route.connectionName)
+    const root = getRoot(route)
     const geometry = getPipeline9RouteCopperGeometry(route, { layerCount, allowBlindAndBuriedVias: copperRules?.allowBlindAndBuriedVias })
     const wires = geometry.wireSegments.map((wire) => ({ start: wire.start, end: wire.end }))
     const vias = geometry.viaSpans.map((via) => ({ start: { ...via.center, z: via.minZ }, end: { ...via.center, z: via.maxZ } }))
@@ -165,7 +167,7 @@ const hasRequiredPortConnectivity = ({
     : [...portsByConnection.values()].flatMap(getConnectionPortPointPairs)
   const components = new Map<string, number>()
   for (const port of pairs.flat()) {
-    const root = getRoot(port.rootConnectionName ?? port.connectionName)
+    const root = getRoot(port)
     const segment = index.search({ minX: port.x - 1e-6, maxX: port.x + 1e-6, minY: port.y - 1e-6, maxY: port.y + 1e-6 }).find((segment) =>
       segment.root === root &&
       port.z >= Math.min(segment.start.z, segment.end.z) &&
@@ -249,7 +251,11 @@ export const assessComputeSelectionOutcome = (params: ValidationParams): Compute
     return obstacle.center.x + disk >= minX && obstacle.center.x - disk <= maxX &&
       obstacle.center.y + disk >= minY && obstacle.center.y - disk <= maxY
   })
-  const ownership = getObstacleRouteConnectivity({ obstacles, routes, connMap })
+  const ownership = getObstacleRouteConnectivity({ obstacles, routes, connMap,
+    // The registered route connection proves its canonical owner. A root key
+    // that also names a foreign ordinary alias cannot authorize pad copper.
+    ...(connMap ? { isObstacleOwnedByRoute: (obstacle, route) => isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap) } : {}),
+  })
   const obstacleContainsPoint = (obstacle: Obstacle, point: { x: number; y: number }): boolean => {
     const radians = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
     const dx = point.x - obstacle.center.x

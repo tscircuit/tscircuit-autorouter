@@ -7,6 +7,7 @@ type ObstacleRouteConnectivityParams = {
   obstacles: Obstacle[]
   routes: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">[]
   connMap?: ConnectivityMap
+  isObstacleOwnedByRoute?: (obstacle: Obstacle, route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">) => boolean
 }
 
 export type ObstacleRouteConnectivity = {
@@ -18,6 +19,7 @@ export const getObstacleRouteConnectivity = ({
   obstacles,
   routes,
   connMap,
+  isObstacleOwnedByRoute,
 }: ObstacleRouteConnectivityParams): ObstacleRouteConnectivity => {
   const connectedRouteNamesByObstacle = obstacles.map((): string[] => [])
   const connectedObstaclesByRoute = routes.map((): Obstacle[] => [])
@@ -36,7 +38,10 @@ export const getObstacleRouteConnectivity = ({
     }
     for (let routeIndex = 0; routeIndex < routes.length; routeIndex++) {
       const route = routes[routeIndex]!
-      if (!isObstacleConnectedToRoute(connectivityObstacle, route, connMap)) {
+      const owned = isObstacleOwnedByRoute
+        ? isObstacleOwnedByRoute(connectivityObstacle, route)
+        : isObstacleConnectedToRoute(connectivityObstacle, route, connMap)
+      if (!owned) {
         continue
       }
       connectedRouteNamesByObstacle[obstacleIndex]!.push(route.connectionName)
