@@ -1,15 +1,17 @@
 import { expect, test } from "bun:test"
 import { checkViaPadClearance } from "@tscircuit/checks"
 import type { Circle, GraphicsObject } from "graphics-debug"
+import { normalizePipeline9DrcErrorsForRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalizePipeline9DrcErrorsForRepair"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import {
   issue3130Input,
   issue3130Traces,
 } from "../fixtures/issue3130-via-pad-clearance"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
-test("issue 3130: reference DRC misses two via-to-pad copper clearances", async (): Promise<void> => {
+test("issue 3130: reference DRC reports and maps both via-to-pad clearances", async (): Promise<void> => {
   const input = structuredClone(issue3130Input)
   const traces = structuredClone(issue3130Traces)
   const drc = evaluateRelaxedDrc({
@@ -38,9 +40,28 @@ test("issue 3130: reference DRC misses two via-to-pad copper clearances", async 
     expect(gap).toBeLessThan(error.minimum_clearance!)
   }
 
-  // Characterize main's missing check; the stacked fix must require both
-  // violations from the autorouter reference evaluator as well.
-  expect(drc.errors).toHaveLength(0)
+  expect(drc.errors).toHaveLength(2)
+  expect(drc.locationAwareErrors).toHaveLength(2)
+  expect(drc.errors).toMatchObject(
+    traces.map((trace) => ({ pcb_trace_id: trace.pcb_trace_id })),
+  )
+  const repairErrors = normalizePipeline9DrcErrorsForRepair({
+    errors: drc.errors as unknown as Record<string, unknown>[],
+    circuitJson: drc.circuitJson,
+    newTraceIds: new Set(traces.map((trace) => trace.pcb_trace_id)),
+  })
+  for (const [index, error] of repairErrors.entries()) {
+    expect(error).toMatchObject(viaPadErrors[index]!)
+    expect(getDrcErrorTraceIds(error)).toEqual([traces[index]!.pcb_trace_id])
+    expect(error.pcb_trace_id).toBe(traces[index]!.pcb_trace_id)
+    expect(
+      drc.circuitJson.find(
+        (element) =>
+          element.type === "pcb_trace" &&
+          element.pcb_trace_id === error.pcb_trace_id,
+      ),
+    ).toMatchObject({ source_trace_id: input.connections[index]!.name })
+  }
 
   const graphics: GraphicsObject = convertSrjToGraphicsObject({
     ...input,
