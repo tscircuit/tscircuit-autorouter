@@ -205,10 +205,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
-      // Learning labels are checked in physical board coordinates. A scaled
-      // search is provisional until its later shrink, so it is not a label.
-      computeSelectionModel:
-        this.scaleFactor === 1 ? portfolioParams.computeSelectionModel : undefined,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),

@@ -1,4 +1,3 @@
-import type { ObstacleRouteOwnershipPredicate } from "../HyperHighDensitySolver/getObstacleRouteConnectivity"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -20,8 +19,6 @@ import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/Portfo
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
-import type { ContextualComputeSelectionModel } from "../HyperHighDensitySolver/ContextualComputeSelectionModel"
-import type { CacheProvider } from "lib/cache/types"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -67,14 +64,11 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
-  isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
-  computeSelectionModel?: ContextualComputeSelectionModel
-  cacheProvider: CacheProvider | null
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -110,14 +104,11 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
     boardGeometry,
-    isObstacleOwnedByRoute,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    computeSelectionModel,
-    cacheProvider,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -134,7 +125,6 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
-    isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -142,8 +132,6 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
-    computeSelectionModel?: ContextualComputeSelectionModel
-    cacheProvider?: CacheProvider | null
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -165,7 +153,6 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
     this.boardGeometry = boardGeometry
-    this.isObstacleOwnedByRoute = isObstacleOwnedByRoute
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -175,8 +162,6 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.computeSelectionModel = computeSelectionModel
-    this.cacheProvider = cacheProvider === undefined ? getGlobalInMemoryCache() : cacheProvider
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -414,7 +399,6 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       boardGeometry: this.boardGeometry,
-      isObstacleOwnedByRoute: this.isObstacleOwnedByRoute,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -429,8 +413,6 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
-      computeSelectionModel: this.computeSelectionModel,
-      cacheProvider: this.cacheProvider,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
@@ -439,8 +421,9 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private updateCacheStats() {
-    this.stats.intraNodeCacheHits = this.cacheProvider?.cacheHits ?? 0
-    this.stats.intraNodeCacheMisses = this.cacheProvider?.cacheMisses ?? 0
+    const cacheProvider = getGlobalInMemoryCache()
+    this.stats.intraNodeCacheHits = cacheProvider.cacheHits
+    this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
   }
 
   visualize(): GraphicsObject {

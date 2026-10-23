@@ -80,7 +80,6 @@ test("joint DRC repair exposes sequential child stages and propagates failures",
       "exactRepairSolver",
       "regionalB01RepairSolver",
       "boundedRegionalRepairSolver",
-      "ownedRouteClearanceSolver",
     ])
     expect(solver.activeSubSolver).toBeNull()
     expect(solver.regionalB01RepairSolver?.solved).toBeTrue()

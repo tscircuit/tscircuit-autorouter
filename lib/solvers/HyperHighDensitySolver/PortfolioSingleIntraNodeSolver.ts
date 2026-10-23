@@ -1,4 +1,3 @@
-import type { ObstacleRouteOwnershipPredicate } from "./getObstacleRouteConnectivity"
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
@@ -15,7 +14,6 @@ import type { BaseSolver } from "../BaseSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
-import { ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
@@ -31,23 +29,6 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
-import {
-  ContextualComputeSelectionModel,
-  getComputeSelectionFeatures,
-  type ComputeSelectionObservation,
-  type ComputeSelectionPrediction,
-} from "./ContextualComputeSelectionModel"
-import { assessComputeSelectionOutcome } from "./validateComputeSelectionOutcome"
-
-type LearnedPortfolioCandidate = NonNullable<
-  PortfolioSingleIntraNodeSolver["supervisedSolvers"]
->[number]
-
-type CandidateComputeWork = {
-  iterations: number
-  work: number
-  elapsedMs: number
-}
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -74,7 +55,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
-    isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -94,17 +74,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     BaseSolver,
     { iterations: number; maxIterations: number }
   >()
-  private readonly computeSelectionModel?: ContextualComputeSelectionModel
-  private readonly learnedComputeSelection: boolean
-  private readonly computeFeatures: number[]
-  private readonly computePredictions = new Map<string, ComputeSelectionPrediction>()
-  private readonly computeWorkBySolver = new Map<BaseSolver, CandidateComputeWork>()
-  private computeOutcomesRecorded = false
-  private readonly computeValidationBySolver = new Map<BaseSolver, {
-    valid: boolean
-    physicallyClean: boolean
-    elapsedMs: number
-  }>()
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -158,24 +127,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      isObstacleOwnedByRoute?: ObstacleRouteOwnershipPredicate
-      computeSelectionModel?: ContextualComputeSelectionModel
     },
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
-    this.computeSelectionModel = opts.computeSelectionModel
-    this.learnedComputeSelection =
-      (opts.computeSelectionModel?.getStats().learnedComputeObservationCount ?? 0) > 0
-    this.computeFeatures = opts.computeSelectionModel
-      ? getComputeSelectionFeatures(
-          opts.nodeWithPortPoints,
-          opts.traceWidth ?? 0.15,
-          opts.obstacleMargin ?? 0.15,
-        )
-      : []
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
@@ -511,9 +468,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override _step() {
-    const startedAt = this.computeSelectionModel ? performance.now() : 0
-    let candidateElapsedMs = 0
-    let computeCandidate: BaseSolver | undefined
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
@@ -523,85 +477,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    if (!this.computeSelectionModel) {
-      super._step()
-    } else {
-      const candidate = this.getSupervisedSolverWithBestFitness()
-      if (!candidate) {
-        // Keep the base supervisor's normal exhausted-portfolio error path.
-        super._step()
-      } else {
-        computeCandidate = candidate.solver
-        const candidateStartedAt = performance.now()
-        for (let index = 0; index < this.MIN_SUBSTEPS; index++) {
-          candidate.solver.step()
-        }
-        candidateElapsedMs = performance.now() - candidateStartedAt
-        this.activeSubSolver = candidate.solver
-        candidate.g = this.computeG(candidate.solver as IntraNodeRouteSolver)
-        candidate.h = this.computeH(candidate.solver as IntraNodeRouteSolver)
-        candidate.f = this.computeF(candidate.g, candidate.h)
-        if (candidate.solver.solved) {
-          this.onSolve(candidate as SupervisedSolver<IntraNodeRouteSolver>)
-          const validationStartedAt = performance.now()
-          const validationParams = {
-            routes: this.solvedRoutes,
-            node: this.nodeWithPortPoints,
-            connMap: this.connMap,
-            obstacles: this.constructorParams.obstacles ?? [],
-            layerCount: this.constructorParams.layerCount ?? 2,
-            traceWidth: this.constructorParams.traceWidth ?? 0.15,
-            viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-            obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
-            boardGeometry: this.constructorParams.boardGeometry,
-            copperRules: this.computeSelectionModel.copperRules,
-          }
-          const assessment = assessComputeSelectionOutcome(validationParams)
-          const valid = assessment.structurallyValid
-          const physicallyClean = assessment.physicallyClean
-          const elapsedMs = performance.now() - validationStartedAt
-          this.computeValidationBySolver.set(candidate.solver, { valid, physicallyClean, elapsedMs })
-          this.computeSelectionModel.recordValidation(elapsedMs)
-          if (valid) {
-            // Local interfaces can carry inherited clearance debt that only the
-            // later global repair may move. Keep the native acceptance contract;
-            // do not train a physically-clean event from this provisional result.
-            if (!physicallyClean) this.stats.learnedComputePendingPhysicalWinnerCount = Number(this.stats.learnedComputePendingPhysicalWinnerCount ?? 0) + 1
-            this.solved = true
-            this.winningSolver = candidate.solver
-          } else {
-            // An invalid candidate is an explicit rejected search outcome. It
-            // cannot become pipeline copper merely because a kernel stopped.
-            candidate.solver.solved = false
-            candidate.solver.failed = true
-            candidate.solver.error = "Portfolio candidate violates required connectivity or physical copper constraints"
-            this.solvedRoutes = []
-            this.stats.learnedComputeRejectedCandidateCount = Number(this.stats.learnedComputeRejectedCandidateCount ?? 0) + 1
-          }
-        }
-      }
-    }
-
-    if (this.computeSelectionModel && computeCandidate) {
-      const solver = computeCandidate
-      const work = this.computeWorkBySolver.get(solver) ?? {
-        iterations: 0,
-        work: 0,
-        elapsedMs: 0,
-      }
-      const iterations = solver instanceof HighDensitySolverA13
-        ? solver.routingIterations
-        : solver.iterations
-      const advancedIterations = Math.max(0, iterations - work.iterations)
-      // Some exact constructors finish before their first step. Their terminal
-      // acceptance is one observed unit, rather than a zero-cost success event.
-      const acceptanceWork = advancedIterations === 0 && solver.solved ? 1 : 0
-      work.work += (advancedIterations + acceptanceWork) / this.MIN_SUBSTEPS
-      work.iterations = iterations
-      work.elapsedMs += candidateElapsedMs
-      this.computeWorkBySolver.set(solver, work)
-      if (this.learnedComputeSelection) this.computeSelectionModel.recordDecision()
-    }
+    super._step()
 
     if (
       !this.negotiatedSearchStarted &&
@@ -614,89 +490,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
-    if (this.computeSelectionModel) {
-      this.computeSelectionModel.recordPortfolioOverhead(
-        Math.max(0, performance.now() - startedAt - candidateElapsedMs),
-      )
-    }
-    if (this.solved || this.failed) this.recordComputeOutcomes()
-  }
-
-  private getComputeStrategy(hyperParameters: Record<string, unknown>): string {
-    if (hyperParameters.HIGH_DENSITY_A01) return "A01"
-    if (hyperParameters.HIGH_DENSITY_A03) return "A03"
-    if (hyperParameters.HIGH_DENSITY_A13) return "A13"
-    if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) return "polyline"
-    if (hyperParameters.THROUGH_OBSTACLE) return "throughObstacle"
-    if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) return "singleTransition"
-    if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) return "singleLayer"
-    return "grid"
-  }
-
-  override getSupervisedSolverWithBestFitness(): LearnedPortfolioCandidate | null {
-    if (!this.computeSelectionModel || !this.learnedComputeSelection) {
-      return super.getSupervisedSolverWithBestFitness()
-    }
-    // Algebraic applicability/constructors are a deterministic preflight, not
-    // a noisy millisecond-scale race against a detailed grid search. Learning
-    // allocates the substantial search only after these domains are exhausted.
-    for (const candidate of this.supervisedSolvers ?? []) {
-      if (candidate.solver.solved) return candidate
-      if (!candidate.solver.failed && (
-        candidate.hyperParameters.THROUGH_OBSTACLE ||
-        candidate.hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS ||
-        candidate.hyperParameters.CLOSED_FORM_SINGLE_TRANSITION
-      )) return candidate
-    }
-    let selected: LearnedPortfolioCandidate | null = null
-    let bestScore = Infinity
-    for (const candidate of this.supervisedSolvers ?? []) {
-      if (candidate.solver.solved) return candidate
-      if (candidate.solver.failed) continue
-      const strategy = this.getComputeStrategy(candidate.hyperParameters)
-      let prediction = this.computePredictions.get(strategy)
-      if (!prediction) {
-        prediction = this.computeSelectionModel.predict(this.computeFeatures, strategy)
-        this.computePredictions.set(strategy, prediction)
-      }
-      // Live exposure lowers a stalled candidate's estimated event rate. All
-      // live candidates retain finite scores and their original full budgets.
-      const elapsedMs = this.computeWorkBySolver.get(candidate.solver)?.elapsedMs ?? 0
-      const score = (prediction.exposure + elapsedMs) / prediction.validEvents
-      if (score < bestScore) {
-        bestScore = score
-        selected = candidate
-      }
-    }
-    return selected
-  }
-
-  private recordComputeOutcomes(): void {
-    if (!this.computeSelectionModel || this.computeOutcomesRecorded) return
-    this.computeOutcomesRecorded = true
-    const winnerValidation = this.winningSolver ? this.computeValidationBySolver.get(this.winningSolver) : undefined
-    if (this.solved && winnerValidation?.valid !== true) throw new Error("Learned portfolio accepted an unvalidated winner")
-    this.computeSelectionModel.observeNode(
-      (this.supervisedSolvers ?? []).flatMap((candidate): ComputeSelectionObservation[] => {
-        const work = this.computeWorkBySolver.get(candidate.solver)
-        if (!work || work.work === 0 && work.elapsedMs === 0) return []
-        const winner = candidate.solver === this.winningSolver
-        const validation = this.computeValidationBySolver.get(candidate.solver)
-        let outcome: ComputeSelectionObservation["outcome"]
-        if (winner) outcome = validation?.physicallyClean ? "valid" : "censored"
-        else if (validation?.valid === false) outcome = "invalid"
-        else outcome = candidate.solver.failed ? "failed" : "censored"
-        return [{
-          nodeId: this.nodeWithPortPoints.capacityMeshNodeId,
-          features: this.computeFeatures,
-          strategy: this.getComputeStrategy(candidate.hyperParameters),
-          work: Math.max(1 / this.MIN_SUBSTEPS, work.work),
-          elapsedMs: work.elapsedMs + (validation?.elapsedMs ?? 0),
-          outcome,
-        }]
-      }),
-    )
-    Object.assign(this.stats, this.computeSelectionModel.getStats())
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
@@ -752,13 +545,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
-    const startedAt = performance.now()
-    const solver = this.generateRoutingCandidate(hyperParameters)
-    if (this.computeSelectionModel) this.computeWorkBySolver.set(solver, { iterations: 0, work: 0, elapsedMs: performance.now() - startedAt })
-    return solver
-  }
-
-  private generateRoutingCandidate(hyperParameters: any): IntraNodeRouteSolver {
     // Each grow/shrink attempt owns a distinct node and portfolio. Keep this
     // shared data local so later attempts and caller edits are recomputed.
     this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
@@ -799,7 +585,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       const solver = new HighDensitySolverA13WithDrcValidation({
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
-        isObstacleOwnedByRoute: this.constructorParams.isObstacleOwnedByRoute,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount ?? 2,
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -881,10 +666,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }) as any
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
-      const PolylineSolver = this.computeSelectionModel
-        ? ProjectedBoundaryMultiHeadPolyLineIntraNodeSolver
-        : MultiHeadPolyLineIntraNodeSolver3
-      return new PolylineSolver({
+      return new MultiHeadPolyLineIntraNodeSolver3({
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
         hyperParameters: hyperParameters,

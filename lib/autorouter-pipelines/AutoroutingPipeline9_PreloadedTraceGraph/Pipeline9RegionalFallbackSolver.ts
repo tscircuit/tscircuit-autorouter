@@ -4,7 +4,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
   HighDensityRoute,
@@ -14,10 +14,8 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
-import type { CacheProvider } from "lib/cache/types"
 
 type Pipeline9RegionalFallbackSolverParams = {
-  cacheProvider?: CacheProvider | null
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
@@ -74,7 +72,23 @@ export const isPipeline9ObstacleConnectedToRoute = ({
   route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
   connMap: ConnectivityMap
 }): boolean => {
-  return isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap)
+  if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
+  if (!route.rootConnectionName) return false
+
+  const routeNetId =
+    connMap.getNetConnectedToId(route.connectionName) ??
+    connMap.getNetConnectedToId(route.rootConnectionName) ??
+    (connMap.netMap[route.rootConnectionName]
+      ? route.rootConnectionName
+      : undefined)
+  if (!routeNetId) return false
+
+  return obstacle.connectedTo.some((connectedId) => {
+    const connectedNetId =
+      connMap.getNetConnectedToId(connectedId) ??
+      (connMap.netMap[connectedId] ? connectedId : undefined)
+    return connectedNetId === routeNetId
+  })
 }
 
 const hasPreloadedViaToBoardObstacleConflict = ({
@@ -145,8 +159,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       layerCount: params.layerCount,
-      cacheProvider: params.cacheProvider,
-      isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, params.connMap),
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,

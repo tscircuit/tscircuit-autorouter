@@ -22,7 +22,6 @@ import {
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
-import type { CacheProvider } from "lib/cache/types"
 
 export type Pipeline9RegionalB01RepairResult = {
   routes: HighDensityRoute[]
@@ -39,7 +38,6 @@ export type Pipeline9RegionalB01RepairResult = {
 }
 
 export type Pipeline9RegionalB01RepairParams = {
-  cacheProvider?: CacheProvider | null
   srj: SimpleRouteJson
   routes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
@@ -392,7 +390,6 @@ const candidateConflictsWithFixedRoutes = ({
 }
 
 export const preparePipeline9RegionalB01Candidate = ({
-  cacheProvider,
   routes,
   fixedObstacleRoutes,
   routeIndex,
@@ -406,7 +403,6 @@ export const preparePipeline9RegionalB01Candidate = ({
   obstacleMargin,
   effort,
 }: {
-  cacheProvider?: CacheProvider | null
   routes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   routeIndex: number
@@ -442,7 +438,6 @@ export const preparePipeline9RegionalB01Candidate = ({
     (_, candidateRouteIndex) => candidateRouteIndex !== routeIndex,
   )
   const solver = new Pipeline9HighDensitySolver({
-    cacheProvider,
     nodePortPoints: [movableProblem.nodeWithPortPoints],
     fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes].map((route) => ({
       ...route,
@@ -499,7 +494,6 @@ export const getPipeline9RegionalB01CandidateOutput = ({
 }
 
 export const preparePipeline9RegularRegionalCandidate = ({
-  cacheProvider,
   routes,
   fixedRouteCopperSpatialIndex,
   center,
@@ -512,7 +506,6 @@ export const preparePipeline9RegularRegionalCandidate = ({
   obstacleMargin,
   effort,
 }: {
-  cacheProvider?: CacheProvider | null
   routes: HighDensityRoute[]
   fixedRouteCopperSpatialIndex: FixedRouteCopperSpatialIndex
   center: { x: number; y: number }
@@ -572,7 +565,6 @@ export const preparePipeline9RegularRegionalCandidate = ({
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
   const solver = new Pipeline9RegionalFallbackSolver({
-    cacheProvider,
     nodeWithPortPoints: problem.nodeWithPortPoints,
     colorMap,
     connMap,

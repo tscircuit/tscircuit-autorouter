@@ -32,7 +32,6 @@ const solvePipeline9OrdinaryHighDensityNode = ({
   connMap: ConnectivityMap
 }): Pipeline9OrdinaryNodeResult => {
   const solver = createPipeline9RegularNodeSolver({
-    cacheProvider: input.cacheProvider,
     nodeWithPortPoints: input.nodeWithPortPoints,
     colorMap: input.colorMap,
     connMap,
@@ -64,9 +63,6 @@ const solvePipeline9OrdinaryHighDensityNode = ({
 export function solvePipeline9NetworkedHighDensityNode(
   input: Pipeline9NetworkedHighDensityNodeInput,
 ): Pipeline9NetworkedHighDensityNodeOutput {
-  if (input.cacheProvider !== undefined && input.cacheProvider !== null) {
-    throw new Error("Networked native cache policy must be omitted or null")
-  }
   if (input.solvePolicy !== PIPELINE9_NETWORKED_SOLVE_POLICY) {
     throw new Error(
       `Unsupported Pipeline9 networked solve policy ${String(input.solvePolicy)}`,
@@ -112,7 +108,6 @@ export function solvePipeline9NetworkedHighDensityNode(
     [],
   )
   const regionalSolver = new Pipeline9RegionalFallbackSolver({
-    cacheProvider: input.cacheProvider,
     nodeWithPortPoints: regionalProblem.nodeWithPortPoints,
     colorMap: input.colorMap,
     connMap,

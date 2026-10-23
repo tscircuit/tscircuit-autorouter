@@ -1,4 +1,3 @@
-import { isPipeline9ObstacleOwnedByRoute } from "./isPipeline9ObstacleOwnedByRoute"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -35,15 +34,9 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
-import { getCanonicalPipeline9PortRoot } from "./getCanonicalPipeline9PortRoot"
-import { ContextualComputeSelectionModel } from "lib/solvers/HyperHighDensitySolver/ContextualComputeSelectionModel"
-import type { CacheProvider } from "lib/cache/types"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
-  cacheProvider?: CacheProvider | null
-  enableComputeSelection?: boolean
-  computeSelectionCopperRules?: ContextualComputeSelectionModel["copperRules"]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
   colorMap?: Record<string, string>
@@ -290,7 +283,12 @@ export const normalizePipeline9NodeRootConnectionNames = (
     portPoint: NodeWithPortPoints["portPoints"][number],
   ): NodeWithPortPoints["portPoints"][number] => ({
     ...portPoint,
-    rootConnectionName: getCanonicalPipeline9PortRoot(portPoint, connMap),
+    rootConnectionName:
+      connMap.getNetConnectedToId(
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ) ??
+      portPoint.rootConnectionName ??
+      portPoint.connectionName,
   })
   return {
     ...node,
@@ -315,8 +313,6 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
-  cacheProvider?: CacheProvider | null
-  computeSelectionModel?: ContextualComputeSelectionModel
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -349,8 +345,6 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-  computeSelectionModel,
-  cacheProvider,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -371,13 +365,9 @@ export const createPipeline9RegularNodeSolver = ({
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
-    // Recreate this acceptance predicate after host/worker JSON reconstruction.
-    isObstacleOwnedByRoute: (obstacle, route): boolean => isPipeline9ObstacleOwnedByRoute(obstacle, route, connMap),
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
-    computeSelectionModel,
-    cacheProvider,
   })
 
 /**
@@ -404,7 +394,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
   readonly routes: HighDensityIntraNodeRoute[] = []
-  readonly computeSelectionModel: ContextualComputeSelectionModel
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -424,7 +413,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
-    this.computeSelectionModel = new ContextualComputeSelectionModel({ ...params.computeSelectionCopperRules, allowBlindAndBuriedVias: params.allowBlindAndBuriedVias })
     this.fixedHdRoutes = params.fixedHdRoutes
     this.connMap = params.connMap
     this.colorMap = params.colorMap ?? {}
@@ -448,7 +436,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
-      ...this.computeSelectionModel.getStats(),
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -471,7 +458,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     return "Pipeline9HighDensitySolver"
   }
 
-  /** Board-local adaptive decisions and preload visibility require serial host state. */
+  /** Independent batches use the host runtime; preloaded repairs retain serial visibility. */
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
     stopAtIteration = Infinity,
@@ -486,13 +473,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      // Caller-owned providers have process-local methods and state. Keep them
-      // on the host before constructing any JSON worker input.
-      if (
-        this.params.enableComputeSelection ||
-        this.fixedHdRoutes.length > 0 ||
-        (this.params.cacheProvider !== undefined && this.params.cacheProvider !== null)
-      ) {
+      if (this.fixedHdRoutes.length > 0) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -507,14 +488,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
-      const { connMap, nodePortPoints: _, cacheProvider, ...params } = this.params
+      const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
               ...params,
-              cacheProvider: cacheProvider === null ? null : undefined,
               nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
               connectivityNetMap: connMap.netMap,
               maxIterations: this.MAX_ITERATIONS,
@@ -584,7 +564,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
-    Object.assign(this.stats, this.computeSelectionModel.getStats())
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -618,8 +597,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
-      computeSelectionModel: this.params.enableComputeSelection ? this.computeSelectionModel : undefined,
-      cacheProvider: this.params.cacheProvider,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -696,7 +673,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
-      cacheProvider: this.params.cacheProvider,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
@@ -1023,7 +999,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
-    Object.assign(this.stats, this.computeSelectionModel.getStats())
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
