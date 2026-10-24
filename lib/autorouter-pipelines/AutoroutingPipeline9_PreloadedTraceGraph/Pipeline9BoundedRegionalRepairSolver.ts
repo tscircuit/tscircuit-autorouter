@@ -1,9 +1,10 @@
+import { addMeshSearchDiagnostics } from "./corridorRepair/meshSearchDiagnostics"
+import { NegotiateTraceClearanceSolver } from "./corridorRepair/NegotiateTraceClearanceSolver"
 import {
   extractRepairRegion,
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
-  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
@@ -141,6 +142,14 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  private readonly completedMeshDiagnostics: Record<string, number> = {}
+
+  get benchmarkDiagnosticCounters(): Record<string, number> {
+    const totals = { ...this.completedMeshDiagnostics }
+    if (this.state.phase === "negotiate")
+      addMeshSearchDiagnostics(totals, this.state.solver.benchmarkDiagnosticCounters)
+    return totals
+  }
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -544,6 +553,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
         "Pipeline9 bounded regional repair exceeded its work budget",
       )
     }
+    addMeshSearchDiagnostics(this.completedMeshDiagnostics, state.solver.benchmarkDiagnosticCounters)
     this.result.candidateAttemptCount += candidateAttempts
     this.result.pathSearchNodeCount += pathSearchNodes
     this.state = {
