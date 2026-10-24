@@ -45,6 +45,8 @@ export type Pipeline9HighDensitySolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
@@ -317,6 +319,8 @@ export type Pipeline9RegularNodeSolverParams = {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -325,19 +329,22 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  allowBlindAndBuriedVias?: boolean
+  priorityDagSearch?: boolean
+  priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
 
 /**
- * Creates the ordinary high-density solver used by Pipeline9. The networked
- * helper calls the same factory with its projected JSON input so the local and
- * remote algorithm configuration cannot drift.
+ * Creates the regular high-density configuration. The experimental priority
+ * policy is explicit and requires the caller's full drill context. Projected
+ * network requests leave it disabled; owned local routing supplies that context.
  */
 export const createPipeline9RegularNodeSolver = ({
   nodeWithPortPoints,
   connMap,
   colorMap,
-  viaDiameter,
+  viaDiameter, viaHoleDiameter, minViaHoleEdgeToViaHoleEdgeClearance, allowBlindAndBuriedVias, priorityDiagnostics, priorityDagSearch = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -368,6 +375,11 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    priorityDagSearch,
+    priorityDiagnostics,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
+    allowBlindAndBuriedVias,
   })
 
 /**
@@ -454,6 +466,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
+  readonly benchmarkDiagnosticCounters: Record<string, number> = {}
+
   override getSolverName(): string {
     return "Pipeline9HighDensitySolver"
   }
@@ -500,11 +514,18 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => ({ type: "result" as const, result }),
+              (result) => {
+                for (const [key, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
+                  this.benchmarkDiagnosticCounters[key] = (this.benchmarkDiagnosticCounters[key] ?? 0) + value
+                }
+                this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted = (this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted ?? 0) + 1
+                return { type: "result" as const, result }
+              },
               (error: unknown) => ({ type: "error" as const, error }),
             ),
         )
       }
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched = (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ?? 0) + pending.length
       for (const promise of pending) {
         const outcome = await promise
         if (outcome.type === "error") throw outcome.error
@@ -519,6 +540,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this.solveUntilIteration(stopAtIteration)
           return
         }
+        this.benchmarkDiagnosticCounters.priorityWorkerBatchesAccepted = (this.benchmarkDiagnosticCounters.priorityWorkerBatchesAccepted ?? 0) + 1
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
@@ -597,6 +619,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      viaHoleDiameter: this.params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: this.params.minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+      priorityDiagnostics: this.benchmarkDiagnosticCounters,
+      priorityDagSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

@@ -102,9 +102,6 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
-    /** Experimental regional cost sharing; preserves native eager search ordering. */
-    USE_REGIONAL_CLASS_COSTS?: boolean
-    COLLECT_REGIONAL_CLASS_COST_WORK?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }
