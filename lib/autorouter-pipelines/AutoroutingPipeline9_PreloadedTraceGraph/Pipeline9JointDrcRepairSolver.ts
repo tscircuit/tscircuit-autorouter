@@ -649,12 +649,9 @@ export const getPipeline9PreloadRepairTraceIds = ({
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   get benchmarkDiagnosticCounters(): Record<string, number> {
     const counters: Record<string, number> = {}
-    for (const solver of [
-      this.initialBoundedRegionalRepairSolver,
-      this.boundedRegionalRepairSolver,
-    ]) {
+    for (const solver of [this.initialBoundedRegionalRepairSolver, this.boundedRegionalRepairSolver]) {
       if (!solver) continue
-      for (const [name, value] of Object.entries(solver.repairKernelDiagnostics)) {
+      for (const [name, value] of Object.entries(solver.repairSceneDiagnostics)) {
         counters[name] = (counters[name] ?? 0) + value
       }
     }
