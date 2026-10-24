@@ -9,11 +9,28 @@ concurrency:
   group: architecture-balanced-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
-  cpu-diagnostics:
-    name: Cold port CPU diagnostics SRJ18 6 and 14
+  benchmark:
+    name: Balanced ${{ matrix.candidate }} SRJ${{ matrix.dataset }}
     if: github.ref == 'refs/heads/experiment/architecture-balanced-harness'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - candidate: constrained-corridor-mesh
+            head: ca4dbf88ad268abbdb5570f69482b48431ed8a2e
+            dataset: '18'
+          - candidate: constrained-corridor-mesh
+            head: ca4dbf88ad268abbdb5570f69482b48431ed8a2e
+            dataset: '24'
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: 30000
+      BENCHMARK_TERMINATE_TIMEOUT_MS: 1000
+      BALANCED_HEAD_SHA: ${{ matrix.head }}
+      BALANCED_DATASET: ${{ matrix.dataset }}
+      BALANCED_ORDER: ABBA
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,11 +38,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Profile cold native and eager regional cost implementation
-        run: bun scripts/benchmark/runStageCpuDiagnostics.ts
-      - name: Preserve CPU diagnostic evidence
+      - name: Run four balanced passes
+        run: bun scripts/benchmark/runBalancedBenchmark.ts
+      - name: Preserve balanced benchmark artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: architecture-port-cpu-diagnostics-${{ github.run_id }}
-          path: tmp/stage-cpu-diagnostics/artifacts
+          name: architecture-${{ matrix.candidate }}-${{ matrix.dataset }}-${{ github.run_id }}
+          path: tmp/balanced-benchmark/artifacts
