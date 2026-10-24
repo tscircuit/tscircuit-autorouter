@@ -647,20 +647,6 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
-  get benchmarkDiagnosticCounters(): Record<string, number> {
-    const counters: Record<string, number> = {}
-    for (const solver of [
-      this.initialBoundedRegionalRepairSolver,
-      this.boundedRegionalRepairSolver,
-    ]) {
-      if (!solver) continue
-      for (const [name, value] of Object.entries(solver.repairKernelDiagnostics)) {
-        counters[name] = (counters[name] ?? 0) + value
-      }
-    }
-    return counters
-  }
-
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]

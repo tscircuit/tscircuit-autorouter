@@ -86,39 +86,6 @@ export class HighDensitySolver extends BaseSolver {
       error?: string
     }
   >
-  private readonly completedNativeGridCounters: Record<string, number> = {}
-  private readonly recordedNativeGridSolvers = new WeakSet<HighDensityIntraNodeSolver>()
-
-  private addNativeGridDiagnostics(
-    target: Record<string, number>,
-    solver: HighDensityIntraNodeSolver,
-  ): void {
-    const portfolios = solver instanceof GrowShrinkHighDensityIntraNodeSolver
-      ? new Set([...solver.failedSolvers, ...(solver.winningSolver ? [solver.winningSolver] : []), ...(solver.activeSubSolver ? [solver.activeSubSolver] : [])])
-      : new Set(solver instanceof PortfolioSingleIntraNodeSolver ? [solver] : [])
-    for (const portfolio of portfolios) {
-      const diagnostics = portfolio.nativeGridSetupDiagnostics
-      for (const [key, value] of Object.entries(diagnostics)) {
-        const name = `nativeGrid${key[0]!.toUpperCase()}${key.slice(1)}`
-        target[name] = (target[name] ?? 0) + value
-      }
-      const unmaterialized = diagnostics.deferredCandidateCount - diagnostics.materializedCandidateCount
-      target.nativeGridUnmaterializedCandidateCount = (target.nativeGridUnmaterializedCandidateCount ?? 0) + unmaterialized
-      if (portfolio.solved || portfolio.failed) {
-        target.nativeGridAvoidedCandidateCount = (target.nativeGridAvoidedCandidateCount ?? 0) + unmaterialized
-        target.nativeGridAvoidedPlaneCellCount = (target.nativeGridAvoidedPlaneCellCount ?? 0) + diagnostics.deferredPlaneCellCount - diagnostics.materializedPlaneCellCount
-        target.nativeGridAvoidedLayerCellCount = (target.nativeGridAvoidedLayerCellCount ?? 0) + diagnostics.deferredLayerCellCount - diagnostics.materializedLayerCellCount
-      }
-    }
-  }
-
-  get benchmarkDiagnosticCounters(): Record<string, number> {
-    const counters = { ...this.completedNativeGridCounters }
-    if (this.activeSubSolver && !this.recordedNativeGridSolvers.has(this.activeSubSolver)) {
-      this.addNativeGridDiagnostics(counters, this.activeSubSolver)
-    }
-    return counters
-  }
 
   constructor({
     nodePortPoints,
@@ -233,10 +200,6 @@ export class HighDensitySolver extends BaseSolver {
     solver: HighDensityIntraNodeSolver,
     status: "solved" | "failed",
   ) {
-    if (!this.recordedNativeGridSolvers.has(solver)) {
-      this.addNativeGridDiagnostics(this.completedNativeGridCounters, solver)
-      this.recordedNativeGridSolvers.add(solver)
-    }
     const node = solver.nodeWithPortPoints
     const nodePf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
     this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
