@@ -29,6 +29,8 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
+  type TinyHyperGraphTopology,
+  type TinyHyperGraphProblem,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -36,6 +38,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { createLazyOwnerReleaseController, type LazyOwnerReleaseController } from "./createLazyOwnerReleaseController"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -919,6 +922,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private lazyOwnerRelease?: LazyOwnerReleaseController,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -939,6 +943,17 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      if (lazyOwnerRelease) {
+        const ownerReleaseController = lazyOwnerRelease
+        solveGraphStep.solverClass = class extends SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments {
+          constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, options?: TinyHyperGraphSolverOptions) {
+            super(topology, problem, options)
+            // Install before the first native step, including a preloaded graph
+            // whose first route immediately exhausts its ordinary frontier.
+            ownerReleaseController.install(this)
+          }
+        }
+      }
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1022,6 +1037,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
+      if (solver instanceof TinyHyperGraphSolver) this.lazyOwnerRelease?.install(solver)
     }
 
     this.configuredSolvers.add(solver)
@@ -1051,9 +1067,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
+  private lazyOwnerRelease?: LazyOwnerReleaseController
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    if (params.flags.USE_LAZY_MINIMUM_OWNER_RELEASE) {
+      if (!params.flags.USE_SELECTIVE_RERIP_ROUTING) throw new Error("Lazy owner release requires native selective rerip routing")
+      this.lazyOwnerRelease = createLazyOwnerReleaseController()
+    }
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1137,6 +1158,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        this.lazyOwnerRelease,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1375,6 +1397,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getStageStats().solveGraph
 
     return {
+      ...(this.lazyOwnerRelease ? { lazyOwnerRelease: { ...this.lazyOwnerRelease.stats } } : {}),
       routeCount: solveGraphSolver.problem.routeCount,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
@@ -1446,6 +1469,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.lazyOwnerRelease,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1533,6 +1557,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
+      ...(this.lazyOwnerRelease?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
