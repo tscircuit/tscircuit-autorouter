@@ -7,13 +7,15 @@ import {
 type Terminal = { x: number; y: number; pointId: string }
 
 test("expand candidate neighborhoods until all clusters connect", (): void => {
-  const points: Terminal[] = [0, 100, 1000].flatMap(
-    (offset): Terminal[] =>
-      Array.from({ length: 25 }, (_, index): Terminal => ({
+  const points: Terminal[] = [0, 100, 1000].flatMap((offset): Terminal[] =>
+    Array.from(
+      { length: 25 },
+      (_, index): Terminal => ({
         x: offset + index / 10,
         y: 0,
         pointId: `${offset}-${index}`,
-      })),
+      }),
+    ),
   )
   const original = structuredClone(points)
   Object.freeze(points)

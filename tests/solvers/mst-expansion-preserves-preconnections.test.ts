@@ -7,13 +7,15 @@ import {
 type Terminal = { x: number; y: number; pointId: string }
 
 test("expand neighborhoods with preconnections and coincident terminals", (): void => {
-  const points: Terminal[] = [0, 100, 1000].flatMap(
-    (offset): Terminal[] =>
-      Array.from({ length: 25 }, (_, index): Terminal => ({
+  const points: Terminal[] = [0, 100, 1000].flatMap((offset): Terminal[] =>
+    Array.from(
+      { length: 25 },
+      (_, index): Terminal => ({
         x: offset + index / 10,
         y: 0,
         pointId: `${offset}-${index}`,
-      })),
+      }),
+    ),
   )
   points.push({ ...points[0]!, pointId: "coincident" })
   const preconnection = { from: points[0]!, to: points[50]!, weight: 0 }

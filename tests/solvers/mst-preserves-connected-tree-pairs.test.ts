@@ -5,11 +5,14 @@ type Terminal = { x: number; y: number; pointId: number }
 
 test("preserve already connected local tree pairs", (): void => {
   const points: Terminal[] = Array.from({ length: 4 }, (_, x): Terminal[] =>
-    Array.from({ length: 7 }, (_, y): Terminal => ({
-      x,
-      y,
-      pointId: x * 7 + y,
-    })),
+    Array.from(
+      { length: 7 },
+      (_, y): Terminal => ({
+        x,
+        y,
+        pointId: x * 7 + y,
+      }),
+    ),
   ).flat()
   const edges = buildMinimumSpanningTree(points)
 
