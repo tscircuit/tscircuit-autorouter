@@ -1,38 +1,48 @@
-name: Blacksmith Testbox
+name: Balanced Same Machine Benchmark
 on:
+  push:
+    branches:
+      - experiment/professional-balanced-harness
   workflow_dispatch:
-    inputs:
-      testbox_id:
-        type: string
-        description: "Testbox session ID"
-        required: true
-  pull_request:
-    paths:
-      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: professional-balanced-harness-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   benchmark:
-    name: Run benchmark
-    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
+    name: Run exact ABBA comparison
+    if: github.ref == 'refs/heads/experiment/professional-balanced-harness'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+      BALANCED_HEAD_SHA: 887e802d7b3862c5ad28ba51bc036d4b1dfb300e
+      BALANCED_ORDER: ABBA
 
     steps:
-      - name: Begin Testbox
-        uses: useblacksmith/begin-testbox@v2
-        with:
-          testbox_id: ${{ inputs.testbox_id }}
-
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.2
 
-      - name: Install dependencies
-        run: bun install
+      - name: Run four balanced passes
+        run: bun scripts/benchmark/runBalancedBenchmark.ts
 
-      - name: Run Testbox
-        uses: useblacksmith/run-testbox@v2
+      - name: Preserve balanced benchmark artifacts
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balanced-same-machine-${{ github.run_id }}
+          path: tmp/balanced-benchmark/artifacts
+          if-no-files-found: warn
