@@ -1,6 +1,4 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
-import { profile } from "bun:jsc"
-import { summarizeBenchmarkCpuProfile } from "./summarizeBenchmarkCpuProfile"
 import { TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { runTraceLinting } from "../../lib/testing/runTraceLinting"
 import { getSvgFromGraphicsObject } from "graphics-debug"
@@ -645,20 +643,7 @@ export const runTask = async (
   let solveError: string | undefined
 
   try {
-    // Research-only candidate: native solver unchanged, timing is not a speed
-    // comparison. Sample at 50ms to bound retained diagnostic stack memory.
-    const sampled = await profile(
-      () => solveWithProgress(task, solver, start, options),
-      50_000,
-    )
-    // Worker stdout is exclusively the task/progress JSON protocol. Its parent
-    // forwards stderr diagnostics; ordinary stdout lines are discarded.
-    console.error("P9_RESEARCH_CPU_PROFILE " + JSON.stringify({
-      sample: task.sampleNumber,
-      scenario: task.scenarioName,
-      solver: task.solverName,
-      ...summarizeBenchmarkCpuProfile(sampled),
-    }))
+    await solveWithProgress(task, solver, start, options)
   } catch (error) {
     solver.solved = false
     solveError = getErrorMessage(error)

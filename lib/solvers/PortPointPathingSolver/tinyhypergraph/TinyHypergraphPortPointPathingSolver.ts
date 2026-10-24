@@ -36,6 +36,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { createTinyRegionalBlockDiagnostics, installTinyRegionalBlockPruning, type TinyRegionalBlockDiagnostics } from "./installTinyRegionalBlockPruning"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -919,6 +920,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly useRegionalBlockPruning: boolean,
+    private readonly regionalBlockDiagnostics: TinyRegionalBlockDiagnostics,
+    private readonly collectRegionalBlockWork: boolean,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -972,6 +976,15 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   override _step() {
     super._step()
     this.configureSolver(this.activeSubSolver)
+    if (this.useRegionalBlockPruning || this.collectRegionalBlockWork) this.configureRegionalBlockPruning(this.activeSubSolver)
+  }
+
+  private configureRegionalBlockPruning(solver?: BaseSolver | null): void {
+    if (!solver) return
+    if (solver instanceof TinyHyperGraphSolver) {
+      installTinyRegionalBlockPruning(solver, this.regionalBlockDiagnostics, this.collectRegionalBlockWork, false, !this.useRegionalBlockPruning)
+    }
+    if (solver.activeSubSolver) this.configureRegionalBlockPruning(solver.activeSubSolver)
   }
 
   override getInitialVisualizationSolver() {
@@ -1029,6 +1042,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  readonly benchmarkDiagnosticCounters = createTinyRegionalBlockDiagnostics()
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1137,6 +1151,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.flags.USE_REGIONAL_BLOCK_PRUNING === true,
+        this.benchmarkDiagnosticCounters,
+        params.flags.COLLECT_REGIONAL_BLOCK_WORK === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1463,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.flags.USE_REGIONAL_BLOCK_PRUNING === true,
+            this.benchmarkDiagnosticCounters,
+            this.params.flags.COLLECT_REGIONAL_BLOCK_WORK === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
