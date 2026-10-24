@@ -34,6 +34,7 @@ import {
 import { getPipeline9BoundedRepairBudget } from "./applyPipeline9BoundedRegionalRepairs"
 import { Pipeline9RegionalB01RepairSolver } from "./Pipeline9RegionalB01RepairSolver"
 import { Pipeline9BoundedRegionalRepairSolver } from "./Pipeline9BoundedRegionalRepairSolver"
+import { applyPipeline9TerminalTracePairRepairs } from "./applyPipeline9TerminalTracePairRepairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1965,9 +1966,33 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    const terminalPairResult =
+      boundedRegionalRepairResult.publishedDrcIssueCount !== undefined &&
+      boundedRegionalRepairResult.publishedDrcIssueCount > 0 &&
+      boundedRegionalRepairResult.publishedDrcIssueCount <= 8
+        ? applyPipeline9TerminalTracePairRepairs({
+            originalSrj: this.params.originalSrj,
+            routes: boundedRegionalRepairResult.routes,
+            newConnections: this.params.newConnections,
+            syntheticConnectionNames: this.syntheticConnectionNames,
+            drcEvaluator: this.cachedReferenceDrcEvaluator!,
+            initialErrors: getPipeline9DrcErrors(
+              this.cachedReferenceDrcEvaluator!,
+              boundedRegionalRepairResult.routes,
+            ),
+          })
+        : undefined
+    this.combinedOutput = terminalPairResult
+      ? terminalPairResult.routes
+      : boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
+      terminalTracePairValidationCount:
+        terminalPairResult?.validationCount ?? 0,
+      terminalTracePairRepaired: terminalPairResult?.repaired ?? false,
+      terminalTracePairRemainingDrcIssueCount:
+        terminalPairResult?.remainingErrorCount ??
+        boundedRegionalRepairResult.publishedDrcIssueCount,
       boundedRegionalRepairMaxRegions: regionalRepairBudget.maxRegions,
       boundedRegionalRepairMaxCandidateAttempts:
         regionalRepairBudget.maxCandidateAttempts,
