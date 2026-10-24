@@ -18,7 +18,6 @@ export type Pipeline9HighDensityBatchInput = Omit<
 export type Pipeline9HighDensityBatchOutput = {
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
-  benchmarkDiagnosticCounters: Record<string, number>
   iterations: number
   consumedNodeCount: number
   solved: boolean
@@ -51,7 +50,6 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
     this.output = {
       routes: solver.routes,
       stats: solver.stats,
-      benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
       iterations: solver.iterations,
       consumedNodeCount:
         this.input.nodePortPoints.length - solver.unsolvedNodePortPoints.length,
