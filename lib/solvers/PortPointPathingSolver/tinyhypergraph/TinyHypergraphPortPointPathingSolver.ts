@@ -36,7 +36,12 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { createGeometricRegionalDiagnostics, installGeometricRegionalDominance, type GeometricRegionalDiagnostics } from "./installGeometricRegionalDominance"
+import {
+  createImplicitRegionalDiagnostics,
+  installImplicitRegionalTransitions,
+  type ImplicitRegionalDiagnostics,
+} from "./installImplicitRegionalTransitions"
+import type { TinyHyperGraphTopology, TinyHyperGraphProblem } from "tiny-hypergraph/lib/core"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -920,9 +925,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly useGeometricRegionalDominance: boolean,
-    private readonly geometricDiagnostics: GeometricRegionalDiagnostics,
-    private readonly collectGeometricWork: boolean,
+    private readonly implicitOptions?: {
+      diagnostics: ImplicitRegionalDiagnostics
+      collectWork: boolean
+    },
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -943,6 +949,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      if (implicitOptions) {
+        const implicit = implicitOptions
+        const NativeSelective = SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        solveGraphStep.solverClass = class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends NativeSelective {
+          constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, options?: TinyHyperGraphSolverOptions) {
+            super(topology, problem, options)
+            installImplicitRegionalTransitions(this, implicit.diagnostics, implicit.collectWork)
+          }
+        }
+      }
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -976,15 +992,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   override _step() {
     super._step()
     this.configureSolver(this.activeSubSolver)
-    if (this.useGeometricRegionalDominance) this.configureGeometricDominance(this.activeSubSolver)
-  }
-
-  private configureGeometricDominance(solver?: BaseSolver | null): void {
-    if (!solver) return
-    if (solver instanceof TinyHyperGraphSolver) {
-      installGeometricRegionalDominance(solver, this.geometricDiagnostics, this.collectGeometricWork)
-    }
-    if (solver.activeSubSolver) this.configureGeometricDominance(solver.activeSubSolver)
   }
 
   override getInitialVisualizationSolver() {
@@ -1037,12 +1044,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
+    if (solver instanceof TinyHyperGraphSolver && this.implicitOptions) {
+      installImplicitRegionalTransitions(solver, this.implicitOptions.diagnostics, this.implicitOptions.collectWork)
+    }
+
     this.configuredSolvers.add(solver)
   }
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  readonly benchmarkDiagnosticCounters = createGeometricRegionalDiagnostics()
+  readonly benchmarkDiagnosticCounters = createImplicitRegionalDiagnostics()
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1151,9 +1162,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_GEOMETRIC_REGIONAL_DOMINANCE === true,
-        this.benchmarkDiagnosticCounters,
-        params.flags.COLLECT_GEOMETRIC_DOMINANCE_WORK === true,
+        params.flags.USE_IMPLICIT_REGIONAL_TRANSITIONS ? {
+          diagnostics: this.benchmarkDiagnosticCounters,
+          collectWork: params.flags.COLLECT_IMPLICIT_REGIONAL_WORK === true,
+        } : undefined,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1463,9 +1475,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_GEOMETRIC_REGIONAL_DOMINANCE === true,
-            this.benchmarkDiagnosticCounters,
-            this.params.flags.COLLECT_GEOMETRIC_DOMINANCE_WORK === true,
+            this.params.flags.USE_IMPLICIT_REGIONAL_TRANSITIONS ? {
+              diagnostics: this.benchmarkDiagnosticCounters,
+              collectWork: this.params.flags.COLLECT_IMPLICIT_REGIONAL_WORK === true,
+            } : undefined,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
