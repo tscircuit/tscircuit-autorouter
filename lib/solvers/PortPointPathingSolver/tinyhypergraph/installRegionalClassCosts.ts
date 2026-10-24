@@ -177,7 +177,7 @@ export function installRegionalClassCosts(
     // Four foreign segments are required by the static class-sharing domain.
     // Most queried regions contain fewer total segments; do not allocate an
     // index or touch the epoch registry for those native-only calls.
-    if (this.state.regionIntersectionCaches[region]!.netIds.length < 4) {
+    if (this.state.regionIntersectionCaches[region]!.netIds.length < 4 || !Number.isFinite(source.g)) {
       if (work) work.nativeQueries++
       return native.computeG.call(this, source, destination, maximumCost, knownSegmentDistance)
     }

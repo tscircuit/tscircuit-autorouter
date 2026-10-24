@@ -29,5 +29,28 @@ test("strict angular and layer classes preserve native binary64 costs in both di
     expect(work.installedSolvers).toBe(1)
     expect(work.classCostQueries).toBeGreaterThan(0)
     expect(work.classCostHits).toBeGreaterThan(work.classCostQueries)
+    // Direct callers may supply values that the native eager frontier never
+    // queues. Preserve its authoritative early single-layer Infinity behavior.
+    for (const g of [-Infinity, Infinity, NaN]) for (const destination of [1, 20, 45]) {
+      const source = regionalClassSource(0, g)
+      expect(candidate.computeG(source, destination)).toBe(native.computeG(source, destination))
+    }
   }
+  const native = createRegionalClassFixture(0, [0]), candidate = createRegionalClassFixture(0, [0])
+  for (const solver of [native, candidate]) {
+    solver.state.currentRouteNetId = 1
+    solver.appendSegmentToRegionCache(0, 7, 31)
+    solver.appendSegmentToRegionCache(0, 13, 55)
+    solver.state.currentRouteNetId = 0
+    solver.topology.regionAvailableZMask![0] = 1
+  }
+  installRegionalClassCosts(candidate, createRegionalClassCostDiagnostics(), true)
+  let nativeSingleLayerRejections = 0
+  for (const g of [-Infinity, Infinity, NaN]) for (let destination = 1; destination < 65; destination++) {
+    const source = regionalClassSource(0, g)
+    const expected = native.computeG(source, destination)
+    expect(candidate.computeG(source, destination)).toBe(expected)
+    if (g === -Infinity && expected === Infinity) nativeSingleLayerRejections++
+  }
+  expect(nativeSingleLayerRejections).toBeGreaterThan(0)
 })
