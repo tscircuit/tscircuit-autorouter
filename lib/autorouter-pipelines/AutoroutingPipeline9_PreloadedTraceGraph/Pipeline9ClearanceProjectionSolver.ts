@@ -1,10 +1,10 @@
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
-  RelaxTraceClearanceSolver,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { CollectiveClearanceSolver } from "./CollectiveClearanceSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -42,7 +42,7 @@ type ProjectionState =
   | {
       phase: "relax"
       context: ProjectionContext
-      solver: RelaxTraceClearanceSolver
+      solver: CollectiveClearanceSolver
     }
   | {
       phase: "select" | "physical-validation" | "reference-validation"
@@ -86,7 +86,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
       const canonicalRoutes = params.subdivideSegments
         ? subdividePipeline9ClearanceSegments(originalCanonicalRoutes, errors)
         : originalCanonicalRoutes
-      const solver = new RelaxTraceClearanceSolver({
+      const solver = new CollectiveClearanceSolver({
         srj,
         routes: canonicalRoutes,
         bounds: srj.bounds,
@@ -123,6 +123,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         throw new Error(`Clearance relaxation failed: ${state.solver.error}`)
       }
       if (state.solver.solved) {
+        this.stats = { ...this.stats, ...state.solver.stats }
         this.activeSubSolver = null
         this.state = {
           phase: "select",
