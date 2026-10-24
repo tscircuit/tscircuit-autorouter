@@ -18,11 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - candidate: eager-regional-class-costs
-            head: cd9ae30196c80651a56b20cfc7c1dfdb8282d9fb
+          - candidate: collective-fixed-normal-clearance
+            head: be1c36e327d5fc3a4c51c035952dad0d7e98084b
             dataset: '18'
-          - candidate: eager-regional-class-costs
-            head: cd9ae30196c80651a56b20cfc7c1dfdb8282d9fb
+          - candidate: collective-fixed-normal-clearance
+            head: be1c36e327d5fc3a4c51c035952dad0d7e98084b
             dataset: '24'
     env:
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
