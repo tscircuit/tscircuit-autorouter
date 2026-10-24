@@ -18,9 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - candidate: native-witness-replay
-            head: ce085bbebcbbbd265cf0fc0d85a0f5c8c6f3f331
+          - candidate: clearance-certificates
+            head: 6720930749acb4ba0fa335548ad56542855b6ded
             dataset: '18'
+          - candidate: clearance-certificates
+            head: 6720930749acb4ba0fa335548ad56542855b6ded
+            dataset: '24'
     env:
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
       BENCHMARK_HEARTBEAT_INTERVAL_MS: 30000
