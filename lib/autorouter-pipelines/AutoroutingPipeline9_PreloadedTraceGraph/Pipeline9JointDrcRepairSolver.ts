@@ -1,4 +1,3 @@
-import { addMeshSearchDiagnostics } from "./corridorRepair/meshSearchDiagnostics"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
@@ -648,13 +647,6 @@ export const getPipeline9PreloadRepairTraceIds = ({
  * traces that participate in a remaining joint-output DRC error.
  */
 export class Pipeline9JointDrcRepairSolver extends BaseSolver {
-  get benchmarkDiagnosticCounters(): Record<string, number> {
-    const totals: Record<string, number> = {}
-    for (const child of new Set([this.initialBoundedRegionalRepairSolver, this.boundedRegionalRepairSolver]))
-      if (child) addMeshSearchDiagnostics(totals, child.benchmarkDiagnosticCounters)
-    return totals
-  }
-
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
