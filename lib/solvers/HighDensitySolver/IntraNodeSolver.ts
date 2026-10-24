@@ -11,6 +11,7 @@ import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+import { LazyPhysicalSingleHighDensityRouteSolver } from "./LazyPhysicalSingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
@@ -76,6 +77,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  readonly lazyPhysicalEvaluation: boolean
+  readonly lazyPhysicalDiagnostics?: Record<string, number>
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -103,6 +106,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    lazyPhysicalEvaluation?: boolean
+    lazyPhysicalDiagnostics?: Record<string, number>
     obstacles?: Obstacle[]
     layerCount?: number
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
@@ -119,6 +124,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.lazyPhysicalEvaluation = params.lazyPhysicalEvaluation ?? false
+    this.lazyPhysicalDiagnostics = params.lazyPhysicalDiagnostics
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -478,10 +485,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
         if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
       }
     }
-    this.activeSubSolver =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-        this.getSingleRouteSolverOpts(unsolvedConnection),
-      )
+    const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
+    this.activeSubSolver = this.lazyPhysicalEvaluation
+      ? new LazyPhysicalSingleHighDensityRouteSolver(opts, this.lazyPhysicalDiagnostics)
+      : new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
   }
 
   visualize(): GraphicsObject {

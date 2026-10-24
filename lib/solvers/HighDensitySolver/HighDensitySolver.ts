@@ -69,6 +69,8 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
+  readonly lazyPhysicalEvaluation: boolean
+  readonly benchmarkDiagnosticCounters: Record<string, number>
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -109,6 +111,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    lazyPhysicalEvaluation = false,
+    lazyPhysicalDiagnostics,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -132,6 +136,8 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    lazyPhysicalEvaluation?: boolean
+    lazyPhysicalDiagnostics?: Record<string, number>
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -162,6 +168,8 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.lazyPhysicalEvaluation = lazyPhysicalEvaluation
+    this.benchmarkDiagnosticCounters = lazyPhysicalDiagnostics ?? {}
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -395,6 +403,8 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
+      lazyPhysicalEvaluation: this.lazyPhysicalEvaluation,
+      lazyPhysicalDiagnostics: this.benchmarkDiagnosticCounters,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,

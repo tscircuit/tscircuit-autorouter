@@ -345,7 +345,8 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
+  lazyPhysicalDiagnostics,
+}: Pipeline9RegularNodeSolverParams & { lazyPhysicalDiagnostics?: Record<string, number> }): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
@@ -368,6 +369,8 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    lazyPhysicalEvaluation: true,
+    lazyPhysicalDiagnostics,
   })
 
 /**
@@ -454,6 +457,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     }
   }
 
+  readonly benchmarkDiagnosticCounters: Record<string, number> = {}
+
   override getSolverName(): string {
     return "Pipeline9HighDensitySolver"
   }
@@ -500,11 +505,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => ({ type: "result" as const, result }),
+              (result) => {
+                // Account every completed worker once, even if its output later
+                // crosses the serial clock or follows a failed earlier batch.
+                for (const [key, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
+                  this.benchmarkDiagnosticCounters[key] = (this.benchmarkDiagnosticCounters[key] ?? 0) + value
+                }
+                this.benchmarkDiagnosticCounters.lazyWorkerBatchesCompleted = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesCompleted ?? 0) + 1
+                return { type: "result" as const, result }
+              },
               (error: unknown) => ({ type: "error" as const, error }),
             ),
         )
       }
+      this.benchmarkDiagnosticCounters.lazyWorkerBatchesDispatched = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesDispatched ?? 0) + pending.length
       for (const promise of pending) {
         const outcome = await promise
         if (outcome.type === "error") throw outcome.error
@@ -519,6 +533,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this.solveUntilIteration(stopAtIteration)
           return
         }
+        this.benchmarkDiagnosticCounters.lazyWorkerBatchesAccepted = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesAccepted ?? 0) + 1
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
@@ -597,6 +612,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
+      lazyPhysicalDiagnostics: this.benchmarkDiagnosticCounters,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

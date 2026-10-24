@@ -9,11 +9,6 @@ import {
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import {
-  PlanarClearanceCertificates,
-  type PlanarClearanceCertificate,
-  type PlanarCertificateDiagnostics,
-} from "./PlanarClearanceCertificates"
 
 export type FutureConnection = {
   connectionName: string
@@ -93,10 +88,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   freePlanarObstaclePoints = new Map<number, FreePlanarObstaclePoint>()
   cachedPlanarTraceProximity: number | undefined
   cachedPlanarViaProximity: number | undefined
-  private planarCertificateSceneRevision = 0
-  planarClearanceCertificatesEnabled = true
-  planarCertificateDiagnostics?: PlanarCertificateDiagnostics
-  private planarCertificatesByLayer = new Map<number, PlanarClearanceCertificates>()
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -304,20 +295,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const traceProximity = this.traceThickness + margin
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
-    const certificate = planarObstacleQuery?.certificate
-    if (
-      !isVia && certificate &&
-      certificate.sceneRevision === this.planarCertificateSceneRevision &&
-      certificate.z === node.z &&
-      certificate.traceProximity === traceProximity &&
-      certificate.viaProximity === viaProximity &&
-      isPointInsidePlanarCertificate(node, certificate)
-    ) {
-      if (this.planarCertificateDiagnostics) {
-        this.planarCertificateDiagnostics.certifiedPointChecks++
-      }
-      return false
-    }
     // Planar point clearance is independent of the parent. Supplied queries
     // must cover the full point rectangle before their result can be reused.
     const canCachePlanarPoint =
@@ -468,20 +445,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
-    const certificate = planarObstacleQuery?.certificate
-    if (
-      certificate && certificate.sceneRevision === this.planarCertificateSceneRevision &&
-      node.z === parent.z && certificate.z === node.z &&
-      certificate.segmentClearance === clearance &&
-      isPointInsidePlanarCertificate(node, certificate) &&
-      isPointInsidePlanarCertificate(parent, certificate)
-    ) {
-      if (this.planarCertificateDiagnostics) {
-        this.planarCertificateDiagnostics.certifiedSegmentChecks++
-      }
-      return false
-    }
-
     const minX = Math.min(node.x, parent.x)
     const maxX = Math.max(node.x, parent.x)
     const minY = Math.min(node.y, parent.y)
@@ -596,7 +559,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   getPlanarNeighborObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
     const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
     const segments = this.obstacleSegmentsByLayer.get(node.z)
-    if ((!segmentIndex || !segments) && !this.obstacleViaIndex) return undefined
+    if (!segmentIndex || !segments) return undefined
     const traceProximity = this.traceThickness + this.obstacleMargin
     const clearance =
       this.obstacleSegments.length > 0 ? this.NEARBY_SEGMENT_CLEARANCE : 0
@@ -605,54 +568,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const minimumNeighborY = clamp(node.y - this.cellStep, minY, maxY)
     const maximumNeighborX = clamp(node.x + this.cellStep, minX, maxX)
     const maximumNeighborY = clamp(node.y + this.cellStep, minY, maxY)
-    let certificate: PlanarClearanceCertificate | undefined
-    if (this.planarClearanceCertificatesEnabled) {
-      const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
-      let certificates = this.planarCertificatesByLayer.get(node.z)
-      const scene = certificates?.scene
-      if (
-        !scene || scene.traceProximity !== traceProximity ||
-        scene.viaProximity !== viaProximity || scene.segmentClearance !== clearance ||
-        scene.segmentIndex !== segmentIndex || scene.viaIndex !== (this.obstacleViaIndex ?? undefined) ||
-        scene.segments !== (segments ?? EMPTY_PLANAR_SEGMENTS) || scene.vias !== this.obstacleVias
-      ) {
-        certificates = new PlanarClearanceCertificates({
-          sceneRevision: this.planarCertificateSceneRevision,
-          z: node.z, traceProximity, viaProximity, segmentClearance: clearance,
-          segments: segments ?? EMPTY_PLANAR_SEGMENTS,
-          segmentIndex, vias: this.obstacleVias,
-          viaIndex: this.obstacleViaIndex ?? undefined,
-        })
-        this.planarCertificatesByLayer.set(node.z, certificates)
-      }
-      certificates!.diagnostics = this.planarCertificateDiagnostics
-      // Only construct at a center already proven free by the native exact
-      // point cache under these same physical thresholds. Otherwise a failed
-      // clipping attempt would add a second broadphase to the shared native
-      // neighbor query. Existing rectangles remain reusable without this gate.
-      const freeCenter = this.freePlanarObstaclePoints.get(this.getNodeKey(node))
-      const allowConstruction =
-        this.cachedPlanarTraceProximity === traceProximity &&
-        this.cachedPlanarViaProximity === viaProximity &&
-        freeCenter?.x === node.x && freeCenter.y === node.y && freeCenter.z === node.z
-      certificate = certificates!.findOrCreate(node, this.cellStep, allowConstruction)
-      if (
-        certificate &&
-        minimumNeighborX >= certificate.minX && maximumNeighborX <= certificate.maxX &&
-        minimumNeighborY >= certificate.minY && maximumNeighborY <= certificate.maxY
-      ) {
-        if (this.planarCertificateDiagnostics) {
-          this.planarCertificateDiagnostics.certifiedNeighborhoodQueries++
-        }
-        return { segments: segments ?? EMPTY_PLANAR_SEGMENTS, segmentIds: [], certificate }
-      }
-    }
-    if (!segmentIndex || !segments) {
-      return certificate ? { segments: EMPTY_PLANAR_SEGMENTS, segmentIds: [], certificate } : undefined
-    }
     return {
       segments,
-      certificate,
       segmentIds: segmentIndex.search(
         Math.min(minimumNeighborX - traceProximity, node.x - clearance),
         Math.min(minimumNeighborY - traceProximity, node.y - clearance),
@@ -663,8 +580,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   buildObstacleIndexes() {
-    this.planarCertificateSceneRevision++
-    this.planarCertificatesByLayer.clear()
     this.freePlanarObstaclePoints.clear()
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
@@ -1216,7 +1131,6 @@ type FreePlanarObstaclePoint = {
 }
 
 type PlanarObstacleQuery = {
-  certificate?: PlanarClearanceCertificate
   segments: IndexedObstacleSegment[]
   segmentIds: number[]
   segmentBounds?: { minX: number; minY: number; maxX: number; maxY: number }
@@ -1317,16 +1231,4 @@ function getPointToPrecomputedSegmentDistanceSquared(
   const dx = point.x - projectionX
   const dy = point.y - projectionY
   return dx * dx + dy * dy
-}
-
-const EMPTY_PLANAR_SEGMENTS: IndexedObstacleSegment[] = []
-
-function isPointInsidePlanarCertificate(
-  point: { x: number; y: number },
-  certificate: PlanarClearanceCertificate,
-): boolean {
-  return (
-    point.x >= certificate.minX && point.x <= certificate.maxX &&
-    point.y >= certificate.minY && point.y <= certificate.maxY
-  )
 }
