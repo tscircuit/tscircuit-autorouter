@@ -1,3 +1,5 @@
+import type { PointKey } from "lib/types"
+
 type Point = { x: number; y: number }
 
 export class KDNode {
@@ -177,8 +179,8 @@ class KDTree {
 
 // Disjoint Set (Union-Find) data structure for Kruskal's algorithm
 export class DisjointSet {
-  private parent: Map<string, string> = new Map()
-  private rank: Map<string, number> = new Map()
+  private parent: Map<PointKey, PointKey> = new Map()
+  private rank: Map<PointKey, number> = new Map()
   componentCount: number
 
   constructor(points: Point[]) {
@@ -191,11 +193,11 @@ export class DisjointSet {
     this.componentCount = this.parent.size
   }
 
-  private pointToKey(point: Point): string {
+  private pointToKey(point: Point): PointKey {
     return `${point.x},${point.y}`
   }
 
-  find(point: Point): string {
+  find(point: Point): PointKey {
     const key = this.pointToKey(point)
     if (!this.parent.has(key)) {
       throw new Error(`Point ${key} not found in DisjointSet`)
