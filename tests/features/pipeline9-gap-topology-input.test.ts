@@ -20,9 +20,9 @@ test("Pipeline9 only combines gap layers when its topology includes all copper",
     expect(gapFillSolver?.inputProblem.viaDiameter).toBe(0.5)
     expect(gapFillSolver?.inputProblem.mergeGapFillLayers).toBe(!traces?.length)
     if (traces?.length) {
-      const expandedNodes = gapFillSolver!.getOutput().outputNodes.slice(
-        gapFillSolver!.inputProblem.meshNodes.length,
-      )
+      const expandedNodes = gapFillSolver!
+        .getOutput()
+        .outputNodes.slice(gapFillSolver!.inputProblem.meshNodes.length)
       expect(expandedNodes.length).toBeGreaterThan(0)
       expect(
         expandedNodes.every((node): boolean => node.availableZ.length === 1),
