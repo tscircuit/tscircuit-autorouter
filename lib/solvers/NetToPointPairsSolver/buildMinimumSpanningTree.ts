@@ -1,4 +1,5 @@
 type Point = { x: number; y: number }
+type PointComponentId = string
 
 export class KDNode {
   point: Point
@@ -179,6 +180,7 @@ class KDTree {
 export class DisjointSet {
   private parent: Map<string, string> = new Map()
   private rank: Map<string, number> = new Map()
+  componentCount: number
 
   constructor(points: Point[]) {
     // Initialize each point as a separate set
@@ -187,6 +189,7 @@ export class DisjointSet {
       this.parent.set(key, key)
       this.rank.set(key, 0)
     }
+    this.componentCount = this.parent.size
   }
 
   private pointToKey(point: Point): string {
@@ -236,6 +239,7 @@ export class DisjointSet {
       this.rank.set(rootA, rankA + 1)
     }
 
+    this.componentCount -= 1
     return true
   }
 }
@@ -311,6 +315,40 @@ export function buildMinimumSpanningTree<T extends Point>(
       if (mstEdges.length === pointsCopy.length - 1) {
         break
       }
+    }
+  }
+
+  // The k-neighbor graph can leave separated terminal clusters disconnected.
+  // Join their nearest outgoing edges without changing existing pairs or order.
+  while (disjointSet.componentCount > 1) {
+    const roots: PointComponentId[] = pointsCopy.map((point) =>
+      disjointSet.find(point),
+    )
+    const nearestEdges = new Map<PointComponentId, Edge<T>>()
+    for (let fromIndex = 0; fromIndex < pointsCopy.length; fromIndex++) {
+      for (
+        let toIndex = fromIndex + 1;
+        toIndex < pointsCopy.length;
+        toIndex++
+      ) {
+        if (roots[fromIndex] === roots[toIndex]) continue
+        const from = pointsCopy[fromIndex]!
+        const to = pointsCopy[toIndex]!
+        const edge: Edge<T> = {
+          from,
+          to,
+          weight: Math.sqrt((from.x - to.x) ** 2 + (from.y - to.y) ** 2),
+        }
+        for (const root of [roots[fromIndex]!, roots[toIndex]!]) {
+          const nearest = nearestEdges.get(root)
+          if (!nearest || edge.weight < nearest.weight) {
+            nearestEdges.set(root, edge)
+          }
+        }
+      }
+    }
+    for (const edge of nearestEdges.values()) {
+      if (disjointSet.union(edge.from, edge.to)) mstEdges.push(edge)
     }
   }
 
