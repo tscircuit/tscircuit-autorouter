@@ -1,38 +1,45 @@
-name: Blacksmith Testbox
+name: Architecture Balanced Benchmark
 on:
+  push:
+    branches: [experiment/architecture-balanced-harness]
   workflow_dispatch:
-    inputs:
-      testbox_id:
-        type: string
-        description: "Testbox session ID"
-        required: true
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-
+permissions:
+  contents: read
+concurrency:
+  group: architecture-balanced-${{ github.run_id }}
+  cancel-in-progress: false
 jobs:
   benchmark:
-    name: Run benchmark
-    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
-
+    name: Balanced ${{ matrix.candidate }} SRJ${{ matrix.dataset }}
+    if: github.ref == 'refs/heads/experiment/architecture-balanced-harness'
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - candidate: geometric-cones
+            head: e3581686c41977cd75e294fc8cb34f3c4ce66529
+            dataset: '18'
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: 30000
+      BENCHMARK_TERMINATE_TIMEOUT_MS: 1000
+      BALANCED_HEAD_SHA: ${{ matrix.head }}
+      BALANCED_DATASET: ${{ matrix.dataset }}
+      BALANCED_ORDER: ABBA
     steps:
-      - name: Begin Testbox
-        uses: useblacksmith/begin-testbox@v2
+      - uses: actions/checkout@v4
         with:
-          testbox_id: ${{ inputs.testbox_id }}
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run Testbox
-        uses: useblacksmith/run-testbox@v2
+          bun-version: 1.4.2
+      - name: Run four balanced passes
+        run: bun scripts/benchmark/runBalancedBenchmark.ts
+      - name: Preserve balanced benchmark artifacts
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-${{ matrix.candidate }}-${{ matrix.dataset }}-${{ github.run_id }}
+          path: tmp/balanced-benchmark/artifacts
