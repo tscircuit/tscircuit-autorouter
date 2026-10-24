@@ -11,6 +11,7 @@ type Witness = { route: HighDensityIntraNodeRoute; ancestors: Array<[number, Wit
 type State = PriorityDagState<Witness>
 type Params = ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
   priorityFamilySize: number; priorityDiagnostics?: Record<string, number>
+  predictFutureConnections?: boolean
   viaHoleDiameter?: number; minViaHoleEdgeToViaHoleEdgeClearance?: number
   allowBlindAndBuriedVias?: boolean
 }
@@ -18,7 +19,10 @@ class PriorityWorkLimitReached extends Error {}
 
 /** Conflict-driven static priorities, with native Single routing below them.
  * Unlike a native complete ordering, unrelated tasks are NOT earlier copper.
- * Futures are canonical nonancestors. This is an explicit routing policy change,
+ * Legacy control uses canonical nonancestor futures; the production variant
+ * omits predicted futures entirely. This changes native numRoutes, grid, via
+ * penalties and constructor shortcuts as well as future costs/vetoes. It is an
+ * explicit routing policy change,
  * not an exact cache for native shuffles, a complete solver, or an UNSAT proof.
  */
 export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
@@ -27,6 +31,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   readonly priorityDiagnostics: Record<string, number> = {}
   readonly familySize: number
   readonly coordinateScale: number
+  readonly predictFutureConnections: boolean
   private terminalRecorded = false
   private readonly aggregate?: Record<string, number>
   private readonly tasks: Task[] = []
@@ -53,6 +58,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   constructor(params: Params) {
     super(params)
     this.aggregate = params.priorityDiagnostics
+    this.predictFutureConnections = params.predictFutureConnections ?? true
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0) throw new Error("Invalid priority coordinate scale")
     this.familySize = params.priorityFamilySize
@@ -69,6 +75,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     if (!Number.isFinite(this.viaHoleDiameter) || this.viaHoleDiameter <= 0 || !Number.isFinite(this.minimumHoleGap) || this.minimumHoleGap < 0) throw new Error("Invalid priority drill geometry")
     for (const [key, value] of Object.entries({ priorityInstances: 1, priorityRemovedNativeCandidates: this.familySize,
       priorityAllocatedWorkUnits: this.MAX_ITERATIONS, priorityDetailedInstances: Number(this.detailedWorkDiagnosticsEnabled),
+      priorityPredictiveFutureInstances: Number(this.predictFutureConnections), priorityNoFutureInstances: Number(!this.predictFutureConnections),
       priorityCoordinateScaleSum: this.coordinateScale, priorityScaledInstances: Number(this.coordinateScale !== 1) })) {
       this.priorityDiagnostics[key] = value
       if (this.aggregate) this.aggregate[key] = (this.aggregate[key] ?? 0) + value
@@ -160,7 +167,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     this.charge("priorityStateSelections")
     // Immutable private witnesses are safe to retain only under EXACT ancestor
     // identities AND their route-witness identities. The future list is exactly
-    // the canonical complement, so the same membership proves its identity.
+    // the canonical complement in legacy control, or empty in the production
+    // no-predicted-futures policy. Both identities follow immutable policy/task data.
     for (let task = 0; task < this.tasks.length; task++) {
       const witness = state.witnesses[task]
       if (!witness) continue
@@ -190,7 +198,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         const witness = state.witnesses[i]
         if (!witness) throw new Error("Missing higher-priority physical witness")
         if (this.owner[i] !== this.owner[task]) obstacleRoutes.push(witness.route)
-      } else if (i !== task) futureConnections.push(this.tasks[i])
+      } else if (this.predictFutureConnections && i !== task) futureConnections.push(this.tasks[i])
     }
     return { ...this.tasks[task], A: this.tasks[task].points[0], B: this.tasks[task].points[1],
       regionId: this.regionId, obstacleRoutes, futureConnections,
@@ -233,6 +241,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
     this.activeSubSolver = new Native(opts)
     this.record("priorityNativeSearches")
+    this.record("priorityNativeFutureConnections", opts.futureConnections?.length ?? 0)
+    if (this.activeSubSolver.solved) this.record("priorityNativeConstructorSolved")
   }
 
   private storeRoute(route: HighDensityIntraNodeRoute, state: State, task: number): void {

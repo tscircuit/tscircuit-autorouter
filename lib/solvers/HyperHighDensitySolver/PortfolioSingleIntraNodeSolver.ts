@@ -694,6 +694,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
       return new PriorityDagIntraNodeSolver({
         ...this.constructorParams,
+        predictFutureConnections: false,
         hyperParameters,
         priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,
         precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
