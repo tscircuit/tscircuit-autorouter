@@ -1,12 +1,12 @@
 import { DistanceAwareTinyHyperGraphSolver } from "tiny-hypergraph/lib/distance-aware-tiny-hypergraph-solver"
 import type { TinyHyperGraphTopology, TinyHyperGraphProblem, TinyHyperGraphSolver, Candidate } from "tiny-hypergraph/lib/core"
 
-export type ImplicitFixture = Omit<TinyHyperGraphSolver, never> & {
+export type RegionalClassFixture = Omit<TinyHyperGraphSolver, never> & {
   getRegionalHopFrontier(region: number, neighbors: number[]): { neighbors: number[]; next: Int32Array; head: number }
   expandRegionalHopFrontier(candidate: Candidate, frontier: { neighbors: number[]; next: Int32Array; head: number }): void
 }
 
-export function createImplicitFixture(seed = 1, layers = [0, 1]): ImplicitFixture {
+export function createRegionalClassFixture(seed = 1, layers = [0, 1]): RegionalClassFixture {
   const ports = 66
   const neighbors = Array.from({ length: 65 }, (_, i): number => i)
   const topology: TinyHyperGraphTopology = {
@@ -30,7 +30,7 @@ export function createImplicitFixture(seed = 1, layers = [0, 1]): ImplicitFixtur
   }
   const solver = new DistanceAwareTinyHyperGraphSolver(topology, problem, {
     STATIC_REACHABILITY_PRECHECK: false, OWNED_REGIONAL_HOP_FRONTIER: true,
-  }) as unknown as ImplicitFixture
+  }) as unknown as RegionalClassFixture
   solver._setup()
   solver.state.currentRouteId = 0
   solver.state.currentRouteNetId = 1
@@ -41,12 +41,12 @@ export function createImplicitFixture(seed = 1, layers = [0, 1]): ImplicitFixtur
   return solver
 }
 
-export function expandImplicitFixture(solver: ImplicitFixture, candidate: Candidate): void {
+export function expandRegionalClassFixture(solver: RegionalClassFixture, candidate: Candidate): void {
   const region = candidate.nextRegionId
   const frontier = solver.getRegionalHopFrontier(region, solver.topology.regionIncidentPorts[region]!)
   solver.expandRegionalHopFrontier(candidate, frontier)
 }
 
-export function implicitSource(port: number, g: number, region = 0): Candidate {
+export function regionalClassSource(port: number, g: number, region = 0): Candidate {
   return { portId: port, nextRegionId: region, g, h: 0, f: g }
 }

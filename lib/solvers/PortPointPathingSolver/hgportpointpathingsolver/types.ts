@@ -102,9 +102,9 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
-    /** Experimental lazy geometric transition families; changes search ordering. */
-    USE_IMPLICIT_REGIONAL_TRANSITIONS?: boolean
-    COLLECT_IMPLICIT_REGIONAL_WORK?: boolean
+    /** Experimental regional cost sharing; preserves native eager search ordering. */
+    USE_REGIONAL_CLASS_COSTS?: boolean
+    COLLECT_REGIONAL_CLASS_COST_WORK?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }

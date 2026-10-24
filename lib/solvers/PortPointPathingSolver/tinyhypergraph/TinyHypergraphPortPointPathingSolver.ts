@@ -37,10 +37,10 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import {
-  createImplicitRegionalDiagnostics,
-  installImplicitRegionalTransitions,
-  type ImplicitRegionalDiagnostics,
-} from "./installImplicitRegionalTransitions"
+  createRegionalClassCostDiagnostics,
+  installRegionalClassCosts,
+  type RegionalClassCostDiagnostics,
+} from "./installRegionalClassCosts"
 import type { TinyHyperGraphTopology, TinyHyperGraphProblem } from "tiny-hypergraph/lib/core"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -925,8 +925,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private readonly implicitOptions?: {
-      diagnostics: ImplicitRegionalDiagnostics
+    private readonly classCostOptions?: {
+      diagnostics: RegionalClassCostDiagnostics
       collectWork: boolean
     },
   ) {
@@ -949,13 +949,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
-      if (implicitOptions) {
-        const implicit = implicitOptions
+      if (classCostOptions) {
+        const classCosts = classCostOptions
         const NativeSelective = SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
         solveGraphStep.solverClass = class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends NativeSelective {
           constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, options?: TinyHyperGraphSolverOptions) {
             super(topology, problem, options)
-            installImplicitRegionalTransitions(this, implicit.diagnostics, implicit.collectWork)
+            installRegionalClassCosts(this, classCosts.diagnostics, classCosts.collectWork)
           }
         }
       }
@@ -1044,8 +1044,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
-    if (solver instanceof TinyHyperGraphSolver && this.implicitOptions) {
-      installImplicitRegionalTransitions(solver, this.implicitOptions.diagnostics, this.implicitOptions.collectWork)
+    if (solver instanceof TinyHyperGraphSolver && this.classCostOptions) {
+      installRegionalClassCosts(solver, this.classCostOptions.diagnostics, this.classCostOptions.collectWork)
     }
 
     this.configuredSolvers.add(solver)
@@ -1053,7 +1053,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  readonly benchmarkDiagnosticCounters = createImplicitRegionalDiagnostics()
+  readonly benchmarkDiagnosticCounters = createRegionalClassCostDiagnostics()
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1162,9 +1162,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_IMPLICIT_REGIONAL_TRANSITIONS ? {
+        params.flags.USE_REGIONAL_CLASS_COSTS ? {
           diagnostics: this.benchmarkDiagnosticCounters,
-          collectWork: params.flags.COLLECT_IMPLICIT_REGIONAL_WORK === true,
+          collectWork: params.flags.COLLECT_REGIONAL_CLASS_COST_WORK === true,
         } : undefined,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
@@ -1475,9 +1475,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_IMPLICIT_REGIONAL_TRANSITIONS ? {
+            this.params.flags.USE_REGIONAL_CLASS_COSTS ? {
               diagnostics: this.benchmarkDiagnosticCounters,
-              collectWork: this.params.flags.COLLECT_IMPLICIT_REGIONAL_WORK === true,
+              collectWork: this.params.flags.COLLECT_REGIONAL_CLASS_COST_WORK === true,
             } : undefined,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
