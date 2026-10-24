@@ -38,7 +38,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { createLazyOwnerReleaseController, type LazyOwnerReleaseController } from "./createLazyOwnerReleaseController"
+import { createFeasibleOwnerCorridorController, type FeasibleOwnerCorridorController } from "./createFeasibleOwnerCorridorController"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -922,7 +922,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    private lazyOwnerRelease?: LazyOwnerReleaseController,
+    private feasibleOwnerCorridor?: FeasibleOwnerCorridorController,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -943,14 +943,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
-      if (lazyOwnerRelease) {
-        const ownerReleaseController = lazyOwnerRelease
-        solveGraphStep.solverClass = class extends SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments {
+      if (feasibleOwnerCorridor) {
+        const ownerController = feasibleOwnerCorridor
+        solveGraphStep.solverClass = class FeasibleOwnerSelectiveSolver extends SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments {
           constructor(topology: TinyHyperGraphTopology, problem: TinyHyperGraphProblem, options?: TinyHyperGraphSolverOptions) {
             super(topology, problem, options)
-            // Install before the first native step, including a preloaded graph
-            // whose first route immediately exhausts its ordinary frontier.
-            ownerReleaseController.install(this)
+            // A first-step exhaustion must already use this explicit policy.
+            ownerController.install(this)
           }
         }
       }
@@ -1037,7 +1036,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
-      if (solver instanceof TinyHyperGraphSolver) this.lazyOwnerRelease?.install(solver)
+      if (solver instanceof TinyHyperGraphSolver) this.feasibleOwnerCorridor?.install(solver)
     }
 
     this.configuredSolvers.add(solver)
@@ -1067,13 +1066,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
-  private lazyOwnerRelease?: LazyOwnerReleaseController
+  private feasibleOwnerCorridor?: FeasibleOwnerCorridorController
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    if (params.flags.USE_LAZY_MINIMUM_OWNER_RELEASE) {
-      if (!params.flags.USE_SELECTIVE_RERIP_ROUTING) throw new Error("Lazy owner release requires native selective rerip routing")
-      this.lazyOwnerRelease = createLazyOwnerReleaseController()
+    if (params.flags.USE_FEASIBLE_OWNER_CORRIDORS) {
+      if (!params.flags.USE_SELECTIVE_RERIP_ROUTING) throw new Error("Feasible owner policy requires native selective routing")
+      this.feasibleOwnerCorridor = createFeasibleOwnerCorridorController()
     }
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1158,7 +1157,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        this.lazyOwnerRelease,
+        this.feasibleOwnerCorridor,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1397,7 +1396,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getStageStats().solveGraph
 
     return {
-      ...(this.lazyOwnerRelease ? { lazyOwnerRelease: { ...this.lazyOwnerRelease.stats } } : {}),
+      ...(this.feasibleOwnerCorridor ? { feasibleOwnerCorridor: this.feasibleOwnerCorridor.getStats() } : {}),
       routeCount: solveGraphSolver.problem.routeCount,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
@@ -1469,7 +1468,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.lazyOwnerRelease,
+            this.feasibleOwnerCorridor,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1557,7 +1556,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
-      ...(this.lazyOwnerRelease?.stats ?? {}),
+      ...(this.feasibleOwnerCorridor?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
