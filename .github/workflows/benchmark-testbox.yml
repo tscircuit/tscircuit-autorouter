@@ -18,8 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - candidate: geometric-cones
-            head: e3581686c41977cd75e294fc8cb34f3c4ce66529
+          - candidate: native-witness-replay
+            head: ce085bbebcbbbd265cf0fc0d85a0f5c8c6f3f331
             dataset: '18'
     env:
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
