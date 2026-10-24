@@ -14,6 +14,9 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
 
   public edges: Array<CapacityMeshEdge>
 
+  // Keep small meshes on the original scans without allocating an adjacency index.
+  protected readonly targetIndexMinScanEstimate: number = 100_000_000
+
   /** Only used for visualization, dynamically instantiated if necessary */
   nodeMap?: Map<CapacityMeshNodeId, CapacityMeshNode>
 
@@ -56,11 +59,26 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     this.solved = true
   }
 
-  handleTargetNodes() {
+  handleTargetNodes(): void {
     const targetNodes = this.nodes.filter((node) => node._containsTarget)
     const nodeById = new Map(
       this.nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    const useIndexedEdgeLookup =
+      this.hasEdgeBetween === CapacityMeshEdgeSolver.prototype.hasEdgeBetween
+    const targetNeighborsById =
+      targetNodes.length * this.edges.length >= this.targetIndexMinScanEstimate
+        ? new Map<CapacityMeshNodeId, Set<CapacityMeshNodeId>>()
+        : undefined
+    if (targetNeighborsById) {
+      for (const node of targetNodes) {
+        targetNeighborsById.set(node.capacityMeshNodeId, new Set())
+      }
+      for (const edge of this.edges) {
+        targetNeighborsById.get(edge.nodeIds[0])?.add(edge.nodeIds[1])
+        targetNeighborsById.get(edge.nodeIds[1])?.add(edge.nodeIds[0])
+      }
+    }
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -68,12 +86,27 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        const neighbors = targetNeighborsById?.get(nodeA.capacityMeshNodeId)
+        if (
+          useIndexedEdgeLookup && targetNeighborsById
+            ? nodeA.capacityMeshNodeId === nodeB.capacityMeshNodeId
+              ? neighbors!.size > 0
+              : neighbors!.has(nodeB.capacityMeshNodeId)
+            : this.hasEdgeBetween(nodeA, nodeB)
+        ) {
+          continue
+        }
 
         this.edges.push({
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
         })
+        if (targetNeighborsById) {
+          neighbors!.add(nodeB.capacityMeshNodeId)
+          targetNeighborsById
+            .get(nodeB.capacityMeshNodeId)!
+            .add(nodeA.capacityMeshNodeId)
+        }
       }
     }
 
@@ -82,21 +115,41 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
-        const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
+      let hasRoutingEdge = false
+      if (targetNeighborsById) {
+        for (const otherNodeId of targetNeighborsById.get(
+          targetNode.capacityMeshNodeId,
+        )!) {
+          const otherNode = nodeById.get(otherNodeId)
+          if (!otherNode) continue
 
-        return (
-          !otherNode._containsObstacle &&
-          !otherNode._containsTarget &&
-          this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
+          if (
+            !otherNode._containsObstacle &&
+            !otherNode._containsTarget &&
+            this.doNodesHaveSharedLayer(targetNode, otherNode)
+          ) {
+            hasRoutingEdge = true
+            break
+          }
+        }
+      } else {
+        hasRoutingEdge = this.edges.some((edge): boolean => {
+          if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId))
+            return false
+          const otherNodeId =
+            edge.nodeIds[0] === targetNode.capacityMeshNodeId
+              ? edge.nodeIds[1]
+              : edge.nodeIds[0]
+          const otherNode = nodeById.get(otherNodeId)
+          if (!otherNode) return false
+
+          return (
+            !otherNode._containsObstacle &&
+            !otherNode._containsTarget &&
+            this.doNodesHaveSharedLayer(targetNode, otherNode)
+          )
+        })
+      }
       if (hasRoutingEdge) continue
 
       throw new Error(
