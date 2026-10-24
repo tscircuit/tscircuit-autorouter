@@ -1,5 +1,11 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import {
+  getSimplifiedTracesViaPlacementViolations,
+  hasCustomViaKeepoutOrClearanceRules,
+} from "lib/utils/viaKeepoutUtils"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
 import {
   getDrcErrors,
@@ -84,12 +90,48 @@ export const evaluateRelaxedDrc = ({
     )
   }
 
+  const drcResult = getDrcErrors(circuitJson, {
+    ...RELAXED_DRC_OPTIONS,
+    holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+    ...drcOptions,
+  })
+
+  if (hasCustomViaKeepoutOrClearanceRules(inputSrj, inputSrj.obstacles)) {
+    const connMap =
+      connectivityMaps?.route ??
+      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs)
+    const defaultViaDiameter = getViaDimensions(inputSrj).padDiameter
+    const viaViolations = getSimplifiedTracesViaPlacementViolations({
+      traces: jointTraces,
+      srj: inputSrj,
+      connMap,
+      defaultViaDiameter,
+    })
+    for (const violation of viaViolations) {
+      const errorObj = {
+        type: "pcb_pad_pad_clearance_error" as const,
+        pcb_pad_pad_clearance_error_id: `via_placement_${violation.pcbTraceId ?? violation.connectionName}_${violation.viaCenter.x.toFixed(4)}_${violation.viaCenter.y.toFixed(4)}_${violation.obstacleId ?? violation.keepoutId ?? "keepout"}`,
+        error_type: "pcb_pad_pad_clearance_error" as const,
+        message: violation.message,
+        pcb_trace_id: violation.pcbTraceId,
+        pcb_trace_ids: violation.pcbTraceId ? [violation.pcbTraceId] : [],
+        pcb_pad_ids: [
+          ...(violation.obstacleId ? [violation.obstacleId] : []),
+          ...(violation.keepoutId ? [violation.keepoutId] : []),
+        ],
+        minimum_clearance: violation.minimumClearance,
+        actual_clearance: violation.actualClearance,
+        center: violation.location,
+        reason: violation.reason,
+      } as any
+      drcResult.errors.push(errorObj)
+      drcResult.errorsWithCenters.push(errorObj)
+      drcResult.locationAwareErrors.push(errorObj)
+    }
+  }
+
   return {
     circuitJson,
-    ...getDrcErrors(circuitJson, {
-      ...RELAXED_DRC_OPTIONS,
-      holeClearance: inputSrj.minTraceToHoleEdgeClearance,
-      ...drcOptions,
-    }),
+    ...drcResult,
   }
 }
