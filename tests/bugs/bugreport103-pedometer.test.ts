@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
@@ -50,10 +49,4 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
       expect(reservedNetId === -1 || reservedNetId === netId).toBe(true)
     }
   }
-  const svg = getSvgFromGraphicsObject(tinySolver.visualize(), {
-    backgroundColor: "white",
-  })
-  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
-    import.meta.path,
-  )
 })

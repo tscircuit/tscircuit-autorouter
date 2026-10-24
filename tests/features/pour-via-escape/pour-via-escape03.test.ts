@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver } from "lib"
+import type { SimpleRouteJson } from "lib/types"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape03.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { expectEscapeViasToClearPads } from "../../fixtures/expectEscapeViasToClearPads"
 import { getLastStepGraphicsObject } from "../../fixtures/getLastStepGraphicsObject"
-import { getLastStepSvg } from "../../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -70,7 +70,5 @@ test("pour-via-escape03.json", () => {
     lastStepGraphics.lines?.filter((line) => line.layer === "z3") ?? [],
   ).not.toHaveLength(0)
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expectEscapeViasToClearPads(solver.escapeViaLocationSolver)
 })
