@@ -401,29 +401,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
-  private readonly completedNativeGridCounters: Record<string, number> = {}
-  private submittedDiagnosticBatchCount = 0
-  private completedDiagnosticBatchCount = 0
-  private erroredDiagnosticBatchCount = 0
-
-  private addNativeGridCounters(counters: Record<string, number>): void {
-    for (const [key, value] of Object.entries(counters)) {
-      const previous = this.completedNativeGridCounters[key] ?? 0
-      this.completedNativeGridCounters[key] = previous + value
-    }
-  }
-
-  get benchmarkDiagnosticCounters(): Record<string, number> {
-    const counters = { ...this.completedNativeGridCounters }
-    for (const [key, value] of Object.entries(this.activeRegularSolver?.benchmarkDiagnosticCounters ?? {})) {
-      counters[key] = (counters[key] ?? 0) + value
-    }
-    counters.nativeGridSubmittedBatchCount = this.submittedDiagnosticBatchCount
-    counters.nativeGridCompletedBatchCount = this.completedDiagnosticBatchCount
-    counters.nativeGridErroredBatchCount = this.erroredDiagnosticBatchCount
-    counters.nativeGridPendingBatchCount = this.submittedDiagnosticBatchCount - this.completedDiagnosticBatchCount - this.erroredDiagnosticBatchCount
-    return counters
-  }
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -514,7 +491,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const { connMap, nodePortPoints: _, ...params } = this.params
       const pending = []
       for (let offset = 0; offset < nodes.length; offset += 4) {
-        this.submittedDiagnosticBatchCount++
         pending.push(
           runtime
             .executeAsync(Pipeline9HighDensityBatchSolver, {
@@ -524,17 +500,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => {
-                // Count every completed speculative batch, including work the
-                // serial acceptance boundary subsequently discards/replays.
-                this.completedDiagnosticBatchCount++
-                this.addNativeGridCounters(result.benchmarkDiagnosticCounters)
-                return { type: "result" as const, result }
-              },
-              (error: unknown) => {
-                this.erroredDiagnosticBatchCount++
-                return { type: "error" as const, error }
-              },
+              (result) => ({ type: "result" as const, result }),
+              (error: unknown) => ({ type: "error" as const, error }),
             ),
         )
       }
@@ -597,7 +564,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
-    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -1033,7 +999,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
-    if (this.activeRegularSolver) this.addNativeGridCounters(this.activeRegularSolver.benchmarkDiagnosticCounters)
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {

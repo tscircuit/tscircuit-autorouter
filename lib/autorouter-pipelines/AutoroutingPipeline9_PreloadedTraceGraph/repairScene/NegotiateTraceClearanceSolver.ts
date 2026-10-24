@@ -1,7 +1,8 @@
 /**
  * Adapted from @tscircuit/repair04 at 4273e9455084b7b35ebc860ebe4483b9d19692ea.
  * Copyright (c) 2025 tscircuit Inc. MIT license: ./LICENSE.
- * Native search policy, work budgets and physical checks are retained.
+ * Persistent physical broadphase candidates replace per-search filtered indexes.
+ * Native search policy, geometry predicates, ordering and budgets are retained.
  */
 import { getRepairRouteVias } from "./pipeline9RepairGeometry"
 import type {
@@ -9,9 +10,10 @@ import type {
   NegotiatedClearanceResult,
 } from "@tscircuit/repair04"
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { FindClearancePathSolver } from "./FindClearancePathSolver"
+import { FindClearancePathSolver } from "@tscircuit/repair04"
+import { createRepairSceneDiagnostics } from "./RepairGeometryDistanceCache"
+import { PersistentRepairScene, type SceneCopper } from "./PersistentRepairScene"
 import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
-import Flatbush from "flatbush"
 import type {
   HighDensityRoute,
   SimpleRouteJson,
@@ -23,30 +25,12 @@ import { REGION_EPSILON } from "./pipeline9RepairGeometry"
 import type { Bounds, ClearancePathInput } from "@tscircuit/repair04"
 type RepairRoutePoint = ClearancePathInput["start"]
 
-import { addPipeline9RepairKernelDiagnostics, createPipeline9RepairKernelDiagnostics } from "./pipeline9RepairKernelDiagnostics"
-
 type Span = {
   routeIndex: number
   mutable: boolean
   route: HighDensityRoute
 }
-type Copper = {
-  a: RepairRoutePoint
-  b: RepairRoutePoint
-  radius: number
-  minX: number
-  maxX: number
-  minY: number
-  maxY: number
-  minZ: number
-  maxZ: number
-  spanIndex: number
-  owner: string
-  index: number
-  cellX: number
-  cellY: number
-  immutable: boolean
-}
+type Copper = SceneCopper & { owner: string; immutable: boolean }
 function withPoints({
   route,
   points,
@@ -76,7 +60,7 @@ type NegotiationPhase =
 
 /** Negotiates span space while exposing each bounded A* search as a child solver. */
 export class NegotiateTraceClearanceSolver extends BaseSolver {
-  readonly diagnostics = createPipeline9RepairKernelDiagnostics()
+  readonly diagnostics = createRepairSceneDiagnostics()
   readonly input: NegotiatedClearanceInput
   private phase: NegotiationPhase = "initialize"
   private routeCursor = 0
@@ -92,7 +76,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
   private applyPath?: (path: RepairRoutePoint[] | null) => void
   private updateWorkStats!: () => void
 
-  constructor(input: NegotiatedClearanceInput) {
+  constructor(input: NegotiatedClearanceInput, private readonly collectGeometryWork = false) {
     super()
     this.input = input
     this.stats = {
@@ -306,6 +290,9 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
       }
     }
     this.finishSetup = (): void => {
+      const scene = new PersistentRepairScene(spans.length, this.diagnostics, this.collectGeometryWork)
+      const spanOwners: string[] = new Array(spans.length)
+      const spanImmutable: boolean[] = new Array(spans.length)
       const current = spans.map((span): HighDensityRoute => span.route)
       const fixed = spans
         .filter((span): boolean => !span.mutable)
@@ -414,84 +401,33 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
         queued.delete(index)
         const route = current[index]!
         const selectedOwner = owner(route)
-        const coppers: Copper[] = []
 
         this.copperCursor = 0
         this.prepareCopper = (si): void => {
-          if (si === index) return
-          const other = current[si]!,
-            otherOwner = owner(other)
+          const other = current[si]!
+          spanOwners[si] = owner(other)
+          spanImmutable[si] = !spans[si]!.mutable || frozen.has(si)
+          scene.prepareSpan(si, other.route.length - 1)
           for (let pi = 1; pi < other.route.length; pi++) {
-            const a = other.route[pi - 1]! as RepairRoutePoint,
-              b = other.route[pi]! as RepairRoutePoint
-            if (a.toNextSegmentType === "through_obstacle") continue
-            // Same-net wires can share copper. Distinct drill holes still require
-            // clearance, including holes in otherwise immutable spans.
-            const immutable = !spans[si]!.mutable || frozen.has(si)
-            if (a.z === b.z && (otherOwner === selectedOwner || immutable))
+            const a = other.route[pi - 1]! as RepairRoutePoint, b = other.route[pi]! as RepairRoutePoint
+            if (a.toNextSegmentType === "through_obstacle") {
+              scene.removeCopper(si, pi - 1)
               continue
-            const radius =
-              (a.z !== b.z
-                ? other.viaDiameter
-                : Math.max(
-                    a.traceThickness ?? other.traceThickness,
-                    b.traceThickness ?? other.traceThickness,
-                  )) / 2
-            const copper: Copper = {
-              a,
-              b,
-              radius,
-              minX: Math.min(a.x, b.x),
-              maxX: Math.max(a.x, b.x),
-              minY: Math.min(a.y, b.y),
-              maxY: Math.max(a.y, b.y),
+            }
+            const radius = (a.z !== b.z ? other.viaDiameter : Math.max(a.traceThickness ?? other.traceThickness, b.traceThickness ?? other.traceThickness)) / 2
+            scene.setCopper({
+              a, b, radius,
+              minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x),
+              minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y),
               ...getRepairCopperLayerSpan(input.srj, a, b),
-              spanIndex: si,
-              owner: otherOwner,
-              index: coppers.length,
+              spanIndex: si, index: pi - 1,
               cellX: Math.floor(Math.min(a.x, b.x) - radius),
               cellY: Math.floor(Math.min(a.y, b.y) - radius),
-              immutable,
-            }
-            coppers.push(copper)
+            })
           }
         }
         this.startPath = (): void => {
-          const createCopperIndex = (
-            indexedCopper: Copper[],
-          ): { index: Flatbush; copper: Copper[] } | undefined => {
-            if (!indexedCopper.length) return undefined
-            const index = new Flatbush(indexedCopper.length)
-            for (const copper of indexedCopper) {
-              index.add(
-                copper.minX - copper.radius - REGION_EPSILON,
-                copper.minY - copper.radius - REGION_EPSILON,
-                copper.maxX + copper.radius + REGION_EPSILON,
-                copper.maxY + copper.radius + REGION_EPSILON,
-              )
-            }
-            index.finish()
-            return { index, copper: indexedCopper }
-          }
-          const copperIndex = createCopperIndex(coppers)
-          const copperByLayer = new Map<
-            number,
-            { index: Flatbush; copper: Copper[] } | undefined
-          >()
-          for (let z = 0; z < input.srj.layerCount; z++) {
-            copperByLayer.set(
-              z,
-              createCopperIndex(
-                coppers.filter(
-                  (copper): boolean => copper.minZ <= z && copper.maxZ >= z,
-                ),
-              ),
-            )
-          }
-          // Both private callers exhaust each result synchronously, retaining
-          // only scalar costs or span indices. No callback can re-enter query,
-          // so this search owns one reusable, insertion-ordered hit buffer.
-          const hits: Array<{ copper: Copper; ratio: number }> = []
+          scene.beginSearch()
           const query = (
             a: RepairRoutePoint,
             b: RepairRoutePoint,
@@ -504,26 +440,21 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
             const reach =
               (via ? route.viaDiameter : route.traceThickness) / 2 +
               Math.max(input.traceClearance, input.viaClearance)
-            hits.length = 0
-            this.diagnostics.copperQueryBufferReuses++
+            const hits: Array<{ copper: Copper; ratio: number }> = []
             const span = getRepairCopperLayerSpan(input.srj, a, b)
-            const activeIndex = via ? copperIndex : copperByLayer.get(a.z)
-            const candidates =
-              activeIndex?.index.search(
-                minX - reach - REGION_EPSILON,
-                minY - reach - REGION_EPSILON,
-                maxX + reach + REGION_EPSILON,
-                maxY + reach + REGION_EPSILON,
-              ) ?? []
-            for (const candidate of candidates) {
-              const copper = activeIndex!.copper[candidate]!
+            const candidates = scene.query(a, b, reach)
+            for (const copper of candidates) {
+              if (copper.spanIndex === index) continue
+              const otherOwner = spanOwners[copper.spanIndex]!
+              const immutable = spanImmutable[copper.spanIndex]!
+              if (copper.a.z === copper.b.z && (otherOwner === selectedOwner || immutable)) continue
               const bothVias = via && copper.minZ !== copper.maxZ
               const sharedLayers =
                 copper.minZ <= span.maxZ && copper.maxZ >= span.minZ
               if (!sharedLayers && !bothVias) continue
-              if (copper.immutable && !bothVias) continue
+              if (immutable && !bothVias) continue
               if (
-                copper.owner === selectedOwner &&
+                otherOwner === selectedOwner &&
                 (!bothVias || (a.x === copper.a.x && a.y === copper.a.y))
               )
                 continue
@@ -538,7 +469,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               // Drill spacing applies even when the connected copper spans do
               // not share layers. Same-net copper may overlap, distinct holes may not.
               const required = bothVias
-                ? sharedLayers && copper.owner !== selectedOwner
+                ? sharedLayers && otherOwner !== selectedOwner
                   ? Math.max(copperDistance, drillDistance)
                   : drillDistance
                 : copperDistance
@@ -552,6 +483,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
                 maxY + required + REGION_EPSILON < copper.minY
               )
                 continue
+              if (this.collectGeometryWork) { this.diagnostics.distanceLookups++; this.diagnostics.nativeDistanceEvaluations++ }
               const distance = segmentToSegmentMinDistance(
                 a,
                 b,
@@ -560,7 +492,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               )
               if (distance < required - REGION_EPSILON)
                 hits.push({
-                  copper,
+                  copper: { ...copper, owner: otherOwner, immutable },
                   ratio: (required - distance) / (required * required),
                 })
             }
@@ -576,7 +508,7 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               const y =
                 Math.max(firstCellY, left.copper.cellY) -
                 Math.max(firstCellY, right.copper.cellY)
-              return y || left.copper.index - right.copper.index
+              return y || left.copper.spanIndex - right.copper.spanIndex || left.copper.index - right.copper.index
             })
             return hits
           }
@@ -593,35 +525,20 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
               y >= input.bounds.maxY - REGION_EPSILON * 4
             )
               return Infinity
-            this.diagnostics.additionalCostCalls++
-            // Most edges meet zero or one blocker owner. Preserve the native
-            // first-owner insertion order without allocating a Map for them.
-            let firstOwner: string | undefined
-            let firstCost = 0
-            let costs: Map<string, number> | undefined
+            const costs = new Map<string, number>()
             for (const { copper, ratio } of query(a, b)) {
               if (copper.owner === selectedOwner || copper.immutable)
                 return Infinity
-              const value = ratio * weights[copper.spanIndex]!
-              if (costs) {
-                costs.set(copper.owner, Math.max(costs.get(copper.owner) ?? 0, value))
-              } else if (firstOwner === undefined) {
-                firstOwner = copper.owner
-                firstCost = Math.max(0, value)
-              } else if (firstOwner === copper.owner) {
-                firstCost = Math.max(firstCost, value)
-              } else {
-                costs = new Map<string, number>([[firstOwner, firstCost]])
-                costs.set(copper.owner, Math.max(0, value))
-                this.diagnostics.ownerCostMapAllocations++
-              }
+              costs.set(
+                copper.owner,
+                Math.max(
+                  costs.get(copper.owner) ?? 0,
+                  ratio * weights[copper.spanIndex]!,
+                ),
+              )
             }
             let total = 0
-            if (costs) {
-              for (const cost of costs.values()) total += cost
-            } else {
-              total += firstCost
-            }
+            for (const cost of costs.values()) total += cost
             return (a.z === b.z ? Math.hypot(a.x - b.x, a.y - b.y) : 1) * total
           }
           // Ordinary drill sites occupy the full stack regardless of which two
@@ -691,7 +608,6 @@ export class NegotiateTraceClearanceSolver extends BaseSolver {
           )
           this.phase = "path"
           this.applyPath = (path): void => {
-            addPipeline9RepairKernelDiagnostics(this.diagnostics, solver.diagnostics)
             pathSearchCalls++
             pathSearchNodes += stats.nodesPopped
             input.onSearch?.(stats)

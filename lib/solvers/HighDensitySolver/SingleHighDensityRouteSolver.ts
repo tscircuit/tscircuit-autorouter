@@ -698,6 +698,24 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
+  protected canShareViaClearanceAcrossLayers(): boolean {
+    // These native predicates inspect XY and the parent's full via ancestry,
+    // independently of the destination layer. Custom methods retain their
+    // original per-layer calls, including any layer-dependent behavior.
+    const native = SingleHighDensityRouteSolver.prototype
+    return (
+      Object.getPrototypeOf(this) === native &&
+      this.isNodeTooCloseToObstacle === native.isNodeTooCloseToObstacle &&
+      this.isNodeTooCloseToEdge === native.isNodeTooCloseToEdge &&
+      this.getViasInNodePath === native.getViasInNodePath &&
+      this.getNodeKey === native.getNodeKey &&
+      this.setNodeCosts === native.setNodeCosts &&
+      this.computeG === native.computeG &&
+      this.computeH === native.computeH &&
+      this.computeF === native.computeF
+    )
+  }
+
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
@@ -709,20 +727,30 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
-          z: node.z,
-          g: node.g,
-          h: node.h,
-          f: node.f,
-          parent: node,
+        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
+        let neighbor: Node | undefined
+        let neighborKey: number
+        if (this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey) {
+          const xIndex = Math.round(neighborX / this.cellStep) - this.gridMinXIndex
+          const yIndex = Math.round(neighborY / this.cellStep) - this.gridMinYIndex
+          neighborKey = (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+        } else {
+          neighbor = {
+            x: neighborX, y: neighborY, z: node.z,
+            g: node.g, h: node.h, f: node.f, parent: node,
+          }
+          neighborKey = this.getNodeKey(neighbor)
         }
-
-        const neighborKey = this.getNodeKey(neighbor)
 
         if (this.exploredNodes.has(neighborKey)) {
           continue
+        }
+        // The key needs only coordinates. Keep Node identities for every
+        // unvisited candidate, but do not allocate already explored cells.
+        neighbor ??= {
+          x: neighborX, y: neighborY, z: node.z,
+          g: node.g, h: node.h, f: node.f, parent: node,
         }
 
         if (!queriedPlanarNeighbors) {
@@ -770,11 +798,30 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    // Add via neighbors for all other layers (a via can connect any layer to any other layer)
+    // A native via's physical clearance spans all layers and shares the same
+    // XY and parent history for every destination. Costs/explored keys remain
+    // per layer, and an invalid via still does not mark its key explored.
+    const shareViaClearance =
+      this.availableZ.length > 2 && this.canShareViaClearanceAcrossLayers()
+    let sharedViaIsClear: boolean | undefined
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
-      const viaNeighbor: Node = {
+      let viaNeighbor: Node | undefined
+      let viaKey: number
+      if (this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey) {
+        const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+        const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+        viaKey = (newZ * this.gridHeight + yIndex) * this.gridWidth + xIndex
+      } else {
+        viaNeighbor = {
+          x: node.x, y: node.y, z: newZ,
+          g: node.g, h: node.h, f: node.f, parent: node,
+        }
+        viaKey = this.getNodeKey(viaNeighbor)
+      }
+      if (this.exploredNodes.has(viaKey)) continue
+      viaNeighbor ??= {
         x: node.x,
         y: node.y,
         z: newZ,
@@ -784,15 +831,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
-      if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
+      const viaIsClear = shareViaClearance && sharedViaIsClear !== undefined
+        ? sharedViaIsClear
+        : (
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
           true,
         ) &&
         !this.isNodeTooCloseToEdge(viaNeighbor, true)
-      ) {
+        )
+      if (shareViaClearance) sharedViaIsClear = viaIsClear
+      if (viaIsClear) {
         this.setNodeCosts(viaNeighbor)
 
         neighbors.push(viaNeighbor)
