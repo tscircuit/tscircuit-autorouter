@@ -11,7 +11,6 @@ import {
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import type { BaseSolver } from "../BaseSolver"
-import { NativeRouteWitnessBroker, createNativeWitnessOwnedNode } from "../HighDensitySolver/NativeRouteWitnessBroker"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -56,9 +55,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
-    enableNativeRouteWitnessReuse?: boolean
   }
-  readonly nativeRouteWitnessBroker?: NativeRouteWitnessBroker
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
@@ -130,14 +127,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
-      enableNativeRouteWitnessReuse?: boolean
     },
   ) {
     super()
-    if (opts.enableNativeRouteWitnessReuse) {
-      opts = { ...opts, nodeWithPortPoints: createNativeWitnessOwnedNode(opts.nodeWithPortPoints) }
-      this.nativeRouteWitnessBroker = new NativeRouteWitnessBroker(opts.nodeWithPortPoints)
-    }
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
@@ -684,7 +676,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
       hyperParameters,
-      nativeRouteWitnessBroker: this.nativeRouteWitnessBroker,
       precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
     })
   }

@@ -59,7 +59,6 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
-  enableNativeRouteWitnessReuse: boolean
   enableNegotiatedSearch: boolean
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
@@ -72,7 +71,6 @@ export class HighDensitySolver extends BaseSolver {
   captureSearchDebug: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
-  readonly benchmarkDiagnosticCounters: Record<string, number> = {}
   activeSubSolver: HighDensityIntraNodeSolver | null = null
   connMap?: ConnectivityMap
   nodePfById: Map<CapacityMeshNodeId, number | null>
@@ -101,7 +99,6 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
-    enableNativeRouteWitnessReuse = false,
     enableNegotiatedSearch = false,
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
@@ -123,7 +120,6 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
-    enableNativeRouteWitnessReuse?: boolean
     enableNegotiatedSearch?: boolean
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
@@ -152,7 +148,6 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
-    this.enableNativeRouteWitnessReuse = enableNativeRouteWitnessReuse
     this.enableNegotiatedSearch = enableNegotiatedSearch
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
@@ -306,16 +301,6 @@ export class HighDensitySolver extends BaseSolver {
   }
 
   private recordResizeStats(solver: HighDensityIntraNodeSolver) {
-    const portfolios = solver instanceof GrowShrinkHighDensityIntraNodeSolver
-      ? new Set([...solver.failedSolvers, solver.winningSolver, solver.activeSubSolver])
-      : new Set([solver])
-    for (const portfolio of portfolios) {
-      if (!portfolio?.nativeRouteWitnessBroker) continue
-      for (const [name, value] of Object.entries(portfolio.nativeRouteWitnessBroker.diagnostics)) {
-        const key = `nativeWitness${name[0]!.toUpperCase()}${name.slice(1)}`
-        this.benchmarkDiagnosticCounters[key] = (this.benchmarkDiagnosticCounters[key] ?? 0) + value
-      }
-    }
     if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
     this.stats.highDensityResizeCount =
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
@@ -409,7 +394,6 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
-      enableNativeRouteWitnessReuse: this.enableNativeRouteWitnessReuse,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,

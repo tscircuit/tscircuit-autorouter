@@ -9,7 +9,6 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
-import type { NativeRouteWitnessBroker } from "./NativeRouteWitnessBroker"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
@@ -83,10 +82,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
   MAX_POSTROUTE_REPAIR_ATTEMPTS = 2
 
   activeSubSolver: SingleHighDensityRouteSolver | null = null
-  readonly nativeRouteWitnessBroker?: NativeRouteWitnessBroker
-  private nativeWitnessDebt = 0
-  private nativeWitnessPendingRoute: HighDensityIntraNodeRoute | null = null
-  private nativeWitnessCompleted = false
   connMap?: ConnectivityMap
 
   // Legacy compat
@@ -110,13 +105,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
-    nativeRouteWitnessBroker?: NativeRouteWitnessBroker
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
     this.nodeWithPortPoints = nodeWithPortPoints
-    this.nativeRouteWitnessBroker = params.nativeRouteWitnessBroker
     this.colorMap = colorMap ?? {}
     this.solvedRoutes = []
     this.hyperParameters = params.hyperParameters ?? {}
@@ -409,26 +402,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   _step() {
     if (this.activeSubSolver) {
-      if (this.nativeWitnessDebt > 0) {
-        this.nativeWitnessDebt--
-        return
-      }
-      if (this.nativeWitnessPendingRoute) {
-        this.activeSubSolver.solvedPath = this.nativeWitnessPendingRoute
-        this.activeSubSolver.solved = true
-        this.nativeWitnessPendingRoute = null
-        this.nativeWitnessCompleted = true
-        this.nativeRouteWitnessBroker!.diagnostics.reusedCompletedRoutes++
-      }
       this.activeSubSolver.step()
-      if (this.activeSubSolver.solved && !this.nativeWitnessCompleted && this.nativeRouteWitnessBroker) {
-        this.nativeWitnessCompleted = true
-        this.nativeRouteWitnessBroker.diagnostics.nativeCompletedRoutes++
-        this.nativeWitnessDebt = this.nativeRouteWitnessBroker.record(
-          this.activeSubSolver as SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
-        )
-        if (this.nativeWitnessDebt > 0) return
-      }
       this.progress = this.computeProgress()
       if (this.activeSubSolver.solved) {
         this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
@@ -504,16 +478,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
         if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
       }
     }
-    const checker = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-      this.getSingleRouteSolverOpts(unsolvedConnection),
-    )
-    this.activeSubSolver = checker
-    this.nativeWitnessCompleted = false
-    if (this.nativeRouteWitnessBroker) {
-      const reuse = this.nativeRouteWitnessBroker.lookup(checker)
-      this.nativeWitnessDebt = reuse.workUnits
-      this.nativeWitnessPendingRoute = reuse.route
-    }
+    this.activeSubSolver =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+        this.getSingleRouteSolverOpts(unsolvedConnection),
+      )
   }
 
   visualize(): GraphicsObject {
