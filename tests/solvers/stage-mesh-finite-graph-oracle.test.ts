@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { segmentToBoundsMinDistance } from "@tscircuit/math-utils"
-import { buildConstrainedCorridorMesh } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/corridorRepair/buildConstrainedCorridorMesh"
+import { buildMonotoneCorridorMesh } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/corridorRepair/buildMonotoneCorridorMesh"
 import { createMeshCorridorSearch } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/corridorRepair/createMeshCorridorSearch"
 import { createMeshInput, meshBox } from "../fixtures/constrained-corridor-mesh-fixture"
 
@@ -19,7 +19,7 @@ test("unit-weight mesh search matches an independent explicit local-cell directe
       const length = Math.hypot(a.x - b.x, a.y - b.y)
       return ((a.y + b.y) / 2 > -0.25 && (a.y + b.y) / 2 < 0.4 ? length * 0.8 : 0) + Math.max(0, b.x - a.x) * 0.03
     }
-    const mesh = buildConstrainedCorridorMesh(input, boxes, { nodesPopped: 0, completionReason: "no-path" })
+    const mesh = buildMonotoneCorridorMesh(input, boxes, { nodesPopped: 0, completionReason: "no-path" })
     const neighbors = mesh.sites.map(() => new Set<number>())
     const cross = (a: { x: number; y: number }, b: { x: number; y: number }, c: { x: number; y: number }): number => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
     for (const cell of mesh.cells) {

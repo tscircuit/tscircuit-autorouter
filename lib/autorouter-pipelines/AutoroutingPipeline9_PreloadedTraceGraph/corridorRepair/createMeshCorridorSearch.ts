@@ -1,6 +1,7 @@
 import Flatbush from "flatbush"
 import { ClearancePathHeap } from "./ClearancePathHeap"
-import { buildConstrainedCorridorMesh, CorridorMeshLimit, meshTriangleContains, type CorridorMeshStats, type MeshBarrier, type MeshCorridorPathInput, type CorridorMesh } from "./buildConstrainedCorridorMesh"
+import { CorridorMeshLimit, meshTriangleContains, type CorridorMeshStats, type MeshBarrier, type MeshCorridorPathInput, type CorridorMesh } from "./buildConstrainedCorridorMesh"
+import { buildMonotoneCorridorMesh } from "./buildMonotoneCorridorMesh"
 import type { RepairRoutePoint } from "./repairRegionTypes"
 import type { ClearancePathSearchStats } from "./findClearancePath"
 
@@ -62,7 +63,7 @@ export function createMeshCorridorCellVerifier(
 }
 
 /**
- * Layered constrained convex-triangle mesh with local vertex/portal/centroid
+ * Layered proposal-only monotone convex-triangle mesh with local vertex/portal/centroid
  * transitions. No complete per-layer visibility clique or target-list sort.
  * Geometric cells are verified lazily; every emitted edge and via still calls
  * the original whole-edge physical oracle and the live nonnegative price.
@@ -71,8 +72,8 @@ export function createMeshCorridorCellVerifier(
  */
 export function createMeshCorridorSearch({ input, barriers, clear, extraCost, clearsDrills, stats: rawStats }: MeshSearchInput): { step(): Result } {
   const stats = rawStats as CorridorMeshStats
-  let mesh: ReturnType<typeof buildConstrainedCorridorMesh>
-  try { mesh = buildConstrainedCorridorMesh(input, barriers, stats) }
+  let mesh: ReturnType<typeof buildMonotoneCorridorMesh>
+  try { mesh = buildMonotoneCorridorMesh(input, barriers, stats) }
   catch (error) {
     if (!(error instanceof CorridorMeshLimit)) throw error
     stats.meshGeometryLimits = 1
