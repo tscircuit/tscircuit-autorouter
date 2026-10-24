@@ -18,11 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - candidate: constrained-corridor-mesh
-            head: ca4dbf88ad268abbdb5570f69482b48431ed8a2e
+          - candidate: split-owner-cardinality-distance
+            head: b0cbd60ee7b40b5d96db603bf18cb4d049dfa5f4
             dataset: '18'
-          - candidate: constrained-corridor-mesh
-            head: ca4dbf88ad268abbdb5570f69482b48431ed8a2e
+          - candidate: split-owner-cardinality-distance
+            head: b0cbd60ee7b40b5d96db603bf18cb4d049dfa5f4
             dataset: '24'
     env:
       BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
