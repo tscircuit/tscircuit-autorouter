@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, openSync, closeSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, openSync, closeSync, readFileSync, writeFileSync, chmodSync } from "node:fs"
 import { resolve } from "node:path"
 import {
-  assertOwnerCutReference, compareOwnerCutResults, ownerCutQueryFingerprint, ownerCutValueHash,
+  assertOwnerCutFrozenReference, assertOwnerCutHistoricalIdentity, compareOwnerCutResults, ownerCutQueryFingerprint, ownerCutReferenceDifferences, ownerCutValueHash, storeOwnerCutResult,
   runColdOwnerCutOperator, type OwnerCutBenchmarkArm, type OwnerCutBenchmarkHost,
-  type OwnerCutBenchmarkReference, type OwnerCutBenchmarkResult, type OwnerCutReferenceSample,
+  type OwnerCutBenchmarkReference, type OwnerCutBenchmarkResult, type OwnerCutFrozenQuery, type OwnerCutStoredResult,
 } from "./ownerCutBenchmarkModel"
 import { getBenchmarkRuntimeMetadata } from "./benchmarkRuntime"
 
@@ -28,7 +28,12 @@ type QueryRow = {
 type PassReport = {
   schema: number; arm: OwnerCutBenchmarkArm; status: "running" | "complete" | "failed"
   provenance: ReturnType<typeof getProvenance>; runtime: ReturnType<typeof assertRuntime>
-  candidateWorkCap: number; rows: QueryRow[]; continuations: unknown[]; error?: string
+  candidateWorkCap: number; platformReferenceHash: string; preflightProcessId: number
+  rows: QueryRow[]; controlQueries: NativeQueryRecord[]; continuations: Continuation[]; error?: string
+}
+export type OwnerCutChildRecord = {
+  index: number; arm: OwnerCutBenchmarkArm; exitStatus: number | null
+  signal: string | null; error?: string; logHash: string; reportHash?: string
 }
 
 function hashFile(path: string): string {
@@ -78,15 +83,51 @@ function resultSummary(result: OwnerCutBenchmarkResult): Record<string, unknown>
     : { found: false, reason: result.reason, expandedLabelCount: result.expandedLabelCount }
 }
 
-async function replaySample(reference: OwnerCutReferenceSample, report: PassReport, save: () => void): Promise<void> {
+type NativeQueryRecord = {
+  sample: number; index: number; routeId: number; fingerprint: string
+  nativeResultHash: string; witness: OwnerCutStoredResult
+  historicalDifferences?: ReturnType<typeof ownerCutReferenceDifferences>
+}
+type Continuation = {
+  sample: number; scenarioHash: string; nativeQueryCount: number; nativeExpandedTotal: number
+  portSolved: boolean; portIterations: number; portOutputHash: string
+}
+type PlatformSample = {
+  sample: number; queries: OwnerCutFrozenQuery[]; allNativeQueries: NativeQueryRecord[]
+  continuation?: Continuation
+}
+type PlatformReferenceReport = {
+  schema: number; status: "running" | "complete" | "failed"
+  provenance: ReturnType<typeof getProvenance>; runtime: ReturnType<typeof assertRuntime>
+  historicalReferenceHash: string; samples: PlatformSample[]; error?: string
+}
+type QueryVisitor = (
+  host: OwnerCutBenchmarkHost, forbidden: ReadonlySet<number>, callNative: () => OwnerCutBenchmarkResult,
+  index: number,
+) => OwnerCutBenchmarkResult
+
+function readHistoricalReference(): OwnerCutBenchmarkReference {
+  const reference = JSON.parse(readFileSync(referencePath, "utf8")) as OwnerCutBenchmarkReference
+  if (reference.schema !== 1 || reference.base !== "b9d32a05c76af701d518f6a78a3114e68addd144" || reference.kernelCommit !== kernelCommit ||
+    reference.samples.length !== 2 || reference.samples[0]?.sample !== 6 || reference.samples[0].queries.length !== 7 ||
+    reference.samples[0].expectedTotalNativeQueries !== 7 || reference.samples[1]?.sample !== 14 || reference.samples[1].queries.length !== 12 ||
+    reference.samples[1].expectedTotalNativeQueries !== 35 ||
+    reference.samples.some((sample) => sample.queries.some((query, index) => query.index !== index + 1))) {
+    throw new Error("Expected immutable 19-query selection and 7/35 native continuation populations")
+  }
+  return reference
+}
+
+/** Every continuation is driven exclusively by an original native result. */
+async function replayNativeSample(sample: number, visit: QueryVisitor): Promise<Continuation> {
   const { TinyHyperGraphSolver, SelectiveReripTinyHyperGraphSolver } = await import("tiny-hypergraph/lib/index")
   const { AutoroutingPipelineSolver9_PreloadedTraceGraph } = await import("../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph")
   const { loadScenarioBySampleNumber } = await import("./scenarios")
-  const { scenario } = await loadScenarioBySampleNumber("srj18", reference.sample)
+  const { scenario } = await loadScenarioBySampleNumber("srj18", sample)
   const scenarioHash = ownerCutValueHash(scenario)
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone(scenario), { effort: 1, cacheProvider: null })
   const installed = new WeakSet<object>()
-  let queryCount = 0, expandedTotal = 0, captured = 0
+  let queryCount = 0, expandedTotal = 0
   const install = (solver: InstanceType<typeof TinyHyperGraphSolver>): void => {
     if (installed.has(solver)) return
     installed.add(solver)
@@ -101,55 +142,8 @@ async function replaySample(reference: OwnerCutReferenceSample, report: PassRepo
     if (!(solver instanceof SelectiveReripTinyHyperGraphSolver)) return
     const original = instance.findRelaxedBlockerPath
     instance.findRelaxedBlockerPath = (forbidden = new Set<number>()): OwnerCutBenchmarkResult => {
-      queryCount++
-      const expected = reference.queries[queryCount - 1]
-      const fingerprint = expected ? ownerCutQueryFingerprint(instance, forbidden) : undefined
-      if (!expected) {
-        const native = original.call(solver, forbidden)
-        expandedTotal += native.expandedLabelCount
-        return native
-      }
-      const row: QueryRow = { sample: reference.sample, queryIndex: queryCount, routeId: instance.state.currentRouteId!,
-        fingerprint: fingerprint!, status: "operator-started",
-        expectedGraphReference: (expected as unknown as { capturedGraph: unknown }).capturedGraph,
-        nativeExpandedCap: instance.getRelaxedSearchExpansionLimit() }
-      report.rows.push(row); save()
-      // Provenance serialization and common preceding baseline replay are
-      // outside BOTH timers. There is NO unmeasured operator warmup here:
-      // selected cold call precedes native control in BOTH arms, so first-use
-      // startup is charged. Force identical GC immediately before each call.
-      Bun.gc(true)
-      const memoryBefore = process.memoryUsage()
-      const cpuBefore = process.cpuUsage()
-      const started = performance.now()
-      const selected = runColdOwnerCutOperator(report.arm, instance, forbidden, maxCandidateWork)
-      const elapsedMs = performance.now() - started
-      const cpuMicroseconds = process.cpuUsage(cpuBefore)
-      const memoryAfter = process.memoryUsage()
-      if (selected.candidate?.result.found && (!selected.candidate.ownerMinimumProven || !selected.candidate.distanceMinimumProven)) {
-        throw new Error("Candidate published a witness before both exact objectives were certified")
-      }
-      if (fingerprint !== ownerCutQueryFingerprint(instance, forbidden)) throw new Error("Selected operator mutated its immutable input")
-      Object.assign(row, { status: "control-started", elapsedMs, cpuMicroseconds, memoryBefore, memoryAfter,
-        processMaxRssKiB: process.resourceUsage().maxRSS, selected: resultSummary(selected.result),
-        candidateWork: selected.candidate?.work, ownerMinimumProven: selected.candidate?.ownerMinimumProven,
-        distanceMinimumProven: selected.candidate?.distanceMinimumProven })
-      save()
-      // Deliberate standalone replay control, NOT a production fallback: this
-      // unconditional native call is outside timers and alone drives later
-      // port routing in BOTH arms, including when the candidate caps unknown.
-      const native = original.call(solver, forbidden)
+      const native = visit(instance, forbidden, (): OwnerCutBenchmarkResult => original.call(solver, forbidden), ++queryCount)
       expandedTotal += native.expandedLabelCount
-      assertOwnerCutReference(expected, instance, forbidden, native)
-      if (fingerprint !== ownerCutQueryFingerprint(instance, forbidden)) throw new Error("Native reference query mutated its immutable input")
-      const comparison = compareOwnerCutResults(native, selected.result)
-      if (report.arm === "native" && ownerCutValueHash(native) !== ownerCutValueHash(selected.result)) {
-        throw new Error("Cold native adapter differs from the original native query result")
-      }
-      Object.assign(row, { status: "complete", nativeResultHash: ownerCutValueHash(native),
-        native: resultSummary(native), comparison })
-      captured++; save()
-      console.log(JSON.stringify({ phase: "operator-complete", sample: reference.sample, query: queryCount, arm: report.arm, classification: comparison.classification }))
       return native
     }
   }
@@ -163,33 +157,129 @@ async function replaySample(reference: OwnerCutReferenceSample, report: PassRepo
     pipeline.step()
   }
   const port = pipeline.portPointPathingSolver
-  if (!port?.solved || pipeline.failed || captured !== reference.queries.length ||
-    queryCount !== reference.expectedTotalNativeQueries || expandedTotal !== reference.expectedTotalNativeExpanded) {
-    throw new Error(`Native sample ${reference.sample} continuation/query population differs from the captured reference`)
-  }
-  report.continuations.push({ sample: reference.sample, scenarioHash, captured, nativeQueryCount: queryCount,
-    nativeExpandedTotal: expandedTotal, portSolved: port.solved, portIterations: port.iterations,
-    portOutputHash: ownerCutValueHash(port.getOutput()) })
-  save()
+  if (!port?.solved || pipeline.failed) throw new Error(`Native sample ${sample} port continuation failed`)
+  return { sample, scenarioHash, nativeQueryCount: queryCount, nativeExpandedTotal: expandedTotal,
+    portSolved: port.solved, portIterations: port.iterations, portOutputHash: ownerCutValueHash(port.getOutput()) }
 }
 
-async function runPass(arm: OwnerCutBenchmarkArm, directory: string): Promise<void> {
-  const runtime = assertRuntime(), provenance = getProvenance()
-  const reference = JSON.parse(readFileSync(referencePath, "utf8")) as OwnerCutBenchmarkReference
-  if (reference.schema !== 1 || reference.base !== "b9d32a05c76af701d518f6a78a3114e68addd144" || reference.kernelCommit !== kernelCommit ||
-    reference.samples.length !== 2 || reference.samples[0]?.sample !== 6 || reference.samples[0].queries.length !== 7 ||
-    reference.samples[1]?.sample !== 14 || reference.samples[1].queries.length !== 12 ||
-    reference.samples.some((sample) => sample.queries.some((query, index) => query.index !== index + 1))) {
-    throw new Error("Expected immutable19-query reference population")
-  }
+async function runPreflight(directory: string): Promise<void> {
+  const runtime = assertRuntime(), provenance = getProvenance(), historical = readHistoricalReference()
   mkdirSync(directory, { recursive: true })
-  const report: PassReport = { schema: 1, arm, status: "running", provenance, runtime,
-    candidateWorkCap: maxCandidateWork, rows: [], continuations: [] }
+  const report: PlatformReferenceReport = { schema: 1, status: "running", provenance, runtime,
+    historicalReferenceHash: provenance.referenceHash, samples: [] }
+  const save = (): void => writeFileSync(resolve(directory, "platform-reference.json"), JSON.stringify(report, null, 2) + "\n")
+  save()
+  try {
+    for (const reference of historical.samples) {
+      const sample: PlatformSample = { sample: reference.sample, queries: [], allNativeQueries: [] }
+      report.samples.push(sample); save()
+      sample.continuation = await replayNativeSample(reference.sample, (host, forbidden, callNative, index): OwnerCutBenchmarkResult => {
+        const fingerprint = ownerCutQueryFingerprint(host, forbidden)
+        const native = callNative(), expected = reference.queries[index - 1]
+        const record: NativeQueryRecord = { sample: reference.sample, index, routeId: host.state.currentRouteId!, fingerprint,
+          nativeResultHash: ownerCutValueHash(native), witness: storeOwnerCutResult(native) }
+        sample.allNativeQueries.push(record); save()
+        record.historicalDifferences = expected ? ownerCutReferenceDifferences(expected, host, forbidden, native) : undefined
+        save() // Preserve full control witness and diagnostics BEFORE every assertion.
+        if (fingerprint !== ownerCutQueryFingerprint(host, forbidden)) throw new Error("Native preflight mutated its immutable context")
+        if (expected) {
+          assertOwnerCutHistoricalIdentity(expected, host, forbidden)
+          const stored = storeOwnerCutResult(native)
+          if (!stored.found) throw new Error(`Selected native preflight query ${index} is not feasible`)
+          sample.queries.push({ ...expected, fingerprint, native: stored })
+        }
+        return native
+      })
+      if (sample.continuation.nativeQueryCount !== reference.expectedTotalNativeQueries || sample.queries.length !== reference.queries.length) {
+        throw new Error(`Preselected sample ${reference.sample} query population changed`)
+      }
+      save()
+    }
+    if (ownerCutValueHash(provenance) !== ownerCutValueHash(getProvenance())) throw new Error("Preflight source/dependencies changed")
+    report.status = "complete"
+  } catch (error) {
+    report.status = "failed"; report.error = error instanceof Error ? error.stack : String(error)
+    throw error
+  } finally { save() }
+}
+
+function loadPlatformReference(path: string, hash: string, provenance: ReturnType<typeof getProvenance>, runtime: ReturnType<typeof assertRuntime>): PlatformReferenceReport {
+  if (!/^[a-f0-9]{64}$/.test(hash) || hashFile(path) !== hash) throw new Error("Frozen platform reference bytes changed")
+  const report = JSON.parse(readFileSync(path, "utf8")) as PlatformReferenceReport
+  const { processId: _preflightPid, ...preflightRuntime } = report.runtime
+  const { processId: _passPid, ...passRuntime } = runtime
+  if (report.schema !== 1 || report.status !== "complete" || report.historicalReferenceHash !== provenance.referenceHash ||
+    ownerCutValueHash(report.provenance) !== ownerCutValueHash(provenance) ||
+    ownerCutValueHash(preflightRuntime) !== ownerCutValueHash(passRuntime) || report.samples.length !== 2 ||
+    report.samples[0]?.sample !== 6 || report.samples[0].queries.length !== 7 || report.samples[0].allNativeQueries.length !== 7 ||
+    report.samples[1]?.sample !== 14 || report.samples[1].queries.length !== 12 || report.samples[1].allNativeQueries.length !== 35 ||
+    report.samples.some((sample) => !sample.continuation || sample.continuation.nativeQueryCount !== sample.allNativeQueries.length)) {
+    throw new Error("Platform reference source/runtime/population contract changed")
+  }
+  return report
+}
+
+async function runPass(arm: OwnerCutBenchmarkArm, directory: string, platformPath: string, platformHash: string): Promise<void> {
+  const runtime = assertRuntime(), provenance = getProvenance(), historical = readHistoricalReference()
+  const platform = loadPlatformReference(platformPath, platformHash, provenance, runtime)
+  mkdirSync(directory, { recursive: true })
+  const report: PassReport = { schema: 2, arm, status: "running", provenance, runtime, platformReferenceHash: platformHash,
+    preflightProcessId: platform.runtime.processId, candidateWorkCap: maxCandidateWork, rows: [], controlQueries: [], continuations: [] }
   const save = (): void => writeFileSync(resolve(directory, "operator-report.json"), JSON.stringify(report, null, 2) + "\n")
   save()
   try {
-    for (const sample of reference.samples) await replaySample(sample, report, save)
-    if (ownerCutValueHash(provenance) !== ownerCutValueHash(getProvenance())) throw new Error("Benchmark source/dependency provenance changed during pass")
+    for (const [sampleIndex, reference] of historical.samples.entries()) {
+      const frozen = platform.samples[sampleIndex]!
+      const continuation = await replayNativeSample(reference.sample, (host, forbidden, callNative, index): OwnerCutBenchmarkResult => {
+        const fingerprint = ownerCutQueryFingerprint(host, forbidden), expected = reference.queries[index - 1]
+        let row: QueryRow | undefined, selected: ReturnType<typeof runColdOwnerCutOperator> | undefined
+        if (expected) {
+          row = { sample: reference.sample, queryIndex: index, routeId: host.state.currentRouteId!, fingerprint, status: "operator-started",
+            expectedGraphReference: (expected as unknown as { capturedGraph: unknown }).capturedGraph,
+            nativeExpandedCap: host.getRelaxedSearchExpansionLimit() }
+          report.rows.push(row); save()
+          // No selected-call warmup: preflight was a DIFFERENT process. Cold
+          // logical setup and requested graph work remain inside this timer.
+          Bun.gc(true)
+          const memoryBefore = process.memoryUsage(), cpuBefore = process.cpuUsage(), started = performance.now()
+          selected = runColdOwnerCutOperator(arm, host, forbidden, maxCandidateWork)
+          const elapsedMs = performance.now() - started, cpuMicroseconds = process.cpuUsage(cpuBefore), memoryAfter = process.memoryUsage()
+          Object.assign(row, { status: "control-started", elapsedMs, cpuMicroseconds, memoryBefore, memoryAfter,
+            processMaxRssKiB: process.resourceUsage().maxRSS, selected: resultSummary(selected.result), selectedWitness: storeOwnerCutResult(selected.result),
+            candidateWork: selected.candidate?.work, ownerMinimumProven: selected.candidate?.ownerMinimumProven,
+            distanceMinimumProven: selected.candidate?.distanceMinimumProven })
+          save()
+          if (selected.candidate?.result.found && (!selected.candidate.ownerMinimumProven || !selected.candidate.distanceMinimumProven)) throw new Error("Uncertified candidate witness")
+          if (fingerprint !== ownerCutQueryFingerprint(host, forbidden)) throw new Error("Selected operator mutated its immutable input")
+        }
+        // Always original native continuation, never a production fallback.
+        const native = callNative(), nativeResultHash = ownerCutValueHash(native)
+        const record: NativeQueryRecord = { sample: reference.sample, index, routeId: host.state.currentRouteId!, fingerprint,
+          nativeResultHash, witness: storeOwnerCutResult(native) }
+        report.controlQueries.push(record)
+        if (row) Object.assign(row, { nativeResultHash, native: resultSummary(native), nativeWitness: storeOwnerCutResult(native) })
+        save()
+        const comparison = selected ? compareOwnerCutResults(native, selected.result) : undefined
+        const differences = expected ? ownerCutReferenceDifferences(expected, host, forbidden, native) : undefined
+        record.historicalDifferences = differences
+        if (row) Object.assign(row, { nativeResultHash, native: resultSummary(native), nativeWitness: storeOwnerCutResult(native), comparison,
+          historicalDifferences: differences, platformDifferences: ownerCutReferenceDifferences(frozen.queries[index - 1]!, host, forbidden, native) })
+        save() // Full native witness/differences survive every reference assertion.
+        if (selected && arm === "native" && nativeResultHash !== ownerCutValueHash(selected.result)) throw new Error("Cold native adapter differs from original native control")
+        if (fingerprint !== ownerCutQueryFingerprint(host, forbidden)) throw new Error("Native reference mutated its immutable context")
+        if (expected) {
+          assertOwnerCutHistoricalIdentity(expected, host, forbidden)
+          assertOwnerCutFrozenReference(frozen.queries[index - 1]!, host, forbidden, native)
+        }
+        const frozenQuery = frozen.allNativeQueries[index - 1]
+        if (!frozenQuery || frozenQuery.fingerprint !== fingerprint || frozenQuery.nativeResultHash !== nativeResultHash || frozenQuery.routeId !== host.state.currentRouteId) throw new Error("Native continuation query differs from frozen preflight")
+        if (row) { row.status = "complete"; save() }
+        return native
+      })
+      report.continuations.push(continuation); save()
+      if (continuation.nativeQueryCount !== reference.expectedTotalNativeQueries || ownerCutValueHash(continuation) !== ownerCutValueHash(frozen.continuation)) throw new Error("Native full port continuation differs from preflight")
+    }
+    if (ownerCutValueHash(provenance) !== ownerCutValueHash(getProvenance()) || hashFile(platformPath) !== platformHash) throw new Error("Benchmark source/dependency/reference provenance changed during pass")
     report.status = "complete"
   } catch (error) {
     report.status = "failed"; report.error = error instanceof Error ? error.stack : String(error)
@@ -198,7 +288,8 @@ async function runPass(arm: OwnerCutBenchmarkArm, directory: string): Promise<vo
 }
 
 /** A strict population audit; capped/missing/objective-only rows never earn a speed claim. */
-export function auditOwnerCutPasses(reports: PassReport[]): Record<string, unknown> {
+export function auditOwnerCutPasses(reports: PassReport[], platformReferenceHash: string): Record<string, unknown> {
+  if (!/^[a-f0-9]{64}$/.test(platformReferenceHash)) throw new Error("A frozen platform reference hash is required")
   if (reports.length !== order.length) throw new Error("Four fresh ABBA process reports are required")
   const reference = JSON.parse(readFileSync(referencePath, "utf8")) as OwnerCutBenchmarkReference
   const expectedRows = reference.samples.flatMap((sample) => sample.queries.map((query) => ({
@@ -207,7 +298,9 @@ export function auditOwnerCutPasses(reports: PassReport[]): Record<string, unkno
   const first = reports[0]!
   let exact = true
   for (const [index, report] of reports.entries()) {
-    if (report.arm !== order[index] || report.status !== "complete" || report.rows.length !== 19 || report.continuations.length !== 2) {
+    if (report.schema !== 2 || report.arm !== order[index] || report.status !== "complete" || report.platformReferenceHash !== platformReferenceHash ||
+      report.preflightProcessId === report.runtime.processId || report.preflightProcessId !== first.preflightProcessId ||
+      report.candidateWorkCap !== maxCandidateWork || report.controlQueries.length !== 42 || report.rows.length !== 19 || report.continuations.length !== 2) {
       throw new Error("Incomplete operator pass/population")
     }
     if (ownerCutValueHash(report.provenance) !== ownerCutValueHash(first.provenance)) throw new Error("Pass source/dependency provenance mismatch")
@@ -231,9 +324,21 @@ export function auditOwnerCutPasses(reports: PassReport[]): Record<string, unkno
     classifications: report.rows.map((row) => (row.comparison as { classification: string }).classification) }))
   const nativeMs = totals.filter((row) => row.arm === "native").reduce((sum, row): number => sum + row.elapsedMs, 0)
   const candidateMs = totals.filter((row) => row.arm === "candidate").reduce((sum, row): number => sum + row.elapsedMs, 0)
-  return { all19ExactAcrossPasses: exact, totals,
+  return { all19ExactAcrossPasses: exact, timedQueriesPerPass: 19, nativeControlQueriesPerPass: 42, platformReferenceHash, totals,
     fullPopulationCandidateOverNative: exact && nativeMs > 0 ? candidateMs / nativeMs : null,
-    qualification: "Cold logical query setup and all requested hop/SCC/cut/master/distance work included; common preceding native replay, provenance and forced pre-query GC excluded identically. Selected call precedes the unconditional native control call in BOTH arms; first-use startup included, later queries naturally warm. Two replicates/revision only; no full-port or board timing claim. Missing/capped/non-equivalent rows invalidate full-population speed comparison. RSS values are process-level, not isolated allocation/GC attribution." }
+    qualification: "Historical local-platform witness drift is diagnostic only; all current controls must exactly match a separate-process native preflight frozen before timers. Cold logical query setup and all requested hop/SCC/cut/master/distance work included; common preceding native replay, provenance and forced pre-query GC excluded identically. Selected call precedes the unconditional native control call in BOTH arms; first-use startup included, later queries naturally warm. Two replicates/revision only; no full-port or board timing claim. Missing/capped/non-equivalent rows invalidate full-population speed comparison. RSS values are process-level, not isolated allocation/GC attribution." }
+}
+
+/** A complete saved report cannot turn a killed or failed process into a successful pass. */
+export function assertOwnerCutProcessCompletion(records: readonly OwnerCutChildRecord[]): void {
+  if (records.length !== order.length) throw new Error("Four owner-cut child exit records are required")
+  for (const [index, record] of records.entries()) {
+    if (record.index !== index + 1 || record.arm !== order[index] || record.exitStatus !== 0 ||
+      record.signal !== null || record.error !== undefined ||
+      typeof record.reportHash !== "string" || !/^[a-f0-9]{64}$/.test(record.reportHash)) {
+      throw new Error(`Owner-cut pass ${index + 1} did not exit successfully with a preserved report`)
+    }
+  }
 }
 
 export function runOwnerCutOperatorBenchmark(): void {
@@ -241,25 +346,46 @@ export function runOwnerCutOperatorBenchmark(): void {
   const directory = resolve(process.env.OWNER_CUT_OUTPUT_DIR ?? "tmp/owner-cut-operator")
   if (existsSync(directory)) throw new Error("Use a fresh owner-cut output directory")
   mkdirSync(directory, { recursive: true })
-  const manifest: Record<string, unknown> = { schema: 1, status: "running", runtime, provenance, order,
+  const manifest: Record<string, unknown> = { schema: 2, status: "running", runtime, provenance, order,
     maxCandidateWork, passTimeoutMs, routingThreads: 1, generationPolicy: "Native baseline replay identical and excluded in all arms; cold selected adapter includes native hop generation.", passes: [] }
-  const records = manifest.passes as Array<Record<string, unknown>>
+  const records = manifest.passes as OwnerCutChildRecord[]
   const reports: PassReport[] = []
   const save = (): void => writeFileSync(resolve(directory, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n")
   save()
   try {
+    const preflightDirectory = resolve(directory, "0-preflight")
+    mkdirSync(preflightDirectory)
+    const descriptor = openSync(resolve(preflightDirectory, "preflight.log"), "w")
+    let preflight: ReturnType<typeof spawnSync>
+    try {
+      preflight = spawnSync(process.execPath, [import.meta.path, "--preflight", preflightDirectory], {
+        env: process.env, stdio: ["ignore", descriptor, descriptor], timeout: passTimeoutMs,
+      })
+    } finally { closeSync(descriptor) }
+    const platformPath = resolve(preflightDirectory, "platform-reference.json")
+    manifest.preflight = { exitStatus: preflight.status, signal: preflight.signal, error: preflight.error?.message,
+      logHash: hashFile(resolve(preflightDirectory, "preflight.log")), referenceHash: existsSync(platformPath) ? hashFile(platformPath) : undefined }
+    save()
+    if (preflight.status !== 0 || preflight.signal !== null || preflight.error || !existsSync(platformPath)) throw new Error("Untimed native preflight did not exit successfully")
+    const platformHash = hashFile(platformPath)
+    const frozen = loadPlatformReference(platformPath, platformHash, provenance, runtime)
+    chmodSync(platformPath, 0o444)
+    manifest.platformReferenceHash = platformHash
+    manifest.preflightProcessId = frozen.runtime.processId
+    manifest.generationPolicy = "Fresh separate-process untimed native preflight freezes first 7/12 and all 7/35 continuations under the same source/runtime/lock before four fresh ABBA processes. No selected warmup; historical identity remains fixed."
+    save()
     for (const [index, arm] of order.entries()) {
       const passDirectory = resolve(directory, `${index + 1}-${arm}`)
       mkdirSync(passDirectory)
       const descriptor = openSync(resolve(passDirectory, "operator.log"), "w")
       let result: ReturnType<typeof spawnSync>
       try {
-        result = spawnSync(process.execPath, [import.meta.path, "--pass", arm, passDirectory], {
+        result = spawnSync(process.execPath, [import.meta.path, "--pass", arm, passDirectory, platformPath, platformHash], {
           env: process.env, stdio: ["ignore", descriptor, descriptor], timeout: passTimeoutMs,
         })
       } finally { closeSync(descriptor) }
       const reportPath = resolve(passDirectory, "operator-report.json")
-      const record: Record<string, unknown> = { index: index + 1, arm, exitStatus: result.status, signal: result.signal,
+      const record: OwnerCutChildRecord = { index: index + 1, arm, exitStatus: result.status, signal: result.signal,
         error: result.error?.message, logHash: hashFile(resolve(passDirectory, "operator.log")) }
       if (existsSync(reportPath)) {
         record.reportHash = hashFile(reportPath)
@@ -269,7 +395,9 @@ export function runOwnerCutOperatorBenchmark(): void {
       // Continue the independent later passes after an explicit failed/killed
       // process to preserve evidence. No row/result is substituted or repaired.
     }
-    manifest.audit = auditOwnerCutPasses(reports)
+    assertOwnerCutProcessCompletion(records)
+    if (hashFile(platformPath) !== platformHash) throw new Error("Frozen platform reference changed after ABBA")
+    manifest.audit = auditOwnerCutPasses(reports, platformHash)
     manifest.status = "complete"
   } catch (error) {
     manifest.status = "incomplete"; manifest.error = error instanceof Error ? error.stack : String(error)
@@ -278,9 +406,10 @@ export function runOwnerCutOperatorBenchmark(): void {
 }
 
 if (import.meta.main) {
-  if (process.argv[2] === "--pass") {
+  if (process.argv[2] === "--preflight") await runPreflight(resolve(process.argv[3]!))
+  else if (process.argv[2] === "--pass") {
     const arm = process.argv[3]
     if (arm !== "native" && arm !== "candidate") throw new Error("Pass arm must be native or candidate")
-    await runPass(arm, resolve(process.argv[4]!))
+    await runPass(arm, resolve(process.argv[4]!), resolve(process.argv[5]!), process.argv[6]!)
   } else runOwnerCutOperatorBenchmark()
 }

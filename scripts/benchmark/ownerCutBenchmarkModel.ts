@@ -41,6 +41,13 @@ export type OwnerCutBenchmarkReference = {
   schema: number; base: string; kernelCommit: string; sources: unknown[]
   samples: OwnerCutReferenceSample[]
 }
+export type OwnerCutStoredResult =
+  | { found: true; owners: number[]; distance: number; expandedLabelCount: number; states: OwnerCutBenchmarkState[]; hops: OwnerCutBenchmarkHop[] }
+  | { found: false; reason: "no_path" | "expansion_limit"; expandedLabelCount: number }
+export type OwnerCutFrozenQuery = Omit<OwnerCutReferenceQuery, "native"> & {
+  fingerprint: string
+  native: Extract<OwnerCutStoredResult, { found: true }>
+}
 
 /** Canonical provenance only. Never run this serializer inside an operator timer. */
 export function ownerCutValueHash(value: unknown): string {
@@ -163,5 +170,64 @@ export function assertOwnerCutReference(
     ownerCutValueHash(native.states) !== ownerCutValueHash(expected.native.states) ||
     ownerCutValueHash([...native.owners].sort((a, b): number => a - b)) !== ownerCutValueHash([...expected.native.owners].sort((a, b): number => a - b))) {
     throw new Error(`Native owner query ${expected.index} differs from the captured directed witness`)
+  }
+}
+
+/** Historical query selection stays fixed even when platform-local search work differs. */
+export function assertOwnerCutHistoricalIdentity(
+  expected: OwnerCutReferenceQuery, host: OwnerCutBenchmarkHost, forbidden: ReadonlySet<number>,
+): void {
+  const route = host.state.currentRouteId
+  if (route !== expected.routeId || forbidden.size !== expected.forbiddenOwnerCount) {
+    throw new Error(`Historical owner query ${expected.index} changed route or forbidden identity`)
+  }
+  const start = host.getRouteStartPortId(route)
+  if (start !== expected.start.portId || host.getStartingNextRegionId(route, start) !== expected.start.nextRegionId ||
+    host.getRouteEndPortId(route) !== expected.goalPortId) {
+    throw new Error(`Historical owner query ${expected.index} changed directed terminals`)
+  }
+}
+
+/** Retain every native witness before assertions, including failure diagnostics. */
+export function storeOwnerCutResult(result: OwnerCutBenchmarkResult): OwnerCutStoredResult {
+  if (!result.found) return { ...result }
+  return {
+    found: true, owners: [...result.owners], distance: result.distance,
+    expandedLabelCount: result.expandedLabelCount,
+    states: result.states, hops: result.hops,
+  }
+}
+
+export function ownerCutReferenceDifferences(
+  expected: OwnerCutReferenceQuery, host: OwnerCutBenchmarkHost,
+  forbidden: ReadonlySet<number>, native: OwnerCutBenchmarkResult,
+): Record<string, { expected: unknown; actual: unknown; equal: boolean }> {
+  const route = host.state.currentRouteId
+  if (route === undefined) throw new Error("Native query lost its current route")
+  const start = host.getRouteStartPortId(route)
+  const fields: Record<string, [unknown, unknown]> = {
+    routeId: [expected.routeId, route], forbiddenOwnerCount: [expected.forbiddenOwnerCount, forbidden.size],
+    startPort: [expected.start.portId, start], startRegion: [expected.start.nextRegionId, host.getStartingNextRegionId(route, start)],
+    goalPort: [expected.goalPortId, host.getRouteEndPortId(route)], found: [expected.native.found, native.found],
+    expandedLabelCount: [expected.native.expandedLabelCount, native.expandedLabelCount],
+    distance: [expected.native.distance, native.found ? native.distance : undefined],
+    owners: [[...expected.native.owners].sort((a, b): number => a - b), native.found ? [...native.owners].sort((a, b): number => a - b) : undefined],
+    states: [expected.native.states, native.found ? native.states : undefined],
+  }
+  return Object.fromEntries(Object.entries(fields).map(([field, [before, after]]) =>
+    [field, { expected: before, actual: after, equal: ownerCutValueHash(before) === ownerCutValueHash(after) }]))
+}
+
+/** Platform reference matching remains exact; historical diagnostics cannot weaken it. */
+export function assertOwnerCutFrozenReference(
+  expected: OwnerCutFrozenQuery, host: OwnerCutBenchmarkHost,
+  forbidden: ReadonlySet<number>, native: OwnerCutBenchmarkResult,
+): void {
+  if (ownerCutQueryFingerprint(host, forbidden) !== expected.fingerprint) {
+    throw new Error(`Platform owner query ${expected.index} changed immutable context`)
+  }
+  assertOwnerCutReference(expected, host, forbidden, native)
+  if (!native.found || ownerCutValueHash(native.hops) !== ownerCutValueHash(expected.native.hops)) {
+    throw new Error(`Platform owner query ${expected.index} changed native hop witness`)
   }
 }
