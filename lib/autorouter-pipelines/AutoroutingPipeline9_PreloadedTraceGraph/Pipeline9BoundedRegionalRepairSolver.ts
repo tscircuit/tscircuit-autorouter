@@ -3,6 +3,7 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
+  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
@@ -25,8 +26,6 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
-import { NegotiateTraceClearanceSolver } from "./repairScene/NegotiateTraceClearanceSolver"
-import { createRepairSceneDiagnostics } from "./repairScene/RepairGeometryDistanceCache"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
@@ -137,7 +136,6 @@ const REGION_SIZES = [10, 16] as const
 
 /** Routes bounded regions through negotiation, projection and guarded publication. */
 export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
-  readonly repairSceneDiagnostics = createRepairSceneDiagnostics()
   readonly params: Pipeline9BoundedRegionalRepairParams
   readonly budget: Pipeline9BoundedRepairBudget
   private state: BoundedRepairState = { phase: "initialize" }
@@ -521,9 +519,6 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     state: Extract<BoundedRepairState, { phase: "negotiate" }>,
   ): void {
     const repair = state.solver.getOutput()
-    for (const key of Object.keys(this.repairSceneDiagnostics) as Array<keyof typeof this.repairSceneDiagnostics>) {
-      this.repairSceneDiagnostics[key] += state.solver.diagnostics[key]
-    }
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
     if (
