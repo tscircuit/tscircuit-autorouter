@@ -10,6 +10,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { NativeCoalescedIntraNodeSolver } from "../HighDensitySolver/NativeCoalescedIntraNodeSolver"
 import type { BaseSolver } from "../BaseSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
@@ -248,9 +249,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "orderings6",
-        possibleValues: ORDERING_SHUFFLE_SEEDS.map((shuffleSeed) => ({
-          SHUFFLE_SEED: shuffleSeed,
-        })),
+        possibleValues: [{ SHUFFLE_SEED: 0, NATIVE_COALESCED_FAMILY_SIZE: 6 }],
       },
       {
         name: "cellSizeFactor",
@@ -282,9 +281,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "orderings50",
-        possibleValues: Array.from({ length: 20 }, (_, i) => ({
-          SHUFFLE_SEED: 100 + i,
-        })),
+        possibleValues: [{ SHUFFLE_SEED: 100, NATIVE_COALESCED_FAMILY_SIZE: 20 }],
       },
       // {
       //   name: "closedFormTwoTrace",
@@ -387,7 +384,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
-            solver.MAX_ITERATIONS,
+            solver instanceof NativeCoalescedIntraNodeSolver
+              ? solver.nativeCandidateIterationLimit
+              : solver.MAX_ITERATIONS,
           )
           this.candidateWorkBySolver.set(solver, {
             iterations: solver.iterations,
@@ -509,7 +508,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           if (candidate instanceof HighDensitySolverA13) continue
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
-            candidate.MAX_ITERATIONS,
+            candidate instanceof NativeCoalescedIntraNodeSolver
+              ? candidate.nativeCandidateIterationLimit
+              : candidate.MAX_ITERATIONS,
           )
         }
       }
@@ -672,6 +673,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
+    }
+    if (hyperParameters.NATIVE_COALESCED_FAMILY_SIZE) {
+      return new NativeCoalescedIntraNodeSolver({
+        ...this.constructorParams,
+        hyperParameters,
+        nativeOrderingFamilySize: hyperParameters.NATIVE_COALESCED_FAMILY_SIZE,
+        precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
+      })
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
