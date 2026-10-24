@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import { options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
 
-test("a blocked incoming segment cannot close a destination reached by a different certified parent", () => {
+test("a blocked incoming segment cannot close a destination reached by a different certified parent", () => withDetailedWork(() => {
   class Ordered extends UniformLazy {
     override setNodeCosts(n: Node): void {
       super.setNodeCosts(n)
@@ -24,4 +24,4 @@ test("a blocked incoming segment cannot close a destination reached by a differe
   solver.step()
   expect(solver.exploredNodes.has(solver.getNodeKey(target))).toBe(true)
   expect(solver.failed).toBe(false)
-})
+}))

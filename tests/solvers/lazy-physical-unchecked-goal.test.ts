@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import { options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
 
-test("an unchecked near-goal candidate is rejected before closing, goal acceptance, or descendant generation", () => {
+test("an unchecked near-goal candidate is rejected before closing, goal acceptance, or descendant generation", () => withDetailedWork(() => {
   class Ordered extends UniformLazy {
     override setNodeCosts(n: Node): void {
       super.setNodeCosts(n)
@@ -22,4 +22,4 @@ test("an unchecked near-goal candidate is rejected before closing, goal acceptan
   expect(solver.lazyPhysicalDiagnostics.lazyExpanded).toBe(1)
   expect(solver.lazyPhysicalDiagnostics.lazyPlanarProposals).toBe(proposals)
   expect(solver.solvedPath).toBeNull()
-})
+}))

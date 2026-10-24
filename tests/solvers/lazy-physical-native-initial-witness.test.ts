@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { Native, options } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, Native, options } from "./lazyPhysicalTestUtils"
 import { LazyPhysicalSingleHighDensityRouteSolver as Lazy } from "lib/solvers/HighDensitySolver/LazyPhysicalSingleHighDensityRouteSolver"
 
-test("native rounded/exact starts and terminal boundary markers are retained and the final chain is checked", () => {
+test("native rounded/exact starts and terminal boundary markers are retained and the final chain is checked", () => withDetailedWork(() => {
   for (const A of [{ x: 0, y: 1, z: 0 }, { x: 0.003, y: 1.007, z: 0 }, { x: 1.013, y: 1.019, z: 0 }]) {
     const opts = options({ A })
     const solver = new Lazy(opts), checker = new Native(opts)
@@ -18,4 +18,4 @@ test("native rounded/exact starts and terminal boundary markers are retained and
       expect(checker.doesPathToParentIntersectObstacle(child)).toBe(false)
     }
   }
-})
+}))

@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { LazyPhysicalSingleHighDensityRouteSolver as Lazy } from "lib/solvers/HighDensitySolver/LazyPhysicalSingleHighDensityRouteSolver"
-import { options } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, options } from "./lazyPhysicalTestUtils"
 
-test("shared diagnostics retain live, failed, and solved route work independently of stable solver stats", () => {
+test("shared diagnostics retain live, failed, and solved route work independently of stable solver stats", () => withDetailedWork(() => {
   const ledger: Record<string, number> = {}
   const loser = new Lazy(options(), ledger)
   const winner = new Lazy(options(), ledger)
@@ -20,4 +20,4 @@ test("shared diagnostics retain live, failed, and solved route work independentl
   }
   expect(winner.stats).toEqual({})
   expect(loser.stats).toEqual({})
-})
+}))

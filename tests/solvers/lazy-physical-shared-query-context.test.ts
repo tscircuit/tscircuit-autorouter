@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
 
-test("lazy siblings share one native query, mutation is loud, and work includes deferred and final validation", () => {
+test("lazy siblings share one native query, mutation is loud, and work includes deferred and final validation", () => withDetailedWork(() => {
   const solver = new UniformLazy(options())
   resetGrid(solver)
   solver.step()
@@ -23,4 +23,4 @@ test("lazy siblings share one native query, mutation is loud, and work includes 
   rebuilt.buildObstacleIndexes()
   expect(Reflect.get(rebuilt, "sceneRevision")).toBe(2)
   expect(() => rebuilt.step()).toThrow("Lazy physical context changed")
-})
+}))

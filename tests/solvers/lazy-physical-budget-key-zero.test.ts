@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import { Native, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, Native, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
 
-test("deferred rejection consumes native step allowance and the preexisting key-zero policy is preserved", () => {
+test("deferred rejection consumes native step allowance and the preexisting key-zero policy is preserved", () => withDetailedWork(() => {
   class Ordered extends UniformLazy {
     override setNodeCosts(n: Node): void {
       super.setNodeCosts(n)
@@ -31,4 +31,4 @@ test("deferred rejection consumes native step allowance and the preexisting key-
     expect(zero.failed).toBe(true)
     expect(zero.error).toBe("Ran out of candidate nodes to explore")
   }
-})
+}))

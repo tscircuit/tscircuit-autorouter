@@ -3,6 +3,12 @@ import { SingleRouteCandidatePriorityQueue } from "lib/data-structures/SingleRou
 import { LazyPhysicalSingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/LazyPhysicalSingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
+export function withDetailedWork(run: () => void): void {
+  const previous = LazyPhysicalSingleHighDensityRouteSolver.detailedWorkDiagnostics
+  LazyPhysicalSingleHighDensityRouteSolver.detailedWorkDiagnostics = true
+  try { run() } finally { LazyPhysicalSingleHighDensityRouteSolver.detailedWorkDiagnostics = previous }
+}
+
 export type Options = ConstructorParameters<typeof Native>[0]
 export const options = (overrides: Partial<Options> = {}): Options => ({
   connectionName: "test", rootConnectionName: "root", regionId: "region",

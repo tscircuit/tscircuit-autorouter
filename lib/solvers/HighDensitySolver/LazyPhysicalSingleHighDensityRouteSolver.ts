@@ -18,7 +18,9 @@ type Point = { x: number; y: number; z: number }
  * consumes a step, and every new action is additionally counted below.
  */
 export class LazyPhysicalSingleHighDensityRouteSolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
-  readonly lazyPhysicalDiagnostics: Record<string, number> = {
+  static detailedWorkDiagnostics = false
+  readonly detailedWorkDiagnosticsEnabled = LazyPhysicalSingleHighDensityRouteSolver.detailedWorkDiagnostics
+  readonly lazyPhysicalDiagnostics: Record<string, number> = this.detailedWorkDiagnosticsEnabled ? {
     lazyInstances: 1, lazyWorkUnits: 1, lazyQueuePushes: 1, lazyQueuePops: 0,
     lazySourceRecords: 0, lazySharedQueryBuilds: 0, lazyPointQueryAdapters: 0,
     lazyNodeConstructions: 0, lazyStepCalls: 0, lazyContextChecks: 0,
@@ -27,7 +29,7 @@ export class LazyPhysicalSingleHighDensityRouteSolver extends SingleHighDensityR
     lazyViaChecks: 0, lazyValidatedPlanar: 0, lazyRejectedPlanar: 0,
     lazyKnownBlockedPointHits: 0, lazyStalePops: 0, lazyExpanded: 0,
     lazyGoalChecks: 0, lazyWitnessEdges: 0, lazyWitnessRejected: 0,
-  }
+  } : { lazyInstances: 1 }
   private pending = new WeakMap<Node, SourceRecord>()
   private certified = new WeakSet<Node>()
   private blockedPoints = new Map<number, Point>()
@@ -38,6 +40,9 @@ export class LazyPhysicalSingleHighDensityRouteSolver extends SingleHighDensityR
   constructor(opts: ConstructorParameters<typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>[0], aggregateDiagnostics?: Record<string, number>) {
     super(opts)
     this.aggregateDiagnostics = aggregateDiagnostics
+    if (aggregateDiagnostics && this.detailedWorkDiagnosticsEnabled) {
+      aggregateDiagnostics.lazyDetailedInstances = (aggregateDiagnostics.lazyDetailedInstances ?? 0) + 1
+    }
     if (aggregateDiagnostics) for (const [key, value] of Object.entries(this.lazyPhysicalDiagnostics)) {
       aggregateDiagnostics[key] = (aggregateDiagnostics[key] ?? 0) + value
     }
@@ -82,6 +87,7 @@ export class LazyPhysicalSingleHighDensityRouteSolver extends SingleHighDensityR
   }
 
   private charge(name: string): void {
+    if (!this.detailedWorkDiagnosticsEnabled) return
     this.lazyPhysicalDiagnostics[name] = (this.lazyPhysicalDiagnostics[name] ?? 0) + 1
     this.lazyPhysicalDiagnostics.lazyWorkUnits++
     if (this.aggregateDiagnostics) {

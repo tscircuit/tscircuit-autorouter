@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import { options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, options, resetGrid, UniformLazy } from "./lazyPhysicalTestUtils"
 
-test("vias remain eager and reject a same-location second drill using the current certified parent chain", () => {
+test("vias remain eager and reject a same-location second drill using the current certified parent chain", () => withDetailedWork(() => {
   class Ordered extends UniformLazy {
     history: Array<{ from: number; to: number; prior: number; blocked: boolean }> = []
     override setNodeCosts(n: Node): void {
@@ -26,4 +26,4 @@ test("vias remain eager and reject a same-location second drill using the curren
   expect(solver.lazyPhysicalDiagnostics.lazyViaChecks).toBe(3)
   expect(solver.lazyPhysicalDiagnostics.lazyExpanded).toBe(2)
   expect(solver.lazyPhysicalDiagnostics.lazyValidatedPlanar).toBe(0)
-})
+}))

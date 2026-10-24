@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { Native, options, resetGrid, UniformLazy, explicitGraphOracle } from "./lazyPhysicalTestUtils"
+import { withDetailedWork, Native, options, resetGrid, UniformLazy, explicitGraphOracle } from "./lazyPhysicalTestUtils"
 
-test("depth-one lazy search agrees with independently enumerated static graphs and checks every emitted edge", () => {
+test("depth-one lazy search agrees with independently enumerated static graphs and checks every emitted edge", () => withDetailedWork(() => {
   for (let mask = 0; mask < 32; mask++) {
     const obstacleRoutes = Array.from({ length: 5 }, (_, i) => i).filter((i) => mask & (1 << i)).map((i) => ({
       connectionName: `wall${i}`, traceThickness: 0.08, viaDiameter: 0.3, vias: [],
@@ -30,4 +30,4 @@ test("depth-one lazy search agrees with independently enumerated static graphs a
     }
     expect(solver.lazyPhysicalDiagnostics.lazyWitnessEdges).toBeGreaterThan(0)
   }
-})
+}))
