@@ -102,8 +102,8 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
-    USE_REGIONAL_BLOCK_PRUNING?: boolean
-    COLLECT_REGIONAL_BLOCK_WORK?: boolean
+    USE_GEOMETRIC_REGIONAL_DOMINANCE?: boolean
+    COLLECT_GEOMETRIC_DOMINANCE_WORK?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }
