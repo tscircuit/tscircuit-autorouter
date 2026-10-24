@@ -187,24 +187,6 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return false
   }
 
-  protected override canShareViaClearanceAcrossLayers(): boolean {
-    const native = SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
-    const base = SingleHighDensityRouteSolver.prototype
-    return (
-      Object.getPrototypeOf(this) === native &&
-      this.isNodeTooCloseToObstacle === native.isNodeTooCloseToObstacle &&
-      this.isViaTooCloseToFutureConnectionTrace === native.isViaTooCloseToFutureConnectionTrace &&
-      this.getFutureConnectionSegments === native.getFutureConnectionSegments &&
-      this.isNodeTooCloseToEdge === base.isNodeTooCloseToEdge &&
-      this.getViasInNodePath === base.getViasInNodePath &&
-      this.getNodeKey === base.getNodeKey &&
-      this.setNodeCosts === native.setNodeCosts &&
-      this.getFutureConnectionPenalty === native.getFutureConnectionPenalty &&
-      this.getClosestFutureConnectionPoint === native.getClosestFutureConnectionPoint &&
-      this.computeF === base.computeF
-    )
-  }
-
   /**
    * Rapidly approaches 0 as the goal distance approaches 0
    */

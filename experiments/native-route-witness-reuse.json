@@ -1,0 +1,85 @@
+{
+  "status": "ready-for-controlled-Blacksmith-changed-policy-tradeoff; no promotion",
+  "control": "b9d32a05c76af701d518f6a78a3114e68addd144",
+  "privateConservativePredecessor": "ec4685b4ec9dc8c5a4538aceef4b9ed4f6d4b996",
+  "methodCorrection": {
+    "finding": "The earlier conservative broker demanded independently clean fixed-pad/board geometry at a local stage where native Single receives neither fixed pads nor physical board outline. That was stronger than the baseline intermediate contract and cannot falsify baseline-contract route reuse.",
+    "principledChange": "Replay untouched original native route microsteps within the exact same owned scaled-node/terminal/width/layer/provenance domain against a fresh CURRENT native checker. Existing static pad/board violations remain identical for that copied route and are left to unchanged downstream legalization, as for ordinary native local output.",
+    "remainingObligation": "Current prior copper, ordered future-via exclusions, source/current initial-grid availability and linked self-via history are rechecked; identity/drill/whole-board rules beyond native local API are not certified here. Final whole-pipeline DRC/style/search-work gate is mandatory.",
+    "notClaimed": [
+      "Exact native objective or search-order equivalence",
+      "Independently physically clean cached route",
+      "General same-net drill-hole spacing proof",
+      "Universal reuse theory disproved"
+    ]
+  },
+  "mechanism": "Bounded per-portfolio native witness broker shared across ordinary Intra ordering/cost candidates; existing native Single constructor/index setup retained. The broker owns a frozen clone of the exact scaled node consumed by candidates, records only native FutureCost Single completions and keeps at most64entries/16,384points with2entries/key. Every replay is at most4,096original points.",
+  "nativeContract": [
+    "Literal connection/root/region, exact oriented A/B, trace/via/margin, bounds, available layers/layer count, cellStep/grid dimensions/offsets and actual selected initial chain are keyed. No canonical root passes through alias lookup.",
+    "Port/terminal metadata is included in one-time owned node scene serialization. No cross-portfolio, cross-growth-scale, cross-node or cross-worker broker sharing.",
+    "Original path microsteps are retained. Every internal move is a current native clamped \u00b1cellStep planar neighbor or same-site available-layer transition, with native directed-key repeat exclusions.",
+    "Current actual initial candidate path must match. Final connector uses the same native distance, same layer, near-goal threshold and segment gate.",
+    "Fresh CURRENT native hard point/edge/segment checks replay with the complete parent chain; via checks see native full-stack prior copper and ordered current future trace veto.",
+    "The current checker receives actual connMap/current Intra prior filtering. Full synchronous revalidation avoids copying or reconstructing ownership maps. Arbitrary mutation during native constructor/replay is outside owned solver semantics.",
+    "Only native Single completions with>=32native iterations become sources. Constructor-simplecase and completed-task-cache hits do not. Through-obstacle, jumpers, variable-width and terminal-annotated/special witnesses are rejected.",
+    "Normal Intra postroute via-trace repair and all downstream P9 phases remain enabled. A feasible witness changes the portfolio policy/diversity and may change later route quality."
+  ],
+  "observerLimits": "The census does not replace routes. Accepted-search expansion totals are a counterfactual opportunity, not actual saved work or guaranteed eventual policy benefit. Script field retains old priorCertifiedPlanarWitnessExpansions name although these rows include native vias. Final accounting added explicit identityPointReads and exact native distance/clamp arithmetic after census; observed ordinary-coordinate acceptance is unaffected but those later counters belong to actual-policy full sample2.",
+  "accounting": {
+    "diagnostics": "Off stable .stats; pipeline phase benchmarkDiagnosticCounters aggregate owned broker counters, including failed scale portfolios. Summed retainedEntries/retainedPoints are cumulative final retained slots over separate domains, not simultaneous peak memory or actual allocation counts.",
+    "effort": "Intra consumes bounded logical debt before applying a replay or continuing native search; source-store clone work is also delayed. Native Single/Intra/supervisor caps unchanged.12point operations per visited routepoint is a declared effort proxy, not CPU equivalence.",
+    "unchargedLimits": "Failed record admission at entry/point cap can still perform identity/key scans before returning0debt. Identity/key/copy/setup counters expose that work; no claim all replacement work is charged. Each attempt is still finite under original source/path caps.",
+    "async": "Native objects never cross worker messages; each batch constructs its own broker. Diagnostic .then merge counts all completed actual worker work even if results are later rejected/discarded by parent budget; accepted routes/stats/iteration order use unchanged parent acceptance.",
+    "materialization": "No second native constructor/index build per lookup. Every original required current Single is still built; native key/current replay caches may materialize earlier, not removed. Owned node clone/freeze+scene serialization are once per portfolio; small task-key serialization is per lookup/store, not entire-board JSON."
+  },
+  "validation": {
+    "focused": "7pass,0fail,205assertions across3newnative-witness tests plus existing portfolio topology/work and high-density async workers1/2/4 and budget tests.",
+    "physicalNativeTests": "Genuine native source1407steps/52points, independent49actual getNeighbors moves; genuine native via source1281steps/52points; changed current prior copper/future-via/current full-stack via contexts reject. Source-independent probe owned by topology reviewer.",
+    "tsc": "PASS bunx tsc --noEmit --pretty false after focused-test nullable assertion correction; work/arch-prefix-native-contract-tsc.log",
+    "build": "bun run build pass; work/arch-prefix-native-contract-build.log",
+    "limits": "Existing async test exercises actual workers and factory propagation, but its simple scene does not establish actual reused-route whole-board4worker parity. This policy was rejected before publication, so no broader async/fullboard runs were added."
+  },
+  "remoteActions": "None; no PR metadata/ref, benchmark or dependency mutation.",
+  "finalConclusion": "Concrete baseline-contract policy is actually activated, completes sample2 with configured relaxedDRC0,4fewer vias and22.13%more oddangles; native HD and Joint search work both decrease. Controlled remote evaluation is warranted with explicit style/coverage/cost caveats; no speedup or promotion established. The earlier stronger intermediate pad gate is explicitly corrected and no universal reuse claim is made.",
+  "actualSample2Tradeoff": {
+    "baselineArtifact": "/Users/shibo/Documents/Codex/2026-10-23/see/work/arch-search-autorouter-sample2.json",
+    "baselineSha256": "72d268462ae65c8380a72f2578ea10907c9478486874f6a43f0222ca5e0e7afa",
+    "candidateArtifact": "/Users/shibo/Documents/Codex/2026-10-23/see/work/arch-prefix-native-contract-full-sample2.json",
+    "candidateSha256": "3d4624e558e76d18251dd44d8d5286a97a97644e383d15d8c37bdfb0923c7651",
+    "scope": "Full P9 functional solve using parent shared probe, effort1/cacheProvider:null in both captures; native b9 control is previously captured, not a fresh timing pair. No elapsed values collected/compared.",
+    "nativeNeighborhoods": {
+      "control": 3247791,
+      "candidate": 2845782,
+      "reductionFraction": 0.12377920869908188
+    },
+    "relaxedDrc": {
+      "control": 0,
+      "candidate": 0
+    },
+    "viaCount": {
+      "control": 496,
+      "candidate": 492
+    },
+    "oddAngles": {
+      "control": 592,
+      "candidate": 723,
+      "increaseFraction": 0.22128378378378377
+    },
+    "decision": "Root initially rejected onHD/styleonly, then corrected after full-trajectory review: Joint search nodes also drop47.11%, so oddangle+22.13%is a disclosed softquality tradeoff, not an explicit user hardconstraint or DRCfailure. Ready for controlled Blacksmith comparison on all16samples; no promotion or runtime claim.",
+    "wholeRuntimePlanningOnly": "At approximate38%HDshare, a proportional neighborhood-only HD contribution would be<4.71%whole-runtime before overhead. This is not a whole changed-policy ceiling: Joint pathnodes also drop47.11%onthissample, and other stage trajectories differ. Operation categories cannot be summed or converted into CPU without remote measurement.",
+    "jointBoundedPathNodes": {
+      "control": 1731379,
+      "candidate": 915748,
+      "reductionFraction": 0.4710874973070599
+    },
+    "jointOuterIterations": {
+      "control": 38057,
+      "candidate": 30144
+    },
+    "hdOuterIterations": {
+      "control": 387523,
+      "candidate": 386819
+    }
+  },
+  "evidence": "work/arch-prefix-native-contract-result.json"
+}

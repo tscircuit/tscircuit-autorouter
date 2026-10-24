@@ -360,6 +360,7 @@ export const createPipeline9RegularNodeSolver = ({
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
+    enableNativeRouteWitnessReuse: true,
     enableNegotiatedSearch: true,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
@@ -409,6 +410,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
+  readonly benchmarkDiagnosticCounters: Record<string, number> = {}
   private asyncRunning = false
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
@@ -500,7 +502,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
               maxIterations: this.MAX_ITERATIONS,
             })
             .then(
-              (result) => ({ type: "result" as const, result }),
+              (result) => {
+                for (const [name, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
+                  this.benchmarkDiagnosticCounters[name] = (this.benchmarkDiagnosticCounters[name] ?? 0) + value
+                }
+                return { type: "result" as const, result }
+              },
               (error: unknown) => ({ type: "error" as const, error }),
             ),
         )
@@ -563,7 +570,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
   }
 
+  private recordRegularWitnessDiagnostics(): void {
+    if (!this.activeRegularSolver) return
+    for (const [name, value] of Object.entries(this.activeRegularSolver.benchmarkDiagnosticCounters)) {
+      this.benchmarkDiagnosticCounters[name] = (this.benchmarkDiagnosticCounters[name] ?? 0) + value
+    }
+  }
+
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    this.recordRegularWitnessDiagnostics()
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -999,6 +1014,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    this.recordRegularWitnessDiagnostics()
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
