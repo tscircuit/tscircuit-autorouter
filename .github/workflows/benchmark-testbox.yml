@@ -9,42 +9,40 @@ concurrency:
   group: architecture-balanced-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
-  owner-cut:
-    name: Cold owner-release operator ABBA
+  benchmark:
+    name: Balanced ${{ matrix.candidate }} SRJ${{ matrix.dataset }}
     if: github.ref == 'refs/heads/experiment/architecture-balanced-harness'
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - candidate: eager-regional-class-costs
+            head: cd9ae30196c80651a56b20cfc7c1dfdb8282d9fb
+            dataset: '18'
+          - candidate: eager-regional-class-costs
+            head: cd9ae30196c80651a56b20cfc7c1dfdb8282d9fb
+            dataset: '24'
     env:
-      OWNER_CUT_SOURCE_SHA: d5f03e2926e37238b2fc6e85626d394fd069965f
-      OWNER_CUT_BENCHMARK_APPROVED: '1'
-      OWNER_CUT_OUTPUT_DIR: tmp/owner-cut-operator
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: 60000
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: 30000
+      BENCHMARK_TERMINATE_TIMEOUT_MS: 1000
+      BALANCED_HEAD_SHA: ${{ matrix.head }}
+      BALANCED_DATASET: ${{ matrix.dataset }}
+      BALANCED_ORDER: ABBA
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: d5f03e2926e37238b2fc6e85626d394fd069965f
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
-      - name: Preserve source and resolved dependency block
-        run: |
-          set -euo pipefail
-          mkdir -p tmp/owner-cut-provenance
-          bun -e 'console.log(JSON.stringify({controller:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT,source:process.env.OWNER_CUT_SOURCE_SHA},null,2))' > tmp/owner-cut-provenance/launch.json
-          git rev-parse HEAD HEAD^{tree} HEAD:lib > tmp/owner-cut-provenance/source.txt
-          bun --version > tmp/owner-cut-provenance/bun-version.txt
-          bun install --lockfile-only --save-text-lockfile 2>&1 | tee tmp/owner-cut-provenance/resolution.log
-          cp bun.lock tmp/owner-cut-provenance/resolved-bun.lock
-          bun install --frozen-lockfile 2>&1 | tee tmp/owner-cut-provenance/install.log
-          sha256sum package.json bunfig.toml bun.lock scripts/benchmark/runOwnerCutOperatorBenchmark.ts scripts/benchmark/ownerCutBenchmarkModel.ts scripts/benchmark/owner-cut-real-query-reference.json > tmp/owner-cut-provenance/hashes.txt
-      - name: Run four fresh selected-first cold operator passes
-        run: bun scripts/benchmark/runOwnerCutOperatorBenchmark.ts
-      - name: Preserve all operator rows and failure evidence
+      - name: Run four balanced passes
+        run: bun scripts/benchmark/runBalancedBenchmark.ts
+      - name: Preserve balanced benchmark artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: owner-cut-operator-${{ github.run_id }}
-          path: |
-            tmp/owner-cut-operator
-            tmp/owner-cut-provenance
-          if-no-files-found: error
+          name: architecture-${{ matrix.candidate }}-${{ matrix.dataset }}-${{ github.run_id }}
+          path: tmp/balanced-benchmark/artifacts
