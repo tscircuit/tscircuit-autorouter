@@ -60,7 +60,7 @@ export class PlanarClearanceCertificates {
     this.lastFailedCenter = undefined
   }
 
-  findOrCreate(center: Point, cellStep: number): PlanarClearanceCertificate | undefined {
+  findOrCreate(center: Point, cellStep: number, allowConstruction = true): PlanarClearanceCertificate | undefined {
     const diagnostics = this.diagnostics
     if (diagnostics) diagnostics.lookups++
     for (let offset = 1; offset <= this.certificates.length; offset++) {
@@ -75,6 +75,11 @@ export class PlanarClearanceCertificates {
         return certificate
       }
     }
+
+    // An existing proof can serve any contained center. A native caller may
+    // separately require its own exact free-point witness before paying for a
+    // new clipping query at an otherwise unvalidated or blocked center.
+    if (!allowConstruction) return undefined
 
     const radius = cellStep * 4
     if (

@@ -626,7 +626,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         this.planarCertificatesByLayer.set(node.z, certificates)
       }
       certificates!.diagnostics = this.planarCertificateDiagnostics
-      certificate = certificates!.findOrCreate(node, this.cellStep)
+      // Only construct at a center already proven free by the native exact
+      // point cache under these same physical thresholds. Otherwise a failed
+      // clipping attempt would add a second broadphase to the shared native
+      // neighbor query. Existing rectangles remain reusable without this gate.
+      const freeCenter = this.freePlanarObstaclePoints.get(this.getNodeKey(node))
+      const allowConstruction =
+        this.cachedPlanarTraceProximity === traceProximity &&
+        this.cachedPlanarViaProximity === viaProximity &&
+        freeCenter?.x === node.x && freeCenter.y === node.y && freeCenter.z === node.z
+      certificate = certificates!.findOrCreate(node, this.cellStep, allowConstruction)
       if (
         certificate &&
         minimumNeighborX >= certificate.minX && maximumNeighborX <= certificate.maxX &&

@@ -17,6 +17,12 @@ test("certificates preserve ordered native neighbors, all costs and via parent-h
       for (let y = -1.5; y < 1.5; y += 0.19) {
         const previous: Node = { x: x - 0.02, y, z: (z + 1) % 4, g: 1, h: 2, f: 3, parent: null }
         const node: Node = { x, y, z, g: 2, h: 3, f: 4, parent: previous }
+        // Actual expansions arrive from a native point-clearance check. These
+        // independently sampled centers need the same exact cache witness to
+        // exercise new certificate construction rather than only reuse.
+        expect(candidate.isNodeTooCloseToObstacle(node, candidate.obstacleMargin)).toBe(
+          native.isNodeTooCloseToObstacle(node, native.obstacleMargin),
+        )
         const left = native.getNeighbors(node)
         const right = candidate.getNeighbors(node)
         expect(right).toEqual(left)
