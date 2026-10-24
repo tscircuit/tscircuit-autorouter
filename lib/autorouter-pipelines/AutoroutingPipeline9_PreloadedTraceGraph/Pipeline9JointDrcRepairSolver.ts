@@ -1689,6 +1689,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       initialBoundedRegionalRepairTimeMs:
         performance.now() - this.initialBoundedRegionalRepairStartedAt,
     }
+    for (const [key, value] of Object.entries(this.initialBoundedRegionalRepairSolver.getIncrementalWorkCounters())) {
+      this.stats[`initialBoundedIncremental_${key}`] = value
+    }
     // A complete bounded repair can avoid the much broader portfolio search.
     // Keep incomplete candidates private so the existing stages see their
     // original input, including all preload ownership and candidate budgets.
@@ -1965,6 +1968,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const boundedRegionalRepairResult =
       this.boundedRegionalRepairSolver.getResult()
     const regionalRepairBudget = this.boundedRegionalParams.budget
+    for (const [key, value] of Object.entries(this.boundedRegionalRepairSolver.getIncrementalWorkCounters())) {
+      this.stats[`boundedIncremental_${key}`] = value
+    }
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,

@@ -3,7 +3,6 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   mergeRepairRegion,
-  NegotiateTraceClearanceSolver,
   type Bounds,
   type ExtractedRepairRegion,
   type NegotiatedClearanceResult,
@@ -26,6 +25,8 @@ import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 import { Pipeline9ClearanceProjectionSolver } from "./Pipeline9ClearanceProjectionSolver"
 import { Pipeline9ReportedViaMergeSolver } from "./Pipeline9ReportedViaMergeSolver"
+
+import { NegotiateTraceClearanceSolver } from "./incrementalRepair/NegotiateTraceClearanceSolver"
 
 type DrcResult = ReturnType<DrcEvaluator>
 type DrcErrors = Array<Record<string, unknown>>
@@ -141,6 +142,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
   private state: BoundedRepairState = { phase: "initialize" }
   private readonly result: Pipeline9BoundedRegionalRepairResult
   private reservedChildMaximum = 0
+  private consumedAggregateWork = 0
+  private readonly incrementalCounters: Record<string, number> = {}
 
   constructor(params: Pipeline9BoundedRegionalRepairParams) {
     super()
@@ -160,6 +163,17 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     }
     // Child solvers reserve their finite iteration bounds as each stage starts.
     this.MAX_ITERATIONS = this.budget.maxRegions * 16 + 32
+  }
+
+  getIncrementalWorkCounters(): Record<string, number> {
+    const counters = { ...this.incrementalCounters }
+    const live = this.state.phase === "negotiate" ? this.state.solver.workBudget.counters : undefined
+    if (live) for (const [key, value] of Object.entries(live)) {
+      if (key === "retainedNodeCount" || key === "retainedRejectionCount") counters[key] = value
+      else if (key === "peakRetainedEntries") counters[key] = Math.max(counters[key] ?? 0, value)
+      else counters[key] = (counters[key] ?? 0) + value
+    }
+    return counters
   }
 
   private updateProgress(): void {
@@ -183,6 +197,9 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       phase: this.state.phase,
       candidateAttemptCount: this.result.candidateAttemptCount + liveCalls,
       pathSearchNodeCount: this.result.pathSearchNodeCount + liveNodes,
+      aggregateWorkCount: this.consumedAggregateWork + (negotiation?.workBudget.counters.aggregateWork ?? 0),
+      ...this.getIncrementalWorkCounters(),
+      allowedAggregateWorkCount: allowance.maxPathSearchNodes,
       allowedRegionCount: allowance.maxRegions,
       allowedCandidateAttemptCount: allowance.maxCandidateAttempts,
       allowedPathSearchNodeCount: allowance.maxPathSearchNodes,
@@ -367,7 +384,8 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     if (
       this.result.attemptedRegionCount >= allowance.maxRegions ||
       this.result.candidateAttemptCount >= allowance.maxCandidateAttempts ||
-      this.result.pathSearchNodeCount >= allowance.maxPathSearchNodes
+      this.result.pathSearchNodeCount >= allowance.maxPathSearchNodes ||
+      this.consumedAggregateWork >= allowance.maxPathSearchNodes
     ) {
       this.state = { phase: "publish-partial", context }
       return
@@ -506,7 +524,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
       viaHoleDiameter: this.params.viaHoleDiameter,
-    })
+    }, allowance.maxPathSearchNodes - this.consumedAggregateWork)
     this.state = {
       phase: "negotiate",
       negotiation: { context, allowance, maxPathSearchCalls, region },
@@ -521,6 +539,17 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
     const repair = state.solver.getOutput()
     const { context, allowance, maxPathSearchCalls } = state.negotiation
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
+    if (!Number.isSafeInteger(repair.aggregateWork) || repair.aggregateWork < 0 ||
+      repair.aggregateWork + this.consumedAggregateWork > this.budget.maxPathSearchNodes) {
+      throw new Error("Pipeline9 incremental repair exceeded its aggregate work budget")
+    }
+    this.consumedAggregateWork += repair.aggregateWork
+    for (const [key, value] of Object.entries(state.solver.workBudget.counters)) {
+      if (key === "retainedNodeCount" || key === "retainedRejectionCount") continue
+      this.incrementalCounters[key] = key === "peakRetainedEntries"
+        ? Math.max(this.incrementalCounters[key] ?? 0, value)
+        : (this.incrementalCounters[key] ?? 0) + value
+    }
     if (
       this.budget.revisitChangedRegions &&
       repair.unresolvedSpanCount > 0 &&

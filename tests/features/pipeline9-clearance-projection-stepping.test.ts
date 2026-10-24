@@ -1,4 +1,4 @@
-import { CollectiveClearanceSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/CollectiveClearanceSolver"
+import { RelaxTraceClearanceSolver } from "@tscircuit/repair04"
 import { expect, spyOn, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { Pipeline9ClearanceProjectionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
@@ -16,18 +16,18 @@ test("clearance projection advances its relaxation child once per step and prese
   fixture.originalSrj.obstacles[0]!.center.y = 0.28
   fixture.originalSrj.obstacles[1]!.center.y = 0.28
   const original = structuredClone(fixture.routes)
-  const originalStep = CollectiveClearanceSolver.prototype.step
+  const originalStep = RelaxTraceClearanceSolver.prototype.step
   let childSteps = 0
   let referenceChecks = 0
   const stepsSpy = spyOn(
-    CollectiveClearanceSolver.prototype,
+    RelaxTraceClearanceSolver.prototype,
     "step",
-  ).mockImplementation(function (this: CollectiveClearanceSolver): void {
+  ).mockImplementation(function (this: RelaxTraceClearanceSolver): void {
     childSteps++
     originalStep.call(this)
   })
   const solveSpy = spyOn(
-    CollectiveClearanceSolver.prototype,
+    RelaxTraceClearanceSolver.prototype,
     "solve",
   ).mockImplementation((): never => {
     throw new Error("Projection must advance the child with step")
@@ -48,7 +48,7 @@ test("clearance projection advances its relaxation child once per step and prese
     expect(solver.solved).toBe(false)
     expect(referenceChecks).toBe(1)
     expect(childSteps).toBe(0)
-    expect(solver.activeSubSolver).toBeInstanceOf(CollectiveClearanceSolver)
+    expect(solver.activeSubSolver).toBeInstanceOf(RelaxTraceClearanceSolver)
     while (!solver.solved && !solver.failed) {
       const stepsBefore = childSteps
       const progressBefore = solver.progress
