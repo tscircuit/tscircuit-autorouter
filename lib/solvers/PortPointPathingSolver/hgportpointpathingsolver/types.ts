@@ -101,7 +101,6 @@ export interface HgPortPointPathingSolverParams {
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
-    USE_HIERARCHICAL_PORT_POTENTIAL?: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean

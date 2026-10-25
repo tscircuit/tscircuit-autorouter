@@ -35,7 +35,6 @@ import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
-import { createHierarchicalPortController } from "./installHierarchicalPortPotential"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -916,16 +915,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
-  readonly hierarchyController: ReturnType<typeof createHierarchicalPortController>
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
-    useHierarchicalPortPotential = false,
-    hierarchyController?: ReturnType<typeof createHierarchicalPortController>,
   ) {
     super(inputProblem)
-    this.hierarchyController = hierarchyController ?? createHierarchicalPortController()
     this.useSelectiveReripRouting = useSelectiveReripRouting
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
@@ -944,20 +939,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       }
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
-    }
-    if (useHierarchicalPortPotential) {
-      const solveGraphStep = this.pipelineDef.find((step) => step.solverName === "solveGraph")
-      if (!solveGraphStep) throw new Error("Missing solve graph hierarchy installation point")
-      const controller = this.hierarchyController
-      const Parent = useSelectiveReripRouting
-        ? SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
-        : TinyHyperGraphSolver
-      solveGraphStep.solverClass = class HierarchicalSolveGraph extends Parent {
-        constructor(...args: ConstructorParameters<typeof TinyHyperGraphSolver>) {
-          super(...args)
-          controller.install(this)
-        }
-      }
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1048,7 +1029,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
-  private readonly hierarchyController?: ReturnType<typeof createHierarchicalPortController>
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1074,7 +1054,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
-    if (params.flags.USE_HIERARCHICAL_PORT_POTENTIAL) this.hierarchyController = createHierarchicalPortController()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1158,8 +1137,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-        params.flags.USE_HIERARCHICAL_PORT_POTENTIAL === true,
-        this.hierarchyController,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1398,7 +1375,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getStageStats().solveGraph
 
     return {
-      hierarchy: this.tinyPipelineSolver.hierarchyController.diagnostics,
       routeCount: solveGraphSolver.problem.routeCount,
       traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
@@ -1470,8 +1446,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-            this.params.flags.USE_HIERARCHICAL_PORT_POTENTIAL === true,
-            this.hierarchyController,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

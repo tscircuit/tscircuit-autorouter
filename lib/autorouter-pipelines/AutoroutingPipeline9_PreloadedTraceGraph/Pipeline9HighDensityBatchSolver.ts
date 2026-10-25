@@ -15,14 +15,17 @@ export type Pipeline9HighDensityBatchInput = Omit<
   maxIterations: number
 }
 
-export type Pipeline9HighDensityBatchOutput = {
+export type Pipeline9HighDensityNodeOutput = {
   routes: HighDensityIntraNodeRoute[]
   stats: Record<string, number>
+  benchmarkDiagnosticCounters: Record<string, number>
   iterations: number
   consumedNodeCount: number
   solved: boolean
   error: string | null
 }
+
+export type Pipeline9HighDensityBatchOutput = Pipeline9HighDensityNodeOutput[]
 
 /** Evaluate an independent serial batch; the parent owns ordered outcome acceptance. */
 export class Pipeline9HighDensityBatchSolver extends BaseSolver {
@@ -39,22 +42,27 @@ export class Pipeline9HighDensityBatchSolver extends BaseSolver {
         "Parallel high-density batches cannot mutate preloaded copper",
       )
     }
-    const solver = new Pipeline9HighDensitySolver({
-      ...this.input,
-      connMap: new ConnectivityMap(this.input.connectivityNetMap),
-    })
-    solver.MAX_ITERATIONS = this.input.maxIterations
-    solver.solve()
-    // Algorithmic failure is an evaluated outcome, consumed in serial node order.
-    // Infrastructure/implementation exceptions still reject runtime execution.
-    this.output = {
-      routes: solver.routes,
-      stats: solver.stats,
-      iterations: solver.iterations,
-      consumedNodeCount:
-        this.input.nodePortPoints.length - solver.unsolvedNodePortPoints.length,
-      solved: solver.solved,
-      error: solver.error,
+    const connMap = new ConnectivityMap(this.input.connectivityNetMap)
+    this.output = []
+    for (const node of this.input.nodePortPoints) {
+      const solver = new Pipeline9HighDensitySolver({
+        ...this.input,
+        nodePortPoints: [node],
+        connMap,
+      })
+      solver.MAX_ITERATIONS = this.input.maxIterations
+      solver.solve()
+      // Every node has an independent outcome. In particular, a failed node
+      // must not skip another node that precedes it in the parent's order.
+      this.output.push({
+        routes: solver.routes,
+        stats: solver.stats,
+        benchmarkDiagnosticCounters: solver.benchmarkDiagnosticCounters,
+        iterations: solver.iterations,
+        consumedNodeCount: 1 - solver.unsolvedNodePortPoints.length,
+        solved: solver.solved,
+        error: solver.error,
+      })
     }
     this.solved = true
   }
