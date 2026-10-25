@@ -97,3 +97,9 @@ When asked to update snapshots, run
 `BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999`. If only specific tests are
 failing because of a change, update only those failing tests. Do not spend time
 updating every test.
+
+## PR benchmark and visual evidence
+
+Every PR needs an inspected native visual snapshot and paired benchmark-effect
+analysis on identical inputs and budgets. Report completion, DRC, input/output
+hashes, timings and memory before merge, including reproductions and stacked fixes.
