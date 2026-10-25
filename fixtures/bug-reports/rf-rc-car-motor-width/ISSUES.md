@@ -10,7 +10,7 @@ clearance. Motor current passes through the narrowed sections.
 [`rf-rc-car-motor-width.srj.json`](rf-rc-car-motor-width.srj.json) is the unchanged
 phase-0 router input captured from the original receiver design: a 74 × 52 mm,
 two-layer board with all 15 connections and 63 obstacles. Nothing was cropped or
-removed. [`receiver.source.tsx`](receiver.source.tsx) preserves the original
+removed. [`receiver.source.tsx.txt`](receiver.source.tsx.txt) preserves the original
 design specification; the SRJ test and debugger do not compile or depend on it.
 
 Run `bun test tests/bugs/rf-rc-car-motor-width.test.ts --timeout 9999999`, or open

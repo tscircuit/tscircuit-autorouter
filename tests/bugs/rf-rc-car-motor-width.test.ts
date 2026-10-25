@@ -70,10 +70,7 @@ test("RF RC car full board reproduces narrowed left-motor routes", async () => {
         previous.width < 1 - 1e-6 &&
         point.width < 1 - 1e-6
       ) {
-        narrowedLength += Math.hypot(
-          point.x - previous.x,
-          point.y - previous.y,
-        )
+        narrowedLength += Math.hypot(point.x - previous.x, point.y - previous.y)
       }
     }
     if (minimumWidth < 1) expect(narrowedLength).toBeGreaterThan(10)
