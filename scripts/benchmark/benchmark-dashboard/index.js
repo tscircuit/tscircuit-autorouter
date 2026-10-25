@@ -1465,8 +1465,7 @@ async function initializeControls() {
   const datasets = uniqueSorted(
     dashboardData.points.map((point) => point.datasetName),
   )
-  const preferredDataset =
-    initialHash.get("dataset") ?? latestPoint?.datasetName ?? null
+  const preferredDataset = initialHash.get("dataset") ?? "srj18"
   setSelectOptions(datasetSelect, datasets, preferredDataset)
   await rebuildSeriesControls(
     initialHash.get("solver") ?? latestPoint?.solverName ?? null,
@@ -1759,6 +1758,10 @@ async function initializeDashboard() {
   ) {
     throw new Error("Benchmark dashboard index is invalid")
   }
+  dashboardData.points = dashboardData.points.filter(
+    (point) =>
+      point.solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+  )
   for (const run of dashboardData.runs) {
     if (!run || typeof run.runId !== "string" || typeof run.path !== "string") {
       throw new Error("Benchmark dashboard index contains an invalid run")
