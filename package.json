@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1002",
+  "version": "0.0.1010",
   "type": "module",
   "repository": {
     "type": "git",
@@ -62,9 +62,10 @@
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#6a85c3ac7cc90f593b177790a988df8b26ece1e7",
     "@tscircuit/math-utils": "^0.0.36",
+    "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/4273e9455084b7b35ebc860ebe4483b9d19692ea",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/88504e8908a3f2e35ad9805162757ef94357d717",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#054d77a1a9a200478736062e1abe4fdb8dc163df",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -99,7 +100,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#e5e1d34f6df3f9b364dc420b17ec5c97cd487fa0",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#a1d4d22e73900a6522cac4cfc8b7d50d39fbbb56",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -111,15 +112,14 @@
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#27b3392c38ed4474b0557c73640b261155e28c27",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/1981ac8d3547772cb4b0267f26c7a0c2fd4dea09",
     "high-density-repair03": "https://codeload.github.com/tscircuit/high-density-repair03/tar.gz/550e7644ef2c4dfda12559fdd4445e15ec0c2709",
-    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#44005d6b9dde7d93a3d3a4815b4e7c8c52b59d34",
+    "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#10cdce5ad507adfaaec8ac32ea905ab02ffefa8a",
     "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#c6812cebd44b09f29f2fee929837b313b822f2ae",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#0acce21dc32a279788f88d884618630c82405590"
   },
   "dependencies": {
     "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1",
-    "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123"
+    "stack-svgs": "^0.0.1"
   }
 }
