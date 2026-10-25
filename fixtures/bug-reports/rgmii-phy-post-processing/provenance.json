@@ -1,0 +1,13 @@
+{
+  "files_sha256": {
+    "outputs/rgmii-phy/index.circuit.tsx": "695ba09dfb1afad358244826503eba75e451e145139409dc4f68380f6827faea",
+    "outputs/rgmii-phy/components.tsx": "d61b2718f7d3af8fc20c23f7af6d63c2dca28ad11490fe588bffab3b3b1abf9f",
+    "outputs/rgmii-phy/power.tsx": "89c4c7a123d30a554f571e9b4b7b0414ecb15c12eb0edf2b4b9d01313ad4f354",
+    "outputs/rgmii-phy/evidence/full-routing-attempt/input.simple-route.json": "4c56abc76fe52c532a1d9eca9eb72f679e20a4562f9359a19e02231245b73388",
+    "outputs/rgmii-phy/dist/index/circuit.json": "f5c86e8754a18daeccb858130e0ef14762c8ed82a3f7d5c00dd118d96e10f51b"
+  },
+  "matching_named_physical_obstacles": 226,
+  "matching_connection_points": 196,
+  "mismatches": [],
+  "source_correspondence": "All authored component IDs and placements are preserved in dist/index/circuit.json. All 226 named physical SRJ obstacle centers/SMT sizes and all SRJ PCB port connection coordinates match the placed circuit JSON exactly. Thermal experiment metadata logs in dist/autorouter-debug were overwritten; do not use them as provenance."
+}

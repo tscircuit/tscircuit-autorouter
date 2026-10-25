@@ -1,0 +1,27 @@
+{
+  "name": "rgmii-phy-companion",
+  "version": "0.1.0",
+  "description": "DP83867IRPAP RGMII companion board engineering prototype",
+  "main": "index.circuit.tsx",
+  "keywords": [
+    "tscircuit",
+    "circuit",
+    "pcb",
+    "electronics"
+  ],
+  "scripts": {
+    "dev": "tsci dev",
+    "build": "tsci build --disable-parts-engine --autorouter-timeout 300s",
+    "snapshot": "tsci snapshot",
+    "snapshot:update": "tsci snapshot --update",
+    "start": "tsci dev",
+    "typecheck": "tsc --noEmit",
+    "preview": "tsci build --routing-disabled --disable-parts-engine --pcb-png --schematic-png --svgs"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "tscircuit": "0.0.3016",
+    "typescript": "5.9.3"
+  },
+  "private": true
+}
