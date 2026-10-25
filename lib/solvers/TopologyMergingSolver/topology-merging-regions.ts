@@ -1,4 +1,5 @@
 import type { Bounds } from "@tscircuit/math-utils"
+import type { CapacityMeshNode } from "lib/types"
 import type {
   PreparedTopologyMergingNode,
   TopologyMergingLayerTopology,
@@ -7,6 +8,23 @@ import type {
   TopologyMergingRegion,
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
+
+const GLOBAL_FREE_GEOMETRY_KEYS = new Set([
+  "capacityMeshNodeId", "center", "width", "height", "layer", "availableZ",
+])
+const EMPTY_GLOBAL_FREE_ROLE_KEYS = new Set([
+  "_containsObstacle", "_containsTarget", "_completelyInsideObstacle",
+  "_isComponentTopologyNode", "_isNarrowQfpPadGap",
+])
+
+function isPlainGlobalFreeNode(node: CapacityMeshNode): boolean {
+  if (![node.center.x, node.center.y, node.width, node.height].every(Number.isFinite) || node.width <= 0 || node.height <= 0) return false
+  // Source partition ids do not restrict physical movement through free space.
+  // Domain metadata, including unknown roles, must retain its original topology.
+  return Object.entries(node).every(([key, value]) =>
+    GLOBAL_FREE_GEOMETRY_KEYS.has(key) || value === undefined || (EMPTY_GLOBAL_FREE_ROLE_KEYS.has(key) && value === false),
+  )
+}
 
 export function getCanonicalCoordinates(values: number[]): number[] {
   const sortedValues = [...values].sort((a, b) => a - b)
@@ -69,6 +87,23 @@ export function getLayerTopologiesForCoveredNodes({
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
 }): TopologyMergingLayerTopology[] {
+  const fullStack = Array.from({ length: layerCount }, (_, z) => z)
+  if (
+    coveringNodes.every(({ node, groupIndex }) =>
+      !nodeGroups[groupIndex]!.isComponent && isPlainGlobalFreeNode(node),
+    ) &&
+    fullStack.every((z) => coveringNodes.some(({ node }) => node.availableZ.includes(z)))
+  ) {
+    // Common refinement already proves this entire atomic rectangle is free
+    // on every layer. Keep its through-via access across per-layer partitions.
+    // Partial free stacks retain their original topology below.
+    return [{
+      availableZ: fullStack,
+      sourceKeys: [...new Set(coveringNodes.map(({ sourceKey }) => sourceKey))].sort(),
+      topologyMode: "passthrough",
+      topologySignature: "full-stack-global-free",
+    }]
+  }
   const layerTopologyBySignature = new Map<
     string,
     TopologyMergingLayerTopology
@@ -263,6 +298,10 @@ function mergeRegionRun(
     } else {
       previousRegion.bounds.maxY = region.bounds.maxY
     }
+    previousRegion.sourceKeys = [...new Set([
+      ...previousRegion.sourceKeys,
+      ...region.sourceKeys,
+    ])].sort()
   }
 
   return mergedRegions
