@@ -1,3 +1,4 @@
+import Flatbush from "flatbush"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
@@ -12,6 +13,7 @@ import {
   compactTopologyMergingRegions,
   doesBoundsContainPoint,
   getCanonicalCoordinates,
+  getHorizontalMergeBucketKey,
   getLayerTopologiesForCoveredNodes,
   restoreAuthoritativeTargetRegions,
 } from "./topology-merging-regions"
@@ -29,6 +31,7 @@ export type {
 
 export class TopologyMergingSolver extends BaseSolver {
   private readonly preparedNodes: PreparedTopologyMergingNode[]
+  private readonly nodeSpatialIndex: Flatbush | null
   private readonly preparedNodeBySourceKey: Map<
     string,
     PreparedTopologyMergingNode
@@ -40,6 +43,8 @@ export class TopologyMergingSolver extends BaseSolver {
   private readonly xCoordinates: number[]
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
+  private logicalAtomicRegionCount = 0
+  private previousSlabRegionsByKey = new Map<string, TopologyMergingRegion>()
   private currentXIndex = 0
 
   constructor(public readonly inputProblem: TopologyMergingSolverParams) {
@@ -50,6 +55,15 @@ export class TopologyMergingSolver extends BaseSolver {
       prepareTopologyMergingInput(inputProblem)
     this.preparedNodes = preparedNodes
     this.preparedNodeBySourceKey = preparedNodeBySourceKey
+    this.nodeSpatialIndex = inputProblem.nodeGroups.length > 1
+      ? new Flatbush(preparedNodes.length)
+      : null
+    if (this.nodeSpatialIndex) {
+      for (const { bounds } of preparedNodes) {
+        this.nodeSpatialIndex.add(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+      }
+      this.nodeSpatialIndex.finish()
+    }
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
@@ -76,7 +90,7 @@ export class TopologyMergingSolver extends BaseSolver {
       this.processCurrentXSlab()
       this.currentXIndex += 1
       this.stats.processedXSlabCount = this.currentXIndex
-      this.stats.atomicRegionCount = this.atomicRegions.length
+      this.stats.atomicRegionCount = this.logicalAtomicRegionCount
       return
     }
 
@@ -173,12 +187,19 @@ export class TopologyMergingSolver extends BaseSolver {
     const maxX = this.xCoordinates[this.currentXIndex + 1]!
     if (maxX - minX <= TOPOLOGY_MERGING_EPSILON) return
 
+    const slabRegionsByKey = new Map<string, TopologyMergingRegion>()
     const x = (minX + maxX) / 2
-    const nodesInXSlab = this.preparedNodes.filter(
-      ({ bounds }) =>
+    if (!this.nodeSpatialIndex) {
+      throw new Error("TopologyMergingSolver: multi-group merge requires its node index")
+    }
+    const nodesInXSlab = this.nodeSpatialIndex
+      .search(x - TOPOLOGY_MERGING_EPSILON, -Infinity, x + TOPOLOGY_MERGING_EPSILON, Infinity)
+      .sort((a, b) => a - b)
+      .map((index) => this.preparedNodes[index]!)
+      .filter(({ bounds }) =>
         x >= bounds.minX - TOPOLOGY_MERGING_EPSILON &&
         x <= bounds.maxX + TOPOLOGY_MERGING_EPSILON,
-    )
+      )
     const yCoordinates = getCanonicalCoordinates(
       nodesInXSlab.flatMap(({ bounds }) => [bounds.minY, bounds.maxY]),
     )
@@ -189,9 +210,16 @@ export class TopologyMergingSolver extends BaseSolver {
       if (maxY - minY <= TOPOLOGY_MERGING_EPSILON) continue
 
       const point = { x, y: (minY + maxY) / 2 }
-      const coveringNodes = nodesInXSlab.filter(({ bounds }) =>
-        doesBoundsContainPoint(bounds, point),
-      )
+      const coveringNodes = this.nodeSpatialIndex
+        .search(
+          point.x - TOPOLOGY_MERGING_EPSILON,
+          point.y - TOPOLOGY_MERGING_EPSILON,
+          point.x + TOPOLOGY_MERGING_EPSILON,
+          point.y + TOPOLOGY_MERGING_EPSILON,
+        )
+        .sort((a, b) => a - b)
+        .map((index) => this.preparedNodes[index]!)
+        .filter(({ bounds }) => doesBoundsContainPoint(bounds, point))
       if (coveringNodes.length === 0) continue
 
       const layerTopologies = getLayerTopologiesForCoveredNodes({
@@ -200,14 +228,28 @@ export class TopologyMergingSolver extends BaseSolver {
         layerCount: this.inputProblem.layerCount,
       })
       for (const layerTopology of layerTopologies) {
-        this.atomicRegions.push({
+        const region: TopologyMergingRegion = {
           bounds: { minX, maxX, minY, maxY },
           availableZ: layerTopology.availableZ,
           sourceKeys: layerTopology.sourceKeys,
           topologyMode: layerTopology.topologyMode,
           topologySignature: layerTopology.topologySignature,
-        })
+        }
+        const key = getHorizontalMergeBucketKey(region)
+        const previous = this.previousSlabRegionsByKey.get(key)
+        this.logicalAtomicRegionCount += 1
+        if (
+          previous &&
+          Math.abs(previous.bounds.maxX - minX) <= TOPOLOGY_MERGING_EPSILON
+        ) {
+          previous.bounds.maxX = maxX
+          slabRegionsByKey.set(key, previous)
+        } else {
+          this.atomicRegions.push(region)
+          slabRegionsByKey.set(key, region)
+        }
       }
     }
+    this.previousSlabRegionsByKey = slabRegionsByKey
   }
 }

@@ -190,7 +190,7 @@ function getRegionMergeKey(region: TopologyMergingRegion): string {
   })
 }
 
-function getHorizontalMergeBucketKey(region: TopologyMergingRegion): string {
+export function getHorizontalMergeBucketKey(region: TopologyMergingRegion): string {
   return JSON.stringify({
     mergeKey: getRegionMergeKey(region),
     minY: region.bounds.minY.toPrecision(15),
