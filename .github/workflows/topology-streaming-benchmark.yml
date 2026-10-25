@@ -110,3 +110,36 @@ jobs:
         with:
           name: topology-validation-comparison
           path: results/
+
+  partial_targets:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare partial target restoration on identical generated inputs
+        run: |
+          mkdir -p results
+          for count in 1 128; do
+            bun head/scripts/benchmarks/measure-partial-target-restoration.ts base results/base-$count.json $count
+            bun head/scripts/benchmarks/measure-partial-target-restoration.ts head results/head-$count.json $count
+          done
+          bun -e 'for(const count of [1,128]) {const b=await Bun.file(`results/base-${count}.json`).json(),h=await Bun.file(`results/head-${count}.json`).json(); if(!h.solved||h.failed||!h.inputUnchanged||h.inputSha256!==b.inputSha256||Math.abs(h.padArea-count*0.1575)>1e-8)throw Error("Target restoration geometry regression")}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: partial-target-restoration-comparison
+          path: results/

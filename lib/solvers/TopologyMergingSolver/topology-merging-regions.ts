@@ -136,6 +136,7 @@ export function restoreAuthoritativeTargetRegions({
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
+  const targetAreaBySourceKeyAndLayer = new Map<string, Map<number, number>>()
   for (const region of regions) {
     for (const sourceKey of region.sourceKeys) {
       const topologyModes =
@@ -143,14 +144,30 @@ export function restoreAuthoritativeTargetRegions({
         new Set<TopologyMergingMode>()
       topologyModes.add(region.topologyMode)
       topologyModesBySourceKey.set(sourceKey, topologyModes)
+      if (region.topologyMode === "target-passthrough") {
+        const areas = targetAreaBySourceKeyAndLayer.get(sourceKey) ?? new Map<number, number>()
+        const area = (region.bounds.maxX - region.bounds.minX) *
+          (region.bounds.maxY - region.bounds.minY)
+        for (const z of region.availableZ) areas.set(z, (areas.get(z) ?? 0) + area)
+        targetAreaBySourceKeyAndLayer.set(sourceKey, areas)
+      }
     }
   }
 
   const restorableSourceKeys = new Set(
     [...topologyModesBySourceKey.entries()]
       .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
+        ([sourceKey, topologyModes]) => {
+          if (topologyModes.size !== 1 || !topologyModes.has("target-passthrough")) return false
+          const preparedNode = preparedNodeBySourceKey.get(sourceKey)!
+          const { bounds, node } = preparedNode
+          const fullArea = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY)
+          const areas = targetAreaBySourceKeyAndLayer.get(sourceKey)!
+          // A target hidden by another authoritative anchor must stay clipped.
+          // Only floating-point summation error is allowed; do not fill real gaps.
+          const tolerance = Math.max(1, fullArea) * Number.EPSILON * 128
+          return node.availableZ.every(z => Math.abs((areas.get(z) ?? 0) - fullArea) <= tolerance)
+        },
       )
       .map(([sourceKey]) => sourceKey),
   )
