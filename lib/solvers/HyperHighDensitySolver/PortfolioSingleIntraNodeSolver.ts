@@ -13,6 +13,7 @@ import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNode
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
 import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntraNodeSolver"
+import { RouteColumnPool } from "../HighDensitySolver/RouteColumnPool"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -71,6 +72,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
+  routeColumnPool?: RouteColumnPool
+  private readonly routeColumnGridVersions = new WeakMap<BaseSolver, object[]>()
   private dynamicExpansionWorkBudget = 1
   private candidateWorkBySolver = new WeakMap<
     BaseSolver,
@@ -414,7 +417,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private refreshDynamicIterationLimit() {
-    this.totalCandidateWork = 0
+    this.totalCandidateWork = this.routeColumnPool?.workUnits ?? 0
     this.dynamicExpansionWorkBudget = 1
     const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) => {
@@ -459,6 +462,44 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
+    }
+    if (this.constructorParams.routeColumnRecombination &&
+      (this.constructorParams.priorityCoordinateScale ?? 1) === 1) {
+      // Transfer a bounded fraction of existing proposal allowances. The
+      // recombiner adds no work allowance to the established portfolio.
+      let reserved = 0
+      const reservations: { solver: BaseSolver; allowance: number }[] = []
+      for (const { solver } of this.supervisedSolvers ?? []) {
+        if (!(solver instanceof CachedIntraNodeRouteSolver ||
+          solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) ||
+          solver.solved || solver.failed) continue
+        const allowance = Math.min(50_000 - reserved,
+          Math.floor(Math.max(0, solver.MAX_ITERATIONS - solver.iterations) * 0.05))
+        solver.MAX_ITERATIONS -= allowance
+        reserved += allowance
+        reservations.push({ solver, allowance })
+      }
+      this.routeColumnPool = new RouteColumnPool({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        connMap: this.connMap,
+        obstacles: this.constructorParams.obstacles ?? [],
+        boardGeometry: this.constructorParams.boardGeometry,
+        layerCount: this.constructorParams.layerCount ?? 2,
+        traceWidth: this.constructorParams.traceWidth ?? 0.15,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
+        viaHoleDiameter: this.constructorParams.viaHoleDiameter,
+        minViaHoleEdgeToViaHoleEdgeClearance: this.constructorParams.minViaHoleEdgeToViaHoleEdgeClearance,
+        allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
+        workLimit: reserved,
+        diagnostics: this.constructorParams.priorityDiagnostics ?? this.stats,
+      })
+      let released = this.routeColumnPool.releaseUnspentIneligibleAllowance()
+      for (const { solver, allowance } of reservations) {
+        const refund = Math.min(released, allowance)
+        solver.MAX_ITERATIONS += refund
+        released -= refund
+      }
     }
     this.refreshDynamicIterationLimit()
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
@@ -517,7 +558,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
+    const previousColumnWork = this.routeColumnPool?.workUnits ?? 0
     super._step()
+    if (!this.solved && !this.failed && this.activeSubSolver) {
+      this.captureRouteColumns(this.activeSubSolver)
+      const combined = this.routeColumnPool?.solvedRoutes
+      if (combined) {
+        this.solvedRoutes = [...combined]
+        this.solved = true
+        this.stats.routeColumnRecombinationSolved = true
+      }
+    }
+    this.totalCandidateWork += (this.routeColumnPool?.workUnits ?? 0) - previousColumnWork
+    if (this.routeColumnPool) {
+      this.stats.routeColumnWorkUnits = this.routeColumnPool.workUnits
+      this.stats.routeColumnAllocatedWorkUnits = this.routeColumnPool.workLimit
+    }
 
     if (
       !this.negotiatedSearchStarted &&
@@ -529,6 +585,34 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
+    }
+  }
+
+  private captureRouteColumns(solver: BaseSolver): void {
+    const pool = this.routeColumnPool
+    if (!pool || !pool.payForDonorObservation(this.getNodeSegmentCount() + 1)) return
+    if (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) {
+      // Public compatibility getters expose donor-owned internal route objects;
+      // their identities change on rip-up/rerouting, even at the same count.
+      const map = solver.solvedConnectionsMap
+      const version: object[] = []
+      let conversionWork = this.getNodeSegmentCount()
+      for (const routes of map.values()) for (const route of routes) {
+        version.push(route)
+        const path = route as unknown as {
+          cells?: unknown[]; states?: ArrayLike<number>;
+          viaCells?: unknown[]; viaCellIds?: ArrayLike<number>
+        }
+        conversionWork += 1 + (path.cells?.length ?? path.states!.length) +
+          (path.viaCells?.length ?? path.viaCellIds!.length)
+      }
+      const previous = this.routeColumnGridVersions.get(solver)
+      if (previous && previous.length === version.length && previous.every((route, index) => route === version[index])) return
+      this.routeColumnGridVersions.set(solver, version)
+      pool.captureGridOutput(conversionWork, () => solver.getOutput(),
+        solver instanceof HighDensitySolverA01 ? "a01" : "a03", solver)
+    } else if (solver instanceof IntraNodeRouteSolver && !(solver instanceof PriorityDagIntraNodeSolver)) {
+      for (const route of solver.solvedRoutes) pool.offerRoute(route, "native", solver)
     }
   }
 
@@ -716,12 +800,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
-      return new PriorityDagIntraNodeSolver({
+      const solver = new PriorityDagIntraNodeSolver({
         ...this.constructorParams,
         hyperParameters,
         priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,
+        onRouteColumn: (route): void => {
+          this.routeColumnPool?.offerRoute(route, "priority", solver)
+        },
         precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
       })
+      return solver
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,

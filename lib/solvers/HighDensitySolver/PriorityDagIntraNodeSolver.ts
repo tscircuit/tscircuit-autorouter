@@ -25,6 +25,7 @@ type Params = ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
   allowBlindAndBuriedVias?: boolean
+  onRouteColumn?: (route: HighDensityIntraNodeRoute) => void
 }
 class PriorityWorkLimitReached extends Error {}
 
@@ -71,9 +72,11 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   } = { minX: 0, maxX: 0, minY: 0, maxY: 0 }
   private readonly allowedLayers: number[] = []
   private readonly regionId: string = ""
+  private readonly onRouteColumn?: (route: HighDensityIntraNodeRoute) => void
 
   constructor(params: Params) {
     super(params)
+    this.onRouteColumn = params.onRouteColumn
     this.aggregate = params.priorityDiagnostics
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
@@ -409,6 +412,9 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         return [i, witness]
       }),
     }
+    // A column is geometry only: its donor ancestor context is not reused.
+    // The portfolio master independently validates it before any recombination.
+    this.onRouteColumn?.(copy)
   }
 
   private pairConflict(left: number, right: number, state: State): boolean {
