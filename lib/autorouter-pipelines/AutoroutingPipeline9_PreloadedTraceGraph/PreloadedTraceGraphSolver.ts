@@ -1,3 +1,4 @@
+import Flatbush from "flatbush"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -256,8 +257,33 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
-    for (const primitive of this.primitives) {
+    // Board-world XY points in mm (+X right, +Y up). Query expanded bounds
+    // only prune impossible pairs; the exact original distance test is retained.
+    const boundarySpatialIndex = this.sharedEdgeSegments.length > 0
+      ? new Flatbush(this.sharedEdgeSegments.length)
+      : null
+    if (boundarySpatialIndex) {
       for (const segment of this.sharedEdgeSegments) {
+        boundarySpatialIndex.add(
+          Math.min(segment.start.x, segment.end.x),
+          Math.min(segment.start.y, segment.end.y),
+          Math.max(segment.start.x, segment.end.x),
+          Math.max(segment.start.y, segment.end.y),
+        )
+      }
+      boundarySpatialIndex.finish()
+    }
+    for (const primitive of this.primitives) {
+      const boundaryIndices = boundarySpatialIndex
+        ? boundarySpatialIndex.search(
+            Math.min(primitive.start.x, primitive.end.x) - GEOMETRIC_TOLERANCE,
+            Math.min(primitive.start.y, primitive.end.y) - GEOMETRIC_TOLERANCE,
+            Math.max(primitive.start.x, primitive.end.x) + GEOMETRIC_TOLERANCE,
+            Math.max(primitive.start.y, primitive.end.y) + GEOMETRIC_TOLERANCE,
+          ).sort((left, right) => left - right)
+        : []
+      for (const boundaryIndex of boundaryIndices) {
+        const segment = this.sharedEdgeSegments[boundaryIndex]!
         if (
           minimumDistanceBetweenSegments(
             primitive.start,

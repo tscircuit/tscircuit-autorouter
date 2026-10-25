@@ -1,0 +1,40 @@
+{
+  "baseRevision": "06498e918380c7fed6d5a6712cdaefbe6e5cbf88",
+  "headSourceSha256": "4832a14213346606da801283b22f6a08812efb072d72d2df1780912e25545807",
+  "base": {
+    "seconds": 188.213780337,
+    "solved": true,
+    "failed": false,
+    "stats": {
+      "preloadedTraceCount": 58,
+      "preloadedTraceShapeCount": 29725,
+      "inputBoundaryCount": 33500,
+      "outputBoundaryCount": 33500,
+      "inputPortCount": 70963,
+      "outputPortCount": 70963,
+      "preloadedPortCount": 1648,
+      "tracePortAssignmentCount": 1712,
+      "topologyChanged": false
+    },
+    "outputSha256": "972aac01ef37571ba7be42ec0db9c4abc817ab8f50430e0aeb6176e723acebde"
+  },
+  "head": {
+    "seconds": 0.563468508,
+    "solved": true,
+    "failed": false,
+    "stats": {
+      "preloadedTraceCount": 58,
+      "preloadedTraceShapeCount": 29725,
+      "inputBoundaryCount": 33500,
+      "outputBoundaryCount": 33500,
+      "inputPortCount": 70963,
+      "outputPortCount": 70963,
+      "preloadedPortCount": 1648,
+      "tracePortAssignmentCount": 1712,
+      "topologyChanged": false
+    },
+    "outputSha256": "972aac01ef37571ba7be42ec0db9c4abc817ab8f50430e0aeb6176e723acebde"
+  },
+  "identicalCompleteOutput": true,
+  "environment": "One sequential local comparison on4CPU/16GB with ongoingnativeboardjobs. Narrowstageeffect; no whole-board speedup claim."
+}

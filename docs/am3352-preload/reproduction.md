@@ -19,3 +19,22 @@ Fixture provenance and hashes are beside the compressed input. To render the suc
     bun scripts/benchmarks/render-am3352-reset-witness.ts
 
 The saved witness is generated diagnostic evidence. It is never loaded into the AM3352 board project as routed copper.
+
+## Indexed-stage result
+
+The spatial index queries primitive bounds expanded by the existing 1e-6 mm
+geometric tolerance. Candidates are sorted back to their original boundary order;
+the original exact-distance, layer, and closest-port checks still make every
+assignment. Empty boundary graphs remain valid.
+
+A local source-stage comparison measures **188.214 → 0.563 seconds**, with the
+complete 33,500-boundary / 70,963-port output byte-identical, including all 1,712
+assignments. The compiled package also completes the full pipeline through preload
+in 6.108 seconds with that identical output. Four focused tests pass, covering the
+real AM3352 output fingerprint, tolerance contacts, full-stack via layers, empty
+graphs, and existing port/topology behavior. No time bounds are asserted in tests.
+
+These results address preload latency. The subsequent B01 reset search still
+fails on 0.0.1006; the independently generated routing witness establishes a legal
+route, and the fresh AM3352 project uses a native handoff-aware support-net phase.
+Broader solve-rate and Blacksmith results must be reported before merge.
