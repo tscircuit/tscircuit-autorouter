@@ -22,6 +22,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private sortedFuturePointIndices?: number[]
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -57,6 +58,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheIndices.fill(-2)
       this.cachedFutureConnectionPoints = this.futureConnectionPoints
       this.cachedFutureConnectionPointCount = this.futureConnectionPoints.length
+      this.sortedFuturePointIndices = undefined
     }
     const pointKey = this.getNodeKey(node)
     const cacheSlot = Number.isSafeInteger(pointKey)
@@ -85,16 +87,24 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     let closestPointIndex = -1
     let pointIndex = 0
 
-    for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
-      if (dist < minDist) {
-        minDist = dist
-        closestPoint = point
-        closestPointIndex = pointIndex
+    if (this.futureConnectionPoints.length > 8) {
+      closestPointIndex = this.getIndexedClosestFutureConnectionPoint(
+        node,
+        viaPenaltyDistance,
+      )
+      closestPoint = this.futureConnectionPoints[closestPointIndex] ?? null
+    } else {
+      for (const point of this.futureConnectionPoints) {
+        const dist =
+          distance(node, point) +
+          (node.z !== point.z ? this.viaPenaltyDistance : 0)
+        if (dist < minDist) {
+          minDist = dist
+          closestPoint = point
+          closestPointIndex = pointIndex
+        }
+        pointIndex++
       }
-      pointIndex++
     }
 
     // A fixed workspace avoids retaining every explored coordinate in large
@@ -108,6 +118,74 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.closestFuturePointCacheIndices[cacheSlot] = closestPointIndex
     }
     return closestPoint
+  }
+
+  private getIndexedClosestFutureConnectionPoint(
+    node: Node,
+    viaPenaltyDistance: number,
+  ): number {
+    // Non-finite coordinates cannot produce a distance below Infinity in the
+    // original scan. The points stay immutable for this routing attempt.
+    if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) return -1
+    if (!this.sortedFuturePointIndices) {
+      const indices: number[] = []
+      for (let index = 0; index < this.futureConnectionPoints.length; index++) {
+        const point = this.futureConnectionPoints[index]!
+        if (Number.isFinite(point.x) && Number.isFinite(point.y)) {
+          indices.push(index)
+        }
+      }
+      indices.sort((left, right): number =>
+        this.futureConnectionPoints[left]!.x -
+        this.futureConnectionPoints[right]!.x,
+      )
+      this.sortedFuturePointIndices = indices
+    }
+    const indices = this.sortedFuturePointIndices
+    let low = 0
+    let high = indices.length
+    while (low < high) {
+      const middle = (low + high) >>> 1
+      if (this.futureConnectionPoints[indices[middle]!]!.x < node.x) {
+        low = middle + 1
+      } else {
+        high = middle
+      }
+    }
+    let left = low - 1
+    let right = low
+    let closestIndex = -1
+    let minimumDistance = Infinity
+    const minimumLayerPenalty = Math.min(0, viaPenaltyDistance)
+    let scanLeft = true
+    while (left >= 0 || right < indices.length) {
+      const useLeft: boolean =
+        left >= 0 && (right >= indices.length || scanLeft)
+      const position = useLeft ? left-- : right++
+      scanLeft = !useLeft
+      const index = indices[position]!
+      const point = this.futureConnectionPoints[index]!
+      const dx = node.x - point.x
+      // Squaring and square-rooting use the same arithmetic as distance().
+      // Strict comparison retains rounded-distance ties in original input order.
+      if (Math.sqrt(dx * dx) + minimumLayerPenalty > minimumDistance) {
+        if (position < low) left = -1
+        else right = indices.length
+        continue
+      }
+      const candidateDistance =
+        distance(node, point) + (node.z !== point.z ? viaPenaltyDistance : 0)
+      if (
+        candidateDistance < minimumDistance ||
+        (candidateDistance === minimumDistance &&
+          closestIndex >= 0 &&
+          index < closestIndex)
+      ) {
+        minimumDistance = candidateDistance
+        closestIndex = index
+      }
+    }
+    return closestIndex
   }
 
   getFutureConnectionSegments() {
