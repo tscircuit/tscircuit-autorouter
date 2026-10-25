@@ -33,6 +33,7 @@ type Field = {
 }
 
 class ReversePotentialWorkLimit extends Error {}
+class ReversePotentialBudgetLimit extends ReversePotentialWorkLimit {}
 
 /** Goal-rooted LPA values belong to immutable context generations, never a route. */
 export class ReverseCostToGoCache {
@@ -42,7 +43,7 @@ export class ReverseCostToGoCache {
   private retainedBytes = 0
   private peakRetainedBytes = 0
   private work = 0
-  private workCharger?: (workUnits: number) => void
+  private workCharger?: (workUnits: number) => boolean | void
 
   constructor(
     readonly diagnostics: Record<string, number>,
@@ -65,7 +66,8 @@ export class ReverseCostToGoCache {
     const nextWork = this.work + units
     const quanta = Math.ceil(Math.min(nextWork, this.maxWorkPerPrepare) / 64) - Math.ceil(this.work / 64)
     if (quanta > 0) {
-      this.workCharger?.(quanta)
+      if (this.workCharger?.(quanta) === false)
+        throw new ReversePotentialBudgetLimit("Reverse field parent allowance")
       this.diagnostics.reversePotentialChargedWorkUnits =
         (this.diagnostics.reversePotentialChargedWorkUnits ?? 0) + quanta
     }
@@ -173,7 +175,7 @@ export class ReverseCostToGoCache {
     }
   }
 
-  prepare(geometry: ReversePotentialGeometry, context: ReversePotentialContext, chargeWork?: (workUnits: number) => void): number | null {
+  prepare(geometry: ReversePotentialGeometry, context: ReversePotentialContext, chargeWork?: (workUnits: number) => boolean | void): number | null {
     this.diagnostics.reversePotentialContexts = (this.diagnostics.reversePotentialContexts ?? 0) + 1
     const count = geometry.columns * geometry.rows * geometry.layers.length
     if (!Number.isSafeInteger(geometry.columns) || geometry.columns <= 0 || !Number.isSafeInteger(geometry.rows) || geometry.rows <= 0 || !Number.isSafeInteger(count) || count <= 0 || count > 2048 || !Number.isFinite(geometry.planarStepCost) || !Number.isFinite(geometry.viaStepCost) || !(geometry.pitchX > 0) || !(geometry.pitchY > 0) || !Number.isFinite(geometry.pitchX) || !Number.isFinite(geometry.pitchY) || geometry.goals.length !== count || context.planarCosts.length !== count || context.viaCosts.length !== count || context.blocked.length !== count || !(geometry.planarStepCost > 0) || !(geometry.viaStepCost > 0))
@@ -243,7 +245,8 @@ export class ReverseCostToGoCache {
       }
     } catch (error) {
       if (!(error instanceof ReversePotentialWorkLimit)) throw error
-      this.diagnostics.reversePotentialWorkBypasses = (this.diagnostics.reversePotentialWorkBypasses ?? 0) + 1
+      const metric = error instanceof ReversePotentialBudgetLimit ? "reversePotentialBudgetBypasses" : "reversePotentialWorkBypasses"
+      this.diagnostics[metric] = (this.diagnostics[metric] ?? 0) + 1
       return null
     } finally {
       this.workCharger = undefined

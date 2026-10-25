@@ -269,10 +269,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
       reversePotentialCache: this.reversePotentialCache,
-      reversePotentialWorkCharge: (units): void => {
+      reversePotentialWorkCharge: (units): boolean => {
         if (!Number.isSafeInteger(units) || units < 0)
           throw new Error("Invalid native reverse potential work charge")
+        if (this.iterations + units > this.MAX_ITERATIONS) return false
         this.iterations += units
+        return true
       },
     }
   }

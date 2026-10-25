@@ -21,7 +21,7 @@ const rectangleDistance = (rectangle: Rectangle, point: Point, maximum: boolean)
  * Self-via history, preferred direction and owner costs are deliberately relaxed.
  * Every retained edge charges no more than its corresponding real transition.
  */
-export const prepareNativeReversePotential = (native: Native, cache: ReverseCostToGoCache, chargeWork?: (workUnits: number) => void): number | null => {
+export const prepareNativeReversePotential = (native: Native, cache: ReverseCostToGoCache, chargeWork?: (workUnits: number) => boolean | void): number | null => {
   const { bounds, cellStep, B, availableZ } = native
   const numericValues = [bounds.minX, bounds.minY, bounds.maxX, bounds.maxY,
     cellStep, B.x, B.y, B.z, native.viaDiameter, native.traceThickness,
@@ -60,7 +60,10 @@ export const prepareNativeReversePotential = (native: Native, cache: ReverseCost
   const count = columns * rows * availableZ.length
   const compileWork = count * perCellWork
   const compileWorkUnits = Math.ceil(compileWork / 64)
-  chargeWork?.(compileWorkUnits)
+  if (chargeWork?.(compileWorkUnits) === false) {
+    cache.diagnostics.reversePotentialBudgetBypasses = (cache.diagnostics.reversePotentialBudgetBypasses ?? 0) + 1
+    return null
+  }
   cache.diagnostics.reversePotentialCompileWork = (cache.diagnostics.reversePotentialCompileWork ?? 0) + compileWork
   cache.diagnostics.reversePotentialChargedWorkUnits = (cache.diagnostics.reversePotentialChargedWorkUnits ?? 0) + compileWorkUnits
   const goals = new Uint8Array(count)

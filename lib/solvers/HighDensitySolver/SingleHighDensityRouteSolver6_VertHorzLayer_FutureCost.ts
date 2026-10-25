@@ -25,7 +25,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
   private readonly reversePotentialCache?: ReverseCostToGoCache
-  private readonly reversePotentialWorkCharge?: (workUnits: number) => void
+  private readonly reversePotentialWorkCharge?: (workUnits: number) => boolean | void
   private reversePotentialGeneration: number | null | undefined
   private reversePotentialFuturePoints?: typeof this.futureConnectionPoints
 

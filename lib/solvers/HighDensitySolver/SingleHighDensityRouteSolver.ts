@@ -124,7 +124,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
     reversePotentialCache?: ReverseCostToGoCache
-    reversePotentialWorkCharge?: (workUnits: number) => void
+    reversePotentialWorkCharge?: (workUnits: number) => boolean | void
   }) {
     super()
     this.bounds = opts.bounds
