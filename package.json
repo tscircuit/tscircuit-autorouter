@@ -120,6 +120,7 @@
     "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/high-density-a13": "git+https://github.com/tscircuit/high-density-a01.git#968a892d98d5dd8149445f12a7dd5b97c12021d9"
   }
 }
