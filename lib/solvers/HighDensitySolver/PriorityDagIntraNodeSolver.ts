@@ -200,7 +200,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
 
   private record(name: string, count = 1): void {
     if (!this.detailedWorkDiagnosticsEnabled) return
-    this.priorityDiagnostics[name] = (this.priorityDiagnostics[name] ?? 0) + count
+    this.priorityDiagnostics[name] =
+      (this.priorityDiagnostics[name] ?? 0) + count
     if (this.aggregate) {
       this.aggregate[name] = (this.aggregate[name] ?? 0) + count
     }
@@ -233,8 +234,10 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       priorityUnknownCandidates: Number(!solved),
       priorityCompletedWorkUnits: this.iterations,
     })) {
-      this.priorityDiagnostics[key] = (this.priorityDiagnostics[key] ?? 0) + value
-      if (this.aggregate) this.aggregate[key] = (this.aggregate[key] ?? 0) + value
+      this.priorityDiagnostics[key] =
+        (this.priorityDiagnostics[key] ?? 0) + value
+      if (this.aggregate)
+        this.aggregate[key] = (this.aggregate[key] ?? 0) + value
     }
   }
 

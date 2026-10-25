@@ -85,7 +85,8 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
       const nodeIndex = Number(
         input.nodePortPoints[index]!.capacityMeshNodeId.slice("node-".length),
       )
-      result.benchmarkDiagnosticCounters.priorityLedgerTestMarker = nodeIndex + 1
+      result.benchmarkDiagnosticCounters.priorityLedgerTestMarker =
+        nodeIndex + 1
       executedLedgers.push(result.benchmarkDiagnosticCounters)
       for (const [key, value] of Object.entries(
         result.benchmarkDiagnosticCounters,
@@ -103,14 +104,18 @@ test("worker node ledgers count execution once beyond an accepted serial prefix"
   for (const [key, value] of Object.entries(expectedLedger)) {
     expect(solver.benchmarkDiagnosticCounters[key]).toBe(value)
   }
-  expect(solver.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched).toBe(
-    16,
+  expect(
+    solver.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched,
+  ).toBe(16)
+  expect(
+    solver.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted,
+  ).toBe(16)
+  expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched).toBe(
+    40,
   )
-  expect(solver.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted).toBe(
-    16,
+  expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted).toBe(
+    40,
   )
-  expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched).toBe(40)
-  expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted).toBe(40)
   expect(solver.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted).toBe(3)
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(false)
