@@ -331,6 +331,7 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
+  eventSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -339,6 +340,7 @@ export type Pipeline9RegularNodeSolverParams = {
  * Creates the regular high-density configuration. The priority policy is
  * explicit and requires the caller's full drill context. Projected
  * network requests leave it disabled; owned local routing supplies that context.
+ * Event search follows that context gate unless explicitly overridden.
  */
 export const createPipeline9RegularNodeSolver = ({
   nodeWithPortPoints,
@@ -350,6 +352,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
+  eventSearch = priorityDagSearch,
   traceWidth,
   obstacleMargin,
   effort,
@@ -373,6 +376,7 @@ export const createPipeline9RegularNodeSolver = ({
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     enableNegotiatedSearch: true,
+    eventSearch,
     gridSearchSegmentWork: 500,
     gridSearchWorkScale: layerCount > 2 ? 0.25 : 1,
     rejectOverlappingTerminals: layerCount > 2,
@@ -684,6 +688,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      eventSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

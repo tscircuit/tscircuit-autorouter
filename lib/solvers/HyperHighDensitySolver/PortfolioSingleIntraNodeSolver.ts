@@ -30,6 +30,7 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
+import { HighDensitySolverA13EventTiles } from "./HighDensitySolverA13EventTiles"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
@@ -624,10 +625,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         1,
         Math.round(50_000_000 * this.effort),
       )
-      const solver = new HighDensitySolverA13WithDrcValidation({
+      const Solver = this.constructorParams.eventSearch
+        ? HighDensitySolverA13EventTiles
+        : HighDensitySolverA13WithDrcValidation
+      const solver = new Solver({
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
         connMap: this.connMap,
+        eventDiagnostics: this.constructorParams.priorityDiagnostics,
         layerCount: this.constructorParams.layerCount ?? 2,
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
