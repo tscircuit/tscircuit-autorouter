@@ -367,6 +367,7 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
       seed.trust /= 2
     } else {
       this.count("contactNonstationaryProposals", Number(!result.stationary))
+      this.count("contactWorkCappedProposals", Number(result.stopReason === "work-cap"))
       for (let index = 0; index < seed.vertices.length; index++) {
         const vertex = seed.vertices[index]!
         vertex.point.x += result.displacement[vertex.variable]!

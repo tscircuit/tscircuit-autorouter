@@ -8,15 +8,23 @@ export type ContactHalfspace = {
 }
 
 export type ContactHalfspaceResult =
-  | { status: "projected"; displacement: Float64Array; maximumSlack: number; stationary: boolean }
+  | {
+      status: "projected"
+      displacement: Float64Array
+      maximumSlack: number
+      stationary: boolean
+      stopReason: "stationary" | "sweep-cap" | "work-cap"
+    }
   | { status: "unknown"; reason: "work-cap" | "hard-residual" }
 
 /**
  * Hildreth dual coordinate minimization for
  *   min .5 ||d||² + .5 penalty ||s||², A d <= b + s, s >= 0.
  * Only contact rows have slack. A checked hard-row witness is required before
- * exporting coordinates. Sweep-capped proposals retain explicit slack and a
- * stationarity flag; exhausted work is unknown, never UNSAT.
+ * exporting coordinates. Bounded proposals retain explicit slack and a
+ * stationarity flag. Runtime hard rows are boxes, whose exact projection is
+ * checked before export. Arbitrary hard rows still require a verified witness;
+ * insufficient witness allowance remains unknown, never UNSAT.
  */
 export class ContactHalfspaceSolver extends BaseSolver {
   readonly displacement: Float64Array
@@ -27,6 +35,7 @@ export class ContactHalfspaceSolver extends BaseSolver {
   sweeps = 0
   private row = 0
   private maximumChange = 0
+  private proposalWork = 0
   private result?: ContactHalfspaceResult
 
   constructor(
@@ -46,8 +55,10 @@ export class ContactHalfspaceSolver extends BaseSolver {
     this.displacement = new Float64Array(variableCount)
     this.dual = new Float64Array(rows.length)
     this.norms = new Float64Array(rows.length)
+    this.proposalWork = 4 * variableCount
     for (let index = 0; index < rows.length; index++) {
       const row = rows[index]!
+      this.proposalWork += 3 + row.terms.length
       if (!this.reserve(1 + row.terms.length)) {
         this.solved = true
         return
@@ -65,6 +76,14 @@ export class ContactHalfspaceSolver extends BaseSolver {
       }
       if (!Number.isFinite(this.norms[index])) throw new Error("Contact normal overflow")
     }
+    // Keep this allowance unavailable to dual updates. It pays the coordinate
+    // copy, box-bound extraction/projection and every final row check even if
+    // the update chunk reaches its work cap halfway through a sweep.
+    if (!Number.isSafeInteger(this.proposalWork) || this.work + this.proposalWork > this.workCap) {
+      this.result = { status: "unknown", reason: "work-cap" }
+      this.solved = true
+      return
+    }
     this.MAX_ITERATIONS = Math.ceil(workCap / 512) + 2
   }
 
@@ -77,14 +96,38 @@ export class ContactHalfspaceSolver extends BaseSolver {
     return true
   }
 
-  private finishProjection(stationary: boolean): void {
+  private finishProjection(stopReason: "stationary" | "sweep-cap" | "work-cap"): void {
+    if (!this.reserve(this.proposalWork)) return
+    const candidate = this.displacement.slice()
+    const lower = new Float64Array(this.variableCount).fill(-Infinity)
+    const upper = new Float64Array(this.variableCount).fill(Infinity)
+    let boxRows = true
+    for (const row of this.rows) {
+      if (row.soft || row.terms.length === 0) continue
+      if (row.terms.length !== 1) {
+        boxRows = false
+        break
+      }
+      const { variable, coefficient } = row.terms[0]!
+      if (coefficient > 0) upper[variable] = Math.min(upper[variable]!, row.maximum / coefficient)
+      else if (coefficient < 0) lower[variable] = Math.max(lower[variable]!, row.maximum / coefficient)
+    }
+    let stationary = stopReason === "stationary"
+    if (boxRows) for (let variable = 0; variable < candidate.length; variable++) {
+      if (lower[variable]! > upper[variable]!) {
+        this.result = { status: "unknown", reason: "hard-residual" }
+        return
+      }
+      const projected = Math.max(lower[variable]!, Math.min(upper[variable]!, candidate[variable]!))
+      if (projected !== candidate[variable]) stationary = false
+      candidate[variable] = projected
+    }
     let maximumSlack = 0
     for (let index = 0; index < this.rows.length; index++) {
       const row = this.rows[index]!
-      if (!this.reserve(1 + row.terms.length)) return
       let residual = -row.maximum
       for (const term of row.terms)
-        residual += term.coefficient * this.displacement[term.variable]!
+        residual += term.coefficient * candidate[term.variable]!
       if (!Number.isFinite(residual)) throw new Error("Nonfinite contact QP witness")
       if (!row.soft && residual > 1e-8) {
         this.result = { status: "unknown", reason: "hard-residual" }
@@ -92,7 +135,7 @@ export class ContactHalfspaceSolver extends BaseSolver {
       }
       if (row.soft) maximumSlack = Math.max(maximumSlack, residual)
     }
-    this.result = { status: "projected", displacement: this.displacement, maximumSlack, stationary }
+    this.result = { status: "projected", displacement: candidate, maximumSlack, stationary, stopReason }
   }
 
   override _step(): void {
@@ -101,14 +144,14 @@ export class ContactHalfspaceSolver extends BaseSolver {
       if (this.row === this.rows.length) {
         this.sweeps++
         if (this.maximumChange < 1e-9 || this.rows.length === 0) {
-          this.finishProjection(true)
+          this.finishProjection("stationary")
           break
         }
         if (this.sweeps >= this.sweepCap) {
           // A bounded QP iterate need not be stationary to be a useful proposal.
           // Export it only after checking every hard row; contact slack remains
           // explicit and the caller still validates actual whole geometry.
-          this.finishProjection(false)
+          this.finishProjection("sweep-cap")
           break
         }
         this.row = 0
@@ -116,7 +159,12 @@ export class ContactHalfspaceSolver extends BaseSolver {
       }
       const index = this.row
       const row = this.rows[index]!
-      if (!this.reserve(1 + row.terms.length * 2)) break
+      const updateWork = 1 + row.terms.length * 2
+      if (this.work + updateWork + this.proposalWork > this.workCap) {
+        this.finishProjection("work-cap")
+        break
+      }
+      if (!this.reserve(updateWork)) throw new Error("Reserved contact QP update exceeded its allowance")
       this.row++
       let residual = -row.maximum
       for (const term of row.terms)

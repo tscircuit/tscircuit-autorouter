@@ -21,7 +21,7 @@
     "perQpSweeps": 64,
     "perSeedRounds": 20,
     "workAccounting": "New geometry collection, normal/row assembly, QP preprocessing/updates/witness checks and final validation consume one shared cap. The external physical checker receives a conservative quadratic primitive reservation. The inherited discrete seed setup remains unchanged, including its existing min(2000, factorial(connectionCount)) bound; contactInheritedSeedSetups and contactRetainedSeeds expose this separately.",
-    "qpSweepCap": "A nonstationary bounded QP proposal is exported only with a checked hard-row witness and explicit remaining slack. It never constitutes route acceptance or an infeasibility proof."
+    "qpSweepCap": "A nonstationary bounded QP proposal is exported only with a checked hard-row witness and explicit remaining slack. Copy, exact box projection and all witness checks are reserved before dual updates. At the unchanged round work cap, runtime axis-aligned hard boxes can supply an exactly projected witness; arbitrary hard rows must still pass their actual inequalities or return UNKNOWN. A QP proposal never constitutes route acceptance or an infeasibility proof."
   },
   "usefulWorkCounters": [
     "contactModelPreparations", "contactVisitedSeeds", "contactQpRounds", "contactActivePairs", "contactGeneratedRows",
@@ -29,7 +29,7 @@
   ],
   "outcomeCounters": [
     "contactInstances", "contactWorkUnits", "contactWorkLimited", "contactUnknownQps", "contactUnknownSeeds",
-    "contactPhysicalRejections", "contactSeedExhaustions", "contactCertifiedDistantPairs", "contactNonstationaryProposals"
+    "contactPhysicalRejections", "contactSeedExhaustions", "contactCertifiedDistantPairs", "contactNonstationaryProposals", "contactWorkCappedProposals"
   ],
   "limitations": [
     "The continuous backend cannot create missing vias or change layer topology/homotopy. Exhaustion is explicit unknown, never UNSAT, and does not invoke the old force backend.",
