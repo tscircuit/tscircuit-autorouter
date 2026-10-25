@@ -67,6 +67,7 @@ test("ordinary local Pipeline9 propagates event search through grow/shrink and a
   expect(eventCandidate.stats.boardDrcIssueCount).toBe(0)
   expect(eventCandidate.stats.eventSearchKernelInstalled).toBe(1)
   expect(pipeline.benchmarkDiagnosticCounters.eventSearchQueries).toBeGreaterThan(0)
+  expect(pipeline.benchmarkDiagnosticCounters.eventSearchAcceptedQueries).toBeGreaterThan(0)
   expect(pipeline.benchmarkDiagnosticCounters.eventSearchCompressedQueries).toBeGreaterThan(0)
   expect(pipeline.benchmarkDiagnosticCounters.eventSearchEventStates).toBeLessThan(pipeline.benchmarkDiagnosticCounters.eventSearchDenseStates!)
   expect(pipeline.benchmarkDiagnosticCounters.eventSearchMacroTransitions).toBeGreaterThan(0)

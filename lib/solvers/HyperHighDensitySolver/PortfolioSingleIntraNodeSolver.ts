@@ -31,6 +31,7 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { HighDensitySolverA13EventTiles } from "./HighDensitySolverA13EventTiles"
+import { getEventTileSearchPolicy } from "./eventTileSearchPolicy"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
@@ -625,9 +626,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         1,
         Math.round(50_000_000 * this.effort),
       )
-      const Solver = this.constructorParams.eventSearch
-        ? HighDensitySolverA13EventTiles
-        : HighDensitySolverA13WithDrcValidation
       const solverParams: ConstructorParameters<typeof HighDensitySolverA13EventTiles>[0] = {
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
@@ -647,6 +645,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         maxRounds: Math.max(1, Math.round(200 * this.effort)),
         hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
       }
+      const policy = getEventTileSearchPolicy({ ...solverParams,
+        cellSizeMm: 0.1, traceThickness: solverParams.traceThickness!,
+        traceMargin: solverParams.traceMargin!, maxSearchIterations })
+      const useEvents = this.constructorParams.eventSearch && policy.eligible
+      if (this.constructorParams.eventSearch && !policy.eligible) {
+        const diagnostics = this.constructorParams.priorityDiagnostics
+        const key = `eventSearchNative${policy.reason[0]!.toUpperCase()}${policy.reason.slice(1)}Candidates`
+        if (diagnostics) diagnostics[key] = (diagnostics[key] ?? 0) + 1
+      }
+      const Solver = useEvents ? HighDensitySolverA13EventTiles : HighDensitySolverA13WithDrcValidation
       const solver = new Solver(solverParams)
       solver.MAX_ITERATIONS = maxSearchIterations * 2
       return solver as any

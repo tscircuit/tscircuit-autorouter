@@ -42,6 +42,10 @@ export type EventTileSearchDiagnostics = {
   macroTransitions: number
   reconstructedGridEdges: number
   workUnits: number
+  declinedQueries: number
+  acceptedQueries: number
+  acceptedDenseStates: number
+  acceptedEventStates: number
 }
 
 type SearchResult = { status: number; expansions: number }
@@ -55,6 +59,7 @@ type SearchPhase =
   | "solved"
   | "unreachable"
   | "budget"
+  | "declined"
 
 /**
  * Retain both ends of every field-change boundary on every layer, and terminal
@@ -80,6 +85,10 @@ export class EventTileSearchKernel {
     macroTransitions: 0,
     reconstructedGridEdges: 0,
     workUnits: 0,
+    declinedQueries: 0,
+    acceptedQueries: 0,
+    acceptedDenseStates: 0,
+    acceptedEventStates: 0,
   }
   private readonly plane: number
   private readonly states: number
@@ -118,6 +127,7 @@ export class EventTileSearchKernel {
     private readonly layerCount: number,
     private readonly pitchX: number,
     private readonly pitchY: number,
+    private readonly maximumEventStateRatio = 1,
   ) {
     for (const count of [columnCount, rowCount, layerCount]) {
       if (!Number.isSafeInteger(count) || count < 1)
@@ -125,6 +135,8 @@ export class EventTileSearchKernel {
     }
     if (![pitchX, pitchY].every((pitch) => Number.isFinite(pitch) && pitch > 0))
       throw new Error("Event search pitches must be positive and finite")
+    if (!Number.isFinite(maximumEventStateRatio) || maximumEventStateRatio <= 0 || maximumEventStateRatio > 1)
+      throw new Error("Event search compression threshold must be in (0, 1]")
     this.plane = columnCount * rowCount
     this.states = this.plane * layerCount
     if (!Number.isSafeInteger(this.states) || this.states > 2_000_000)
@@ -255,11 +267,22 @@ export class EventTileSearchKernel {
     if (this.cursor === this.columnCount + this.rowCount) {
       this.macroPlane = this.columns.length * this.rows.length
       this.macroStates = this.macroPlane * this.layerCount
+      this.diagnostics.eventStates += this.macroStates
+      if (this.macroStates < this.states) this.diagnostics.compressedQueries++
+      // Status 4 is an explicit pre-search eligibility result. The instance
+      // dispatcher may select the original kernel after charging this profile;
+      // no macro path, partial failure or unexpected exception is recovered.
+      if (this.macroStates / this.states > this.maximumEventStateRatio) {
+        this.diagnostics.declinedQueries++
+        this.phase = "declined"
+        return
+      }
+      this.diagnostics.acceptedQueries++
+      this.diagnostics.acceptedDenseStates += this.states
+      this.diagnostics.acceptedEventStates += this.macroStates
       this.distance = new Float64Array(this.macroStates)
       this.parent = new Int32Array(this.macroStates)
       this.versions = new Uint32Array(this.macroStates)
-      this.diagnostics.eventStates += this.macroStates
-      if (this.macroStates < this.states) this.diagnostics.compressedQueries++
       this.phase = "initialize"
       this.cursor = 0
     }
@@ -433,6 +456,7 @@ export class EventTileSearchKernel {
     while (work < steps) {
       if (this.phase === "solved") return { status: 1, expansions: work }
       if (this.phase === "unreachable") return { status: 2, expansions: work }
+      if (this.phase === "declined") return { status: 4, expansions: work }
       if (this.phase === "budget" || work >= budget) {
         this.phase = "budget"
         return { status: 3, expansions: work }
@@ -447,7 +471,7 @@ export class EventTileSearchKernel {
       this.diagnostics.workUnits++
     }
     return {
-      status: this.phase === "solved" ? 1 : this.phase === "unreachable" ? 2 : 0,
+      status: this.phase === "solved" ? 1 : this.phase === "unreachable" ? 2 : this.phase === "declined" ? 4 : 0,
       expansions: work,
     }
   }
