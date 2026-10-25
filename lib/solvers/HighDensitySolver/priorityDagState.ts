@@ -1,13 +1,26 @@
-export type PriorityDagState<T> = { ancestors: Set<number>[]; witnesses: Array<T | undefined> }
+export type PriorityDagState<T> = {
+  ancestors: Set<number>[]
+  witnesses: Array<T | undefined>
+}
 
-/** Transitive closure represents priorities, not a claimed routing UNSAT proof.
+/**
+ * Transitive closure represents priorities, not a claimed routing UNSAT proof.
  * Changing a priority invalidates every new descendant, even geometrically
  * distant tasks: both its copper scene and canonical future list change.
  */
-export function extendPriorityDag<T>(state: PriorityDagState<T>, higher: number, lower: number,
-  charge: (name: string, count?: number) => void): PriorityDagState<T> | null {
+export function extendPriorityDag<T>(
+  state: PriorityDagState<T>,
+  higher: number,
+  lower: number,
+  charge: (name: string, count?: number) => void,
+): PriorityDagState<T> | null {
   charge("priorityBranchProposals")
-  if (higher === lower || state.ancestors[higher].has(lower) || state.ancestors[lower].has(higher)) return null
+  if (
+    higher === lower ||
+    state.ancestors[higher].has(lower) ||
+    state.ancestors[lower].has(higher)
+  )
+    return null
   const ancestors = state.ancestors.map((set) => {
     charge("priorityClosureCopies", set.size + 1)
     return new Set(set)

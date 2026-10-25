@@ -70,7 +70,12 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
-  readonly priorityDagOptions: { priorityDagSearch: boolean; viaHoleDiameter?: number; minViaHoleEdgeToViaHoleEdgeClearance?: number; allowBlindAndBuriedVias?: boolean }
+  readonly priorityDagOptions: {
+    priorityDagSearch: boolean
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
+  }
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -111,7 +116,11 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    priorityDagSearch = false, priorityDiagnostics, viaHoleDiameter, minViaHoleEdgeToViaHoleEdgeClearance, allowBlindAndBuriedVias,
+    priorityDagSearch = false,
+    priorityDiagnostics,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
+    allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -171,7 +180,12 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
-    this.priorityDagOptions = { priorityDagSearch, viaHoleDiameter, minViaHoleEdgeToViaHoleEdgeClearance, allowBlindAndBuriedVias }
+    this.priorityDagOptions = {
+      priorityDagSearch,
+      viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias,
+    }
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *

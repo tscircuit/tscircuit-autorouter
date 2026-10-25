@@ -926,6 +926,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ) {
       this.solved = true
       this.setSolvedPath(currentNode)
+      return
     }
 
     const neighbors = this.getNeighbors(currentNode)

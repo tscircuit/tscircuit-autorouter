@@ -16,8 +16,12 @@ test("lean priority routing has identical work policy while detailed instrumenta
     expect(lean.solvedRoutes).toEqual(detailed.solvedRoutes)
     expect(lean.iterations).toBe(detailed.iterations)
     expect(lean.priorityDiagnostics.priorityNativeSteps).toBeUndefined()
-    expect(lean.priorityDiagnostics.priorityCompletedWorkUnits).toBe(lean.iterations)
+    expect(lean.priorityDiagnostics.priorityCompletedWorkUnits).toBe(
+      lean.iterations,
+    )
     expect(lean.priorityDiagnostics.prioritySolvedCandidates).toBe(1)
     expect(detailed.priorityDiagnostics.priorityNativeSteps).toBeGreaterThan(0)
-  } finally { Priority.detailedWorkDiagnostics = previous }
+  } finally {
+    Priority.detailedWorkDiagnostics = previous
+  }
 })

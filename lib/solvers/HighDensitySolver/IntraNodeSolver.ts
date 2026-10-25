@@ -222,7 +222,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
-  }): ConstructorParameters<typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>[0] {
+  }): ConstructorParameters<
+    typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
+  >[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
     return {
       connectionName,
