@@ -12,6 +12,7 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import type { ReverseCostToGoCache } from "./ReverseCostToGoCache"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
   precomputeIntraNodeRouteParams,
@@ -76,6 +77,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  readonly reversePotentialCache?: ReverseCostToGoCache
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -108,6 +110,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
+    reversePotentialCache?: ReverseCostToGoCache
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -125,6 +128,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.reversePotentialCache = params.reversePotentialCache
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -264,6 +268,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      reversePotentialCache: this.reversePotentialCache,
+      reversePotentialWorkCharge: (units): void => {
+        if (!Number.isSafeInteger(units) || units < 0)
+          throw new Error("Invalid native reverse potential work charge")
+        this.iterations += units
+      },
     }
   }
 

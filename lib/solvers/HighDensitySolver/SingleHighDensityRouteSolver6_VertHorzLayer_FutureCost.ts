@@ -1,6 +1,8 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import type { ReverseCostToGoCache } from "./ReverseCostToGoCache"
+import { prepareNativeReversePotential } from "./prepareNativeReversePotential"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
@@ -22,6 +24,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private readonly reversePotentialCache?: ReverseCostToGoCache
+  private readonly reversePotentialWorkCharge?: (workUnits: number) => void
+  private reversePotentialGeneration: number | null | undefined
+  private reversePotentialFuturePoints?: typeof this.futureConnectionPoints
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -46,6 +52,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    this.reversePotentialCache = opts.reversePotentialCache
+    this.reversePotentialWorkCharge = opts.reversePotentialWorkCharge
+    if (this.reversePotentialCache) {
+      // The oracle's ancestor/future snapshot belongs to this one native query.
+      this.futureConnectionPoints = this.futureConnectionPoints.map((point) => Object.freeze({ ...point }))
+      Object.freeze(this.futureConnectionPoints)
+      this.reversePotentialFuturePoints = this.futureConnectionPoints
+    }
   }
 
   getClosestFutureConnectionPoint(node: Node) {
@@ -256,6 +270,20 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
+  prepareReversePotential(): void {
+    if (!this.reversePotentialCache) return
+    if (this.futureConnectionPoints !== this.reversePotentialFuturePoints)
+      throw new Error("Native reverse potential future context changed during search")
+    if (this.reversePotentialGeneration === undefined)
+      this.reversePotentialGeneration = prepareNativeReversePotential(this, this.reversePotentialCache, this.reversePotentialWorkCharge)
+  }
+
+  getReverseCostToGo(node: Node): number {
+    this.prepareReversePotential()
+    if (!this.reversePotentialCache || this.reversePotentialGeneration == null) return 0
+    return this.reversePotentialCache.estimate(this.reversePotentialGeneration, node)
+  }
+
   override setNodeCosts(node: Node) {
     const dx = Math.abs(node.x - node.parent!.x)
     const dy = Math.abs(node.y - node.parent!.y)
@@ -282,7 +310,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
 
     node.g = baseG + futureConnectionPenalty
-    node.h = baseH + futureConnectionPenalty
+    const reverseCost = this.getReverseCostToGo(node)
+    node.h = Math.max(baseH + futureConnectionPenalty, reverseCost)
+    if (reverseCost > baseH + futureConnectionPenalty && this.reversePotentialCache)
+      this.reversePotentialCache.diagnostics.reversePotentialStrengthenedQueries =
+        (this.reversePotentialCache.diagnostics.reversePotentialStrengthenedQueries ?? 0) + 1
     node.f = this.computeF(node.g, node.h)
   }
 }

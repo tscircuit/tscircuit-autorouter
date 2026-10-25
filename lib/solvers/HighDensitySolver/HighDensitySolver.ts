@@ -1,3 +1,4 @@
+import type { ReverseCostToGoCache } from "./ReverseCostToGoCache"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -72,6 +73,7 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
+    reversePotentialCache?: ReverseCostToGoCache
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -118,6 +120,7 @@ export class HighDensitySolver extends BaseSolver {
     captureSearchDebug,
     priorityDagSearch = false,
     priorityDiagnostics,
+    reversePotentialCache,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
@@ -146,6 +149,7 @@ export class HighDensitySolver extends BaseSolver {
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
+    reversePotentialCache?: ReverseCostToGoCache
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -182,6 +186,7 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
+      reversePotentialCache,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,
