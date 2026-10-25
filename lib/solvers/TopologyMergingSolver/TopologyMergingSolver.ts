@@ -98,6 +98,8 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    // Completed output and visualization no longer need the sweep cells.
+    this.atomicRegions.length = 0
     this.solved = true
   }
 
