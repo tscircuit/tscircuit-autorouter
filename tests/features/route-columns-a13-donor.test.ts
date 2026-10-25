@@ -39,12 +39,12 @@ class NegotiatedDonorPortfolio extends PortfolioSingleIntraNodeSolver {
   override getCombinationDefs(): string[][] {
     return [["donor"]]
   }
-  override generateSolver(hyperParameters: { HIGH_DENSITY_A13: boolean }): BoundedNegotiatedDonor | OtherCommodityDonor {
+  override generateSolver(hyperParameters: { HIGH_DENSITY_A13: boolean }): ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]> {
     if (hyperParameters.HIGH_DENSITY_A13) return new BoundedNegotiatedDonor({
       nodeWithPortPoints: this.node, layerCount: 2, obstacles: [],
       traceThickness: 0.1, viaDiameter: 0.3, traceMargin: 0.1,
       cellSizeMm: 0.1, stepMultiplier: 1,
-    })
+    }) as unknown as ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]>
     return new OtherCommodityDonor(this.node, this.other)
   }
 }
