@@ -108,18 +108,30 @@ test("indexed future points preserve exact scan winners across ties, scales, lay
     ),
   )
   for (const tiedPoints of [
-    [{ x: 1 + Number.EPSILON, y: 0, z: 1 }, { x: 1, y: 0, z: 1 }],
-    [{ x: -1, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
-    [{ x: 1e-170, y: 0, z: 0 }, { x: -1e-170, y: 0, z: 0 }],
+    [
+      { x: 1 + Number.EPSILON, y: 0, z: 1 },
+      { x: 1, y: 0, z: 1 },
+    ],
+    [
+      { x: -1, y: 0, z: 0 },
+      { x: 1, y: 0, z: 0 },
+    ],
+    [
+      { x: 1e-170, y: 0, z: 0 },
+      { x: -1e-170, y: 0, z: 0 },
+    ],
   ]) {
     const origin = { ...query, x: 0, y: 0, z: 0 }
     solver.futureConnectionPoints = [
       ...tiedPoints,
-      ...Array.from({ length: 10 }, (_, index): Point => ({
-        x: 100 + index,
-        y: 100,
-        z: 1,
-      })),
+      ...Array.from(
+        { length: 10 },
+        (_, index): Point => ({
+          x: 100 + index,
+          y: 100,
+          z: 1,
+        }),
+      ),
     ]
     Object.defineProperty(solver, "viaPenaltyDistance", {
       configurable: true,

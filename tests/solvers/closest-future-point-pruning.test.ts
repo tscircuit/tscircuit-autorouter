@@ -7,14 +7,17 @@ type Point = { x: number; y: number; z: number }
 
 test("nearest future-point queries stop reading distant points after indexing", (): void => {
   let coordinateReads = 0
-  const points = Array.from({ length: 512 }, (_, index): Point => ({
-    get x(): number {
-      coordinateReads++
-      return index - 256
-    },
-    y: 0,
-    z: 0,
-  }))
+  const points = Array.from(
+    { length: 512 },
+    (_, index): Point => ({
+      get x(): number {
+        coordinateReads++
+        return index - 256
+      },
+      y: 0,
+      z: 0,
+    }),
+  )
   for (const point of points) Object.freeze(point)
   const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
     connectionName: "current",

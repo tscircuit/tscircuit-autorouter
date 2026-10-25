@@ -135,9 +135,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
           indices.push(index)
         }
       }
-      indices.sort((left, right): number =>
-        this.futureConnectionPoints[left]!.x -
-        this.futureConnectionPoints[right]!.x,
+      indices.sort(
+        (left, right): number =>
+          this.futureConnectionPoints[left]!.x -
+          this.futureConnectionPoints[right]!.x,
       )
       this.sortedFuturePointIndices = indices
     }
