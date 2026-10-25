@@ -587,7 +587,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private captureRouteColumns(solver: BaseSolver): void {
     const pool = this.routeColumnPool
     if (!pool || !pool.payForDonorObservation(this.getNodeSegmentCount() + 1)) return
-    if (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) {
+    if (solver instanceof HighDensitySolverA13WithDrcValidation) {
+      if (!pool.payForDonorObservation(this.getNodeSegmentCount() * 5)) return
+      const version = solver.getUnprojectedRouteColumns()
+      const previous = this.routeColumnGridVersions.get(solver)
+      if (previous && previous.length === version.length && previous.every((route, index) => route === version[index])) return
+      this.routeColumnGridVersions.set(solver, version)
+      const conversionWork = version.reduce((sum, route) => sum + route.route.length + route.vias.length + 5, 1)
+      pool.captureGridOutput(conversionWork, (): HighDensityIntraNodeRoute[] => solver.getOutput(), "a13", solver)
+    } else if (solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) {
       // Public compatibility getters expose donor-owned internal route objects;
       // their identities change on rip-up/rerouting, even at the same count.
       const map = solver.solvedConnectionsMap
