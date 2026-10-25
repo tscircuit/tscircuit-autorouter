@@ -5,12 +5,13 @@ import {
   getLayerRange,
   getObstacleAvailableZ,
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
+import { getObstacleTargetConnectionName } from "lib/solvers/BgaTopologyGeneratorSolver/getObstacleTargetConnectionName"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -31,6 +32,7 @@ type QfpThermalPadRoutingRegion = {
   isNarrowPadGap?: boolean
   obstacleZ?: number[]
   connectedTo?: string[]
+  targetConnectionName?: string
 }
 
 export interface QfpThermalPadTopologyGeneratorSolverParams
@@ -150,6 +152,7 @@ function createMeshNodesForRegion({
   isNarrowPadGap = false,
   obstacleZ = [],
   connectedTo,
+  targetConnectionName,
 }: {
   nodeId: string
   bounds: Bounds
@@ -159,6 +162,7 @@ function createMeshNodesForRegion({
   isNarrowPadGap?: boolean
   obstacleZ?: number[]
   connectedTo?: string[]
+  targetConnectionName?: string
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -198,26 +202,40 @@ function createMeshNodesForRegion({
     _isNarrowQfpPadGap: isNarrowPadGap,
     _containsObstacle: group.containsObstacle,
     _connectedTo: group.containsObstacle ? connectedTo : undefined,
+    ...(group.containsObstacle && targetConnectionName
+      ? {
+          _containsTarget: true,
+          _targetConnectionName: targetConnectionName,
+        }
+      : {}),
   }))
 }
 
-function getPadRegions(obstacles: Obstacle[], layerCount: number) {
+function getPadRegions(
+  obstacles: Obstacle[],
+  srj: SimpleRouteJson,
+): QfpThermalPadRoutingRegion[] {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    obstacleZ: getObstacleAvailableZ(obstacle, srj.layerCount),
     connectedTo: [...obstacle.connectedTo],
+    targetConnectionName: getObstacleTargetConnectionName({ obstacle, srj }),
   }))
 }
 
-function getThermalPadRegions(obstacles: Obstacle[], layerCount: number) {
+function getThermalPadRegions(
+  obstacles: Obstacle[],
+  srj: SimpleRouteJson,
+): QfpThermalPadRoutingRegion[] {
   return obstacles.map((obstacle, index) => ({
     key: `thermal-pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    obstacleZ: getObstacleAvailableZ(obstacle, srj.layerCount),
     connectedTo: [...obstacle.connectedTo],
+    targetConnectionName: getObstacleTargetConnectionName({ obstacle, srj }),
   }))
 }
 
@@ -784,8 +802,8 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
     const narrowPadGapThreshold =
       this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
     const regions: QfpThermalPadRoutingRegion[] = [
-      ...getPadRegions(padRingObstacles, layerCount),
-      ...getThermalPadRegions(thermalPadObstacles, layerCount),
+      ...getPadRegions(padRingObstacles, this.inputProblem.inputSrj),
+      ...getThermalPadRegions(thermalPadObstacles, this.inputProblem.inputSrj),
       ...createOuterGapRegionsForSide({
         side: "top",
         sideObstacles: sideGroups.top,
@@ -855,6 +873,7 @@ export class QfpThermalPadTopologyGeneratorSolver extends BaseSolver {
         isNarrowPadGap: region.isNarrowPadGap,
         obstacleZ: region.obstacleZ,
         connectedTo: region.connectedTo,
+        targetConnectionName: region.targetConnectionName,
       }),
     )
 
