@@ -36,6 +36,8 @@ export type Pipeline9BoundedRepairBudget = {
   maxCandidateAttemptsPerRegion?: number
   pathGridSizeScale?: number
   pathHeuristicWeight?: number
+  /** Custom budgets retain single-direction search unless explicitly selected. */
+  searchDirectionCount?: 1 | 2
   revisitChangedRegions?: boolean
   regionSizes?: readonly number[]
 }
@@ -68,6 +70,7 @@ export const getPipeline9BoundedRepairBudget = (
     maxPathSearchNodesPerCall: 1_000_000,
     pathGridSizeScale: 2,
     pathHeuristicWeight: 3,
+    searchDirectionCount: 2,
     revisitChangedRegions: true,
     regionSizes: [16, 32],
   }

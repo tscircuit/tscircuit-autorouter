@@ -45,6 +45,8 @@ export type Pipeline9HighDensitySolverParams = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
@@ -317,6 +319,8 @@ export type Pipeline9RegularNodeSolverParams = {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -325,19 +329,27 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  allowBlindAndBuriedVias?: boolean
+  priorityDagSearch?: boolean
+  priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
 
 /**
- * Creates the ordinary high-density solver used by Pipeline9. The networked
- * helper calls the same factory with its projected JSON input so the local and
- * remote algorithm configuration cannot drift.
+ * Creates the regular high-density configuration. The priority policy is
+ * explicit and requires the caller's full drill context. Projected
+ * network requests leave it disabled; owned local routing supplies that context.
  */
 export const createPipeline9RegularNodeSolver = ({
   nodeWithPortPoints,
   connMap,
   colorMap,
   viaDiameter,
+  viaHoleDiameter,
+  minViaHoleEdgeToViaHoleEdgeClearance,
+  allowBlindAndBuriedVias,
+  priorityDiagnostics,
+  priorityDagSearch = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -345,8 +357,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
-  lazyPhysicalDiagnostics,
-}: Pipeline9RegularNodeSolverParams & { lazyPhysicalDiagnostics?: Record<string, number> }): HighDensitySolver =>
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
@@ -369,8 +380,11 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
-    lazyPhysicalEvaluation: true,
-    lazyPhysicalDiagnostics,
+    priorityDagSearch,
+    priorityDiagnostics,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
+    allowBlindAndBuriedVias,
   })
 
 /**
@@ -494,31 +508,81 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.asyncRunning = true
       const nodes = [...this.unsolvedNodePortPoints].reverse()
       const { connMap, nodePortPoints: _, ...params } = this.params
-      const pending = []
-      for (let offset = 0; offset < nodes.length; offset += 4) {
-        pending.push(
-          runtime
-            .executeAsync(Pipeline9HighDensityBatchSolver, {
-              ...params,
-              nodePortPoints: nodes.slice(offset, offset + 4).reverse(),
-              connectivityNetMap: connMap.netMap,
-              maxIterations: this.MAX_ITERATIONS,
-            })
-            .then(
-              (result) => {
-                // Account every completed worker once, even if its output later
-                // crosses the serial clock or follows a failed earlier batch.
-                for (const [key, value] of Object.entries(result.benchmarkDiagnosticCounters)) {
-                  this.benchmarkDiagnosticCounters[key] = (this.benchmarkDiagnosticCounters[key] ?? 0) + value
-                }
-                this.benchmarkDiagnosticCounters.lazyWorkerBatchesCompleted = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesCompleted ?? 0) + 1
-                return { type: "result" as const, result }
-              },
-              (error: unknown) => ({ type: "error" as const, error }),
-            ),
+      // Keep the expensive board context to a bounded number of messages.
+      // Assign crowded nodes first so a difficult node does not start only
+      // after hundreds of inexpensive nodes have passed through the pool.
+      const batches = Array.from(
+        { length: Math.min(16, nodes.length) },
+        () => ({
+          work: 0,
+          nodes: [] as { node: NodeWithPortPoints; index: number }[],
+        }),
+      )
+      const plannedNodes = nodes
+        .map((node, index) => ({ node, index }))
+        .sort((a, b) => b.node.portPoints.length - a.node.portPoints.length)
+      for (const entry of plannedNodes) {
+        const batch = batches.reduce((best, candidate) =>
+          candidate.work < best.work ? candidate : best,
         )
+        batch.nodes.push(entry)
+        batch.work += Math.max(1, entry.node.portPoints.length) ** 3
       }
-      this.benchmarkDiagnosticCounters.lazyWorkerBatchesDispatched = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesDispatched ?? 0) + pending.length
+      const pending = []
+      for (const batch of batches) {
+        const nodePfById = new Map(
+          batch.nodes.map(({ node }) => [
+            node.capacityMeshNodeId,
+            this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+          ]),
+        )
+        const promise = runtime
+          .executeAsync(Pipeline9HighDensityBatchSolver, {
+            ...params,
+            nodePortPoints: batch.nodes.map(({ node }) => node),
+            nodePfById,
+            connectivityNetMap: connMap.netMap,
+            maxIterations: this.MAX_ITERATIONS,
+          })
+          .then(
+            (results) => {
+              // Each batch promise owns execution telemetry exactly once,
+              // including completed nodes outside the accepted serial prefix.
+              for (const result of results) {
+                for (const [key, value] of Object.entries(
+                  result.benchmarkDiagnosticCounters,
+                )) {
+                  this.benchmarkDiagnosticCounters[key] =
+                    (this.benchmarkDiagnosticCounters[key] ?? 0) + value
+                }
+              }
+              this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted =
+                (this.benchmarkDiagnosticCounters
+                  .priorityWorkerBatchesCompleted ?? 0) + 1
+              this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted =
+                (this.benchmarkDiagnosticCounters
+                  .priorityWorkerNodesCompleted ?? 0) + results.length
+              return { type: "result" as const, results }
+            },
+            (error: unknown) => ({ type: "error" as const, error }),
+          )
+        for (const [batchIndex, { index }] of batch.nodes.entries()) {
+          pending[index] = promise.then((outcome) =>
+            outcome.type === "error"
+              ? outcome
+              : {
+                  type: "result" as const,
+                  result: outcome.results[batchIndex]!,
+                },
+          )
+        }
+      }
+      this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched =
+        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ??
+          0) + batches.length
+      this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched =
+        (this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched ?? 0) +
+        nodes.length
       for (const promise of pending) {
         const outcome = await promise
         if (outcome.type === "error") throw outcome.error
@@ -533,7 +597,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this.solveUntilIteration(stopAtIteration)
           return
         }
-        this.benchmarkDiagnosticCounters.lazyWorkerBatchesAccepted = (this.benchmarkDiagnosticCounters.lazyWorkerBatchesAccepted ?? 0) + 1
+        this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted =
+          (this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted ?? 0) +
+          1
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {
@@ -612,7 +678,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       layerCount: this.layerCount,
-      lazyPhysicalDiagnostics: this.benchmarkDiagnosticCounters,
+      viaHoleDiameter: this.params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance:
+        this.params.minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
+      priorityDiagnostics: this.benchmarkDiagnosticCounters,
+      priorityDagSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

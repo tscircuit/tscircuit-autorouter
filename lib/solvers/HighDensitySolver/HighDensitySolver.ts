@@ -69,8 +69,13 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
-  readonly lazyPhysicalEvaluation: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
+  readonly priorityDagOptions: {
+    priorityDagSearch: boolean
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
+  }
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -111,8 +116,11 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    lazyPhysicalEvaluation = false,
-    lazyPhysicalDiagnostics,
+    priorityDagSearch = false,
+    priorityDiagnostics,
+    viaHoleDiameter,
+    minViaHoleEdgeToViaHoleEdgeClearance,
+    allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -136,8 +144,11 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
-    lazyPhysicalEvaluation?: boolean
-    lazyPhysicalDiagnostics?: Record<string, number>
+    priorityDagSearch?: boolean
+    priorityDiagnostics?: Record<string, number>
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -168,8 +179,13 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.lazyPhysicalEvaluation = lazyPhysicalEvaluation
-    this.benchmarkDiagnosticCounters = lazyPhysicalDiagnostics ?? {}
+    this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
+    this.priorityDagOptions = {
+      priorityDagSearch,
+      viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance,
+      allowBlindAndBuriedVias,
+    }
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -262,6 +278,9 @@ export class HighDensitySolver extends BaseSolver {
   private getIntraNodeStrategyName(
     hyperParameters: Record<string, any> | undefined,
   ): string {
+    if (hyperParameters?.PRIORITY_DAG_FAMILY_SIZE) {
+      return "PriorityDagIntraNodeSolver"
+    }
     if (hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
       return "MultiHeadPolyLineIntraNodeSolver3"
     }
@@ -402,9 +421,9 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      ...this.priorityDagOptions,
+      priorityDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
-      lazyPhysicalEvaluation: this.lazyPhysicalEvaluation,
-      lazyPhysicalDiagnostics: this.benchmarkDiagnosticCounters,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
