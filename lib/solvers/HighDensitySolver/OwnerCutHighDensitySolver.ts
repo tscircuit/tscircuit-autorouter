@@ -415,6 +415,7 @@ export class OwnerCutHighDensitySolver extends BaseSolver {
   override getConstructorParams(): [OwnerCutHighDensitySolverProps] {
     return [
       {
+        ...this.ownerCutParams,
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: this.cellSizeMm,
         viaDiameter: this.viaDiameter,
@@ -428,7 +429,6 @@ export class OwnerCutHighDensitySolver extends BaseSolver {
         effort: this.effort,
         hyperParameters: this.hyperParameters,
         initialPenaltyFn: this.initialPenaltyFn,
-        ...this.ownerCutParams,
       },
     ]
   }
