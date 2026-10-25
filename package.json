@@ -100,7 +100,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#a1d4d22e73900a6522cac4cfc8b7d50d39fbbb56",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#62613f601b4895cf9888358fbb9cce4675b6a197",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",
@@ -120,7 +120,6 @@
     "@tscircuit/solver-utils": "^0.0.23",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#62613f601b4895cf9888358fbb9cce4675b6a197"
+    "stack-svgs": "^0.0.1"
   }
 }
