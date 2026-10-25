@@ -97,3 +97,11 @@ When asked to update snapshots, run
 `BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 9999999`. If only specific tests are
 failing because of a change, update only those failing tests. Do not spend time
 updating every test.
+
+## Routing benchmark evidence
+
+Every routing PR must report its benchmark effect before merge: base/head
+revisions, identical inputs and budgets, pass counts, failures and timings.
+Separate pre-existing failures and single-stage latency from whole-board solve
+rate. Include an inspected, successfully routed visual snapshot. Do not merge
+without this analysis; use Blacksmith only for benchmark runs.

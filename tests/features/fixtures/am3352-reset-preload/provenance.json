@@ -1,0 +1,12 @@
+{
+  "source": "Actual native AM3352 build validation85 phase1.9 after accepted46-signal DDR phase",
+  "nativeRoutingInputSha256": "fc93c6b06d0e6f03d1e0b91bdd72a4b3ff1abf4c77e0b8203d4afbcc181f5f09",
+  "stageInputSha256": "7a830df22291c38ccd0f62457640ff74f875d7f3e2840072a29a5a10c5abd7c9",
+  "stageVersion": "capacity-autorouter0.0.1006",
+  "witness": "Freshly generated native support-net tree from existing via handoffs; diagnostic only, never replayed into the board",
+  "witnessSeconds": 67.837476208,
+  "strictDrcPassed": true,
+  "viaDrillMm": 0.3,
+  "viaLandMm": 0.5,
+  "manualRouting": false
+}

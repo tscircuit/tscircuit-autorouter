@@ -1,0 +1,38 @@
+name: AM3352 preload benchmark
+on:
+  pull_request:
+    paths:
+      - lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver.ts
+      - scripts/benchmarks/*am3352*
+      - tests/features/fixtures/am3352-reset-preload/**
+      - .github/workflows/am3352-preload-benchmark.yml
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Base revision for the paired comparison
+        required: true
+        default: main
+jobs:
+  benchmark:
+    runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    timeout-minutes: 45
+    env:
+      BUN_JSC_forceRAMSize: "2147483648"
+      BUN_JSC_miniVMHeapGrowthFactor: "1.05"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - name: Compare identical real-stage input sequentially
+        run: |
+          BASE_REVISION=$(python3 -c 'import json,os; event=json.load(open(os.environ["GITHUB_EVENT_PATH"])); print(event["pull_request"]["base"]["sha"] if "pull_request" in event else event["inputs"]["base_ref"])')
+          bun scripts/benchmarks/compare-am3352-preload.ts "$BASE_REVISION"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: am3352-preload-comparison
+          path: .tscircuit/benchmarks/am3352-preload/
