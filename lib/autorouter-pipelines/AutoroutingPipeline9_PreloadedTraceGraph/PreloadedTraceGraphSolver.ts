@@ -259,7 +259,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   override _step(): void {
     // Board-world XY points in mm (+X right, +Y up). Query expanded bounds
     // only prune impossible pairs; the exact original distance test is retained.
-    const boundarySpatialIndex = this.sharedEdgeSegments.length > 0
+    const boundarySpatialIndex = this.primitives.length > 0 && this.sharedEdgeSegments.length > 0
       ? new Flatbush(this.sharedEdgeSegments.length)
       : null
     if (boundarySpatialIndex) {

@@ -38,3 +38,8 @@ These results address preload latency. The subsequent B01 reset search still
 fails on 0.0.1006; the independently generated routing witness establishes a legal
 route, and the fresh AM3352 project uses a native handoff-aware support-net phase.
 Broader solve-rate and Blacksmith results must be reported before merge.
+
+Blacksmith ARM paired run 40146477157 on head 2ed844a2 measured
+**212.099 -> 0.775 seconds**, with identical full output SHA and 1,712
+assignments. The index is also skipped when no fixed-copper primitives exist,
+so single-phase inputs do not pay to build an unused boundary index.
