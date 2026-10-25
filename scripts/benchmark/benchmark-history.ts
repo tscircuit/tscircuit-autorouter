@@ -532,7 +532,8 @@ const makeDashboardPoint = (
   const peakRssValues = samples
     .map((sample) => sample.peakRssBytes)
     .filter(
-      (peakRssBytes): peakRssBytes is number => typeof peakRssBytes === "number",
+      (peakRssBytes): peakRssBytes is number =>
+        typeof peakRssBytes === "number",
     )
 
   return {

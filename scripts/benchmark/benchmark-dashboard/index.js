@@ -432,7 +432,13 @@ async function renderHealth() {
           "p50PeakRssBytes",
           "avgVia",
         ]
-      : ["completedRate", "relaxedDrcRate", "p50TimeMs", "p50PeakRssBytes", "avgVia"]
+      : [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
   healthGrid.innerHTML = healthMetricKeys
     .map((metricKey) => {
       const metric = metricByKey.get(metricKey)
@@ -440,7 +446,9 @@ async function renderHealth() {
         sampleSelect.value !== "" && metricKey === "p50TimeMs"
           ? "Elapsed time"
           : metric.group === "Memory"
-            ? sampleSelect.value === "" ? "P50 peak memory" : "Peak memory"
+            ? sampleSelect.value === ""
+              ? "P50 peak memory"
+              : "Peak memory"
             : metric.label +
               (metric.group === "Solve time"
                 ? " solve time"
@@ -485,9 +493,10 @@ function renderMetricToolbar() {
   if (
     !availableMetrics.some((metric) => metric.key === dashboardState.metricKey)
   ) {
-    dashboardState.metricKey = metricByKey.get(dashboardState.metricKey).group === "Memory"
-      ? "p50PeakRssBytes"
-      : "p50TimeMs"
+    dashboardState.metricKey =
+      metricByKey.get(dashboardState.metricKey).group === "Memory"
+        ? "p50PeakRssBytes"
+        : "p50TimeMs"
   }
   const groups = uniqueSorted(availableMetrics.map((metric) => metric.group))
   getRequiredElement("metric-toolbar").innerHTML = groups
@@ -555,7 +564,8 @@ function makeSvgElement(name, attributes) {
 
 function appendChartTitle(metric, points) {
   const title = makeSvgElement("title", { id: "chart-title" })
-  const label = metric.group === "Memory" ? metric.label + " peak memory" : metric.label
+  const label =
+    metric.group === "Memory" ? metric.label + " peak memory" : metric.label
   title.textContent = label + " history for " + datasetSelect.value
   const description = makeSvgElement("desc", { id: "chart-description" })
   description.textContent =
@@ -805,9 +815,12 @@ async function renderChart() {
     formatDate(points[points.length - 1].createdAt, false)
   const scopeLabel =
     sampleSelect.value === "" ? "All samples" : "Sample " + sampleSelect.value
-  const metricLabel = metric.group === "Memory"
-    ? sampleSelect.value === "" ? metric.label + " peak memory (RSS)" : "Peak memory (RSS)"
-    : metric.label
+  const metricLabel =
+    metric.group === "Memory"
+      ? sampleSelect.value === ""
+        ? metric.label + " peak memory (RSS)"
+        : "Peak memory (RSS)"
+      : metric.label
   getRequiredElement("chart-unit").textContent =
     metricLabel + " · " + scopeLabel + " · axis in " + scale.unit
 }
@@ -1125,7 +1138,8 @@ function renderSamples(point, previous) {
       ) +
       '</td><td class="number-cell">' +
       escapeHtml(formatMemory(sample.peakRssBytes)) +
-      (sample.peakRssBytes !== undefined && previousSample?.peakRssBytes !== undefined
+      (sample.peakRssBytes !== undefined &&
+      previousSample?.peakRssBytes !== undefined
         ? renderDeltaText(
             metricByKey.get("p50PeakRssBytes"),
             sample.peakRssBytes,
@@ -1260,7 +1274,13 @@ async function renderRunDetails() {
           "p50PeakRssBytes",
           "avgVia",
         ]
-      : ["completedRate", "relaxedDrcRate", "p50TimeMs", "p50PeakRssBytes", "avgVia"]
+      : [
+          "completedRate",
+          "relaxedDrcRate",
+          "p50TimeMs",
+          "p50PeakRssBytes",
+          "avgVia",
+        ]
   getRequiredElement("selected-metrics").innerHTML = detailMetricKeys
     .map((metricKey) => {
       const metric = metricByKey.get(metricKey)
@@ -1272,7 +1292,9 @@ async function renderRunDetails() {
         sampleSelect.value !== "" && metricKey === "p50TimeMs"
           ? "Elapsed time"
           : metric.group === "Memory"
-            ? sampleSelect.value === "" ? "P50 peak memory" : "Peak memory"
+            ? sampleSelect.value === ""
+              ? "P50 peak memory"
+              : "Peak memory"
             : metric.label + (metric.group === "Vias" ? " vias" : "")
       return (
         '<div class="selected-metric"><span>' +
@@ -1547,7 +1569,9 @@ async function buildSelectedSummary() {
         : null
     lines.push(
       "- " +
-        (metric.group === "Memory" ? metric.label + " peak memory" : metric.label) +
+        (metric.group === "Memory"
+          ? metric.label + " peak memory"
+          : metric.label) +
         ": " +
         formatMetricValue(metric, point[metricKey]) +
         " (" +

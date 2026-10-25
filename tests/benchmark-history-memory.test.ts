@@ -24,7 +24,8 @@ test("benchmark history publishes peak RSS percentiles across all measured sampl
     runId: "123-1",
     workflowRunId: "123",
     workflowRunAttempt: 1,
-    runUrl: "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/123",
+    runUrl:
+      "https://github.com/tscircuit/tscircuit-autorouter/actions/runs/123",
     commitSha: "abc123",
     createdAt: "2026-10-25T12:00:00.000Z",
     runner: "test",
@@ -79,7 +80,9 @@ test("benchmark history publishes peak RSS percentiles across all measured sampl
         ...run,
         report: {
           ...report,
-          tests: [Object.assign({}, report.tests[0], { peakRssBytes: invalid })],
+          tests: [
+            Object.assign({}, report.tests[0], { peakRssBytes: invalid }),
+          ],
         },
       }
       await expect(
@@ -108,7 +111,8 @@ test("benchmark history publishes peak RSS percentiles across all measured sampl
     const legacyReport = {
       ...report,
       summary: report.summary.map(
-        ({ p50PeakRssBytes, p80PeakRssBytes, p90PeakRssBytes, ...summary }) => summary,
+        ({ p50PeakRssBytes, p80PeakRssBytes, p90PeakRssBytes, ...summary }) =>
+          summary,
       ),
       tests: report.tests.map(({ peakRssBytes, ...sample }) => sample),
     }
