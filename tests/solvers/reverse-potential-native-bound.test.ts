@@ -5,7 +5,7 @@ import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from
 
 test("native reverse values are consistent with actual clamped transitions, future selection and accepted goal disk", () => {
   const diagnostics: Record<string, number> = {}
-  const cache = new ReverseCostToGoCache(diagnostics)
+  const cache = new ReverseCostToGoCache(diagnostics, 512 * 1024, 100_000, 1_000_000)
   const options: ConstructorParameters<typeof Native>[0] = {
     connectionName: "actual-context", regionId: "native-bound-test", obstacleRoutes: [],
     minDistBetweenEnteringPoints: 0.05,
@@ -20,8 +20,11 @@ test("native reverse values are consistent with actual clamped transitions, futu
   }
   let positive = 0
   let checked = 0
+  for (const flipped of [false, true]) {
   for (const target of [options.B, { x: 1.193, y: 0.197, z: 0 }]) {
-    const solver = new Native({ ...options, B: target })
+    const solver = new Native({ ...options, B: target, hyperParameters: {
+      FLIP_TRACE_ALIGNMENT_DIRECTION: flipped, MISALIGNED_DIST_PENALTY_FACTOR: flipped ? 7 : 5,
+    } })
     for (const z of [0, 1]) {
       for (let row = 0; row <= 10; row++) {
         for (let column = 0; column <= 25; column++) {
@@ -45,10 +48,11 @@ test("native reverse values are consistent with actual clamped transitions, futu
       }
     }
   }
+  }
   const repeated = new Native(options)
   repeated.getReverseCostToGo({ ...options.A, g: 0, h: 0, f: 0, parent: null })
   expect(positive).toBeGreaterThan(100)
   expect(checked).toBeGreaterThan(1000)
   expect(diagnostics.reversePotentialCacheHits).toBeGreaterThan(0)
-  expect(diagnostics.reversePotentialBuilds).toBe(2)
+  expect(diagnostics.reversePotentialBuilds).toBe(4)
 })

@@ -7,6 +7,8 @@ test("real native solves use stronger reverse guidance, share a repeated query a
   const cache = new ReverseCostToGoCache(diagnostics)
   let charged = 0
   for (let query = 0; query < 3; query++) {
+    const compiledBefore = diagnostics.reversePotentialCompiledCells
+    const repairedBefore = diagnostics.reversePotentialRepairWork
     const solver = new Native({
       connectionName: "dense", regionId: "tiny", obstacleRoutes: [],
       minDistBetweenEnteringPoints: 0.05,
@@ -21,6 +23,10 @@ test("real native solves use stronger reverse guidance, share a repeated query a
       })) }],
     })
     solver.solve()
+    if (query === 1) {
+      expect(diagnostics.reversePotentialCompiledCells).toBe(compiledBefore)
+      expect(diagnostics.reversePotentialRepairWork).toBe(repairedBefore)
+    }
     expect(solver.solved).toBe(true)
     expect(solver.error).toBeNull()
     expect(solver.solvedPath!.route[0]).toMatchObject(solver.A)

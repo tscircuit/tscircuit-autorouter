@@ -7,6 +7,8 @@ export type ReversePotentialGeometry = {
   pitchX: number
   pitchY: number
   planarStepCost: number
+  planarXCosts: readonly number[]
+  planarYCosts: readonly number[]
   viaStepCost: number
   goals: Uint8Array
 }
@@ -43,27 +45,74 @@ export class ReverseCostToGoCache {
   private retainedBytes = 0
   private peakRetainedBytes = 0
   private work = 0
+  private totalWork = 0
   private workCharger?: (workUnits: number) => boolean | void
 
   constructor(
     readonly diagnostics: Record<string, number>,
     readonly maxBytes = 512 * 1024,
     readonly maxWorkPerPrepare = 100_000,
+    readonly maxTotalWork = 200_000,
   ) {
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 0)
       throw new Error("Invalid reverse potential memory allowance")
     if (!Number.isSafeInteger(maxWorkPerPrepare) || maxWorkPerPrepare < 0)
       throw new Error("Invalid reverse potential work allowance")
+    if (!Number.isSafeInteger(maxTotalWork) || maxTotalWork < 0)
+      throw new Error("Invalid reverse potential node work allowance")
   }
 
   get memoryBytes(): number {
     return this.retainedBytes
   }
 
+  private geometryIdentity(geometry: ReversePotentialGeometry): string {
+    return JSON.stringify([
+      geometry.key, geometry.columns, geometry.rows, geometry.layers,
+      geometry.bounds, geometry.pitchX, geometry.pitchY,
+      geometry.planarStepCost, geometry.planarXCosts, geometry.planarYCosts, geometry.viaStepCost, Array.from(geometry.goals),
+    ])
+  }
+
+  /** Reserve optional setup before it runs; refusal never changes physical validity. */
+  reserveCompilation(work: number, chargeWork?: (workUnits: number) => boolean | void): boolean {
+    if (!Number.isSafeInteger(work) || work < 0)
+      throw new Error("Invalid reverse potential compilation charge")
+    if (this.totalWork + work > this.maxTotalWork) {
+      this.diagnostics.reversePotentialBudgetBypasses = (this.diagnostics.reversePotentialBudgetBypasses ?? 0) + 1
+      return false
+    }
+    const units = Math.ceil(work / 64)
+    if (chargeWork?.(units) === false) {
+      this.diagnostics.reversePotentialBudgetBypasses = (this.diagnostics.reversePotentialBudgetBypasses ?? 0) + 1
+      return false
+    }
+    this.totalWork += work
+    this.diagnostics.reversePotentialCompileWork = (this.diagnostics.reversePotentialCompileWork ?? 0) + work
+    this.diagnostics.reversePotentialChargedWorkUnits = (this.diagnostics.reversePotentialChargedWorkUnits ?? 0) + units
+    return true
+  }
+
+  /** Caller supplies the complete frozen cost-generating context, before compiling its cells. */
+  lookupExact(geometry: ReversePotentialGeometry, signature: string): number | null {
+    const key = JSON.stringify([this.geometryIdentity(geometry), signature])
+    const generation = this.contexts.get(key)
+    if (generation === undefined) return null
+    const field = this.fields.get(generation)
+    if (!field) throw new Error("Missing reverse potential exact generation")
+    this.fields.delete(generation)
+    this.fields.set(generation, field)
+    this.diagnostics.reversePotentialContexts = (this.diagnostics.reversePotentialContexts ?? 0) + 1
+    this.diagnostics.reversePotentialCacheHits = (this.diagnostics.reversePotentialCacheHits ?? 0) + 1
+    return generation
+  }
+
   private charge(units = 1): void {
     // Reserve each quantum before executing it. A parent budget exception must
     // propagate; only this cache's own bounded-work exception is recoverable.
     const nextWork = this.work + units
+    if (this.totalWork + units > this.maxTotalWork)
+      throw new ReversePotentialBudgetLimit("Reverse field node allowance")
     const quanta = Math.ceil(Math.min(nextWork, this.maxWorkPerPrepare) / 64) - Math.ceil(this.work / 64)
     if (quanta > 0) {
       if (this.workCharger?.(quanta) === false)
@@ -72,6 +121,7 @@ export class ReverseCostToGoCache {
         (this.diagnostics.reversePotentialChargedWorkUnits ?? 0) + quanta
     }
     this.work = nextWork
+    this.totalWork += units
     if (this.work > this.maxWorkPerPrepare)
       throw new ReversePotentialWorkLimit("Reverse field work allowance")
     this.diagnostics.reversePotentialRepairWork =
@@ -156,9 +206,12 @@ export class ReverseCostToGoCache {
         this.neighbors(field, index, (next, via, diagonal): void => {
           this.charge()
           if (field.context.blocked[next] && !field.geometry.goals[next]) return
+          const layer = Math.floor(index / (field.geometry.columns * field.geometry.rows))
+          const xCost = index % field.geometry.columns !== next % field.geometry.columns ? field.geometry.planarXCosts[layer]! : 0
+          const yCost = Math.floor(index / field.geometry.columns) !== Math.floor(next / field.geometry.columns) ? field.geometry.planarYCosts[layer]! : 0
           const cost = via
             ? field.geometry.viaStepCost + field.context.viaCosts[next]!
-            : field.geometry.planarStepCost * (diagonal ? Math.SQRT2 : 1) + field.context.planarCosts[next]!
+            : field.geometry.planarStepCost * (diagonal ? Math.SQRT2 : 1) + xCost + yCost + field.context.planarCosts[next]!
           value = Math.min(value, cost + field.g[next]!)
         })
       }
@@ -180,14 +233,15 @@ export class ReverseCostToGoCache {
     const count = geometry.columns * geometry.rows * geometry.layers.length
     if (!Number.isSafeInteger(geometry.columns) || geometry.columns <= 0 || !Number.isSafeInteger(geometry.rows) || geometry.rows <= 0 || !Number.isSafeInteger(count) || count <= 0 || count > 2048 || !Number.isFinite(geometry.planarStepCost) || !Number.isFinite(geometry.viaStepCost) || !(geometry.pitchX > 0) || !(geometry.pitchY > 0) || !Number.isFinite(geometry.pitchX) || !Number.isFinite(geometry.pitchY) || geometry.goals.length !== count || context.planarCosts.length !== count || context.viaCosts.length !== count || context.blocked.length !== count || !(geometry.planarStepCost > 0) || !(geometry.viaStepCost > 0))
       throw new Error("Invalid reverse potential graph")
+    if (geometry.planarXCosts.length !== geometry.layers.length || geometry.planarYCosts.length !== geometry.layers.length ||
+        [...geometry.planarXCosts, ...geometry.planarYCosts].some((value) => !Number.isFinite(value) || value < 0))
+      throw new Error("Invalid reverse potential directional cost")
     for (let i = 0; i < count; i++) {
       if (!Number.isFinite(context.planarCosts[i]) || context.planarCosts[i]! < 0 || !Number.isFinite(context.viaCosts[i]) || context.viaCosts[i]! < 0)
         throw new Error("Invalid reverse potential edge cost")
     }
     // The caller namespace cannot hide a changed goal region, grid or dimensions.
-    const geometryKey = JSON.stringify([geometry.key, geometry.columns, geometry.rows,
-      geometry.layers, geometry.bounds, geometry.pitchX, geometry.pitchY,
-      geometry.planarStepCost, geometry.viaStepCost, Array.from(geometry.goals)])
+    const geometryKey = this.geometryIdentity(geometry)
     const key = JSON.stringify([geometryKey, context.signature])
     const existing = this.contexts.get(key)
     if (existing !== undefined) {
@@ -202,7 +256,7 @@ export class ReverseCostToGoCache {
       this.diagnostics.reversePotentialCacheHits = (this.diagnostics.reversePotentialCacheHits ?? 0) + 1
       return existing
     }
-    const bytes = 1024 + count * 43 + 8 * geometry.layers.length + 2 * (key.length + context.signature.length + geometryKey.length)
+    const bytes = 1024 + count * 43 + 24 * geometry.layers.length + 2 * (key.length + context.signature.length + geometryKey.length)
     if (bytes > this.maxBytes) {
       this.diagnostics.reversePotentialMemoryBypasses = (this.diagnostics.reversePotentialMemoryBypasses ?? 0) + 1
       return null
@@ -213,7 +267,7 @@ export class ReverseCostToGoCache {
     }
     const field: Field = {
       generation: this.nextGeneration++, key, geometryKey,
-      geometry: { ...geometry, layers: [...geometry.layers], bounds: { ...geometry.bounds }, goals: geometry.goals.slice() },
+      geometry: { ...geometry, layers: [...geometry.layers], planarXCosts: [...geometry.planarXCosts], planarYCosts: [...geometry.planarYCosts], bounds: { ...geometry.bounds }, goals: geometry.goals.slice() },
       context: { ...context, planarCosts: context.planarCosts.slice(), viaCosts: context.viaCosts.slice(), blocked: context.blocked.slice() },
       g: parent ? parent.g.slice() : new Float64Array(count).fill(Infinity),
       rhs: parent ? parent.rhs.slice() : new Float64Array(count).fill(Infinity),

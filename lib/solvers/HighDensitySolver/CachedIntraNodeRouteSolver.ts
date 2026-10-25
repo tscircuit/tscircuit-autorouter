@@ -155,7 +155,7 @@ export class CachedIntraNodeRouteSolver
 
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
-      reversePotentialPolicy: this.reversePotentialCache ? "native6-reverse-v1" : undefined,
+      reversePotentialPolicy: this.reversePotentialCache ? "native6-reverse-v2" : undefined,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),

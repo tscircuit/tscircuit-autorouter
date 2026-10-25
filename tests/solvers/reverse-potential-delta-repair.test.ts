@@ -3,7 +3,7 @@ import { ReverseCostToGoCache, type ReversePotentialGeometry } from "lib/solvers
 
 test("reverse generations repair increases, decreases and blocked cells against an independent shortest-path oracle", () => {
   const diagnostics: Record<string, number> = {}
-  const cache = new ReverseCostToGoCache(diagnostics)
+  const cache = new ReverseCostToGoCache(diagnostics, 512 * 1024, 100_000, 1_000_000)
   const columns = 7
   const rows = 3
   const count = columns * rows * 2
@@ -12,7 +12,7 @@ test("reverse generations repair increases, decreases and blocked cells against 
   const geometry: ReversePotentialGeometry = {
     key: "delta-oracle", columns, rows, layers: [0, 2],
     bounds: { minX: 0, minY: 0, maxX: columns, maxY: rows },
-    pitchX: 1, pitchY: 1, planarStepCost: 0.7, viaStepCost: 2.3, goals,
+    pitchX: 1, pitchY: 1, planarXCosts: [0.2, 0.7], planarYCosts: [0.9, 0.1], planarStepCost: 0.7, viaStepCost: 2.3, goals,
   }
   let firstGeneration = 0
   let firstValue = 0
@@ -41,7 +41,7 @@ test("reverse generations repair increases, decreases and blocked cells against 
           const via = Math.floor(j / plane) !== layer && other === xy
           const planar = Math.floor(j / plane) === layer && Math.max(dx, dy) === 1
           if (!via && !planar) continue
-          const edge = via ? 2.3 + viaCosts[j]! : 0.7 * (dx && dy ? Math.SQRT2 : 1) + planarCosts[j]!
+          const edge = via ? 2.3 + viaCosts[j]! : 0.7 * (dx && dy ? Math.SQRT2 : 1) + (dx ? geometry.planarXCosts[layer]! : 0) + (dy ? geometry.planarYCosts[layer]! : 0) + planarCosts[j]!
           reference[i] = Math.min(reference[i]!, edge + reference[j]!)
         }
       }

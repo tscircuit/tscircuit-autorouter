@@ -7,7 +7,7 @@ test("goal keys, expired generations and repair quotas never expose a field for 
   const geometry: ReversePotentialGeometry = {
     key: "same-caller-key", columns: 5, rows: 1, layers: [0],
     bounds: { minX: 0, minY: 0, maxX: 5, maxY: 1 },
-    pitchX: 1, pitchY: 1, planarStepCost: 1, viaStepCost: 3,
+    pitchX: 1, pitchY: 1, planarXCosts: [0], planarYCosts: [0], planarStepCost: 1, viaStepCost: 3,
     goals: Uint8Array.from([0, 0, 0, 0, 1]),
   }
   const context = { signature: "same-ancestor", planarCosts: new Float64Array(5), viaCosts: new Float64Array(5), blocked: new Uint8Array(5) }
