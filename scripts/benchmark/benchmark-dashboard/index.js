@@ -498,7 +498,7 @@ function renderMetricToolbar() {
         ? "p50PeakRssBytes"
         : "p50TimeMs"
   }
-  const groups = uniqueSorted(availableMetrics.map((metric) => metric.group))
+  const groups = [...new Set(availableMetrics.map((metric) => metric.group))]
   getRequiredElement("metric-toolbar").innerHTML = groups
     .map((group) => {
       const buttons = availableMetrics
