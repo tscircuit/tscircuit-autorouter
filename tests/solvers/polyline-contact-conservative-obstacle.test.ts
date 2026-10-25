@@ -4,9 +4,9 @@ import type { Candidate } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineI
 import { createPolylineContactFixture } from "../fixtures/createPolylineContactFixture"
 
 test("a conservative obstacle envelope cannot reject an exactly validated physical route", (): void => {
-  const { solver: original, node } = createPolylineContactFixture()
+  const { context, node } = createPolylineContactFixture()
   const solver = new MultiHeadPolylineContactSolver({
-    ...original.physicalContext,
+    ...context,
     nodeWithPortPoints: { ...node, portPoints: node.portPoints.filter((p): boolean => p.connectionName === "a")
       .map((p) => ({ ...p, y: 0.3 })) },
     obstacles: [{ type: "rect", center: { x: 0, y: 0 }, width: 0.2, height: 0.2, layers: ["top"], connectedTo: [] }],

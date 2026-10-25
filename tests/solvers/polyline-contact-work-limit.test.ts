@@ -7,7 +7,7 @@ test("local contact work exhaustion remains an explicit unknown with unchanged c
   solver.solve()
   expect(solver.solved).toBe(false)
   expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("unknown: bounded model preparation work exhausted")
+  expect(solver.error).toContain("unknown: bounded model work exhausted")
   expect(Number(solver.stats.contactWorkUnits ?? 0)).toBeLessThanOrEqual(1)
   expect(candidate.polyLines).toEqual(original)
   expect(solver.solvedRoutes).toHaveLength(0)

@@ -1,11 +1,13 @@
 import { MultiHeadPolylineContactSolver } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolylineContactSolver"
 import type { Candidate, PolyLine } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types1"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { PolylineContactPhysicalContext } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/validatePolylineContactRoutes"
 
 export const createPolylineContactFixture = (workCap = 100_000): {
   solver: MultiHeadPolylineContactSolver
   candidate: Candidate
   node: NodeWithPortPoints
+  context: PolylineContactPhysicalContext
 } => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "contact-fixture", center: { x: 0, y: 0 }, width: 6, height: 4,
@@ -14,9 +16,12 @@ export const createPolylineContactFixture = (workCap = 100_000): {
       connectionName: vertical < 0 ? "a" : "b", x: side * 2.5, y: vertical * 0.5, z: 0,
     }))),
   }
-  const solver = new MultiHeadPolylineContactSolver({
+  const context: PolylineContactPhysicalContext = {
     nodeWithPortPoints: node, traceWidth: 0.15, viaDiameter: 0.3,
     obstacleMargin: 0.1, obstacles: [], layerCount: 2,
+  }
+  const solver = new MultiHeadPolylineContactSolver({
+    ...context,
     contactWorkCap: workCap, hyperParameters: { SEGMENTS_PER_POLYLINE: 3 },
   })
   const lines: PolyLine[] = [-1, 1].map((sign): PolyLine => ({
@@ -31,5 +36,5 @@ export const createPolylineContactFixture = (workCap = 100_000): {
   }
   solver.phase = "solving"
   solver.candidates = [candidate]
-  return { solver, candidate, node }
+  return { solver, candidate, node, context }
 }

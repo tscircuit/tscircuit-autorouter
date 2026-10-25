@@ -8,7 +8,7 @@ test("grow/shrink contact coordinates retain physical copper and drill dimension
   const node = { ...fixture.node, width: fixture.node.width * 2, height: fixture.node.height * 2,
     portPoints: fixture.node.portPoints.map((p) => ({ ...p, x: p.x * 2, y: p.y * 2 })) }
   const solver = new MultiHeadPolylineContactSolver({
-    ...fixture.solver.physicalContext,
+    ...fixture.context,
     nodeWithPortPoints: { ...node, portPointsInPairs: [[node.portPoints[0]!, node.portPoints[2]!]] },
     physicalCoordinateScale: 2,
   })
@@ -28,5 +28,5 @@ test("grow/shrink contact coordinates retain physical copper and drill dimension
     vias: route.vias.map((p) => ({ x: p.x / 2, y: p.y / 2 })),
   }))
   expect(physical.every((route): boolean => route.traceThickness === 0.15 && route.viaDiameter === 0.3)).toBe(true)
-  expect(validatePolylineContactRoutes(physical, fixture.solver.physicalContext)).toBeNull()
+  expect(validatePolylineContactRoutes(physical, fixture.context)).toBeNull()
 })

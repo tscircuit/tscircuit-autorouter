@@ -36,7 +36,9 @@ class ContactWorkLimitReached extends Error {}
 export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSolver3 {
   readonly coordinateScale: number
   readonly workCap: number
-  readonly physicalContext: PolylineContactPhysicalContext
+  private readonly contactParams: Params
+  private context?: PolylineContactPhysicalContext
+  private modelPrepared = false
   private readonly aggregate?: Record<string, number>
   private readonly fixed: ContactPrimitive[] = []
   private readonly roots: string[] = []
@@ -72,7 +74,24 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
     this.BOUNDARY_PADDING *= scale
     this.maximumTrust = Math.max(params.viaDiameter, params.traceWidth * 2) * scale
     this.aggregate = params.contactDiagnostics
+    this.contactParams = { ...params }
+    this.count("contactInstances")
+    this.count("contactScaledInstances", Number(scale !== 1))
+    // Keep the replaced MultiHead3 candidate's supervisor allowance. The
+    // additional explicit work cap bounds model/dual/validation work inside it.
+    this.MAX_ITERATIONS = 1000
+  }
+
+  get physicalContext(): PolylineContactPhysicalContext {
+    if (!this.context) throw new Error("Contact physical context is prepared on the first selected step")
+    return this.context
+  }
+
+  private prepareModel(): void {
+    const params = this.contactParams
+    const scale = this.coordinateScale
     const node = params.nodeWithPortPoints
+    this.charge(1 + node.portPoints.length + 2 * (node.portPointsInPairs?.length ?? 0))
     const physicalNode: NodeWithPortPoints = {
       ...node, width: node.width / scale, height: node.height / scale,
       portPoints: node.portPoints.map((p) => ({
@@ -84,7 +103,7 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
         { ...b, x: node.center.x + (b.x - node.center.x) / scale, y: node.center.y + (b.y - node.center.y) / scale },
       ]),
     }
-    this.physicalContext = { ...params, nodeWithPortPoints: physicalNode }
+    this.context = { ...params, nodeWithPortPoints: physicalNode }
     for (const port of node.portPoints) {
       if (this.owners.has(port.connectionName)) continue
       this.owners.set(port.connectionName, this.roots.length)
@@ -93,49 +112,39 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
     const routeNames = [...this.owners.keys()].map((connectionName) => ({
       connectionName, rootConnectionName: this.roots[this.owners.get(connectionName)!],
     }))
-    this.count("contactInstances")
-    this.count("contactScaledInstances", Number(scale !== 1))
-    try {
-      this.charge(params.nodeWithPortPoints.portPoints.length + params.obstacles.length * (routeNames.length + 1))
-      const connectivity = getObstacleRouteConnectivity({
-        obstacles: params.obstacles, routes: routeNames, connMap: params.connMap,
+    this.charge(params.nodeWithPortPoints.portPoints.length + params.obstacles.length * (routeNames.length + 1))
+    const connectivity = getObstacleRouteConnectivity({
+      obstacles: params.obstacles, routes: routeNames, connMap: params.connMap,
+    })
+    for (let index = 0; index < params.obstacles.length; index++) {
+      const obstacle = params.obstacles[index]!
+      this.charge(1)
+      const radius = Math.hypot(obstacle.width, obstacle.height) / 2 * scale
+      if (!Number.isFinite(radius) || obstacle.width < 0 || obstacle.height < 0)
+        throw new Error("Invalid fixed obstacle geometry in contact context")
+      const reach = Math.max(this.traceWidth, this.viaDiameter) / 2 +
+        Math.max(this.obstacleMargin, (params.viaToPadClearance ?? params.obstacleMargin) * scale) +
+        Math.SQRT2 * this.maximumTrust
+      const x = node.center.x + (obstacle.center.x - node.center.x) * scale
+      const y = node.center.y + (obstacle.center.y - node.center.y) * scale
+      if (x + radius + reach < this.bounds.minX || x - radius - reach > this.bounds.maxX ||
+        y + radius + reach < this.bounds.minY || y - radius - reach > this.bounds.maxY) continue
+      const layers = obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.flatMap((layer): number[] =>
+        layer === "all" ? Array.from({ length: params.layerCount }, (_, z): number => z) :
+          [mapLayerNameToZ(layer, params.layerCount)])
+      if (layers.length === 0 || layers.some((z): boolean => !Number.isInteger(z) || z < 0 || z >= params.layerCount))
+        throw new Error("Contact obstacle has no valid physical layer span")
+      // A circumscribed disk conservatively encloses both rotated and axis-
+      // aligned interpretations. Final acceptance uses actual board geometry.
+      this.fixed.push({
+        vertices: [{ point: { x, y }, variable: -1 }], radius,
+        minZ: Math.min(...layers), maxZ: Math.max(...layers), owner: -1, via: false,
+        excludedOwners: new Set(connectivity.connectedRouteNamesByObstacle[index]!
+          .map((name): number => this.owners.get(name)!)),
       })
-      for (let index = 0; index < params.obstacles.length; index++) {
-        const obstacle = params.obstacles[index]!
-        this.charge(1)
-        const radius = Math.hypot(obstacle.width, obstacle.height) / 2 * scale
-        if (!Number.isFinite(radius) || obstacle.width < 0 || obstacle.height < 0)
-          throw new Error("Invalid fixed obstacle geometry in contact context")
-        const reach = Math.max(this.traceWidth, this.viaDiameter) / 2 +
-          Math.max(this.obstacleMargin, (params.viaToPadClearance ?? params.obstacleMargin) * scale) +
-          Math.SQRT2 * this.maximumTrust
-        const x = node.center.x + (obstacle.center.x - node.center.x) * scale
-        const y = node.center.y + (obstacle.center.y - node.center.y) * scale
-        if (x + radius + reach < this.bounds.minX || x - radius - reach > this.bounds.maxX ||
-          y + radius + reach < this.bounds.minY || y - radius - reach > this.bounds.maxY) continue
-        const layers = obstacle.__zLayers ?? obstacle.zLayers ?? obstacle.layers.flatMap((layer): number[] =>
-          layer === "all" ? Array.from({ length: params.layerCount }, (_, z): number => z) :
-            [mapLayerNameToZ(layer, params.layerCount)])
-        if (layers.length === 0 || layers.some((z): boolean => !Number.isInteger(z) || z < 0 || z >= params.layerCount))
-          throw new Error("Contact obstacle has no valid physical layer span")
-        // A circumscribed disk conservatively encloses both rotated and axis-
-        // aligned interpretations. Final acceptance uses actual board geometry.
-        this.fixed.push({
-          vertices: [{ point: { x, y }, variable: -1 }], radius,
-          minZ: Math.min(...layers), maxZ: Math.max(...layers), owner: -1, via: false,
-          excludedOwners: new Set(connectivity.connectedRouteNamesByObstacle[index]!
-            .map((name): number => this.owners.get(name)!)),
-        })
-      }
-    } catch (error) {
-      if (!(error instanceof ContactWorkLimitReached)) throw error
-      this.failed = true
-      this.error = "Polyline contact solve unknown: bounded model preparation work exhausted"
-      this.count("contactWorkLimited")
     }
-    // Keep the replaced MultiHead3 candidate's supervisor allowance. The
-    // additional explicit work cap bounds model/dual/validation work inside it.
-    this.MAX_ITERATIONS = 1000
+    this.modelPrepared = true
+    this.count("contactModelPreparations")
   }
 
   override getSolverName(): string {
@@ -308,6 +317,7 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
       this.count("contactIterationLimited")
       return
     }
+    if (!this.modelPrepared) this.prepareModel()
     if (this.phase === "setup") {
       this.setupInitialPolyLines()
       this.phase = "solving"
