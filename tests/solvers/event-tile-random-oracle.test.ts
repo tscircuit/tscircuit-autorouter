@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { denseEventOracle, emptyEventInput, runEventQuery } from "./eventTileTestUtils"
 
-test("event costs and reachability agree with an independent dense oracle on varying physical fields", () => {
+test("event costs and reachability agree with an independent dense oracle on varying physical fields", (): void => {
   let seed = 893421
   const random = (): number => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { denseEventOracle, emptyEventInput, runEventQuery } from "./eventTileTestUtils"
 
-test("event contraction preserves tiny multilayer costs across every fixed-column and via-window mask", () => {
+test("event contraction preserves tiny multilayer costs across every fixed-column and via-window mask", (): void => {
   const cols = 4
   const rows = 3
   const layers = 2

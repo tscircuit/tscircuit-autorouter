@@ -628,7 +628,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       const Solver = this.constructorParams.eventSearch
         ? HighDensitySolverA13EventTiles
         : HighDensitySolverA13WithDrcValidation
-      const solver = new Solver({
+      const solverParams: ConstructorParameters<typeof HighDensitySolverA13EventTiles>[0] = {
         obstacles: this.constructorParams.obstacles ?? [],
         boardGeometry: this.constructorParams.boardGeometry,
         connMap: this.connMap,
@@ -646,7 +646,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         maxSearchIterations,
         maxRounds: Math.max(1, Math.round(200 * this.effort)),
         hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
-      })
+      }
+      const solver = new Solver(solverParams)
       solver.MAX_ITERATIONS = maxSearchIterations * 2
       return solver as any
     }

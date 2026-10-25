@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { EventTileSearchKernel } from "lib/solvers/HighDensitySolver/EventTileSearchKernel"
 import { emptyEventInput } from "./eventTileTestUtils"
 
-test("event compilation, macro setup, search and expanded parent publication share one work allowance", () => {
+test("event compilation, macro setup, search and expanded parent publication share one work allowance", (): void => {
   const kernel = new EventTileSearchKernel(20, 15, 2, 0.1, 0.1)
   const input = emptyEventInput(20, 15, 2)
   kernel.begin(input, 0, 599, 0.5)

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { denseEventOracle, emptyEventInput, runEventQuery } from "./eventTileTestUtils"
 
-test("interior turn and via-cost events survive multilayer contraction and parent reconstruction", () => {
+test("interior turn and via-cost events survive multilayer contraction and parent reconstruction", (): void => {
   const cols = 21
   const rows = 17
   const layers = 3
