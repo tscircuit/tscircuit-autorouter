@@ -12,7 +12,6 @@ import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
-import { compactGlobalSingleLayerFreeNodes } from "lib/solvers/NodeDimensionSubdivisionSolver/compactGlobalSingleLayerFreeNodes"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import {
   type ChangedPreloadedTraceSection,
@@ -430,13 +429,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         cms.maxNodeDimension,
         cms.maxNodeRatio,
         cms.minNodeArea,
+        // Match AvailableSegmentPointSolver's ordinary-port threshold.
+        1.5 * (cms.minTraceWidth + 0.15),
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = compactGlobalSingleLayerFreeNodes(
-            cms.nodeDimensionSubdivisionSolver!.outputNodes,
-            cms.maxNodeDimension,
-          )
+          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
         },
       },
     ),
