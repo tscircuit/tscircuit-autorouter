@@ -106,8 +106,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     priorityCoordinateScale?: number
+    ownerCutSearch?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
+    viaToPadClearance?: number
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean

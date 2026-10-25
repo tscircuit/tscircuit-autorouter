@@ -71,7 +71,9 @@ export class HighDensitySolver extends BaseSolver {
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
+    ownerCutSearch: boolean
     priorityDagSearch: boolean
+    viaToPadClearance?: number
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -116,8 +118,10 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    ownerCutSearch = false,
     priorityDagSearch = false,
     priorityDiagnostics,
+    viaToPadClearance,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
@@ -144,8 +148,10 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    ownerCutSearch?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
+    viaToPadClearance?: number
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -181,7 +187,9 @@ export class HighDensitySolver extends BaseSolver {
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
+      ownerCutSearch,
       priorityDagSearch,
+      viaToPadClearance,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,

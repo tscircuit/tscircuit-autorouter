@@ -9,6 +9,8 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { OwnerCutHighDensitySolver } from "../HighDensitySolver/OwnerCutHighDensitySolver"
+import { isOwnerCutNodeEligible } from "../HighDensitySolver/isOwnerCutNodeEligible"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
@@ -400,6 +402,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private initializeCandidateBudget(solver: unknown) {
     // A13 already declares its search limit; allocate its grid only if selected.
     if (solver instanceof HighDensitySolverA13) return
+    if (solver instanceof OwnerCutHighDensitySolver) {
+      solver.setup()
+      // Explicit experimental allowance: 16 bounded charged micro-units per
+      // native expansion allowance. This is not an equal CPU-time assertion.
+      solver.MAX_ITERATIONS = Math.min(32_000_000,
+        16 * Math.min(solver.MAX_ITERATIONS, this.getGridSearchIterationBudget()))
+      return
+    }
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
     if (
@@ -413,6 +423,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
   }
 
+  private getAccountedCandidateWork(solver: BaseSolver): {
+    iterations: number; maxIterations: number
+  } {
+    // Fitness, expansion thresholds and aggregate work all use the same
+    // explicit allowance conversion. Raw charged work remains in diagnostics.
+    const divisor = solver instanceof OwnerCutHighDensitySolver ? 16 : 1
+    return { iterations: solver.iterations / divisor,
+      maxIterations: solver.MAX_ITERATIONS / divisor }
+  }
+
   private refreshDynamicIterationLimit() {
     this.totalCandidateWork = 0
     this.dynamicExpansionWorkBudget = 1
@@ -421,23 +441,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         // A13 negotiates route orders internally. Its larger budget must not
         // delay expansion of the existing A01 ordering search.
         if (!(solver instanceof HighDensitySolverA13)) {
-          this.totalCandidateWork += solver.iterations
+          const accounted = this.getAccountedCandidateWork(solver)
+          this.totalCandidateWork += accounted.iterations
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
             solver instanceof PriorityDagIntraNodeSolver
               ? solver.nativeCandidateIterationLimit
-              : solver.MAX_ITERATIONS,
+              : accounted.maxIterations,
           )
-          this.candidateWorkBySolver.set(solver, {
-            iterations: solver.iterations,
-            maxIterations: solver.MAX_ITERATIONS,
-          })
+          this.candidateWorkBySolver.set(solver, accounted)
         }
         if (solver.solved || solver.failed) return total
         const remainingCandidateIterations = Math.max(
           0,
-          solver.MAX_ITERATIONS - solver.iterations + 1,
+          this.getAccountedCandidateWork(solver).maxIterations -
+            this.getAccountedCandidateWork(solver).iterations + 1,
         )
         return (
           total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
@@ -540,10 +559,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // Account for that candidate's actual work without rescanning the portfolio.
     const accountedWork = this.candidateWorkBySolver.get(solver)
     if (accountedWork) {
-      this.totalCandidateWork += solver.iterations - accountedWork.iterations
-      accountedWork.iterations = solver.iterations
-      if (accountedWork.maxIterations !== solver.MAX_ITERATIONS) {
-        accountedWork.maxIterations = solver.MAX_ITERATIONS
+      const current = this.getAccountedCandidateWork(solver)
+      this.totalCandidateWork += current.iterations - accountedWork.iterations
+      accountedWork.iterations = current.iterations
+      if (accountedWork.maxIterations !== current.maxIterations) {
+        accountedWork.maxIterations = current.maxIterations
         this.dynamicExpansionWorkBudget = 1
         for (const { solver: candidate } of this.supervisedSolvers ?? []) {
           if (candidate instanceof HighDensitySolverA13) continue
@@ -551,11 +571,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             this.dynamicExpansionWorkBudget,
             candidate instanceof PriorityDagIntraNodeSolver
               ? candidate.nativeCandidateIterationLimit
-              : candidate.MAX_ITERATIONS,
+              : this.getAccountedCandidateWork(candidate).maxIterations,
           )
         }
       }
     }
+    if ((solver as any) instanceof OwnerCutHighDensitySolver)
+      return (solver as any).iterations / 16_000_000
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
       (solver as any) instanceof HighDensityA03Solver ||
@@ -646,6 +668,32 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
+      const params = this.constructorParams
+      if (params.ownerCutSearch && isOwnerCutNodeEligible(params)) {
+        const diagnostics = params.priorityDiagnostics
+        if (diagnostics) diagnostics.ownerCutCandidates =
+          (diagnostics.ownerCutCandidates ?? 0) + 1
+        return new OwnerCutHighDensitySolver({
+          nodeWithPortPoints: this.nodeWithPortPoints,
+          cellSizeMm: 0.1, maxCellCount: 2048,
+          viaDiameter: params.viaDiameter ?? 0.3,
+          viaMinDistFromBorder: (params.viaDiameter ?? 0.3) / 2,
+          traceMargin: 0.1, traceThickness: params.traceWidth ?? 0.15,
+          effort: this.effort, hyperParameters: {
+            shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+          },
+          obstacles: params.obstacles ?? [], connMap: params.connMap,
+          layerCount: 2, viaHoleDiameter: params.viaHoleDiameter!,
+          viaToPadClearance: params.viaToPadClearance,
+          minViaHoleEdgeToViaHoleEdgeClearance:
+            params.minViaHoleEdgeToViaHoleEdgeClearance!,
+          allowBlindAndBuriedVias: false, boardGeometry: params.boardGeometry,
+          ownerCutDiagnostics: diagnostics,
+        }) as any
+      }
+      if (params.ownerCutSearch && params.priorityDiagnostics)
+        params.priorityDiagnostics.ownerCutIneligibleCandidates =
+          (params.priorityDiagnostics.ownerCutIneligibleCandidates ?? 0) + 1
       const solver = new HighDensitySolverA01({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
@@ -734,6 +782,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let routes: HighDensityIntraNodeRoute[]
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
+      (solver.solver as any) instanceof OwnerCutHighDensitySolver ||
       (solver.solver as any) instanceof HighDensityA03Solver ||
       (solver.solver as any) instanceof HighDensitySolverA13
     ) {
