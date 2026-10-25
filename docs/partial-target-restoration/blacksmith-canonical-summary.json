@@ -1,0 +1,48 @@
+{
+  "workflowRun": 40239587505,
+  "base": [
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "completedRateLabel": "100.0%",
+      "relaxedDrcRateLabel": "100.0%",
+      "timedOutLabel": "0/85",
+      "p50TimeMs": 1664.590361,
+      "p60TimeMs": 2137.1735946,
+      "p70TimeMs": 2604.6344904,
+      "p80TimeMs": 3403.8880744000003,
+      "p90TimeMs": 4605.938999800002,
+      "p95TimeMs": 5129.469522799999,
+      "p50PeakRssBytes": 354549760,
+      "p80PeakRssBytes": 483968614.40000004,
+      "p90PeakRssBytes": 548837785.6,
+      "avgVia": 37.38823529411765,
+      "avgTraceLintIssues": {
+        "odd_angle": 7.741176470588235
+      }
+    }
+  ],
+  "head": [
+    {
+      "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
+      "completedRateLabel": "100.0%",
+      "relaxedDrcRateLabel": "100.0%",
+      "timedOutLabel": "0/85",
+      "p50TimeMs": 1650.2391810000001,
+      "p60TimeMs": 2119.0778158,
+      "p70TimeMs": 2637.2607278,
+      "p80TimeMs": 3163.7321850000008,
+      "p90TimeMs": 4705.672869400002,
+      "p95TimeMs": 5219.9695422,
+      "p50PeakRssBytes": 364158976,
+      "p80PeakRssBytes": 498792857.6,
+      "p90PeakRssBytes": 535040000,
+      "avgVia": 37.38823529411765,
+      "avgTraceLintIssues": {
+        "odd_angle": 7.741176470588235
+      }
+    }
+  ],
+  "baseRevision": "f32ffdca",
+  "headRevision": "0786b285",
+  "samples": 85
+}

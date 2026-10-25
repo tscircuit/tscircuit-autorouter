@@ -1,0 +1,18 @@
+{
+  "count": 1,
+  "solved": false,
+  "failed": true,
+  "error": "Error: TopologyMergingSolver: output nodes \"via_0\" and \"pad_0\" have an unresolved inter-group overlap on a shared layer",
+  "outputNodes": 0,
+  "padArea": 0,
+  "inputUnchanged": true,
+  "inputSha256": "0cfc1b3a115995c9bb66371d0e519c1ef144e34a3708570706cd58484ac11f65",
+  "outputSha256": null,
+  "peakRssBytes": 50954240,
+  "medianMs": 0.11548600000000064,
+  "trialsMs": [
+    0.10312300000000008,
+    0.11548600000000064,
+    0.12313100000000077
+  ]
+}

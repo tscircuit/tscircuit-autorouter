@@ -1,0 +1,18 @@
+{
+  "count": 1,
+  "solved": true,
+  "failed": false,
+  "error": null,
+  "outputNodes": 3,
+  "padArea": 0.15750000000000003,
+  "inputUnchanged": true,
+  "inputSha256": "0cfc1b3a115995c9bb66371d0e519c1ef144e34a3708570706cd58484ac11f65",
+  "outputSha256": "4f1d29a55576dfd5291cbe86e8b64849bfa88ce989585d035c49885218e37290",
+  "peakRssBytes": 46530560,
+  "medianMs": 0.12722899999999981,
+  "trialsMs": [
+    0.12031599999999898,
+    0.12722899999999981,
+    0.16947800000000157
+  ]
+}
