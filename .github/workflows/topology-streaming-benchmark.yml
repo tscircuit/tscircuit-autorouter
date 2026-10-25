@@ -1,0 +1,76 @@
+name: Topology streaming comparison
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  stages:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 75
+    env:
+      BUN_JSC_forceRAMSize: "4294967296"
+      BUN_JSC_miniVMHeapGrowthFactor: "1.05"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Identical stage inputs and budgets
+        run: |
+          mkdir -p results
+          bun head/scripts/benchmarks/measure-topology-streaming.ts base results/base-striped.json 160 > results/base-striped.log 2>&1
+          bun head/scripts/benchmarks/measure-topology-streaming.ts head results/head-striped.json 160 > results/head-striped.log 2>&1
+          bun head/scripts/benchmarks/measure-topology-streaming.ts base results/base-large.json 640 > results/base-large.log 2>&1
+          bun head/scripts/benchmarks/measure-topology-streaming.ts head results/head-large.json 640 > results/head-large.log 2>&1
+      - name: Require exact small-case output and completed large head case
+        run: |
+          bun -e 'const b=await Bun.file("results/base-striped.json").json(), h=await Bun.file("results/head-striped.json").json(), large=await Bun.file("results/head-large.json").json(), bl=await Bun.file("results/base-large.json").json(); if(!h.solved||!large.solved||!bl.solved||h.inputSha256!==b.inputSha256||h.outputSha256!==b.outputSha256||large.inputSha256!==bl.inputSha256||large.outputSha256!==bl.outputSha256||h.peakRetainedRegions>h.inputNodes*8)throw Error("Topology comparison did not meet completion, preservation, and memory criteria")'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: topology-streaming-stage-comparison
+          path: results/
+  canonical:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 60
+    env:
+      BUN_JSC_forceRAMSize: "2147483648"
+      BUN_JSC_miniVMHeapGrowthFactor: "1.05"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Full fresh base and head routing benchmark
+        run: |
+          mkdir -p results
+          (cd base && bash ./benchmark.sh --dataset dataset01 --pipeline 9 --concurrency 4 --effort 1 --sample-timeout 120s) > results/base.log 2>&1
+          cp base/benchmark-result.json results/base.json
+          (cd head && bash ./benchmark.sh --dataset dataset01 --pipeline 9 --concurrency 4 --effort 1 --sample-timeout 120s) > results/head.log 2>&1
+          cp head/benchmark-result.json results/head.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: topology-streaming-canonical-comparison
+          path: results/
