@@ -378,6 +378,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
           viaDiameter: cms.viaDiameter,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          // This mesh excludes preloaded copper, which is added to the graph later.
+          // Keep its layer partition until that copper participates in gap filling.
+          mergeGapFillLayers: !cms.srj.traces?.length,
         },
       ],
       {
