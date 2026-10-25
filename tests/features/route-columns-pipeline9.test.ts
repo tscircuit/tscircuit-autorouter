@@ -19,7 +19,7 @@ test("ordinary Pipeline9 activates columns with matching serial/batch output whi
   expect(serial.solved).toBe(true)
   expect(serial.routes).toHaveLength(2)
   expect(serial.benchmarkDiagnosticCounters.routeColumnEligibleInstances).toBeGreaterThan(0)
-  expect(serial.benchmarkDiagnosticCounters.routeColumnWorkUnits).toBeGreaterThan(0)
+  expect(serial.benchmarkDiagnosticCounters.routeColumnPreflightWorkUnits).toBeGreaterThan(0)
   expect(doPipeline9RoutesHaveCopperConflict({ left: serial.routes[0]!, right: serial.routes[1]!, clearance: 0.1, layerCount: 4 })).toBe(false)
   for (const route of serial.routes) {
     const expected = initial.find((r) => r.connectionName === route.connectionName)!

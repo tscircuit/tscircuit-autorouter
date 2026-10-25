@@ -8,6 +8,7 @@ test("the finite pool combines distinct donor geometry after an incompatible poo
     { x: -4, y: 0, z: 0 }, { x: -3, y: 0, z: 0 }, { x: -3, y: 0, z: 1 },
     { x: 3, y: 0, z: 1 }, { x: 3, y: 0, z: 0 }, { x: 4, y: 0, z: 0 },
   ], [{ x: -3, y: 0 }, { x: 3, y: 0 }])
+  b.jumpers = []
   const pool = columnPool([a, b])
   pool.offerRoute(a, "priority")
   pool.offerRoute(b, "native")
@@ -18,6 +19,8 @@ test("the finite pool combines distinct donor geometry after an incompatible poo
   expect(pool.solvedRoutes).toHaveLength(2)
   expect(pool.solvedRoutes![0]!.route).toEqual(alternative.route)
   expect(pool.solvedRoutes![1]!.route).toEqual(b.route)
+  b.jumpers.push({ route_type: "jumper", start: { x: 0, y: 0 }, end: { x: 1, y: 1 }, footprint: "0603" })
+  expect(pool.solvedRoutes![1]!.jumpers).toBeUndefined()
   expect(pool.params.diagnostics.routeColumnCrossDonorSolutions).toBe(1)
   alternative.route[1]!.y = 3
   expect(pool.solvedRoutes![0]!.route[1]!.y).toBe(0)

@@ -41,6 +41,14 @@ test("columns independently reject wrong terminals, fixed copper, full-span via 
   const fixedBlind = columnPool([a, b], { obstacles: innerPad, allowBlindAndBuriedVias: true })
   fixedBlind.offerRoute(a, "native")
   expect(fixedBlind.params.diagnostics.routeColumnAcceptedColumns).toBe(1)
+  const pad = [{ type: "rect" as const, obstacleId: "near-via", center: { x: 0.6, y: 0 },
+    width: 0.2, height: 0.2, layers: ["top"], __zLayers: [0], connectedTo: [] }]
+  const ordinaryGap = columnPool([a, b], { obstacles: pad })
+  ordinaryGap.offerRoute(a, "native")
+  expect(ordinaryGap.params.diagnostics.routeColumnAcceptedColumns).toBe(1)
+  const requiredPadGap = columnPool([a, b], { obstacles: pad, viaToPadClearance: 0.4 })
+  requiredPadGap.offerRoute(a, "native")
+  expect(requiredPadGap.params.diagnostics.routeColumnRejectedStatic).toBe(1)
 
   const c = columnRoute("c", [{ x: -4, y: 0, z: 0 }, { x: 0.2, y: 0, z: 0 }, { x: 0.2, y: 0, z: 1 }, { x: 4, y: 0, z: 1 }], [{ x: 0.2, y: 0 }])
   const owner = new ConnectivityMap({ owner: ["a", "c"] })

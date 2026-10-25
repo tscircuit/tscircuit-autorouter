@@ -111,6 +111,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
+    viaToPadClearance?: number
     allowBlindAndBuriedVias?: boolean
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {

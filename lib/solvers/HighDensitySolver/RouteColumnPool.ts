@@ -38,6 +38,7 @@ export type RouteColumnPoolParams = {
   obstacleMargin: number
   viaHoleDiameter?: number
   minViaHoleEdgeToViaHoleEdgeClearance?: number
+  viaToPadClearance?: number
   allowBlindAndBuriedVias?: boolean
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
@@ -60,6 +61,9 @@ export class RouteColumnPool {
   private readonly seenRoutes = new WeakSet<HighDensityIntraNodeRoute>()
   private readonly obstacles: Obstacle[] = []
   private nextColumnId = 0
+  private preflight = true
+  private preflightWorkUnits = 0
+  private obstaclesInitialized = false
   private readonly bounds: { minX: number; maxX: number; minY: number; maxY: number }
 
   constructor(readonly params: RouteColumnPoolParams) {
@@ -73,7 +77,8 @@ export class RouteColumnPool {
       (params.viaHoleDiameter !== undefined && (!Number.isFinite(params.viaHoleDiameter) ||
         params.viaHoleDiameter <= 0 || params.viaHoleDiameter > params.viaDiameter)) ||
       (params.minViaHoleEdgeToViaHoleEdgeClearance !== undefined &&
-        (!Number.isFinite(params.minViaHoleEdgeToViaHoleEdgeClearance) || params.minViaHoleEdgeToViaHoleEdgeClearance < 0)))
+        (!Number.isFinite(params.minViaHoleEdgeToViaHoleEdgeClearance) || params.minViaHoleEdgeToViaHoleEdgeClearance < 0)) ||
+      (params.viaToPadClearance !== undefined && (!Number.isFinite(params.viaToPadClearance) || params.viaToPadClearance < 0)))
       throw new Error("Invalid route column physical geometry")
     const node = params.nodeWithPortPoints
     this.bounds = {
@@ -85,6 +90,11 @@ export class RouteColumnPool {
     this.record("routeColumnInstances")
     this.record("routeColumnAllocatedWorkUnits", this.workLimit)
     this.runBounded((): void => {
+      if (node.portPoints.length > 64) {
+        this.charge(1)
+        this.record("routeColumnIneligibleInstances")
+        return
+      }
       const ownerTerminals = new Map<string, Set<string>>()
       for (const point of node.portPoints) {
         this.charge(2)
@@ -128,17 +138,8 @@ export class RouteColumnPool {
         return
       }
       this.record("routeColumnEligibleInstances")
-      const padding = params.viaDiameter + params.obstacleMargin
-      for (const obstacle of params.obstacles) {
-        this.charge(1 + obstacle.connectedTo.length)
-        const radius = Math.hypot(obstacle.width, obstacle.height) / 2
-        if (obstacle.center.x + radius >= this.bounds.minX - padding &&
-          obstacle.center.x - radius <= this.bounds.maxX + padding &&
-          obstacle.center.y + radius >= this.bounds.minY - padding &&
-          obstacle.center.y - radius <= this.bounds.maxY + padding)
-          this.obstacles.push(obstacle)
-      }
     })
+    this.preflight = false
   }
 
   private record(key: string, count = 1): void {
@@ -149,6 +150,12 @@ export class RouteColumnPool {
   private charge(count: number): void {
     if (!Number.isSafeInteger(count) || count < 0)
       throw new Error("Invalid route column work charge")
+    if (this.preflight) {
+      if (this.preflightWorkUnits + count > 4096) throw new RouteColumnWorkLimit()
+      this.preflightWorkUnits += count
+      this.record("routeColumnPreflightWorkUnits", count)
+      return
+    }
     if (this.workUnits + count > this.workLimit)
       throw new RouteColumnWorkLimit()
     this.workUnits += count
@@ -161,17 +168,38 @@ export class RouteColumnPool {
       operation()
     } catch (error) {
       if (!(error instanceof RouteColumnWorkLimit)) throw error
+      if (this.preflight) {
+        this.eligible = false
+        this.record("routeColumnPreflightUnknown")
+        return
+      }
       this.exhausted = true
       this.record("routeColumnBudgetUnknown")
     }
   }
 
-  releaseUnspentIneligibleAllowance(): number {
-    if (this.eligible || this.exhausted) return 0
-    const released = this.workLimit - this.workUnits
-    this.workLimit = this.workUnits
-    this.record("routeColumnAllocatedWorkUnits", -released)
-    return released
+  allocateWorkAllowance(allowance: number): void {
+    if (!Number.isSafeInteger(allowance) || allowance < 0 ||
+      this.workLimit !== 0 || this.workUnits !== 0 || !this.eligible)
+      throw new Error("Invalid route column allowance transfer")
+    this.workLimit = allowance
+    this.record("routeColumnAllocatedWorkUnits", allowance)
+  }
+
+  private initializeObstacles(): void {
+    if (this.obstaclesInitialized) return
+    const padding = Math.max(this.params.viaDiameter + this.params.obstacleMargin,
+      this.params.viaDiameter / 2 + (this.params.viaToPadClearance ?? 0) + this.params.traceWidth + this.params.obstacleMargin)
+    for (const obstacle of this.params.obstacles) {
+      this.charge(1)
+      const radius = Math.hypot(obstacle.width, obstacle.height) / 2
+      if (obstacle.center.x + radius >= this.bounds.minX - padding &&
+        obstacle.center.x - radius <= this.bounds.maxX + padding &&
+        obstacle.center.y + radius >= this.bounds.minY - padding &&
+        obstacle.center.y - radius <= this.bounds.maxY + padding)
+        this.obstacles.push(obstacle)
+    }
+    this.obstaclesInitialized = true
   }
 
   /** Conversion of donor-owned grid output is paid before calling getOutput. */
@@ -201,17 +229,18 @@ export class RouteColumnPool {
       this.charge(1 + 3 * route.route.length + route.vias.length)
       route = this.compactRoute(route)
       if (route.route.length > 256) return
+      this.initializeObstacles()
       const fingerprint = JSON.stringify([route.traceThickness, route.viaDiameter, route.route, route.vias])
       if (task.columns.some((column) => column.fingerprint === fingerprint)) return
       this.record("routeColumnCandidates")
       if (!this.validateStaticRoute(route, task)) {
-        this.record("routeColumnRejectedStatic")
         return
       }
       this.charge(1 + route.route.length + route.vias.length)
       const copy: HighDensityIntraNodeRoute = {
         ...route,
         rootConnectionName: task.root,
+        jumpers: undefined,
         route: route.route.map((point) => Object.freeze({ ...point })),
         vias: route.vias.map((via) => Object.freeze({ ...via })),
       }
@@ -223,6 +252,14 @@ export class RouteColumnPool {
       this.record(`routeColumnDonor_${donor}`)
       this.selectCompatibleColumns()
     })
+  }
+
+  private rejectStatic(reason: string): false {
+    const diagnostics = this.params.diagnostics
+    const key = `routeColumnRejected_${reason}`
+    diagnostics[key] = (diagnostics[key] ?? 0) + 1
+    this.record("routeColumnRejectedStatic")
+    return false
   }
 
   private compactRoute(route: HighDensityIntraNodeRoute): HighDensityIntraNodeRoute {
@@ -250,43 +287,49 @@ export class RouteColumnPool {
       route.rootConnectionName !== task.root || route.route.length < 2 ||
       !Number.isFinite(route.traceThickness) || route.traceThickness < params.traceWidth ||
       !Number.isFinite(route.viaDiameter) || route.viaDiameter < params.viaDiameter ||
-      (route.jumpers && route.jumpers.length > 0)) return false
+      (route.jumpers && route.jumpers.length > 0)) return this.rejectStatic("identityOrDimensions")
     const start = route.route[0]!, end = route.route.at(-1)!
     const matches = (a: Point, b: Point): boolean =>
       Math.abs(a.x - b.x) < 1e-8 && Math.abs(a.y - b.y) < 1e-8 && a.z === b.z
     if (!((matches(start, task.terminals[0]!) && matches(end, task.terminals[1]!)) ||
-      (matches(end, task.terminals[0]!) && matches(start, task.terminals[1]!)))) return false
+      (matches(end, task.terminals[0]!) && matches(start, task.terminals[1]!)))) return this.rejectStatic("terminals")
     for (const [point, pcbPortId] of [[start, route.startPcbPortId], [end, route.endPcbPortId]] as const) {
       this.charge(params.nodeWithPortPoints.portPoints.length)
       const terminal = params.nodeWithPortPoints.portPoints.find((port) => port.connectionName === task.name && matches(port, point))!
       if ((pcbPortId !== undefined && pcbPortId !== terminal.pcb_port_id) ||
-        (point.pcb_port_id !== undefined && point.pcb_port_id !== terminal.pcb_port_id)) return false
+        (point.pcb_port_id !== undefined && point.pcb_port_id !== terminal.pcb_port_id)) return this.rejectStatic("portIdentity")
     }
     const transitions: { x: number; y: number }[] = []
     for (let i = 0; i < route.route.length; i++) {
       this.charge(1 + route.vias.length)
       const point = route.route[i]!
-      if (!Number.isFinite(point.x) || !Number.isFinite(point.y) ||
-        !Number.isSafeInteger(point.z) || point.z < 0 || point.z >= params.layerCount ||
-        (params.nodeWithPortPoints.availableZ && !params.nodeWithPortPoints.availableZ.includes(point.z)) ||
-        point.x < bounds.minX - 1e-8 || point.x > bounds.maxX + 1e-8 ||
-        point.y < bounds.minY - 1e-8 || point.y > bounds.maxY + 1e-8 ||
-        point.toNextSegmentType || point.insideJumperPad ||
-        (point.traceThickness !== undefined && (!Number.isFinite(point.traceThickness) || point.traceThickness < params.traceWidth))) return false
+      if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return this.rejectStatic("nonfinitePoint")
+      if (!Number.isSafeInteger(point.z) || point.z < 0 || point.z >= params.layerCount ||
+        (params.nodeWithPortPoints.availableZ && !params.nodeWithPortPoints.availableZ.includes(point.z))) return this.rejectStatic("layer")
+      if (point.x < bounds.minX - 1e-8 || point.x > bounds.maxX + 1e-8 ||
+        point.y < bounds.minY - 1e-8 || point.y > bounds.maxY + 1e-8) return this.rejectStatic("nodeBounds")
+      if (point.toNextSegmentType || point.insideJumperPad) return this.rejectStatic("unsupportedSegment")
+      if (point.traceThickness !== undefined && (!Number.isFinite(point.traceThickness) || point.traceThickness < params.traceWidth)) return this.rejectStatic("pointWidth")
       if (i > 0 && i < route.route.length - 1 && !matches(point, start) && !matches(point, end)) {
-        const inset = (point.traceThickness ?? route.traceThickness) / 2 + params.obstacleMargin
-        if (point.x < bounds.minX + inset || point.x > bounds.maxX - inset ||
-          point.y < bounds.minY + inset || point.y > bounds.maxY - inset) return false
+        // Mesh edges are shared routing interfaces, not physical obstacles.
+        // Keep internal copper footprints inside the cell. Native's explicit
+        // terminal-stub exception remains, but never permits a center outside
+        // the hard node bounds checked above. Real board clearance is separate.
+        const inset = (point.traceThickness ?? route.traceThickness) / 2
+        const nearTerminal = Math.hypot(point.x - start.x, point.y - start.y) < params.obstacleMargin ||
+          Math.hypot(point.x - end.x, point.y - end.y) < params.obstacleMargin
+        if (!nearTerminal && (point.x < bounds.minX + inset || point.x > bounds.maxX - inset ||
+          point.y < bounds.minY + inset || point.y > bounds.maxY - inset)) return this.rejectStatic("nodeInterface")
       }
       const previous = route.route[i - 1]
       if (!previous || previous.z === point.z) continue
       // The first implementation accepts the unambiguous colocated via form.
       // Donor endpoint projections with simultaneous XY/Z movement stay in
       // their original candidate instead of reaching a stricter DRC adapter.
-      if (Math.hypot(previous.x - point.x, previous.y - point.y) > 1e-8) return false
+      if (Math.hypot(previous.x - point.x, previous.y - point.y) > 1e-8) return this.rejectStatic("noncolocatedTransition")
       const via = route.vias.find((v) => Math.hypot(v.x - point.x, v.y - point.y) < 1e-8) ??
         route.vias.find((v) => Math.hypot(v.x - previous.x, v.y - previous.y) < 1e-8)
-      if (!via) return false
+      if (!via) return this.rejectStatic("missingVia")
       transitions.push(via)
     }
     const drillGap = (params.viaHoleDiameter ?? params.viaDiameter) +
@@ -294,14 +337,14 @@ export class RouteColumnPool {
     for (let i = 0; i < route.vias.length; i++) {
       const via = route.vias[i]!
       this.charge(1 + transitions.length + route.vias.length)
-      const inset = route.viaDiameter / 2 + params.obstacleMargin
+      const inset = route.viaDiameter / 2
       if (!Number.isFinite(via.x) || !Number.isFinite(via.y) ||
         !transitions.some((v) => Math.hypot(v.x - via.x, v.y - via.y) < 1e-8) ||
         via.x < bounds.minX + inset || via.x > bounds.maxX - inset ||
-        via.y < bounds.minY + inset || via.y > bounds.maxY - inset) return false
+        via.y < bounds.minY + inset || via.y > bounds.maxY - inset) return this.rejectStatic("viaGeometry")
       for (let j = 0; j < i; j++) {
         const distance = Math.hypot(via.x - route.vias[j]!.x, via.y - route.vias[j]!.y)
-        if (distance > 1e-8 && distance < drillGap) return false
+        if (distance > 1e-8 && distance < drillGap) return this.rejectStatic("ownDrill")
       }
     }
     // Independent fixed-copper and physical-board validation. This does not
@@ -317,6 +360,7 @@ export class RouteColumnPool {
       minTraceWidth: params.traceWidth,
       minViaDiameter: params.viaDiameter,
       minViaHoleDiameter: params.viaHoleDiameter,
+      minViaEdgeToPadEdgeClearance: params.viaToPadClearance,
       allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
       bounds,
       ...params.boardGeometry,
@@ -345,10 +389,12 @@ export class RouteColumnPool {
       holeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
       includeTraceContinuity: false,
     })
-    return errors.length === 0 && getFixedObstacleViolations({
+    if (errors.length > 0) return this.rejectStatic(`boardDrc_${errors[0]!.type}`)
+    const fixedViolations = getFixedObstacleViolations({
       srj: { ...srj, traces: undefined }, routes: [route],
       traceClearance: params.obstacleMargin, viaClearance: params.obstacleMargin,
-    }).length === 0
+    })
+    return fixedViolations.length === 0 || this.rejectStatic("fixedCopper")
   }
 
   private compatible(left: Column, right: Column, sameOwner: boolean): boolean {

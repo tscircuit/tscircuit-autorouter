@@ -56,4 +56,16 @@ test("two separate failed portfolio attempts supply complete commodities and fin
   expect(portfolio.supervisedSolvers!.reduce((sum, { solver }) => sum + solver.MAX_ITERATIONS, 0) + portfolio.routeColumnPool!.workLimit).toBe(200_000)
   expect(portfolio.routeColumnPool!.workUnits).toBe(diagnostics.routeColumnWorkUnits!)
   expect(portfolio.routeColumnPool!.workUnits).toBeLessThanOrEqual(portfolio.routeColumnPool!.workLimit)
+  const originalNode = columnNode(routes)
+  const treeNode = { ...originalNode, portPoints: [...originalNode.portPoints,
+    { x: 0, y: 3, z: 0, connectionName: "0", rootConnectionName: "0" }] }
+  const disabled = new TwoDonorPortfolio({ nodeWithPortPoints: treeNode, layerCount: 4 }, routes)
+  const enabled = new TwoDonorPortfolio({ nodeWithPortPoints: treeNode, layerCount: 4, routeColumnRecombination: true }, routes)
+  disabled.initializeSolvers()
+  enabled.initializeSolvers()
+  expect(enabled.routeColumnPool!.eligible).toBe(false)
+  expect(enabled.routeColumnPool!.workLimit).toBe(0)
+  expect(enabled.supervisedSolvers!.map(({ solver }) => solver.MAX_ITERATIONS)).toEqual(disabled.supervisedSolvers!.map(({ solver }) => solver.MAX_ITERATIONS))
+  expect(enabled.stats.routeColumnPreflightWorkUnits).toBeGreaterThan(0)
+  expect(enabled.stats.routeColumnWorkUnits).toBeUndefined()
 })

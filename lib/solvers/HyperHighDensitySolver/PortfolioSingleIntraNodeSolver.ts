@@ -465,20 +465,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (this.constructorParams.routeColumnRecombination &&
       (this.constructorParams.priorityCoordinateScale ?? 1) === 1) {
-      // Transfer a bounded fraction of existing proposal allowances. The
-      // recombiner adds no work allowance to the established portfolio.
-      let reserved = 0
-      const reservations: { solver: BaseSolver; allowance: number }[] = []
-      for (const { solver } of this.supervisedSolvers ?? []) {
-        if (!(solver instanceof CachedIntraNodeRouteSolver ||
-          solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) ||
-          solver.solved || solver.failed) continue
-        const allowance = Math.min(50_000 - reserved,
-          Math.floor(Math.max(0, solver.MAX_ITERATIONS - solver.iterations) * 0.05))
-        solver.MAX_ITERATIONS -= allowance
-        reserved += allowance
-        reservations.push({ solver, allowance })
-      }
       this.routeColumnPool = new RouteColumnPool({
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
@@ -490,15 +476,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
         viaHoleDiameter: this.constructorParams.viaHoleDiameter,
         minViaHoleEdgeToViaHoleEdgeClearance: this.constructorParams.minViaHoleEdgeToViaHoleEdgeClearance,
+        viaToPadClearance: this.constructorParams.viaToPadClearance,
         allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
-        workLimit: reserved,
+        workLimit: 0,
         diagnostics: this.constructorParams.priorityDiagnostics ?? this.stats,
       })
-      let released = this.routeColumnPool.releaseUnspentIneligibleAllowance()
-      for (const { solver, allowance } of reservations) {
-        const refund = Math.min(released, allowance)
-        solver.MAX_ITERATIONS += refund
-        released -= refund
+      // Eligibility has a separate bounded preflight ledger. Ineligible
+      // domains never reduce any original candidate's search allowance.
+      if (this.routeColumnPool.eligible) {
+        let reserved = 0
+        for (const { solver } of this.supervisedSolvers ?? []) {
+          if (!(solver instanceof CachedIntraNodeRouteSolver ||
+            solver instanceof HighDensitySolverA01 || solver instanceof HighDensityA03Solver) ||
+            solver.solved || solver.failed) continue
+          const allowance = Math.min(50_000 - reserved,
+            Math.floor(Math.max(0, solver.MAX_ITERATIONS - solver.iterations) * 0.05))
+          solver.MAX_ITERATIONS -= allowance
+          reserved += allowance
+        }
+        this.routeColumnPool.allocateWorkAllowance(reserved)
       }
     }
     this.refreshDynamicIterationLimit()

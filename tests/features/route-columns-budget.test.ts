@@ -11,6 +11,7 @@ test("setup, donor conversion and compatibility searches obey a deterministic bu
     pool.offerRoute(b, "native")
     expect(pool.workUnits).toBeLessThanOrEqual(workLimit)
     expect(pool.params.diagnostics.routeColumnWorkUnits ?? 0).toBe(pool.workUnits)
+    expect(pool.params.diagnostics.routeColumnPreflightWorkUnits).toBeLessThanOrEqual(4096)
     if (workLimit < 18) expect(converted).toBe(0)
     if (!pool.solvedRoutes) expect(pool.exhausted).toBe(true)
     const spent = pool.workUnits
