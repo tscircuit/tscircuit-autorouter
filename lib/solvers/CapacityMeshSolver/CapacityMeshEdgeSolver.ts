@@ -1,3 +1,4 @@
+import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   CapacityMeshEdge,
@@ -6,6 +7,8 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+
+const TARGET_NODE_TOUCH_EPSILON = 0.001
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -62,18 +65,47 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       this.nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
 
+    const edgesByTargetNodeId = new Map<CapacityMeshNodeId, CapacityMeshEdge[]>(
+      targetNodes.map((node) => [node.capacityMeshNodeId, []]),
+    )
+    for (const edge of this.edges) {
+      for (const nodeId of edge.nodeIds) {
+        const incidentEdges = edgesByTargetNodeId.get(nodeId)
+        if (incidentEdges) incidentEdges.push(edge)
+      }
+    }
+    const targetIndex = targetNodes.length ? new Flatbush(targetNodes.length) : null
+    for (const node of targetNodes) {
+      targetIndex!.add(node.center.x - node.width / 2, node.center.y - node.height / 2,
+        node.center.x + node.width / 2, node.center.y + node.height / 2)
+    }
+    targetIndex?.finish()
     for (let i = 0; i < targetNodes.length; i++) {
-      for (let j = i + 1; j < targetNodes.length; j++) {
+      const target = targetNodes[i]!
+      // Board-world mm. Expand only the broad phase by the existing touch
+      // epsilon; preserve the original predicate and input-pair order below.
+      const candidates = targetIndex!.search(
+        target.center.x - target.width / 2 - TARGET_NODE_TOUCH_EPSILON,
+        target.center.y - target.height / 2 - TARGET_NODE_TOUCH_EPSILON,
+        target.center.x + target.width / 2 + TARGET_NODE_TOUCH_EPSILON,
+        target.center.y + target.height / 2 + TARGET_NODE_TOUCH_EPSILON,
+      ).filter((j) => j > i).sort((a, b) => a - b)
+      for (const j of candidates) {
         const nodeA = targetNodes[i]!
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        if (edgesByTargetNodeId.get(nodeA.capacityMeshNodeId)!.some(
+          (edge) => edge.nodeIds.includes(nodeB.capacityMeshNodeId),
+        )) continue
 
-        this.edges.push({
+        const edge: CapacityMeshEdge = {
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
-        })
+        }
+        this.edges.push(edge)
+        edgesByTargetNodeId.get(nodeA.capacityMeshNodeId)!.push(edge)
+        edgesByTargetNodeId.get(nodeB.capacityMeshNodeId)!.push(edge)
       }
     }
 
@@ -82,7 +114,7 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
+      const hasRoutingEdge = edgesByTargetNodeId.get(targetNode.capacityMeshNodeId)!.some((edge) => {
         if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
         const otherNodeId =
           edge.nodeIds[0] === targetNode.capacityMeshNodeId
@@ -124,7 +156,7 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     node1: CapacityMeshNode,
     node2: CapacityMeshNode,
   ): boolean {
-    const epsilon = 0.001
+    const epsilon = TARGET_NODE_TOUCH_EPSILON
     const n1Left = node1.center.x - node1.width / 2
     const n1Right = node1.center.x + node1.width / 2
     const n1Top = node1.center.y - node1.height / 2

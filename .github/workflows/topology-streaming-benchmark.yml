@@ -143,3 +143,36 @@ jobs:
         with:
           name: partial-target-restoration-comparison
           path: results/
+
+  target_edges:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare identical target graphs and require exact ordered edges
+        run: |
+          mkdir -p results
+          for count in 4096 16384; do
+            bun head/scripts/benchmarks/measure-target-edge-completion.ts base results/base-$count.json $count
+            bun head/scripts/benchmarks/measure-target-edge-completion.ts head results/head-$count.json $count
+          done
+          bun -e 'for(const count of [4096,16384]) {const b=await Bun.file(`results/base-${count}.json`).json(),h=await Bun.file(`results/head-${count}.json`).json(); if(!b.solved||!h.solved||b.failed||h.failed||!b.inputUnchanged||!h.inputUnchanged||b.inputSha256!==h.inputSha256||b.outputSha256!==h.outputSha256||h.edges!==count)throw Error("Native target edge completion or ordered geometry changed")}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: target-edge-completion-comparison
+          path: results/
