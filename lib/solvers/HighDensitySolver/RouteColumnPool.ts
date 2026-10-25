@@ -1,5 +1,7 @@
+import { checkViaPadClearance, checkViasOffBoard } from "@tscircuit/checks"
+import { isPointInsideBounds, isPointInsidePolygon } from "@tscircuit/math-utils"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { type ConnectivityMap, getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import {
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9RouteCopperGeometry,
@@ -59,11 +61,11 @@ export class RouteColumnPool {
   private readonly taskByName = new Map<string, Task>()
   private readonly pairCompatibility = new Map<string, boolean>()
   private readonly seenRoutes = new WeakSet<HighDensityIntraNodeRoute>()
-  private readonly obstacles: Obstacle[] = []
+  private obstacles: Obstacle[] = []
   private nextColumnId = 0
   private preflight = true
   private preflightWorkUnits = 0
-  private obstaclesInitialized = false
+  private obstaclePadding = -1
   private readonly bounds: { minX: number; maxX: number; minY: number; maxY: number }
 
   constructor(readonly params: RouteColumnPoolParams) {
@@ -186,10 +188,22 @@ export class RouteColumnPool {
     this.record("routeColumnAllocatedWorkUnits", allowance)
   }
 
-  private initializeObstacles(): void {
-    if (this.obstaclesInitialized) return
+  private initializeObstacles(route: HighDensityIntraNodeRoute): void {
+    // A donor may use wider copper than the configured minima. In particular,
+    // boundary terminals can have a footprint outside the mesh interface.
+    let wireWidth = this.params.traceWidth
+    if (Number.isFinite(route.traceThickness)) wireWidth = Math.max(wireWidth, route.traceThickness)
+    for (const point of route.route) {
+      if (point.traceThickness !== undefined && Number.isFinite(point.traceThickness))
+        wireWidth = Math.max(wireWidth, point.traceThickness)
+    }
+    const viaDiameter = Number.isFinite(route.viaDiameter)
+      ? Math.max(this.params.viaDiameter, route.viaDiameter) : this.params.viaDiameter
     const padding = Math.max(this.params.viaDiameter + this.params.obstacleMargin,
-      this.params.viaDiameter / 2 + (this.params.viaToPadClearance ?? 0) + this.params.traceWidth + this.params.obstacleMargin)
+      wireWidth / 2 + this.params.obstacleMargin,
+      viaDiameter / 2 + Math.max(this.params.obstacleMargin, this.params.viaToPadClearance ?? 0))
+    if (padding <= this.obstaclePadding) return
+    const obstacles: Obstacle[] = []
     for (const obstacle of this.params.obstacles) {
       this.charge(1)
       const radius = Math.hypot(obstacle.width, obstacle.height) / 2
@@ -197,9 +211,10 @@ export class RouteColumnPool {
         obstacle.center.x - radius <= this.bounds.maxX + padding &&
         obstacle.center.y + radius >= this.bounds.minY - padding &&
         obstacle.center.y - radius <= this.bounds.maxY + padding)
-        this.obstacles.push(obstacle)
+        obstacles.push(obstacle)
     }
-    this.obstaclesInitialized = true
+    this.obstacles = obstacles
+    this.obstaclePadding = padding
   }
 
   /** Conversion of donor-owned grid output is paid before calling getOutput. */
@@ -229,7 +244,6 @@ export class RouteColumnPool {
       this.charge(1 + 3 * route.route.length + route.vias.length)
       route = this.compactRoute(route)
       if (route.route.length > 256) return
-      this.initializeObstacles()
       const fingerprint = JSON.stringify([route.traceThickness, route.viaDiameter, route.route, route.vias])
       if (task.columns.some((column) => column.fingerprint === fingerprint)) return
       this.record("routeColumnCandidates")
@@ -349,9 +363,19 @@ export class RouteColumnPool {
     }
     // Independent fixed-copper and physical-board validation. This does not
     // trust the donor's ancestor/order context, provisional congestion or DRC.
+    this.initializeObstacles(route)
     const primitives = route.route.length + route.vias.length + 1
-    this.charge(primitives * (primitives + this.obstacles.reduce((sum, o) => sum + 4 + o.connectedTo.length, 0) +
-      (params.boardGeometry?.outline?.length ?? 0) + 4))
+    this.charge(this.obstacles.length)
+    const obstaclePrimitives = this.obstacles.reduce((sum, o) => sum + 4 + o.connectedTo.length, 0)
+    const outlineSize = params.boardGeometry?.outline?.length ?? 0
+    const padValidationWork = route.vias.length > 0 && this.obstacles.length > 0
+      ? 4 * (primitives + obstaclePrimitives) ** 2 : 0
+    const boardValidationWork = params.boardGeometry
+      ? 4 * primitives * (outlineSize + 4) : 0
+    // Reserve before conversion, connectivity traversal, pad checks or polygon
+    // scans. The added checks share the existing finite pool work allowance.
+    this.charge(primitives * (primitives + obstaclePrimitives + outlineSize + 4) +
+      padValidationWork + boardValidationWork)
     const { connectedRouteNamesByObstacle, connectedObstaclesByRoute } = getObstacleRouteConnectivity({
       obstacles: this.obstacles, routes: [route], connMap: params.connMap,
     })
@@ -378,12 +402,47 @@ export class RouteColumnPool {
         ),
       }],
     }
+    const traceId = `column_${route.connectionName}`
     const circuitJson = convertToCircuitJson(srj, [{
-      type: "pcb_trace", pcb_trace_id: `column_${route.connectionName}`,
+      type: "pcb_trace", pcb_trace_id: traceId,
       connection_name: route.connectionName,
       route: convertHdRouteToSimplifiedRoute(route, params.layerCount, { defaultViaHoleDiameter: params.viaHoleDiameter }),
     }])
     if (params.boardGeometry) circuitJson.push(createPcbBoardElement(srj))
+    if (route.vias.length > 0 && this.obstacles.length > 0) {
+      const drcConnectivity = getFullConnectivityMapFromCircuitJson(circuitJson)
+      const padIds = new Set<string>()
+      for (const element of circuitJson) {
+        if (element.type === "pcb_via" && "pcb_trace_id" in element && typeof element.pcb_trace_id === "string")
+          drcConnectivity.addConnections([[element.pcb_via_id, element.pcb_trace_id]])
+        if (element.type === "pcb_smtpad") padIds.add(element.pcb_smtpad_id)
+        if (element.type === "pcb_plated_hole") padIds.add(element.pcb_plated_hole_id)
+      }
+      // Mesh ports do not necessarily touch a component pad. Preserve the
+      // imported physical ownership even when no PCB port can be attached.
+      // Distinct geometric pieces of one pad receive conversion fragment IDs.
+      for (let index = 0; index < this.obstacles.length; index++) {
+        const metadata = this.obstacles[index]!.circuitJsonMetadata
+        const baseId = metadata?.pcb_plated_hole_id ?? metadata?.pcb_smtpad_id
+        if (!baseId || connectedRouteNamesByObstacle[index]!.length === 0) continue
+        for (const padId of [baseId, `${baseId}_fragment_${index}`]) {
+          if (padIds.has(padId)) drcConnectivity.addConnections([[traceId, padId]])
+        }
+      }
+      if (checkViaPadClearance(circuitJson, {
+        connMap: drcConnectivity,
+        minClearance: params.viaToPadClearance ?? params.obstacleMargin,
+      }).length > 0) return this.rejectStatic("viaPad")
+    }
+    if (params.boardGeometry) {
+      const inside = srj.outline
+        ? route.route.every((point): boolean => isPointInsidePolygon(point, srj.outline!))
+        : route.route.every((point): boolean => isPointInsideBounds(point, srj.bounds))
+      if (!inside) return this.rejectStatic("boardContainment")
+      // This check uses each converted via's actual copper diameter, complete
+      // drill-layer span and the physical board's declared edge clearance.
+      if (checkViasOffBoard(circuitJson).length > 0) return this.rejectStatic("viaBoard")
+    }
     const { errors } = getDrcErrors(circuitJson, {
       traceClearance: params.obstacleMargin, viaClearance: params.obstacleMargin,
       holeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
