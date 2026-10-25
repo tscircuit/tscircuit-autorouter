@@ -12,9 +12,9 @@ test("Pipeline9 forwards differential-pair maximum uncoupled length", async () =
   input.differentialPairs![0]!.maxUncoupledLength = 3
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
 
-  solver.solve()
+  solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
 
-  expect(solver.solved).toBe(true)
+  expect(solver.getCurrentPhase()).toBe("lengthMatchingPostProcessingSolver")
   expect(solver.failed).toBe(false)
   const lengthMatchingStep = solver.pipelineDef.find(
     (step) => step.solverClass === LengthMatchingPostProcessingSolver,

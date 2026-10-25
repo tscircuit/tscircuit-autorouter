@@ -170,7 +170,13 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     }
 
     if (!this.busLengthMatchingSolver) {
-      const hdRoutes = this.differentialPairSolver.getOutput().hdRoutes
+      const { hdRoutes, postProcessingErrors } =
+        this.differentialPairSolver.getOutput()
+      if (postProcessingErrors.length > 0) {
+        this.failed = true
+        this.error = postProcessingErrors.map((error) => error.message).join("\n")
+        return
+      }
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,

@@ -10,16 +10,16 @@ maximum uncoupled length. The negative endpoint is 3 mm shorter than the
 positive endpoint. It is a failure-reporting reproduction, not a complete
 Ethernet board or evidence of manufacturable signal integrity.
 
-Pipeline9 currently finishes with `solved=true`, `failed=false`, and no error.
+Before the fix, Pipeline9 finishes with `solved=true`, `failed=false`, and no error.
 The nested length-matching `PostProcessingSolver` rejects the pair with a
 `no-valid-candidate` diagnostic and returns its input HD routes. The autorouter's
-`LengthMatchingPostProcessingSolver` reads only `hdRoutes`, discarding
+`LengthMatchingPostProcessingSolver` read only `hdRoutes`, discarding
 `postProcessingErrors`.
 
-Expected behavior: Pipeline9 fails and preserves the pair-specific diagnostic.
+With the fix, Pipeline9 fails and preserves the pair-specific diagnostic.
 An infeasible constraint must not be reported as successful routing.
 
-Run the characterization regression and create its actual solver snapshot:
+Run the regression and create its actual solver snapshot:
 
 ```sh
 BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/differential-pair-silent-failure.test.ts --timeout 9999999

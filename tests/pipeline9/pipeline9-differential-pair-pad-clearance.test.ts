@@ -5,7 +5,11 @@ import srj from "../fixtures/core-differential-pair-pad-clearance.json"
 
 test("Pipeline9 preserves declared pad clearance when length matching", () => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    srj as SimpleRouteJson,
+    {
+      ...srj,
+      // The distant receiver pins need uncoupled fanout for this clearance test.
+      differentialPairs: [{ ...srj.differentialPairs[0], maxUncoupledLength: 20 }],
+    } as SimpleRouteJson,
   )
   solver.solve()
   expect(solver.solved).toBe(true)

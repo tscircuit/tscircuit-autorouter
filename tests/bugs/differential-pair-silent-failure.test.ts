@@ -10,7 +10,7 @@ type LengthMatchingStep = Extract<
   { solverClass: typeof LengthMatchingPostProcessingSolver }
 >
 
-test("Pipeline9 reproduces silent differential-pair post-processing failure", async (): Promise<void> => {
+test("Pipeline9 reports rejected differential-pair post-processing", async (): Promise<void> => {
   const input: SimpleRouteJson = await Bun.file(
     new URL(
       "../../fixtures/bug-reports/differential-pair-silent-failure/differential-pair-silent-failure.srj.json",
@@ -23,10 +23,10 @@ test("Pipeline9 reproduces silent differential-pair post-processing failure", as
 
   solver.solve()
 
-  // Characterize the bug here; the stacked fix changes these status assertions.
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.error).toBeNull()
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.error).toContain("source_trace_0/source_trace_1")
+  expect(solver.error).toContain("could not be improved")
   const postProcessingStep = solver.pipelineDef.find(
     (step): step is LengthMatchingStep =>
       step.solverClass === LengthMatchingPostProcessingSolver,

@@ -14,7 +14,7 @@ const readFixture = async (filename: string): Promise<string> => {
   return gunzipSync(await Bun.file(fixtureUrl).bytes()).toString("utf8")
 }
 
-test("RGMII PHY board reproduces ignored MDI post-processing diagnostics", async (): Promise<void> => {
+test("RGMII PHY board reports all rejected MDI post-processing diagnostics", async (): Promise<void> => {
   const inputSrj: SimpleRouteJson = JSON.parse(await readFixture("board.srj.json.gz"))
   const srjWithPointPairs: SimpleRouteJson = JSON.parse(await readFixture("point-pairs.srj.json.gz"))
   const boardCircuitJson: AnyCircuitElement[] = JSON.parse(await readFixture("placement.circuit.json.gz"))
@@ -44,11 +44,12 @@ test("RGMII PHY board reproduces ignored MDI post-processing diagnostics", async
 
   const solver = new LengthMatchingPostProcessingSolver(mdiInput)
   solver.solve()
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.error).toBeNull()
-  const output = solver.getOutput()
-  expect(output.hdRoutes).toEqual(candidate.hdRoutes)
+  expect(solver.solved).toBe(false)
+  expect(solver.failed).toBe(true)
+  expect(solver.error).toBe(
+    candidate.postProcessingErrors.map((error) => error.message).join("\n"),
+  )
+  expect(() => solver.getOutput()).toThrow("output requested before completion")
 
   await expect(getRealBoardPostProcessingSnapshotSvg({
     inputSrj,
@@ -62,6 +63,5 @@ test("RGMII PHY board reproduces ignored MDI post-processing diagnostics", async
       failed: solver.failed,
       error: solver.error,
     },
-    outputRouteCount: output.hdRoutes.length,
   })).toMatchSvgSnapshot(import.meta.path)
 })
