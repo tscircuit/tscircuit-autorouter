@@ -35,6 +35,9 @@ jobs:
       - name: Require exact small-case output and completed large head case
         run: |
           bun -e 'const b=await Bun.file("results/base-striped.json").json(), h=await Bun.file("results/head-striped.json").json(), large=await Bun.file("results/head-large.json").json(), bl=await Bun.file("results/base-large.json").json(); if(!h.solved||!large.solved||!bl.solved||h.inputSha256!==b.inputSha256||h.outputSha256!==b.outputSha256||large.inputSha256!==bl.inputSha256||large.outputSha256!==bl.outputSha256||h.peakRetainedRegions>h.inputNodes*8)throw Error("Topology comparison did not meet completion, preservation, and memory criteria")'
+      - name: Require bounded cached layer topology work
+        run: |
+          bun -e 'for (const size of ["striped", "large"]) { const h=await Bun.file(`results/head-${size}.json`).json(); if (!(h.stats.layerTopologyReuses>0) || !(h.stats.layerTopologyComputations<h.stats.atomicRegionCount/4) || h.stats.peakLayerTopologyCacheEntries>h.inputNodes*4) throw Error("Coverage cache cost or retention regressed") }'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

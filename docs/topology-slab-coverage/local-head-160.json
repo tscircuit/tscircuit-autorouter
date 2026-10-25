@@ -1,0 +1,28 @@
+{
+  "caseName": "synthetic-striped-160",
+  "runtime": "1.4.0",
+  "revision": "ff23d0e468f0b48a61964969fdcdcab5d38dfe54",
+  "sourceSha256": "0008abc06e9e1659cbb1de9d1e1d251194cffbf559995d4716ae2806fad09a0a",
+  "inputSha256": "9286a4c028b5e920d106f77edcb0d7c755236023affd925c3699a50700b11a82",
+  "inputNodes": 320,
+  "seconds": 0.187581731,
+  "solved": true,
+  "failed": false,
+  "error": null,
+  "stopReason": null,
+  "peakRetainedRegions": 960,
+  "peakRss": 74211328,
+  "outputNodes": 960,
+  "outputSha256": "be7c59ab60fa192e311bf848cb37780b98dfb5d6b44962fe6a312544062a555a",
+  "stats": {
+    "inputNodeCount": 320,
+    "xSlabCount": 321,
+    "processedXSlabCount": 321,
+    "atomicRegionCount": 51840,
+    "outputNodeCount": 960,
+    "layerTopologyComputations": 320,
+    "layerTopologyReuses": 51360,
+    "peakLayerTopologyCacheEntries": 321,
+    "compactedRegionCount": 960
+  }
+}
