@@ -102,8 +102,6 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
-    /** Changed policy: bounded feasible owner corridors ranked by once-per-owner reroute work. */
-    USE_FEASIBLE_OWNER_CORRIDORS?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }
