@@ -267,6 +267,7 @@ const getTinyViaSizeOptions = (
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  negotiateSingleLayerCrossings = false,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
@@ -276,6 +277,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     // Closed regional occurrences remain rejected until the native heap clears.
     OWNED_REGIONAL_HOP_FRONTIER: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
+    NEGOTIATE_SINGLE_LAYER_CROSSINGS: negotiateSingleLayerCrossings,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
@@ -301,6 +303,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  negotiateSingleLayerCrossings = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -317,7 +320,11 @@ const getTinyHyperGraphPipelineInput = (
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
-      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...getTinyHyperGraphSolveGraphOptions(
+        effort,
+        minViaPadDiameter,
+        negotiateSingleLayerCrossings,
+      ),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -1132,6 +1139,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.flags.NEGOTIATE_SINGLE_LAYER_CROSSINGS === true,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
