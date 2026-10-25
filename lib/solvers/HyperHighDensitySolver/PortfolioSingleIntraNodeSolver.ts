@@ -16,6 +16,7 @@ import { PriorityDagIntraNodeSolver } from "../HighDensitySolver/PriorityDagIntr
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
+import { MultiHeadPolylineContactSolver } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolylineContactSolver"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
@@ -57,6 +58,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    enablePolylineContactSolve?: boolean
+    viaToPadClearance?: number
+    physicalCoordinateScale?: number
+    contactDiagnostics?: Record<string, number>
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -129,6 +134,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      enablePolylineContactSolve?: boolean
+      viaToPadClearance?: number
+      physicalCoordinateScale?: number
+      contactDiagnostics?: Record<string, number>
     },
   ) {
     super()
@@ -708,6 +717,29 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }) as any
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
+      if (this.constructorParams.enablePolylineContactSolve) {
+        const params = this.constructorParams
+        if (params.traceWidth === undefined || params.viaDiameter === undefined ||
+          params.obstacleMargin === undefined || params.obstacles === undefined || params.layerCount === undefined)
+          throw new Error("Polyline contact refinement requires the full physical board context")
+        return new MultiHeadPolylineContactSolver({
+          nodeWithPortPoints: this.nodeWithPortPoints,
+          connMap: this.connMap,
+          hyperParameters,
+          traceWidth: params.traceWidth,
+          viaDiameter: params.viaDiameter,
+          obstacleMargin: params.obstacleMargin,
+          viaToPadClearance: params.viaToPadClearance,
+          obstacles: params.obstacles,
+          layerCount: params.layerCount,
+          boardGeometry: params.boardGeometry,
+          viaHoleDiameter: params.viaHoleDiameter,
+          minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
+          allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+          physicalCoordinateScale: params.physicalCoordinateScale,
+          contactDiagnostics: params.contactDiagnostics,
+        }) as any
+      }
       return new MultiHeadPolyLineIntraNodeSolver3({
         nodeWithPortPoints: this.nodeWithPortPoints,
         connMap: this.connMap,
