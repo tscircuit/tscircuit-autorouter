@@ -105,6 +105,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
+    priorityCoordinateScale?: number
+    priorityDagSearch?: boolean
+    priorityDiagnostics?: Record<string, number>
+    viaHoleDiameter?: number
+    minViaHoleEdgeToViaHoleEdgeClearance?: number
+    allowBlindAndBuriedVias?: boolean
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
     const { nodeWithPortPoints, colorMap } = params
@@ -212,11 +218,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
   }
 
-  private getSingleRouteSolverOpts(unsolvedConnection: {
+  protected getSingleRouteSolverOpts(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
-  }) {
+  }): ConstructorParameters<typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
     return {
       connectionName,
@@ -259,7 +265,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
   }
 
-  private trySolveSamePointLayerChange(unsolvedConnection: {
+  protected trySolveSamePointLayerChange(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
