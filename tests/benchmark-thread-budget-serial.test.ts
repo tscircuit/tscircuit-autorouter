@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph as Pipeline9 } from "../lib"
 import { solveWithProgress } from "../scripts/benchmark/benchmark-run-task"
-import type { BenchmarkTask } from "../scripts/benchmark/benchmark-types"
+import type {
+  BenchmarkTask,
+  WorkerProgress,
+} from "../scripts/benchmark/benchmark-types"
 
 test("single-thread Pipeline9 preserves serial benchmark output", async (): Promise<void> => {
   const task: BenchmarkTask = {
@@ -42,4 +45,23 @@ test("single-thread Pipeline9 preserves serial benchmark output", async (): Prom
     JSON.stringify(serial.getOutputSimpleRouteJson()),
   )
   expect(budgeted.iterations).toBe(serial.iterations)
+
+  const observed = new Pipeline9(structuredClone(task.scenario), {
+    effort: 0.1,
+    cacheProvider: null,
+  })
+  const phases: Array<string | undefined> = []
+  await solveWithProgress(task, observed, performance.now(), {
+    onProgress: (progress: WorkerProgress): void => {
+      phases.push(progress.phaseName)
+    },
+  })
+  expect(observed.solved).toBe(true)
+  expect(observed.getOutputSimpleRouteJson()).toEqual(
+    serial.getOutputSimpleRouteJson(),
+  )
+  expect(observed.iterations).toBe(serial.iterations)
+  expect(phases).toContain("highDensityRouteSolver")
+  expect(Object.hasOwn(observed, "step")).toBe(false)
+  expect(observed.timeToSolve).toBeNumber()
 })

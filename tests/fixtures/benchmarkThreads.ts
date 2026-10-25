@@ -35,7 +35,9 @@ const parallel = new Pipeline(structuredClone(task.scenario), {
   effort: 0.1,
   cacheProvider: null,
 })
-await solveWithProgress(task, parallel, performance.now(), {})
+await solveWithProgress(task, parallel, performance.now(), {
+  onProgress: (): void => {},
+})
 assert.equal(parallel.solved, true)
 assert.equal(
   JSON.stringify(parallel.getOutputSimpleRouteJson()),

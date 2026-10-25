@@ -545,15 +545,44 @@ export const solveWithProgress = async (
     throw new Error("--threads > 1 requires Pipeline9_PreloadedTraceGraph")
   }
 
+  // Local Pipeline9 solveAsync without a runtime runs synchronously, so timer
+  // callbacks cannot report its intermediate phases.
+  const reportInlineProgress =
+    options.onProgress !== undefined &&
+    (task.threads ?? 1) === 1 &&
+    (task.solverConstructorName ?? task.solverName) ===
+      "AutoroutingPipelineSolver9_PreloadedTraceGraph" &&
+    typeof solver.step === "function" &&
+    typeof solver.solveAsync === "function"
+
   if (typeof solver.solveAsync === "function") {
+    const originalStepDescriptor = reportInlineProgress
+      ? Object.getOwnPropertyDescriptor(solver, "step")
+      : undefined
     const interval =
-      options.onProgress && progressIntervalMs > 0
+      !reportInlineProgress && options.onProgress && progressIntervalMs > 0
         ? setInterval(() => emitProgress(true), progressIntervalMs)
         : null
     let runtime:
       | (SolverRuntimeExecutor & { dispose(): Promise<void> })
       | undefined
     try {
+      if (reportInlineProgress) {
+        const originalStep = solver.step!
+        let phaseIndex = solver.currentPipelineStepIndex
+        let stepsSinceProgressCheck = 0
+        solver.step = (): void => {
+          originalStep.call(solver)
+          if (
+            solver.currentPipelineStepIndex !== phaseIndex ||
+            ++stepsSinceProgressCheck >= 1024
+          ) {
+            emitProgress()
+            phaseIndex = solver.currentPipelineStepIndex
+            stepsSinceProgressCheck = 0
+          }
+        }
+      }
       if ((task.threads ?? 1) > 1) {
         const { createAutorouterSolverRuntime } = await import(
           "../../lib/runtime/bun"
@@ -565,6 +594,13 @@ export const solveWithProgress = async (
       }
       await solver.solveAsync(runtime)
     } finally {
+      if (reportInlineProgress) {
+        if (originalStepDescriptor) {
+          Object.defineProperty(solver, "step", originalStepDescriptor)
+        } else {
+          delete solver.step
+        }
+      }
       if (interval) {
         clearInterval(interval)
       }
