@@ -45,4 +45,22 @@ test("ordinary Pipeline9 activates columns with matching serial/batch output whi
   projected.solve()
   expect(projected.solved).toBe(true)
   expect(projectedDiagnostics.routeColumnInstances).toBeUndefined()
+  const ownedDefaults: Record<string, number> = {}
+  const explicitlyDisabled: Record<string, number> = {}
+  for (const [diagnostics, override] of [
+    [ownedDefaults, {}],
+    [explicitlyDisabled, { routeColumnRecombination: false }],
+  ] as const) {
+    const owned = createPipeline9RegularNodeSolver({
+      nodeWithPortPoints: params.nodePortPoints[0]!, connMap,
+      colorMap: {}, viaDiameter: 0.3, traceWidth: 0.1,
+      obstacleMargin: 0.1, effort: 0.1, nodePfById: {},
+      obstacles: [], layerCount: 4, priorityDiagnostics: diagnostics,
+      priorityDagSearch: true, ...override,
+    })
+    owned.solve()
+    expect(owned.solved).toBe(true)
+  }
+  expect(ownedDefaults.routeColumnEligibleInstances).toBeGreaterThan(0)
+  expect(explicitlyDisabled.routeColumnInstances).toBeUndefined()
 })

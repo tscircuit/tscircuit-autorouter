@@ -351,7 +351,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  routeColumnRecombination = false,
+  routeColumnRecombination = priorityDagSearch,
   traceWidth,
   obstacleMargin,
   effort,
