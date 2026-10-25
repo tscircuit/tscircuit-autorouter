@@ -146,8 +146,15 @@ export function restoreAuthoritativeTargetRegions({
       topologyModesBySourceKey.set(sourceKey, topologyModes)
       if (region.topologyMode === "target-passthrough") {
         const areas = targetAreaBySourceKeyAndLayer.get(sourceKey) ?? new Map<number, number>()
-        const area = (region.bounds.maxX - region.bounds.minX) *
-          (region.bounds.maxY - region.bounds.minY)
+        const { bounds } = preparedNodeBySourceKey.get(sourceKey)!
+        // The sweep coalesces boundaries within EPSILON. Account for that
+        // existing coordinate normalization without filling a genuinely masked
+        // corner or changing the original source geometry.
+        const minX = Math.abs(region.bounds.minX - bounds.minX) <= TOPOLOGY_MERGING_EPSILON ? bounds.minX : region.bounds.minX
+        const maxX = Math.abs(region.bounds.maxX - bounds.maxX) <= TOPOLOGY_MERGING_EPSILON ? bounds.maxX : region.bounds.maxX
+        const minY = Math.abs(region.bounds.minY - bounds.minY) <= TOPOLOGY_MERGING_EPSILON ? bounds.minY : region.bounds.minY
+        const maxY = Math.abs(region.bounds.maxY - bounds.maxY) <= TOPOLOGY_MERGING_EPSILON ? bounds.maxY : region.bounds.maxY
+        const area = (maxX - minX) * (maxY - minY)
         for (const z of region.availableZ) areas.set(z, (areas.get(z) ?? 0) + area)
         targetAreaBySourceKeyAndLayer.set(sourceKey, areas)
       }
