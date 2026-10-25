@@ -1,5 +1,7 @@
+import { checkViaPadClearance, checkViasOffBoard } from "@tscircuit/checks"
+import { isPointInsideBounds, isPointInsidePolygon } from "@tscircuit/math-utils"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { type ConnectivityMap, getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson, createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
@@ -60,7 +62,8 @@ export const validatePolylineContactRoutes = (
   // Reserve a conservative quadratic primitive allowance before entering the
   // external physical checker. Its internal pair checks cannot escape the
   // local model's work cap merely because they execute in another package.
-  const primitiveCount = points.length + sites.length + obstacles.length * 4 + 4
+  const primitiveCount = points.length + sites.length + obstacles.length * 4 +
+    (context.boardGeometry?.outline?.length ?? 4)
   charge(16 * primitiveCount * primitiveCount)
   const { connectedRouteNamesByObstacle, connectedObstaclesByRoute } =
     getObstacleRouteConnectivity({ obstacles, routes, connMap: context.connMap })
@@ -107,6 +110,43 @@ export const validatePolylineContactRoutes = (
   }))
   const circuitJson = convertToCircuitJson(srj, traces)
   if (context.boardGeometry) circuitJson.push(createPcbBoardElement(srj))
+  const drcConnectivity = getFullConnectivityMapFromCircuitJson(circuitJson)
+  for (const element of circuitJson) {
+    if (element.type === "pcb_via" && "pcb_trace_id" in element && typeof element.pcb_trace_id === "string")
+      drcConnectivity.addConnections([[element.pcb_via_id, element.pcb_trace_id]])
+  }
+  // Mesh-port routes need not terminate at the pad, so imported pad ownership
+  // can be known even when conversion cannot attach a PCB port to that pad.
+  const traceIdsByName = new Map(traces.map((trace): [string, string] => [trace.connection_name, trace.pcb_trace_id]))
+  const padIds = new Set(circuitJson.flatMap((element): string[] =>
+    element.type === "pcb_smtpad" ? [element.pcb_smtpad_id] :
+      element.type === "pcb_plated_hole" ? [element.pcb_plated_hole_id] : []))
+  for (let index = 0; index < obstacles.length; index++) {
+    const metadata = obstacles[index]!.circuitJsonMetadata
+    const baseId = metadata?.pcb_plated_hole_id ?? metadata?.pcb_smtpad_id
+    if (!baseId) continue
+    for (const name of connectedRouteNamesByObstacle[index]!) {
+      const traceId = traceIdsByName.get(name)!
+      for (const padId of [baseId, `${baseId}_fragment_${index}`]) {
+        if (padIds.has(padId)) drcConnectivity.addConnections([[traceId, padId]])
+      }
+    }
+  }
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap: drcConnectivity,
+    minClearance: context.viaToPadClearance ?? context.obstacleMargin,
+  })
+  if (viaPadErrors.length > 0) return viaPadErrors[0]!.message
+  if (context.boardGeometry) {
+    // Boundary-distance checks also need an inside witness: a whole wire can
+    // otherwise lie outside a concave outline without approaching an edge.
+    const inside = srj.outline
+      ? points.every((point): boolean => isPointInsidePolygon(point, srj.outline!))
+      : points.every((point): boolean => isPointInsideBounds(point, srj.bounds))
+    if (!inside) return "route point outside physical board"
+    const viaBoardErrors = checkViasOffBoard(circuitJson)
+    if (viaBoardErrors.length > 0) return viaBoardErrors[0]!.message
+  }
   const { errors } = getDrcErrors(circuitJson, {
     traceClearance: context.obstacleMargin,
     viaClearance: Math.max(0.1, context.obstacleMargin),

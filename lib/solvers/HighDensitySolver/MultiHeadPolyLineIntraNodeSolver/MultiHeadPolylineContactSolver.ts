@@ -368,6 +368,9 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
     } else {
       this.count("contactNonstationaryProposals", Number(!result.stationary))
       this.count("contactWorkCappedProposals", Number(result.stopReason === "work-cap"))
+      // Prepay the proposal, exact merit/bounds checks and possible rollback.
+      // Exhaustion must leave the candidate at its last checked coordinates.
+      this.charge(seed.contacts.length + seed.vertices.length * 3)
       for (let index = 0; index < seed.vertices.length; index++) {
         const vertex = seed.vertices[index]!
         vertex.point.x += result.displacement[vertex.variable]!
@@ -375,7 +378,6 @@ export class MultiHeadPolylineContactSolver extends MultiHeadPolyLineIntraNodeSo
       }
       const merit = seed.contacts.reduce((sum, contact): number => sum +
         Math.max(0, contact.required + 1e-5 - contactPrimitiveDistance(contact.a, contact.b)) ** 2, 0)
-      this.charge(seed.contacts.length + seed.vertices.length)
       if (this.inBounds(seed.candidate) && (merit < 1e-16 || merit < seed.merit * (1 - 1e-5))) {
         this.count("contactAcceptedSteps")
         seed.trust = Math.min(this.maximumTrust, seed.trust * 1.25)
