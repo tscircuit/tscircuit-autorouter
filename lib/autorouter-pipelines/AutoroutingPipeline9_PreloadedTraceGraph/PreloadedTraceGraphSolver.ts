@@ -68,11 +68,15 @@ const getPreloadedTracePrimitives = (
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition,
-          zLayers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
+          // Logical trace transitions do not shorten a drilled through barrel.
+          // Match the physical span already used by detailed routing and DRC.
+          zLayers: srj.allowBlindAndBuriedVias
+            ? getLayersBetween(
+                routePoint.from_layer,
+                routePoint.to_layer,
+                srj.layerCount,
+              )
+            : Array.from({ length: srj.layerCount }, (_, z) => z),
           start: routePoint,
           end: routePoint,
         })
