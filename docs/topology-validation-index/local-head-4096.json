@@ -1,0 +1,17 @@
+{
+  "scope": "Generated native disjoint topology validation; timings use ordinary nodes, geometry reads are a separate instrumented run",
+  "count": 4096,
+  "validated": true,
+  "runtime": "1.4.0",
+  "sourceSha256": "251e99f8728eb5c48926fd1bdf6f9dd30bc2f935b3029a98cb9bab54a929e477",
+  "inputSha256": "871a312a1cdd184d46d6834d7589790bbce6dc7122333af1332601c1584371fb",
+  "outputUnchanged": true,
+  "geometryReads": 8192,
+  "medianMs": 4.8070359999999965,
+  "trialsMs": [
+    4.5154270000000025,
+    4.8070359999999965,
+    5.504177000000006
+  ],
+  "rssAfterBytes": 66215936
+}

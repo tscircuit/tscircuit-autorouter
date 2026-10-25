@@ -77,3 +77,36 @@ jobs:
         with:
           name: topology-streaming-canonical-comparison
           path: results/
+
+  validation:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare disjoint validation without changing nodes
+        run: |
+          mkdir -p results
+          for count in 4096 16384; do
+            bun head/scripts/benchmarks/measure-topology-validation.ts base results/base-$count.json $count
+            bun head/scripts/benchmarks/measure-topology-validation.ts head results/head-$count.json $count
+          done
+          bun -e 'for(const count of [4096,16384]) { const b=await Bun.file(`results/base-${count}.json`).json(), h=await Bun.file(`results/head-${count}.json`).json(); if(!b.validated||!h.validated||!b.outputUnchanged||!h.outputUnchanged||b.inputSha256!==h.inputSha256||h.geometryReads>count*20) throw Error("Validation behavior or geometry-work regression") }'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: topology-validation-comparison
+          path: results/
