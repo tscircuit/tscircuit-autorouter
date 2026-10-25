@@ -14,11 +14,13 @@ function node(overrides: Partial<CapacityMeshNode> = {}): CapacityMeshNode {
 }
 
 test("optional free-span floor preserves ordinary gates, dimensions, roles and default ratio behavior", (): void => {
-  for (const traceWidth of [0.1, 0.1524]) {
+  const layerSets = [[7], [0, 7], [0, 1, 2, 3, 4, 5, 6, 7]]
+  const cases: Array<{ traceWidth: number; availableZ: number[] }> = [0.1, 0.1524].flatMap((traceWidth) => layerSets.map((availableZ) => ({ traceWidth, availableZ })))
+  for (const { traceWidth, availableZ } of cases) {
     const minimumSpan = 1.5 * (traceWidth + 0.15)
     const expectedCount = traceWidth === 0.1 ? 17 : 14
     for (const dimension of [3, 15]) {
-      const input = [node()]
+      const input = [node({ availableZ })]
       const snapshot = structuredClone(input)
       const solver = new NodeDimensionSubdivisionSolver(input, dimension, 6, 0.01, minimumSpan)
       solver.solve()
@@ -27,13 +29,14 @@ test("optional free-span floor preserves ordinary gates, dimensions, roles and d
       expect(solver.outputNodes.reduce((sum, n) => sum + n.width * n.height, 0)).toBeCloseTo(input[0]!.width * input[0]!.height, 12)
       expect(input).toEqual(snapshot)
       const first = solver.outputNodes[0]!
-      const side = node({ capacityMeshNodeId: "side", center: { x: first.center.x - first.width / 2 - 0.5, y: first.center.y }, width: 1 })
-      const end = node({ capacityMeshNodeId: "end", center: { x: first.center.x, y: first.center.y - first.height / 2 - 0.5 }, width: 1, height: 1 })
+      const side = node({ capacityMeshNodeId: "side", center: { x: first.center.x - first.width / 2 - 0.5, y: first.center.y }, width: 1, availableZ })
+      const end = node({ capacityMeshNodeId: "end", center: { x: first.center.x, y: first.center.y - first.height / 2 - 0.5 }, width: 1, height: 1, availableZ })
       for (const [index, neighbor] of [side, end].entries()) {
         const ports = new AvailableSegmentPointSolver({ nodes: [first, neighbor], edges: [{ capacityMeshEdgeId: "gate", nodeIds: [first.capacityMeshNodeId, neighbor.capacityMeshNodeId] }], traceWidth, obstacleMargin: 0.15, shouldReturnCrampedPortPoints: true })
         ports.solve()
         const points = ports.getOutput().flatMap((s) => s.portPoints)
         expect(points.length).toBeGreaterThan(0)
+        expect([...new Set(points.flatMap((point) => point.availableZ))]).toEqual(availableZ)
         expect(points.every((p) => p.cramped)).toBe(index === 1)
       }
     }
@@ -46,8 +49,15 @@ test("optional free-span floor preserves ordinary gates, dimensions, roles and d
     solver.solve()
     expect(solver.outputNodes).toEqual(original.outputNodes)
   }
-  for (const role of [{ _containsObstacle: true }, { _containsTarget: true }, { _isNarrowQfpPadGap: true }, { _isComponentTopologyNode: true }, { _connectedTo: ["net"] }, { _targetConnectionName: "net" }, { _qfpRegionType: "pad-gap" }, { _soicRegionType: "pad-gap" }, { _parent: node() }, { unknownRole: false }, { availableZ: [0, 7] }]) {
-    const solver = new NodeDimensionSubdivisionSolver([node(role as Partial<CapacityMeshNode>)], 15, 6, 0.01, 0.375)
+  for (const availableZ of layerSets) {
+    for (const role of [{ _containsObstacle: true }, { _containsTarget: true }, { _isNarrowQfpPadGap: true }, { _isComponentTopologyNode: true }, { _connectedTo: ["net"] }, { _targetConnectionName: "net" }, { _qfpRegionType: "pad-gap" }, { _soicRegionType: "pad-gap" }, { _parent: node() }, { unknownRole: false }]) {
+      const solver = new NodeDimensionSubdivisionSolver([node({ ...role, availableZ } as Partial<CapacityMeshNode>)], 15, 6, 0.01, 0.375)
+      solver.solve()
+      expect(solver.outputNodes).toHaveLength(171)
+    }
+  }
+  for (const invalidLayers of [[], [-1], [0, 0.5], [0, NaN]]) {
+    const solver = new NodeDimensionSubdivisionSolver([node({ availableZ: invalidLayers })], 15, 6, 0.01, 0.375)
     solver.solve()
     expect(solver.outputNodes).toHaveLength(171)
   }

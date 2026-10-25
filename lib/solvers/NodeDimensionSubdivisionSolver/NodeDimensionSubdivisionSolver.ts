@@ -26,8 +26,8 @@ type BridgeNodeWorkspace = {
   bridgeNodeIndex?: BridgeNodeIndex
 }
 
-function isPlainSingleLayerGlobalFreeNode(node: CapacityMeshNode): boolean {
-  if (node.availableZ.length !== 1 || !Number.isInteger(node.availableZ[0]) || node.availableZ[0]! < 0) return false
+function isPlainGlobalFreeNode(node: CapacityMeshNode): boolean {
+  if (node.availableZ.length === 0 || node.availableZ.some((z) => !Number.isInteger(z) || z < 0)) return false
   if (![node.center.x, node.center.y, node.width, node.height].every(Number.isFinite) || node.width <= 0 || node.height <= 0) return false
   // Unknown metadata can describe ownership, component gaps or offboard links.
   // Keep their subdivision behavior intact, even when the free-span floor is on.
@@ -82,7 +82,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
 
   /**
    * The dimension limit has priority. Opting into minimumFreeNodeSpan makes
-   * the ratio limit best effort for plain single-layer global free cells.
+   * the ratio limit best effort for plain global free cells on any layer set.
    */
   constructor(
     private readonly nodes: CapacityMeshNode[],
@@ -119,7 +119,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       const preserveOrdinaryFreePorts =
         Number.isFinite(this.minimumFreeNodeSpan) &&
         this.minimumFreeNodeSpan > 0 &&
-        isPlainSingleLayerGlobalFreeNode(node)
+        isPlainGlobalFreeNode(node)
       while (true) {
         const childWidth = node.width / cols
         const childHeight = node.height / rows
