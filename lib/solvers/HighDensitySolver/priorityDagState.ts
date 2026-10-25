@@ -15,7 +15,12 @@ export function extendPriorityDag<T>(
   charge: (name: string, count?: number) => void,
 ): PriorityDagState<T> | null {
   charge("priorityBranchProposals")
-  if (higher === lower || state.ancestors[higher].has(lower) || state.ancestors[lower].has(higher)) return null
+  if (
+    higher === lower ||
+    state.ancestors[higher].has(lower) ||
+    state.ancestors[lower].has(higher)
+  )
+    return null
   const ancestors = state.ancestors.map((set) => {
     charge("priorityClosureCopies", set.size + 1)
     return new Set(set)

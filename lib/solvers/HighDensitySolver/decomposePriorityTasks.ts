@@ -26,7 +26,12 @@ export function decomposePriorityTasks(
     let points: readonly PriorityPoint[] = connection.points
     for (const point of points) {
       charge("priorityDecompositionPoints")
-      if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || !Number.isSafeInteger(point.z)) return null
+      if (
+        !Number.isFinite(point.x) ||
+        !Number.isFinite(point.y) ||
+        !Number.isSafeInteger(point.z)
+      )
+        return null
     }
     if (points.length > 2) {
       const seen = new Set<string>()
@@ -45,11 +50,16 @@ export function decomposePriorityTasks(
     }
     for (let endpoint = points.length - 1; endpoint >= 1; endpoint--) {
       charge("priorityDecompositionBranches")
-      const a = points[0], b = points[endpoint]
-      const nearSameXY = Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6
+      const a = points[0],
+        b = points[endpoint]
+      const nearSameXY =
+        Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6
       if (nearSameXY && (a.z === b.z || a.x !== b.x || a.y !== b.y)) return null
-      tasks.push({ connectionName: connection.connectionName, rootConnectionName: connection.rootConnectionName,
-        points: [{ ...a }, { ...b }] })
+      tasks.push({
+        connectionName: connection.connectionName,
+        rootConnectionName: connection.rootConnectionName,
+        points: [{ ...a }, { ...b }],
+      })
     }
   }
   return tasks.length >= 2 ? tasks : null

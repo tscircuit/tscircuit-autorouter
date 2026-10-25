@@ -557,10 +557,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
                 }
               }
               this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted =
-                (this.benchmarkDiagnosticCounters.priorityWorkerBatchesCompleted ?? 0) + 1
+                (this.benchmarkDiagnosticCounters
+                  .priorityWorkerBatchesCompleted ?? 0) + 1
               this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted =
-                (this.benchmarkDiagnosticCounters.priorityWorkerNodesCompleted ?? 0) +
-                results.length
+                (this.benchmarkDiagnosticCounters
+                  .priorityWorkerNodesCompleted ?? 0) + results.length
               return { type: "result" as const, results }
             },
             (error: unknown) => ({ type: "error" as const, error }),
@@ -577,8 +578,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         }
       }
       this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched =
-        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ?? 0) +
-        batches.length
+        (this.benchmarkDiagnosticCounters.priorityWorkerBatchesDispatched ??
+          0) + batches.length
       this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched =
         (this.benchmarkDiagnosticCounters.priorityWorkerNodesDispatched ?? 0) +
         nodes.length
@@ -597,7 +598,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           return
         }
         this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted =
-          (this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted ?? 0) + 1
+          (this.benchmarkDiagnosticCounters.priorityWorkerNodesAccepted ?? 0) +
+          1
         this.iterations += logicalIterations
         this.routes.push(...result.routes)
         for (const [key, value] of Object.entries(result.stats)) {

@@ -217,18 +217,34 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   getHyperParameterDefs() {
     let priorityEligible = false
     if (this.constructorParams.priorityDagSearch) {
-      this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(this.nodeWithPortPoints)
-      const groups = [...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries()].map(([connectionName, points]) => ({
-        connectionName, rootConnectionName: this.precomputedIntraNodeRouteParams!.rootConnectionNameByConnectionName.get(connectionName), points,
+      this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
+        this.nodeWithPortPoints,
+      )
+      const groups = [
+        ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
+      ].map(([connectionName, points]) => ({
+        connectionName,
+        rootConnectionName:
+          this.precomputedIntraNodeRouteParams!.rootConnectionNameByConnectionName.get(
+            connectionName,
+          ),
+        points,
       }))
       let preflightWork = 0
       const detailed = PriorityDagIntraNodeSolver.detailedWorkDiagnostics
-      priorityEligible = decomposePriorityTasks(groups, (_name, count = 1) => { if (detailed) preflightWork += count }) !== null
+      priorityEligible =
+        decomposePriorityTasks(groups, (_name, count = 1) => {
+          if (detailed) preflightWork += count
+        }) !== null
       const diagnostics = this.constructorParams.priorityDiagnostics
       if (detailed && diagnostics) {
-        diagnostics.priorityEligibilityCalls = (diagnostics.priorityEligibilityCalls ?? 0) + 1
-        diagnostics.priorityEligibilityObservedWork = (diagnostics.priorityEligibilityObservedWork ?? 0) + preflightWork
-        if (!priorityEligible) diagnostics.priorityIneligiblePreflightWork = (diagnostics.priorityIneligiblePreflightWork ?? 0) + preflightWork
+        diagnostics.priorityEligibilityCalls =
+          (diagnostics.priorityEligibilityCalls ?? 0) + 1
+        diagnostics.priorityEligibilityObservedWork =
+          (diagnostics.priorityEligibilityObservedWork ?? 0) + preflightWork
+        if (!priorityEligible)
+          diagnostics.priorityIneligiblePreflightWork =
+            (diagnostics.priorityIneligiblePreflightWork ?? 0) + preflightWork
       }
     }
     return [
@@ -266,9 +282,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "orderings6",
-        possibleValues: priorityEligible ? [{ SHUFFLE_SEED: 0, PRIORITY_DAG_FAMILY_SIZE: 6 }] : ORDERING_SHUFFLE_SEEDS.map((shuffleSeed) => ({
-          SHUFFLE_SEED: shuffleSeed,
-        })),
+        possibleValues: priorityEligible
+          ? [{ SHUFFLE_SEED: 0, PRIORITY_DAG_FAMILY_SIZE: 6 }]
+          : ORDERING_SHUFFLE_SEEDS.map((shuffleSeed) => ({
+              SHUFFLE_SEED: shuffleSeed,
+            })),
       },
       {
         name: "cellSizeFactor",
@@ -300,9 +318,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "orderings50",
-        possibleValues: priorityEligible ? [{ SHUFFLE_SEED: 0, PRIORITY_DAG_FAMILY_SIZE: 20 }] : Array.from({ length: 20 }, (_, i) => ({
-          SHUFFLE_SEED: 100 + i,
-        })),
+        possibleValues: priorityEligible
+          ? [{ SHUFFLE_SEED: 0, PRIORITY_DAG_FAMILY_SIZE: 20 }]
+          : Array.from({ length: 20 }, (_, i) => ({
+              SHUFFLE_SEED: 100 + i,
+            })),
       },
       // {
       //   name: "closedFormTwoTrace",
@@ -405,7 +425,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           // Preserve the work budget of the most expensive initial candidate.
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
-            solver instanceof PriorityDagIntraNodeSolver ? solver.nativeCandidateIterationLimit : solver.MAX_ITERATIONS,
+            solver instanceof PriorityDagIntraNodeSolver
+              ? solver.nativeCandidateIterationLimit
+              : solver.MAX_ITERATIONS,
           )
           this.candidateWorkBySolver.set(solver, {
             iterations: solver.iterations,
@@ -527,7 +549,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           if (candidate instanceof HighDensitySolverA13) continue
           this.dynamicExpansionWorkBudget = Math.max(
             this.dynamicExpansionWorkBudget,
-            candidate instanceof PriorityDagIntraNodeSolver ? candidate.nativeCandidateIterationLimit : candidate.MAX_ITERATIONS,
+            candidate instanceof PriorityDagIntraNodeSolver
+              ? candidate.nativeCandidateIterationLimit
+              : candidate.MAX_ITERATIONS,
           )
         }
       }
