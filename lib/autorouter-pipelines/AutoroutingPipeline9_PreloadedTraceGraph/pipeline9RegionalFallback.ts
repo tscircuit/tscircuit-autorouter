@@ -305,10 +305,11 @@ export const createRegionalFallbackProblem = (
         ...node.portPoints,
         ...fallbackPortPairs.flatMap((pair) => pair),
       ],
-      portPointsInPairs: [
-        ...(node.portPointsInPairs ?? []),
-        ...fallbackPortPairs,
-      ],
+      // Keep legacy requests implicit; a fixed-only pair list would hide them.
+      portPointsInPairs:
+        node.portPointsInPairs?.length || node.portPoints.length === 0
+          ? [...(node.portPointsInPairs ?? []), ...fallbackPortPairs]
+          : node.portPointsInPairs,
     },
     fixedRouteSectionsByConnectionName,
     fixedObstacleRoutes,

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { createRegionalFallbackProblem } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
+import { precomputeIntraNodeRouteParams } from "lib/solvers/HighDensitySolver/precomputeIntraNodeRouteParams"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 test("Pipeline9 only makes preloaded sections on target layers movable", (): void => {
@@ -69,5 +70,9 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
     problem.fixedObstacleRoutes.map((route) => route.connectionName),
   ).toEqual(["top_only", "touches_target_layer_outside_node"])
   expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4)
-  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1)
+  expect(problem.nodeWithPortPoints.portPointsInPairs).toBeUndefined()
+  expect(
+    precomputeIntraNodeRouteParams(problem.nodeWithPortPoints)
+      .connectionTasks.map((task) => task.connectionName),
+  ).toEqual(["target", "touches_target_layer"])
 })
