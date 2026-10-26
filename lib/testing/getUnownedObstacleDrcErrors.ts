@@ -3,6 +3,7 @@ import type { AnyCircuitElement, PcbTraceError } from "circuit-json"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 
@@ -24,12 +25,18 @@ export const getUnownedObstacleDrcErrors = ({
   jointTraces: SimplifiedPcbTrace[]
   circuitJson: AnyCircuitElement[]
 }): UnownedObstacleDrcError[] => {
+  // Completed fanout footprint bounds reserve later routing space while their
+  // existing source copper remains represented by traces inside the footprint.
   const unownedObstacles = inputSrj.obstacles.flatMap((obstacle, obstacleIndex) =>
-    isOpaqueUnownedObstacle(obstacle)
+    isOpaqueUnownedObstacle(obstacle) && obstacle.isFanoutSourceKeepout !== true
       ? [{ obstacle, obstacleIndex }]
       : [],
   )
   if (unownedObstacles.length === 0) return []
+  const barrierSrj = createSrjWithBoardValidObstacleLayers({
+    ...inputSrj,
+    obstacles: unownedObstacles.map(({ obstacle }) => obstacle),
+  })
 
   // These barriers have no electrical owner, so aliases cannot exempt copper.
   const connMap = new ConnectivityMap({})
@@ -52,9 +59,8 @@ export const getUnownedObstacleDrcErrors = ({
   )
   const violations = getFixedObstacleViolations({
     srj: {
-      ...inputSrj,
+      ...barrierSrj,
       traces: undefined,
-      obstacles: unownedObstacles.map(({ obstacle }) => obstacle),
       // Routing margins do not declare additional clearance for opaque barriers.
       defaultObstacleMargin: 0,
       minTraceToPadEdgeClearance: 0,
