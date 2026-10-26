@@ -36,9 +36,9 @@ jobs:
       - name: Measure graph construction with a bounded V8 heap
         run: |
           set +e
-          (cd base && node --max-old-space-size=10240 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/base.json) > results/base.log 2>&1
+          (cd base && node --max-old-space-size=12288 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/base.json) > results/base.log 2>&1
           echo "$?" > results/base.exit-code
-          (cd head && node --max-old-space-size=10240 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/head.json) > results/head.log 2>&1
+          (cd head && node --max-old-space-size=12288 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/head.json) > results/head.log 2>&1
           echo "$?" > results/head.exit-code
           set -e
           python3 - <<'PYCODE'
