@@ -4,9 +4,12 @@ import {SingleTargetNecessaryCrampedPortPointSolver} from "lib/solvers/Necessary
 
 export class CountingPortMap extends Map<CapacityMeshNodeId, SegmentPortPoint[]> {
   getCalls = 0
+  adjacencyEntriesRead = 0
   override get(id: CapacityMeshNodeId): SegmentPortPoint[] | undefined {
     this.getCalls++
-    return super.get(id)
+    const ports=super.get(id)
+    this.adjacencyEntriesRead+=ports?.length??0
+    return ports
   }
 }
 

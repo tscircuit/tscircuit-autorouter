@@ -26,6 +26,10 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     SegmentPortPoint,
     ExploredPortPoint
   >()
+  private expandedCostByNodeAndDepth = new Map<
+    CapacityMeshNodeId,
+    Map<number, number>
+  >()
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
@@ -71,8 +75,8 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return
     }
 
-    while (this.queue.length > 0) {
-      this.currentExploredPortPoints = this.queue.shift()!
+    for (let queueIndex = 0; queueIndex < this.queue.length; queueIndex++) {
+      this.currentExploredPortPoints = this.queue[queueIndex]!
       const bestKnownCandidate = this.visitedExploredPortPoints.get(
         this.currentExploredPortPoints.port,
       )
@@ -97,18 +101,27 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         },
       )
 
-      const nextPorts = nextNodes.flatMap(
-        (node) =>
-          this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
-            node.capacityMeshNodeId,
-          ) ?? [],
-      )
-
-      for (const nextPort of nextPorts) {
+      const currentCost = this.getCandidateCost(this.currentExploredPortPoints)
+      for (const node of nextNodes) {
+        // At equal depth a cheaper prefix dominates every adjacent port.
+        // Keep depths separate for the search limit; ties retain the first parent.
+        let costsByDepth = this.expandedCostByNodeAndDepth.get(node.capacityMeshNodeId)
+        const previousCost = costsByDepth?.get(this.currentExploredPortPoints.depth)
+        if (previousCost !== undefined && previousCost <= currentCost) continue
+        if (!costsByDepth) {
+          costsByDepth = new Map<number, number>()
+          this.expandedCostByNodeAndDepth.set(node.capacityMeshNodeId, costsByDepth)
+        }
+        costsByDepth.set(this.currentExploredPortPoints.depth, currentCost)
+        const nextPorts = this.input.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(node.capacityMeshNodeId) ?? []
+        for (const nextPort of nextPorts) {
         if (this.input.shouldIgnoreCrampedPortPoints && nextPort.cramped) {
           continue
         }
 
+        const nextCost = currentCost + 1 + (nextPort.cramped ? 1000 : 0)
+        const existingCandidate = this.visitedExploredPortPoints.get(nextPort)
+        if (existingCandidate && this.getCandidateCost(existingCandidate) <= nextCost) continue
         const nextCandidate: ExploredPortPoint = {
           port: nextPort,
           depth: this.currentExploredPortPoints.depth + 1,
@@ -117,19 +130,13 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
             this.currentExploredPortPoints.countOfCrampedPortPointsInPath +
             (nextPort.cramped ? 1 : 0),
         }
-        const existingCandidate = this.visitedExploredPortPoints.get(nextPort)
-        if (
-          existingCandidate &&
-          this.getCandidateCost(existingCandidate) <=
-            this.getCandidateCost(nextCandidate)
-        ) {
-          continue
-        }
         this.visitedExploredPortPoints.set(nextPort, nextCandidate)
         this.queue.push(nextCandidate)
+        }
       }
     }
 
+    this.queue = []
     this.solved = true
   }
 
