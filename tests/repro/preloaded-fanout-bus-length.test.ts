@@ -16,7 +16,9 @@ const getPlanarTraceLength = (trace: SimplifiedPcbTrace): number => {
     const previous = trace.route[index - 1]!
     const point = trace.route[index]!
     if (!("x" in previous) || !("x" in point)) {
-      throw new Error("Expected wire/via geometry in the reduced fanout fixture")
+      throw new Error(
+        "Expected wire/via geometry in the reduced fanout fixture",
+      )
     }
     length += Math.hypot(point.x - previous.x, point.y - previous.y)
   }
