@@ -3,6 +3,50 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  completed_topology_retention:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare identical completed native topologies
+        run: |
+          mkdir -p results base/scripts/benchmarks base/tests/fixtures
+          cp head/scripts/benchmarks/measure-completed-topology-retention.ts base/scripts/benchmarks/
+          cp head/tests/fixtures/createOverlayGridTopology.ts base/tests/fixtures/
+          for count in 16 128 512; do
+            for trial in 1 2 3; do
+              (cd base && bun scripts/benchmarks/measure-completed-topology-retention.ts "$count") > "results/base-$count-$trial.json"
+              (cd head && bun scripts/benchmarks/measure-completed-topology-retention.ts "$count") > "results/head-$count-$trial.json"
+            done
+          done
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          for count in [16,128,512]:
+            for trial in [1,2,3]:
+              a=json.loads(Path(f'results/base-{count}-{trial}.json').read_text());b=json.loads(Path(f'results/head-{count}-{trial}.json').read_text())
+              for k in ['inputSha256','outputSha256','outputNodes','solved','failed','inputUnchanged']:assert a[k]==b[k],(count,k)
+              assert a['solved'] and b['solved'] and a['inputUnchanged'] and b['inputUnchanged']
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: completed-topology-retention-comparison
+          path: results/
   port_lookup_indexes:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
