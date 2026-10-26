@@ -32,6 +32,7 @@ import {
   type PlanarCrosscutDemand,
 } from "./getViaApproachCrosscutFeasibility"
 import { getNoViaPlanarCrossingFeasibility } from "./getNoViaPlanarCrossingFeasibility"
+import { getUnequalViaDomainCrosscutFeasibility } from "./getUnequalViaDomainCrosscutFeasibility"
 import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
 import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
@@ -960,6 +961,17 @@ export function createPhysicalViaCapacityEvaluator({
       slack,
     })
     if (!pair.feasible) return pair
+    if (owners.size >= 3 && vias.size > 0) {
+      const unequal = getUnequalViaDomainCrosscutFeasibility({
+        bounds, vias: [...vias.values()], wires: [...planarWires.values()],
+        radius: board.minimumViaTraceRadius - 4 * slack,
+        minimumForeignViaSpacing: board.minimumViaPairSpacing - slack,
+        minimumSameOwnerViaSpacing: board.minimumSameOwnerViaSpacing - slack,
+        minimumTraceSpacing: board.minimumTraceCenterSpacing,
+        slack,
+      })
+      if (!unequal.feasible) return unequal
+    }
     return getViaApproachCrosscutFeasibility({
       bounds, approaches: [...approaches.values()], wires: [...planarWires.values()],
       radius: board.minimumViaTraceRadius - 4 * slack,

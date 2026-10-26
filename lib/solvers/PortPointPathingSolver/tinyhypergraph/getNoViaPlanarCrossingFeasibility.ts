@@ -34,6 +34,32 @@ function perimeterInterval(contact: CrosscutBoundaryContact, bounds: Bounds, sla
     : [2 * width + height + contact.min - bounds.minY, 2 * width + height + contact.max - bounds.minY]
 }
 
+/** Prove alternating contact order for every point in four boundary domains. */
+export function haveAlternatingBoundaryContacts(
+  bounds: Bounds,
+  first: Pick<PlanarCrosscutDemand, "first" | "second">,
+  second: Pick<PlanarCrosscutDemand, "first" | "second">,
+  minimumTraceSpacing: number,
+  slack: number,
+): boolean {
+  if (![...Object.values(bounds), minimumTraceSpacing, slack].every(Number.isFinite) ||
+    bounds.minX >= bounds.maxX || bounds.minY >= bounds.maxY ||
+    slack < 0 || minimumTraceSpacing <= 4 * slack)
+    return false
+  const endpoints = [first.first, first.second, second.first, second.second].map((contact, index) => ({
+    owner: index < 2 ? 0 : 1,
+    interval: perimeterInterval(contact, bounds, slack),
+  }))
+  if (endpoints.some((entry) => entry.interval === undefined)) return false
+  endpoints.sort((a, b) => a.interval![0] - b.interval![0] || a.interval![1] - b.interval![1] || a.owner - b.owner)
+  // Touching intervals retain their order: positive foreign trace spacing
+  // prevents the two owners from selecting the same boundary junction.
+  if (endpoints.some((entry, index) => index > 0 && endpoints[index - 1]!.interval![1] > entry.interval![0]))
+    return false
+  return endpoints[0]!.owner !== endpoints[1]!.owner &&
+    endpoints[0]!.owner === endpoints[2]!.owner && endpoints[1]!.owner === endpoints[3]!.owner
+}
+
 /** Enforce the ordinary planar crossing invariant for owners with no via site. */
 export function getNoViaPlanarCrossingFeasibility({
   bounds, wires, minimumTraceSpacing, slack,
@@ -49,18 +75,7 @@ export function getNoViaPlanarCrossingFeasibility({
     for (let secondIndex = firstIndex + 1; secondIndex < trapped.length; secondIndex++) {
       const second = trapped[secondIndex]!
       if (first.owner === second.owner || first.layer !== second.layer) continue
-      const endpoints = [first.first, first.second, second.first, second.second].map((contact, index) => ({
-        owner: index < 2 ? 0 : 1,
-        interval: perimeterInterval(contact, bounds, slack),
-      }))
-      if (endpoints.some((entry) => entry.interval === undefined)) continue
-      endpoints.sort((a, b) => a.interval![0] - b.interval![0] || a.interval![1] - b.interval![1] || a.owner - b.owner)
-      // Touching intervals retain their order: positive foreign trace spacing
-      // prevents the two owners from selecting the same boundary junction.
-      if (endpoints.some((entry, index) => index > 0 && endpoints[index - 1]!.interval![1] > entry.interval![0]))
-        continue
-      if (endpoints[0]!.owner === endpoints[1]!.owner ||
-        endpoints[0]!.owner !== endpoints[2]!.owner || endpoints[1]!.owner !== endpoints[3]!.owner)
+      if (!haveAlternatingBoundaryContacts(bounds, first, second, minimumTraceSpacing, slack))
         continue
       const alternatives = new Map<string, number[]>()
       for (const wire of [first, second]) {
