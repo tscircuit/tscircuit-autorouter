@@ -12,10 +12,15 @@ test("task score caching preserves coordinate aliases, arrival modes and fresh p
     B: { x: 2, y: 2, z: 0 },
     layerCount: 3,
     cacheNodeCosts: true,
-    futureConnections: [{ connectionName: "foreign", points: [
-      { x: 0.25, y: 0.5, z: 0 },
-      { x: -0.25, y: -0.5, z: 1 },
-    ] }],
+    futureConnections: [
+      {
+        connectionName: "foreign",
+        points: [
+          { x: 0.25, y: 0.5, z: 0 },
+          { x: -0.25, y: -0.5, z: 1 },
+        ],
+      },
+    ],
   }
   const first = new Solver(opts)
   const second = new Solver({
@@ -24,11 +29,17 @@ test("task score caching preserves coordinate aliases, arrival modes and fresh p
   })
   const parent: Node = { x: -0.1, y: 0, z: 0, g: 1, h: 0, f: 0, parent: null }
   const point: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent }
-  expect(first.getNodeKey({ ...point, x: 0.004, y: 0.005 })).toBe(first.getNodeKey(point))
+  expect(first.getNodeKey({ ...point, x: 0.004, y: 0.005 })).toBe(
+    first.getNodeKey(point),
+  )
   for (const solver of [first, second]) {
-    for (const node of [point, { ...point, x: 0.004, y: 0.005 }, point,
+    for (const node of [
+      point,
+      { ...point, x: 0.004, y: 0.005 },
+      point,
       { ...point, parent: { ...parent, z: 1 } },
-      { ...point, parent: { ...parent, g: 99 } }]) {
+      { ...point, parent: { ...parent, g: 99 } },
+    ]) {
       const expectedG = solver.computeG(node)
       const expectedH = solver.computeH(node)
       solver.setNodeCosts(node)
