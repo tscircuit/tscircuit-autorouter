@@ -858,20 +858,33 @@ export function createPhysicalViaCapacityEvaluator({
             ? "y"
             : undefined
       if (!axis) continue
-      const key = JSON.stringify([owner, Math.min(from, to), Math.max(from, to)])
+      const key = JSON.stringify([
+        owner,
+        Math.min(from, to),
+        Math.max(from, to),
+      ])
       let wire = wires.get(key)
       if (!wire) {
         wire = { owner, axis, routeIds: [], candidate: false }
         wires.set(key, wire)
       }
       wire.candidate ||= route === query.routeId
-      if (route !== query.routeId && !wire.routeIds.includes(route)) wire.routeIds.push(route)
+      if (route !== query.routeId && !wire.routeIds.includes(route))
+        wire.routeIds.push(route)
     }
     if (wires.size === 0) return FEASIBLE
-    const slack = 1e-9 + Number.EPSILON * 128 *
-      Object.values(bounds).reduce((sum, coordinate) => sum + Math.abs(coordinate), 0)
+    const slack =
+      1e-9 +
+      Number.EPSILON *
+        128 *
+        Object.values(bounds).reduce(
+          (sum, coordinate) => sum + Math.abs(coordinate),
+          0,
+        )
     return getThroughViaCrosscutFeasibility({
-      bounds, vias: [...vias.values()], wires: [...wires.values()],
+      bounds,
+      vias: [...vias.values()],
+      wires: [...wires.values()],
       radius: board.minimumViaTraceRadius - slack,
       minimumViaSpacing: board.minimumViaPairSpacing - slack,
       slack,
@@ -898,8 +911,12 @@ export function createPhysicalViaCapacityEvaluator({
     const owner = routeId === undefined ? undefined : getOwner(problem, routeId)
     if (owner === undefined) return FEASIBLE
     for (const edge of new Set([fromEdge, toEdge])) {
-      if (!edge || preserveSolitarySharedEdgePorts === false ||
-        !isMovableFace(edge, query) || !edge.blockedAnyLayer)
+      if (
+        !edge ||
+        preserveSolitarySharedEdgePorts === false ||
+        !isMovableFace(edge, query) ||
+        !edge.blockedAnyLayer
+      )
         continue
       const conditional = getOrderedFeasibility(edge, query, owner)
       if (!conditional.feasible) return conditional

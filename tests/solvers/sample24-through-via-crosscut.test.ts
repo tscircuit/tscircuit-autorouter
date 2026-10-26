@@ -125,50 +125,120 @@ test("sample24 node61252 attributes an impossible full-stack via barrier to remo
   })
   expect(evaluate({ ...query, regionSegments: [] })).toEqual({ feasible: true })
   const ground = {
-    ...query, routeId: 0, fromPortId: pairs[0]![0], toPortId: pairs[0]![1],
-    regionSegments: [[1, ...pairs[1]!], [2, ...pairs[2]!]] as [number, number, number][],
+    ...query,
+    routeId: 0,
+    fromPortId: pairs[0]![0],
+    toPortId: pairs[0]![1],
+    regionSegments: [
+      [1, ...pairs[1]!],
+      [2, ...pairs[2]!],
+    ] as [number, number, number][],
   }
-  expect(evaluate(ground)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1], [2]] })
+  expect(evaluate(ground)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1], [2]],
+  })
   const changingGround = { ...topology, portZ: topology.portZ.slice() }
   changingGround.portZ[pairs[0]![1]] = 7
   expect(evaluate({ ...ground, topology: changingGround })).toEqual({
-    feasible: false, alternativeBlockerRouteIdSets: [[1], [2]],
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1], [2]],
   })
   const aliasedProblem = {
-    ...problem, routeCount: 4,
+    ...problem,
+    routeCount: 4,
     routeMetadata: [...problem.routeMetadata!, problem.routeMetadata![1]],
   }
-  const aliased = { ...query, problem: aliasedProblem,
-    regionSegments: [...query.regionSegments, [3, ...pairs[1]!]] as [number, number, number][] }
-  expect(evaluate(aliased)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 3], [0]] })
+  const aliased = {
+    ...query,
+    problem: aliasedProblem,
+    regionSegments: [...query.regionSegments, [3, ...pairs[1]!]] as [
+      number,
+      number,
+      number,
+    ][],
+  }
+  expect(evaluate(aliased)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1, 3], [0]],
+  })
   expect(evaluate({ ...aliased, ignoredRouteIds: new Set([1]) })).toEqual({
-    feasible: false, alternativeBlockerRouteIdSets: [[3], [0]],
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[3], [0]],
   })
-  const remapped = { ...problem, routeMetadata: [problem.routeMetadata![1], problem.routeMetadata![2], problem.routeMetadata![0]] }
-  expect(evaluate({ ...query, problem: remapped, routeId: 1,
-    regionSegments: [[2, ...pairs[0]!], [0, ...pairs[1]!]] })).toEqual({
-    feasible: false, alternativeBlockerRouteIdSets: [[0], [2]],
+  const remapped = {
+    ...problem,
+    routeMetadata: [
+      problem.routeMetadata![1],
+      problem.routeMetadata![2],
+      problem.routeMetadata![0],
+    ],
+  }
+  expect(
+    evaluate({
+      ...query,
+      problem: remapped,
+      routeId: 1,
+      regionSegments: [
+        [2, ...pairs[0]!],
+        [0, ...pairs[1]!],
+      ],
+    }),
+  ).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[0], [2]],
   })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, throughViaCrosscutEnabled: false })!(query))
-    .toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, throughViaCrosscutEnabled: undefined })!(query))
-    .toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      throughViaCrosscutEnabled: false,
+    })!(query),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      throughViaCrosscutEnabled: undefined,
+    })!(query),
+  ).toEqual({ feasible: true })
   const outside = { ...topology, portX: topology.portX.slice() }
   const currentNode = nodes[query.regionId]!
-  outside.portX[pairs[0]![0]] = currentNode.center.x - currentNode.width / 2 - 1e-6
+  outside.portX[pairs[0]![0]] =
+    currentNode.center.x - currentNode.width / 2 - 1e-6
   expect(evaluate({ ...query, topology: outside })).toEqual({
-    feasible: false, alternativeBlockerRouteIdSets: [[1], [0]],
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1], [0]],
   })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!({
-    ...query, topology: outside,
-  })).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({
-    ...context, physicalSrj: { ...fixture.physicalSrj, allowJumpers: true },
-  })!(query)).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      movableSharedEdgeRegionIds: [],
+    })!({
+      ...query,
+      topology: outside,
+    }),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      physicalSrj: { ...fixture.physicalSrj, allowJumpers: true },
+    })!(query),
+  ).toEqual({ feasible: true })
   const plated = structuredClone(fixture.physicalSrj)
   plated.obstacles.push({
-    type: "rect", center: { x: 279, y: 68.2 }, width: 2, height: 0.01,
-    layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"],
+    type: "rect",
+    center: { x: 279, y: 68.2 },
+    width: 2,
+    height: 0.01,
+    layers: [
+      "top",
+      "inner1",
+      "inner2",
+      "inner3",
+      "inner4",
+      "inner5",
+      "inner6",
+      "bottom",
+    ],
     connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_136"],
   })
   // Existing owned multilayer copper makes the manufactured-via demand
