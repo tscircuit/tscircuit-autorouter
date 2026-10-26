@@ -1,13 +1,84 @@
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { hasViaObstacleCollision } from "lib/solvers/HyperHighDensitySolver/hasViaObstacleCollision"
+import type { Obstacle } from "lib/types/srj-types"
 import {
   Pipeline9HighDensityForceImproveSampleSolver,
   type Pipeline9HighDensityForceImproveSampleOutput,
 } from "./Pipeline9HighDensityForceImproveSampleSolver"
 
+type ViaObstacleContext = {
+  obstacles: Obstacle[]
+  layerCount: number
+  allowBlindAndBuriedVias?: boolean
+  viaDiameter: number
+  viaToPadClearance: number
+  connectivityNetMap: Record<string, string[]>
+}
+
+type Pipeline9ForceImproveParams = ConstructorParameters<
+  typeof HighDensityForceImproveSolver
+>[0] & { viaObstacleContext?: ViaObstacleContext }
+
 export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImproveSolver {
   private asyncRunning = false
   private completedSample?: Pipeline9HighDensityForceImproveSampleOutput
+  private readonly viaObstacleContext?: ViaObstacleContext
+  private readonly connMap?: ConnectivityMap
+  private viaObstacleRejectedSampleCount = 0
+
+  constructor(params: Pipeline9ForceImproveParams) {
+    super(params)
+    this.viaObstacleContext = params.viaObstacleContext
+    this.connMap = params.viaObstacleContext
+      ? new ConnectivityMap(params.viaObstacleContext.connectivityNetMap)
+      : undefined
+  }
+
+  override getConstructorParams(): [Pipeline9ForceImproveParams] {
+    return [{
+      ...super.getConstructorParams()[0],
+      viaObstacleContext: this.viaObstacleContext,
+    }]
+  }
+
+  private retainValidViaGeometry(sampleIndex: number): void {
+    const context = this.viaObstacleContext
+    const entry = this.sampleEntries[sampleIndex]
+    if (!context || !entry || this.activeSampleIndex === sampleIndex) return
+    const collisionParams = {
+      ...context,
+      connMap: this.connMap,
+      center: entry.node.center,
+      coordinateScale: 1,
+    }
+    const proposedRoutes = entry.routeIndexes.map((routeIndex) => {
+      const route = this.improvedRoutesByIndex.get(routeIndex)
+      if (!route) throw new Error("Completed force-improve sample is missing a route")
+      return route
+    })
+    const originalRoutes = entry.routeIndexes.map(
+      (routeIndex) => this.originalHdRoutes[routeIndex],
+    )
+    if (
+      hasViaObstacleCollision({ ...collisionParams, routes: proposedRoutes }) &&
+      !hasViaObstacleCollision({ ...collisionParams, routes: originalRoutes })
+    ) {
+      // Keep the node sample atomic: mixing original and moved routes can cross.
+      for (const routeIndex of entry.routeIndexes) {
+        this.improvedRoutesByIndex.delete(routeIndex)
+      }
+      this.viaObstacleRejectedSampleCount += 1
+      this.latestVisualization = {}
+    }
+    this.stats = {
+      ...this.stats,
+      improvedNodeCount: this.activeSampleIndex - this.viaObstacleRejectedSampleCount,
+      improvedRouteCount: this.improvedRoutesByIndex.size,
+      viaObstacleRejectedSampleCount: this.viaObstacleRejectedSampleCount,
+    }
+  }
 
   async solveAsync(
     runtime?: SolverRuntimeExecutor,
@@ -90,9 +161,11 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
   }
 
   override _step(): void {
+    const sampleIndex = this.activeSampleIndex
     const result = this.completedSample
     if (!result) {
       super._step()
+      this.retainValidViaGeometry(sampleIndex)
       return
     }
     this.completedSample = undefined
@@ -113,5 +186,6 @@ export class Pipeline9HighDensityForceImproveSolver extends HighDensityForceImpr
       totalStepsPerNode: this.totalStepsPerNode,
     }
     if (this.activeSampleIndex >= this.sampleEntries.length) this.solved = true
+    this.retainValidViaGeometry(sampleIndex)
   }
 }
