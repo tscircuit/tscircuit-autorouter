@@ -672,6 +672,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         // has a good reproduction
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
+        staticSegmentValidator: this.constructorParams.staticSegmentValidator,
+        coordinateScale: this.constructorParams.staticSegmentValidator
+          ? (this.constructorParams.priorityCoordinateScale ?? 1)
+          : undefined,
         hyperParameters,
       })
       return solver as any
