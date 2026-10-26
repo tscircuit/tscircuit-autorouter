@@ -8,7 +8,7 @@ export class NativeExploredNodeSet extends Set<number> {
   }
 
   override has(key: number): boolean {
-    if ((key >>> 0) === key && key < this.keyLimit) {
+    if (key >>> 0 === key && key < this.keyLimit) {
       const page = this.pages[key >>> 10]
       return (
         page !== undefined &&
@@ -20,7 +20,7 @@ export class NativeExploredNodeSet extends Set<number> {
 
   override add(key: number): this {
     super.add(key)
-    if ((key >>> 0) === key && key < this.keyLimit) {
+    if (key >>> 0 === key && key < this.keyLimit) {
       const pageIndex = key >>> 10
       const page = (this.pages[pageIndex] ??= new Uint32Array(32))
       page[(key >>> 5) & 31] |= 1 << (key & 31)
@@ -30,7 +30,7 @@ export class NativeExploredNodeSet extends Set<number> {
 
   override delete(key: number): boolean {
     const deleted = super.delete(key)
-    if ((key >>> 0) === key && key < this.keyLimit) {
+    if (key >>> 0 === key && key < this.keyLimit) {
       const page = this.pages[key >>> 10]
       if (page !== undefined) {
         page[(key >>> 5) & 31] &= ~(1 << (key & 31))

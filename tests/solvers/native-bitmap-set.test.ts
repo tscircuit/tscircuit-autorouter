@@ -23,8 +23,7 @@ test("Native membership mirrors preserve ordinary numeric Set mutations and orde
   let seed = 0x59a463
   for (let index = 0; index < 6000; index++) {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
-    const key =
-      index % 5 === 0 ? special[index % special.length]! : seed % 4200
+    const key = index % 5 === 0 ? special[index % special.length]! : seed % 4200
     if (index % 127 === 0) {
       mirrored.clear()
       reference.clear()
