@@ -10,16 +10,8 @@ export function isConnectionPointOnObstacle(input: {
   obstacle: Obstacle
   layerCount: number
 }): boolean {
-  const pointIds: string[] = [
-    input.point.pointId,
-    input.point.pcb_port_id,
-  ].filter((pointId): pointId is string => typeof pointId === "string")
-  if (
-    pointIds.some((pointId) => input.obstacle.connectedTo.includes(pointId))
-  ) {
-    return true
-  }
-
+  // connectedTo can contain every terminal on the net, including remote pads.
+  // Active target ownership therefore also requires physical layer and geometry.
   if (input.obstacle.connectedTo.length === 0) return false
 
   if (
