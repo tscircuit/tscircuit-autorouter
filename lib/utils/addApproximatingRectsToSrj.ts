@@ -87,7 +87,7 @@ interface Rect {
   height: number
 }
 
-const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
+const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle): boolean => {
   if (
     getConnectionPointLayers(point).length > 0 &&
     !getConnectionPointLayers(point).some((layer) =>
@@ -97,7 +97,25 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
     return false
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  const rotation = obstacle.ccwRotationDegrees
+  if (typeof rotation !== "number" || !Number.isFinite(rotation)) {
+    return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
+  }
+  if (isAxisAlignedRotation(rotation)) {
+    return isPointInsideBounds(point, getBoundFromCenteredRect(removeAxisAlignedRotation(obstacle, rotation)))
+  }
+  // Membership must use the same rotated copper as conversion. An unrotated
+  // box can otherwise select a neighboring pad through whole-net aliases.
+  const radians = -normalizeRotation(rotation) * Math.PI / 180
+  const dx = point.x - obstacle.center.x, dy = point.y - obstacle.center.y
+  const localPoint = {
+    x: dx * Math.cos(radians) - dy * Math.sin(radians),
+    y: dx * Math.sin(radians) + dy * Math.cos(radians),
+  }
+  return isPointInsideBounds(localPoint, {
+    minX: -obstacle.width / 2, maxX: obstacle.width / 2,
+    minY: -obstacle.height / 2, maxY: obstacle.height / 2,
+  })
 }
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
