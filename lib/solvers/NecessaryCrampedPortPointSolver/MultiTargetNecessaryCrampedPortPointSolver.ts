@@ -37,6 +37,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   private candidatesAtDepth: ExploredPortPoint[] = []
   private isRunningCrampedPass = false
   private filteredOutput?: SharedEdgeSegment[]
+  private graphInitialized = false
 
   override activeSubSolver: SingleTargetNecessaryCrampedPortPointSolver | null =
     null
@@ -64,6 +65,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override _setup(): void {
+    // Some callers require construction-time setup; BaseSolver also calls setup
+    // before the first step. Initialize this immutable adjacency graph once.
+    if (this.graphInitialized) return
     this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
@@ -92,15 +96,17 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           if (!cmNode) {
             throw new Error(`Could not find capacity mesh node for id ${id}`)
           }
-          const existingSegmentPortPoints =
-            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id) || []
-          this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, [
-            ...existingSegmentPortPoints,
-            segmentPortPoint,
-          ])
+          let existingSegmentPortPoints =
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(id)
+          if (!existingSegmentPortPoints) {
+            existingSegmentPortPoints = []
+            this.mapOfCapacityMeshNodeIdToSegmentPortPoints.set(id, existingSegmentPortPoints)
+          }
+          existingSegmentPortPoints.push(segmentPortPoint)
         }
       }
     }
+    this.graphInitialized = true
   }
 
   override _step(): void {
