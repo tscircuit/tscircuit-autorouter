@@ -170,59 +170,101 @@ export class PhysicalSharedEdgePlacement {
     return allowed
   }
 
-  redistribute(edge: SharedEdge, ports: PortPointWithOwnerPair[]): PortPointWithOwnerPair[] {
+  redistribute(
+    edge: SharedEdge,
+    ports: PortPointWithOwnerPair[],
+  ): PortPointWithOwnerPair[] {
     const output: PortPointWithOwnerPair[] = []
-    const layers = [...new Set(ports.map((port) => port.z))].sort((a, b) => a - b)
+    const layers = [...new Set(ports.map((port) => port.z))].sort(
+      (a, b) => a - b,
+    )
     for (const z of layers) {
-      const family = ports.filter((port) => port.z === z).sort((a, b) =>
-        (edge.orientation === "horizontal" ? a.x - b.x : a.y - b.y) ||
-        (a.portPointId ?? "").localeCompare(b.portPointId ?? ""))
+      const family = ports
+        .filter((port) => port.z === z)
+        .sort(
+          (a, b) =>
+            (edge.orientation === "horizontal" ? a.x - b.x : a.y - b.y) ||
+            (a.portPointId ?? "").localeCompare(b.portPointId ?? ""),
+        )
       const geometry: PortGeometry[] = family.map((port) => {
-        const owner = this.getOwner(port), width = this.getWidth(port)
-        return { owner, width, allowed: this.getAllowedIntervals(edge, { owner, width, z }) }
+        const owner = this.getOwner(port),
+          width = this.getWidth(port)
+        return {
+          owner,
+          width,
+          allowed: this.getAllowedIntervals(edge, { owner, width, z }),
+        }
       })
       const schedule = getOrderedSharedEdgeSchedule({
         length: edge.length,
-        ports: geometry.map((shape, i) => ({ ...shape, connectionName: family[i]!.connectionName })),
+        ports: geometry.map((shape, i) => ({
+          ...shape,
+          connectionName: family[i]!.connectionName,
+        })),
         traceClearance: this.traceClearance,
         tolerance: TRACE_ENGINE_TOLERANCE,
       })
       if (!schedule.feasible)
-        throw new Error(`No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${family[schedule.failedIndex]!.portPointId}"`)
+        throw new Error(
+          `No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${family[schedule.failedIndex]!.portPointId}"`,
+        )
       const { latest, gaps } = schedule
       const positions: number[] = []
       for (let i = 0; i < family.length; i++) {
-        const port = family[i]!, shape = geometry[i]!
-        const minimum = Math.max(0, ...positions.map((position, j) => position + gaps[i]![j]!))
+        const port = family[i]!,
+          shape = geometry[i]!
+        const minimum = Math.max(
+          0,
+          ...positions.map((position, j) => position + gaps[i]![j]!),
+        )
         const fraction = (2 * i + 1) / (2 * family.length)
-        let distance = shape.allowed.reduce((sum, [low, high]) => sum + high - low, 0) * fraction
+        let distance =
+          shape.allowed.reduce((sum, [low, high]) => sum + high - low, 0) *
+          fraction
         let ideal: number | undefined
         for (const [low, high] of shape.allowed) {
-          if (distance <= high - low) { ideal = low + distance; break }
+          if (distance <= high - low) {
+            ideal = low + distance
+            break
+          }
           distance -= high - low
         }
-        if (ideal === undefined) throw new Error(`No physical interval for port "${port.portPointId}"`)
+        if (ideal === undefined)
+          throw new Error(`No physical interval for port "${port.portPointId}"`)
         const preferred = ideal
         const candidates = shape.allowed.flatMap(([low, high]) => {
-          const start = Math.max(low, minimum), end = Math.min(high, latest[i]!)
+          const start = Math.max(low, minimum),
+            end = Math.min(high, latest[i]!)
           if (start > end) return []
           // Keep proof domains inclusive; only selected positions move away
           // from round-off at an obstacle boundary when interior space exists.
           const inset = Math.min(EPSILON, (end - start) / 4)
           return [Math.min(end - inset, Math.max(start + inset, preferred))]
         })
-        candidates.sort((a, b) => Math.abs(a - preferred) - Math.abs(b - preferred) || a - b)
+        candidates.sort(
+          (a, b) => Math.abs(a - preferred) - Math.abs(b - preferred) || a - b,
+        )
         const position = candidates[0]
         if (position === undefined)
-          throw new Error(`No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${port.portPointId}"`)
-        const x = edge.x1 + (edge.x2 - edge.x1) * position / edge.length
-        const y = edge.y1 + (edge.y2 - edge.y1) * position / edge.length
+          throw new Error(
+            `No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${port.portPointId}"`,
+          )
+        const x = edge.x1 + ((edge.x2 - edge.x1) * position) / edge.length
+        const y = edge.y1 + ((edge.y2 - edge.y1) * position) / edge.length
         const point = { x, y, z }
-        if (!this.validator({
-          connectionName: port.connectionName, rootConnectionName: port.rootConnectionName,
-          traceThickness: shape.width, viaDiameter: this.viaDiameter,
-          start: point, end: { ...point },
-        })) throw new Error(`Analytical physical port placement failed validation for "${port.portPointId}" on "${edge.ownerPairKey}"`)
+        if (
+          !this.validator({
+            connectionName: port.connectionName,
+            rootConnectionName: port.rootConnectionName,
+            traceThickness: shape.width,
+            viaDiameter: this.viaDiameter,
+            start: point,
+            end: { ...point },
+          })
+        )
+          throw new Error(
+            `Analytical physical port placement failed validation for "${port.portPointId}" on "${edge.ownerPairKey}"`,
+          )
         output.push({ ...port, x, y })
         positions.push(position)
       }

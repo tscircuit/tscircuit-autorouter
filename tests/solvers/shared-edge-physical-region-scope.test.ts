@@ -106,7 +106,10 @@ test("trace domains use all real producer rectangles while via capacity retains 
     "parented",
   ])
   expect(params.physicalViaCapacity.freeRegionIds).toEqual(["free"])
-  expect(params.physicalViaCapacity.movableSharedEdgeRegionIds).toEqual(["free", "parented"])
+  expect(params.physicalViaCapacity.movableSharedEdgeRegionIds).toEqual([
+    "free",
+    "parented",
+  ])
   expect(params.physicalViaCapacity.planningObstacles).toEqual(srj.obstacles)
   expect(params.physicalViaCapacity.preserveSolitarySharedEdgePorts).toBe(false)
   expect(params.physicalViaCapacity.throughViaCrosscutEnabled).toBe(true)

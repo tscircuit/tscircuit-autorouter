@@ -559,9 +559,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               }),
               planningObstacles: cms.srj.obstacles,
               preserveSolitarySharedEdgePorts: Boolean(cms.srj.traces?.length),
-              movableSharedEdgeRegionIds: cms.capacityNodes!
-                .filter((node) =>
-                  !node._isVirtualOffboard && !node._offBoardConnectionId && !node._containsTarget,
+              movableSharedEdgeRegionIds: cms
+                .capacityNodes!.filter(
+                  (node) =>
+                    !node._isVirtualOffboard &&
+                    !node._offBoardConnectionId &&
+                    !node._containsTarget,
                 )
                 .map((node) => node.capacityMeshNodeId),
               sharedEdgeRegionIds: cms

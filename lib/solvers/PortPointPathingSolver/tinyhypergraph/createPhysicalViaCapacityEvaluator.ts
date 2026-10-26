@@ -16,7 +16,10 @@ import { getPipeline9PhysicalGeometryContext } from "lib/autorouter-pipelines/Au
 import { canUseThroughViaCrosscut } from "./canUseThroughViaCrosscut"
 import { shouldIgnoreSharedEdge } from "lib/solvers/UniformPortDistributionSolver/shouldIgnoreSharedEdge"
 import type { EdgeInterval } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgePhysicalIntervals"
-import { getOrderedSharedEdgeFeasibility, type OrderedSharedEdgeEvent } from "./getOrderedSharedEdgeFeasibility"
+import {
+  getOrderedSharedEdgeFeasibility,
+  type OrderedSharedEdgeEvent,
+} from "./getOrderedSharedEdgeFeasibility"
 import {
   getThroughViaCrosscutFeasibility,
   type ThroughViaDemand,
@@ -51,7 +54,10 @@ type SharedEdge = {
   z: number
   movable?: boolean
   blockedAnyLayer?: boolean
-  lastOrdered?: { key: string; result: TinyHyperGraphRegionSegmentFeasibilityResult }
+  lastOrdered?: {
+    key: string
+    result: TinyHyperGraphRegionSegmentFeasibilityResult
+  }
   capacityOne: boolean
   geometry: PhysicalSharedEdge | null
   numericalSlack: number
@@ -236,10 +242,13 @@ export function createPhysicalViaCapacityEvaluator({
     })
   const freeIds = new Set(freeRegionIds)
   const sharedIds = new Set(sharedEdgeRegionIds ?? freeRegionIds)
-  const movableIds = movableSharedEdgeRegionIds === undefined
-    ? undefined : new Set(movableSharedEdgeRegionIds)
+  const movableIds =
+    movableSharedEdgeRegionIds === undefined
+      ? undefined
+      : new Set(movableSharedEdgeRegionIds)
   const planningIndex = planningObstacles?.length
-    ? new Flatbush(planningObstacles.length) : undefined
+    ? new Flatbush(planningObstacles.length)
+    : undefined
   for (const obstacle of planningObstacles ?? []) {
     planningIndex!.add(
       obstacle.center.x - obstacle.width / 2,
@@ -260,12 +269,13 @@ export function createPhysicalViaCapacityEvaluator({
     if (preserveSolitarySharedEdgePorts === false) return true
     if (edge.blockedAnyLayer === undefined) {
       const epsilon = 1e-6
-      const nearby = planningIndex?.search(
-        Math.min(face.x1, face.x2) - epsilon,
-        Math.min(face.y1, face.y2) - epsilon,
-        Math.max(face.x1, face.x2) + epsilon,
-        Math.max(face.y1, face.y2) + epsilon,
-      ) ?? []
+      const nearby =
+        planningIndex?.search(
+          Math.min(face.x1, face.x2) - epsilon,
+          Math.min(face.y1, face.y2) - epsilon,
+          Math.max(face.x1, face.x2) + epsilon,
+          Math.max(face.y1, face.y2) + epsilon,
+        ) ?? []
       edge.blockedAnyLayer = shouldIgnoreSharedEdge({
         sharedEdge: face,
         obstacles: nearby.map((id) => planningObstacles[id]!),
@@ -276,14 +286,26 @@ export function createPhysicalViaCapacityEvaluator({
     for (const portId of [query.fromPortId, query.toPortId]) {
       if (getSharedEdge(query.topology, portId)?.key !== edge.key) continue
       const metadata = query.topology.portMetadata?.[portId]
-      ports.add(String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`))
+      ports.add(
+        String(
+          metadata?.serializedPortId ??
+            metadata?.portId ??
+            `tiny-port-${portId}`,
+        ),
+      )
     }
     for (const [routeId, first, second] of query.regionSegments) {
       if (query.ignoredRouteIds?.has(routeId)) continue
       for (const portId of [first, second]) {
         if (getSharedEdge(query.topology, portId)?.key !== edge.key) continue
         const metadata = query.topology.portMetadata?.[portId]
-        ports.add(String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`))
+        ports.add(
+          String(
+            metadata?.serializedPortId ??
+              metadata?.portId ??
+              `tiny-port-${portId}`,
+          ),
+        )
       }
     }
     return ports.size > 1
@@ -333,9 +355,13 @@ export function createPhysicalViaCapacityEvaluator({
   ): boolean => {
     const topology = query.topology
     const regions = topology.incidentPortRegion[portId]!
-    if (movableIds ? isMovableFace(edge, query) : regions.every((id) =>
-      freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
-    ))
+    if (
+      movableIds
+        ? isMovableFace(edge, query)
+        : regions.every((id) =>
+            freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
+          )
+    )
       return true
     // Special endpoint ports can be anchored outside a rectangle face. Only
     // redistributable free-space aliases can ignore their current offset XY.
@@ -539,10 +565,14 @@ export function createPhysicalViaCapacityEvaluator({
   ): TraceDomain | null | undefined => {
     const onFace = canUseSharedFace(query, portId, edge)
     const domain = getTraceDomain(edge, owner, query.topology.portZ[portId]!)
-    const canBecomePreserved = domain === null &&
-      preserveSolitarySharedEdgePorts !== false && edge.blockedAnyLayer === true
-    if ((!onFace || canBecomePreserved) &&
-      isPointClear(query.topology, portId, owner) !== false)
+    const canBecomePreserved =
+      domain === null &&
+      preserveSolitarySharedEdgePorts !== false &&
+      edge.blockedAnyLayer === true
+    if (
+      (!onFace || canBecomePreserved) &&
+      isPointClear(query.topology, portId, owner) !== false
+    )
       return undefined
     return domain
   }
@@ -560,13 +590,17 @@ export function createPhysicalViaCapacityEvaluator({
       if (!fromMatches && !toMatches) continue
       const otherOwner = getOwner(query.problem, route)
       if (otherOwner === undefined) return FEASIBLE
-      if (fromMatches) assignments.push([route, from, otherOwner, route === query.routeId])
-      if (toMatches) assignments.push([route, to, otherOwner, route === query.routeId])
+      if (fromMatches)
+        assignments.push([route, from, otherOwner, route === query.routeId])
+      if (toMatches)
+        assignments.push([route, to, otherOwner, route === query.routeId])
     }
     assignments.push([query.routeId!, query.fromPortId, owner, true])
     assignments.push([query.routeId!, query.toPortId, owner, true])
-    if (assignments.every(([, , eventOwner]) => eventOwner === owner) &&
-      getTraceDomain(edge, owner, edge.z))
+    if (
+      assignments.every(([, , eventOwner]) => eventOwner === owner) &&
+      getTraceDomain(edge, owner, edge.z)
+    )
       return FEASIBLE
     const events = new Map<number, OrderedSharedEdgeEvent>()
     const serializedIds = new Map<string, number>()
@@ -583,7 +617,9 @@ export function createPhysicalViaCapacityEvaluator({
       const domain = getTraceDomain(edge, eventOwner, edge.z)
       if (domain === undefined) return FEASIBLE
       const metadata = query.topology.portMetadata?.[portId]
-      const serializedPortId = String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`)
+      const serializedPortId = String(
+        metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`,
+      )
       if (serializedIds.has(serializedPortId)) return FEASIBLE
       serializedIds.set(serializedPortId, portId)
       events.set(portId, {
@@ -591,13 +627,16 @@ export function createPhysicalViaCapacityEvaluator({
         serializedPortId,
         owner: eventOwner,
         connectionName: eventOwner,
-        position: edge.geometry.orientation === "horizontal"
-          ? query.topology.portX[portId]! : query.topology.portY[portId]!,
+        position:
+          edge.geometry.orientation === "horizontal"
+            ? query.topology.portX[portId]!
+            : query.topology.portY[portId]!,
         width: board.minimumTraceWidth,
         allowed: domain === null ? [] : domain.allowed,
         routeIds: candidate ? [] : [route],
         candidate,
-        preservedAlone: preserveSolitarySharedEdgePorts !== false &&
+        preservedAlone:
+          preserveSolitarySharedEdgePorts !== false &&
           edge.blockedAnyLayer === true &&
           isPointClear(query.topology, portId, eventOwner) !== false,
       })

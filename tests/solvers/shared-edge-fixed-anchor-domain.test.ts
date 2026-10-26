@@ -123,20 +123,39 @@ test("shared-face ordering and fixed plated endpoints preserve exact legal tange
     portX: new Float64Array([delta, delta]),
   }
   const protectedContext = {
-    physicalSrj: blockedFaceSrj, freeRegionIds: [], sharedEdgeRegionIds: context.freeRegionIds,
+    physicalSrj: blockedFaceSrj,
+    freeRegionIds: [],
+    sharedEdgeRegionIds: context.freeRegionIds,
   }
   // The face is blocked, while this fixed point is only 0.1 nm beyond the
   // obstacle's tolerance boundary. Uniform preserves such target endpoints.
-  expect(createPhysicalViaCapacityEvaluator(protectedContext)!({ ...query, topology: special }))
-    .toEqual({ feasible: true })
-  const invalidAnchor = { ...special, portX: new Float64Array([-delta, -delta]) }
-  expect(createPhysicalViaCapacityEvaluator(protectedContext)!({ ...query, topology: invalidAnchor }))
-    .toEqual({ feasible: false, blockerRouteIds: [] })
+  expect(
+    createPhysicalViaCapacityEvaluator(protectedContext)!({
+      ...query,
+      topology: special,
+    }),
+  ).toEqual({ feasible: true })
+  const invalidAnchor = {
+    ...special,
+    portX: new Float64Array([-delta, -delta]),
+  }
+  expect(
+    createPhysicalViaCapacityEvaluator(protectedContext)!({
+      ...query,
+      topology: invalidAnchor,
+    }),
+  ).toEqual({ feasible: false, blockerRouteIds: [] })
 
   const ownPth = structuredClone(blockedFaceSrj)
   ownPth.obstacles[0]!.layers = ["top", "bottom"]
   ownPth.obstacles[0]!.connectedTo = ["pcb_plated_hole_own", "signal-root"]
-  expect(createPhysicalViaCapacityEvaluator({ ...protectedContext, physicalSrj: ownPth })!({
-    ...query, topology: invalidAnchor,
-  })).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...protectedContext,
+      physicalSrj: ownPth,
+    })!({
+      ...query,
+      topology: invalidAnchor,
+    }),
+  ).toEqual({ feasible: true })
 })

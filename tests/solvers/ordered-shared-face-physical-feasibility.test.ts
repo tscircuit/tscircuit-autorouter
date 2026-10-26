@@ -1,13 +1,23 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import type { TinyHyperGraphProblem, TinyHyperGraphTopology } from "tiny-hypergraph/lib/core"
+import type {
+  TinyHyperGraphProblem,
+  TinyHyperGraphTopology,
+} from "tiny-hypergraph/lib/core"
 import { createPhysicalViaCapacityEvaluator } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/createPhysicalViaCapacityEvaluator"
 import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 
 type FixtureCase = {
   name: string
   nodes: CapacityMeshNode[]
-  ports: { portPointId: string; x: number; y: number; z: number; connectionName: string; rootConnectionName: string }[]
+  ports: {
+    portPointId: string
+    x: number
+    y: number
+    z: number
+    connectionName: string
+    rootConnectionName: string
+  }[]
   physicalSrj: SimpleRouteJson
   planningObstacles: Obstacle[]
 }
@@ -26,48 +36,99 @@ function getQuery(fixture: FixtureCase): {
   const portIds = ports.map((_, index) => index)
   return {
     topology: {
-      portCount: ports.length, regionCount: 2,
-      regionIncidentPorts: [portIds, portIds], incidentPortRegion: ports.map(() => [0, 1]),
+      portCount: ports.length,
+      regionCount: 2,
+      regionIncidentPorts: [portIds, portIds],
+      incidentPortRegion: ports.map(() => [0, 1]),
       regionWidth: new Float64Array(nodes.map((node) => node.width)),
       regionHeight: new Float64Array(nodes.map((node) => node.height)),
       regionCenterX: new Float64Array(nodes.map((node) => node.center.x)),
       regionCenterY: new Float64Array(nodes.map((node) => node.center.y)),
-      regionAvailableZMask: new Int32Array([255, 255]), regionMetadata: nodes,
-      portMetadata: ports.map((port) => ({ serializedPortId: port.portPointId })),
-      portAngleForRegion1: new Int32Array(ports.length), portAngleForRegion2: new Int32Array(ports.length),
+      regionAvailableZMask: new Int32Array([255, 255]),
+      regionMetadata: nodes,
+      portMetadata: ports.map((port) => ({
+        serializedPortId: port.portPointId,
+      })),
+      portAngleForRegion1: new Int32Array(ports.length),
+      portAngleForRegion2: new Int32Array(ports.length),
       portX: new Float64Array(ports.map((port) => port.x)),
       portY: new Float64Array(ports.map((port) => port.y)),
       portZ: new Int32Array(ports.map((port) => port.z)),
     },
     problem: {
-      routeCount: ports.length, portSectionMask: new Int8Array(ports.length).fill(1),
-      routeStartPort: new Int32Array(portIds), routeEndPort: new Int32Array(portIds),
-      routeNet: new Int32Array(portIds), regionNetId: new Int32Array([-1, -1]),
-      routeMetadata: ports.map((port) => ({ connectionId: port.connectionName,
-        simpleRouteConnection: { __rootConnectionNames: [port.rootConnectionName] } })),
+      routeCount: ports.length,
+      portSectionMask: new Int8Array(ports.length).fill(1),
+      routeStartPort: new Int32Array(portIds),
+      routeEndPort: new Int32Array(portIds),
+      routeNet: new Int32Array(portIds),
+      regionNetId: new Int32Array([-1, -1]),
+      routeMetadata: ports.map((port) => ({
+        connectionId: port.connectionName,
+        simpleRouteConnection: {
+          __rootConnectionNames: [port.rootConnectionName],
+        },
+      })),
     },
-    regionId: 0, fromPortId: ports.length - 1, toPortId: ports.length - 1,
-    routeId: ports.length - 1, netId: ports.length - 1,
+    regionId: 0,
+    fromPortId: ports.length - 1,
+    toPortId: ports.length - 1,
+    routeId: ports.length - 1,
+    netId: ports.length - 1,
     regionSegments: portIds.slice(0, -1).map((index) => [index, index, index]),
   }
 }
 
 test("actual inherited-order and movable SOIC capacity conflicts expose port-event rerip alternatives", (): void => {
-  const { cases } = JSON.parse(readFileSync(new URL(
-    "../fixtures/sample24/ordered-shared-face-failures.json", import.meta.url,
-  ), "utf8")) as { cases: FixtureCase[] }
+  const { cases } = JSON.parse(
+    readFileSync(
+      new URL(
+        "../fixtures/sample24/ordered-shared-face-failures.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as { cases: FixtureCase[] }
   cases.push({
     name: "empty-existing-domain",
     nodes: [
-      { capacityMeshNodeId: "left", layer: "top", center: { x: -0.5, y: 0.5 }, width: 1, height: 1, availableZ: [0, 1] },
-      { capacityMeshNodeId: "right", layer: "top", center: { x: 0.5, y: 0.5 }, width: 1, height: 1, availableZ: [0, 1] },
+      {
+        capacityMeshNodeId: "left",
+        layer: "top",
+        center: { x: -0.5, y: 0.5 },
+        width: 1,
+        height: 1,
+        availableZ: [0, 1],
+      },
+      {
+        capacityMeshNodeId: "right",
+        layer: "top",
+        center: { x: 0.5, y: 0.5 },
+        width: 1,
+        height: 1,
+        availableZ: [0, 1],
+      },
     ],
     ports: [
-      { portPointId: "a", x: 0.3, y: 0.25, z: 0, connectionName: "A", rootConnectionName: "A-root" },
-      { portPointId: "b", x: 0, y: 0.75, z: 0, connectionName: "B", rootConnectionName: "B-root" },
+      {
+        portPointId: "a",
+        x: 0.3,
+        y: 0.25,
+        z: 0,
+        connectionName: "A",
+        rootConnectionName: "A-root",
+      },
+      {
+        portPointId: "b",
+        x: 0,
+        y: 0.75,
+        z: 0,
+        connectionName: "B",
+        rootConnectionName: "B-root",
+      },
     ],
     physicalSrj: {
-      layerCount: 2, minTraceWidth: 0.1,
+      layerCount: 2,
+      minTraceWidth: 0.1,
       bounds: { minX: -3, maxX: 3, minY: -3, maxY: 3 },
       connections: [
         { name: "A", __rootConnectionNames: ["A-root"], pointsToConnect: [] },

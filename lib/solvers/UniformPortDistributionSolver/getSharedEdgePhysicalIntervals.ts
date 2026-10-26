@@ -198,8 +198,15 @@ function polygonInteriorIntervals(
   cuts.sort((a, b) => a - b)
   const intervals: EdgeInterval[] = []
   for (let i = 1; i < cuts.length; i++) {
-    const low = cuts[i - 1]!, high = cuts[i]!, middle = (low + high) / 2
-    if (isPointInOrOnPolygon({ x: line.x + line.dx * middle, y: line.y + line.dy * middle }, polygon))
+    const low = cuts[i - 1]!,
+      high = cuts[i]!,
+      middle = (low + high) / 2
+    if (
+      isPointInOrOnPolygon(
+        { x: line.x + line.dx * middle, y: line.y + line.dy * middle },
+        polygon,
+      )
+    )
       intervals.push([low, high])
   }
   return mergeEdgeIntervals(intervals)
@@ -213,36 +220,69 @@ export function getSharedEdgeObstacleIntervals(
 ): EdgeInterval[] {
   const obstacle = input as ImportedObstacle
   const line = getLine(edge)
-  if (!Number.isFinite(radius) || radius < 0) throw new Error("Invalid physical port radius")
+  if (!Number.isFinite(radius) || radius < 0)
+    throw new Error("Invalid physical port radius")
   if (radius === 0) return []
-  const polygon = obstacle.type === "polygon" ? obstacle.points ?? obstacle.outline : undefined
+  const polygon =
+    obstacle.type === "polygon"
+      ? (obstacle.points ?? obstacle.outline)
+      : undefined
   if (polygon) {
-    if (polygon.length < 3 || !polygon.every((point) => [point.x, point.y].every(Number.isFinite)))
+    if (
+      polygon.length < 3 ||
+      !polygon.every((point) => [point.x, point.y].every(Number.isFinite))
+    )
       throw new Error("Invalid physical polygon obstacle")
     return mergeEdgeIntervals([
       ...polygonInteriorIntervals(line, polygon),
-      ...polygon.flatMap((point, index) => capsuleIntervals(line, point, polygon[(index + 1) % polygon.length]!, radius)),
+      ...polygon.flatMap((point, index) =>
+        capsuleIntervals(
+          line,
+          point,
+          polygon[(index + 1) % polygon.length]!,
+          radius,
+        ),
+      ),
     ])
   }
   const { center, width, height } = obstacle
-  const angle = (obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
-  if (![center.x, center.y, width, height, angle].every(Number.isFinite) || width < 0 || height < 0)
-    throw new Error(`Invalid physical obstacle "${obstacle.obstacleId ?? "unknown"}"`)
+  const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  if (
+    ![center.x, center.y, width, height, angle].every(Number.isFinite) ||
+    width < 0 ||
+    height < 0
+  )
+    throw new Error(
+      `Invalid physical obstacle "${obstacle.obstacleId ?? "unknown"}"`,
+    )
   if (obstacle.shape === "circle" || obstacle.type === "circle") {
-    if (Math.abs(width - height) > 1e-8) throw new Error("Noncircular physical circle obstacle")
+    if (Math.abs(width - height) > 1e-8)
+      throw new Error("Noncircular physical circle obstacle")
     return clipCircle(line, center, width / 2 + radius)
   }
   const local = localLine(line, center, angle)
   if (obstacle.type === "oval" || obstacle.shape === "oval") {
-    const halfWidth = width / 2, halfHeight = height / 2
+    const halfWidth = width / 2,
+      halfHeight = height / 2
     const small = Math.min(halfWidth, halfHeight)
-    return capsuleIntervals(local,
-      halfWidth >= halfHeight ? { x: -(halfWidth - small), y: 0 } : { x: 0, y: -(halfHeight - small) },
-      halfWidth >= halfHeight ? { x: halfWidth - small, y: 0 } : { x: 0, y: halfHeight - small },
-      small + radius)
+    return capsuleIntervals(
+      local,
+      halfWidth >= halfHeight
+        ? { x: -(halfWidth - small), y: 0 }
+        : { x: 0, y: -(halfHeight - small) },
+      halfWidth >= halfHeight
+        ? { x: halfWidth - small, y: 0 }
+        : { x: 0, y: halfHeight - small },
+      small + radius,
+    )
   }
-  if (obstacle.type !== "rect" || (obstacle.shape !== undefined && obstacle.shape !== "rect"))
-    throw new Error(`Unsupported physical obstacle geometry "${obstacle.type}/${obstacle.shape}"`)
+  if (
+    obstacle.type !== "rect" ||
+    (obstacle.shape !== undefined && obstacle.shape !== "rect")
+  )
+    throw new Error(
+      `Unsupported physical obstacle geometry "${obstacle.type}/${obstacle.shape}"`,
+    )
   return roundedRectangle(local, width / 2, height / 2, radius)
 }
 
@@ -255,13 +295,44 @@ export function getSharedEdgeBoardIntervals(
   const line = getLine(edge)
   const radius = copperRadius + (srj.minBoardEdgeClearance ?? 0)
   const { bounds, outline } = srj
-  if (![bounds.minX, bounds.maxX, bounds.minY, bounds.maxY, radius].every(Number.isFinite) || radius < 0)
+  if (
+    ![bounds.minX, bounds.maxX, bounds.minY, bounds.maxY, radius].every(
+      Number.isFinite,
+    ) ||
+    radius < 0
+  )
     throw new Error("Invalid physical board bounds or edge clearance")
-  let allowed = clipBox(line, bounds.minX + radius, bounds.maxX - radius, bounds.minY + radius, bounds.maxY - radius, true)
+  let allowed = clipBox(
+    line,
+    bounds.minX + radius,
+    bounds.maxX - radius,
+    bounds.minY + radius,
+    bounds.maxY - radius,
+    true,
+  )
   if (!outline) return allowed
-  if (outline.length < 3 || !outline.every((point) => [point.x, point.y].every(Number.isFinite)))
+  if (
+    outline.length < 3 ||
+    !outline.every((point) => [point.x, point.y].every(Number.isFinite))
+  )
     throw new Error("Invalid physical board outline")
   const inside = polygonInteriorIntervals(line, outline)
-  allowed = allowed.flatMap(([low, high]) => inside.flatMap(([a, b]): EdgeInterval[] => Math.min(high, b) >= Math.max(low, a) ? [[Math.max(low, a), Math.min(high, b)]] : []))
-  return subtractEdgeIntervals(allowed, outline.flatMap((point, index) => capsuleIntervals(line, point, outline[(index + 1) % outline.length]!, Math.max(0, radius - 1e-6))))
+  allowed = allowed.flatMap(([low, high]) =>
+    inside.flatMap(([a, b]): EdgeInterval[] =>
+      Math.min(high, b) >= Math.max(low, a)
+        ? [[Math.max(low, a), Math.min(high, b)]]
+        : [],
+    ),
+  )
+  return subtractEdgeIntervals(
+    allowed,
+    outline.flatMap((point, index) =>
+      capsuleIntervals(
+        line,
+        point,
+        outline[(index + 1) % outline.length]!,
+        Math.max(0, radius - 1e-6),
+      ),
+    ),
+  )
 }

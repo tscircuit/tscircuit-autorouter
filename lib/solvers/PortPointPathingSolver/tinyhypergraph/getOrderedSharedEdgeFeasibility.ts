@@ -29,9 +29,10 @@ export function getOrderedSharedEdgeFeasibility({
   traceClearance,
   proofSlack,
 }: Input): TinyHyperGraphRegionSegmentFeasibilityResult {
-  const ordered = [...events].sort((first, second) =>
-    first.position - second.position ||
-    first.serializedPortId.localeCompare(second.serializedPortId),
+  const ordered = [...events].sort(
+    (first, second) =>
+      first.position - second.position ||
+      first.serializedPortId.localeCompare(second.serializedPortId),
   )
   const rules = {
     length,
@@ -41,24 +42,21 @@ export function getOrderedSharedEdgeFeasibility({
     proofSlack,
   }
   const isFeasible = (ports: OrderedSharedEdgeEvent[]): boolean => {
-    if (ports.length === 1 && ports[0]!.preservedAlone)
-      return true
+    if (ports.length === 1 && ports[0]!.preservedAlone) return true
     return getOrderedSharedEdgeSchedule({
       ...rules,
       ports,
     }).feasible
   }
-  if (isFeasible(ordered))
-    return { feasible: true }
+  if (isFeasible(ordered)) return { feasible: true }
   let core = ordered
-  for (let index = 0; index < core.length;) {
+  for (let index = 0; index < core.length; ) {
     if (core[index]!.candidate) {
       index++
       continue
     }
     const without = core.filter((_, other) => other !== index)
-    if (!isFeasible(without))
-      core = without
+    if (!isFeasible(without)) core = without
     else index++
   }
   const alternatives = new Map<string, number[]>()
@@ -66,7 +64,9 @@ export function getOrderedSharedEdgeFeasibility({
     if (event.candidate) continue
     if (event.routeIds.length === 0)
       throw new Error("A removable shared-edge event has no committed routes")
-    const routes = [...new Set(event.routeIds)].sort((first, second) => first - second)
+    const routes = [...new Set(event.routeIds)].sort(
+      (first, second) => first - second,
+    )
     alternatives.set(JSON.stringify(routes), routes)
   }
   return alternatives.size === 0

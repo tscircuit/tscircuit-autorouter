@@ -166,9 +166,19 @@ test("actual wide faces cannot carry two foreign owners confined to the same nar
   ]
   preloaded.minTraceToPadEdgeClearance = 0
   const topology = createTopology(fixture.nodes.slice(0, 2))
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: preloaded })!({
-    topology, problem, regionId: 0, fromPortId: 2, toPortId: 3, routeId: 1,
-    netId: 1, regionSegments: [[0, 0, 1]],
-  })).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: preloaded })!(
+      {
+        topology,
+        problem,
+        regionId: 0,
+        fromPortId: 2,
+        toPortId: 3,
+        routeId: 1,
+        netId: 1,
+        regionSegments: [[0, 0, 1]],
+      },
+    ),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })

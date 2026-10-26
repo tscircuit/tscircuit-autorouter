@@ -278,45 +278,127 @@ test("joint regional candidates retain the original board and declared owners ac
   ).toBe("source_foreign")
   // Preserve the unresolved via conflict at the exact-stage boundary. This
   // exercises the actual Joint handoff without executing a repair search.
-  const unchangedExactOutput = spyOn(joint.exactRepairSolver!, "getOutput").mockReturnValue([...newHdRoutes, synthetic.hdRoute])
+  const unchangedExactOutput = spyOn(
+    joint.exactRepairSolver!,
+    "getOutput",
+  ).mockReturnValue([...newHdRoutes, synthetic.hdRoute])
   try {
-    joint.pipelineDef.find((stage) => stage.solverName === "exactRepairSolver")!.onSolved()
-    const regional = joint.pipelineDef.find((stage) => stage.solverName === "regionalB01RepairSolver")!.createSolver() as Pipeline9RegionalB01RepairSolver
+    joint.pipelineDef
+      .find((stage) => stage.solverName === "exactRepairSolver")!
+      .onSolved()
+    const regional = joint.pipelineDef
+      .find((stage) => stage.solverName === "regionalB01RepairSolver")!
+      .createSolver() as Pipeline9RegionalB01RepairSolver
     expect(regional.params.physicalSrj).toBe(jointOriginal)
-    expect(regional.params.physicalRootConnectionNameByConnectionName).toBe(joint.physicalRootConnectionNameByConnectionName)
+    expect(regional.params.physicalRootConnectionNameByConnectionName).toBe(
+      joint.physicalRootConnectionNameByConnectionName,
+    )
     expect(regional.params.viaHoleDiameter).toBe(0.15)
   } finally {
     unchangedExactOutput.mockRestore()
   }
 
   const promotedRoute: PreloadedHighDensityRoute = {
-    ...routes[0]!, connectionName: "promoted_fixed", preloadedTraceIndex: 0, preloadedRouteIndex: 0,
-    route: [{ x: -2, y: 0, z: 7 }, { x: 2, y: 0, z: 7 }],
+    ...routes[0]!,
+    connectionName: "promoted_fixed",
+    preloadedTraceIndex: 0,
+    preloadedRouteIndex: 0,
+    route: [
+      { x: -2, y: 0, z: 7 },
+      { x: 2, y: 0, z: 7 },
+    ],
   }
   const activeNode: NodeWithPortPoints = {
-    capacityMeshNodeId: "promoted-fixed-owner", center: { x: 0, y: 0 }, width: 3, height: 3, availableZ: [0],
-    portPoints: [{ x: -1.5, y: 1, z: 0, connectionName: "source_foreign", rootConnectionName: "source_foreign" }, { x: 1.5, y: 1, z: 0, connectionName: "source_foreign", rootConnectionName: "source_foreign" }],
+    capacityMeshNodeId: "promoted-fixed-owner",
+    center: { x: 0, y: 0 },
+    width: 3,
+    height: 3,
+    availableZ: [0],
+    portPoints: [
+      {
+        x: -1.5,
+        y: 1,
+        z: 0,
+        connectionName: "source_foreign",
+        rootConnectionName: "source_foreign",
+      },
+      {
+        x: 1.5,
+        y: 1,
+        z: 0,
+        connectionName: "source_foreign",
+        rootConnectionName: "source_foreign",
+      },
+    ],
   }
-  for (const explicitRoots of [{ promoted_fixed: "source_signal" }, undefined]) {
+  for (const explicitRoots of [
+    { promoted_fixed: "source_signal" },
+    undefined,
+  ]) {
     const main = new Pipeline9HighDensitySolver({
-      nodePortPoints: [activeNode], fixedHdRoutes: [promotedRoute], connMap: params.connMap,
-      obstacles: [], layerCount: 8, viaDiameter: 0.3, viaHoleDiameter: 0.15, traceWidth: 0.1, obstacleMargin: 0.15, effort: 1,
-      physicalSrj: jointOriginal, physicalRootConnectionNameByConnectionName: explicitRoots,
+      nodePortPoints: [activeNode],
+      fixedHdRoutes: [promotedRoute],
+      connMap: params.connMap,
+      obstacles: [],
+      layerCount: 8,
+      viaDiameter: 0.3,
+      viaHoleDiameter: 0.15,
+      traceWidth: 0.1,
+      obstacleMargin: 0.15,
+      effort: 1,
+      physicalSrj: jointOriginal,
+      physicalRootConnectionNameByConnectionName: explicitRoots,
     })
     main.activeNode = activeNode
-    const fallbackDriver = main as unknown as { startRegionalFallback: (promoted: ReadonlySet<string>) => void }
-    fallbackDriver.startRegionalFallback(new Set([promotedRoute.connectionName]))
+    const fallbackDriver = main as unknown as {
+      startRegionalFallback: (promoted: ReadonlySet<string>) => void
+    }
+    fallbackDriver.startRegionalFallback(
+      new Set([promotedRoute.connectionName]),
+    )
     const fallback = main.activeFallbackSolver!
-    expect(fallback.params.physicalRootConnectionNameByConnectionName?.promoted_fixed).toBe("source_signal")
-    const edge: StaticRouteSegment = { connectionName: promotedRoute.connectionName, rootConnectionName: "connectivity_net_routing", traceThickness: 0.1, viaDiameter: 0.3, start: { x: -0.5, y: 0, z: 0 }, end: { x: -0.5, y: 0, z: 7 } }
+    expect(
+      fallback.params.physicalRootConnectionNameByConnectionName
+        ?.promoted_fixed,
+    ).toBe("source_signal")
+    const edge: StaticRouteSegment = {
+      connectionName: promotedRoute.connectionName,
+      rootConnectionName: "connectivity_net_routing",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      start: { x: -0.5, y: 0, z: 0 },
+      end: { x: -0.5, y: 0, z: 7 },
+    }
     expect(fallback.highDensitySolver.staticSegmentValidator!(edge)).toBe(true)
-    expect(fallback.highDensitySolver.growShrinkSolutionValidator!([{ ...promotedRoute, route: [edge.start, edge.end], vias: [{ x: -0.5, y: 0 }] }])).toBe(true)
+    expect(
+      fallback.highDensitySolver.growShrinkSolutionValidator!([
+        {
+          ...promotedRoute,
+          route: [edge.start, edge.end],
+          vias: [{ x: -0.5, y: 0 }],
+        },
+      ]),
+    ).toBe(true)
   }
   const undeclared = new Pipeline9HighDensitySolver({
-    nodePortPoints: [activeNode], fixedHdRoutes: [promotedRoute], connMap: params.connMap,
-    obstacles: [], layerCount: 8, viaDiameter: 0.3, traceWidth: 0.1, obstacleMargin: 0.15, effort: 1, physicalSrj,
+    nodePortPoints: [activeNode],
+    fixedHdRoutes: [promotedRoute],
+    connMap: params.connMap,
+    obstacles: [],
+    layerCount: 8,
+    viaDiameter: 0.3,
+    traceWidth: 0.1,
+    obstacleMargin: 0.15,
+    effort: 1,
+    physicalSrj,
   })
   undeclared.activeNode = activeNode
-  const undeclaredDriver = undeclared as unknown as { startRegionalFallback: (promoted: ReadonlySet<string>) => void }
-  expect(() => undeclaredDriver.startRegionalFallback(new Set([promotedRoute.connectionName]))).toThrow('fixed route "promoted_fixed" has no declared physical owner')
+  const undeclaredDriver = undeclared as unknown as {
+    startRegionalFallback: (promoted: ReadonlySet<string>) => void
+  }
+  expect(() =>
+    undeclaredDriver.startRegionalFallback(
+      new Set([promotedRoute.connectionName]),
+    ),
+  ).toThrow('fixed route "promoted_fixed" has no declared physical owner')
 })
