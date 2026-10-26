@@ -4,6 +4,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { EdgeInterval } from "./getSharedEdgePhysicalIntervals"
 import { getOrderedSharedEdgeSchedule } from "./getOrderedSharedEdgeSchedule"
+import { getNearbyPortPlacementConstraints } from "./getNearbyPortPlacementConstraints"
 import {
   PhysicalSharedEdgePlacement,
   TRACE_ENGINE_TOLERANCE,
@@ -278,6 +279,15 @@ export class CoupledSharedEdgePlacementPlan {
         const gap = Math.max(0, (firstEvent.width + secondEvent.width) / 2 + physical.traceClearance - TRACE_ENGINE_TOLERANCE)
         this.distances.push({ first: a, second: b, gap })
       }
+    }
+    for (const constraint of getNearbyPortPlacementConstraints(this.events.map((event) => ({
+      bounds: this.domainBounds(event.variable), z: event.port.z, owner: event.owner,
+      connectionName: event.port.connectionName, width: event.width,
+    })), physical.traceClearance, TRACE_ENGINE_TOLERANCE)) {
+      const key = `${constraint.first}:${constraint.second}`
+      if (pairs.has(key)) continue
+      pairs.add(key)
+      this.distances.push(constraint)
     }
     this.selected.push(...this.events.map((event) => event.variable.preferred))
     const parent = this.events.map((_, index) => index)
