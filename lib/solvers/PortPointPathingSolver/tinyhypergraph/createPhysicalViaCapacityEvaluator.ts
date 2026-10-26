@@ -31,6 +31,7 @@ import {
   type ViaApproachDemand,
   type PlanarCrosscutDemand,
 } from "./getViaApproachCrosscutFeasibility"
+import { getNoViaPlanarCrossingFeasibility } from "./getNoViaPlanarCrossingFeasibility"
 import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
 import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
@@ -817,7 +818,11 @@ export function createPhysicalViaCapacityEvaluator({
       if (route !== query.routeId && !demand.routeIds.includes(route))
         demand.routeIds.push(route)
     }
-    if (vias.size === 0) return FEASIBLE
+    const owners = new Set(assignments.flatMap(([route]) => {
+      const owner = getOwner(query.problem, route)
+      return owner === undefined ? [] : [owner]
+    }))
+    if (owners.size < 2) return FEASIBLE
     // Native families use the node-plus-port hull. Certify that projected
     // movable faces and every fixed endpoint keep that hull inside this box.
     for (const [, from, to] of assignments) {
@@ -905,20 +910,11 @@ export function createPhysicalViaCapacityEvaluator({
               (firstSide === "bottom" && secondSide === "top")
             ? "y"
             : undefined
-      if (!axis) continue
       const key = JSON.stringify([
         owner,
         Math.min(from, to),
         Math.max(from, to),
       ])
-      let wire = wires.get(key)
-      if (!wire) {
-        wire = { owner, axis, routeIds: [], candidate: false }
-        wires.set(key, wire)
-      }
-      wire.candidate ||= route === query.routeId
-      if (route !== query.routeId && !wire.routeIds.includes(route))
-        wire.routeIds.push(route)
       if (query.topology.portZ[from] === query.topology.portZ[to]) {
         const first = contactForPort(from, owner), second = contactForPort(to, owner)
         if (!first || !second) continue
@@ -931,8 +927,17 @@ export function createPhysicalViaCapacityEvaluator({
         planar.candidate ||= route === query.routeId
         if (route !== query.routeId && !planar.routeIds.includes(route)) planar.routeIds.push(route)
       }
+      if (axis) {
+        let wire = wires.get(key)
+        if (!wire) {
+          wire = { owner, axis, routeIds: [], candidate: false }
+          wires.set(key, wire)
+        }
+        wire.candidate ||= route === query.routeId
+        if (route !== query.routeId && !wire.routeIds.includes(route))
+          wire.routeIds.push(route)
+      }
     }
-    if (wires.size === 0) return FEASIBLE
     const slack =
       1e-9 +
       Number.EPSILON *
@@ -941,6 +946,11 @@ export function createPhysicalViaCapacityEvaluator({
           (sum, coordinate) => sum + Math.abs(coordinate),
           0,
         )
+    const planar = getNoViaPlanarCrossingFeasibility({
+      bounds, wires: [...planarWires.values()],
+      minimumTraceSpacing: board.minimumTraceCenterSpacing, slack,
+    })
+    if (!planar.feasible) return planar
     const pair = getThroughViaCrosscutFeasibility({
       bounds,
       vias: [...vias.values()],
