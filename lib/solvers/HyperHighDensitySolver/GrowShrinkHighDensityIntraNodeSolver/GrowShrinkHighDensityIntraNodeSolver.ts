@@ -429,7 +429,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     return false
   }
 
-  private finishScaleStep(search: ScaleSearch, candidate: ScaleCandidate): void {
+  private finishScaleStep(
+    search: ScaleSearch,
+    candidate: ScaleCandidate,
+  ): void {
     if (candidate.solver.solved) {
       if (
         candidate.solver.winningSolver instanceof HighDensitySolverA03 &&
