@@ -3,6 +3,46 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  pathing_effort:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare identical native controls and requested pathing budgets
+        run: |
+          mkdir -p results base/scripts/benchmarks
+          cp head/scripts/benchmarks/measure-explicit-pathing-effort.ts base/scripts/benchmarks/
+          (cd base && bun scripts/benchmarks/measure-explicit-pathing-effort.ts) > results/base.json
+          (cd head && bun scripts/benchmarks/measure-explicit-pathing-effort.ts) > results/head.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('results/base.json').read_text());b=json.loads(Path('results/head.json').read_text())
+          assert len(a)==len(b)==3
+          for old,new in zip(a,b):
+            assert old['solved'] and new['solved'] and old['drcErrorCount']==new['drcErrorCount']==0
+            assert old['inputSha256']==new['inputSha256'] and old['outputSha256']==new['outputSha256']
+            assert new['observedPathingEffort']==(new['requestedPathingEffort'] or 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: explicit-pathing-effort-comparison
+          path: results/
   stages:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 75

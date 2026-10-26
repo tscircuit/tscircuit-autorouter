@@ -109,6 +109,8 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
   effort?: number
+  /** Explicit initial path-finding effort; general effort remains cleanup-only above 1. */
+  pathingEffort?: number
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -532,7 +534,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             graph,
             connections,
             layerCount: cms.srj.layerCount,
-            effort: Math.min(1, cms.effort),
+            effort: cms.opts.pathingEffort ?? Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -1084,6 +1086,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       createSrjWithBoardValidObstacleLayers(srj)
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
+    if (opts.pathingEffort !== undefined && (!Number.isFinite(opts.pathingEffort) || opts.pathingEffort <= 0)) {
+      throw new Error("pathingEffort must be a finite positive number")
+    }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
@@ -1227,6 +1232,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       )
     }
     if (
+      (pipelineStepDef.solverName === "portPointPathingSolver" && this.opts.pathingEffort !== undefined) ||
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
       pipelineStepDef.solverName === "effortCleanupSolver"
