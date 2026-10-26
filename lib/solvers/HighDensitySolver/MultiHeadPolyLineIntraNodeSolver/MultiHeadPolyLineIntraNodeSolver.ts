@@ -76,6 +76,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
     viaDiameter?: number
+    traceWidth?: number
   }) {
     super()
     this.MAX_ITERATIONS = 10e3
@@ -89,6 +90,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.BOUNDARY_PADDING = params.hyperParameters?.BOUNDARY_PADDING ?? 0.05
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
+    this.traceWidth = params.traceWidth ?? this.traceWidth
     this.portPairMap = getMultiHeadPortPairs(this.nodeWithPortPoints)
     for (const point of this.nodeWithPortPoints.portPoints) {
       if (point.rootConnectionName !== undefined)
