@@ -253,7 +253,15 @@ export class PhysicalSharedEdgePlacement {
         }
         if (ideal === undefined)
           throw new Error(`No physical interval for port "${port.portPointId}"`)
-        const preferred = ideal
+        // Prefer nominal construction spacing; checker tolerance remains only
+        // the legal floor enforced by the unchanged intervals and schedule.
+        const preferred = Math.max(ideal, ...positions.map((position, j) => {
+          const previous = geometry[j]!
+          const sameOwner = shape.owner !== undefined && shape.owner === previous.owner
+          const sameConnection = port.connectionName === family[j]!.connectionName
+          return position + (sameOwner || sameConnection ? 0
+            : (shape.width + previous.width) / 2 + this.traceClearance)
+        }))
         const candidates = shape.allowed.flatMap(([low, high]) => {
           const start = Math.max(low, minimum),
             end = Math.min(high, latest[i]!)
