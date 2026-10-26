@@ -7,6 +7,12 @@ export type CrosscutBoundaryContact = {
   normal: number
   min: number
   max: number
+  /** Exact preferred position and stable ID used by physical Uniform. */
+  movableOrder?: {
+    sharedEdgeKey: string
+    position: number
+    serializedPortId: string
+  }
 }
 type Demand = { owner: string; routeIds: number[]; candidate: boolean }
 export type ViaApproachDemand = Demand & {
@@ -74,6 +80,22 @@ function isBoundaryContact(
   )
 }
 
+/** Full disjoint intervals or certified Uniform order fix a boundary relation. */
+function precedesContact(
+  first: CrosscutBoundaryContact,
+  second: CrosscutBoundaryContact,
+): boolean {
+  if (first.max <= second.min) return true
+  const a = first.movableOrder, b = second.movableOrder
+  if (!a || !b || a.sharedEdgeKey !== b.sharedEdgeKey ||
+    a.serializedPortId === b.serializedPortId ||
+    ![a.position, b.position].every(Number.isFinite))
+    return false
+  // Same comparator and event fields as getOrderedSharedEdgeFeasibility and
+  // PhysicalSharedEdgePlacement; removing other events preserves this order.
+  return (a.position - b.position || a.serializedPortId.localeCompare(b.serializedPortId)) < 0
+}
+
 /** Prove that a required via approach separates the other same-layer route. */
 export function getViaApproachCrosscutFeasibility({
   bounds,
@@ -114,8 +136,7 @@ export function getViaApproachCrosscutFeasibility({
       box.maxX > bounds.maxX ||
       box.minY < bounds.minY ||
       box.maxY > bounds.maxY ||
-      !isBoundaryContact(approach.contact, bounds, slack) ||
-      maximumDomainDistance(box, box) + slack >= minimumSameOwnerViaSpacing
+      !isBoundaryContact(approach.contact, bounds, slack)
     )
       continue
     for (const wire of wires) {
@@ -159,24 +180,32 @@ export function getViaApproachCrosscutFeasibility({
               : bounds.maxY
       const lowNormal = verticalFace ? box.minX : box.minY
       const highNormal = verticalFace ? box.maxX : box.maxY
-      if (
+      const reachesFar =
         Math.max(
           Math.abs(farCoordinate - lowNormal),
           Math.abs(farCoordinate - highNormal),
         ) +
-          slack >=
+          slack <
         radius
-      )
-        continue
       const low = verticalFace ? box.minY : box.minX
       const high = verticalFace ? box.maxY : box.maxX
+      const approachBelow = precedesContact(approach.contact, near)
+      const approachAbove = precedesContact(near, approach.contact)
       const below =
-        near.max <= approach.contact.min &&
+        reachesFar && approachAbove &&
         high + radius < Math.min(approach.contact.min, far.min) - slack
       const above =
-        near.min >= approach.contact.max &&
+        reachesFar && approachBelow &&
         low - radius > Math.max(approach.contact.max, far.max) + slack
-      if (!below && !above) continue
+      const cellLow = verticalFace ? bounds.minY : bounds.minX
+      const cellHigh = verticalFace ? bounds.maxY : bounds.maxX
+      const reachesHigh = approachBelow && low + radius > cellHigh + slack &&
+        far.max < cellHigh - slack
+      const reachesLow = approachAbove && high - radius < cellLow - slack &&
+        far.min > cellLow + slack
+      if (!below && !above && !reachesHigh && !reachesLow) continue
+      // The first barrel reached from this layer already supplies the forbidden
+      // boundary contact. Additional approach-owner barrels cannot remove it.
       // Positive trace spacing prevents equal junction points from inverting
       // boundary order. The shrunk forbidden tube also covers rounding-sized
       // normal projections of the native boundary contacts.
