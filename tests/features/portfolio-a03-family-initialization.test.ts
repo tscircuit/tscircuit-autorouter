@@ -22,7 +22,13 @@ test("A03 family selection initializes inside BaseSolver's first step and preser
     initializationIteration = selected.iterations
     initialize()
   }
-  selected.stepA03Candidate()
+  expect(selected.getPreferredFamilyState()).toEqual({
+    status: "uninitialized",
+    iterations: 0,
+    won: false,
+  })
+  expect(initializationIteration).toBe(-1)
+  expect(selected.stepPreferredFamily()).toBe(1)
   const native = selected.supervisedSolvers!.find(
     ({ solver }) => solver instanceof HighDensitySolverA03,
   )!.solver
@@ -34,7 +40,7 @@ test("A03 family selection initializes inside BaseSolver's first step and preser
   expect(selected.MAX_ITERATIONS).toBe(ordinary.MAX_ITERATIONS)
   expect(native.MAX_ITERATIONS).toBe(reference.MAX_ITERATIONS)
   expect(native.iterations).toBe(1)
-  expect(selected["candidateToAdvance"]).toBeUndefined()
+  expect(selected["advancingPreferredFamily"]).toBe(false)
 
   const failing = new PortfolioSingleIntraNodeSolver(params)
   failing.initializeSolvers = (): never => {
@@ -42,12 +48,12 @@ test("A03 family selection initializes inside BaseSolver's first step and preser
   }
   const logging = spyOn(console, "error").mockImplementation((): void => {})
   try {
-    expect(() => failing.stepA03Candidate()).toThrow(
+    expect(() => failing.stepPreferredFamily()).toThrow(
       "expected family setup failure",
     )
   } finally {
     logging.mockRestore()
   }
   expect(failing.failed).toBe(true)
-  expect(failing["candidateToAdvance"]).toBeUndefined()
+  expect(failing["advancingPreferredFamily"]).toBe(false)
 })

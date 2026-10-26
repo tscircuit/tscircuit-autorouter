@@ -1,4 +1,3 @@
-import { HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
@@ -192,7 +191,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     )
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
-    this.raceGrowthAttempts = this.shouldRaceGrowthAttempts()
+    this.raceGrowthAttempts =
+      !params.fallbackToInvalidGeometryOnFailure &&
+      PortfolioSingleIntraNodeSolver.shouldRaceScales(params)
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       if (!params.fallbackToInvalidGeometryOnFailure) {
@@ -218,45 +219,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
   getConstructorParams() {
     return this.constructorParams
-  }
-
-  private shouldRaceGrowthAttempts(): boolean {
-    const params = this.constructorParams
-    const node = this.nodeWithPortPoints
-    const ports = node.portPoints
-    if (
-      !params.rejectOverlappingTerminals ||
-      params.fallbackToInvalidGeometryOnFailure ||
-      new Set(node.availableZ ?? ports.map((point) => point.z ?? 0)).size < 3
-    ) {
-      return false
-    }
-    const segmentCount =
-      node.portPointsInPairs?.length ??
-      new Set(ports.map((point) => point.connectionName)).size
-    if (segmentCount < 8) return false
-
-    const traceWidth = params.traceWidth ?? 0.15
-    let clearanceDeficit = false
-    for (let i = 0; i < ports.length; i++) {
-      for (let j = i + 1; j < ports.length; j++) {
-        const a = ports[i]!
-        const b = ports[j]!
-        if (
-          a.z !== b.z ||
-          (a.rootConnectionName ?? a.connectionName) ===
-            (b.rootConnectionName ?? b.connectionName) ||
-          params.connMap?.areIdsConnected(a.connectionName, b.connectionName)
-        ) {
-          continue
-        }
-        const gap = Math.hypot(a.x - b.x, a.y - b.y)
-        // Copper overlap is already rejected cheaply by the existing preflight.
-        if (gap < traceWidth - 1e-6) return false
-        if (gap < traceWidth + 0.1 - 1e-6) clearanceDeficit = true
-      }
-    }
-    return clearanceDeficit
   }
 
   private createScaleCandidate(growthAttempt: number): ScaleCandidate {
@@ -334,24 +296,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ) {
         continue
       }
-      const supervised = candidate.solver.supervisedSolvers?.find(
-        ({ solver }) => solver instanceof HighDensitySolverA03,
-      )
-      if (!supervised || supervised.solver.failed) continue
+      const family = candidate.solver.getPreferredFamilyState()
+      if (family.status === "uninitialized" || family.status === "failed") {
+        continue
+      }
       this.scaleFactor = candidate.scaleFactor
       this.growthAttempts = candidate.growthAttempt
       this.activeSubSolver = candidate.solver
-      const before = supervised.solver.iterations
-      if (supervised.solver.solved) {
-        // Observe the child's terminal state through the ordinary onSolve path.
-        candidate.solver.step()
-      } else {
-        candidate.solver.stepCandidate(supervised)
-      }
+      const advanced = candidate.solver.stepPreferredFamily()
       this.stats.scaleRefinementNativeIterations =
-        (this.stats.scaleRefinementNativeIterations ?? 0) +
-        supervised.solver.iterations -
-        before
+        (this.stats.scaleRefinementNativeIterations ?? 0) + advanced
       if (candidate.solver.solved && this.acceptScaleCandidate(candidate)) {
         return true
       }
@@ -367,7 +321,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     // scales before spending work on the remaining routing families.
     const search = (this.scaleSearch ??= this.initializeScaleSearch())
     if (search.incumbent && this.stepScaleRefinement(search)) return
-    if (search.phase === "family" && this.stepA03Family(search)) return
+    if (search.phase === "family" && this.stepPreferredFamily(search)) return
 
     if (!search.candidates.some(({ solver }) => !solver.failed)) {
       if (search.nextAttempt === null) {
@@ -378,7 +332,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         return
       }
       this.addScaleSearchWave(search)
-      if (this.stepA03Family(search)) return
+      if (this.stepPreferredFamily(search)) return
     }
     let candidate =
       search.candidates[search.cursor++ % search.candidates.length]!
@@ -392,36 +346,20 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.finishScaleStep(search, candidate)
   }
 
-  private stepA03Family(search: ScaleSearch): boolean {
+  private stepPreferredFamily(search: ScaleSearch): boolean {
     for (let i = 0; i < search.candidates.length; i++) {
       const candidate =
         search.candidates[search.familyCursor++ % search.candidates.length]!
       if (candidate.solver.failed) continue
-      const candidates = candidate.solver.supervisedSolvers
-      const supervised = candidates?.find(
-        ({ solver }) => solver instanceof HighDensitySolverA03,
-      )
-      if (candidates && !supervised) {
-        throw new Error("Scale portfolio is missing its A03 candidate")
+      if (candidate.solver.getPreferredFamilyState().status === "failed") {
+        continue
       }
-      if (supervised?.solver.failed) continue
       this.scaleFactor = candidate.scaleFactor
       this.growthAttempts = candidate.growthAttempt
       this.activeSubSolver = candidate.solver
-      const before = supervised?.solver.iterations ?? 0
-      if (supervised?.solver.solved) candidate.solver.step()
-      else if (supervised) candidate.solver.stepCandidate(supervised)
-      else candidate.solver.stepA03Candidate()
-      const advanced =
-        supervised ??
-        candidate.solver.supervisedSolvers?.find(
-          ({ solver }) => solver instanceof HighDensitySolverA03,
-        )
-      if (!advanced) throw new Error("A03 candidate disappeared during setup")
+      const advanced = candidate.solver.stepPreferredFamily()
       this.stats.scaleFamilyNativeIterations =
-        (this.stats.scaleFamilyNativeIterations ?? 0) +
-        advanced.solver.iterations -
-        before
+        (this.stats.scaleFamilyNativeIterations ?? 0) + advanced
       this.finishScaleStep(search, candidate)
       return true
     }
@@ -435,7 +373,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   ): void {
     if (candidate.solver.solved) {
       if (
-        candidate.solver.winningSolver instanceof HighDensitySolverA03 &&
+        candidate.solver.getPreferredFamilyState().won &&
         search.candidates.some(
           (other) =>
             other.scaleFactor < candidate.scaleFactor && !other.solver.failed,

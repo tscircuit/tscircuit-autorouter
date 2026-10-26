@@ -42,6 +42,17 @@ type PortfolioCandidate = NonNullable<
   PortfolioSingleIntraNodeSolver["supervisedSolvers"]
 >[number]
 
+type A03RoutingParams = ConstructorParameters<typeof HighDensityA03Solver>[0] & {
+  traceThickness: number
+  traceMargin: number
+}
+
+type PreferredFamilyState = {
+  status: "uninitialized" | "active" | "solved" | "failed"
+  iterations: number
+  won: boolean
+}
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -76,11 +87,77 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
-  private candidateToAdvance?: PortfolioCandidate | typeof HighDensityA03Solver
+  private advancingPreferredFamily = false
   private candidateWorkBySolver = new WeakMap<
     BaseSolver,
     { iterations: number; maxIterations: number }
   >()
+
+  private static getA03RoutingParams(
+    params: ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
+    hyperParameters: A03RoutingParams["hyperParameters"],
+  ): A03RoutingParams {
+    return {
+      nodeWithPortPoints: params.nodeWithPortPoints,
+      highResolutionCellSize: 0.1,
+      highResolutionCellThickness: 8,
+      lowResolutionCellSize: 0.4,
+      viaDiameter: params.viaDiameter ?? 0.3,
+      viaMinDistFromBorder: (params.viaDiameter ?? 0.3) / 2,
+      traceMargin: 0.1,
+      // Preserve A03's existing thickness workaround (native repro01).
+      // Eligibility must account for this as well as the requested trace width.
+      traceThickness: 0.1,
+      effort: params.effort ?? 1,
+      hyperParameters,
+    }
+  }
+
+  /**
+   * Close unrelated fixed terminals cannot gain clearance by route ordering.
+   * Trying another scale early can avoid exhausting equivalent cramped models.
+   * Use the candidate's actual copper spacing, conservatively retaining the
+   * requested width when it exceeds A03's native thickness workaround.
+   *
+   * Copper overlap already fails cheap preflight. Keep the serial policy for
+   * two-layer nodes, whose specialized solvers and grid budgets differ from the
+   * multilayer portfolio. No segment-count cutoff predicts a benefit reliably;
+   * this scheduling heuristic still requires end-to-end benchmark validation.
+   */
+  static shouldRaceScales(
+    params: ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
+  ): boolean {
+    const node = params.nodeWithPortPoints
+    const ports = node.portPoints
+    if (
+      !params.rejectOverlappingTerminals ||
+      new Set(node.availableZ ?? ports.map((point) => point.z ?? 0)).size < 3
+    ) {
+      return false
+    }
+    const traceWidth = params.traceWidth ?? 0.15
+    const { traceThickness, traceMargin } = this.getA03RoutingParams(params, {})
+    const terminalSpacing = Math.max(traceWidth, traceThickness) + traceMargin
+    let clearanceDeficit = false
+    for (let i = 0; i < ports.length; i++) {
+      for (let j = i + 1; j < ports.length; j++) {
+        const a = ports[i]!
+        const b = ports[j]!
+        if (
+          a.z !== b.z ||
+          (a.rootConnectionName ?? a.connectionName) ===
+            (b.rootConnectionName ?? b.connectionName) ||
+          params.connMap?.areIdsConnected(a.connectionName, b.connectionName)
+        ) {
+          continue
+        }
+        const gap = Math.hypot(a.x - b.x, a.y - b.y)
+        if (gap < traceWidth - 1e-6) return false
+        if (gap < terminalSpacing - 1e-6) clearanceDeficit = true
+      }
+    }
+    return clearanceDeficit
+  }
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -512,36 +589,39 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return this.totalCandidateWork >= expansionWorkBudget
   }
 
-  stepCandidate(candidate: PortfolioCandidate): void {
-    if (
-      !this.supervisedSolvers?.includes(candidate) ||
-      this.solved ||
-      this.failed ||
-      candidate.solver.solved ||
-      candidate.solver.failed ||
-      this.candidateToAdvance
-    ) {
-      throw new Error(
-        "Cannot advance an inactive or foreign portfolio candidate",
-      )
+  private getPreferredCandidate(): PortfolioCandidate {
+    const candidate = this.supervisedSolvers?.find(
+      ({ solver }) => solver instanceof HighDensityA03Solver,
+    )
+    if (!candidate) throw new Error("Portfolio is missing its A03 candidate")
+    return candidate
+  }
+
+  /** Report family progress without exposing candidates or initializing them. */
+  getPreferredFamilyState(): PreferredFamilyState {
+    if (!this.supervisedSolvers) {
+      return { status: "uninitialized", iterations: 0, won: false }
     }
-    this.candidateToAdvance = candidate
-    try {
-      this.step()
-    } finally {
-      this.candidateToAdvance = undefined
+    const { solver } = this.getPreferredCandidate()
+    return {
+      status: solver.solved ? "solved" : solver.failed ? "failed" : "active",
+      iterations: solver.iterations,
+      won: this.winningSolver instanceof HighDensityA03Solver,
     }
   }
 
-  stepA03Candidate(): void {
-    if (this.solved || this.failed || this.candidateToAdvance) {
+  /** Advance the preferred family through the normal supervisor lifecycle. */
+  stepPreferredFamily(): number {
+    if (this.solved || this.failed || this.advancingPreferredFamily) {
       throw new Error("Cannot advance a family in an inactive portfolio")
     }
-    this.candidateToAdvance = HighDensityA03Solver
+    const before = this.getPreferredFamilyState().iterations
+    this.advancingPreferredFamily = true
     try {
       this.step()
+      return this.getPreferredFamilyState().iterations - before
     } finally {
-      this.candidateToAdvance = undefined
+      this.advancingPreferredFamily = false
     }
   }
 
@@ -555,19 +635,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    const selection = this.candidateToAdvance
-    if (typeof selection === "function") {
-      const candidates = this.supervisedSolvers!
-      const selected = candidates.find(
-        ({ solver }) => solver instanceof selection,
-      )
-      if (!selected) throw new Error("Portfolio is missing its A03 candidate")
+    if (this.advancingPreferredFamily) {
+      const selected = this.getPreferredCandidate()
       // Observe any proposal completed during setup through ordinary onSolve.
-      if (candidates.some(({ solver }) => solver.solved)) super._step()
-      else if (selected.solver.failed) return
-      else super._step(selected)
+      if (this.supervisedSolvers!.some(({ solver }) => solver.solved)) {
+        super._step()
+      } else if (selected.solver.failed) {
+        return
+      } else {
+        super._step(selected)
+      }
     } else {
-      super._step(selection)
+      super._step()
     }
 
     if (
@@ -712,23 +791,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
-      const solver = new HighDensityA03Solver({
-        nodeWithPortPoints: this.nodeWithPortPoints,
-        highResolutionCellSize: 0.1,
-        highResolutionCellThickness: 8,
-        lowResolutionCellSize: 0.4,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
-        // This likely needs to be corrected to use the actual trace width-
-        // but using anything but 0.1 for traceThickness is causing issues
-        // needs more debugging- repro01 in the high-density-a01 repo
-        // has a good reproduction
-        traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
-        effort: this.effort,
-        hyperParameters,
-      })
-      return solver as any
+      return new HighDensityA03Solver(
+        PortfolioSingleIntraNodeSolver.getA03RoutingParams(
+          { ...this.constructorParams, effort: this.effort },
+          hyperParameters,
+        ),
+      ) as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
