@@ -73,13 +73,4 @@ export class HighDensitySolverA13WithBoundaryClearance extends HighDensitySolver
       }
     })
   }
-
-  getUnprojectedRouteColumns(): ReturnType<HighDensitySolverA13["getOutput"]> {
-    // These donor-owned identities let the portfolio detect reroutes before
-    // paying to copy complete paths and restore their original terminals.
-    // Callers only inspect identity and lengths; accepted columns always use
-    // getOutput() and independently validate physical geometry.
-    const routes = super.getOutput()
-    return routes
-  }
 }

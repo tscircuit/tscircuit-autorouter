@@ -107,11 +107,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     layerCount?: number
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
-    routeColumnRecombination?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
-    viaToPadClearance?: number
     allowBlindAndBuriedVias?: boolean
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {

@@ -72,10 +72,8 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
-    routeColumnRecombination: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
-    viaToPadClearance?: number
     allowBlindAndBuriedVias?: boolean
   }
 
@@ -119,11 +117,9 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
-    routeColumnRecombination = false,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
-    viaToPadClearance,
     allowBlindAndBuriedVias,
   }: {
     nodePortPoints: NodeWithPortPoints[]
@@ -149,11 +145,9 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
-    routeColumnRecombination?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
-    viaToPadClearance?: number
     allowBlindAndBuriedVias?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
@@ -188,10 +182,8 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
-      routeColumnRecombination,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
-      viaToPadClearance,
       allowBlindAndBuriedVias,
     }
     this.MAX_ITERATIONS =
