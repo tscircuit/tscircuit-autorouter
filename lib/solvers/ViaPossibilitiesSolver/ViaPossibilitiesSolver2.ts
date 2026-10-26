@@ -16,6 +16,7 @@ import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorM
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { PortPairMap, getPortPairMap } from "lib/utils/getPortPairs"
 import { BaseSolver } from "../BaseSolver"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { safeTransparentize } from "../colors"
 
 export type ConnectionName = string
@@ -72,17 +73,23 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   currentConnectionName: ConnectionName
   currentPath: Point3[]
   currentViaCount: number
+  private readonly connMap?: ConnectivityMap
+  private readonly rootConnectionNames = new Map<string, string>()
 
   constructor({
     nodeWithPortPoints,
     colorMap,
     hyperParameters,
     viaDiameter,
+    connMap,
+    portPairMap,
   }: {
     nodeWithPortPoints: NodeWithPortPoints
     colorMap?: Record<string, string>
     hyperParameters?: ViaPossibilities2HyperParameters
     viaDiameter?: number
+    connMap?: ConnectivityMap
+    portPairMap?: PortPairMap
   }) {
     super()
     this.MAX_ITERATIONS = 100e3
@@ -91,7 +98,15 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.maxViaCount = 5
     this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
-    this.portPairMap = getPortPairMap(nodeWithPortPoints)
+    this.portPairMap = portPairMap ?? getPortPairMap(nodeWithPortPoints)
+    this.connMap = connMap
+    for (const point of nodeWithPortPoints.portPoints) {
+      if (point.rootConnectionName !== undefined)
+        this.rootConnectionNames.set(
+          point.connectionName,
+          point.rootConnectionName,
+        )
+    }
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
     this.hyperParameters = hyperParameters ?? {
@@ -99,7 +114,17 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
     this.viaDiameter = viaDiameter ?? 0.3
 
-    this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
+    this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort(
+      portPairMap
+        ? (first, second) => {
+            const firstName = this.portPairMap.get(first)!.connectionName
+            const secondName = this.portPairMap.get(second)!.connectionName
+            if (firstName < secondName) return -1
+            if (firstName > secondName) return 1
+            return Number(first) - Number(second)
+          }
+        : undefined,
+    )
     if (hyperParameters?.SHUFFLE_SEED) {
       this.unprocessedConnections = cloneAndShuffleArray(
         this.unprocessedConnections,
@@ -203,7 +228,18 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     const checkIntersectionsWithPathMap = (
       pathMap: Map<ConnectionName, Point3[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [pairId, path] of pathMap) {
+        const first = this.portPairMap.get(
+          this.currentConnectionName,
+        )!.connectionName
+        const second = this.portPairMap.get(pairId)!.connectionName
+        const root = this.rootConnectionNames.get(first)
+        if (
+          first === second ||
+          this.connMap?.areIdsConnected(first, second) ||
+          (root !== undefined && root === this.rootConnectionNames.get(second))
+        )
+          continue
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)

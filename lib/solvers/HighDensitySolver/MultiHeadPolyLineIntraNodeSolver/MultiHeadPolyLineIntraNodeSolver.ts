@@ -23,6 +23,10 @@ import { constructMiddlePointsWithViaPositions } from "./constructMiddlePointsWi
 import { detectMultiConnectionClosedFacesWithoutVias } from "./detectMultiConnectionClosedFacesWithoutVias"
 import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
 import { getEveryPossibleOrdering } from "./getEveryPossibleOrdering"
+import {
+  getMultiHeadPortPairs,
+  type MultiHeadPortPair,
+} from "./getMultiHeadPortPairs"
 import { getPossibleInitialViaPositions } from "./getPossibleInitialViaPositions"
 import { Candidate, MHPoint, PolyLine } from "./types1"
 import { MHPoint2, PolyLine2 } from "./types2"
@@ -53,6 +57,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   traceWidth: number = 0.15
   availableZ: number[] = []
   uniqueConnections: number = 0
+  readonly portPairMap: Map<string, MultiHeadPortPair>
+  private readonly rootConnectionNames = new Map<string, string>()
 
   BOUNDARY_PADDING: number
 
@@ -83,6 +89,14 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     this.BOUNDARY_PADDING = params.hyperParameters?.BOUNDARY_PADDING ?? 0.05
     this.connMap = params.connMap
     this.viaDiameter = params.viaDiameter ?? this.viaDiameter
+    this.portPairMap = getMultiHeadPortPairs(this.nodeWithPortPoints)
+    for (const point of this.nodeWithPortPoints.portPoints) {
+      if (point.rootConnectionName !== undefined)
+        this.rootConnectionNames.set(
+          point.connectionName,
+          point.rootConnectionName,
+        )
+    }
 
     // TODO swap with more sophisticated grid in SingleHighDensityRouteSolver
     this.cellSize = this.nodeWithPortPoints.width / 1024
@@ -106,13 +120,18 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     const areaPerVia =
       (this.viaDiameter + this.obstacleMargin * 2 + this.traceWidth / 2) ** 2
 
-    const uniqueConnections = new Set(
-      this.nodeWithPortPoints.portPoints.map((pp) => pp.connectionName),
-    ).size
+    const uniqueConnections = this.portPairMap.size
     this.uniqueConnections = uniqueConnections
 
     const { numSameLayerCrossings, numEntryExitLayerChanges } =
-      getIntraNodeCrossings(this.nodeWithPortPoints)
+      getIntraNodeCrossings(this.nodeWithPortPoints, {
+        portPairs: [...this.portPairMap.values()].map(({ start, end }) => [
+          start,
+          end,
+        ]),
+        areConnectionsConnected: (first, second) =>
+          this.areConnectionsConnected(first, second),
+      })
 
     this.minViaCount = numSameLayerCrossings * 2 + numEntryExitLayerChanges
     this.maxViaCount = Math.min(
@@ -142,6 +161,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     if (this.maxViaCount < this.minViaCount) {
       this.maxViaCount = this.minViaCount
     }
+  }
+
+  protected areConnectionsConnected(first: string, second: string): boolean {
+    if (first === second || this.connMap?.areIdsConnected(first, second)) return true
+    const root = this.rootConnectionNames.get(first)
+    return root !== undefined && root === this.rootConnectionNames.get(second)
   }
 
   /**
@@ -182,7 +207,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       // Start j from i + 1 to compare distinct pairs only once
       for (let j = i + 1; j < polyLines.length; j++) {
         if (
-          this.connMap?.areIdsConnected(
+          this.areConnectionsConnected(
             polyLines[i].connectionName,
             polyLines[j].connectionName,
           )
@@ -268,32 +293,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    * neighbors we never consider changing layers
    */
   setupInitialPolyLines() {
-    const portPairs: Map<string, { start: MHPoint; end: MHPoint }> = new Map()
-    this.nodeWithPortPoints.portPoints.forEach((portPoint) => {
-      if (!portPairs.has(portPoint.connectionName)) {
-        portPairs.set(portPoint.connectionName, {
-          start: {
-            ...portPoint,
-            z1: portPoint.z ?? 0,
-            z2: portPoint.z ?? 0,
-          },
-          end: null as any,
-        })
-      } else {
-        portPairs.get(portPoint.connectionName)!.end = {
-          ...portPoint,
-          z1: portPoint.z ?? 0,
-          z2: portPoint.z ?? 0,
-        }
-      }
-    })
-
-    // Remove port pairs with only one point
-    for (const [connectionName, portPair] of portPairs.entries()) {
-      if (portPair.end === null) {
-        portPairs.delete(connectionName)
-      }
-    }
+    const portPairs = new Map(
+      [...this.portPairMap].map(([pairId, { start, end, connectionName }]) => [
+        pairId,
+        {
+          connectionName,
+          start: { ...start, z1: start.z, z2: start.z },
+          end: { ...end, z1: end.z, z2: end.z },
+        },
+      ] as const),
+    )
 
     if (portPairs.size === 0) {
       this.failed = true
@@ -308,6 +317,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       this.SEGMENTS_PER_POLYLINE,
       this.maxViaCount,
       this.minViaCount,
+      (first, second) =>
+        this.areConnectionsConnected(
+          portPairs.get(first)!.connectionName,
+          portPairs.get(second)!.connectionName,
+        ),
     )
 
     const possibleViaPositions = getPossibleInitialViaPositions({
@@ -343,7 +357,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       const polyLines: PolyLine[] = []
       let viaPositionIndicesUsed = 0
       for (let i = 0; i < portPairsEntries.length; i++) {
-        const [connectionName, portPair] = portPairsEntries[i]
+        const [portPairId, portPair] = portPairsEntries[i]
         const viaCount = viaCountVariant[i]
         const viaPositionsForPolyline = viaPositions.slice(
           viaPositionIndicesUsed,
@@ -360,14 +374,19 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
         viaPositionIndicesUsed += viaCount
 
         polyLines.push({
-          connectionName,
+          connectionName: portPair.connectionName,
+          portPairId,
           start: portPair.start,
           end: portPair.end,
           mPoints: middlePoints,
         })
       }
       const hasClosedSameLayerFace =
-        detectMultiConnectionClosedFacesWithoutVias(polyLines, this.bounds)
+        detectMultiConnectionClosedFacesWithoutVias(
+          polyLines,
+          this.bounds,
+          (first, second) => this.areConnectionsConnected(first, second),
+        )
 
       if (hasClosedSameLayerFace) continue
 

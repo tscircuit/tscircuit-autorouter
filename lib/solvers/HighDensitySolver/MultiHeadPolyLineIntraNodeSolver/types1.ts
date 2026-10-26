@@ -10,6 +10,7 @@ export interface MHPoint {
 
 export interface PolyLine {
   connectionName: string
+  portPairId?: string
   start: MHPoint
   end: MHPoint
   mPoints: MHPoint[]

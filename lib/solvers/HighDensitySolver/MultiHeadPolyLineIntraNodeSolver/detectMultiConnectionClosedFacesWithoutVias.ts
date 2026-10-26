@@ -101,6 +101,7 @@ interface DcelFace {
 export function detectMultiConnectionClosedFacesWithoutVias(
   polyLines: PolyLine[],
   bounds: Bounds,
+  areConnectionsConnected?: (first: string, second: string) => boolean,
 ): boolean {
   const allSegments: Segment[] = []
   const viaPoints = new Map<
@@ -437,7 +438,13 @@ export function detectMultiConnectionClosedFacesWithoutVias(
         (name) => name !== null,
       )
 
-      if (actualConnectionNames.length > 1) {
+      if (
+        actualConnectionNames.length > 1 &&
+        (!areConnectionsConnected ||
+          actualConnectionNames.some(
+            (name) => !areConnectionsConnected(actualConnectionNames[0]!, name),
+          ))
+      ) {
         // Check 2: Is ANY vertex on this face's boundary a via?
         let viaFoundOnFace = false
         for (const vertex of faceVertices) {
