@@ -281,7 +281,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        const snapEndpoint = (islandEndpoint: Point3): Point3 => {
+        const snapEndpoint = (
+          islandEndpoint: Point3,
+        ): Point3 & { pcb_port_id?: string } => {
           let terminals: Array<Point3 & { pcb_port_id?: string }> = [
             globalStart,
             globalEnd,
@@ -312,8 +314,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
             terminals,
           })
         }
-        start = snapEndpoint(start)
-        end = snapEndpoint(end)
+        const snappedStart = snapEndpoint(start)
+        const snappedEnd = snapEndpoint(end)
+        if (
+          snappedStart.pcb_port_id &&
+          snappedStart.pcb_port_id === snappedEnd.pcb_port_id
+        ) {
+          // Only the closer endpoint owns this terminal. Keep the other
+          // endpoint available to join its neighboring route island.
+          if (distance(start, snappedStart) <= distance(end, snappedEnd)) {
+            start = snappedStart
+          } else {
+            end = snappedEnd
+          }
+        } else {
+          start = snappedStart
+          end = snappedEnd
+        }
       } else {
         start = {
           ...connection.pointsToConnect[0],
