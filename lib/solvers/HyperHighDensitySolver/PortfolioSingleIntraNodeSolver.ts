@@ -464,6 +464,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.dynamicExpansionWorkBudget = this.dynamicExpansionWorkBudget
   }
 
+  /** Keep failed-attempt metadata without retaining obsolete search graphs. */
+  retireFailedCandidateWorkspaces(): void {
+    if (!this.failed || this.solved) {
+      throw new Error("Only a failed portfolio can retire candidate workspaces")
+    }
+    if (this.constructorParams.captureSearchDebug !== false) return
+    if (this.stats.failedCandidateWorkspacesRetired) return
+
+    this.stats.retiredCandidateCount = this.supervisedSolvers?.length ?? 0
+    this.stats.failedCandidateWorkspacesRetired = true
+    // Candidate work accounting uses weak keys. These are the portfolio's
+    // strong candidate roots; geometry, errors and scalar metrics stay intact.
+    this.supervisedSolvers = []
+    this.activeSubSolver = null
+    this.winningSolver = undefined
+  }
+
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
     this.initializeCandidateBudget(solver)
