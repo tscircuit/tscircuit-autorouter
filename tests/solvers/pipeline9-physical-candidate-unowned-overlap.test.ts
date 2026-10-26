@@ -7,17 +7,42 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 test("opaque unowned barriers enforce overlap independently of IDs while typed pads retain clearance", (): void => {
   const srj: SimpleRouteJson = {
     bounds: { minX: -2, maxX: 2, minY: -2, maxY: 2 },
-    layerCount: 8, minTraceWidth: 0.1, defaultObstacleMargin: 0.8,
-    minTraceToPadEdgeClearance: 0.3, minViaEdgeToPadEdgeClearance: 0.3,
+    layerCount: 8,
+    minTraceWidth: 0.1,
+    defaultObstacleMargin: 0.8,
+    minTraceToPadEdgeClearance: 0.3,
+    minViaEdgeToPadEdgeClearance: 0.3,
     connections: [],
-    obstacles: [{ obstacleId: "pcb_keepout_fixed", type: "rect", center: { x: 0.32, y: 0 }, width: 0.3, height: 1, layers: ["inner4"], connectedTo: [] }],
+    obstacles: [
+      {
+        obstacleId: "pcb_keepout_fixed",
+        type: "rect",
+        center: { x: 0.32, y: 0 },
+        width: 0.3,
+        height: 1,
+        layers: ["inner4"],
+        connectedTo: [],
+      },
+    ],
   }
   const route: HighDensityRoute = {
-    connectionName: "signal", traceThickness: 0.1, viaDiameter: 0.3,
-    route: [{ x: 0, y: -0.5, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 7 }, { x: 0, y: 0.5, z: 7 }], vias: [{ x: 0, y: 0 }],
+    connectionName: "signal",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [
+      { x: 0, y: -0.5, z: 0 },
+      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0, z: 7 },
+      { x: 0, y: 0.5, z: 7 },
+    ],
+    vias: [{ x: 0, y: 0 }],
   }
   const connMap = new ConnectivityMap({})
-  const overlap = { ...route, route: route.route.map((point) => ({ ...point, x: 0.03 })), vias: [{ x: 0.03, y: 0 }] }
+  const overlap = {
+    ...route,
+    route: route.route.map((point) => ({ ...point, x: 0.03 })),
+    vias: [{ x: 0.03, y: 0 }],
+  }
   for (const obstacleId of ["pcb_keepout_fixed", "opaque-object", undefined]) {
     const opaqueInput = {
       ...srj,

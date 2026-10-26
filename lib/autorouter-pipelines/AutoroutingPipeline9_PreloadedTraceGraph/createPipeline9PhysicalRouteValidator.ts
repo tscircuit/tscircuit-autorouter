@@ -7,7 +7,10 @@ import { getObstacleRouteConnectivity } from "lib/solvers/HyperHighDensitySolver
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { doesSegmentCrossPolygonBoundary, isPointInOrOnPolygon } from "lib/utils/polygonContainment"
+import {
+  doesSegmentCrossPolygonBoundary,
+  isPointInOrOnPolygon,
+} from "lib/utils/polygonContainment"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
@@ -24,7 +27,10 @@ type PhysicalRouteValidationParams = {
 }
 type RouteValidator = (routes: HighDensityRoute[]) => boolean
 
-const validatorCache = new WeakMap<SimpleRouteJson, WeakMap<ConnectivityMap, Map<string, RouteValidator>>>()
+const validatorCache = new WeakMap<
+  SimpleRouteJson,
+  WeakMap<ConnectivityMap, Map<string, RouteValidator>>
+>()
 
 /** Validates final coordinates after the grow/shrink solver restores their scale. */
 export function createPipeline9PhysicalRouteValidator({
@@ -47,42 +53,100 @@ export function createPipeline9PhysicalRouteValidator({
   const cached = mapCache.get(cacheKey)
   if (cached) return cached
   const normalized = createSrjWithBoardValidObstacleLayers(physicalSrj)
-  const physicalConnMap = getConnectivityMapFromSimpleRouteJson(normalized, { includeGeometricPointConnections: false })
-  const rawObstacles = [...normalized.obstacles, ...(normalized.jumpers?.flatMap((jumper) => jumper.pads) ?? [])]
-  const obstacleIndex = rawObstacles.length > 0 ? new Flatbush(rawObstacles.length) : undefined
+  const physicalConnMap = getConnectivityMapFromSimpleRouteJson(normalized, {
+    includeGeometricPointConnections: false,
+  })
+  const rawObstacles = [
+    ...normalized.obstacles,
+    ...(normalized.jumpers?.flatMap((jumper) => jumper.pads) ?? []),
+  ]
+  const obstacleIndex =
+    rawObstacles.length > 0 ? new Flatbush(rawObstacles.length) : undefined
   for (const obstacle of rawObstacles) {
     const reach = Math.hypot(obstacle.width, obstacle.height) / 2
-    if (![obstacle.center.x, obstacle.center.y, reach].every(Number.isFinite) || obstacle.width < 0 || obstacle.height < 0) throw new Error("Physical route validation requires finite obstacle geometry")
-    obstacleIndex!.add(obstacle.center.x - reach, obstacle.center.y - reach, obstacle.center.x + reach, obstacle.center.y + reach)
+    if (
+      ![obstacle.center.x, obstacle.center.y, reach].every(Number.isFinite) ||
+      obstacle.width < 0 ||
+      obstacle.height < 0
+    )
+      throw new Error(
+        "Physical route validation requires finite obstacle geometry",
+      )
+    obstacleIndex!.add(
+      obstacle.center.x - reach,
+      obstacle.center.y - reach,
+      obstacle.center.x + reach,
+      obstacle.center.y + reach,
+    )
   }
   obstacleIndex?.finish()
   const boardEdgeClearance = physicalSrj.minBoardEdgeClearance ?? 0
-  const isPointInsideBoard = (point: { x: number; y: number }, copperRadius: number): boolean => {
+  const isPointInsideBoard = (
+    point: { x: number; y: number },
+    copperRadius: number,
+  ): boolean => {
     const radius = copperRadius + boardEdgeClearance
     const { bounds, outline } = physicalSrj
-    if (![point.x, point.y, radius].every(Number.isFinite) || point.x - radius < bounds.minX || point.x + radius > bounds.maxX || point.y - radius < bounds.minY || point.y + radius > bounds.maxY) return false
+    if (
+      ![point.x, point.y, radius].every(Number.isFinite) ||
+      point.x - radius < bounds.minX ||
+      point.x + radius > bounds.maxX ||
+      point.y - radius < bounds.minY ||
+      point.y + radius > bounds.maxY
+    )
+      return false
     if (!outline) return true
     if (!isPointInOrOnPolygon(point, outline)) return false
-    return outline.every((start, index) => pointToSegmentDistance(point, start, outline[(index + 1) % outline.length]!) >= radius - 1e-6)
+    return outline.every(
+      (start, index) =>
+        pointToSegmentDistance(
+          point,
+          start,
+          outline[(index + 1) % outline.length]!,
+        ) >=
+        radius - 1e-6,
+    )
   }
   // Planning margins guide the search; acceptance uses the same declared
   // physical rules as Pipeline9's final DRC evaluator.
   const traceClearance = physicalSrj.minTraceToPadEdgeClearance ?? 0.1
-  const viaClearance = physicalSrj.minViaEdgeToPadEdgeClearance ?? physicalSrj.minPadEdgeToPadEdgeClearance ?? 0.1
-  const viaHoleClearance = physicalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1
+  const viaClearance =
+    physicalSrj.minViaEdgeToPadEdgeClearance ??
+    physicalSrj.minPadEdgeToPadEdgeClearance ??
+    0.1
+  const viaHoleClearance =
+    physicalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1
   const viaCopperClearance = physicalSrj.minPadEdgeToPadEdgeClearance ?? 0.1
-  const defaultViaHoleDiameter = viaHoleDiameter ?? getViaDimensions(physicalSrj).holeDiameter
+  const defaultViaHoleDiameter =
+    viaHoleDiameter ?? getViaDimensions(physicalSrj).holeDiameter
   const validator = (inputRoutes: HighDensityRoute[]): boolean => {
     const routes = inputRoutes.map((route) => ({
       ...route,
       traceThickness: Math.max(route.traceThickness, physicalSrj.minTraceWidth),
-      route: route.route.map((point) => point.traceThickness === undefined ? point : { ...point, traceThickness: Math.max(point.traceThickness, physicalSrj.minTraceWidth) }),
+      route: route.route.map((point) =>
+        point.traceThickness === undefined
+          ? point
+          : {
+              ...point,
+              traceThickness: Math.max(
+                point.traceThickness,
+                physicalSrj.minTraceWidth,
+              ),
+            },
+      ),
     }))
     if (routes.length === 0) return true
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+    let minX = Infinity,
+      maxX = -Infinity,
+      minY = Infinity,
+      maxY = -Infinity
     let copperDiameter = 0
     for (const route of routes) {
-      copperDiameter = Math.max(copperDiameter, route.traceThickness, route.viaDiameter)
+      copperDiameter = Math.max(
+        copperDiameter,
+        route.traceThickness,
+        route.viaDiameter,
+      )
       for (const point of route.route) {
         minX = Math.min(minX, point.x)
         maxX = Math.max(maxX, point.x)
@@ -90,12 +154,21 @@ export function createPipeline9PhysicalRouteValidator({
         maxY = Math.max(maxY, point.y)
       }
     }
-    const radius = copperDiameter / 2 +
-      Math.max(traceClearance, viaClearance, physicalSrj.defaultObstacleMargin ?? 0, physicalSrj.minTraceToHoleEdgeClearance ?? 0) + 1e-6
+    const radius =
+      copperDiameter / 2 +
+      Math.max(
+        traceClearance,
+        viaClearance,
+        physicalSrj.defaultObstacleMargin ?? 0,
+        physicalSrj.minTraceToHoleEdgeClearance ?? 0,
+      ) +
+      1e-6
     // Circumscribed obstacle bounds also enclose rotated rectangles and ovals.
     // Filter only by physical separation, without requiring electrical ids.
     const nearby = obstacleIndex
-      ? obstacleIndex.search(minX - radius, minY - radius, maxX + radius, maxY + radius).map((index) => rawObstacles[index]!)
+      ? obstacleIndex
+          .search(minX - radius, minY - radius, maxX + radius, maxY + radius)
+          .map((index) => rawObstacles[index]!)
       : []
     const ownership = getObstacleRouteConnectivity({ obstacles: nearby, routes, connMap: physicalConnMap })
     const srj: SimpleRouteJson = {
