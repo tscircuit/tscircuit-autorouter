@@ -60,7 +60,6 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
-  eventSearch: boolean
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
@@ -108,7 +107,6 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
-    eventSearch = false,
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
@@ -135,7 +133,6 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
-    eventSearch?: boolean
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
@@ -169,7 +166,6 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
-    this.eventSearch = eventSearch
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
@@ -428,7 +424,6 @@ export class HighDensitySolver extends BaseSolver {
       ...this.priorityDagOptions,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
-      eventSearch: this.eventSearch,
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
