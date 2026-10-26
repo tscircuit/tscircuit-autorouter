@@ -21,7 +21,7 @@ type RealA64Fixture = {
   originalCarriers: SimplifiedPcbTrace[]
 }
 
-test.failing(
+test(
   "original A64 DQ1/DQ3 paths stay matched through retained terminal escapes",
   async (): Promise<void> => {
     const bytes = gunzipSync(
