@@ -21,6 +21,11 @@ import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSh
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
 import { PhysicalSharedEdgePlacement } from "./PhysicalSharedEdgePlacement"
+import { CoupledPortPlacementSolver } from "./CoupledPortPlacementSolver"
+import {
+  CoupledSharedEdgePlacementPlan,
+  type MovableSharedEdgeFamily,
+} from "./CoupledSharedEdgePlacementPlan"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
@@ -58,6 +63,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
   private readonly physicalPlacement?: PhysicalSharedEdgePlacement
+  private readonly movableFamilies: MovableSharedEdgeFamily[] = []
+  private coupledPlan?: CoupledSharedEdgePlacementPlan
+  private coupledSolver?: CoupledPortPlacementSolver
+  private coupledJobIndex = 0
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -130,8 +139,50 @@ export class UniformPortDistributionSolver extends BaseSolver {
     })
   }
 
-  step(): void {
+  _step(): void {
+    this.stepPlacement()
+    if (!this.solved && !this.failed && this.iterations >= this.MAX_ITERATIONS)
+      throw new Error("UNRESOLVED physical Uniform placement: phase budget exhausted")
+  }
+
+  private stepPlacement(): void {
     if (this.ownerPairsToProcess.length === 0) {
+      if (this.physicalPlacement) {
+        if (!this.coupledPlan) {
+          this.coupledPlan = new CoupledSharedEdgePlacementPlan({
+            nodes: this.input.nodeWithPortPoints,
+            currentPorts: [...this.mapOfOwnerPairToPortPoints.values()].flat(),
+            families: this.movableFamilies,
+            physical: this.physicalPlacement,
+          })
+        }
+        const job = this.coupledPlan.jobs[this.coupledJobIndex]
+        if (job) {
+          if (!this.coupledSolver)
+            this.coupledSolver = new CoupledPortPlacementSolver(job.input)
+          this.activeSubSolver = this.coupledSolver
+          this.coupledSolver.step()
+          if (this.coupledSolver.failed) {
+            this.failed = true
+            this.error = `UNRESOLVED coupled shared-edge placement: ${this.coupledSolver.error}`
+            return
+          }
+          if (this.coupledSolver.solved) {
+            this.coupledPlan.accept(job, this.coupledSolver.getOutput())
+            this.coupledJobIndex++
+            this.coupledSolver = undefined
+            this.activeSubSolver = undefined
+          }
+          return
+        }
+        const positions = this.coupledPlan.getValidatedPositions()
+        for (const [key, family] of this.mapOfOwnerPairToPortPoints) {
+          this.mapOfOwnerPairToPortPoints.set(key, family.map((port) => {
+            const point = port.portPointId && positions.get(port.portPointId)
+            return point ? { ...port, ...point } : port
+          }))
+        }
+      }
       this.rebuildNodes()
       this.solved = true
       return
@@ -189,6 +240,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
+    if (this.physicalPlacement)
+      this.movableFamilies.push({ edge: sharedEdge, ports: familyRaw,
+        movablePortIds: family.map((port) => port.portPointId!) })
     const redistributed = this.physicalPlacement
       ? this.physicalPlacement.redistribute(sharedEdge, family)
       : redistributePortPointsOnSharedEdge({

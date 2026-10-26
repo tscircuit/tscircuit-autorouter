@@ -26,7 +26,7 @@ export type PhysicalSharedEdgeQuery = {
   owner: string | undefined
   width: number
 }
-const TRACE_ENGINE_TOLERANCE = 0.005
+export const TRACE_ENGINE_TOLERANCE = 0.005
 const EPSILON = 1e-9
 
 /** Places existing shared ports using declared owners and physical board geometry. */
@@ -36,7 +36,7 @@ export class PhysicalSharedEdgePlacement {
   private readonly viaDiameter: number
   private readonly widths = new Map<string, number>()
   private readonly prepared = new Map<Obstacle, PreparedPhysicalObstacle>()
-  private readonly traceClearance: number
+  readonly traceClearance: number
 
   constructor(
     private readonly physicalSrj: SimpleRouteJson,
@@ -75,7 +75,7 @@ export class PhysicalSharedEdgePlacement {
     this.validator = createPipeline9StaticSegmentValidator(physicalSrj)
   }
 
-  private getOwner(port: PortPoint): string | undefined {
+  getOwner(port: PortPoint): string | undefined {
     const owners = new Set<string>()
     for (const id of [port.connectionName, port.rootConnectionName]) {
       if (id === undefined) continue
@@ -87,7 +87,7 @@ export class PhysicalSharedEdgePlacement {
     return owners.values().next().value
   }
 
-  private getWidth(port: PortPoint): number {
+  getWidth(port: PortPoint): number {
     if (this.routingTraceWidth !== undefined) return this.routingTraceWidth
     const direct = this.widths.get(port.connectionName)
     const root =
@@ -110,6 +110,18 @@ export class PhysicalSharedEdgePlacement {
       this.prepared.set(obstacle, prepared)
     }
     return prepared
+  }
+
+  /** Check the selected world-space endpoint with the same physical rules. */
+  isPortClear(port: PortPoint): boolean {
+    return this.validator({
+      connectionName: port.connectionName,
+      rootConnectionName: port.rootConnectionName,
+      traceThickness: this.getWidth(port),
+      viaDiameter: this.viaDiameter,
+      start: port,
+      end: port,
+    })
   }
 
   /** Pure geometry query shared by placement and permanent edge-capacity checks. */
