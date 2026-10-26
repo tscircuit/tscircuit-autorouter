@@ -14,6 +14,7 @@ import {
   type EdgeInterval,
 } from "./getSharedEdgePhysicalIntervals"
 import type { PortPointWithOwnerPair, SharedEdge } from "./types"
+import { getOrderedSharedEdgeSchedule } from "./getOrderedSharedEdgeSchedule"
 
 type PortGeometry = {
   owner: string | undefined
@@ -169,15 +170,6 @@ export class PhysicalSharedEdgePlacement {
     return allowed
   }
 
-  private lastAllowed(intervals: EdgeInterval[], maximum: number): number | undefined {
-    for (let i = intervals.length - 1; i >= 0; i--) {
-      const [low, high] = intervals[i]!
-      const value = Math.min(high, maximum)
-      if (value >= low - EPSILON) return Math.max(value, low)
-    }
-    return undefined
-  }
-
   redistribute(edge: SharedEdge, ports: PortPointWithOwnerPair[]): PortPointWithOwnerPair[] {
     const output: PortPointWithOwnerPair[] = []
     const layers = [...new Set(ports.map((port) => port.z))].sort((a, b) => a - b)
@@ -189,20 +181,15 @@ export class PhysicalSharedEdgePlacement {
         const owner = this.getOwner(port), width = this.getWidth(port)
         return { owner, width, allowed: this.getAllowedIntervals(edge, { owner, width, z }) }
       })
-      const gaps = family.map((port, index) => family.map((previous, j) => {
-        if (index === j) return 0
-        const a = geometry[j]!, b = geometry[index]!
-        const sameOwner = a.owner !== undefined && a.owner === b.owner
-        return sameOwner || port.connectionName === previous.connectionName ? 0
-          : Math.max(0, (a.width + b.width) / 2 + this.traceClearance - TRACE_ENGINE_TOLERANCE)
-      }))
-      const latest: number[] = []
-      for (let i = family.length - 1; i >= 0; i--) {
-        const maximum = Math.min(edge.length, ...latest.slice(i + 1).map((position, offset) => position - gaps[i]![i + 1 + offset]!))
-        const value = this.lastAllowed(geometry[i]!.allowed, maximum)
-        if (value === undefined) throw new Error(`No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${family[i]!.portPointId}"`)
-        latest[i] = value
-      }
+      const schedule = getOrderedSharedEdgeSchedule({
+        length: edge.length,
+        ports: geometry.map((shape, i) => ({ ...shape, connectionName: family[i]!.connectionName })),
+        traceClearance: this.traceClearance,
+        tolerance: TRACE_ENGINE_TOLERANCE,
+      })
+      if (!schedule.feasible)
+        throw new Error(`No owner-clear ordered placement on shared edge "${edge.ownerPairKey}" at z=${z} for port "${family[schedule.failedIndex]!.portPointId}"`)
+      const { latest, gaps } = schedule
       const positions: number[] = []
       for (let i = 0; i < family.length; i++) {
         const port = family[i]!, shape = geometry[i]!
