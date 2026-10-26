@@ -57,6 +57,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    costAlignedNativeHeuristic?: boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -129,6 +130,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      costAlignedNativeHeuristic?: boolean
     },
   ) {
     super()
@@ -715,17 +717,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
     }
+    const nativeHyperParameters =
+      this.constructorParams.costAlignedNativeHeuristic
+        ? { ...hyperParameters, COST_ALIGNED_HEURISTIC: true }
+        : hyperParameters
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
       return new PriorityDagIntraNodeSolver({
         ...this.constructorParams,
-        hyperParameters,
+        hyperParameters: nativeHyperParameters,
         priorityFamilySize: hyperParameters.PRIORITY_DAG_FAMILY_SIZE,
         precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
       })
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
-      hyperParameters,
+      hyperParameters: nativeHyperParameters,
       precomputedIntraNodeRouteParams: this.precomputedIntraNodeRouteParams,
     })
   }
