@@ -653,6 +653,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
+  readonly physicalRootConnectionNameByConnectionName: Record<string, string> = {}
   exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private exactRepairParams?: ConstructorParameters<
     typeof GlobalDrcBranchPortfolioSolver
@@ -806,6 +807,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
+    // Search connectivity can include geometric unions. Physical ownership uses
+    // only source declarations, including the point-pair solver's aliases.
+    for (const connection of [
+      ...params.originalSrj.connections,
+      ...params.newConnections,
+    ]) {
+      this.physicalRootConnectionNameByConnectionName[connection.name] =
+        connection.__rootConnectionNames?.[0] ??
+        connection.__netConnectionName ??
+        connection.name
+    }
 
     const currentMutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
       (trace) => params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
@@ -989,6 +1001,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         (movableSection) => movableSection.syntheticConnectionName,
       ),
     )
+    for (const section of this.movablePreloadedSections) {
+      this.physicalRootConnectionNameByConnectionName[
+        section.syntheticConnectionName
+      ] = section.originalTrace.connection_name
+    }
     const movablePreloadedTraceIds = new Set(
       this.movablePreloadedSections.map(
         (movableSection) => movableSection.originalTrace.pcb_trace_id,
@@ -1015,6 +1032,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
       },
     )
+    for (const route of this.fixedPreloadedObstacleRoutes) {
+      this.physicalRootConnectionNameByConnectionName[route.connectionName] =
+        params.updatedPreloadedTraces[route.preloadedTraceIndex]!.connection_name
+    }
     const movableSectionIndexesByOriginalTraceId = new Map<string, number[]>()
     for (const [
       movableSectionIndex,
@@ -1878,6 +1899,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     this.regionalB01Params = {
       srj: this.params.srj,
+      physicalSrj: this.params.originalSrj,
+      physicalRootConnectionNameByConnectionName:
+        this.physicalRootConnectionNameByConnectionName,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
@@ -1889,6 +1913,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
       viaDiameter: this.params.defaultViaDiameter,
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
       traceWidth: this.params.srj.minTraceWidth,
       obstacleMargin:
         this.params.srj.defaultObstacleMargin ??

@@ -39,6 +39,8 @@ export type Pipeline9RegionalB01RepairResult = {
 
 export type Pipeline9RegionalB01RepairParams = {
   srj: SimpleRouteJson
+  physicalSrj?: SimpleRouteJson
+  physicalRootConnectionNameByConnectionName?: Record<string, string>
   routes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   newConnections: SimpleRouteConnection[]
@@ -50,6 +52,7 @@ export type Pipeline9RegionalB01RepairParams = {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -214,6 +217,7 @@ export const getViaIssueCount = (errors: Pipeline9DrcError[]): number => {
 export const asRegionalRoutes = (
   routes: HighDensityRoute[],
   connMap: ConnectivityMap,
+  physicalRootConnectionNameByConnectionName?: Record<string, string>,
 ): PreloadedHighDensityRoute[] => {
   const counts = new Map<string, number>()
   for (const route of routes) {
@@ -240,6 +244,9 @@ export const asRegionalRoutes = (
     return {
       ...route,
       connectionName,
+      rootConnectionName:
+        physicalRootConnectionNameByConnectionName?.[route.connectionName] ??
+        route.rootConnectionName,
       preloadedTraceId: `pipeline9_joint_candidate_${routeIndex}`,
       preloadedTraceIndex: routeIndex,
       preloadedRouteIndex: 0,
@@ -396,9 +403,12 @@ export const preparePipeline9RegionalB01Candidate = ({
   center,
   regionSize,
   srj,
+  physicalSrj,
+  physicalRootConnectionNameByConnectionName,
   connMap,
   colorMap,
   viaDiameter,
+  viaHoleDiameter,
   traceWidth,
   obstacleMargin,
   effort,
@@ -409,14 +419,21 @@ export const preparePipeline9RegionalB01Candidate = ({
   center: { x: number; y: number }
   regionSize: number
   srj: SimpleRouteJson
+  physicalSrj?: SimpleRouteJson
+  physicalRootConnectionNameByConnectionName?: Record<string, string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
 }): Pipeline9RegionalB01CandidateProblem | undefined => {
-  const regionalRoutes = asRegionalRoutes(routes, connMap)
+  const regionalRoutes = asRegionalRoutes(
+    routes,
+    connMap,
+    physicalRootConnectionNameByConnectionName,
+  )
   const movableRoute = regionalRoutes[routeIndex]
   if (!movableRoute) return undefined
   const node = {
@@ -451,9 +468,20 @@ export const preparePipeline9RegionalB01Candidate = ({
     connMap,
     colorMap,
     obstacles: srj.obstacles,
+    physicalSrj,
+    physicalRootConnectionNameByConnectionName: {
+      ...physicalRootConnectionNameByConnectionName,
+      ...Object.fromEntries(
+        regionalRoutes.map((route) => [
+          route.connectionName,
+          route.rootConnectionName ?? route.connectionName,
+        ]),
+      ),
+    },
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     viaDiameter,
+    viaHoleDiameter,
     traceWidth,
     obstacleMargin,
     effort,
@@ -499,9 +527,12 @@ export const preparePipeline9RegularRegionalCandidate = ({
   center,
   regionSize,
   srj,
+  physicalSrj,
+  physicalRootConnectionNameByConnectionName,
   connMap,
   colorMap,
   viaDiameter,
+  viaHoleDiameter,
   traceWidth,
   obstacleMargin,
   effort,
@@ -511,14 +542,21 @@ export const preparePipeline9RegularRegionalCandidate = ({
   center: { x: number; y: number }
   regionSize: number
   srj: SimpleRouteJson
+  physicalSrj?: SimpleRouteJson
+  physicalRootConnectionNameByConnectionName?: Record<string, string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
+  viaHoleDiameter?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
 }): Pipeline9RegularRegionalCandidateProblem | undefined => {
-  const regionalRoutes = asRegionalRoutes(routes, connMap)
+  const regionalRoutes = asRegionalRoutes(
+    routes,
+    connMap,
+    physicalRootConnectionNameByConnectionName,
+  )
   const node = {
     capacityMeshNodeId: "pipeline9_joint_drc_regular_fallback",
     center,
@@ -569,10 +607,18 @@ export const preparePipeline9RegularRegionalCandidate = ({
     colorMap,
     connMap,
     viaDiameter,
+    viaHoleDiameter,
     traceWidth,
     obstacleMargin,
     effort,
     obstacles: [...srj.obstacles, ...fixedRouteObstacles],
+    physicalSrj,
+    physicalRootConnectionNameByConnectionName: Object.fromEntries(
+      problem.nodeWithPortPoints.portPoints.map((point) => [
+        point.connectionName,
+        point.rootConnectionName ?? point.connectionName,
+      ]),
+    ),
     layerCount: srj.layerCount,
     allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
