@@ -692,7 +692,8 @@ export const runTask = async (
         "Cannot lint a solved benchmark without routed SimpleRouteJson",
       )
     }
-    const traceLinter = runTraceLinting(solver.getOutputSimpleRouteJson())
+    const finalSrj = solver.getOutputSimpleRouteJson()
+    const traceLinter = runTraceLinting(finalSrj)
     const traceLintIssueCounts: Record<string, number> = Object.fromEntries(
       Object.keys(TRACE_LINT_LABELS).map((type) => [type, 0]),
     )
@@ -739,6 +740,7 @@ export const runTask = async (
       stageTiming,
       routingMetrics,
       benchmarkSnapshot,
+      ...(task.captureFinalSrj ? { finalSrj } : {}),
       ...drcSummary,
     }
   } catch (error) {

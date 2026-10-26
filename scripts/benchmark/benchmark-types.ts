@@ -7,6 +7,7 @@ export type BenchmarkTask = {
   solverName: string
   solverConstructorName?: string
   threads?: number
+  captureFinalSrj?: boolean
   networkedCachePass?: "cold" | "hot"
   networkedServer?: {
     url: string
@@ -148,6 +149,7 @@ export type WorkerResult<
   stageTiming?: BenchmarkStageTimingBreakdown
   routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
+  finalSrj?: SimpleRouteJson
 }
 
 export type WorkerResultWithImage = WorkerResult<BenchmarkSnapshotWithImage>

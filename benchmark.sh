@@ -13,6 +13,7 @@ DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver9_PreloadedTraceGraph"
 PIPELINE_ID=""
 NETWORKED_COLD_HOT=false
 NETWORKED_REMOTE=false
+CAPTURE_FINAL_SRJ=false
 
 resolve_pipeline_solver_name() {
   case "$1" in
@@ -97,6 +98,7 @@ Options:
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
   --sample N           Run one 1-based sample number from the dataset order
   --sample-numbers L   Run comma-separated 1-based sample numbers
+  --capture-final-srj  Include solved routed SimpleRouteJson in benchmark-result.json
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, or 29/srj29
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
@@ -229,6 +231,10 @@ while [ "$#" -gt 0 ]; do
       INCLUDE_ASSIGNABLE=true
       shift
       ;;
+    --capture-final-srj)
+      CAPTURE_FINAL_SRJ=true
+      shift
+      ;;
     *)
       echo "Unknown argument: $1"
       echo "Run ./benchmark.sh --help for usage"
@@ -283,6 +289,9 @@ if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipeline
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
+if [ "$CAPTURE_FINAL_SRJ" = true ]; then
+  CMD+=("--capture-final-srj")
+fi
 if [ -n "$THREADS" ]; then
   CMD+=("--threads" "$THREADS")
 fi
