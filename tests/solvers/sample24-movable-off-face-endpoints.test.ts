@@ -156,8 +156,12 @@ test("sample24 displaced movable endpoints retain their complete physical face d
     routeMetadata: [problem.routeMetadata![0], problem.routeMetadata![0]],
   }
   expect(evaluate({ ...query, problem: sameOwner })).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!(query)).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, planningObstacles: undefined })!(query)).toEqual({ feasible: true })
+  // Exclude the separate three-endpoint corridor conflict so these controls
+  // isolate abstention for the unknown/anchored displaced endpoint itself.
+  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!(query)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0]] })
+  const abstention = { ...query, regionSegments: [[0, wire[0], wire[0]]] as [number, number, number][] }
+  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!(abstention)).toEqual({ feasible: true })
+  expect(createPhysicalViaCapacityEvaluator({ ...context, planningObstacles: undefined })!(abstention)).toEqual({ feasible: true })
   expect(createPhysicalViaCapacityEvaluator({ ...context, preserveSolitarySharedEdgePorts: true })!(query)).toEqual({ feasible: false, blockerRouteIds: [0] })
   const aliasFaceX = 157.86689280000002
   const preserved = createPhysicalViaCapacityEvaluator({
@@ -166,7 +170,7 @@ test("sample24 displaced movable endpoints retain their complete physical face d
     planningObstacles: [{ type: "rect", layers: ["bottom"], connectedTo: [],
       center: { x: aliasFaceX + .5, y: 96.58592020871794 }, width: 1, height: .019332915897436465 }],
   })!
-  expect(preserved(query)).toEqual({ feasible: true })
+  expect(preserved(abstention)).toEqual({ feasible: true })
   const remapped = { ...problem, routeMetadata: [problem.routeMetadata![1], problem.routeMetadata![0]] }
   expect(evaluate({ ...query, problem: remapped, routeId: 0, regionSegments: [[1, ...wire]] })).toEqual({ feasible: false, blockerRouteIds: [1] })
   expect(fixture).toEqual(snapshot)
