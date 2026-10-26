@@ -26,7 +26,9 @@ test("Pipeline9 enables the analytic Native priority while legacy callers keep t
   expect(regular.activeSubSolver).toBeInstanceOf(
     GrowShrinkHighDensityIntraNodeSolver,
   )
-  if (!(regular.activeSubSolver instanceof GrowShrinkHighDensityIntraNodeSolver)) {
+  if (
+    !(regular.activeSubSolver instanceof GrowShrinkHighDensityIntraNodeSolver)
+  ) {
     throw new Error("Expected the regular Pipeline9 grow/shrink candidate")
   }
   const portfolio = new PortfolioSingleIntraNodeSolver(

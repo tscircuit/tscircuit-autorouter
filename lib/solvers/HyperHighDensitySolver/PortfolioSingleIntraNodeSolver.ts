@@ -717,10 +717,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
     }
-    const nativeHyperParameters =
-      this.constructorParams.costAlignedNativeHeuristic
-        ? { ...hyperParameters, COST_ALIGNED_HEURISTIC: true }
-        : hyperParameters
+    const nativeHyperParameters = this.constructorParams
+      .costAlignedNativeHeuristic
+      ? { ...hyperParameters, COST_ALIGNED_HEURISTIC: true }
+      : hyperParameters
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
       return new PriorityDagIntraNodeSolver({
         ...this.constructorParams,

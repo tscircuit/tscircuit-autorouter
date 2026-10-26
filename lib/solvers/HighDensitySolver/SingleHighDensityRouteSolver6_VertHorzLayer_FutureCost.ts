@@ -49,7 +49,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
-    this.hasEvenAvailableLayer = this.availableZ.some((layer) => layer % 2 === 0)
+    this.hasEvenAvailableLayer = this.availableZ.some(
+      (layer) => layer % 2 === 0,
+    )
     this.hasOddAvailableLayer = this.availableZ.some((layer) => layer % 2 !== 0)
     if (
       this.COST_ALIGNED_HEURISTIC &&
@@ -58,7 +60,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         !Number.isFinite(this.viaPenaltyDistance) ||
         this.viaPenaltyDistance < 0)
     ) {
-      throw new Error("Native movement penalties must be finite and nonnegative")
+      throw new Error(
+        "Native movement penalties must be finite and nonnegative",
+      )
     }
     if (this.COST_ALIGNED_HEURISTIC) {
       // Keep the linear estimate's search weight explicit when replacing the
