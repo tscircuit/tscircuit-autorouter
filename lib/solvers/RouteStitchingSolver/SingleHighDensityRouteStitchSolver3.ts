@@ -77,6 +77,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preferSameLayerTerminalEndpoints?: boolean
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -234,14 +235,19 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
-        ? firstRouteFirstPoint
-        : firstRouteLastPoint
+    const firstRouteEndpoints = [firstRouteFirstPoint, firstRouteLastPoint]
+    const sameLayerEndpoints = opts.preferSameLayerTerminalEndpoints
+      ? firstRouteEndpoints.filter((point) => point.z === this.start.z)
+      : []
+    const endpointCandidates = sameLayerEndpoints.length > 0 ? sameLayerEndpoints : firstRouteEndpoints
+    const closestFirstRoutePoint = endpointCandidates.reduce((bestPoint, point) => {
+      const pointDistance = distance(this.start, point)
+      const bestDistance = distance(this.start, bestPoint)
+      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE && comparePoints(point, bestPoint) < 0)
+        ? point
+        : bestPoint
+    })
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
