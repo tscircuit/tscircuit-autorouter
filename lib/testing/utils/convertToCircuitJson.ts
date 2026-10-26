@@ -448,7 +448,17 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+          // Copper contact cannot declare connectivity: a routed endpoint can
+          // overlap a foreign pad, including one on another layer.
+          if (
+            pointToBoxDistance(endpoint, obstacle) <= 0 &&
+            obstacle.connectedTo.some((id) =>
+              circuitJsonSourceTraceIdResolver.connMap.areIdsConnected(
+                connection.name,
+                id,
+              ),
+            )
+          ) {
             obstaclesContainingEndpoints.push(obstacle)
           }
         }

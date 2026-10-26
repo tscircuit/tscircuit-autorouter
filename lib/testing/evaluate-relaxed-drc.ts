@@ -1,6 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
+import { getRawKeepoutDrcErrors } from "./getRawKeepoutDrcErrors"
 import {
   getDrcErrors,
   type GetDrcErrorsOptions,
@@ -84,12 +85,23 @@ export const evaluateRelaxedDrc = ({
     )
   }
 
+  const drc = getDrcErrors(circuitJson, {
+    ...RELAXED_DRC_OPTIONS,
+    holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+    viaPadClearance:
+      inputSrj.minViaEdgeToPadEdgeClearance ??
+      inputSrj.minPadEdgeToPadEdgeClearance,
+    ...drcOptions,
+  })
+  const keepoutErrors = getRawKeepoutDrcErrors({
+    inputSrj,
+    jointTraces,
+    circuitJson,
+  })
   return {
     circuitJson,
-    ...getDrcErrors(circuitJson, {
-      ...RELAXED_DRC_OPTIONS,
-      holeClearance: inputSrj.minTraceToHoleEdgeClearance,
-      ...drcOptions,
-    }),
+    errors: [...drc.errors, ...keepoutErrors],
+    errorsWithCenters: [...drc.errorsWithCenters, ...keepoutErrors],
+    locationAwareErrors: [...drc.locationAwareErrors, ...keepoutErrors],
   }
 }
