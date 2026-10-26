@@ -24,6 +24,15 @@ const EMPTY_ROLE_KEYS = new Set([
   "_isNarrowQfpPadGap",
 ])
 
+export function isPlainGlobalFreeNode(node: CapacityMeshNode): boolean {
+  return Object.entries(node).every(
+    ([key, value]) =>
+      GEOMETRY_KEYS.has(key) ||
+      value === undefined ||
+      (EMPTY_ROLE_KEYS.has(key) && value === false),
+  )
+}
+
 /** A partial free stack cannot host a through via across its missing layers. */
 export function splitThroughOnlyGlobalFreeNodes(
   nodes: CapacityMeshNode[],
@@ -50,12 +59,7 @@ export function splitThroughOnlyGlobalFreeNodes(
       ) &&
       node.width > 0 &&
       node.height > 0
-    const plainFree = Object.entries(node).every(
-      ([key, value]) =>
-        GEOMETRY_KEYS.has(key) ||
-        value === undefined ||
-        (EMPTY_ROLE_KEYS.has(key) && value === false),
-    )
+    const plainFree = isPlainGlobalFreeNode(node)
     const partial = node.availableZ.length < policy.layerCount
     if (
       !validMultilayer ||

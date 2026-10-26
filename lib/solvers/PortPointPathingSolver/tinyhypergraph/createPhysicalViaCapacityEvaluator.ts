@@ -1,0 +1,346 @@
+import Flatbush from "flatbush"
+import type {
+  TinyHyperGraphProblem,
+  TinyHyperGraphRegionSegmentFeasibilityContext,
+  TinyHyperGraphRegionSegmentFeasibilityResult,
+  TinyHyperGraphTopology,
+} from "tiny-hypergraph/lib/core"
+import type {
+  CapacityMeshNode,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
+
+export type PhysicalViaCapacityContext = {
+  physicalSrj: SimpleRouteJson
+  freeRegionIds: string[]
+}
+
+type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
+type PhysicalPad = Bounds & { owners: Set<string>; radius: number }
+type ExistingConductor = Bounds & { owners: Set<string> }
+type PhysicalBoard = {
+  pads: PhysicalPad[]
+  index?: Flatbush
+  conductors: ExistingConductor[]
+  conductorIndex?: Flatbush
+  maximumRadius: number
+  minimumCenterSpacing: number
+  connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
+}
+type RouteMetadata = {
+  connectionId?: string
+  simpleRouteConnection?: Partial<SimpleRouteConnection>
+}
+type Evaluator = (
+  query: TinyHyperGraphRegionSegmentFeasibilityContext,
+) => TinyHyperGraphRegionSegmentFeasibilityResult
+
+const boardCache = new WeakMap<SimpleRouteJson, PhysicalBoard>()
+const FEASIBLE: TinyHyperGraphRegionSegmentFeasibilityResult = { feasible: true }
+
+function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
+  const cached = boardCache.get(physicalSrj)
+  if (cached) return cached
+  const srj = createSrjWithBoardValidObstacleLayers(physicalSrj)
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj, {
+    includeGeometricPointConnections: false,
+  })
+  const dimensions = getViaDimensions(srj)
+  let minimumPadDiameter = dimensions.padDiameter
+  let minimumHoleDiameter = dimensions.holeDiameter
+  // Existing vias can be smaller than newly generated vias. A global lower
+  // bound keeps the proof conservative when an existing transition is reused.
+  for (const trace of srj.traces ?? []) {
+    for (const point of trace.route) {
+      if (point.route_type !== "via") continue
+      minimumPadDiameter = Math.min(
+        minimumPadDiameter,
+        point.via_diameter ?? dimensions.padDiameter,
+      )
+      minimumHoleDiameter = Math.min(
+        minimumHoleDiameter,
+        point.via_hole_diameter ?? dimensions.holeDiameter,
+      )
+    }
+  }
+  const padGap =
+    srj.minViaEdgeToPadEdgeClearance ?? srj.minPadEdgeToPadEdgeClearance ?? 0.1
+  const pads: PhysicalPad[] = []
+  const conductors: ExistingConductor[] = []
+  for (const obstacle of srj.obstacles) {
+    const owners = new Set<string>()
+    let unknownOwner = false
+    for (const id of obstacle.connectedTo) {
+      const owner = connMap.getNetConnectedToId(id)
+      if (owner === undefined) unknownOwner = true
+      else owners.add(owner)
+    }
+    if (
+      unknownOwner ||
+      obstacle.netIsAssignable ||
+      obstacle.offBoardConnectsTo?.length
+    )
+      continue
+    const { x, y } = obstacle.center
+    if (![x, y, obstacle.width, obstacle.height].every(Number.isFinite)) continue
+    if (obstacle.__zLayers!.length > 1 && owners.size > 0) {
+      const reach = Math.hypot(obstacle.width, obstacle.height) / 2
+      conductors.push({
+        minX: x - reach,
+        maxX: x + reach,
+        minY: y - reach,
+        maxY: y + reach,
+        owners,
+      })
+    }
+    // Only axis-aligned rectangles supply coordinate bounds. Unsupported
+    // shapes remain physical obstacles; they simply do not strengthen proof.
+    if (
+      obstacle.type !== "rect" ||
+      obstacle.shape !== undefined ||
+      obstacle.isNonPlatedHole ||
+      obstacle.width < 0 ||
+      obstacle.height < 0 ||
+      (obstacle.ccwRotationDegrees ?? 0) % 180 !== 0
+    )
+      continue
+    const radius =
+      minimumPadDiameter / 2 +
+      (isOpaqueUnownedObstacle(obstacle) ? 0 : padGap) -
+      0.005
+    if (!Number.isFinite(radius) || radius <= 0) continue
+    pads.push({
+      minX: x - obstacle.width / 2,
+      maxX: x + obstacle.width / 2,
+      minY: y - obstacle.height / 2,
+      maxY: y + obstacle.height / 2,
+      owners,
+      radius,
+    })
+  }
+  const index = pads.length > 0 ? new Flatbush(pads.length) : undefined
+  for (const pad of pads) index!.add(pad.minX, pad.minY, pad.maxX, pad.maxY)
+  index?.finish()
+  const conductorIndex =
+    conductors.length > 0 ? new Flatbush(conductors.length) : undefined
+  for (const conductor of conductors) {
+    conductorIndex!.add(
+      conductor.minX,
+      conductor.minY,
+      conductor.maxX,
+      conductor.maxY,
+    )
+  }
+  conductorIndex?.finish()
+  const board: PhysicalBoard = {
+    pads,
+    index,
+    conductors,
+    conductorIndex,
+    connMap,
+    maximumRadius: Math.max(0, ...pads.map((pad) => pad.radius)),
+    minimumCenterSpacing:
+      Math.max(
+        minimumPadDiameter + (srj.minPadEdgeToPadEdgeClearance ?? 0.1),
+        minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
+      ) - 0.005,
+  }
+  boardCache.set(physicalSrj, board)
+  return board
+}
+
+/** Rejects only physically proved incompatible through-via assignments. */
+export function createPhysicalViaCapacityEvaluator({
+  physicalSrj,
+  freeRegionIds,
+}: PhysicalViaCapacityContext): Evaluator | undefined {
+  if (physicalSrj.allowBlindAndBuriedVias || physicalSrj.layerCount < 2)
+    return undefined
+  const board = compilePhysicalBoard(physicalSrj)
+  if (!board.index || !(board.minimumCenterSpacing > 0)) return undefined
+  const freeIds = new Set(freeRegionIds)
+  const ownerByMetadata = new WeakMap<RouteMetadata, string | null>()
+  const getOwner = (
+    problem: Readonly<TinyHyperGraphProblem>,
+    routeId: number,
+  ): string | undefined => {
+    const metadata = problem.routeMetadata?.[routeId] as
+      | RouteMetadata
+      | undefined
+    if (!metadata || typeof metadata !== "object") return undefined
+    const cached = ownerByMetadata.get(metadata)
+    if (cached !== undefined) return cached === null ? undefined : cached
+    const connection = metadata.simpleRouteConnection
+    const ids = [
+      metadata.connectionId,
+      connection?.name,
+      connection?.rootConnectionName,
+      connection?.__netConnectionName,
+      connection?.netConnectionName,
+      ...(connection?.__rootConnectionNames ?? []),
+    ]
+    const owners = new Set(
+      ids.flatMap((id) => {
+        const owner =
+          id === undefined ? undefined : board.connMap.getNetConnectedToId(id)
+        return owner === undefined ? [] : [owner]
+      }),
+    )
+    const owner = owners.size === 1 ? owners.values().next().value : undefined
+    ownerByMetadata.set(metadata, owner ?? null)
+    return owner
+  }
+  const boundsByTopology = new WeakMap<
+    Readonly<TinyHyperGraphTopology>,
+    Map<number, Map<string, Bounds | null>>
+  >()
+  const getBounds = (
+    topology: Readonly<TinyHyperGraphTopology>,
+    regionId: number,
+    owner: string,
+  ): Bounds | null => {
+    let boundsByRegion = boundsByTopology.get(topology)
+    if (!boundsByRegion)
+      boundsByTopology.set(topology, (boundsByRegion = new Map()))
+    let cache = boundsByRegion.get(regionId)
+    if (!cache) boundsByRegion.set(regionId, (cache = new Map()))
+    const cached = cache.get(owner)
+    if (cached !== undefined) return cached
+    const metadata = topology.regionMetadata?.[regionId] as
+      | CapacityMeshNode
+      | undefined
+    if (!metadata?.center || !(metadata.width > 0) || !(metadata.height > 0))
+      return null
+    const original: Bounds = {
+      minX: metadata.center.x - metadata.width / 2,
+      maxX: metadata.center.x + metadata.width / 2,
+      minY: metadata.center.y - metadata.height / 2,
+      maxY: metadata.center.y + metadata.height / 2,
+    }
+    if (!Object.values(original).every(Number.isFinite)) return null
+    // A connection may change layers through its existing plated copper,
+    // without manufacturing a new via in this rectangle.
+    const existing = board.conductorIndex?.search(
+      original.minX,
+      original.minY,
+      original.maxX,
+      original.maxY,
+    )
+    if (existing?.some((id) => board.conductors[id]!.owners.has(owner))) {
+      cache.set(owner, null)
+      return null
+    }
+    const bounds = { ...original }
+    const slack =
+      1e-9 +
+      Number.EPSILON *
+        128 *
+        (Math.abs(original.minX) +
+          Math.abs(original.maxX) +
+          Math.abs(original.minY) +
+          Math.abs(original.maxY))
+    const reach = board.maximumRadius
+    for (const id of board.index!.search(
+      original.minX - reach,
+      original.minY - reach,
+      original.maxX + reach,
+      original.maxY + reach,
+    )) {
+      const pad = board.pads[id]!
+      if (pad.owners.has(owner)) continue
+      const radius = pad.radius - slack
+      const maxDx = Math.max(
+        pad.minX - original.minX,
+        original.maxX - pad.maxX,
+        0,
+      )
+      if (maxDx < radius) {
+        // The furthest possible x distance gives a necessary y distance even
+        // beside a rounded offset corner. Clip only when one escape side is
+        // outside the original cell; every legal center remains enclosed.
+        const dy = Math.sqrt(radius * radius - maxDx * maxDx)
+        if (original.minY >= pad.minY)
+          bounds.minY = Math.max(bounds.minY, pad.maxY + dy - slack)
+        if (original.maxY <= pad.maxY)
+          bounds.maxY = Math.min(bounds.maxY, pad.minY - dy + slack)
+      }
+      const maxDy = Math.max(
+        pad.minY - original.minY,
+        original.maxY - pad.maxY,
+        0,
+      )
+      if (maxDy < radius) {
+        const dx = Math.sqrt(radius * radius - maxDy * maxDy)
+        if (original.minX >= pad.minX)
+          bounds.minX = Math.max(bounds.minX, pad.maxX + dx - slack)
+        if (original.maxX <= pad.maxX)
+          bounds.maxX = Math.min(bounds.maxX, pad.minX - dx + slack)
+      }
+    }
+    cache.set(owner, bounds)
+    return bounds
+  }
+  return (query): TinyHyperGraphRegionSegmentFeasibilityResult => {
+    const {
+      topology,
+      problem,
+      regionId,
+      fromPortId,
+      toPortId,
+      routeId,
+      regionSegments,
+      ignoredRouteIds,
+    } = query
+    if (
+      !freeIds.has(topology.regionMetadata?.[regionId]?.capacityMeshNodeId) ||
+      topology.portZ[fromPortId] === topology.portZ[toPortId]
+    )
+      return FEASIBLE
+    const owner = routeId === undefined ? undefined : getOwner(problem, routeId)
+    if (owner === undefined) return FEASIBLE
+    const bounds = getBounds(topology, regionId, owner)
+    if (!bounds) return FEASIBLE
+    if (bounds.minX > bounds.maxX || bounds.minY > bounds.maxY)
+      return { feasible: false, blockerRouteIds: [] }
+    const others = new Map<string, Set<number>>()
+    for (const [otherRoute, first, second] of regionSegments) {
+      if (
+        ignoredRouteIds?.has(otherRoute) ||
+        topology.portZ[first] === topology.portZ[second]
+      )
+        continue
+      const otherOwner = getOwner(problem, otherRoute)
+      if (otherOwner === undefined || otherOwner === owner) continue
+      let ids = others.get(otherOwner)
+      if (!ids) others.set(otherOwner, (ids = new Set()))
+      ids.add(otherRoute)
+    }
+    const blockers = new Set<number>()
+    for (const [otherOwner, ids] of others) {
+      const other = getBounds(topology, regionId, otherOwner)
+      if (!other) continue
+      const maxDx = Math.max(
+        Math.abs(bounds.minX - other.maxX),
+        Math.abs(bounds.maxX - other.minX),
+      )
+      const maxDy = Math.max(
+        Math.abs(bounds.minY - other.maxY),
+        Math.abs(bounds.maxY - other.minY),
+      )
+      if (
+        other.minX > other.maxX ||
+        other.minY > other.maxY ||
+        Math.hypot(maxDx, maxDy) + 1e-8 < board.minimumCenterSpacing
+      )
+        for (const id of ids) blockers.add(id)
+    }
+    return blockers.size === 0
+      ? FEASIBLE
+      : { feasible: false, blockerRouteIds: [...blockers] }
+  }
+}
