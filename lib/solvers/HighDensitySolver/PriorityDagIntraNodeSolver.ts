@@ -308,8 +308,6 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
-      reversePotentialCache: this.reversePotentialCache,
-      reversePotentialWorkCharge: (units): void => this.charge("priorityReversePotentialWorkUnits", units),
     }
   }
 
@@ -555,10 +553,6 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       this.charge("priorityDispatches")
       if (this.activeSubSolver) {
         this.charge("priorityNativeSteps")
-        // Prepare outside Native.step so expected parent-budget exhaustion is
-        // handled as this policy's UNKNOWN, without a low-level error report.
-        if (this.activeSubSolver instanceof Native)
-          this.activeSubSolver.prepareReversePotential()
         this.activeSubSolver.step()
         if (this.activeSubSolver.failed) {
           this.record("priorityUnknownLowLevelSearches")

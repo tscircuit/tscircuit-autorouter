@@ -9,7 +9,6 @@ import {
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import type { ReverseCostToGoCache } from "./ReverseCostToGoCache"
 
 export type FutureConnection = {
   connectionName: string
@@ -123,8 +122,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
-    reversePotentialCache?: ReverseCostToGoCache
-    reversePotentialWorkCharge?: (workUnits: number) => boolean | void
   }) {
     super()
     this.bounds = opts.bounds

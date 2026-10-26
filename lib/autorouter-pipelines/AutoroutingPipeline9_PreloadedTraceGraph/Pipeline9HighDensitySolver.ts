@@ -1,4 +1,3 @@
-import { ReverseCostToGoCache } from "../../solvers/HighDensitySolver/ReverseCostToGoCache"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9HighDensityBatchSolver } from "./Pipeline9HighDensityBatchSolver"
 import {
@@ -333,7 +332,6 @@ export type Pipeline9RegularNodeSolverParams = {
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
-  reversePotentialCache?: ReverseCostToGoCache
   layerCount: number
 }
 
@@ -350,9 +348,8 @@ export const createPipeline9RegularNodeSolver = ({
   viaHoleDiameter,
   minViaHoleEdgeToViaHoleEdgeClearance,
   allowBlindAndBuriedVias,
-  priorityDiagnostics = {},
+  priorityDiagnostics,
   priorityDagSearch = false,
-  reversePotentialCache,
   traceWidth,
   obstacleMargin,
   effort,
@@ -385,7 +382,6 @@ export const createPipeline9RegularNodeSolver = ({
     captureSearchDebug: false,
     priorityDagSearch,
     priorityDiagnostics,
-    reversePotentialCache: reversePotentialCache ?? (priorityDagSearch ? new ReverseCostToGoCache(priorityDiagnostics) : undefined),
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
