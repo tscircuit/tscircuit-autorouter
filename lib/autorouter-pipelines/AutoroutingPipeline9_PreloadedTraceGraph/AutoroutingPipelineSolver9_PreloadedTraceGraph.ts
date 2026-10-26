@@ -458,6 +458,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
+          physicalClearanceSrj: cms.originalSrj,
         },
       ],
     ),

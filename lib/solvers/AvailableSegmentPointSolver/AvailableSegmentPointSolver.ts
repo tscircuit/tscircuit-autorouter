@@ -7,6 +7,7 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import { PhysicalPortClearance } from "./PhysicalPortClearance"
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -88,6 +89,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
+  private readonly physicalPortClearance?: PhysicalPortClearance
 
   // edgeMargin = 0.25
 
@@ -98,6 +100,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    physicalClearanceSrj,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -105,6 +108,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    physicalClearanceSrj?: SimpleRouteJson
   }) {
     super()
     this.nodes = nodes
@@ -112,6 +116,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     this.traceWidth = traceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.shouldReturnCrampedPortPoints = shouldReturnCrampedPortPoints
+    this.physicalPortClearance = physicalClearanceSrj
+      ? new PhysicalPortClearance(physicalClearanceSrj, this.traceWidth, this.obstacleMargin)
+      : undefined
     // Port spacing: each trace extends traceWidth/2 from center, plus obstacleMargin clearance
     // Center-to-center distance = traceWidth + obstacleMargin
     this.minPortSpacing = this.traceWidth + this.obstacleMargin
@@ -182,30 +189,40 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       !node1._containsTarget &&
       !node2._containsTarget
     ) {
-      if (!this.shouldReturnCrampedPortPoints) {
-        return null
-      }
-      const crampedPortPoints: SegmentPortPoint[] = []
+      const midpoint = { x: (overlap.start.x + overlap.end.x) / 2, y: (overlap.start.y + overlap.end.y) / 2 }
+      const canCheckPhysicalClearance = Boolean(
+        this.physicalPortClearance &&
+        !node1._containsObstacle && !node2._containsObstacle &&
+        !edgeTouchesNarrowQfpPadGap &&
+        !node1._offBoardConnectionId && !node2._offBoardConnectionId &&
+        !node1._isVirtualOffboard && !node2._isVirtualOffboard &&
+        !node1._offboardNetName && !node2._offboardNetName &&
+        !node1._offBoardConnectedCapacityMeshNodeIds?.length && !node2._offBoardConnectedCapacityMeshNodeIds?.length,
+      )
+      const midpointPortPoints: SegmentPortPoint[] = []
       for (const z of availableZ) {
-        crampedPortPoints.push({
-          segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}_cramped`,
-          x: (overlap.start.x + overlap.end.x) / 2,
-          y: (overlap.start.y + overlap.end.y) / 2,
+        const cramped = !canCheckPhysicalClearance || !this.physicalPortClearance!.isPointClear({ ...midpoint, z })
+        if (cramped && !this.shouldReturnCrampedPortPoints) continue
+        midpointPortPoints.push({
+          segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}${cramped ? "_cramped" : ""}`,
+          x: midpoint.x,
+          y: midpoint.y,
           availableZ: [z],
           nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ: 0,
-          cramped: true,
+          cramped,
         })
       }
+      if (midpointPortPoints.length === 0) return null
       return {
         edgeId: edge.capacityMeshEdgeId,
         nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
         start: overlap.start,
         end: overlap.end,
         availableZ,
-        portPoints: crampedPortPoints,
+        portPoints: midpointPortPoints,
       }
     }
     // At minimum we need 1 port point, at maximum we space them minPortSpacing apart
