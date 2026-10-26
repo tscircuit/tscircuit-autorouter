@@ -24,8 +24,9 @@ test("partial regional pathing preserves bridge terminals", (): void => {
   const solveGraph =
     solver["tinyPipelineSolver"].getSolver<TinyHyperGraphSolver>("solveGraph")
   expect(solveGraph?.PARTIAL_REGIONAL_EXPANSION).toBe(true)
-  const terminals = solver.getOutput().nodesWithPortPoints
-    .flatMap((node) => node.portPoints)
+  const terminals = solver
+    .getOutput()
+    .nodesWithPortPoints.flatMap((node) => node.portPoints)
     .filter((point) => point.pcb_port_id)
     .map(({ x, y, pcb_port_id }) => ({ x, y, pcb_port_id }))
     .sort((left, right) => left.x - right.x)
