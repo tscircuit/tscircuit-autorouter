@@ -14,7 +14,7 @@ export function createPhysicalUniformScenario({
   obstacles?: Obstacle[]
   rules?: Partial<SimpleRouteJson>
 } = {}): { solver: UniformPortDistributionSolver; physicalSrj: SimpleRouteJson; nodes: NodeWithPortPoints[] } {
-  const nodes: NodeWithPortPoints[] = [-1, 1].map((y, index) => ({
+  const nodes: (NodeWithPortPoints & { availableZ: number[] })[] = [-1, 1].map((y, index) => ({
     capacityMeshNodeId: index === 0 ? "lower" : "upper",
     center: { x: length / 2, y }, width: length, height: 2,
     availableZ: [0, 1], portPoints: ports.map((port) => ({ ...port })),
