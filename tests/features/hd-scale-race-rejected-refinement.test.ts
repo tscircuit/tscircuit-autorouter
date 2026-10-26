@@ -15,7 +15,8 @@ test("a rejected lower-scale refinement leaves the incumbent subject to the same
       return validations === 2
     },
   })
-  while (!solver.solved && !solver.failed && solver.iterations < 30) solver.step()
+  while (!solver.solved && !solver.failed && solver.iterations < 30)
+    solver.step()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.error).toBeNull()

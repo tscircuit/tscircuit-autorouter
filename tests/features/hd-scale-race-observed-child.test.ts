@@ -22,10 +22,13 @@ test("scale refinement observes an already-solved native child through portfolio
     },
     validator: (routes): boolean => {
       validations++
-      return routes.every((route) => route.rootConnectionName?.startsWith("net"))
+      return routes.every((route) =>
+        route.rootConnectionName?.startsWith("net"),
+      )
     },
   })
-  while (!solver.solved && !solver.failed && solver.iterations < 20) solver.step()
+  while (!solver.solved && !solver.failed && solver.iterations < 20)
+    solver.step()
   expect(solver.solved).toBe(true)
   expect(solver.scaleFactor).toBe(1)
   expect(portfolios.get(1)!.native.iterations).toBe(1)

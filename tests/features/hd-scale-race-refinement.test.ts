@@ -15,7 +15,8 @@ test("scale racing refines the successful family at smaller scales without advan
       return routes.length === 8
     },
   })
-  while (!solver.solved && !solver.failed && solver.iterations < 30) solver.step()
+  while (!solver.solved && !solver.failed && solver.iterations < 30)
+    solver.step()
   expect(solver.solved).toBe(true)
   expect(solver.scaleFactor).toBe(2)
   expect(created).toEqual([1, 2, 4])

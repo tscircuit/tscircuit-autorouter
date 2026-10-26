@@ -344,7 +344,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       }
       this.stats.scaleRefinementNativeIterations =
         (this.stats.scaleRefinementNativeIterations ?? 0) +
-        supervised.solver.iterations - before
+        supervised.solver.iterations -
+        before
       if (candidate.solver.solved && this.acceptScaleCandidate(candidate)) {
         return true
       }
@@ -371,7 +372,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       }
       this.addScaleSearchWave(search)
     }
-    let candidate = search.candidates[search.cursor++ % search.candidates.length]!
+    let candidate =
+      search.candidates[search.cursor++ % search.candidates.length]!
     while (candidate.solver.failed) {
       candidate = search.candidates[search.cursor++ % search.candidates.length]!
     }
@@ -451,7 +453,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
         (this.maxGrowthAttempts + 1),
     )
-    return this.raceGrowthAttempts ? Math.max(this.progress, progress) : progress
+    return this.raceGrowthAttempts
+      ? Math.max(this.progress, progress)
+      : progress
   }
 
   override tryFinalAcceptance(): void {

@@ -521,7 +521,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       candidate.solver.failed ||
       this.candidateToAdvance
     ) {
-      throw new Error("Cannot advance an inactive or foreign portfolio candidate")
+      throw new Error(
+        "Cannot advance an inactive or foreign portfolio candidate",
+      )
     }
     this.candidateToAdvance = candidate
     try {

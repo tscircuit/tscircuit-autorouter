@@ -8,14 +8,18 @@ import { PortfolioSingleIntraNodeSolver } from "../../lib/solvers/HyperHighDensi
 import { GrowShrinkHighDensityIntraNodeSolver } from "../../lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/GrowShrinkHighDensityIntraNodeSolver"
 
 type Plan = { completeAfter: number; budget: number; throwAt?: number }
-type PortfolioParams = ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0]
+type PortfolioParams = ConstructorParameters<
+  typeof PortfolioSingleIntraNodeSolver
+>[0]
 
 type HarnessOptions = {
   plans: Record<number, Plan>
   makeOtherBest?: boolean
   onStep?: (scale: number, portfolio: ScriptedPortfolio) => void
   validator?: (routes: HighDensityIntraNodeRoute[]) => boolean
-  params?: Partial<ConstructorParameters<typeof GrowShrinkHighDensityIntraNodeSolver>[0]>
+  params?: Partial<
+    ConstructorParameters<typeof GrowShrinkHighDensityIntraNodeSolver>[0]
+  >
 }
 
 export const raceNode: NodeWithPortPoints = {
@@ -43,7 +47,10 @@ export const raceNode: NodeWithPortPoints = {
 }
 
 class ScriptedA03 extends HighDensitySolverA03 {
-  constructor(node: NodeWithPortPoints, readonly plan: Plan) {
+  constructor(
+    node: NodeWithPortPoints,
+    readonly plan: Plan,
+  ) {
     super({ nodeWithPortPoints: node, viaDiameter: 0.3 })
     this.MAX_ITERATIONS = plan.budget
   }

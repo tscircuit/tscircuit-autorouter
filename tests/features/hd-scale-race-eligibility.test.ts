@@ -8,7 +8,12 @@ test("scale racing leaves cheap preflight failures and simpler or legacy routing
   for (const point of shared.portPoints) point.rootConnectionName = "shared"
   for (const params of [
     { nodeWithPortPoints: { ...raceNode, availableZ: [0, 1] } },
-    { nodeWithPortPoints: { ...raceNode, portPoints: raceNode.portPoints.slice(0, 14) } },
+    {
+      nodeWithPortPoints: {
+        ...raceNode,
+        portPoints: raceNode.portPoints.slice(0, 14),
+      },
+    },
     { nodeWithPortPoints: overlap },
     { nodeWithPortPoints: shared },
     { fallbackToInvalidGeometryOnFailure: true },

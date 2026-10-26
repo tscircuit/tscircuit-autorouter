@@ -23,7 +23,9 @@ test("explicit portfolio advancement preserves candidate budgets and restores or
   expect(portfolio.iterations).toBe(2)
   const logging = spyOn(console, "error").mockImplementation((): void => {})
   try {
-    expect(() => portfolio.stepCandidate(candidate)).toThrow("scripted A03 failure")
+    expect(() => portfolio.stepCandidate(candidate)).toThrow(
+      "scripted A03 failure",
+    )
   } finally {
     logging.mockRestore()
   }
