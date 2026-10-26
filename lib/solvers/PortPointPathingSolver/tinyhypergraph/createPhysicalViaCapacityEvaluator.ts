@@ -23,6 +23,7 @@ export type PhysicalViaCapacityContext = {
 type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 type PhysicalPad = Bounds & { owners: Set<string>; radius: number }
 type ExistingConductor = Bounds & { owners: Set<string> }
+type SharedEdge = { key: string }
 type PhysicalBoard = {
   pads: PhysicalPad[]
   index?: Flatbush
@@ -30,6 +31,7 @@ type PhysicalBoard = {
   conductorIndex?: Flatbush
   maximumRadius: number
   minimumCenterSpacing: number
+  minimumTraceCenterSpacing: number
   connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
 }
 type RouteMetadata = {
@@ -53,10 +55,14 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
   const dimensions = getViaDimensions(srj)
   let minimumPadDiameter = dimensions.padDiameter
   let minimumHoleDiameter = dimensions.holeDiameter
+  let minimumTraceWidth = srj.minTraceWidth
   // Existing vias can be smaller than newly generated vias. A global lower
   // bound keeps the proof conservative when an existing transition is reused.
   for (const trace of srj.traces ?? []) {
     for (const point of trace.route) {
+      if (point.route_type === "wire") {
+        minimumTraceWidth = Math.min(minimumTraceWidth, point.width)
+      }
       if (point.route_type !== "via") continue
       minimumPadDiameter = Math.min(
         minimumPadDiameter,
@@ -149,20 +155,28 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
         minimumPadDiameter + (srj.minPadEdgeToPadEdgeClearance ?? 0.1),
         minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
       ) - 0.005,
+    minimumTraceCenterSpacing:
+      minimumTraceWidth + (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
   }
   boardCache.set(physicalSrj, board)
   return board
 }
 
-/** Rejects only physically proved incompatible through-via assignments. */
+/** Rejects only physically proved incompatible via or shared-face assignments. */
 export function createPhysicalViaCapacityEvaluator({
   physicalSrj,
   freeRegionIds,
 }: PhysicalViaCapacityContext): Evaluator | undefined {
-  if (physicalSrj.allowBlindAndBuriedVias || physicalSrj.layerCount < 2)
-    return undefined
+  const throughViaCapacityEnabled =
+    !physicalSrj.allowBlindAndBuriedVias && physicalSrj.layerCount >= 2
   const board = compilePhysicalBoard(physicalSrj)
-  if (!board.index || !(board.minimumCenterSpacing > 0)) return undefined
+  if (
+    !(board.minimumTraceCenterSpacing > 0) &&
+    (!throughViaCapacityEnabled ||
+      !board.index ||
+      !(board.minimumCenterSpacing > 0))
+  )
+    return undefined
   const freeIds = new Set(freeRegionIds)
   const ownerByMetadata = new WeakMap<RouteMetadata, string | null>()
   const getOwner = (
@@ -194,6 +208,97 @@ export function createPhysicalViaCapacityEvaluator({
     const owner = owners.size === 1 ? owners.values().next().value : undefined
     ownerByMetadata.set(metadata, owner ?? null)
     return owner
+  }
+  const edgesByTopology = new WeakMap<
+    Readonly<TinyHyperGraphTopology>,
+    Map<number, SharedEdge | null>
+  >()
+  const getSharedEdge = (
+    topology: Readonly<TinyHyperGraphTopology>,
+    portId: number,
+  ): SharedEdge | null => {
+    let cache = edgesByTopology.get(topology)
+    if (!cache) edgesByTopology.set(topology, (cache = new Map()))
+    const cached = cache.get(portId)
+    if (cached !== undefined) return cached
+    cache.set(portId, null)
+    const regions = topology.incidentPortRegion[portId]
+    if (!regions || regions.length !== 2 || regions[0] === regions[1]) return null
+    const first = topology.regionMetadata?.[regions[0]!] as
+      | CapacityMeshNode
+      | undefined
+    const second = topology.regionMetadata?.[regions[1]!] as
+      | CapacityMeshNode
+      | undefined
+    const z = topology.portZ[portId]!
+    // Both identities come from the original producer whitelist. Missing role
+    // metadata in a serialized graph must not turn a component into free space.
+    if (
+      !first?.center ||
+      !second?.center ||
+      !freeIds.has(first.capacityMeshNodeId) ||
+      !freeIds.has(second.capacityMeshNodeId) ||
+      !first.availableZ?.includes(z) ||
+      !second.availableZ?.includes(z) ||
+      !(first.width > 0) ||
+      !(first.height > 0) ||
+      !(second.width > 0) ||
+      !(second.height > 0)
+    )
+      return null
+    const a = {
+      minX: first.center.x - first.width / 2,
+      maxX: first.center.x + first.width / 2,
+      minY: first.center.y - first.height / 2,
+      maxY: first.center.y + first.height / 2,
+    }
+    const b = {
+      minX: second.center.x - second.width / 2,
+      maxX: second.center.x + second.width / 2,
+      minY: second.center.y - second.height / 2,
+      maxY: second.center.y + second.height / 2,
+    }
+    const coordinates = [...Object.values(a), ...Object.values(b)]
+    if (!coordinates.every(Number.isFinite)) return null
+    const error =
+      1e-9 +
+      Number.EPSILON *
+        128 *
+        coordinates.reduce((sum, coordinate) => sum + Math.abs(coordinate), 0)
+    const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX)
+    const overlapY = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY)
+    if (overlapX > error && overlapY > error) return null
+    const vertical = Math.min(
+      Math.abs(a.maxX - b.minX),
+      Math.abs(b.maxX - a.minX),
+    )
+    const horizontal = Math.min(
+      Math.abs(a.maxY - b.minY),
+      Math.abs(b.maxY - a.minY),
+    )
+    let length: number
+    let normalSeparation: number
+    if (vertical <= error && overlapY > error && horizontal > error) {
+      length = overlapY
+      normalSeparation = vertical
+    } else if (horizontal <= error && overlapX > error && vertical > error) {
+      length = overlapX
+      normalSeparation = horizontal
+    } else return null
+    // Redistribution can use the entire original face. Duplicate port XY
+    // offsets are deliberately irrelevant: they need not lie on that face.
+    // Only capacity-one is certified; larger capacities have alternative,
+    // rather than mandatory, choices of routed owners to remove.
+    const maximumSeparation = Math.hypot(
+      length + 2 * error,
+      normalSeparation + 2 * error,
+    )
+    const edge =
+      maximumSeparation < board.minimumTraceCenterSpacing
+        ? { key: `${Math.min(...regions)}:${Math.max(...regions)}:${z}` }
+        : null
+    cache.set(portId, edge)
+    return edge
   }
   const boundsByTopology = new WeakMap<
     Readonly<TinyHyperGraphTopology>,
@@ -245,12 +350,13 @@ export function createPhysicalViaCapacityEvaluator({
           Math.abs(original.minY) +
           Math.abs(original.maxY))
     const reach = board.maximumRadius
-    for (const id of board.index!.search(
+    const nearby = board.index!.search(
       original.minX - reach,
       original.minY - reach,
       original.maxX + reach,
       original.maxY + reach,
-    )) {
+    )
+    for (const id of nearby) {
       const pad = board.pads[id]!
       if (pad.owners.has(owner)) continue
       const radius = pad.radius - slack
@@ -296,13 +402,43 @@ export function createPhysicalViaCapacityEvaluator({
       regionSegments,
       ignoredRouteIds,
     } = query
-    if (
-      !freeIds.has(topology.regionMetadata?.[regionId]?.capacityMeshNodeId) ||
-      topology.portZ[fromPortId] === topology.portZ[toPortId]
-    )
+    if (!freeIds.has(topology.regionMetadata?.[regionId]?.capacityMeshNodeId))
       return FEASIBLE
+    const fromEdge = getSharedEdge(topology, fromPortId)
+    const toEdge = getSharedEdge(topology, toPortId)
+    const sameLayer = topology.portZ[fromPortId] === topology.portZ[toPortId]
+    if (sameLayer && !fromEdge && !toEdge) return FEASIBLE
     const owner = routeId === undefined ? undefined : getOwner(problem, routeId)
     if (owner === undefined) return FEASIBLE
+    if (fromEdge || toEdge) {
+      const blockers = new Set<number>()
+      for (const [otherRoute, first, second] of regionSegments) {
+        if (ignoredRouteIds?.has(otherRoute)) continue
+        const otherOwner = getOwner(problem, otherRoute)
+        if (otherOwner === undefined || otherOwner === owner) continue
+        const firstEdge = getSharedEdge(topology, first)
+        const secondEdge = getSharedEdge(topology, second)
+        if (
+          (firstEdge &&
+            (firstEdge.key === fromEdge?.key ||
+              firstEdge.key === toEdge?.key)) ||
+          (secondEdge &&
+            (secondEdge.key === fromEdge?.key ||
+              secondEdge.key === toEdge?.key))
+        ) {
+          blockers.add(otherRoute)
+        }
+      }
+      if (blockers.size > 0)
+        return { feasible: false, blockerRouteIds: [...blockers] }
+    }
+    if (
+      sameLayer ||
+      !throughViaCapacityEnabled ||
+      !board.index ||
+      !(board.minimumCenterSpacing > 0)
+    )
+      return FEASIBLE
     const bounds = getBounds(topology, regionId, owner)
     if (!bounds) return FEASIBLE
     if (bounds.minX > bounds.maxX || bounds.minY > bounds.maxY)
