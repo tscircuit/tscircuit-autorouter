@@ -15,7 +15,10 @@ type Fixture = {
   physicalSrj: SimpleRouteJson
 }
 
-function createSolver(fixture: Fixture, enabled: boolean): TinyHyperGraphSolver {
+function createSolver(
+  fixture: Fixture,
+  enabled: boolean,
+): TinyHyperGraphSolver {
   const node = fixture.capacityNode
   const detour = fixture.detourNode
   const y = node.center.y + node.height / 2
@@ -24,7 +27,14 @@ function createSolver(fixture: Fixture, enabled: boolean): TinyHyperGraphSolver 
     { x: node.portPoints[2]!.x, y, z: 2 },
     { x: node.portPoints[2]!.x, y, z: 7 },
   ]
-  const incidentPortRegion = [[0, 2], [0, 3], [0, 4], [0, 5], [0, 1], [1, 0]]
+  const incidentPortRegion = [
+    [0, 2],
+    [0, 3],
+    [0, 4],
+    [0, 5],
+    [0, 1],
+    [1, 0],
+  ]
   const terminals = points.slice(0, 4).map((point, index) => ({
     capacityMeshNodeId: `terminal-${index}`,
     center: { x: point.x, y: point.y },
@@ -37,10 +47,13 @@ function createSolver(fixture: Fixture, enabled: boolean): TinyHyperGraphSolver 
   const angles = points.map((point, index) =>
     incidentPortRegion[index]!.map((id) => {
       const center = regions[id]!.center
-      return Math.round(
-        Math.atan2(point.y - center.y, point.x - center.x) * 18000 /
-          Math.PI + 36000,
-      ) % 36000
+      return (
+        Math.round(
+          (Math.atan2(point.y - center.y, point.x - center.x) * 18000) /
+            Math.PI +
+            36000,
+        ) % 36000
+      )
     }),
   )
   const topology: TinyHyperGraphTopology = {
@@ -73,9 +86,13 @@ function createSolver(fixture: Fixture, enabled: boolean): TinyHyperGraphSolver 
     regionNetId: new Int32Array([-1, -1, 0, 0, 1, 1]),
     routeMetadata: [136, 106].map((net) => ({
       connectionId: `source_net_altium_pcb_${net}_mst0`,
-      simpleRouteConnection: { __rootConnectionNames: [`source_net_altium_pcb_${net}`] },
+      simpleRouteConnection: {
+        __rootConnectionNames: [`source_net_altium_pcb_${net}`],
+      },
     })),
-    initialAssignments: [{ routeId: 0, regionId: 0, fromPortId: 0, toPortId: 1 }],
+    initialAssignments: [
+      { routeId: 0, regionId: 0, fromPortId: 0, toPortId: 1 },
+    ],
   }
   if (enabled) {
     topology.regionSegmentFeasibility = createPhysicalViaCapacityEvaluator({
@@ -126,7 +143,9 @@ test("actual61633 through-via capacity takes a global detour and preserves elect
       ...solver.problem.routeMetadata!,
       {
         connectionId: "same-physical-net-alias",
-        simpleRouteConnection: { __rootConnectionNames: ["pcb_port_altium_7459"] },
+        simpleRouteConnection: {
+          __rootConnectionNames: ["pcb_port_altium_7459"],
+        },
       },
     ],
     initialAssignments: [
@@ -142,7 +161,10 @@ test("actual61633 through-via capacity takes a global detour and preserves elect
     toPortId: 3,
     routeId: 1,
     netId: 1,
-    regionSegments: [[0, 0, 1], [2, 0, 1]] as [number, number, number][],
+    regionSegments: [
+      [0, 0, 1],
+      [2, 0, 1],
+    ] as [number, number, number][],
   }
   // Two MST requests on one electrical owner consume one shared-via unit,
   // but every transition request for a conflicting owner must be removed.
@@ -265,13 +287,39 @@ test("actual61633 through-via capacity takes a global detour and preserves elect
   }
   const remappedTopology = {
     ...solver.topology,
-    regionMetadata: [solver.topology.regionMetadata![1], solver.topology.regionMetadata![0], ...solver.topology.regionMetadata!.slice(2)],
-    regionWidth: new Float64Array([solver.topology.regionWidth[1]!, solver.topology.regionWidth[0]!, ...solver.topology.regionWidth.slice(2)]),
-    regionHeight: new Float64Array([solver.topology.regionHeight[1]!, solver.topology.regionHeight[0]!, ...solver.topology.regionHeight.slice(2)]),
-    regionCenterX: new Float64Array([solver.topology.regionCenterX[1]!, solver.topology.regionCenterX[0]!, ...solver.topology.regionCenterX.slice(2)]),
-    regionCenterY: new Float64Array([solver.topology.regionCenterY[1]!, solver.topology.regionCenterY[0]!, ...solver.topology.regionCenterY.slice(2)]),
-    regionIncidentPorts: [solver.topology.regionIncidentPorts[1]!, solver.topology.regionIncidentPorts[0]!, ...solver.topology.regionIncidentPorts.slice(2)],
-    incidentPortRegion: solver.topology.incidentPortRegion.map((ids) => ids.map((id) => id < 2 ? 1 - id : id)),
+    regionMetadata: [
+      solver.topology.regionMetadata![1],
+      solver.topology.regionMetadata![0],
+      ...solver.topology.regionMetadata!.slice(2),
+    ],
+    regionWidth: new Float64Array([
+      solver.topology.regionWidth[1]!,
+      solver.topology.regionWidth[0]!,
+      ...solver.topology.regionWidth.slice(2),
+    ]),
+    regionHeight: new Float64Array([
+      solver.topology.regionHeight[1]!,
+      solver.topology.regionHeight[0]!,
+      ...solver.topology.regionHeight.slice(2),
+    ]),
+    regionCenterX: new Float64Array([
+      solver.topology.regionCenterX[1]!,
+      solver.topology.regionCenterX[0]!,
+      ...solver.topology.regionCenterX.slice(2),
+    ]),
+    regionCenterY: new Float64Array([
+      solver.topology.regionCenterY[1]!,
+      solver.topology.regionCenterY[0]!,
+      ...solver.topology.regionCenterY.slice(2),
+    ]),
+    regionIncidentPorts: [
+      solver.topology.regionIncidentPorts[1]!,
+      solver.topology.regionIncidentPorts[0]!,
+      ...solver.topology.regionIncidentPorts.slice(2),
+    ],
+    incidentPortRegion: solver.topology.incidentPortRegion.map((ids) =>
+      ids.map((id) => (id < 2 ? 1 - id : id)),
+    ),
   }
   expect(evaluate({
     ...query,

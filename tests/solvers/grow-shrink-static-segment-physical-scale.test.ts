@@ -5,20 +5,49 @@ import type { StaticRouteSegment } from "lib/types/high-density-types"
 
 test("grown native edge guards receive original coordinates, owners and copper diameters", (): void => {
   const node = {
-    capacityMeshNodeId: "translated-four-times", center: { x: 10, y: 20 }, width: 2, height: 2, availableZ: [0, 1],
-    portPoints: [{ x: 9, y: 19, z: 0, connectionName: "child", rootConnectionName: "declared-owner" }, { x: 11, y: 21, z: 1, connectionName: "child", rootConnectionName: "declared-owner" }],
+    capacityMeshNodeId: "translated-four-times",
+    center: { x: 10, y: 20 },
+    width: 2,
+    height: 2,
+    availableZ: [0, 1],
+    portPoints: [
+      {
+        x: 9,
+        y: 19,
+        z: 0,
+        connectionName: "child",
+        rootConnectionName: "declared-owner",
+      },
+      {
+        x: 11,
+        y: 21,
+        z: 1,
+        connectionName: "child",
+        rootConnectionName: "declared-owner",
+      },
+    ],
   }
   const original = structuredClone(node)
   const calls: StaticRouteSegment[] = []
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
-    nodeWithPortPoints: node, traceWidth: 0.1, viaDiameter: 0.3, obstacleMargin: 0.15,
-    staticSegmentValidator: (segment) => { calls.push(structuredClone(segment)); return true },
+    nodeWithPortPoints: node,
+    traceWidth: 0.1,
+    viaDiameter: 0.3,
+    obstacleMargin: 0.15,
+    staticSegmentValidator: (segment) => {
+      calls.push(structuredClone(segment))
+      return true
+    },
   })
   // Select an existing growth attempt directly; this test exercises its real
   // native candidate without a different closed-form winner ending the test.
   solver.scaleFactor = 4
-  ;(solver as unknown as { createActiveSubSolver(): void }).createActiveSubSolver()
-  const candidate = solver.activeSubSolver!.generateSolver({}) as CachedIntraNodeRouteSolver
+  ;(
+    solver as unknown as { createActiveSubSolver(): void }
+  ).createActiveSubSolver()
+  const candidate = solver.activeSubSolver!.generateSolver(
+    {},
+  ) as CachedIntraNodeRouteSolver
   expect(candidate.nodeWithPortPoints.width).toBe(8)
   expect(candidate.nodeWithPortPoints.center).toEqual({ x: 10, y: 20 })
   candidate.solve()

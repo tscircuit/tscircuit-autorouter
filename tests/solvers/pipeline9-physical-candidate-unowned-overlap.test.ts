@@ -48,28 +48,54 @@ test("opaque unowned barriers enforce overlap independently of IDs while typed p
       ...srj,
       obstacles: [{ ...srj.obstacles[0]!, obstacleId }],
     }
-    const validate = createPipeline9PhysicalRouteValidator({ physicalSrj: opaqueInput, connMap, obstacleMargin: 0.8 })
+    const validate = createPipeline9PhysicalRouteValidator({
+      physicalSrj: opaqueInput,
+      connMap,
+      obstacleMargin: 0.8,
+    })
     expect(validate([route])).toBe(true)
     expect(validate([overlap])).toBe(false)
   }
   const pad = {
     ...srj,
-    obstacles: [{
-      ...srj.obstacles[0]!,
-      obstacleId: undefined,
-      circuitJsonMetadata: { pcb_smtpad_id: "unconnected-pad", pcb_port_id: "unconnected-port" },
-    }],
+    obstacles: [
+      {
+        ...srj.obstacles[0]!,
+        obstacleId: undefined,
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "unconnected-pad",
+          pcb_port_id: "unconnected-port",
+        },
+      },
+    ],
   }
-  expect(createPipeline9PhysicalRouteValidator({ physicalSrj: pad, connMap, obstacleMargin: 0.8 })([route])).toBe(false)
+  expect(
+    createPipeline9PhysicalRouteValidator({
+      physicalSrj: pad,
+      connMap,
+      obstacleMargin: 0.8,
+    })([route]),
+  ).toBe(false)
   const hole = {
     ...srj,
     minTraceToHoleEdgeClearance: 0.3,
-    obstacles: [{ ...srj.obstacles[0]!, obstacleId: undefined, isNonPlatedHole: true }],
+    obstacles: [
+      { ...srj.obstacles[0]!, obstacleId: undefined, isNonPlatedHole: true },
+    ],
   }
   const wire = {
     ...route,
-    route: [{ x: 0, y: -0.5, z: 4 }, { x: 0, y: 0.5, z: 4 }],
+    route: [
+      { x: 0, y: -0.5, z: 4 },
+      { x: 0, y: 0.5, z: 4 },
+    ],
     vias: [],
   }
-  expect(createPipeline9PhysicalRouteValidator({ physicalSrj: hole, connMap, obstacleMargin: 0.8 })([wire])).toBe(false)
+  expect(
+    createPipeline9PhysicalRouteValidator({
+      physicalSrj: hole,
+      connMap,
+      obstacleMargin: 0.8,
+    })([wire]),
+  ).toBe(false)
 })

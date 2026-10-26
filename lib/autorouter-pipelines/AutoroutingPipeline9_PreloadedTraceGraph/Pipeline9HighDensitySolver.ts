@@ -392,10 +392,17 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     staticSegmentValidator: staticSegmentValidator
-      ? (segment) => staticSegmentValidator({
-          ...segment,
-          rootConnectionName: physicalRootConnectionNameByConnectionName?.[segment.connectionName] ?? nodeWithPortPoints.portPoints.find((point) => point.connectionName === segment.connectionName)?.rootConnectionName ?? segment.connectionName,
-        })
+      ? (segment) =>
+          staticSegmentValidator({
+            ...segment,
+            rootConnectionName:
+              physicalRootConnectionNameByConnectionName?.[
+                segment.connectionName
+              ] ??
+              nodeWithPortPoints.portPoints.find(
+                (point) => point.connectionName === segment.connectionName,
+              )?.rootConnectionName ?? segment.connectionName,
+          })
       : undefined,
     growShrinkSolutionValidator: physicalRouteValidator
       ? (routes) =>
@@ -495,7 +502,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           viaHoleDiameter: params.viaHoleDiameter,
         })
       : undefined
-    this.staticSegmentValidator = params.physicalSrj ? createPipeline9StaticSegmentValidator(params.physicalSrj) : undefined
+    this.staticSegmentValidator = params.physicalSrj
+      ? createPipeline9StaticSegmentValidator(params.physicalSrj)
+      : undefined
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {

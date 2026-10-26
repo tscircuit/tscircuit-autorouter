@@ -164,7 +164,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
-    const staticSegmentValidator = params.physicalSrj ? createPipeline9StaticSegmentValidator(params.physicalSrj) : undefined
+    const staticSegmentValidator = params.physicalSrj
+      ? createPipeline9StaticSegmentValidator(params.physicalSrj)
+      : undefined
     this.highDensitySolver = new HighDensitySolver({
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
@@ -180,10 +182,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       staticSegmentValidator: staticSegmentValidator
-        ? (segment) => staticSegmentValidator({
-            ...segment,
-            rootConnectionName: params.physicalRootConnectionNameByConnectionName?.[segment.connectionName] ?? segment.rootConnectionName,
-          })
+        ? (segment) =>
+            staticSegmentValidator({
+              ...segment,
+              rootConnectionName:
+                params.physicalRootConnectionNameByConnectionName?.[
+                  segment.connectionName
+                ] ?? segment.rootConnectionName,
+            })
         : undefined,
       growShrinkSolutionValidator:
         this.physicalRouteValidator ||

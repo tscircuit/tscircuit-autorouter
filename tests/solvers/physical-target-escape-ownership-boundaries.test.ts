@@ -48,7 +48,10 @@ test("physical target escapes require proven copper identity, layer and existing
   }> = [
     {
       bridge: copper,
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: true,
     },
     {
@@ -61,12 +64,18 @@ test("physical target escapes require proven copper identity, layer and existing
         ...copper,
         _physicalTargetRegions: [{ ...region, id: "other-pad" }],
       },
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: false,
     },
     {
       bridge: { ...copper, layer: "z1", availableZ: [1] },
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: false,
     },
     {
@@ -76,7 +85,10 @@ test("physical target escapes require proven copper identity, layer and existing
         _containsTarget: false,
         _physicalTargetRegions: undefined,
       },
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: false,
     },
     {
@@ -86,12 +98,18 @@ test("physical target escapes require proven copper identity, layer and existing
     },
     {
       bridge: { ...copper, center: { x: 1.5, y: 1.5 }, width: 1 },
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: false,
     },
     {
       bridge: { ...copper, center: { x: 1.75, y: 0.5 }, width: 2.5 },
-      edges: [["target", "copper"], ["copper", "outside"]],
+      edges: [
+        ["target", "copper"],
+        ["copper", "outside"],
+      ],
       expected: false,
     },
   ]

@@ -1,39 +1,69 @@
-import { pointToSegmentDistance, segmentToBoundsMinDistance, segmentToSegmentMinDistance } from "@tscircuit/math-utils"
+import {
+  pointToSegmentDistance,
+  segmentToBoundsMinDistance,
+  segmentToSegmentMinDistance,
+} from "@tscircuit/math-utils"
 import type { SimpleRouteJson } from "lib/types"
 import type { StaticSegmentValidator } from "lib/types/high-density-types"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { doesSegmentCrossPolygonBoundary, isPointInOrOnPolygon } from "lib/utils/polygonContainment"
+import {
+  doesSegmentCrossPolygonBoundary,
+  isPointInOrOnPolygon,
+} from "lib/utils/polygonContainment"
 import { getPipeline9PhysicalGeometryContext } from "./getPipeline9PhysicalGeometryContext"
 
 type Point = { x: number; y: number }
 type Shape = { kind: "rect" | "oval"; width: number; height: number }
 type PreparedObstacle = {
-  layers: Set<number>; owners: Set<string>
-  x: number; y: number; cosine: number; sine: number
-  engineShape?: Shape; rawShape?: Shape
-  opaque: boolean; nonPlatedHole: boolean
+  layers: Set<number>
+  owners: Set<string>
+  x: number
+  y: number
+  cosine: number
+  sine: number
+  engineShape?: Shape
+  rawShape?: Shape
+  opaque: boolean
+  nonPlatedHole: boolean
 }
 const validators = new WeakMap<SimpleRouteJson, StaticSegmentValidator>()
 
 const shapeDistance = (a: Point, b: Point, shape: Shape): number => {
-  if (shape.kind === "rect") return segmentToBoundsMinDistance(a, b, { minX: -shape.width / 2, maxX: shape.width / 2, minY: -shape.height / 2, maxY: shape.height / 2 })
+  if (shape.kind === "rect")
+    return segmentToBoundsMinDistance(a, b, {
+      minX: -shape.width / 2,
+      maxX: shape.width / 2,
+      minY: -shape.height / 2,
+      maxY: shape.height / 2,
+    })
   const spine = Math.abs(shape.width - shape.height) / 2
   const dx = shape.width >= shape.height ? spine : 0
   const dy = shape.height > shape.width ? spine : 0
-  return Math.max(0, segmentToSegmentMinDistance(a, b, { x: -dx, y: -dy }, { x: dx, y: dy }) - Math.min(shape.width, shape.height) / 2)
+  return Math.max(
+    0,
+    segmentToSegmentMinDistance(a, b, { x: -dx, y: -dy }, { x: dx, y: dy }) -
+      Math.min(shape.width, shape.height) / 2,
+  )
 }
 
 /** Query static copper without rebuilding a DRC engine for every search edge. */
-export function createPipeline9StaticSegmentValidator(physicalSrj: SimpleRouteJson): StaticSegmentValidator {
+export function createPipeline9StaticSegmentValidator(
+  physicalSrj: SimpleRouteJson,
+): StaticSegmentValidator {
   const cached = validators.get(physicalSrj)
   if (cached) return cached
   const context = getPipeline9PhysicalGeometryContext(physicalSrj)
   const { srj, connMap } = context
   const prepared = new Map<number, PreparedObstacle>()
   const traceClearance = srj.minTraceToPadEdgeClearance ?? 0.1
-  const viaClearance = srj.minViaEdgeToPadEdgeClearance ?? srj.minPadEdgeToPadEdgeClearance ?? 0.1
-  const maximumClearance = Math.max(traceClearance, viaClearance, srj.minTraceToHoleEdgeClearance ?? 0)
+  const viaClearance =
+    srj.minViaEdgeToPadEdgeClearance ?? srj.minPadEdgeToPadEdgeClearance ?? 0.1
+  const maximumClearance = Math.max(
+    traceClearance,
+    viaClearance,
+    srj.minTraceToHoleEdgeClearance ?? 0,
+  )
   const boardClearance = srj.minBoardEdgeClearance ?? 0
   const validator: StaticSegmentValidator = (segment) => {
     const { start, end } = segment
@@ -41,17 +71,62 @@ export function createPipeline9StaticSegmentValidator(physicalSrj: SimpleRouteJs
     mapZToLayerName(end.z, srj.layerCount)
     const via = start.z !== end.z
     if (via && (start.x !== end.x || start.y !== end.y)) return false
-    const radius = via ? segment.viaDiameter / 2 : Math.max(segment.traceThickness, srj.minTraceWidth) / 2
-    if (![start.x, start.y, end.x, end.y, radius].every(Number.isFinite) || radius < 0) throw new Error("Physical segment validation requires finite copper geometry")
+    const radius = via
+      ? segment.viaDiameter / 2
+      : Math.max(segment.traceThickness, srj.minTraceWidth) / 2
+    if (
+      ![start.x, start.y, end.x, end.y, radius].every(Number.isFinite) ||
+      radius < 0
+    )
+      throw new Error(
+        "Physical segment validation requires finite copper geometry",
+      )
     const boardRadius = radius + boardClearance
     for (const point of [start, end]) {
-      if (point.x - boardRadius < srj.bounds.minX || point.x + boardRadius > srj.bounds.maxX || point.y - boardRadius < srj.bounds.minY || point.y + boardRadius > srj.bounds.maxY) return false
-      if (srj.outline && (!isPointInOrOnPolygon(point, srj.outline) || srj.outline.some((a, i) => pointToSegmentDistance(point, a, srj.outline![(i + 1) % srj.outline!.length]!) < boardRadius - 1e-6))) return false
+      if (
+        point.x - boardRadius < srj.bounds.minX ||
+        point.x + boardRadius > srj.bounds.maxX ||
+        point.y - boardRadius < srj.bounds.minY ||
+        point.y + boardRadius > srj.bounds.maxY
+      )
+        return false
+      if (
+        srj.outline &&
+        (!isPointInOrOnPolygon(point, srj.outline) ||
+          srj.outline.some(
+            (a, i) =>
+              pointToSegmentDistance(
+                point,
+                a,
+                srj.outline![(i + 1) % srj.outline!.length]!,
+              ) <
+              boardRadius - 1e-6,
+          ))
+      )
+        return false
     }
-    if (srj.outline && doesSegmentCrossPolygonBoundary({ start, end, polygon: srj.outline, margin: boardRadius })) return false
-    const minZ = via && !srj.allowBlindAndBuriedVias ? 0 : Math.min(start.z, end.z)
-    const maxZ = via && !srj.allowBlindAndBuriedVias ? srj.layerCount - 1 : Math.max(start.z, end.z)
-    const owner = connMap.getNetConnectedToId(segment.connectionName) ?? (segment.rootConnectionName && connMap.getNetConnectedToId(segment.rootConnectionName)) ?? segment.rootConnectionName ?? segment.connectionName
+    if (
+      srj.outline &&
+      doesSegmentCrossPolygonBoundary({
+        start,
+        end,
+        polygon: srj.outline,
+        margin: boardRadius,
+      })
+    )
+      return false
+    const minZ =
+      via && !srj.allowBlindAndBuriedVias ? 0 : Math.min(start.z, end.z)
+    const maxZ =
+      via && !srj.allowBlindAndBuriedVias
+        ? srj.layerCount - 1
+        : Math.max(start.z, end.z)
+    const owner =
+      connMap.getNetConnectedToId(segment.connectionName) ??
+      (segment.rootConnectionName &&
+        connMap.getNetConnectedToId(segment.rootConnectionName)) ??
+      segment.rootConnectionName ??
+      segment.connectionName
     const reach = radius + maximumClearance + 1e-6
     for (const id of context.index?.search(Math.min(start.x, end.x) - reach, Math.min(start.y, end.y) - reach, Math.max(start.x, end.x) + reach, Math.max(start.y, end.y) + reach) ?? []) {
       let obstacle = prepared.get(id)

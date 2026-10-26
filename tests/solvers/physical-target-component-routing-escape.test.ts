@@ -72,11 +72,13 @@ test("physical pad fragments retain their existing copper escape while isolated 
       "component:physical-pad",
     )
     expect(
-      segments.getOutput().some(
-        (segment) =>
-          segment.nodeIds.includes(target.capacityMeshNodeId) &&
-          segment.portPoints.length > 0,
-      ),
+      segments
+        .getOutput()
+        .some(
+          (segment) =>
+            segment.nodeIds.includes(target.capacityMeshNodeId) &&
+            segment.portPoints.length > 0,
+        ),
     ).toBeTrue()
   }
   expect([pad, existingCopper, free]).toEqual(input)

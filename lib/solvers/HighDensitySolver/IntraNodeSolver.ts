@@ -606,7 +606,13 @@ const isEndpointViaSafe = (
   A: { x: number; y: number; z: number },
   B: { x: number; y: number; z: number },
 ) => {
-  if (!obstacleChecker.isStaticSegmentValid({ ...viaPoint, z: A.z }, { ...viaPoint, z: B.z })) return false
+  if (
+    !obstacleChecker.isStaticSegmentValid(
+      { ...viaPoint, z: A.z },
+      { ...viaPoint, z: B.z },
+    )
+  )
+    return false
   const viaNode = {
     x: viaPoint.x,
     y: viaPoint.y,

@@ -211,11 +211,20 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       staticSegmentValidator: staticSegmentValidator
-        ? (segment) => staticSegmentValidator({
-            ...segment,
-            start: scalePoint(segment.start, this.nodeWithPortPoints.center, 1 / scaleFactor),
-            end: scalePoint(segment.end, this.nodeWithPortPoints.center, 1 / scaleFactor),
-          })
+        ? (segment) =>
+            staticSegmentValidator({
+              ...segment,
+              start: scalePoint(
+                segment.start,
+                this.nodeWithPortPoints.center,
+                1 / scaleFactor,
+              ),
+              end: scalePoint(
+                segment.end,
+                this.nodeWithPortPoints.center,
+                1 / scaleFactor,
+              ),
+            })
         : undefined,
       solutionValidator:
         growShrinkSolutionValidator || solutionValidator

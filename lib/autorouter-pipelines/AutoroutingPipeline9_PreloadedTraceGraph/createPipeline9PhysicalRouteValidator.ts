@@ -50,7 +50,11 @@ export function createPipeline9PhysicalRouteValidator({
   const cacheKey = JSON.stringify([obstacleMargin, viaHoleDiameter])
   const cached = mapCache.get(cacheKey)
   if (cached) return cached
-  const { connMap: physicalConnMap, obstacles: rawObstacles, index: obstacleIndex } = getPipeline9PhysicalGeometryContext(physicalSrj)
+  const {
+    connMap: physicalConnMap,
+    obstacles: rawObstacles,
+    index: obstacleIndex,
+  } = getPipeline9PhysicalGeometryContext(physicalSrj)
   const boardEdgeClearance = physicalSrj.minBoardEdgeClearance ?? 0
   const isPointInsideBoard = (
     point: { x: number; y: number },
@@ -141,35 +145,115 @@ export function createPipeline9PhysicalRouteValidator({
           .search(minX - radius, minY - radius, maxX + radius, maxY + radius)
           .map((index) => rawObstacles[index]!)
       : []
-    const ownership = getObstacleRouteConnectivity({ obstacles: nearby, routes, connMap: physicalConnMap })
+    const ownership = getObstacleRouteConnectivity({
+      obstacles: nearby,
+      routes,
+      connMap: physicalConnMap,
+    })
     const srj: SimpleRouteJson = {
-      ...physicalSrj, traces: undefined, defaultObstacleMargin: undefined,
-      obstacles: nearby.map((obstacle, index) => ({ ...obstacle, connectedTo: [...obstacle.connectedTo, ...ownership.connectedRouteNamesByObstacle[index]!] })),
-      connections: routes.map((route) => ({ name: route.connectionName, rootConnectionName: route.rootConnectionName, __rootConnectionNames: [route.rootConnectionName ?? route.connectionName], pointsToConnect: [] })),
+      ...physicalSrj,
+      traces: undefined,
+      defaultObstacleMargin: undefined,
+      obstacles: nearby.map((obstacle, index) => ({
+        ...obstacle,
+        connectedTo: [
+          ...obstacle.connectedTo,
+          ...ownership.connectedRouteNamesByObstacle[index]!,
+        ],
+      })),
+      connections: routes.map((route) => ({
+        name: route.connectionName,
+        rootConnectionName: route.rootConnectionName,
+        __rootConnectionNames: [
+          route.rootConnectionName ?? route.connectionName,
+        ],
+        pointsToConnect: [],
+      })),
     }
     const traces = routes.map((route, index) => ({
       type: "pcb_trace" as const,
       pcb_trace_id: `physical-node-candidate-${index}`,
       connection_name: route.connectionName,
-      route: convertHdRouteToSimplifiedRoute(route, srj.layerCount, { defaultViaHoleDiameter, obstacles: srj.obstacles, connMap: physicalConnMap }),
+      route: convertHdRouteToSimplifiedRoute(route, srj.layerCount, {
+        defaultViaHoleDiameter,
+        obstacles: srj.obstacles,
+        connMap: physicalConnMap,
+      }),
     }))
-    const engine = new AutoroutingDrcEngine(srj as any, { connMap: physicalConnMap, traceClearance, viaClearance: viaCopperClearance, viaToPadClearance: viaClearance, queryResultCacheBudget: 0 })
+    const engine = new AutoroutingDrcEngine(srj as any, {
+      connMap: physicalConnMap,
+      traceClearance,
+      viaClearance: viaCopperClearance,
+      viaToPadClearance: viaClearance,
+      queryResultCacheBudget: 0,
+    })
     // The indexed engine's via-pair cost measures copper even on one net.
     // Same-net annuli may overlap; distinct drill holes still need clearance.
-    if (engine.evaluate(traces as any).errors.some((error) => error.pcb_via_pair_net_relation === undefined)) return false
-    const vias = traces.flatMap((trace, routeIndex) => trace.route.flatMap((segment) => segment.route_type === "via" ? [{ segment, routeIndex, minZ: srj.allowBlindAndBuriedVias ? Math.min(mapLayerNameToZ(segment.from_layer, srj.layerCount), mapLayerNameToZ(segment.to_layer, srj.layerCount)) : 0, maxZ: srj.allowBlindAndBuriedVias ? Math.max(mapLayerNameToZ(segment.from_layer, srj.layerCount), mapLayerNameToZ(segment.to_layer, srj.layerCount)) : srj.layerCount - 1 }] : []))
+    if (
+      engine
+        .evaluate(traces as any)
+        .errors.some((error) => error.pcb_via_pair_net_relation === undefined)
+    )
+      return false
+    const vias = traces.flatMap((trace, routeIndex) =>
+      trace.route.flatMap((segment) =>
+        segment.route_type === "via"
+          ? [
+              {
+                segment,
+                routeIndex,
+                minZ: srj.allowBlindAndBuriedVias
+                  ? Math.min(
+                      mapLayerNameToZ(segment.from_layer, srj.layerCount),
+                      mapLayerNameToZ(segment.to_layer, srj.layerCount),
+                    )
+                  : 0,
+                maxZ: srj.allowBlindAndBuriedVias
+                  ? Math.max(
+                      mapLayerNameToZ(segment.from_layer, srj.layerCount),
+                      mapLayerNameToZ(segment.to_layer, srj.layerCount),
+                    )
+                  : srj.layerCount - 1,
+              },
+            ]
+          : [],
+      ),
+    )
     for (let firstIndex = 0; firstIndex < vias.length; firstIndex++) {
       const first = vias[firstIndex]!
-      for (let secondIndex = firstIndex + 1; secondIndex < vias.length; secondIndex++) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < vias.length;
+        secondIndex++
+      ) {
         const second = vias[secondIndex]!
         const overlap = first.minZ <= second.maxZ && second.minZ <= first.maxZ
         if (!overlap) continue
-        const distance = Math.hypot(first.segment.x - second.segment.x, first.segment.y - second.segment.y)
-        const sameNet = arePipeline9RoutesOnSameNet(routes[first.routeIndex]!, routes[second.routeIndex]!, physicalConnMap)
+        const distance = Math.hypot(
+          first.segment.x - second.segment.x,
+          first.segment.y - second.segment.y,
+        )
+        const sameNet = arePipeline9RoutesOnSameNet(
+          routes[first.routeIndex]!,
+          routes[second.routeIndex]!,
+          physicalConnMap,
+        )
         if (sameNet && distance <= 1e-9) continue
-        const drillDistance = (first.segment.via_hole_diameter ?? defaultViaHoleDiameter) / 2 + (second.segment.via_hole_diameter ?? defaultViaHoleDiameter) / 2 + viaHoleClearance
-        const copperDistance = !sameNet ? (first.segment.via_diameter ?? routes[first.routeIndex]!.viaDiameter) / 2 + (second.segment.via_diameter ?? routes[second.routeIndex]!.viaDiameter) / 2 + viaCopperClearance : 0
-        if (distance + 1e-6 < Math.max(drillDistance, copperDistance)) return false
+        const drillDistance =
+          (first.segment.via_hole_diameter ?? defaultViaHoleDiameter) / 2 +
+          (second.segment.via_hole_diameter ?? defaultViaHoleDiameter) / 2 +
+          viaHoleClearance
+        const copperDistance = !sameNet
+          ? (first.segment.via_diameter ??
+              routes[first.routeIndex]!.viaDiameter) /
+              2 +
+            (second.segment.via_diameter ??
+              routes[second.routeIndex]!.viaDiameter) /
+              2 +
+            viaCopperClearance
+          : 0
+        if (distance + 1e-6 < Math.max(drillDistance, copperDistance))
+          return false
       }
     }
     // Opaque unowned barriers have no declared copper role. Check overlap

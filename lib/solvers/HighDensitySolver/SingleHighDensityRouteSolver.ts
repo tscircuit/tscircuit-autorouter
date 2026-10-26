@@ -6,7 +6,10 @@ import {
   Node,
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import type { HighDensityIntraNodeRoute, StaticSegmentValidator } from "lib/types/high-density-types"
+import type {
+  HighDensityIntraNodeRoute,
+  StaticSegmentValidator,
+} from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
@@ -263,7 +266,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
-    if (route.some((point, index) => index > 0 && !this.isStaticSegmentValid(route[index - 1], point))) return
+    if (
+      route.some(
+        (point, index) =>
+          index > 0 && !this.isStaticSegmentValid(route[index - 1], point),
+      )
+    )
+      return
     this.solved = true
     this.solvedPath = {
       connectionName: this.connectionName,
@@ -416,9 +425,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
     // Cell partitions constrain route centers. With authoritative physical
     // clearance, their artificial borders do not constrain copper overhang.
-    const margin = this.staticSegmentValidator ? 0 : isVia
-      ? this.viaDiameter / 2 + this.obstacleMargin / 2
-      : this.obstacleMargin / 2
+    const margin = this.staticSegmentValidator
+      ? 0
+      : isVia
+        ? this.viaDiameter / 2 + this.obstacleMargin / 2
+        : this.obstacleMargin / 2
     const tooClose =
       node.x < this.bounds.minX + margin ||
       node.x > this.bounds.maxX - margin ||
@@ -709,11 +720,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     start: { x: number; y: number; z: number },
     end: { x: number; y: number; z: number },
   ): boolean {
-    return !this.staticSegmentValidator || this.staticSegmentValidator({
-      start, end, connectionName: this.connectionName,
-      rootConnectionName: this.rootConnectionName,
-      traceThickness: this.traceThickness, viaDiameter: this.viaDiameter,
-    })
+    return (
+      !this.staticSegmentValidator ||
+      this.staticSegmentValidator({
+        start,
+        end,
+        connectionName: this.connectionName,
+        rootConnectionName: this.rootConnectionName,
+        traceThickness: this.traceThickness,
+        viaDiameter: this.viaDiameter,
+      })
+    )
   }
 
   getNeighbors(node: Node) {

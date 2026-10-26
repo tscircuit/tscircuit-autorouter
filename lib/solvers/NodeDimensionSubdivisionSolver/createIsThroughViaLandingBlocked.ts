@@ -106,8 +106,10 @@ export function createIsThroughViaLandingBlocked(
       let coversRectangle = true
       for (const signX of [-1, 1]) {
         for (const signY of [-1, 1]) {
-          const dx = node.center.x + signX * node.width / 2 - obstacle.center.x
-          const dy = node.center.y + signY * node.height / 2 - obstacle.center.y
+          const dx =
+            node.center.x + (signX * node.width) / 2 - obstacle.center.x
+          const dy =
+            node.center.y + (signY * node.height) / 2 - obstacle.center.y
           const x = dx * cosine + dy * sine
           const y = -dx * sine + dy * cosine
           const distance = Math.hypot(
