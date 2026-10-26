@@ -122,9 +122,7 @@ const srj: SimpleRouteJson = {
 }
 const connMap = getConnectivityMapFromSimpleRouteJson(srj)
 
-const createSolver = (
-  validatePreloadedVias: boolean,
-): Pipeline9RegionalFallbackSolver =>
+const createSolver = (): Pipeline9RegionalFallbackSolver =>
   new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints,
     colorMap: {
@@ -137,13 +135,9 @@ const createSolver = (
     obstacleMargin: 0.15,
     effort: 1,
     obstacles,
-    ...(validatePreloadedVias
-      ? {
-          boardObstacles: obstacles,
-          movablePreloadedConnectionNames: new Set([RF_CONNECTION]),
-          viaToPadClearance: 0.1,
-        }
-      : {}),
+    boardObstacles: obstacles,
+    movablePreloadedConnectionNames: new Set([RF_CONNECTION]),
+    viaToPadClearance: 0.1,
     layerCount: 4,
   })
 
@@ -178,17 +172,45 @@ const cleanPreloadedTrace: SimplifiedPcbTrace = {
   ],
 }
 
-test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", async () => {
-  const legacySolver = createSolver(false)
-  legacySolver.solve()
-  expect(legacySolver.failed).toBe(false)
-  const legacyTraces = toTraces(legacySolver.getOutput())
-  const legacyRfTrace = legacyTraces.find(
-    (trace) => trace.connection_name === RF_CONNECTION,
-  )!
-  const legacyViaPadErrors = getViaPadErrors([legacyRfTrace])
+// Recorded MultiHead output before final acceptance checked routing bounds.
+// Keep the bad geometry fixed as the native portfolio chooses better routes.
+const rejectedRfCandidate: HighDensityRoute = {
+  connectionName: RF_CONNECTION,
+  rootConnectionName: "connectivity_net31",
+  regionId: "cmn_109",
+  traceThickness: 0.15,
+  viaDiameter: 0.6,
+  route: [
+    { x: 6.915, y: 0, z: 0 },
+    { x: 6.94, y: 0.463, z: 0 },
+    { x: 7.043, y: 0.298, z: 0 },
+    { x: 7.137497868787037, y: 0.14111272420672513, z: 0 },
+    { x: 7.137497868787037, y: 0.14111272420672513, z: 1 },
+    { x: 7.582, y: -0.254, z: 1 },
+    { x: 7.992494515573888, y: -0.379, z: 1 },
+    { x: 7.992494515573888, y: -0.379, z: 0 },
+    { x: 7.77, y: -0.68, z: 0 },
+  ],
+  vias: [
+    { x: 7.137497868787037, y: 0.14111272420672513 },
+    { x: 7.992494515573888, y: -0.379 },
+  ],
+}
 
-  const fixedSolver = createSolver(true)
+test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", async () => {
+  const rejectedRfTrace = toTraces([rejectedRfCandidate])[0]!
+  const rejectedViaPadErrors = getViaPadErrors([rejectedRfTrace])
+  expect(rejectedViaPadErrors).toContainEqual(
+    expect.objectContaining({
+      pcb_pad_ids: expect.arrayContaining(["pcb_smtpad_30"]),
+    }),
+  )
+
+  const fixedSolver = createSolver()
+  const validateCandidate =
+    fixedSolver.highDensitySolver.growShrinkSolutionValidator
+  expect(validateCandidate).toBeDefined()
+  expect(validateCandidate!([structuredClone(rejectedRfCandidate)])).toBe(false)
   fixedSolver.solve()
   expect(fixedSolver.failed).toBe(false)
   const fixedTraces = toTraces(fixedSolver.getOutput())
@@ -197,21 +219,26 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
   )!
   const fixedViaPadErrors = getViaPadErrors([fixedRfTrace])
 
-  expect(legacyViaPadErrors).toContainEqual(
-    expect.objectContaining({
-      pcb_pad_ids: expect.arrayContaining(["pcb_smtpad_30"]),
-    }),
-  )
-  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
-  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
   expect(
     fixedRfTrace.route.filter((point) => point.route_type === "via"),
   ).toEqual([])
   expect(fixedViaPadErrors).toEqual([])
+  expect(fixedRfTrace.route[0]).toMatchObject({
+    route_type: "wire",
+    x: 6.915,
+    y: 0,
+    layer: "top",
+  })
+  expect(fixedRfTrace.route.at(-1)).toMatchObject({
+    route_type: "wire",
+    x: 7.77,
+    y: -0.68,
+    layer: "top",
+  })
 
   const frames = [
     { name: "PRELOADED · CLEAN RF", traces: [cleanPreloadedTrace] },
-    { name: "OLD FALLBACK · VIA / FOREIGN PAD DRC", traces: [legacyRfTrace] },
+    { name: "OLD FALLBACK · VIA / FOREIGN PAD DRC", traces: [rejectedRfTrace] },
     { name: "FIXED FALLBACK · REJECTED VIA", traces: [fixedRfTrace] },
   ].map(({ name, traces }) => ({
     name,
