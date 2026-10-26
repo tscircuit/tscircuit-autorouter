@@ -5,6 +5,15 @@ export interface CapacityMesh {
   edges: CapacityMeshEdge[]
 }
 
+export type PhysicalTargetRegion = {
+  id: string
+  connectionName: string
+  center: { x: number; y: number }
+  width: number
+  height: number
+  availableZ: number[]
+}
+
 export interface CapacityMeshNode {
   capacityMeshNodeId: string
   center: { x: number; y: number }
@@ -19,6 +28,8 @@ export interface CapacityMeshNode {
   _containsObstacle?: boolean
   _containsTarget?: boolean
   _targetConnectionName?: string
+  /** Original physical pad footprints shared by their refined copper pieces. */
+  _physicalTargetRegions?: PhysicalTargetRegion[]
   _strawNode?: boolean
   _strawParentCapacityMeshNodeId?: CapacityMeshNodeId
   _isVirtualOffboard?: boolean

@@ -6,6 +6,9 @@ import type {
 } from "../../types/capacity-mesh-types"
 import { BaseSolver } from "../BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import { getCapacityMeshNodeBounds } from "../TopologyPlanningSolver/capacity-node-geometry"
+import { getNodeEdgeMap } from "./getNodeEdgeMap"
+import { hasPhysicalTargetRoutingEscape } from "./hasPhysicalTargetRoutingEscape"
 
 export class CapacityMeshEdgeSolver extends BaseSolver {
   override getSolverName(): string {
@@ -77,6 +80,13 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
+    const edgesByNodeId = getNodeEdgeMap(this.edges)
+    const nodeBounds = new Map(
+      this.nodes.map((node) => [
+        node.capacityMeshNodeId,
+        getCapacityMeshNodeBounds(node),
+      ]),
+    )
     for (const targetNode of targetNodes) {
       if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
         continue
@@ -98,6 +108,16 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         )
       })
       if (hasRoutingEdge) continue
+      if (
+        hasPhysicalTargetRoutingEscape({
+          targetNode,
+          nodeById,
+          nodeBounds,
+          edgesByNodeId,
+        })
+      ) {
+        continue
+      }
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,

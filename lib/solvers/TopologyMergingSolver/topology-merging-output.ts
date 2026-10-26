@@ -1,5 +1,6 @@
 import type { Bounds } from "@tscircuit/math-utils"
 import type { CapacityMeshNode } from "lib/types"
+import type { PhysicalTargetRegion } from "lib/types/capacity-mesh-types"
 import {
   getBoundsIntersection,
   getCapacityMeshNodeBounds,
@@ -47,6 +48,27 @@ export function createTopologyMergingOutputNodes({
       a.availableZ[0]! - b.availableZ[0]!,
   )
   const usedNodeIds = new Set<string>()
+  const physicalTargetRegions = [...preparedNodeBySourceKey.values()]
+    .filter(
+      ({ node, groupIndex }) =>
+        nodeGroups[groupIndex]!.isComponent &&
+        node._containsObstacle &&
+        node._containsTarget &&
+        node._targetConnectionName &&
+        (node._soicRegionType === "pad" || node._qfpRegionType === "pad"),
+    )
+    .map(({ node, sourceKey, bounds }) => ({
+      bounds,
+      connectedTo: node._connectedTo ?? [],
+      region: {
+        id: sourceKey,
+        connectionName: node._targetConnectionName!,
+        center: { ...node.center },
+        width: node.width,
+        height: node.height,
+        availableZ: [...node.availableZ],
+      } satisfies PhysicalTargetRegion,
+    }))
 
   return sortedRegions.map((region, regionIndex) => {
     const sourcePreparedNodes = region.sourceKeys.map((sourceKey) => {
@@ -95,7 +117,7 @@ export function createTopologyMergingOutputNodes({
       ])
     }
 
-    return {
+    const outputNode: CapacityMeshNode = {
       ...(preservedSourceNode ?? sourceNodes[0]),
       ...metadata,
       capacityMeshNodeId,
@@ -112,6 +134,26 @@ export function createTopologyMergingOutputNodes({
       _strawNode: undefined,
       _strawParentCapacityMeshNodeId: undefined,
     }
+    if (outputNode._containsObstacle && outputNode._containsTarget) {
+      outputNode._physicalTargetRegions = physicalTargetRegions
+        .filter(({ bounds, connectedTo, region: targetRegion }) => {
+          const intersection = getBoundsIntersection(bounds, region.bounds)
+          return (
+            intersection !== null &&
+            intersection.maxX - intersection.minX > TOPOLOGY_MERGING_EPSILON &&
+            intersection.maxY - intersection.minY > TOPOLOGY_MERGING_EPSILON &&
+            targetRegion.availableZ.some((z) =>
+              region.availableZ.includes(z),
+            ) &&
+            (!outputNode._targetConnectionName ||
+              outputNode._targetConnectionName ===
+                targetRegion.connectionName) &&
+            connectedTo.some((id) => outputNode._connectedTo?.includes(id))
+          )
+        })
+        .map(({ region: targetRegion }) => targetRegion)
+    }
+    return outputNode
   })
 }
 
