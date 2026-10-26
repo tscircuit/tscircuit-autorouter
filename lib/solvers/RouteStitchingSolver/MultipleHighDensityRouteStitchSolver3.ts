@@ -3,7 +3,7 @@ import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
+import { getConnectionPointLayer, getConnectionPointLayers } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
@@ -44,6 +44,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  private preferSameLayerTerminalEndpoints: boolean
+  private layerCount: number
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
@@ -63,6 +65,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+      layerCount: this.layerCount,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -154,6 +158,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.preferSameLayerTerminalEndpoints = params.preferSameLayerTerminalEndpoints ?? false
+    this.layerCount = params.layerCount
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -271,14 +277,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
-        start = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
-        })
-        end = snapIslandEndpointToNearestTerminal({
-          islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
-        })
+        const snapEndpoint = (islandEndpoint: Point3): Point3 => {
+          let terminals: Array<Point3 & { pcb_port_id?: string }> = [globalStart, globalEnd]
+          if (params.preferSameLayerTerminalEndpoints) {
+            terminals = connection.pointsToConnect.slice(0, 2).flatMap((point) =>
+              getConnectionPointLayers(point).some(
+                (layer) => mapLayerNameToZ(layer, params.layerCount) === islandEndpoint.z,
+              ) ? [{ ...point, z: islandEndpoint.z }] : [],
+            )
+            const pcbPortId = (islandEndpoint as Point3 & { pcb_port_id?: string }).pcb_port_id
+            const matchingTerminals = terminals.filter((point) => pcbPortId && point.pcb_port_id === pcbPortId)
+            if (matchingTerminals.length > 0) terminals = matchingTerminals
+            if (terminals.length === 0) return islandEndpoint
+          }
+          return snapIslandEndpointToNearestTerminal({ islandEndpoint, terminals })
+        }
+        start = snapEndpoint(start)
+        end = snapEndpoint(end)
       } else {
         start = {
           ...connection.pointsToConnect[0],
@@ -448,6 +463,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       defaultViaDiameter: this.defaultViaDiameter,
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+      preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+      layerCount: this.layerCount,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",

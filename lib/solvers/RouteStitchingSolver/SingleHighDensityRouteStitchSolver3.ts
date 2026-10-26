@@ -3,6 +3,7 @@ import { GraphicsObject } from "graphics-debug"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import {
@@ -18,7 +19,7 @@ const GAP_PENALTY = 100000
 const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
-type StitchTerminal = Point3 & { pcb_port_id?: string }
+type StitchTerminal = Point3 & { pcb_port_id?: string; layers?: string[] }
 export type StitchClearanceMode = "require_clear" | "prefer_clear"
 export {
   MAX_STITCH_GAP_DISTANCE_3,
@@ -77,6 +78,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preferSameLayerTerminalEndpoints?: boolean
+    layerCount?: number
     isStitchSegmentClear: IsStitchSegmentClear
     stitchClearanceMode: StitchClearanceMode
   }) {
@@ -183,15 +186,39 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let bestDist = Infinity
     let firstRoute = canonicalHdRoutes[0]
     let orientation: "start-to-end" | "end-to-start" = "start-to-end"
+    // Rounded stacked terminals can share XY. Choose an eligible layer and
+    // terminal identity before selecting the first route and its orientation.
+    const endpointEntries = canonicalHdRoutes.flatMap((route) => [
+      { point: route.route[0]!, pcbPortId: route.startPcbPortId },
+      { point: route.route.at(-1)!, pcbPortId: route.endPcbPortId },
+    ])
+    const getTerminalEndpoints = (terminal: StitchTerminal): RoutePoint[] => {
+      if (!opts.preferSameLayerTerminalEndpoints) return endpointEntries.map(({ point }) => point)
+      const allowedZ = terminal.layers && opts.layerCount !== undefined
+        ? terminal.layers.map((layer) => mapLayerNameToZ(layer, opts.layerCount!))
+        : [terminal.z]
+      const sameLayerEntries = endpointEntries.filter(({ point }) => allowedZ.includes(point.z))
+      const eligibleEntries = sameLayerEntries.length > 0 ? sameLayerEntries : endpointEntries
+      const matchingEntries = eligibleEntries.filter(({ pcbPortId }) => terminal.pcb_port_id && pcbPortId === terminal.pcb_port_id)
+      return (matchingEntries.length > 0 ? matchingEntries : eligibleEntries).map(({ point }) => point)
+    }
+    const withEndpointLayer = (terminal: StitchTerminal, point: RoutePoint): StitchTerminal => {
+      if (!opts.preferSameLayerTerminalEndpoints || !terminal.layers || opts.layerCount === undefined) return terminal
+      const allowedZ = terminal.layers.map((layer) => mapLayerNameToZ(layer, opts.layerCount!))
+      if (!allowedZ.includes(point.z)) return terminal
+      return { ...terminal, z: point.z }
+    }
+    const startEndpoints = new Set(getTerminalEndpoints(opts.start))
+    const endEndpoints = new Set(getTerminalEndpoints(opts.end))
 
     for (const route of canonicalHdRoutes) {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
+      const distStartToFirst = startEndpoints.has(firstPoint) ? distance(opts.start, firstPoint) : Infinity
+      const distStartToLast = startEndpoints.has(lastPoint) ? distance(opts.start, lastPoint) : Infinity
+      const distEndToFirst = endEndpoints.has(firstPoint) ? distance(opts.end, firstPoint) : Infinity
+      const distEndToLast = endEndpoints.has(lastPoint) ? distance(opts.end, lastPoint) : Infinity
 
       const minDist = Math.min(
         distStartToFirst,
@@ -234,18 +261,25 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
-    const distToFirst = distance(this.start, firstRouteFirstPoint)
-    const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
-        ? firstRouteFirstPoint
-        : firstRouteLastPoint
+    const firstRouteEndpoints = [firstRouteFirstPoint, firstRouteLastPoint]
+    const terminalEndpoints = orientation === "start-to-end" ? startEndpoints : endEndpoints
+    const endpointCandidates = firstRouteEndpoints.filter((point) => terminalEndpoints.has(point))
+    const closestFirstRoutePoint = endpointCandidates.reduce((bestPoint, point) => {
+      const pointDistance = distance(this.start, point)
+      const bestDistance = distance(this.start, bestPoint)
+      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE && comparePoints(point, bestPoint) < 0)
+        ? point
+        : bestPoint
+    })
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
+    this.start = withEndpointLayer(this.start, closestFirstRoutePoint)
+    const finalEndpoints = orientation === "start-to-end" ? endEndpoints : startEndpoints
+    const finalPoint = [...finalEndpoints].sort((a, b) => distance(this.end, a) - distance(this.end, b) || comparePoints(a, b))[0]!
+    this.end = withEndpointLayer(this.end, finalPoint)
     if (
       closestFirstRoutePcbPortId &&
       this.start.pcb_port_id &&
