@@ -131,9 +131,11 @@ export function getLayerTopologiesForCoveredNodes({
 export function restoreAuthoritativeTargetRegions({
   regions,
   preparedNodeBySourceKey,
+  nodeGroups,
 }: {
   regions: TopologyMergingRegion[]
   preparedNodeBySourceKey: ReadonlyMap<string, PreparedTopologyMergingNode>
+  nodeGroups: readonly TopologyMergingNodeGroup[]
 }): TopologyMergingRegion[] {
   const topologyModesBySourceKey = new Map<string, Set<TopologyMergingMode>>()
   for (const region of regions) {
@@ -146,12 +148,38 @@ export function restoreAuthoritativeTargetRegions({
     }
   }
 
+  const globalTargets = [...preparedNodeBySourceKey.values()].filter(
+    ({ node, groupIndex }) =>
+      !nodeGroups[groupIndex]!.isComponent &&
+      node._containsObstacle &&
+      node._containsTarget,
+  )
   const restorableSourceKeys = new Set(
     [...topologyModesBySourceKey.entries()]
-      .filter(
-        ([, topologyModes]) =>
-          topologyModes.size === 1 && topologyModes.has("target-passthrough"),
-      )
+      .filter(([sourceKey, topologyModes]) => {
+        if (
+          topologyModes.size !== 1 ||
+          !topologyModes.has("target-passthrough")
+        ) {
+          return false
+        }
+        const preparedNode = preparedNodeBySourceKey.get(sourceKey)
+        if (!preparedNode) {
+          throw new Error(
+            `TopologyMergingSolver: missing authoritative target source "${sourceKey}"`,
+          )
+        }
+        if (!nodeGroups[preparedNode.groupIndex]!.isComponent) return true
+        // A global target already clipped this component pad during common
+        // refinement. Keep its annulus instead of restoring copper over it.
+        return !globalTargets.some(({ node, bounds }) =>
+          node.availableZ.some((z) => preparedNode.node.availableZ.includes(z)) &&
+          bounds.minX < preparedNode.bounds.maxX &&
+          bounds.maxX > preparedNode.bounds.minX &&
+          bounds.minY < preparedNode.bounds.maxY &&
+          bounds.maxY > preparedNode.bounds.minY,
+        )
+      })
       .map(([sourceKey]) => sourceKey),
   )
   if (restorableSourceKeys.size === 0) return regions

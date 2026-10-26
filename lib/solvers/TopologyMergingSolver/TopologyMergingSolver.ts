@@ -83,6 +83,7 @@ export class TopologyMergingSolver extends BaseSolver {
     const topologyRegions = restoreAuthoritativeTargetRegions({
       regions: this.atomicRegions,
       preparedNodeBySourceKey: this.preparedNodeBySourceKey,
+      nodeGroups: this.inputProblem.nodeGroups,
     })
     const compactedRegions = compactTopologyMergingRegions(topologyRegions)
     this.outputNodes = createTopologyMergingOutputNodes({
