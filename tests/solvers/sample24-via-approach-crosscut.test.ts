@@ -200,13 +200,51 @@ test("sample24 node61487 cannot put its required via approach across a trapped s
     })!({ ...query, topology: outside }),
   ).toEqual({ feasible: true })
   const plated = structuredClone(fixture.physicalSrj)
-  plated.obstacles.push({ type: "rect", center: { x: 281.3, y: 68.2 }, width: 2, height: 0.01,
-    layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"],
-    connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_136"] })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(query)).toEqual({ feasible: true })
-  const remapped = { ...problem, routeMetadata: [...problem.routeMetadata!].reverse() }
-  expect(evaluate({ ...query, problem: remapped, routeId: 0, regionSegments: [[1, ...wire]] })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, throughViaCrosscutEnabled: false })!(query)).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true } })!(query)).toEqual({ feasible: true })
+  plated.obstacles.push({
+    type: "rect",
+    center: { x: 281.3, y: 68.2 },
+    width: 2,
+    height: 0.01,
+    layers: [
+      "top",
+      "inner1",
+      "inner2",
+      "inner3",
+      "inner4",
+      "inner5",
+      "inner6",
+      "bottom",
+    ],
+    connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_136"],
+  })
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
+  const remapped = {
+    ...problem,
+    routeMetadata: [...problem.routeMetadata!].reverse(),
+  }
+  expect(
+    evaluate({
+      ...query,
+      problem: remapped,
+      routeId: 0,
+      regionSegments: [[1, ...wire]],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      throughViaCrosscutEnabled: false,
+    })!(query),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true },
+    })!(query),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })
