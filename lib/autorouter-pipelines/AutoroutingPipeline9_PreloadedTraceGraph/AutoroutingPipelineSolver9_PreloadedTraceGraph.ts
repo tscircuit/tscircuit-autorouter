@@ -632,6 +632,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
             },
             fixedHdRoutes,
+            physicalSrj: cms.originalSrj,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,

@@ -68,6 +68,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  private readonly solutionValidator?: (
+    routes: HighDensityIntraNodeRoute[],
+  ) => boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -129,6 +132,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
     super()
@@ -140,6 +144,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.solutionValidator = opts.solutionValidator
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -754,9 +759,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (this.solutionValidator && !this.solutionValidator(solvedRoutes)) {
+      // Reject this candidate while preserving the other existing candidates
+      // at the same scale. The supervisor already selected its provisional win.
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Portfolio candidate solution rejected by validator"
+      this.solved = false
+      this.winningSolver = undefined
+      this.stats.candidateValidationRejectionCount =
+        Number(this.stats.candidateValidationRejectionCount ?? 0) + 1
+      return
+    }
+    this.solvedRoutes = solvedRoutes
   }
 }
