@@ -164,7 +164,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
   }
 
   protected areConnectionsConnected(first: string, second: string): boolean {
-    if (first === second || this.connMap?.areIdsConnected(first, second)) return true
+    if (first === second || this.connMap?.areIdsConnected(first, second))
+      return true
     const root = this.rootConnectionNames.get(first)
     return root !== undefined && root === this.rootConnectionNames.get(second)
   }
@@ -294,14 +295,17 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
    */
   setupInitialPolyLines() {
     const portPairs = new Map(
-      [...this.portPairMap].map(([pairId, { start, end, connectionName }]) => [
-        pairId,
-        {
-          connectionName,
-          start: { ...start, z1: start.z, z2: start.z },
-          end: { ...end, z1: end.z, z2: end.z },
-        },
-      ] as const),
+      [...this.portPairMap].map(
+        ([pairId, { start, end, connectionName }]) =>
+          [
+            pairId,
+            {
+              connectionName,
+              start: { ...start, z1: start.z, z2: start.z },
+              end: { ...end, z1: end.z, z2: end.z },
+            },
+          ] as const,
+      ),
     )
 
     if (portPairs.size === 0) {

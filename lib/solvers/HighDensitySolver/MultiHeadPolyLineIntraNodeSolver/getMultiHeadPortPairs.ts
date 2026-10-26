@@ -1,4 +1,7 @@
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
 export type MultiHeadPortPair = {
@@ -25,7 +28,10 @@ export function getMultiHeadPortPairs(
     pairs.map(([start, end], index) => {
       if (start.connectionName !== end.connectionName)
         throw new Error("A MultiHead port pair has conflicting connection IDs")
-      return [String(index), { start, end, connectionName: start.connectionName }]
+      return [
+        String(index),
+        { start, end, connectionName: start.connectionName },
+      ]
     }),
   )
 }

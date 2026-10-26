@@ -9,18 +9,29 @@ import type { SimpleRouteJson } from "lib/types/srj-types"
 
 test("MultiHead seeds same-root branches without inventing foreign crossings", () => {
   const coordinates = [
-    [[-1.5, 0], [1.5, 0]],
-    [[0, -1.5], [0, 1.5]],
-    [[-1.2, -1.2], [1.2, 1.2]],
+    [
+      [-1.5, 0],
+      [1.5, 0],
+    ],
+    [
+      [0, -1.5],
+      [0, 1.5],
+    ],
+    [
+      [-1.2, -1.2],
+      [1.2, 1.2],
+    ],
   ]
-  const points = coordinates.flatMap((pair, index) => pair.map(([x, y], end) => ({
-    x,
-    y,
-    z: 0,
-    connectionName: `root_mst${index}`,
-    rootConnectionName: "root",
-    portPointId: `p${index}-${end}`,
-  })))
+  const points = coordinates.flatMap((pair, index) =>
+    pair.map(([x, y], end) => ({
+      x,
+      y,
+      z: 0,
+      connectionName: `root_mst${index}`,
+      rootConnectionName: "root",
+      portPointId: `p${index}-${end}`,
+    })),
+  )
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "same-root-crossing",
     center: { x: 0, y: 0 },
@@ -29,7 +40,8 @@ test("MultiHead seeds same-root branches without inventing foreign crossings", (
     availableZ: [0, 1],
     portPoints: points,
     portPointsInPairs: coordinates.map((_, index) => [
-      points[2 * index]!, points[2 * index + 1]!,
+      points[2 * index]!,
+      points[2 * index + 1]!,
     ]),
   }
   const connMap = new ConnectivityMap({
@@ -68,14 +80,18 @@ test("MultiHead seeds same-root branches without inventing foreign crossings", (
     expect(solver.checkIfSolved(seed)).toBe(true)
     solver.solve()
     expect(solver.solved).toBe(true)
-    expect(solver.solvedRoutes.map((route) => route.connectionName).sort()).toEqual(
-      ["root_mst0", "root_mst1", "root_mst2"],
+    expect(
+      solver.solvedRoutes.map((route) => route.connectionName).sort(),
+    ).toEqual(["root_mst0", "root_mst1", "root_mst2"])
+    expect(solver.solvedRoutes.every((route) => route.vias.length === 0)).toBe(
+      true,
     )
-    expect(solver.solvedRoutes.every((route) => route.vias.length === 0)).toBe(true)
     expect(validate(solver.solvedRoutes)).toBe(true)
   }
 
-  const base = new MultiHeadPolyLineIntraNodeSolver({ nodeWithPortPoints: node })
+  const base = new MultiHeadPolyLineIntraNodeSolver({
+    nodeWithPortPoints: node,
+  })
   base.setupInitialPolyLines()
   expect(base.candidates[0]?.viaCount).toBe(0)
   expect(base.checkIfSolved(base.candidates[0]!)).toBe(true)
