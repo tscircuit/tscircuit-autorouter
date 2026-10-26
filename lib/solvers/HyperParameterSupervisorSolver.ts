@@ -144,10 +144,11 @@ export class HyperParameterSupervisorSolver<
       .join(", ")}`
   }
 
-  _step() {
+  _step(selectedSolver?: SupervisedSolver<T>): void {
     if (!this.supervisedSolvers) this.initializeSolvers()
 
-    const supervisedSolver = this.getSupervisedSolverWithBestFitness()
+    const supervisedSolver =
+      selectedSolver ?? this.getSupervisedSolverWithBestFitness()
 
     if (!supervisedSolver) {
       this.failed = true

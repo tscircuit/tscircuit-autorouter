@@ -38,6 +38,10 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+type PortfolioCandidate = NonNullable<
+  PortfolioSingleIntraNodeSolver["supervisedSolvers"]
+>[number]
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -72,6 +76,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
+  private candidateToAdvance?: PortfolioCandidate
   private candidateWorkBySolver = new WeakMap<
     BaseSolver,
     { iterations: number; maxIterations: number }
@@ -507,6 +512,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return this.totalCandidateWork >= expansionWorkBudget
   }
 
+  stepCandidate(candidate: PortfolioCandidate): void {
+    if (
+      !this.supervisedSolvers?.includes(candidate) ||
+      this.solved ||
+      this.failed ||
+      candidate.solver.solved ||
+      candidate.solver.failed ||
+      this.candidateToAdvance
+    ) {
+      throw new Error("Cannot advance an inactive or foreign portfolio candidate")
+    }
+    this.candidateToAdvance = candidate
+    try {
+      this.step()
+    } finally {
+      this.candidateToAdvance = undefined
+    }
+  }
+
   override _step() {
     if (!this.supervisedSolvers) this.initializeSolvers()
 
@@ -517,7 +541,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    super._step()
+    super._step(this.candidateToAdvance)
 
     if (
       !this.negotiatedSearchStarted &&
