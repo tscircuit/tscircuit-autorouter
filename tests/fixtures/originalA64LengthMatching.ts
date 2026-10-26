@@ -58,8 +58,8 @@ export const getOriginalA64PathLengths = ({
       .reduce((length, trace) => length + getPlanarLength(trace), 0),
   )
   const fixed = bus.connectionNames.map((name) =>
-    srj.traces!
-      .filter((trace) => trace.connection_name === name)
+    srj
+      .traces!.filter((trace) => trace.connection_name === name)
       .reduce((length, trace) => length + getPlanarLength(trace), 0),
   )
   return {
