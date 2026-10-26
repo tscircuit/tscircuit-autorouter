@@ -199,7 +199,13 @@ export const configureNetworkedBenchmarkRequestTimeout = (
 export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const constructorName = task.solverConstructorName ?? task.solverName
   const SolverConstructor = getSolverConstructor(constructorName)
-  const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
+  const scenarioOptions = {
+    ...getBenchmarkSolverOptions(task.scenario),
+    ...(constructorName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" &&
+    process.env.BENCHMARK_RELEASE_GRAPH_CONSTRUCTION_STATE === "1"
+      ? { releaseGraphConstructionState: true }
+      : {}),
+  }
   if (constructorName !== "AutoroutingPipelineSolver9_Networked") {
     return new SolverConstructor(task.scenario, scenarioOptions)
   }

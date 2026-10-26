@@ -13,6 +13,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { consumeSegmentPortPoints } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/consumeSegmentPortPoints"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -111,6 +112,8 @@ interface CapacityMeshSolverOptions {
   effort?: number
   /** Explicit initial path-finding effort; general effort remains cleanup-only above 1. */
   pathingEffort?: number
+  /** Stream construction state into the pathing graph; completed construction previews are not retained. */
+  releaseGraphConstructionState?: boolean
   maxNodeDimension?: number
   maxNodeRatio?: number
   minNodeArea?: number
@@ -519,13 +522,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
           cms.necessaryCrampedPortPointSolver?.getOutput() ??
           cms.availableSegmentPointSolver!.getOutput()
+        const releaseConstructionState = cms.opts.releaseGraphConstructionState === true
+        if (releaseConstructionState) {
+          // The pathing graph owns the derived geometry from this point onward.
+          // Release older owners before consuming segments, so converted points
+          // can be collected as their equivalent graph ports are constructed.
+          cms.edgeSolver = undefined
+          cms.availableSegmentPointSolver = undefined
+          cms.necessaryCrampedPortPointSolver = undefined
+          cms.preloadedTraceGraphSolver = undefined
+          cms.topologyMergingSolver = undefined
+          cms.nodeDimensionSubdivisionSolver = undefined
+          cms.capacityEdges = null
+          cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints = undefined
+        }
         const { graph, connections } = buildHyperGraph({
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
-          segmentPortPoints: sharedEdgeSegments.flatMap(
-            (seg) => seg.portPoints,
-          ),
+          segmentPortPoints: releaseConstructionState
+            ? consumeSegmentPortPoints(sharedEdgeSegments)
+            : sharedEdgeSegments.flatMap((seg) => seg.portPoints),
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 

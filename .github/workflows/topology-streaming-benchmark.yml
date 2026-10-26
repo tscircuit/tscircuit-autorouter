@@ -261,6 +261,43 @@ jobs:
         with:
           name: topology-streaming-stage-comparison
           path: results/
+  canonical_consumed_graph:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 60
+    env:
+      BENCHMARK_RELEASE_GRAPH_CONSTRUCTION_STATE: "1"
+      BUN_JSC_forceRAMSize: "2147483648"
+      BUN_JSC_miniVMHeapGrowthFactor: "1.05"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Full fresh base and head routing benchmark
+        run: |
+          cp head/scripts/benchmark/benchmark-run-task.ts base/scripts/benchmark/benchmark-run-task.ts
+          mkdir -p results
+          (cd base && bash ./benchmark.sh --dataset dataset01 --pipeline 9 --concurrency 4 --effort 1 --sample-timeout 120s) > results/base.log 2>&1
+          cp base/benchmark-result.json results/base.json
+          (cd head && bash ./benchmark.sh --dataset dataset01 --pipeline 9 --concurrency 4 --effort 1 --sample-timeout 120s) > results/head.log 2>&1
+          cp head/benchmark-result.json results/head.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consumed-graph-canonical-comparison
+          path: results/
+
   canonical:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
