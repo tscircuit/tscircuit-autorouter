@@ -38,7 +38,10 @@ export class PhysicalSharedEdgePlacement {
   private readonly prepared = new Map<Obstacle, PreparedPhysicalObstacle>()
   private readonly traceClearance: number
 
-  constructor(private readonly physicalSrj: SimpleRouteJson) {
+  constructor(
+    private readonly physicalSrj: SimpleRouteJson,
+    private readonly routingTraceWidth?: number,
+  ) {
     this.context = getPipeline9PhysicalGeometryContext(physicalSrj)
     this.traceClearance = physicalSrj.minTraceToPadEdgeClearance ?? 0.1
     if (
@@ -51,6 +54,12 @@ export class PhysicalSharedEdgePlacement {
       throw new Error(
         "Uniform port placement requires valid physical trace rules",
       )
+    if (
+      routingTraceWidth !== undefined &&
+      (!Number.isFinite(routingTraceWidth) ||
+        routingTraceWidth < physicalSrj.minTraceWidth)
+    )
+      throw new Error("Invalid physical routing trace width")
     for (const connection of physicalSrj.connections) {
       const width = Math.max(
         physicalSrj.minTraceWidth,
@@ -79,6 +88,7 @@ export class PhysicalSharedEdgePlacement {
   }
 
   private getWidth(port: PortPoint): number {
+    if (this.routingTraceWidth !== undefined) return this.routingTraceWidth
     const direct = this.widths.get(port.connectionName)
     const root =
       port.rootConnectionName === undefined

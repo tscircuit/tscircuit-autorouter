@@ -33,6 +33,8 @@ export interface UniformPortDistributionSolverInput {
   preserveSolitaryPorts?: boolean
   /** Authoritative physical copper and declared ownership; coordinates are board-world millimetres. */
   physicalSrj?: SimpleRouteJson
+  /** Width used by the current routing stage; otherwise use declared connection widths. */
+  routingTraceWidth?: number
 }
 
 /**
@@ -62,7 +64,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.physicalPlacement =
       input.physicalSrj === undefined
         ? undefined
-        : new PhysicalSharedEdgePlacement(input.physicalSrj)
+        : new PhysicalSharedEdgePlacement(
+            input.physicalSrj,
+            input.routingTraceWidth,
+          )
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
