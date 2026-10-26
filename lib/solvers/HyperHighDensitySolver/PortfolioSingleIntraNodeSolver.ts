@@ -640,7 +640,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         stepMultiplier: 1000,
         maxSearchIterations,
         maxRounds: Math.max(1, Math.round(200 * this.effort)),
-        hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
+        hyperParameters: {
+          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+          // Avoid repeated grid expansions caused by inflating this heuristic.
+          greedyMultiplier: 1,
+        },
       })
       solver.MAX_ITERATIONS = maxSearchIterations * 2
       return solver as any
