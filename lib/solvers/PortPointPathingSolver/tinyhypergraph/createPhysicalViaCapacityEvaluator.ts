@@ -33,6 +33,7 @@ import {
 } from "./getViaApproachCrosscutFeasibility"
 import { getNoViaPlanarCrossingFeasibility } from "./getNoViaPlanarCrossingFeasibility"
 import { getUnequalViaDomainCrosscutFeasibility } from "./getUnequalViaDomainCrosscutFeasibility"
+import { refineViaDomainByConvexCover } from "./refineViaDomainByConvexCover"
 import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
 import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
@@ -779,8 +780,17 @@ export function createPhysicalViaCapacityEvaluator({
         }
       }
     }
-    cache.set(owner, bounds)
-    return bounds
+    const refined = crosscutScopeEnabled
+      ? refineViaDomainByConvexCover({
+          bounds,
+          exclusions: nearby
+            .map((id) => board.pads[id]!)
+            .filter((pad) => !pad.owners.has(owner)),
+          slack,
+        })
+      : bounds
+    cache.set(owner, refined)
+    return refined
   }
   const getCrosscutFeasibility = (
     query: TinyHyperGraphRegionSegmentFeasibilityContext,
