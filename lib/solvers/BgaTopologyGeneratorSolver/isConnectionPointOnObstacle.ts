@@ -14,9 +14,20 @@ export function isConnectionPointOnObstacle(input: {
   // Active target ownership therefore also requires physical layer and geometry.
   if (input.obstacle.connectedTo.length === 0) return false
 
+  const rotationRadians =
+    (-(input.obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const offsetX = input.point.x - input.obstacle.center.x
+  const offsetY = input.point.y - input.obstacle.center.y
+  const localPoint = {
+    x: offsetX * Math.cos(rotationRadians) - offsetY * Math.sin(rotationRadians),
+    y: offsetX * Math.sin(rotationRadians) + offsetY * Math.cos(rotationRadians),
+  }
   if (
-    pointToBoxDistance(input.point, input.obstacle) >
-    TARGET_POINT_OBSTACLE_TOLERANCE
+    pointToBoxDistance(localPoint, {
+      center: { x: 0, y: 0 },
+      width: input.obstacle.width,
+      height: input.obstacle.height,
+    }) > TARGET_POINT_OBSTACLE_TOLERANCE
   ) {
     return false
   }
