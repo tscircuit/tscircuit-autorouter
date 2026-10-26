@@ -148,38 +148,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return segments
   }
 
-  isViaTooCloseToFutureConnectionTrace(node: Node): boolean {
+  isViaTooCloseToFutureConnectionTrace(node: Node) {
     const minCenterlineDistance =
       this.viaDiameter / 2 +
       this.traceThickness / 2 +
       this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
-    const queryScale = Math.max(1, Math.abs(node.x), Math.abs(node.y))
 
     for (const segment of this.getFutureConnectionSegments()) {
-      // Read the live endpoints: callers can change the public future scene.
-      // Projection arithmetic can round outside the endpoint rectangle, so
-      // retain a conservative Float64 envelope and use the original predicate
-      // near its boundary or whenever the numerical envelope is not finite.
-      const roundingMargin =
-        32 *
-        Number.EPSILON *
-        Math.max(
-          queryScale,
-          Math.abs(segment.start.x),
-          Math.abs(segment.start.y),
-          Math.abs(segment.end.x),
-          Math.abs(segment.end.y),
-        )
-      const queryRadius = minCenterlineDistance + roundingMargin
-      if (
-        Number.isFinite(queryRadius) &&
-        (node.x < Math.min(segment.start.x, segment.end.x) - queryRadius ||
-          node.x > Math.max(segment.start.x, segment.end.x) + queryRadius ||
-          node.y < Math.min(segment.start.y, segment.end.y) - queryRadius ||
-          node.y > Math.max(segment.start.y, segment.end.y) + queryRadius)
-      ) {
-        continue
-      }
       if (
         pointToSegmentDistance(node, segment.start, segment.end) <
         minCenterlineDistance
