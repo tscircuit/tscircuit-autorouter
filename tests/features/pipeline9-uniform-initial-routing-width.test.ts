@@ -14,10 +14,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport107-board-1726/bugrep
 
 test("Pipeline 9 places initial shared ports at its actual routing width before nominal-width expansion", (): void => {
   const srj = structuredClone(bugReport.simple_route_json) as SimpleRouteJson
-  const ownerNodeIds: [string, string] = [
-    "cmn_71",
-    "new-cmn_2554-1839",
-  ]
+  const ownerNodeIds: [string, string] = ["cmn_71", "new-cmn_2554-1839"]
   const port = {
     portPointId: "ce2312_pp0_z0::0",
     connectionName: "source_net_148",
@@ -115,6 +112,7 @@ test("Pipeline 9 places initial shared ports at its actual routing width before 
     'No owner-clear ordered placement on shared edge "cmn_71|new-cmn_2554-1839"',
   )
   expect(
-    () => new UniformPortDistributionSolver({ ...params, routingTraceWidth: 0 }),
+    () =>
+      new UniformPortDistributionSolver({ ...params, routingTraceWidth: 0 }),
   ).toThrow("Invalid physical routing trace width")
 })
