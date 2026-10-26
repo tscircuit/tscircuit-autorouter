@@ -75,16 +75,57 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   minPortSpacing: number
 
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
-  nodeEdgeMap: Map<CapacityMeshNodeId, CapacityMeshEdge[]>
+  private nodeEdgeMapCache?: Map<CapacityMeshNodeId, CapacityMeshEdge[]>
 
   /** All shared edge segments with their port points */
   sharedEdgeSegments: SharedEdgeSegment[] = []
 
   /** Map from edgeId to SharedEdgeSegment for quick lookup */
-  edgeSegmentMap: Map<string, SharedEdgeSegment> = new Map()
+  private edgeSegmentMapCache?: Map<string, SharedEdgeSegment>
 
   /** Map from segmentPortPointId to SegmentPortPoint */
-  portPointMap: Map<string, SegmentPortPoint> = new Map()
+  private portPointMapCache?: Map<string, SegmentPortPoint>
+
+  get nodeEdgeMap(): Map<CapacityMeshNodeId, CapacityMeshEdge[]> {
+    if (!this.nodeEdgeMapCache) {
+      this.nodeEdgeMapCache = getNodeEdgeMap(this.edges)
+    }
+    return this.nodeEdgeMapCache
+  }
+
+  set nodeEdgeMap(value: Map<CapacityMeshNodeId, CapacityMeshEdge[]>) {
+    this.nodeEdgeMapCache = value
+  }
+
+  get edgeSegmentMap(): Map<string, SharedEdgeSegment> {
+    if (!this.edgeSegmentMapCache) {
+      this.edgeSegmentMapCache = new Map()
+      for (const segment of this.sharedEdgeSegments) {
+        this.edgeSegmentMapCache.set(segment.edgeId, segment)
+      }
+    }
+    return this.edgeSegmentMapCache
+  }
+
+  set edgeSegmentMap(value: Map<string, SharedEdgeSegment>) {
+    this.edgeSegmentMapCache = value
+  }
+
+  get portPointMap(): Map<string, SegmentPortPoint> {
+    if (!this.portPointMapCache) {
+      this.portPointMapCache = new Map()
+      for (const segment of this.sharedEdgeSegments) {
+        for (const port of segment.portPoints) {
+          this.portPointMapCache.set(port.segmentPortPointId, port)
+        }
+      }
+    }
+    return this.portPointMapCache
+  }
+
+  set portPointMap(value: Map<string, SegmentPortPoint>) {
+    this.portPointMapCache = value
+  }
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
@@ -118,7 +159,6 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     this.colorMap = colorMap ?? {}
 
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
-    this.nodeEdgeMap = getNodeEdgeMap(edges)
 
     // This solver completes in a single step
     this.MAX_ITERATIONS = 1
@@ -140,10 +180,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       const segment = this.computeSharedEdgeSegment(edge, node1, node2)
       if (segment) {
         this.sharedEdgeSegments.push(segment)
-        this.edgeSegmentMap.set(edge.capacityMeshEdgeId, segment)
+        this.edgeSegmentMapCache?.set(edge.capacityMeshEdgeId, segment)
 
-        for (const portPoint of segment.portPoints) {
-          this.portPointMap.set(portPoint.segmentPortPointId, portPoint)
+        if (this.portPointMapCache) {
+          for (const portPoint of segment.portPoints) {
+            this.portPointMapCache.set(portPoint.segmentPortPointId, portPoint)
+          }
         }
       }
     }
