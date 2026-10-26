@@ -59,8 +59,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
-    this.physicalPlacement = input.physicalSrj === undefined
-      ? undefined : new PhysicalSharedEdgePlacement(input.physicalSrj)
+    this.physicalPlacement =
+      input.physicalSrj === undefined
+        ? undefined
+        : new PhysicalSharedEdgePlacement(input.physicalSrj)
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
@@ -140,7 +142,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       obstacles: this.input.obstacles,
     })
-    if (!this.physicalPlacement && !this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    if (
+      !this.physicalPlacement &&
+      !this.input.useLayerAwareGeometry &&
+      blockedOnAnotherLayer
+    )
+      return
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
@@ -160,12 +167,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
         continue
       }
       if (
-        (this.physicalPlacement || !shouldIgnoreSharedEdge({
-          sharedEdge,
-          obstacles: this.input.obstacles,
-          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
-          layerCount: this.input.layerCount,
-        })) &&
+        (this.physicalPlacement ||
+          !shouldIgnoreSharedEdge({
+            sharedEdge,
+            obstacles: this.input.obstacles,
+            z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
+            layerCount: this.input.layerCount,
+          })) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
@@ -179,14 +187,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = this.physicalPlacement
       ? this.physicalPlacement.redistribute(sharedEdge, family)
       : redistributePortPointsOnSharedEdge({
-      sharedEdge,
-      portPoints: family,
-    })
+          sharedEdge,
+          portPoints: family,
+        })
 
     if (this.physicalPlacement) {
-      const positions = new Map(redistributed.map((port) => [port.portPointId, port]))
-      this.mapOfOwnerPairToPortPoints.set(ownerPairKey,
-        familyRaw.map((port) => positions.get(port.portPointId) ?? port))
+      const positions = new Map(
+        redistributed.map((port) => [port.portPointId, port]),
+      )
+      this.mapOfOwnerPairToPortPoints.set(
+        ownerPairKey,
+        familyRaw.map((port) => positions.get(port.portPointId) ?? port),
+      )
     } else this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }
 

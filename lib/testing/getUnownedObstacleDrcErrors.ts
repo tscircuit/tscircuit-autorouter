@@ -27,10 +27,12 @@ export const getUnownedObstacleDrcErrors = ({
 }): UnownedObstacleDrcError[] => {
   // Completed fanout footprint bounds reserve later routing space while their
   // existing source copper remains represented by traces inside the footprint.
-  const unownedObstacles = inputSrj.obstacles.flatMap((obstacle, obstacleIndex) =>
-    isOpaqueUnownedObstacle(obstacle) && obstacle.isFanoutSourceKeepout !== true
-      ? [{ obstacle, obstacleIndex }]
-      : [],
+  const unownedObstacles = inputSrj.obstacles.flatMap(
+    (obstacle, obstacleIndex) =>
+      isOpaqueUnownedObstacle(obstacle) &&
+      obstacle.isFanoutSourceKeepout !== true
+        ? [{ obstacle, obstacleIndex }]
+        : [],
   )
   if (unownedObstacles.length === 0) return []
   const barrierSrj = createSrjWithBoardValidObstacleLayers({
@@ -88,7 +90,8 @@ export const getUnownedObstacleDrcErrors = ({
         `Unowned obstacle DRC requires source_trace_id for "${trace.pcb_trace_id}"`,
       )
     }
-    const { obstacle, obstacleIndex } = unownedObstacles[violation.obstacleIndex]!
+    const { obstacle, obstacleIndex } =
+      unownedObstacles[violation.obstacleIndex]!
     const errorId = `unowned_obstacle_${JSON.stringify([
       trace.pcb_trace_id,
       obstacleIndex,

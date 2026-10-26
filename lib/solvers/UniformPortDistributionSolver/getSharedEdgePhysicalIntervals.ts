@@ -45,10 +45,14 @@ function getLine(edge: SharedEdge): ParametricLine {
   if (
     ![edge.x1, edge.y1, edge.x2, edge.y2, edge.length].every(Number.isFinite) ||
     !(edge.length > 0) ||
-    Math.abs(Math.hypot(edge.x2 - edge.x1, edge.y2 - edge.y1) - edge.length) > 1e-6
-  ) throw new Error(`Invalid physical shared edge "${edge.ownerPairKey}"`)
+    Math.abs(Math.hypot(edge.x2 - edge.x1, edge.y2 - edge.y1) - edge.length) >
+      1e-6
+  )
+    throw new Error(`Invalid physical shared edge "${edge.ownerPairKey}"`)
   return {
-    x: edge.x1, y: edge.y1, length: edge.length,
+    x: edge.x1,
+    y: edge.y1,
+    length: edge.length,
     dx: (edge.x2 - edge.x1) / edge.length,
     dy: (edge.y2 - edge.y1) / edge.length,
   }
@@ -56,19 +60,26 @@ function getLine(edge: SharedEdge): ParametricLine {
 
 function clipBox(
   line: ParametricLine,
-  minX: number, maxX: number, minY: number, maxY: number,
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number,
   closedBoardBounds = false,
 ): EdgeInterval[] {
   if (minX > maxX || minY > maxY) return []
   let low = closedBoardBounds ? 0 : -Infinity
   let high = closedBoardBounds ? line.length : Infinity
   for (const [origin, direction, minimum, maximum] of [
-    [line.x, line.dx, minX, maxX], [line.y, line.dy, minY, maxY],
+    [line.x, line.dx, minX, maxX],
+    [line.y, line.dy, minY, maxY],
   ]) {
     if (direction === 0) {
-      if (closedBoardBounds
-        ? origin! < minimum! || origin! > maximum!
-        : origin! <= minimum! || origin! >= maximum!) return []
+      if (
+        closedBoardBounds
+          ? origin! < minimum! || origin! > maximum!
+          : origin! <= minimum! || origin! >= maximum!
+      )
+        return []
       continue
     }
     const first = (minimum! - origin!) / direction!
@@ -84,11 +95,13 @@ function clipCircle(
   center: Point,
   radius: number,
 ): EdgeInterval[] {
-  const x = line.x - center.x, y = line.y - center.y
+  const x = line.x - center.x,
+    y = line.y - center.y
   const squaredDirection = line.dx * line.dx + line.dy * line.dy
   const projection = x * line.dx + y * line.dy
   const perpendicular = x * line.dy - y * line.dx
-  const discriminant = radius * radius * squaredDirection - perpendicular * perpendicular
+  const discriminant =
+    radius * radius * squaredDirection - perpendicular * perpendicular
   if (discriminant <= 0) return []
   const reach = Math.sqrt(discriminant)
   const low = (-projection - reach) / squaredDirection
@@ -96,11 +109,18 @@ function clipCircle(
   return high >= low ? [[low, high]] : []
 }
 
-function localLine(line: ParametricLine, center: Point, angle: number): ParametricLine {
-  const cosine = Math.cos(angle), sine = Math.sin(angle)
-  const x = line.x - center.x, y = line.y - center.y
+function localLine(
+  line: ParametricLine,
+  center: Point,
+  angle: number,
+): ParametricLine {
+  const cosine = Math.cos(angle),
+    sine = Math.sin(angle)
+  const x = line.x - center.x,
+    y = line.y - center.y
   return {
-    x: x * cosine + y * sine, y: -x * sine + y * cosine,
+    x: x * cosine + y * sine,
+    y: -x * sine + y * cosine,
     dx: line.dx * cosine + line.dy * sine,
     dy: -line.dx * sine + line.dy * cosine,
     length: line.length,
@@ -114,8 +134,20 @@ function roundedRectangle(
   radius: number,
 ): EdgeInterval[] {
   const intervals = [
-    ...clipBox(line, -halfWidth - radius, halfWidth + radius, -halfHeight, halfHeight),
-    ...clipBox(line, -halfWidth, halfWidth, -halfHeight - radius, halfHeight + radius),
+    ...clipBox(
+      line,
+      -halfWidth - radius,
+      halfWidth + radius,
+      -halfHeight,
+      halfHeight,
+    ),
+    ...clipBox(
+      line,
+      -halfWidth,
+      halfWidth,
+      -halfHeight - radius,
+      halfHeight + radius,
+    ),
   ]
   for (const x of [-halfWidth, halfWidth]) {
     for (const y of [-halfHeight, halfHeight])
@@ -124,11 +156,20 @@ function roundedRectangle(
   return mergeEdgeIntervals(intervals)
 }
 
-function capsuleIntervals(line: ParametricLine, start: Point, end: Point, radius: number): EdgeInterval[] {
+function capsuleIntervals(
+  line: ParametricLine,
+  start: Point,
+  end: Point,
+  radius: number,
+): EdgeInterval[] {
   const length = Math.hypot(end.x - start.x, end.y - start.y)
   if (length === 0) return clipCircle(line, start, radius)
   const center = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
-  const local = localLine(line, center, Math.atan2(end.y - start.y, end.x - start.x))
+  const local = localLine(
+    line,
+    center,
+    Math.atan2(end.y - start.y, end.x - start.x),
+  )
   return mergeEdgeIntervals([
     ...clipBox(local, -length / 2, length / 2, -radius, radius),
     ...clipCircle(local, { x: -length / 2, y: 0 }, radius),
@@ -136,14 +177,20 @@ function capsuleIntervals(line: ParametricLine, start: Point, end: Point, radius
   ])
 }
 
-function polygonInteriorIntervals(line: ParametricLine, polygon: Point[]): EdgeInterval[] {
+function polygonInteriorIntervals(
+  line: ParametricLine,
+  polygon: Point[],
+): EdgeInterval[] {
   const cuts: number[] = []
   for (let i = 0; i < polygon.length; i++) {
-    const a = polygon[i]!, b = polygon[(i + 1) % polygon.length]!
-    const x = b.x - a.x, y = b.y - a.y
+    const a = polygon[i]!,
+      b = polygon[(i + 1) % polygon.length]!
+    const x = b.x - a.x,
+      y = b.y - a.y
     const denominator = line.dx * y - line.dy * x
     if (denominator === 0) continue
-    const dx = a.x - line.x, dy = a.y - line.y
+    const dx = a.x - line.x,
+      dy = a.y - line.y
     const t = (dx * y - dy * x) / denominator
     const u = (dx * line.dy - dy * line.dx) / denominator
     if (u >= 0 && u <= 1) cuts.push(t)

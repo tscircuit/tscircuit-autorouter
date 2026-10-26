@@ -158,44 +158,124 @@ test("joint regional candidates retain the original board and declared owners ac
     expect(solver.staticSegmentValidator!(offBoard)).toBe(false)
     expect(whole(offBoard)).toBe(false)
   }
-  expect({ physicalSrj, srj, routes, physicalRootConnectionNameByConnectionName }).toEqual(original)
+  expect({
+    physicalSrj,
+    srj,
+    routes,
+    physicalRootConnectionNameByConnectionName,
+  }).toEqual(original)
 
   const movableTrace: SimplifiedPcbTrace = {
-    type: "pcb_trace", pcb_trace_id: "preloaded_movable", connection_name: "source_signal",
-    route: [{ route_type: "wire", x: -2, y: 2, width: 0.1, layer: "top" }, { route_type: "wire", x: 2, y: 2, width: 0.1, layer: "top" }],
+    type: "pcb_trace",
+    pcb_trace_id: "preloaded_movable",
+    connection_name: "source_signal",
+    route: [
+      { route_type: "wire", x: -2, y: 2, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 2, y: 2, width: 0.1, layer: "top" },
+    ],
   }
   const fixedTrace: SimplifiedPcbTrace = {
-    type: "pcb_trace", pcb_trace_id: "preloaded_fixed", connection_name: "source_foreign",
-    route: [{ route_type: "wire", x: -2, y: -3, width: 0.1, layer: "top" }, { route_type: "wire", x: 2, y: -3, width: 0.1, layer: "top" }],
+    type: "pcb_trace",
+    pcb_trace_id: "preloaded_fixed",
+    connection_name: "source_foreign",
+    route: [
+      { route_type: "wire", x: -2, y: -3, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 2, y: -3, width: 0.1, layer: "top" },
+    ],
   }
-  const jointOriginal: SimpleRouteJson = { ...physicalSrj, traces: [movableTrace, fixedTrace] }
-  const changedTrace: SimplifiedPcbTrace = { ...movableTrace, route: [
-    { route_type: "wire", x: -2, y: 0, width: 0.1, layer: "top" },
-    { route_type: "wire", x: 0.5, y: 0, width: 0.1, layer: "top" },
-    { route_type: "via", x: 0.5, y: 0, from_layer: "top", to_layer: "bottom", via_diameter: 0.3, via_hole_diameter: 0.15 },
-    { route_type: "wire", x: 0.5, y: 0, width: 0.1, layer: "bottom" },
-    { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "bottom" },
-  ] }
+  const jointOriginal: SimpleRouteJson = {
+    ...physicalSrj,
+    traces: [movableTrace, fixedTrace],
+  }
+  const changedTrace: SimplifiedPcbTrace = {
+    ...movableTrace,
+    route: [
+      { route_type: "wire", x: -2, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 0.5, y: 0, width: 0.1, layer: "top" },
+      {
+        route_type: "via",
+        x: 0.5,
+        y: 0,
+        from_layer: "top",
+        to_layer: "bottom",
+        via_diameter: 0.3,
+        via_hole_diameter: 0.15,
+      },
+      { route_type: "wire", x: 0.5, y: 0, width: 0.1, layer: "bottom" },
+      { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "bottom" },
+    ],
+  }
   const newConnections = [
-    { name: "signal_mst0", __rootConnectionNames: ["source_signal"], pointsToConnect: [{ x: -4, y: 4, layer: "top", pointId: "mst_start" }, { x: -3, y: 4, layer: "top", pointId: "mst_end" }] },
-    { name: "declared_net_alias", __netConnectionName: "source_signal", pointsToConnect: [{ x: 3, y: 4, layer: "top", pointId: "net_start" }, { x: 4, y: 4, layer: "top", pointId: "net_end" }] },
+    {
+      name: "signal_mst0",
+      __rootConnectionNames: ["source_signal"],
+      pointsToConnect: [
+        { x: -4, y: 4, layer: "top", pointId: "mst_start" },
+        { x: -3, y: 4, layer: "top", pointId: "mst_end" },
+      ],
+    },
+    {
+      name: "declared_net_alias",
+      __netConnectionName: "source_signal",
+      pointsToConnect: [
+        { x: 3, y: 4, layer: "top", pointId: "net_start" },
+        { x: 4, y: 4, layer: "top", pointId: "net_end" },
+      ],
+    },
   ]
-  const newHdRoutes = newConnections.map((connection): HighDensityRoute => ({ connectionName: connection.name, rootConnectionName: "connectivity_net_routing", traceThickness: 0.1, viaDiameter: 0.3, route: connection.pointsToConnect.map((point) => ({ x: point.x, y: point.y, z: 0 })), vias: [] }))
-  const jointPlanning = { ...jointOriginal, connections: [...jointOriginal.connections, ...newConnections] }
+  const newHdRoutes = newConnections.map(
+    (connection): HighDensityRoute => ({
+      connectionName: connection.name,
+      rootConnectionName: "connectivity_net_routing",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      route: connection.pointsToConnect.map((point) => ({
+        x: point.x,
+        y: point.y,
+        z: 0,
+      })),
+      vias: [],
+    }),
+  )
+  const jointPlanning = {
+    ...jointOriginal,
+    connections: [...jointOriginal.connections, ...newConnections],
+  }
   const joint = new Pipeline9JointDrcRepairSolver({
-    srj: jointPlanning, srjWithPointPairs: jointPlanning, originalSrj: jointOriginal,
-    newConnections, newHdRoutes, updatedPreloadedTraces: [changedTrace, fixedTrace],
+    srj: jointPlanning,
+    srjWithPointPairs: jointPlanning,
+    originalSrj: jointOriginal,
+    newConnections,
+    newHdRoutes,
+    updatedPreloadedTraces: [changedTrace, fixedTrace],
     mutatedPreloadedTraceIds: new Set([changedTrace.pcb_trace_id]),
-    connMap: getConnectivityMapFromSimpleRouteJson(jointPlanning), obstacles: jointPlanning.obstacles,
-    layerCount: 8, defaultViaDiameter: 0.3, defaultViaHoleDiameter: 0.15, effort: 1, colorMap: {},
+    connMap: getConnectivityMapFromSimpleRouteJson(jointPlanning),
+    obstacles: jointPlanning.obstacles,
+    layerCount: 8,
+    defaultViaDiameter: 0.3,
+    defaultViaHoleDiameter: 0.15,
+    effort: 1,
+    colorMap: {},
   })
   expect(joint.movablePreloadedSections).toHaveLength(1)
   const synthetic = joint.movablePreloadedSections[0]!
-  expect(joint.physicalRootConnectionNameByConnectionName.signal_mst0).toBe("source_signal")
-  expect(joint.physicalRootConnectionNameByConnectionName.declared_net_alias).toBe("source_signal")
-  expect(joint.physicalRootConnectionNameByConnectionName[synthetic.syntheticConnectionName]).toBe("source_signal")
+  expect(joint.physicalRootConnectionNameByConnectionName.signal_mst0).toBe(
+    "source_signal",
+  )
+  expect(
+    joint.physicalRootConnectionNameByConnectionName.declared_net_alias,
+  ).toBe("source_signal")
+  expect(
+    joint.physicalRootConnectionNameByConnectionName[
+      synthetic.syntheticConnectionName
+    ],
+  ).toBe("source_signal")
   expect(joint.fixedPreloadedObstacleRoutes).toHaveLength(1)
-  expect(joint.physicalRootConnectionNameByConnectionName[joint.fixedPreloadedObstacleRoutes[0]!.connectionName]).toBe("source_foreign")
+  expect(
+    joint.physicalRootConnectionNameByConnectionName[
+      joint.fixedPreloadedObstacleRoutes[0]!.connectionName
+    ],
+  ).toBe("source_foreign")
   // Preserve the unresolved via conflict at the exact-stage boundary. This
   // exercises the actual Joint handoff without executing a repair search.
   const unchangedExactOutput = spyOn(joint.exactRepairSolver!, "getOutput").mockReturnValue([...newHdRoutes, synthetic.hdRoute])

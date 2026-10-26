@@ -23,13 +23,18 @@ test("reference electrical ownership does not merge same-layer pads by exact or 
           },
           ...(foreignDeclared
             ? [
-              {
-                name: "foreign",
-                pointsToConnect: [
-                  { x: offset, y: 0, layer: "inner1", pcb_port_id: "pcb_port_foreign" },
-                ],
-              },
-            ]
+                {
+                  name: "foreign",
+                  pointsToConnect: [
+                    {
+                      x: offset,
+                      y: 0,
+                      layer: "inner1",
+                      pcb_port_id: "pcb_port_foreign",
+                    },
+                  ],
+                },
+              ]
             : []),
         ],
         obstacles: [
@@ -77,7 +82,13 @@ test("reference electrical ownership does not merge same-layer pads by exact or 
             start_pcb_port_id: "pcb_port_own",
           },
           { route_type: "wire", x: 0.3, y: 0, layer: "inner1", width: 0.1 },
-          { route_type: "via", x: 0.3, y: 0, from_layer: "inner1", to_layer: "inner2" },
+          {
+            route_type: "via",
+            x: 0.3,
+            y: 0,
+            from_layer: "inner1",
+            to_layer: "inner2",
+          },
           { route_type: "wire", x: 0.3, y: 0, layer: "inner2", width: 0.1 },
           {
             route_type: "wire",
@@ -106,7 +117,9 @@ test("reference electrical ownership does not merge same-layer pads by exact or 
         const connectivity = getFullConnectivityMapFromCircuitJson(
           result.circuitJson,
         )
-        expect(connectivity.areIdsConnected("own", "pcb_smtpad_foreign")).toBe(false)
+        expect(connectivity.areIdsConnected("own", "pcb_smtpad_foreign")).toBe(
+          false,
+        )
         expect(connectivity.areIdsConnected("own", "pcb_smtpad_own")).toBe(true)
         if (foreignDeclared) {
           expect(connectivity.areIdsConnected("own", "foreign")).toBe(false)
@@ -121,7 +134,9 @@ test("reference electrical ownership does not merge same-layer pads by exact or 
           minimum_clearance: 0.1,
         })
       }
-      expect(declaredMap.areIdsConnected("own", "pcb_smtpad_foreign")).toBe(false)
+      expect(declaredMap.areIdsConnected("own", "pcb_smtpad_foreign")).toBe(
+        false,
+      )
       // Routing keeps its existing coordinate aliases unless explicitly opted out.
       expect(
         getConnectivityMapFromSimpleRouteJson(srj).areIdsConnected(

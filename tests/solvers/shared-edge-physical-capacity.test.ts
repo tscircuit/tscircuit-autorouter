@@ -176,13 +176,18 @@ test("real shared-face capacity groups all aliases without restricting wide redi
     ],
     routeNet: new Int32Array([1, 0, 0]),
   }
-  expect(evaluate({
-    ...query,
-    topology: remappedTopology,
-    problem: remappedProblem,
-    regionId: 1,
-    routeId: 0,
-    regionSegments: [[1, 4, 5], [2, 0, 1]],
-  })).toEqual({ feasible: false, blockerRouteIds: [1, 2] })
+  expect(
+    evaluate({
+      ...query,
+      topology: remappedTopology,
+      problem: remappedProblem,
+      regionId: 1,
+      routeId: 0,
+      regionSegments: [
+        [1, 4, 5],
+        [2, 0, 1],
+      ],
+    }),
+  ).toEqual({ feasible: false, blockerRouteIds: [1, 2] })
   expect(fixture).toEqual(snapshot)
 })

@@ -5,7 +5,7 @@ export function isOpaqueUnownedObstacle(obstacle: Obstacle): boolean {
   const metadata = obstacle.circuitJsonMetadata
   return (
     obstacle.connectedTo.length === 0 &&
-    !(obstacle.offBoardConnectsTo?.length) &&
+    !obstacle.offBoardConnectsTo?.length &&
     !obstacle.isNonPlatedHole &&
     !metadata?.pcb_smtpad_id &&
     !metadata?.pcb_plated_hole_id &&

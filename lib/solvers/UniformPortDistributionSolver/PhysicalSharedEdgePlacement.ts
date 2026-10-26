@@ -1,6 +1,9 @@
 import { createPipeline9StaticSegmentValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9StaticSegmentValidator"
 import { getPipeline9PhysicalGeometryContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalGeometryContext"
-import { preparePipeline9PhysicalObstacle, type PreparedPhysicalObstacle } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9PhysicalObstacle"
+import {
+  preparePipeline9PhysicalObstacle,
+  type PreparedPhysicalObstacle,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9PhysicalObstacle"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import type { PortPoint } from "lib/types/high-density-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
@@ -37,13 +40,25 @@ export class PhysicalSharedEdgePlacement {
   constructor(private readonly physicalSrj: SimpleRouteJson) {
     this.context = getPipeline9PhysicalGeometryContext(physicalSrj)
     this.traceClearance = physicalSrj.minTraceToPadEdgeClearance ?? 0.1
-    if (![physicalSrj.minTraceWidth, this.traceClearance].every(Number.isFinite) ||
-      physicalSrj.minTraceWidth <= 0 || this.traceClearance < 0)
-      throw new Error("Uniform port placement requires valid physical trace rules")
+    if (
+      ![physicalSrj.minTraceWidth, this.traceClearance].every(
+        Number.isFinite,
+      ) ||
+      physicalSrj.minTraceWidth <= 0 ||
+      this.traceClearance < 0
+    )
+      throw new Error(
+        "Uniform port placement requires valid physical trace rules",
+      )
     for (const connection of physicalSrj.connections) {
-      const width = Math.max(physicalSrj.minTraceWidth,
-        connection.nominalTraceWidth ?? connection.width ?? physicalSrj.minTraceWidth)
-      if (!Number.isFinite(width) || width <= 0) throw new Error("Invalid connection trace width")
+      const width = Math.max(
+        physicalSrj.minTraceWidth,
+        connection.nominalTraceWidth ??
+          connection.width ??
+          physicalSrj.minTraceWidth,
+      )
+      if (!Number.isFinite(width) || width <= 0)
+        throw new Error("Invalid connection trace width")
       this.widths.set(connection.name, width)
     }
     this.viaDiameter = getViaDimensions(physicalSrj).padDiameter
@@ -57,52 +72,98 @@ export class PhysicalSharedEdgePlacement {
       const owner = this.context.connMap.getNetConnectedToId(id)
       if (owner !== undefined) owners.add(owner)
     }
-    if (owners.size > 1) throw new Error(`Ambiguous physical owner for port "${port.portPointId}"`)
+    if (owners.size > 1)
+      throw new Error(`Ambiguous physical owner for port "${port.portPointId}"`)
     return owners.values().next().value
   }
 
   private getWidth(port: PortPoint): number {
     const direct = this.widths.get(port.connectionName)
-    const root = port.rootConnectionName === undefined ? undefined : this.widths.get(port.rootConnectionName)
+    const root =
+      port.rootConnectionName === undefined
+        ? undefined
+        : this.widths.get(port.rootConnectionName)
     const width = direct ?? root ?? this.physicalSrj.minTraceWidth
-    if (!Number.isFinite(width) || width <= 0) throw new Error("Invalid physical port width")
+    if (!Number.isFinite(width) || width <= 0)
+      throw new Error("Invalid physical port width")
     return width
   }
 
   private getPrepared(obstacle: Obstacle): PreparedPhysicalObstacle {
     let prepared = this.prepared.get(obstacle)
     if (!prepared) {
-      prepared = preparePipeline9PhysicalObstacle(obstacle, this.context.connMap)
+      prepared = preparePipeline9PhysicalObstacle(
+        obstacle,
+        this.context.connMap,
+      )
       this.prepared.set(obstacle, prepared)
     }
     return prepared
   }
 
   /** Pure geometry query shared by placement and permanent edge-capacity checks. */
-  getAllowedIntervals(edge: SharedEdge, { owner, width, z }: PhysicalSharedEdgeQuery): EdgeInterval[] {
-    if (!Number.isInteger(z) || z < 0 || z >= this.physicalSrj.layerCount || !Number.isFinite(width) || width <= 0)
+  getAllowedIntervals(
+    edge: SharedEdge,
+    { owner, width, z }: PhysicalSharedEdgeQuery,
+  ): EdgeInterval[] {
+    if (
+      !Number.isInteger(z) ||
+      z < 0 ||
+      z >= this.physicalSrj.layerCount ||
+      !Number.isFinite(width) ||
+      width <= 0
+    )
       throw new Error("Invalid physical shared-edge layer or trace width")
     let allowed = getSharedEdgeBoardIntervals(edge, this.physicalSrj, width / 2)
-    const reach = width / 2 + Math.max(this.traceClearance, this.physicalSrj.minTraceToHoleEdgeClearance ?? 0)
-    const nearby = this.context.index?.search(
-      Math.min(edge.x1, edge.x2) - reach, Math.min(edge.y1, edge.y2) - reach,
-      Math.max(edge.x1, edge.x2) + reach, Math.max(edge.y1, edge.y2) + reach,
-    ) ?? []
+    const reach =
+      width / 2 +
+      Math.max(
+        this.traceClearance,
+        this.physicalSrj.minTraceToHoleEdgeClearance ?? 0,
+      )
+    const nearby =
+      this.context.index?.search(
+        Math.min(edge.x1, edge.x2) - reach,
+        Math.min(edge.y1, edge.y2) - reach,
+        Math.max(edge.x1, edge.x2) + reach,
+        Math.max(edge.y1, edge.y2) + reach,
+      ) ?? []
     for (const index of nearby) {
       const obstacle = this.context.obstacles[index]!
       const prepared = this.getPrepared(obstacle)
-      if (!prepared.layers.has(z) || (owner !== undefined && prepared.owners.has(owner))) continue
-      const rawClearance = prepared.opaque ? 0 : prepared.nonPlatedHole
-        ? this.physicalSrj.minTraceToHoleEdgeClearance ?? this.traceClearance : this.traceClearance
-      if (!Number.isFinite(rawClearance) || rawClearance < 0) throw new Error("Invalid physical obstacle clearance")
+      if (
+        !prepared.layers.has(z) ||
+        (owner !== undefined && prepared.owners.has(owner))
+      )
+        continue
+      const rawClearance = prepared.opaque
+        ? 0
+        : prepared.nonPlatedHole
+          ? (this.physicalSrj.minTraceToHoleEdgeClearance ??
+            this.traceClearance)
+          : this.traceClearance
+      if (!Number.isFinite(rawClearance) || rawClearance < 0)
+        throw new Error("Invalid physical obstacle clearance")
       for (const [shape, clearance, tolerance] of [
         [prepared.engineShape, this.traceClearance, TRACE_ENGINE_TOLERANCE],
         [prepared.rawShape, rawClearance, 1e-8],
       ] as const) {
         if (!shape) continue
-        const representation = { ...obstacle, type: shape.kind, shape: undefined, width: shape.width, height: shape.height } as Obstacle
-        allowed = subtractEdgeIntervals(allowed, getSharedEdgeObstacleIntervals(edge, representation,
-          Math.max(0, width / 2 + clearance - tolerance)))
+        const representation = {
+          ...obstacle,
+          type: shape.kind,
+          shape: undefined,
+          width: shape.width,
+          height: shape.height,
+        } as Obstacle
+        allowed = subtractEdgeIntervals(
+          allowed,
+          getSharedEdgeObstacleIntervals(
+            edge,
+            representation,
+            Math.max(0, width / 2 + clearance - tolerance),
+          ),
+        )
       }
     }
     return allowed

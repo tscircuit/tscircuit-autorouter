@@ -241,9 +241,11 @@ export function createPhysicalViaCapacityEvaluator({
     edge: SharedEdge,
   ): boolean => {
     const regions = topology.incidentPortRegion[portId]!
-    if (regions.every((id) =>
-      freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
-    ))
+    if (
+      regions.every((id) =>
+        freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
+      )
+    )
       return true
     // Special endpoint ports can be anchored outside a rectangle face. Only
     // redistributable free-space aliases can ignore their current offset XY.
@@ -384,17 +386,21 @@ export function createPhysicalViaCapacityEvaluator({
     if (!widths) edge.domainsByOwner.set(owner, (widths = new Map()))
     const cached = widths.get(width)
     if (cached !== undefined) return cached
-    const intervals = board.sharedEdgePlacement.getAllowedIntervals(edge.geometry, {
-      z,
-      owner,
-      width,
-    })
-    const domain = intervals.length === 0
-      ? null
-      : {
-          min: Math.min(...intervals.map(([low]) => low)),
-          max: Math.max(...intervals.map(([, high]) => high)),
-        }
+    const intervals = board.sharedEdgePlacement.getAllowedIntervals(
+      edge.geometry,
+      {
+        z,
+        owner,
+        width,
+      },
+    )
+    const domain =
+      intervals.length === 0
+        ? null
+        : {
+            min: Math.min(...intervals.map(([low]) => low)),
+            max: Math.max(...intervals.map(([, high]) => high)),
+          }
     widths.set(width, domain)
     return domain
   }
@@ -569,7 +575,8 @@ export function createPhysicalViaCapacityEvaluator({
           const edge = getSharedEdge(topology, otherPort)
           if (!edge || (edge.key !== fromEdge?.key && edge.key !== toEdge?.key))
             continue
-          const candidatePort = edge.key === fromEdge?.key ? fromPortId : toPortId
+          const candidatePort =
+            edge.key === fromEdge?.key ? fromPortId : toPortId
           if (
             edge.capacityOne &&
             canUseSharedFace(topology, candidatePort, edge) &&
@@ -590,7 +597,8 @@ export function createPhysicalViaCapacityEvaluator({
             Math.abs(domain.max - other.min),
           )
           if (
-            maximumSeparation + edge.numericalSlack < board.minimumTraceCenterSpacing
+            maximumSeparation + edge.numericalSlack <
+            board.minimumTraceCenterSpacing
           )
             blockers.add(otherRoute)
         }
