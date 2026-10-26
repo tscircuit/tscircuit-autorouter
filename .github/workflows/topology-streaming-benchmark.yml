@@ -3,6 +3,58 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  am3352_graph_allocation:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compile identical native allocation reproductions
+        run: |
+          mkdir -p results base/scripts/benchmarks base/tests/fixtures
+          cp head/scripts/benchmarks/measure-am3352-graph-construction.ts head/scripts/benchmarks/node-require-compat.mjs base/scripts/benchmarks/
+          cp head/tests/fixtures/createConstructionGraphControl.ts head/tests/fixtures/am3352-support-default-conversion.json.gz base/tests/fixtures/
+          for revision in base head; do
+            (cd "$revision" && bun build scripts/benchmarks/measure-am3352-graph-construction.ts --target=node --outfile graph-allocation.mjs --external sharp --external @resvg/resvg-js --external looks-same --external circuit-to-svg --external @tscircuit/core --external @tscircuit/props)
+          done
+      - name: Measure graph construction with a bounded V8 heap
+        run: |
+          set +e
+          (cd base && node --max-old-space-size=10240 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/base.json) > results/base.log 2>&1
+          echo "$?" > results/base.exit-code
+          (cd head && node --max-old-space-size=10240 --import ./scripts/benchmarks/node-require-compat.mjs graph-allocation.mjs ../results/head.json) > results/head.log 2>&1
+          echo "$?" > results/head.exit-code
+          set -e
+          python3 - <<'PYCODE'
+          import json
+          from pathlib import Path
+          h=json.loads(Path('results/head.json').read_text())
+          assert h['pathingGraphConstructed'] and not h['failed'] and h['sourceInputUnchanged'] and h['releasedConstructionState']
+          assert h['inputSha256']=='000a5a4c98faf44d509b5073343bba9d4d7db3d1fe405d8faa616921ee616cd8'
+          if Path('results/base.json').exists():
+            b=json.loads(Path('results/base.json').read_text());assert b['inputSha256']==h['inputSha256']
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: am3352-graph-allocation-comparison
+          path: results/
   completed_topology_retention:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
