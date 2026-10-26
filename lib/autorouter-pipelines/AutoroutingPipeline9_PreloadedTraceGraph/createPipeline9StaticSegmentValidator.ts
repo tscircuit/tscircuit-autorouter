@@ -5,31 +5,18 @@ import {
 } from "@tscircuit/math-utils"
 import type { SimpleRouteJson } from "lib/types"
 import type { StaticSegmentValidator } from "lib/types/high-density-types"
-import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
 } from "lib/utils/polygonContainment"
 import { getPipeline9PhysicalGeometryContext } from "./getPipeline9PhysicalGeometryContext"
+import { preparePipeline9PhysicalObstacle, type PhysicalObstacleShape, type PreparedPhysicalObstacle } from "./preparePipeline9PhysicalObstacle"
 
 type Point = { x: number; y: number }
-type Shape = { kind: "rect" | "oval"; width: number; height: number }
-type PreparedObstacle = {
-  layers: Set<number>
-  owners: Set<string>
-  x: number
-  y: number
-  cosine: number
-  sine: number
-  engineShape?: Shape
-  rawShape?: Shape
-  opaque: boolean
-  nonPlatedHole: boolean
-}
 const validators = new WeakMap<SimpleRouteJson, StaticSegmentValidator>()
 
-const shapeDistance = (a: Point, b: Point, shape: Shape): number => {
+const shapeDistance = (a: Point, b: Point, shape: PhysicalObstacleShape): number => {
   if (shape.kind === "rect")
     return segmentToBoundsMinDistance(a, b, {
       minX: -shape.width / 2,
@@ -55,7 +42,7 @@ export function createPipeline9StaticSegmentValidator(
   if (cached) return cached
   const context = getPipeline9PhysicalGeometryContext(physicalSrj)
   const { srj, connMap } = context
-  const prepared = new Map<number, PreparedObstacle>()
+  const prepared = new Map<number, PreparedPhysicalObstacle>()
   const traceClearance = srj.minTraceToPadEdgeClearance ?? 0.1
   const viaClearance =
     srj.minViaEdgeToPadEdgeClearance ?? srj.minPadEdgeToPadEdgeClearance ?? 0.1
@@ -132,22 +119,7 @@ export function createPipeline9StaticSegmentValidator(
       let obstacle = prepared.get(id)
       if (!obstacle) {
         const raw = context.obstacles[id]!
-        const obstacleType = raw.type as string
-        const angle = (raw.ccwRotationDegrees ?? 0) * Math.PI / 180
-        if (!Number.isFinite(angle)) throw new Error("Physical segment validation requires finite obstacle rotation")
-        const recognized = raw.connectedTo.some((name) => /^(pcb_smtpad_|pcb_plated_hole_|pcb_port_)/.test(name))
-        const squarePlated = obstacleType === "rect" && raw.layers.length > 1 && Math.abs(raw.width - raw.height) < 0.001
-        const needsRaw = !recognized || Math.abs((raw.ccwRotationDegrees ?? 0) % 180) > 1e-8 || squarePlated
-        if (obstacleType !== "rect" && obstacleType !== "oval") throw new Error("Physical segment validation found an unsupported obstacle shape")
-        const rawCircle = raw.isNonPlatedHole && raw.shape === "circle"
-        const engineCircle = raw.ccwRotationDegrees === undefined && raw.layers.length > 1 && Math.abs(raw.width - raw.height) < 0.001
-        obstacle = {
-          layers: new Set(raw.__zLayers), owners: new Set(raw.connectedTo.map((name) => connMap.getNetConnectedToId(name) ?? name)),
-          x: raw.center.x, y: raw.center.y, cosine: Math.cos(angle), sine: Math.sin(angle),
-          engineShape: recognized ? { kind: engineCircle ? "oval" : "rect", width: raw.width, height: engineCircle ? raw.width : raw.height } : undefined,
-          rawShape: needsRaw ? { kind: rawCircle || obstacleType === "oval" ? "oval" : "rect", width: raw.width, height: rawCircle ? raw.width : raw.height } : undefined,
-          opaque: isOpaqueUnownedObstacle(raw), nonPlatedHole: raw.isNonPlatedHole === true,
-        }
+        obstacle = preparePipeline9PhysicalObstacle(raw, connMap)
         prepared.set(id, obstacle)
       }
       if (obstacle.owners.has(owner) || ![...obstacle.layers].some((z) => z >= minZ && z <= maxZ)) continue

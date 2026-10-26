@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import { Obstacle, type SimpleRouteJson } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
@@ -20,6 +20,7 @@ import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
+import { PhysicalSharedEdgePlacement } from "./PhysicalSharedEdgePlacement"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
@@ -30,6 +31,8 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Authoritative physical copper and declared ownership; coordinates are board-world millimetres. */
+  physicalSrj?: SimpleRouteJson
 }
 
 /**
@@ -52,15 +55,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly physicalPlacement?: PhysicalSharedEdgePlacement
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.physicalPlacement = input.physicalSrj === undefined
+      ? undefined : new PhysicalSharedEdgePlacement(input.physicalSrj)
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
-        !input.useLayerAwareGeometry
+        !input.useLayerAwareGeometry && !input.physicalSrj
           ? getBoundsFromNodeWithPortPoints(node)
           : {
               minX: node.center.x - node.width / 2,
@@ -134,7 +140,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       obstacles: this.input.obstacles,
     })
-    if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    if (!this.physicalPlacement && !this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
@@ -154,12 +160,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
         continue
       }
       if (
-        !shouldIgnoreSharedEdge({
+        (this.physicalPlacement || !shouldIgnoreSharedEdge({
           sharedEdge,
           obstacles: this.input.obstacles,
           z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
           layerCount: this.input.layerCount,
-        }) &&
+        })) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
@@ -170,12 +176,18 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
+    const redistributed = this.physicalPlacement
+      ? this.physicalPlacement.redistribute(sharedEdge, family)
+      : redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
     })
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    if (this.physicalPlacement) {
+      const positions = new Map(redistributed.map((port) => [port.portPointId, port]))
+      this.mapOfOwnerPairToPortPoints.set(ownerPairKey,
+        familyRaw.map((port) => positions.get(port.portPointId) ?? port))
+    } else this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }
 
   rebuildNodes(): void {
