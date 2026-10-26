@@ -223,7 +223,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
       if (
         this.input.preserveSolitaryPorts &&
         blockedOnAnotherLayer &&
-        portCountByLayer.get(portPoint.z) === 1
+        portCountByLayer.get(portPoint.z) === 1 &&
+        (!this.physicalPlacement ||
+          this.physicalPlacement.isPortClear(portPoint))
       ) {
         continue
       }
