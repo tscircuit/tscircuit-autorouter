@@ -7,11 +7,15 @@ import type {
 } from "tiny-hypergraph/lib/core"
 import type {
   CapacityMeshNode,
+  Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import { createPipeline9StaticSegmentValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9StaticSegmentValidator"
 import { getPipeline9PhysicalGeometryContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalGeometryContext"
+import { shouldIgnoreSharedEdge } from "lib/solvers/UniformPortDistributionSolver/shouldIgnoreSharedEdge"
+import type { EdgeInterval } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgePhysicalIntervals"
+import { getOrderedSharedEdgeFeasibility, type OrderedSharedEdgeEvent } from "./getOrderedSharedEdgeFeasibility"
 import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
 import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
@@ -24,14 +28,22 @@ export type PhysicalViaCapacityContext = {
   freeRegionIds: string[]
   /** Actual producer rectangles eligible for physical shared-face proofs. */
   sharedEdgeRegionIds?: string[]
+  /** Producer rectangles whose shared ports Uniform is permitted to move. */
+  movableSharedEdgeRegionIds?: string[]
+  planningObstacles?: Obstacle[]
+  preserveSolitarySharedEdgePorts?: boolean
 }
 
 type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 type PhysicalPad = Bounds & { owners: Set<string>; radius: number }
 type ExistingConductor = Bounds & { owners: Set<string> }
-type TraceDomain = { min: number; max: number }
+type TraceDomain = { min: number; max: number; allowed: EdgeInterval[] }
 type SharedEdge = {
   key: string
+  z: number
+  movable?: boolean
+  blockedAnyLayer?: boolean
+  lastOrdered?: { key: string; result: TinyHyperGraphRegionSegmentFeasibilityResult }
   capacityOne: boolean
   geometry: PhysicalSharedEdge | null
   numericalSlack: number
@@ -191,12 +203,67 @@ export function createPhysicalViaCapacityEvaluator({
   physicalSrj,
   freeRegionIds,
   sharedEdgeRegionIds,
+  movableSharedEdgeRegionIds,
+  planningObstacles,
+  preserveSolitarySharedEdgePorts,
 }: PhysicalViaCapacityContext): Evaluator | undefined {
   const throughViaCapacityEnabled =
     !physicalSrj.allowBlindAndBuriedVias && physicalSrj.layerCount >= 2
   const board = compilePhysicalBoard(physicalSrj)
   const freeIds = new Set(freeRegionIds)
   const sharedIds = new Set(sharedEdgeRegionIds ?? freeRegionIds)
+  const movableIds = movableSharedEdgeRegionIds === undefined
+    ? undefined : new Set(movableSharedEdgeRegionIds)
+  const planningIndex = planningObstacles?.length
+    ? new Flatbush(planningObstacles.length) : undefined
+  for (const obstacle of planningObstacles ?? []) {
+    planningIndex!.add(
+      obstacle.center.x - obstacle.width / 2,
+      obstacle.center.y - obstacle.height / 2,
+      obstacle.center.x + obstacle.width / 2,
+      obstacle.center.y + obstacle.height / 2,
+    )
+  }
+  planningIndex?.finish()
+  const isMovableFace = (
+    edge: SharedEdge,
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
+  ): boolean => {
+    const face = edge.geometry
+    if (!face || !movableIds || planningObstacles === undefined) return false
+    edge.movable ??= face.ownerNodeIds.every((id) => movableIds.has(id))
+    if (!edge.movable) return false
+    if (preserveSolitarySharedEdgePorts === false) return true
+    if (edge.blockedAnyLayer === undefined) {
+      const epsilon = 1e-6
+      const nearby = planningIndex?.search(
+        Math.min(face.x1, face.x2) - epsilon,
+        Math.min(face.y1, face.y2) - epsilon,
+        Math.max(face.x1, face.x2) + epsilon,
+        Math.max(face.y1, face.y2) + epsilon,
+      ) ?? []
+      edge.blockedAnyLayer = shouldIgnoreSharedEdge({
+        sharedEdge: face,
+        obstacles: nearby.map((id) => planningObstacles[id]!),
+      })
+    }
+    if (!edge.blockedAnyLayer) return true
+    const ports = new Set<string>()
+    for (const portId of [query.fromPortId, query.toPortId]) {
+      if (getSharedEdge(query.topology, portId)?.key !== edge.key) continue
+      const metadata = query.topology.portMetadata?.[portId]
+      ports.add(String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`))
+    }
+    for (const [routeId, first, second] of query.regionSegments) {
+      if (query.ignoredRouteIds?.has(routeId)) continue
+      for (const portId of [first, second]) {
+        if (getSharedEdge(query.topology, portId)?.key !== edge.key) continue
+        const metadata = query.topology.portMetadata?.[portId]
+        ports.add(String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`))
+      }
+    }
+    return ports.size > 1
+  }
   const ownerByMetadata = new WeakMap<RouteMetadata, string | null>()
   const getOwner = (
     problem: Readonly<TinyHyperGraphProblem>,
@@ -236,16 +303,15 @@ export function createPhysicalViaCapacityEvaluator({
     }
   >()
   const canUseSharedFace = (
-    topology: Readonly<TinyHyperGraphTopology>,
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
     portId: number,
     edge: SharedEdge,
   ): boolean => {
+    const topology = query.topology
     const regions = topology.incidentPortRegion[portId]!
-    if (
-      regions.every((id) =>
-        freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
-      )
-    )
+    if (movableIds ? isMovableFace(edge, query) : regions.every((id) =>
+      freeIds.has(topology.regionMetadata?.[id]?.capacityMeshNodeId),
+    ))
       return true
     // Special endpoint ports can be anchored outside a rectangle face. Only
     // redistributable free-space aliases can ignore their current offset XY.
@@ -357,6 +423,7 @@ export function createPhysicalViaCapacityEvaluator({
     ].sort()
     const edge: SharedEdge = {
       key,
+      z,
       capacityOne: maximumSeparation < board.minimumTraceCenterSpacing,
       geometry: getSharedEdgeForNodePair({
         nodeAId: firstId!,
@@ -400,6 +467,7 @@ export function createPhysicalViaCapacityEvaluator({
         : {
             min: Math.min(...intervals.map(([low]) => low)),
             max: Math.max(...intervals.map(([, high]) => high)),
+            allowed: intervals,
           }
     widths.set(width, domain)
     return domain
@@ -409,42 +477,124 @@ export function createPhysicalViaCapacityEvaluator({
     Map<number, Map<string, boolean>>
   >()
   const pointValidator = createPipeline9StaticSegmentValidator(physicalSrj)
-  const getPortDomain = (
+  const isPointClear = (
     topology: Readonly<TinyHyperGraphTopology>,
+    portId: number,
+    owner: string,
+  ): boolean | undefined => {
+    const sourceName = board.sourceNameByOwner.get(owner)
+    if (!sourceName || board.minimumTraceWidth < physicalSrj.minTraceWidth)
+      return undefined
+    let ports = pointClearByTopology.get(topology)
+    if (!ports) pointClearByTopology.set(topology, (ports = new Map()))
+    let owners = ports.get(portId)
+    if (!owners) ports.set(portId, (owners = new Map()))
+    let clear = owners.get(owner)
+    if (clear === undefined) {
+      const point = {
+        x: topology.portX[portId]!,
+        y: topology.portY[portId]!,
+        z: topology.portZ[portId]!,
+      }
+      clear = pointValidator({
+        connectionName: sourceName,
+        traceThickness: board.minimumTraceWidth,
+        viaDiameter: getViaDimensions(physicalSrj).padDiameter,
+        start: point,
+        end: point,
+      })
+      owners.set(owner, clear)
+    }
+    return clear
+  }
+  const getPortDomain = (
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
     portId: number,
     edge: SharedEdge,
     owner: string,
   ): TraceDomain | null | undefined => {
-    if (!canUseSharedFace(topology, portId, edge)) {
-      // A fixed special endpoint may legally lie outside its face. Keep that
-      // possibility whenever its actual copper point is clear. Invalid fixed
-      // points do not enlarge the permissive redistributed face domain.
-      const sourceName = board.sourceNameByOwner.get(owner)
-      if (!sourceName || board.minimumTraceWidth < physicalSrj.minTraceWidth)
-        return undefined
-      let ports = pointClearByTopology.get(topology)
-      if (!ports) pointClearByTopology.set(topology, (ports = new Map()))
-      let owners = ports.get(portId)
-      if (!owners) ports.set(portId, (owners = new Map()))
-      let clear = owners.get(owner)
-      if (clear === undefined) {
-        const point = {
-          x: topology.portX[portId]!,
-          y: topology.portY[portId]!,
-          z: topology.portZ[portId]!,
-        }
-        clear = pointValidator({
-          connectionName: sourceName,
-          traceThickness: board.minimumTraceWidth,
-          viaDiameter: getViaDimensions(physicalSrj).padDiameter,
-          start: point,
-          end: point,
-        })
-        owners.set(owner, clear)
-      }
-      if (clear) return undefined
+    const onFace = canUseSharedFace(query, portId, edge)
+    const domain = getTraceDomain(edge, owner, query.topology.portZ[portId]!)
+    const canBecomePreserved = domain === null &&
+      preserveSolitarySharedEdgePorts !== false && edge.blockedAnyLayer === true
+    if ((!onFace || canBecomePreserved) &&
+      isPointClear(query.topology, portId, owner) !== false)
+      return undefined
+    return domain
+  }
+  const getOrderedFeasibility = (
+    edge: SharedEdge,
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
+    owner: string,
+  ): TinyHyperGraphRegionSegmentFeasibilityResult => {
+    if (!isMovableFace(edge, query) || !edge.geometry) return FEASIBLE
+    const assignments: [number, number, string, boolean][] = []
+    for (const [route, from, to] of query.regionSegments) {
+      if (query.ignoredRouteIds?.has(route)) continue
+      const fromMatches = getSharedEdge(query.topology, from)?.key === edge.key
+      const toMatches = getSharedEdge(query.topology, to)?.key === edge.key
+      if (!fromMatches && !toMatches) continue
+      const otherOwner = getOwner(query.problem, route)
+      if (otherOwner === undefined) return FEASIBLE
+      if (fromMatches) assignments.push([route, from, otherOwner, route === query.routeId])
+      if (toMatches) assignments.push([route, to, otherOwner, route === query.routeId])
     }
-    return getTraceDomain(edge, owner, topology.portZ[portId]!)
+    assignments.push([query.routeId!, query.fromPortId, owner, true])
+    assignments.push([query.routeId!, query.toPortId, owner, true])
+    if (assignments.every(([, , eventOwner]) => eventOwner === owner) &&
+      getTraceDomain(edge, owner, edge.z))
+      return FEASIBLE
+    const events = new Map<number, OrderedSharedEdgeEvent>()
+    const serializedIds = new Map<string, number>()
+    for (const [route, portId, eventOwner, candidate] of assignments) {
+      if (getSharedEdge(query.topology, portId)?.key !== edge.key) continue
+      const existing = events.get(portId)
+      if (existing) {
+        if (existing.owner !== eventOwner) return FEASIBLE
+        existing.candidate ||= candidate
+        if (!candidate && !existing.routeIds.includes(route))
+          existing.routeIds.push(route)
+        continue
+      }
+      const domain = getTraceDomain(edge, eventOwner, edge.z)
+      if (domain === undefined) return FEASIBLE
+      const metadata = query.topology.portMetadata?.[portId]
+      const serializedPortId = String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${portId}`)
+      if (serializedIds.has(serializedPortId)) return FEASIBLE
+      serializedIds.set(serializedPortId, portId)
+      events.set(portId, {
+        portId,
+        serializedPortId,
+        owner: eventOwner,
+        connectionName: eventOwner,
+        position: edge.geometry.orientation === "horizontal"
+          ? query.topology.portX[portId]! : query.topology.portY[portId]!,
+        width: board.minimumTraceWidth,
+        allowed: domain === null ? [] : domain.allowed,
+        routeIds: candidate ? [] : [route],
+        candidate,
+        preservedAlone: preserveSolitarySharedEdgePorts !== false &&
+          edge.blockedAnyLayer === true &&
+          isPointClear(query.topology, portId, eventOwner) !== false,
+      })
+    }
+    const values = [...events.values()]
+    if (values.every((event) => event.owner === owner && event.allowed.length > 0))
+      return FEASIBLE
+    const family = values.sort((first, second) => first.portId - second.portId)
+    const key = JSON.stringify(family.map((event) => [
+      event.portId, event.owner, event.candidate, event.preservedAlone, event.routeIds.sort((first, second) => first - second),
+    ]))
+    if (edge.lastOrdered?.key === key) return edge.lastOrdered.result
+    const result = getOrderedSharedEdgeFeasibility({
+      length: edge.geometry.length,
+      events: family,
+      minimumWidth: board.minimumTraceWidth,
+      traceClearance: physicalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      proofSlack: edge.numericalSlack,
+    })
+    edge.lastOrdered = { key, result }
+    return result
   }
   const boundsByTopology = new WeakMap<
     Readonly<TinyHyperGraphTopology>,
@@ -557,12 +707,19 @@ export function createPhysicalViaCapacityEvaluator({
     if (sameLayer && !fromEdge && !toEdge) return FEASIBLE
     const owner = routeId === undefined ? undefined : getOwner(problem, routeId)
     if (owner === undefined) return FEASIBLE
+    for (const edge of new Set([fromEdge, toEdge])) {
+      if (!edge || preserveSolitarySharedEdgePorts === false ||
+        !isMovableFace(edge, query) || !edge.blockedAnyLayer)
+        continue
+      const conditional = getOrderedFeasibility(edge, query, owner)
+      if (!conditional.feasible) return conditional
+    }
     for (const [edge, portId] of [
       [fromEdge, fromPortId],
       [toEdge, toPortId],
     ] as const) {
       if (!edge) continue
-      if (getPortDomain(topology, portId, edge, owner) === null)
+      if (getPortDomain(query, portId, edge, owner) === null)
         return { feasible: false, blockerRouteIds: [] }
     }
     if (fromEdge || toEdge) {
@@ -579,14 +736,14 @@ export function createPhysicalViaCapacityEvaluator({
             edge.key === fromEdge?.key ? fromPortId : toPortId
           if (
             edge.capacityOne &&
-            canUseSharedFace(topology, candidatePort, edge) &&
-            canUseSharedFace(topology, otherPort, edge)
+            canUseSharedFace(query, candidatePort, edge) &&
+            canUseSharedFace(query, otherPort, edge)
           ) {
             blockers.add(otherRoute)
             continue
           }
-          const domain = getPortDomain(topology, candidatePort, edge, owner)
-          const other = getPortDomain(topology, otherPort, edge, otherOwner)
+          const domain = getPortDomain(query, candidatePort, edge, owner)
+          const other = getPortDomain(query, otherPort, edge, otherOwner)
           if (!domain || !other) continue
           if (edge.capacityOne) {
             blockers.add(otherRoute)
@@ -605,6 +762,11 @@ export function createPhysicalViaCapacityEvaluator({
       }
       if (blockers.size > 0)
         return { feasible: false, blockerRouteIds: [...blockers] }
+    }
+    for (const edge of new Set([fromEdge, toEdge])) {
+      if (!edge) continue
+      const ordered = getOrderedFeasibility(edge, query, owner)
+      if (!ordered.feasible) return ordered
     }
     if (
       sameLayer ||

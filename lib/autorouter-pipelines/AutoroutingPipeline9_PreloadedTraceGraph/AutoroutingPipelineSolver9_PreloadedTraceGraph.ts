@@ -550,6 +550,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaPadDiameter: cms.viaDiameter,
             physicalViaCapacity: {
               physicalSrj: cms.originalSrj,
+              planningObstacles: cms.srj.obstacles,
+              preserveSolitarySharedEdgePorts: Boolean(cms.srj.traces?.length),
+              movableSharedEdgeRegionIds: cms.capacityNodes!
+                .filter((node) =>
+                  !node._isVirtualOffboard && !node._offBoardConnectionId && !node._containsTarget,
+                )
+                .map((node) => node.capacityMeshNodeId),
               sharedEdgeRegionIds: cms
                 .capacityNodes!.filter(
                   (node) =>
