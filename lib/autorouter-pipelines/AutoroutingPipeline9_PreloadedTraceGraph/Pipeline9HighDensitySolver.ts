@@ -315,7 +315,6 @@ const restoreRootConnectionNames = (
   }))
 
 export type Pipeline9RegularNodeSolverParams = {
-  viaToPadClearance?: number
   nodeWithPortPoints: NodeWithPortPoints
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -331,7 +330,6 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
-  ownerCutSearch?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
@@ -347,13 +345,11 @@ export const createPipeline9RegularNodeSolver = ({
   connMap,
   colorMap,
   viaDiameter,
-  viaToPadClearance,
   viaHoleDiameter,
   minViaHoleEdgeToViaHoleEdgeClearance,
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  ownerCutSearch = priorityDagSearch,
   traceWidth,
   obstacleMargin,
   effort,
@@ -384,10 +380,8 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
-    ownerCutSearch,
     priorityDagSearch,
     priorityDiagnostics,
-    viaToPadClearance,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
     allowBlindAndBuriedVias,
@@ -689,8 +683,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.params.minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
-      viaToPadClearance: this.viaToPadClearance,
-      ownerCutSearch: true,
       priorityDagSearch: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
