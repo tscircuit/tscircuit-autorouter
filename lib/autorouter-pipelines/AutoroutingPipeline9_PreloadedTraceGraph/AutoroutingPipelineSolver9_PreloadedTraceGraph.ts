@@ -437,7 +437,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.capacityNodes = splitThroughOnlyGlobalFreeNodes(
             cms.nodeDimensionSubdivisionSolver!.outputNodes,
-            cms.originalSrj,
+            {
+              layerCount: cms.originalSrj.layerCount,
+              allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+              physicalSrj: cms.originalSrj,
+            },
           )
         },
       },

@@ -1,9 +1,11 @@
-import type { CapacityMeshNode } from "lib/types"
+import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
+import { createIsThroughViaLandingBlocked } from "./createIsThroughViaLandingBlocked"
 
 type ThroughOnlyPolicy = {
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   allowViaInPad?: boolean
+  physicalSrj?: SimpleRouteJson
 }
 
 const GEOMETRY_KEYS = new Set([
@@ -30,13 +32,15 @@ export function splitThroughOnlyGlobalFreeNodes(
   // Via-in-pad permits repair inside connected pads; it does not authorize
   // transitions through foreign copper or keepouts below unowned free space.
   if (policy.allowBlindAndBuriedVias) return nodes
+  const isLandingBlocked = policy.physicalSrj
+    ? createIsThroughViaLandingBlocked(policy.physicalSrj)
+    : undefined
   const usedIds = new Set(nodes.map((node) => node.capacityMeshNodeId))
   const output: CapacityMeshNode[] = []
   let splitAny = false
   for (const node of nodes) {
-    const partial =
+    const validMultilayer =
       node.availableZ.length > 1 &&
-      node.availableZ.length < policy.layerCount &&
       node.availableZ.every(
         (z) => Number.isInteger(z) && z >= 0 && z < policy.layerCount,
       ) &&
@@ -52,7 +56,12 @@ export function splitThroughOnlyGlobalFreeNodes(
         value === undefined ||
         (EMPTY_ROLE_KEYS.has(key) && value === false),
     )
-    if (!partial || !plainFree) {
+    const partial = node.availableZ.length < policy.layerCount
+    if (
+      !validMultilayer ||
+      !plainFree ||
+      (!partial && !isLandingBlocked?.(node))
+    ) {
       output.push(node)
       continue
     }
