@@ -86,7 +86,8 @@ test("rejecting an invalid closed-form candidate preserves existing valid portfo
   expect(regular.stats.solverNodeCount).toEqual({
     SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost: 1,
   })
-  expect(regular.stats.highDensityResizeCount).toBe(1)
+  // Static geometry guides the existing native family at the original scale.
+  expect(regular.stats.highDensityResizeCount).toBe(0)
   const via = pipeline.routes[0]!.vias[0]!
   expect(0.3 - via.x - 0.15).toBeGreaterThanOrEqual(0.1 - 1e-6)
   expect(pipeline.routes[0]!.route[0]).toMatchObject({ x: 0.2, y: -0.5, z: 0 })

@@ -15,6 +15,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 import { createPipeline9PhysicalRouteValidator } from "./createPipeline9PhysicalRouteValidator"
+import { createPipeline9StaticSegmentValidator } from "./createPipeline9StaticSegmentValidator"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -163,6 +164,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
+    const staticSegmentValidator = params.physicalSrj ? createPipeline9StaticSegmentValidator(params.physicalSrj) : undefined
     this.highDensitySolver = new HighDensitySolver({
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
@@ -177,6 +179,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
+      staticSegmentValidator: staticSegmentValidator
+        ? (segment) => staticSegmentValidator({
+            ...segment,
+            rootConnectionName: params.physicalRootConnectionNameByConnectionName?.[segment.connectionName] ?? segment.rootConnectionName,
+          })
+        : undefined,
       growShrinkSolutionValidator:
         this.physicalRouteValidator ||
         (params.boardObstacles &&

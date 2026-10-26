@@ -35,6 +35,8 @@ import {
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import { createPipeline9PhysicalRouteValidator } from "./createPipeline9PhysicalRouteValidator"
+import { createPipeline9StaticSegmentValidator } from "./createPipeline9StaticSegmentValidator"
+import type { StaticSegmentValidator } from "lib/types/high-density-types"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -336,6 +338,7 @@ export type Pipeline9RegularNodeSolverParams = {
   priorityDiagnostics?: Record<string, number>
   layerCount: number
   physicalRouteValidator?: (routes: HighDensityRoute[]) => boolean
+  staticSegmentValidator?: StaticSegmentValidator
 }
 
 /**
@@ -361,6 +364,7 @@ export const createPipeline9RegularNodeSolver = ({
   boardGeometry,
   layerCount,
   physicalRouteValidator,
+  staticSegmentValidator,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -383,6 +387,12 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    staticSegmentValidator: staticSegmentValidator
+      ? (segment) => staticSegmentValidator({
+          ...segment,
+          rootConnectionName: nodeWithPortPoints.portPoints.find((point) => point.connectionName === segment.connectionName)?.rootConnectionName ?? segment.connectionName,
+        })
+      : undefined,
     growShrinkSolutionValidator: physicalRouteValidator
       ? (routes) =>
           physicalRouteValidator(
@@ -446,6 +456,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   private readonly physicalRouteValidator?: (
     routes: HighDensityRoute[],
   ) => boolean
+  private readonly staticSegmentValidator?: StaticSegmentValidator
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -477,6 +488,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           viaHoleDiameter: params.viaHoleDiameter,
         })
       : undefined
+    this.staticSegmentValidator = params.physicalSrj ? createPipeline9StaticSegmentValidator(params.physicalSrj) : undefined
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -712,6 +724,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
       physicalRouteValidator: this.physicalRouteValidator,
+      staticSegmentValidator: this.staticSegmentValidator,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

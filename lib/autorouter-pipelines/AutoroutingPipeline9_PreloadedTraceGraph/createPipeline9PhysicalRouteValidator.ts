@@ -1,7 +1,6 @@
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { AutoroutingDrcEngine } from "high-density-repair03/lib"
-import Flatbush from "flatbush"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { getObstacleRouteConnectivity } from "lib/solvers/HyperHighDensitySolver/getObstacleRouteConnectivity"
 import type { SimpleRouteJson } from "lib/types"
@@ -12,9 +11,8 @@ import {
   isPointInOrOnPolygon,
 } from "lib/utils/polygonContainment"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
-import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getPipeline9PhysicalGeometryContext } from "./getPipeline9PhysicalGeometryContext"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { arePipeline9RoutesOnSameNet } from "./pipeline9FixedRouteCopper"
@@ -52,34 +50,7 @@ export function createPipeline9PhysicalRouteValidator({
   const cacheKey = JSON.stringify([obstacleMargin, viaHoleDiameter])
   const cached = mapCache.get(cacheKey)
   if (cached) return cached
-  const normalized = createSrjWithBoardValidObstacleLayers(physicalSrj)
-  const physicalConnMap = getConnectivityMapFromSimpleRouteJson(normalized, {
-    includeGeometricPointConnections: false,
-  })
-  const rawObstacles = [
-    ...normalized.obstacles,
-    ...(normalized.jumpers?.flatMap((jumper) => jumper.pads) ?? []),
-  ]
-  const obstacleIndex =
-    rawObstacles.length > 0 ? new Flatbush(rawObstacles.length) : undefined
-  for (const obstacle of rawObstacles) {
-    const reach = Math.hypot(obstacle.width, obstacle.height) / 2
-    if (
-      ![obstacle.center.x, obstacle.center.y, reach].every(Number.isFinite) ||
-      obstacle.width < 0 ||
-      obstacle.height < 0
-    )
-      throw new Error(
-        "Physical route validation requires finite obstacle geometry",
-      )
-    obstacleIndex!.add(
-      obstacle.center.x - reach,
-      obstacle.center.y - reach,
-      obstacle.center.x + reach,
-      obstacle.center.y + reach,
-    )
-  }
-  obstacleIndex?.finish()
+  const { connMap: physicalConnMap, obstacles: rawObstacles, index: obstacleIndex } = getPipeline9PhysicalGeometryContext(physicalSrj)
   const boardEdgeClearance = physicalSrj.minBoardEdgeClearance ?? 0
   const isPointInsideBoard = (
     point: { x: number; y: number },

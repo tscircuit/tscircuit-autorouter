@@ -6,6 +6,7 @@ import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWith
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  StaticSegmentValidator,
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
@@ -76,6 +77,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  readonly staticSegmentValidator?: StaticSegmentValidator
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -103,6 +105,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    staticSegmentValidator?: StaticSegmentValidator
     obstacles?: Obstacle[]
     layerCount?: number
     priorityCoordinateScale?: number
@@ -125,6 +128,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.staticSegmentValidator = params.staticSegmentValidator
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -264,6 +268,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      staticSegmentValidator: this.staticSegmentValidator,
     }
   }
 
@@ -601,6 +606,7 @@ const isEndpointViaSafe = (
   A: { x: number; y: number; z: number },
   B: { x: number; y: number; z: number },
 ) => {
+  if (!obstacleChecker.isStaticSegmentValid({ ...viaPoint, z: A.z }, { ...viaPoint, z: B.z })) return false
   const viaNode = {
     x: viaPoint.x,
     y: viaPoint.y,

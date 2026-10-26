@@ -59,7 +59,7 @@ export class CachedIntraNodeRouteSolver
   ) {
     super(params)
     this.cacheProvider =
-      params.cacheProvider === undefined
+      params.staticSegmentValidator ? null : params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
     this.initialUnsolvedConnections = this.unsolvedConnections.map(
