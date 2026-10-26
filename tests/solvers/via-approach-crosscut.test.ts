@@ -126,11 +126,23 @@ test("approach crosscuts preserve orientation, via escapes, ordered contacts and
       side: sides[contact.side],
     }
   }
-  expect(getViaApproachCrosscutFeasibility({
-    ...input, bounds: rotateBounds(bounds),
-    approaches: input.approaches.map((event) => ({ ...event, bounds: rotateBounds(event.bounds), contact: rotateContact(event.contact) })),
-    wires: input.wires.map((event) => ({ ...event, viaBounds: rotateBounds(event.viaBounds), first: rotateContact(event.first), second: rotateContact(event.second) })),
-  })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...input,
+      bounds: rotateBounds(bounds),
+      approaches: input.approaches.map((event) => ({
+        ...event,
+        bounds: rotateBounds(event.bounds),
+        contact: rotateContact(event.contact),
+      })),
+      wires: input.wires.map((event) => ({
+        ...event,
+        viaBounds: rotateBounds(event.viaBounds),
+        first: rotateContact(event.first),
+        second: rotateContact(event.second),
+      })),
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
   const reflectBounds = (box: typeof bounds): typeof bounds => {
     return {
       ...box,
@@ -138,19 +150,48 @@ test("approach crosscuts preserve orientation, via escapes, ordered contacts and
       maxY: bounds.minY + bounds.maxY - box.minY,
     }
   }
-  const reflectContact = (contact: CrosscutBoundaryContact): CrosscutBoundaryContact => {
+  const reflectContact = (
+    contact: CrosscutBoundaryContact,
+  ): CrosscutBoundaryContact => {
     return {
       ...contact,
       min: bounds.minY + bounds.maxY - contact.max,
       max: bounds.minY + bounds.maxY - contact.min,
     }
   }
-  expect(getViaApproachCrosscutFeasibility({
-    ...input, approaches: input.approaches.map((event) => ({ ...event, bounds: reflectBounds(event.bounds), contact: reflectContact(event.contact) })),
-    wires: input.wires.map((event) => ({ ...event, viaBounds: reflectBounds(event.viaBounds), first: reflectContact(event.first), second: reflectContact(event.second) })),
-  })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
-  const shifted = { ...input.approaches[0]!, contact: { ...input.approaches[0]!.contact, normal: bounds.minX + 0.5e-9 } }
-  expect(getViaApproachCrosscutFeasibility({ ...input, approaches: [shifted] })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
-  expect(getViaApproachCrosscutFeasibility({ ...input, approaches: [{ ...shifted, contact: { ...shifted.contact, normal: bounds.minX + 0.001 } }] })).toEqual({ feasible: true })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...input,
+      approaches: input.approaches.map((event) => ({
+        ...event,
+        bounds: reflectBounds(event.bounds),
+        contact: reflectContact(event.contact),
+      })),
+      wires: input.wires.map((event) => ({
+        ...event,
+        viaBounds: reflectBounds(event.viaBounds),
+        first: reflectContact(event.first),
+        second: reflectContact(event.second),
+      })),
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
+  const shifted = {
+    ...input.approaches[0]!,
+    contact: { ...input.approaches[0]!.contact, normal: bounds.minX + 0.5e-9 },
+  }
+  expect(
+    getViaApproachCrosscutFeasibility({ ...input, approaches: [shifted] }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...input,
+      approaches: [
+        {
+          ...shifted,
+          contact: { ...shifted.contact, normal: bounds.minX + 0.001 },
+        },
+      ],
+    }),
+  ).toEqual({ feasible: true })
   expect(input).toEqual(snapshot)
 })

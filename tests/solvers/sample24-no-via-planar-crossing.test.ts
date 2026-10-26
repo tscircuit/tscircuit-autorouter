@@ -97,19 +97,80 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
     throughViaCrosscutEnabled: true,
   }
   const evaluate = createPhysicalViaCapacityEvaluator(context)!
-  const query = { topology, problem, regionId: regionById.get("topology_merge_61420__sub_1_0")!, fromPortId: approach[0], toPortId: approach[1], routeId: 1, netId: 1, regionSegments: [[0, ...wire]] as [number, number, number][] }
-  expect(evaluate(query)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0]] })
-  expect(evaluate({ ...query, ignoredRouteIds: new Set([0]) })).toEqual({ feasible: true })
-  const candidateWire = { ...query, routeId: 0, fromPortId: wire[0], toPortId: wire[1], regionSegments: [[1, ...approach]] as [number, number, number][] }
-  expect(evaluate(candidateWire)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
-  const aliased = { ...problem, routeCount: 3, routeMetadata: [...problem.routeMetadata!, problem.routeMetadata![0]] }
-  expect(evaluate({ ...query, problem: aliased, regionSegments: [[0, ...wire], [2, ...wire]] })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0, 2]] })
-  expect(evaluate({ ...query, problem: aliased, regionSegments: [[0, ...wire], [2, ...wire]], ignoredRouteIds: new Set([0]) })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2]] })
-  const sameOwner = { ...problem, routeMetadata: [problem.routeMetadata![0], problem.routeMetadata![0]] }
+  const query = {
+    topology,
+    problem,
+    regionId: regionById.get("topology_merge_61420__sub_1_0")!,
+    fromPortId: approach[0],
+    toPortId: approach[1],
+    routeId: 1,
+    netId: 1,
+    regionSegments: [[0, ...wire]] as [number, number, number][],
+  }
+  expect(evaluate(query)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[0]],
+  })
+  expect(evaluate({ ...query, ignoredRouteIds: new Set([0]) })).toEqual({
+    feasible: true,
+  })
+  const candidateWire = {
+    ...query,
+    routeId: 0,
+    fromPortId: wire[0],
+    toPortId: wire[1],
+    regionSegments: [[1, ...approach]] as [number, number, number][],
+  }
+  expect(evaluate(candidateWire)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1]],
+  })
+  const aliased = {
+    ...problem,
+    routeCount: 3,
+    routeMetadata: [...problem.routeMetadata!, problem.routeMetadata![0]],
+  }
+  expect(
+    evaluate({
+      ...query,
+      problem: aliased,
+      regionSegments: [
+        [0, ...wire],
+        [2, ...wire],
+      ],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0, 2]] })
+  expect(
+    evaluate({
+      ...query,
+      problem: aliased,
+      regionSegments: [
+        [0, ...wire],
+        [2, ...wire],
+      ],
+      ignoredRouteIds: new Set([0]),
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2]] })
+  const sameOwner = {
+    ...problem,
+    routeMetadata: [problem.routeMetadata![0], problem.routeMetadata![0]],
+  }
   expect(evaluate({ ...query, problem: sameOwner })).toEqual({ feasible: true })
   const escape = structuredClone(fixture.physicalSrj)
-  escape.obstacles[0]!.connectedTo = ["pcb_smtpad_owned", "source_net_altium_pcb_136"]
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: escape })!(query)).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, throughViaCrosscutEnabled: false })!(query)).toEqual({ feasible: true })
+  escape.obstacles[0]!.connectedTo = [
+    "pcb_smtpad_owned",
+    "source_net_altium_pcb_136",
+  ]
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: escape })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      throughViaCrosscutEnabled: false,
+    })!(query),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })

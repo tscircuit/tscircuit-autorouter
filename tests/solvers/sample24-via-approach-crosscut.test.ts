@@ -97,33 +97,108 @@ test("sample24 node61487 cannot put its required via approach across a trapped s
     throughViaCrosscutEnabled: true,
   }
   const evaluate = createPhysicalViaCapacityEvaluator(context)!
-  const query = { topology, problem, regionId: regionById.get("topology_merge_61487")!, fromPortId: approach[0], toPortId: approach[1], routeId: 1, netId: 1, regionSegments: [[0, ...wire]] as [number, number, number][] }
-  expect(evaluate(query)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0]] })
-  expect(evaluate({ ...query, ignoredRouteIds: new Set([0]) })).toEqual({ feasible: true })
-  const candidateWire = { ...query, routeId: 0, fromPortId: wire[0], toPortId: wire[1], regionSegments: [[1, ...approach]] as [number, number, number][] }
-  expect(evaluate(candidateWire)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
-  expect(evaluate({ ...candidateWire, ignoredRouteIds: new Set([1]) })).toEqual({ feasible: true })
-  const aliased = { ...problem, routeCount: 3, routeMetadata: [...problem.routeMetadata!, problem.routeMetadata![1]] }
-  expect(evaluate({ ...candidateWire, problem: aliased, regionSegments: [[1, ...approach], [2, ...approach]] })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 2]] })
-  expect(evaluate({ ...candidateWire, problem: aliased, regionSegments: [[1, ...approach], [2, ...approach]], ignoredRouteIds: new Set([1]) })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2]] })
+  const query = {
+    topology,
+    problem,
+    regionId: regionById.get("topology_merge_61487")!,
+    fromPortId: approach[0],
+    toPortId: approach[1],
+    routeId: 1,
+    netId: 1,
+    regionSegments: [[0, ...wire]] as [number, number, number][],
+  }
+  expect(evaluate(query)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[0]],
+  })
+  expect(evaluate({ ...query, ignoredRouteIds: new Set([0]) })).toEqual({
+    feasible: true,
+  })
+  const candidateWire = {
+    ...query,
+    routeId: 0,
+    fromPortId: wire[0],
+    toPortId: wire[1],
+    regionSegments: [[1, ...approach]] as [number, number, number][],
+  }
+  expect(evaluate(candidateWire)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1]],
+  })
+  expect(evaluate({ ...candidateWire, ignoredRouteIds: new Set([1]) })).toEqual(
+    { feasible: true },
+  )
+  const aliased = {
+    ...problem,
+    routeCount: 3,
+    routeMetadata: [...problem.routeMetadata!, problem.routeMetadata![1]],
+  }
+  expect(
+    evaluate({
+      ...candidateWire,
+      problem: aliased,
+      regionSegments: [
+        [1, ...approach],
+        [2, ...approach],
+      ],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 2]] })
+  expect(
+    evaluate({
+      ...candidateWire,
+      problem: aliased,
+      regionSegments: [
+        [1, ...approach],
+        [2, ...approach],
+      ],
+      ignoredRouteIds: new Set([1]),
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2]] })
   const lowerTopology = {
-    ...topology, portCount: ports.length + 1,
-    incidentPortRegion: [...topology.incidentPortRegion, topology.incidentPortRegion[wire[0]]!],
-    portMetadata: [...topology.portMetadata!, { serializedPortId: "other-lower-entry" }],
+    ...topology,
+    portCount: ports.length + 1,
+    incidentPortRegion: [
+      ...topology.incidentPortRegion,
+      topology.incidentPortRegion[wire[0]]!,
+    ],
+    portMetadata: [
+      ...topology.portMetadata!,
+      { serializedPortId: "other-lower-entry" },
+    ],
     portX: new Float64Array([...topology.portX, topology.portX[wire[0]]!]),
     portY: new Float64Array([...topology.portY, 68.95]),
     portZ: new Int32Array([...topology.portZ, 1]),
   }
   const extraEntry = [2, ports.length, approach[1]] as [number, number, number]
-  expect(evaluate({ ...candidateWire, topology: lowerTopology, problem: aliased, regionSegments: [[1, ...approach], extraEntry] }))
-    .toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
-  expect(evaluate({ ...candidateWire, topology: lowerTopology, problem: aliased, regionSegments: [[1, ...approach], extraEntry], ignoredRouteIds: new Set([1]) }))
-    .toEqual({ feasible: true })
+  expect(
+    evaluate({
+      ...candidateWire,
+      topology: lowerTopology,
+      problem: aliased,
+      regionSegments: [[1, ...approach], extraEntry],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1]] })
+  expect(
+    evaluate({
+      ...candidateWire,
+      topology: lowerTopology,
+      problem: aliased,
+      regionSegments: [[1, ...approach], extraEntry],
+      ignoredRouteIds: new Set([1]),
+    }),
+  ).toEqual({ feasible: true })
   const outside = { ...topology, portX: topology.portX.slice() }
   outside.portX[approach[0]] -= 0.01
-  expect(evaluate({ ...query, topology: outside })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0]] })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!({ ...query, topology: outside }))
-    .toEqual({ feasible: true })
+  expect(evaluate({ ...query, topology: outside })).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[0]],
+  })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      movableSharedEdgeRegionIds: [],
+    })!({ ...query, topology: outside }),
+  ).toEqual({ feasible: true })
   const plated = structuredClone(fixture.physicalSrj)
   plated.obstacles.push({ type: "rect", center: { x: 281.3, y: 68.2 }, width: 2, height: 0.01,
     layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"],

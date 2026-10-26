@@ -159,13 +159,22 @@ export function getViaApproachCrosscutFeasibility({
               : bounds.maxY
       const lowNormal = verticalFace ? box.minX : box.minY
       const highNormal = verticalFace ? box.maxX : box.maxY
-      if (Math.max(Math.abs(farCoordinate - lowNormal), Math.abs(farCoordinate - highNormal)) + slack >= radius)
+      if (
+        Math.max(
+          Math.abs(farCoordinate - lowNormal),
+          Math.abs(farCoordinate - highNormal),
+        ) +
+          slack >=
+        radius
+      )
         continue
       const low = verticalFace ? box.minY : box.minX
       const high = verticalFace ? box.maxY : box.maxX
-      const below = near.max <= approach.contact.min &&
+      const below =
+        near.max <= approach.contact.min &&
         high + radius < Math.min(approach.contact.min, far.min) - slack
-      const above = near.min >= approach.contact.max &&
+      const above =
+        near.min >= approach.contact.max &&
         low - radius > Math.max(approach.contact.max, far.max) + slack
       if (!below && !above) continue
       // Positive trace spacing prevents equal junction points from inverting
@@ -174,13 +183,21 @@ export function getViaApproachCrosscutFeasibility({
       const alternatives = new Map<string, number[]>()
       for (const demand of [approach, wire]) {
         if (demand.candidate) continue
-        if (demand.routeIds.length === 0) throw new Error("A removable approach crosscut has no committed routes")
-        const routes = [...new Set(demand.routeIds)].sort((first, second) => first - second)
+        if (demand.routeIds.length === 0)
+          throw new Error(
+            "A removable approach crosscut has no committed routes",
+          )
+        const routes = [...new Set(demand.routeIds)].sort(
+          (first, second) => first - second,
+        )
         alternatives.set(JSON.stringify(routes), routes)
       }
       return alternatives.size === 0
         ? { feasible: false, blockerRouteIds: [] }
-        : { feasible: false, alternativeBlockerRouteIdSets: [...alternatives.values()] }
+        : {
+            feasible: false,
+            alternativeBlockerRouteIdSets: [...alternatives.values()],
+          }
     }
   }
   return { feasible: true }

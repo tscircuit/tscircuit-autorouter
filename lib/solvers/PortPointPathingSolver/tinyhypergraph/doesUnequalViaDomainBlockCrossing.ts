@@ -29,17 +29,11 @@ function hasAtMostOneRestrictedBarrel(
     0,
     Math.sqrt(foreignDistance ** 2 - height ** 2) - epsilon,
   )
-  const dy = Math.max(
-    0,
-    Math.sqrt(foreignDistance ** 2 - width ** 2) - epsilon,
-  )
+  const dy = Math.max(0, Math.sqrt(foreignDistance ** 2 - width ** 2) - epsilon)
   if (dx <= width / 2 + epsilon || dy <= height / 2 + epsilon) return false
   // For any mandatory barrel, every restricted barrel is in its opposite
   // corner box. Two distinct drills cannot fit inside that box.
-  const diameter = Math.hypot(
-    Math.max(0, width - dx),
-    Math.max(0, height - dy),
-  )
+  const diameter = Math.hypot(Math.max(0, width - dx), Math.max(0, height - dy))
   return diameter + epsilon < drillDistance
 }
 
@@ -57,14 +51,8 @@ function hasConnectedOtherBarrels(
     foreignDistance <= height + epsilon
   )
     return false
-  const dx = Math.max(
-    0,
-    Math.sqrt(separation ** 2 - height ** 2) - epsilon,
-  )
-  const dy = Math.max(
-    0,
-    Math.sqrt(separation ** 2 - width ** 2) - epsilon,
-  )
+  const dx = Math.max(0, Math.sqrt(separation ** 2 - height ** 2) - epsilon)
+  const dy = Math.max(0, Math.sqrt(separation ** 2 - width ** 2) - epsilon)
   if (dx <= width / 2 + epsilon || dy <= height / 2 + epsilon) return false
   const cornerWidth = Math.max(0, width - dx)
   const cornerHeight = Math.max(0, height - dy)

@@ -940,12 +940,20 @@ export function createPhysicalViaCapacityEvaluator({
         if (!first || !second) continue
         let planar = planarWires.get(key)
         if (!planar) {
-          planar = { owner, layer: query.topology.portZ[from]!, viaBounds: wireViaBounds,
-            first, second, routeIds: [], candidate: false }
+          planar = {
+            owner,
+            layer: query.topology.portZ[from]!,
+            viaBounds: wireViaBounds,
+            first,
+            second,
+            routeIds: [],
+            candidate: false,
+          }
           planarWires.set(key, planar)
         }
         planar.candidate ||= route === query.routeId
-        if (route !== query.routeId && !planar.routeIds.includes(route)) planar.routeIds.push(route)
+        if (route !== query.routeId && !planar.routeIds.includes(route))
+          planar.routeIds.push(route)
       }
       if (axis) {
         let wire = wires.get(key)
@@ -967,8 +975,10 @@ export function createPhysicalViaCapacityEvaluator({
           0,
         )
     const planar = getNoViaPlanarCrossingFeasibility({
-      bounds, wires: [...planarWires.values()],
-      minimumTraceSpacing: board.minimumTraceCenterSpacing, slack,
+      bounds,
+      wires: [...planarWires.values()],
+      minimumTraceSpacing: board.minimumTraceCenterSpacing,
+      slack,
     })
     if (!planar.feasible) return planar
     const pair = getThroughViaCrosscutFeasibility({
@@ -982,7 +992,9 @@ export function createPhysicalViaCapacityEvaluator({
     if (!pair.feasible) return pair
     if (owners.size >= 3 && vias.size > 0) {
       const unequal = getUnequalViaDomainCrosscutFeasibility({
-        bounds, vias: [...vias.values()], wires: [...planarWires.values()],
+        bounds,
+        vias: [...vias.values()],
+        wires: [...planarWires.values()],
         radius: board.minimumViaTraceRadius - 4 * slack,
         minimumForeignViaSpacing: board.minimumViaPairSpacing - slack,
         minimumSameOwnerViaSpacing: board.minimumSameOwnerViaSpacing - slack,
@@ -992,7 +1004,9 @@ export function createPhysicalViaCapacityEvaluator({
       if (!unequal.feasible) return unequal
     }
     return getViaApproachCrosscutFeasibility({
-      bounds, approaches: [...approaches.values()], wires: [...planarWires.values()],
+      bounds,
+      approaches: [...approaches.values()],
+      wires: [...planarWires.values()],
       radius: board.minimumViaTraceRadius - 4 * slack,
       minimumForeignViaSpacing: board.minimumViaPairSpacing - slack,
       minimumSameOwnerViaSpacing: board.minimumSameOwnerViaSpacing - slack,

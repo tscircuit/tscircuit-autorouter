@@ -18,40 +18,64 @@ type Input = {
 
 /** Attribute a forced crossing whose extra via barrels cannot bypass each other. */
 export function getUnequalViaDomainCrosscutFeasibility({
-  bounds, vias, wires, radius, minimumForeignViaSpacing,
-  minimumSameOwnerViaSpacing, minimumTraceSpacing, slack,
+  bounds,
+  vias,
+  wires,
+  radius,
+  minimumForeignViaSpacing,
+  minimumSameOwnerViaSpacing,
+  minimumTraceSpacing,
+  slack,
 }: Input): TinyHyperGraphRegionSegmentFeasibilityResult {
   for (const mandatory of vias) {
     for (const restricted of wires) {
       if (mandatory.owner === restricted.owner) continue
       for (const other of wires) {
-        if (other.owner === mandatory.owner || other.owner === restricted.owner ||
-          other.layer !== restricted.layer)
+        if (
+          other.owner === mandatory.owner ||
+          other.owner === restricted.owner ||
+          other.layer !== restricted.layer
+        )
           continue
-        if (!haveAlternatingBoundaryContacts(bounds, restricted, other, minimumTraceSpacing, slack))
+        if (
+          !haveAlternatingBoundaryContacts(
+            bounds,
+            restricted,
+            other,
+            minimumTraceSpacing,
+            slack,
+          )
+        )
           continue
-        if (!doesUnequalViaDomainBlockCrossing({
-          cellBounds: bounds,
-          mandatoryViaBounds: mandatory.bounds,
-          restrictedWireViaBounds: restricted.viaBounds,
-          otherWireViaBounds: other.viaBounds,
-          minimumForeignViaDistance: minimumForeignViaSpacing,
-          minimumSameOwnerDrillDistance: minimumSameOwnerViaSpacing,
-          traceExclusionRadius: radius,
-          slack,
-        }))
+        if (
+          !doesUnequalViaDomainBlockCrossing({
+            cellBounds: bounds,
+            mandatoryViaBounds: mandatory.bounds,
+            restrictedWireViaBounds: restricted.viaBounds,
+            otherWireViaBounds: other.viaBounds,
+            minimumForeignViaDistance: minimumForeignViaSpacing,
+            minimumSameOwnerDrillDistance: minimumSameOwnerViaSpacing,
+            traceExclusionRadius: radius,
+            slack,
+          })
+        )
           continue
         const alternatives = new Map<string, number[]>()
         for (const demand of [mandatory, restricted, other]) {
           if (demand.candidate) continue
           if (demand.routeIds.length === 0)
-            throw new Error("A removable unequal-domain crossing demand has no committed routes")
+            throw new Error(
+              "A removable unequal-domain crossing demand has no committed routes",
+            )
           const routes = [...new Set(demand.routeIds)].sort((a, b) => a - b)
           alternatives.set(JSON.stringify(routes), routes)
         }
         return alternatives.size === 0
           ? { feasible: false, blockerRouteIds: [] }
-          : { feasible: false, alternativeBlockerRouteIdSets: [...alternatives.values()] }
+          : {
+              feasible: false,
+              alternativeBlockerRouteIdSets: [...alternatives.values()],
+            }
       }
     }
   }

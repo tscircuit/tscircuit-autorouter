@@ -138,10 +138,18 @@ test("sample24 node61252 preserves alternating movable wires despite unequal own
     feasible: false,
     alternativeBlockerRouteIdSets: [[1], [2]],
   })
-  expect(evaluate({
-    ...query, routeId: 1, fromPortId: pairs[1]![0], toPortId: pairs[1]![1],
-    regionSegments: [[0, ...pairs[0]!], [2, ...pairs[2]!]],
-  })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2], [0]] })
+  expect(
+    evaluate({
+      ...query,
+      routeId: 1,
+      fromPortId: pairs[1]![0],
+      toPortId: pairs[1]![1],
+      regionSegments: [
+        [0, ...pairs[0]!],
+        [2, ...pairs[2]!],
+      ],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2], [0]] })
   const aliasedProblem = {
     ...problem,
     routeCount: 4,
@@ -150,23 +158,76 @@ test("sample24 node61252 preserves alternating movable wires despite unequal own
   const aliased = {
     ...query,
     problem: aliasedProblem,
-    regionSegments: [...query.regionSegments, [3, ...pairs[1]!]] as [number, number, number][],
+    regionSegments: [...query.regionSegments, [3, ...pairs[1]!]] as [
+      number,
+      number,
+      number,
+    ][],
   }
-  expect(evaluate(aliased)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 3], [0]] })
-  expect(evaluate({ ...aliased, ignoredRouteIds: new Set([1]) })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[3], [0]] })
-  const remapped = { ...problem, routeMetadata: [problem.routeMetadata![1], problem.routeMetadata![2], problem.routeMetadata![0]] }
-  expect(evaluate({ ...query, problem: remapped, routeId: 1, regionSegments: [[2, ...pairs[0]!], [0, ...pairs[1]!]] })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0], [2]] })
+  expect(evaluate(aliased)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1, 3], [0]],
+  })
+  expect(evaluate({ ...aliased, ignoredRouteIds: new Set([1]) })).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[3], [0]],
+  })
+  const remapped = {
+    ...problem,
+    routeMetadata: [
+      problem.routeMetadata![1],
+      problem.routeMetadata![2],
+      problem.routeMetadata![0],
+    ],
+  }
+  expect(
+    evaluate({
+      ...query,
+      problem: remapped,
+      routeId: 1,
+      regionSegments: [
+        [2, ...pairs[0]!],
+        [0, ...pairs[1]!],
+      ],
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0], [2]] })
   const plated = structuredClone(fixture.physicalSrj)
   plated.obstacles.push({
-    type: "rect", center: { ...nodes[query.regionId]!.center }, width: 0.01, height: 0.01,
-    layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"],
+    type: "rect",
+    center: { ...nodes[query.regionId]!.center },
+    width: 0.01,
+    height: 0.01,
+    layers: [
+      "top",
+      "inner1",
+      "inner2",
+      "inner3",
+      "inner4",
+      "inner5",
+      "inner6",
+      "bottom",
+    ],
     connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_136"],
   })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(query)).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, throughViaCrosscutEnabled: false })!(query)).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      throughViaCrosscutEnabled: false,
+    })!(query),
+  ).toEqual({ feasible: true })
   const reverseOrder = { ...topology, portY: topology.portY.slice() }
   // A fixed contact away from its certified face cannot justify an all-position crosscut.
   reverseOrder.portY[pairs[2]![1]] = nodes[query.regionId]!.center.y
-  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!({ ...query, topology: reverseOrder })).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      movableSharedEdgeRegionIds: [],
+    })!({ ...query, topology: reverseOrder }),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })
