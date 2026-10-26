@@ -331,7 +331,6 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
-  viaToPadClearance?: number
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -351,7 +350,6 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  viaToPadClearance,
   traceWidth,
   obstacleMargin,
   effort,
@@ -383,10 +381,6 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
-    // Owned local and batch contexts supply physical drill/board rules. The
-    // projected 9net configuration keeps its existing polyline solver.
-    enablePolylineContactSolve: priorityDagSearch,
-    viaToPadClearance,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -690,7 +684,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      viaToPadClearance: this.params.viaToPadClearance,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

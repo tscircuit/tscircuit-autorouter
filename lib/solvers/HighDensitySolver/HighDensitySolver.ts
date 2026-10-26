@@ -63,8 +63,6 @@ export class HighDensitySolver extends BaseSolver {
   gridSearchSegmentWork: number
   gridSearchWorkScale: number
   rejectOverlappingTerminals: boolean
-  enablePolylineContactSolve: boolean
-  viaToPadClearance?: number
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -112,8 +110,6 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork = 10_000,
     gridSearchWorkScale = 1,
     rejectOverlappingTerminals = false,
-    enablePolylineContactSolve = false,
-    viaToPadClearance,
     boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
@@ -140,8 +136,6 @@ export class HighDensitySolver extends BaseSolver {
     gridSearchSegmentWork?: number
     gridSearchWorkScale?: number
     rejectOverlappingTerminals?: boolean
-    enablePolylineContactSolve?: boolean
-    viaToPadClearance?: number
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -175,8 +169,6 @@ export class HighDensitySolver extends BaseSolver {
     this.gridSearchSegmentWork = gridSearchSegmentWork
     this.gridSearchWorkScale = gridSearchWorkScale
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
-    this.enablePolylineContactSolve = enablePolylineContactSolve
-    this.viaToPadClearance = viaToPadClearance
     this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
@@ -435,9 +427,6 @@ export class HighDensitySolver extends BaseSolver {
       gridSearchSegmentWork: this.gridSearchSegmentWork,
       gridSearchWorkScale: this.gridSearchWorkScale,
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
-      enablePolylineContactSolve: this.enablePolylineContactSolve,
-      viaToPadClearance: this.viaToPadClearance,
-      contactDiagnostics: this.benchmarkDiagnosticCounters,
       boardGeometry: this.boardGeometry,
       colorMap: this.colorMap,
       connMap: this.connMap,
