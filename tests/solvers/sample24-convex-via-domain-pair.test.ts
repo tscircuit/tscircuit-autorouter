@@ -121,6 +121,11 @@ test("sample24 node60069 applies existing via-pair capacity after combining fore
     ],
   }
   expect(evaluate({ ...query, problem: ownFlank })).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true } })!(query)).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true },
+    })!(query),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })
