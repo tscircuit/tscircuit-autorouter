@@ -4,14 +4,9 @@ import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
-test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (): Promise<void> => {
-  // Reduced from a TSCircuit board with <trace thickness="0.4mm">. Core
-  // sends the source minimum as nominalTraceWidth; SRJ has no per-connection
-  // minimum, so Pipeline9 is currently free to shrink to the board minimum.
-  // A 0.4mm trace plus 0.13mm clearance on each side needs a 0.66mm gap,
-  // greater than the 0.50mm gap between the two unrelated pads here. There
-  // is ample room around either obstacle for a legal 0.4mm detour: the
-  // board extends to y=+/-10mm while the obstacles end at y=+/-2.6mm.
+test("Pipeline9 keeps a 0.4mm trace at nominal width around a blocked corridor", async (): Promise<void> => {
+  // A 0.4mm trace needs a 0.66mm corridor including clearance; the 0.50mm
+  // gap is too narrow, so nominal-width expansion must take a legal detour.
   const input: SimpleRouteJson = {
     bounds: { minX: -15, maxX: 15, minY: -10, maxY: 10 },
     layerCount: 1,
@@ -71,16 +66,14 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const traces = solver.getOutputSimplifiedPcbTraces()
-  const interiorWidths = traces.flatMap((trace) =>
-    trace.route.flatMap((point) =>
-      point.route_type === "wire" && Math.abs(point.x) < 2 ? [point.width] : [],
-    ),
+  const wirePoints = traces.flatMap((trace) =>
+    trace.route.filter((point) => point.route_type === "wire"),
   )
-  expect(interiorWidths.length).toBeGreaterThan(0)
-  expect(Math.max(...interiorWidths)).toBeLessThan(0.4)
+  expect(wirePoints.length).toBeGreaterThan(0)
+  expect(wirePoints.every((point) => point.width >= 0.4 - 1e-6)).toBe(true)
+  expect(wirePoints.some((point) => Math.abs(point.y) > 2.9)).toBe(true)
 
-  // Same copper obstacles and connection, but with the board minimum raised
-  // to 0.4mm: Pipeline9 can take the legal route around the lower obstacle.
+  // Raising the board minimum to 0.4mm must retain the same full-width behavior.
   const controlInput: SimpleRouteJson = { ...input, minTraceWidth: 0.4 }
   const controlSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     controlInput,
@@ -108,12 +101,12 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
     fill: "none",
     stroke: "gray",
   }
-  const bugGraphics = convertSrjToGraphicsObject({ ...input, traces })
+  const routedGraphics = convertSrjToGraphicsObject({ ...input, traces })
   const controlGraphics = convertSrjToGraphicsObject({
     ...controlInput,
     traces: controlTraces,
   })
-  bugGraphics.rects.push(boardOutline)
+  routedGraphics.rects.push(boardOutline)
   controlGraphics.rects.push(boardOutline)
 
   // Both panels are produced from real solver output, not hand-drawn routes.
@@ -121,9 +114,9 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "BUG: board min 0.10mm, center route 0.2375mm",
+          name: "NOMINAL 0.40mm: legal detour with board min 0.10mm",
           pipeline: "end",
-          graphics: bugGraphics,
+          graphics: routedGraphics,
         },
         {
           name: "CONTROL: board min 0.40mm, legal detour",
