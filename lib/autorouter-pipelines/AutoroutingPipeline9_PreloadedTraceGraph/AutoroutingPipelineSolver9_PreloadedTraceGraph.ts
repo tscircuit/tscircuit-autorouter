@@ -429,6 +429,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         cms.maxNodeDimension,
         cms.maxNodeRatio,
         cms.minNodeArea,
+        // Match AvailableSegmentPointSolver's ordinary-port threshold.
+        1.5 * (cms.minTraceWidth + 0.15),
       ],
       {
         onSolved: (cms) => {
