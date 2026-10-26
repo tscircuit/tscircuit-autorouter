@@ -717,10 +717,11 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
 
     // An imported pad can belong to a net outside the current routing task.
     // Its source identity still describes copper that DRC must retain.
+    const sourceComponentName = circuitJsonMetadata.source_component_name
+    const sourcePortName = circuitJsonMetadata.source_port_name
     const sourcePadId =
-      circuitJsonMetadata.source_component_name &&
-      circuitJsonMetadata.source_port_name
-        ? obstacle.obstacleId ?? `${circuitJsonMetadata.source_component_name}.${circuitJsonMetadata.source_port_name}`
+      sourceComponentName && sourcePortName
+        ? (obstacle.obstacleId ?? `${sourceComponentName}.${sourcePortName}`)
         : undefined
     const smtPadId = circuitJsonMetadata.pcb_smtpad_id ?? sourcePadId
     const platedHoleId = circuitJsonMetadata.pcb_plated_hole_id
