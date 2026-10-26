@@ -119,6 +119,11 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    // Completed output and visualization use outputNodes, not sweep work regions.
+    // Keep work available on validation failures, and release it only on success.
+    this.atomicRegions.length = 0
+    this.previousSlabRegionsByKey.clear()
+    this.previousSlabLayerTopologies.clear()
     this.solved = true
   }
 
