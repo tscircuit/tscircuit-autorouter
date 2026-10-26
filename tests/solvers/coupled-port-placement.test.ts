@@ -6,12 +6,23 @@ import {
 } from "lib/solvers/UniformPortDistributionSolver/CoupledPortPlacementSolver"
 
 test("coupled placement preserves diagonal, disconnected, anchored and closed-domain solutions", (): void => {
-  const variable = (id: string, dx: number, dy: number): CoupledPortPlacementVariable => ({
-    id, x: 0, y: 0, dx, dy, domains: [[0, 0.16]], preferred: 0,
+  const variable = (
+    id: string,
+    dx: number,
+    dy: number,
+  ): CoupledPortPlacementVariable => ({
+    id,
+    x: 0,
+    y: 0,
+    dx,
+    dy,
+    domains: [[0, 0.16]],
+    preferred: 0,
   })
   const input: CoupledPortPlacementInput = {
     variables: [variable("horizontal", 1, 0), variable("vertical", 0, 1)],
-    orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: 0.2 }],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: 0.2 }],
   }
   const snapshot = structuredClone(input)
   const diagonal = new CoupledPortPlacementSolver(input)
@@ -28,9 +39,21 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
 
   const parallel = new CoupledPortPlacementSolver({
     variables: [
-      { ...variable("lower-face", 0, 1), y: -0.1, domains: [[0, 0.1]], preferred: 0.05 },
-      { ...variable("upper-face", 0, 1), x: 0.1, domains: [[0, 0.1]], preferred: 0.05 },
-    ], orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: 0.195 }],
+      {
+        ...variable("lower-face", 0, 1),
+        y: -0.1,
+        domains: [[0, 0.1]],
+        preferred: 0.05,
+      },
+      {
+        ...variable("upper-face", 0, 1),
+        x: 0.1,
+        domains: [[0, 0.1]],
+        preferred: 0.05,
+      },
+    ],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: 0.195 }],
   })
   parallel.solve()
   expect(parallel.solved).toBe(true)
@@ -41,12 +64,28 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
 
   const ordered = new CoupledPortPlacementSolver({
     variables: [
-      { ...variable("first", 1, 0), domains: [[0, 0], [0.3, 0.5]] },
-      { ...variable("second", 1, 0), domains: [[0.1, 0.2], [0.7, 0.8]], preferred: 0.1 },
+      {
+        ...variable("first", 1, 0),
+        domains: [
+          [0, 0],
+          [0.3, 0.5],
+        ],
+      },
+      {
+        ...variable("second", 1, 0),
+        domains: [
+          [0.1, 0.2],
+          [0.7, 0.8],
+        ],
+        preferred: 0.1,
+      },
       { ...variable("fixed", 0, 0), x: 0.35, domains: [[0, 0]] },
     ],
     orderConstraints: [{ first: 0, second: 1, gap: 0.25 }],
-    distanceConstraints: [{ first: 0, second: 2, gap: 0.2 }, { first: 1, second: 2, gap: 0.2 }],
+    distanceConstraints: [
+      { first: 0, second: 2, gap: 0.2 },
+      { first: 1, second: 2, gap: 0.2 },
+    ],
   })
   ordered.solve()
   expect(ordered.getOutput()).toEqual([0, 0.7, 0])
@@ -54,9 +93,16 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
   const nested = new CoupledPortPlacementSolver({
     variables: [
       { ...variable("fixed", 0, 0), domains: [[0, 0]] },
-      { ...variable("nested", 1, 0), domains: [[0, 10], [5, 6]] },
+      {
+        ...variable("nested", 1, 0),
+        domains: [
+          [0, 10],
+          [5, 6],
+        ],
+      },
     ],
-    orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: 8 }],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: 8 }],
   })
   nested.solve()
   expect(nested.getOutput()[1]!).toBeGreaterThanOrEqual(8)
@@ -65,7 +111,9 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
     variables: [
       { ...variable("left", 0, 0), domains: [[0, 0]] },
       { ...variable("right", 0, 0), x: 1, domains: [[0, 0]] },
-    ], orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: 1 }],
+    ],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: 1 }],
   })
   tangent.solve()
   expect(tangent.getOutput()).toEqual([0, 0])
@@ -73,14 +121,20 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
     variables: [
       { ...variable("center", 0, 0), domains: [[0, 0]] },
       { ...variable("circle-tangent", 1, 0), y: 1, domains: [[1, 1]] },
-    ], orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: Math.SQRT2 }],
+    ],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: Math.SQRT2 }],
   })
   circularTangent.solve()
   expect(circularTangent.getOutput()).toEqual([0, 1])
-  const low = 0.1, high = low + 1e-12
+  const low = 0.1,
+    high = low + 1e-12
   const tiny = new CoupledPortPlacementSolver({
-    variables: [{ ...variable("tiny", 1, 0), domains: [[low, high]], preferred: low }],
-    orderConstraints: [], distanceConstraints: [],
+    variables: [
+      { ...variable("tiny", 1, 0), domains: [[low, high]], preferred: low },
+    ],
+    orderConstraints: [],
+    distanceConstraints: [],
     solutionValidator: ([position]) => position === high,
   })
   tiny.solve()
@@ -88,7 +142,11 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
   expect(tiny.stats.rejectedCandidates).toBeGreaterThan(0)
 
   const impossible = new CoupledPortPlacementSolver({
-    ...input, variables: input.variables.map((point) => ({ ...point, domains: [[0, 0]] })),
+    ...input,
+    variables: input.variables.map((point) => ({
+      ...point,
+      domains: [[0, 0]],
+    })),
   })
   impossible.solve()
   expect(impossible.failed).toBe(true)
@@ -96,8 +154,12 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
   expect(impossible.error).toContain("UNRESOLVED")
   expect(() => impossible.getOutput()).toThrow("UNRESOLVED")
   const precision = new CoupledPortPlacementSolver({
-    variables: [{ ...variable("precision", 1, 0), domains: [[1, 1 + Number.EPSILON]] }],
-    orderConstraints: [], distanceConstraints: [], solutionValidator: () => false,
+    variables: [
+      { ...variable("precision", 1, 0), domains: [[1, 1 + Number.EPSILON]] },
+    ],
+    orderConstraints: [],
+    distanceConstraints: [],
+    solutionValidator: () => false,
   })
   precision.solve()
   expect(precision.failed).toBe(true)
@@ -107,7 +169,9 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
     variables: [
       { ...variable("a", 1, 0), domains: [[0, 1]], preferred: 0.5 },
       { ...variable("b", 1, 0), domains: [[0, 1]], preferred: 0.5 },
-    ], orderConstraints: [], distanceConstraints: [{ first: 0, second: 1, gap: 0.8 }],
+    ],
+    orderConstraints: [],
+    distanceConstraints: [{ first: 0, second: 1, gap: 0.8 }],
   })
   budget.MAX_ITERATIONS = 1
   expect(() => budget.solve()).toThrow("UNRESOLVED")

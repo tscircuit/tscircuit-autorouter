@@ -1,5 +1,8 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import { subtractEdgeIntervals, type EdgeInterval } from "./getSharedEdgePhysicalIntervals"
+import {
+  subtractEdgeIntervals,
+  type EdgeInterval,
+} from "./getSharedEdgePhysicalIntervals"
 
 export type CoupledPortPlacementVariable = {
   id: string
@@ -30,7 +33,7 @@ function adjacentFloat(value: number, upward: boolean): number {
   const view = new DataView(new ArrayBuffer(8))
   view.setFloat64(0, value)
   const bits = view.getBigUint64(0)
-  view.setBigUint64(0, bits + ((value > 0) === upward ? 1n : -1n))
+  view.setBigUint64(0, bits + (value > 0 === upward ? 1n : -1n))
   return view.getFloat64(0)
 }
 
@@ -50,36 +53,68 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     this.input = {
       ...input,
       variables: input.variables.map((variable) => {
-        if (ids.has(variable.id) || ![variable.x, variable.y, variable.dx, variable.dy, variable.preferred].every(Number.isFinite) ||
-          !((Math.abs(variable.dx) === 1 && variable.dy === 0) ||
+        if (
+          ids.has(variable.id) ||
+          ![
+            variable.x,
+            variable.y,
+            variable.dx,
+            variable.dy,
+            variable.preferred,
+          ].every(Number.isFinite) ||
+          !(
+            (Math.abs(variable.dx) === 1 && variable.dy === 0) ||
             (Math.abs(variable.dy) === 1 && variable.dx === 0) ||
-            (variable.dx === 0 && variable.dy === 0)))
+            (variable.dx === 0 && variable.dy === 0)
+          )
+        )
           throw new Error("Invalid coupled port identity or axis")
         ids.add(variable.id)
-        const sorted = variable.domains.map(([low, high]): EdgeInterval => {
-          if (![low, high].every(Number.isFinite) || low > high ||
-            (variable.dx === 0 && variable.dy === 0 && (low !== 0 || high !== 0)))
-            throw new Error("Invalid coupled port domain")
-          return [low, high]
-        }).sort((first, second) => first[0] - second[0] || first[1] - second[1])
+        const sorted = variable.domains
+          .map(([low, high]): EdgeInterval => {
+            if (
+              ![low, high].every(Number.isFinite) ||
+              low > high ||
+              (variable.dx === 0 &&
+                variable.dy === 0 &&
+                (low !== 0 || high !== 0))
+            )
+              throw new Error("Invalid coupled port domain")
+            return [low, high]
+          })
+          .sort((first, second) => first[0] - second[0] || first[1] - second[1])
         const domains: EdgeInterval[] = []
         for (const [low, high] of sorted) {
           const previous = domains.at(-1)
-          if (previous && low <= previous[1]) previous[1] = Math.max(previous[1], high)
+          if (previous && low <= previous[1])
+            previous[1] = Math.max(previous[1], high)
           else domains.push([low, high])
         }
         return { ...variable, domains }
       }),
-      orderConstraints: input.orderConstraints.map((constraint) => ({ ...constraint })),
-      distanceConstraints: input.distanceConstraints.map((constraint) => ({ ...constraint })),
+      orderConstraints: input.orderConstraints.map((constraint) => ({
+        ...constraint,
+      })),
+      distanceConstraints: input.distanceConstraints.map((constraint) => ({
+        ...constraint,
+      })),
     }
     const count = input.variables.length
     this.incoming = Array.from({ length: count }, () => [])
     this.outgoing = Array.from({ length: count }, () => [])
     this.distances = Array.from({ length: count }, () => [])
-    for (const constraint of [...this.input.orderConstraints, ...this.input.distanceConstraints]) {
-      if (![constraint.first, constraint.second].every((index) => Number.isInteger(index) && index >= 0 && index < count) ||
-        constraint.first === constraint.second || !Number.isFinite(constraint.gap) || constraint.gap < 0)
+    for (const constraint of [
+      ...this.input.orderConstraints,
+      ...this.input.distanceConstraints,
+    ]) {
+      if (
+        ![constraint.first, constraint.second].every(
+          (index) => Number.isInteger(index) && index >= 0 && index < count,
+        ) ||
+        constraint.first === constraint.second ||
+        !Number.isFinite(constraint.gap) ||
+        constraint.gap < 0
+      )
         throw new Error("Invalid coupled port constraint")
     }
     for (const constraint of this.input.orderConstraints) {
@@ -91,14 +126,18 @@ export class CoupledPortPlacementSolver extends BaseSolver {
       this.distances[constraint.second]!.push(constraint)
     }
     const indegree = this.incoming.map((constraints) => constraints.length)
-    this.order = indegree.flatMap((degree, index) => degree === 0 ? [index] : [])
+    this.order = indegree.flatMap((degree, index) =>
+      degree === 0 ? [index] : [],
+    )
     for (let next = 0; next < this.order.length; next++) {
       for (const constraint of this.outgoing[this.order[next]!]!) {
         indegree[constraint.second]!--
-        if (indegree[constraint.second] === 0) this.order.push(constraint.second)
+        if (indegree[constraint.second] === 0)
+          this.order.push(constraint.second)
       }
     }
-    if (this.order.length !== count) throw new Error("Coupled face-order constraints contain a cycle")
+    if (this.order.length !== count)
+      throw new Error("Coupled face-order constraints contain a cycle")
     this.pending = [this.input.variables.map((variable) => variable.domains)]
     this.stats.boxesExamined = 0
     this.stats.precisionLimitedBoxes = 0
@@ -106,18 +145,33 @@ export class CoupledPortPlacementSolver extends BaseSolver {
   }
 
   private numericGuard(first: number, second: number, gap: number): number {
-    const a = this.input.variables[first]!, b = this.input.variables[second]!
-    return 128 * Number.EPSILON * Math.max(
-      1, Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y), gap,
-      ...a.domains.flatMap((interval) => interval.map(Math.abs)),
-      ...b.domains.flatMap((interval) => interval.map(Math.abs)),
+    const a = this.input.variables[first]!,
+      b = this.input.variables[second]!
+    return (
+      128 *
+      Number.EPSILON *
+      Math.max(
+        1,
+        Math.abs(a.x),
+        Math.abs(a.y),
+        Math.abs(b.x),
+        Math.abs(b.y),
+        gap,
+        ...a.domains.flatMap((interval) => interval.map(Math.abs)),
+        ...b.domains.flatMap((interval) => interval.map(Math.abs)),
+      )
     )
   }
 
-  private clip(domains: EdgeInterval[], low: number, high: number): EdgeInterval[] {
+  private clip(
+    domains: EdgeInterval[],
+    low: number,
+    high: number,
+  ): EdgeInterval[] {
     const output: EdgeInterval[] = []
     for (const [start, end] of domains) {
-      const first = Math.max(start, low), last = Math.min(end, high)
+      const first = Math.max(start, low),
+        last = Math.min(end, high)
       if (first <= last) output.push([first, last])
     }
     return output

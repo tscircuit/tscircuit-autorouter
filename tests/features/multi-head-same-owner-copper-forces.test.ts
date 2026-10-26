@@ -40,21 +40,28 @@ test("MultiHead copper forces follow physical ownership while distinct via force
       width: 10,
       height: 100,
       availableZ: [0, 1, 2],
-      portPoints: lines.flatMap((line) => [line.start, line.end].map((point) => ({
-        x: point.x,
-        y: point.y,
-        z: point.z1,
-        connectionName: line.connectionName,
-        rootConnectionName: ownership === "root" && line.connectionName !== "foreign"
-          ? "shared-root"
-          : line.connectionName,
-      }))),
+      portPoints: lines.flatMap((line) =>
+        [line.start, line.end].map((point) => ({
+          x: point.x,
+          y: point.y,
+          z: point.z1,
+          connectionName: line.connectionName,
+          rootConnectionName:
+            ownership === "root" && line.connectionName !== "foreign"
+              ? "shared-root"
+              : line.connectionName,
+        })),
+      ),
     }
     return {
       nodeWithPortPoints: node,
-      connMap: ownership === "connectivity"
-        ? new ConnectivityMap({ own: ["branch-a", "branch-b"], other: ["foreign"] })
-        : undefined,
+      connMap:
+        ownership === "connectivity"
+          ? new ConnectivityMap({
+              own: ["branch-a", "branch-b"],
+              other: ["foreign"],
+            })
+          : undefined,
     }
   }
 
@@ -64,7 +71,9 @@ test("MultiHead copper forces follow physical ownership while distinct via force
     [wire, via, third],
   ]) {
     for (const ownership of ["root", "connectivity"] as const) {
-      const solver = new MultiHeadPolyLineIntraNodeSolver2(makeParams(lines, ownership))
+      const solver = new MultiHeadPolyLineIntraNodeSolver2(
+        makeParams(lines, ownership),
+      )
       const actual = structuredClone(lines)
       expect(solver.applyForcesToPolyLines(actual)).toEqual({
         lastStepMoved: false,
@@ -96,20 +105,39 @@ test("MultiHead copper forces follow physical ownership while distinct via force
     for (const index of [0, 1]) {
       const pair = [mixed[index]!, activeThird]
       const movedPair = structuredClone(pair)
-      new Frozen142EndpointForceSolver(mixedParams).applyForcesToPolyLines(movedPair)
-      for (const [pairIndex, lineIndex] of [[0, index], [1, 2]]) {
-        for (let point = 0; point < movedPair[pairIndex]!.mPoints.length; point++) {
+      new Frozen142EndpointForceSolver(mixedParams).applyForcesToPolyLines(
+        movedPair,
+      )
+      for (const [pairIndex, lineIndex] of [
+        [0, index],
+        [1, 2],
+      ]) {
+        for (
+          let point = 0;
+          point < movedPair[pairIndex]!.mPoints.length;
+          point++
+        ) {
           expectedPositions[lineIndex]![point]!.x +=
-            movedPair[pairIndex]!.mPoints[point]!.x - pair[pairIndex]!.mPoints[point]!.x
+            movedPair[pairIndex]!.mPoints[point]!.x -
+            pair[pairIndex]!.mPoints[point]!.x
           expectedPositions[lineIndex]![point]!.y +=
-            movedPair[pairIndex]!.mPoints[point]!.y - pair[pairIndex]!.mPoints[point]!.y
+            movedPair[pairIndex]!.mPoints[point]!.y -
+            pair[pairIndex]!.mPoints[point]!.y
         }
       }
     }
-    expect(mixedSolver.applyForcesToPolyLines(moved).magForceApplied).toBeGreaterThan(0)
+    expect(
+      mixedSolver.applyForcesToPolyLines(moved).magForceApplied,
+    ).toBeGreaterThan(0)
     for (let line = 0; line < moved.length; line++) {
-      expect(moved[line]!.mPoints[0]!.x).toBeCloseTo(expectedPositions[line]![0]!.x, 14)
-      expect(moved[line]!.mPoints[0]!.y).toBeCloseTo(expectedPositions[line]![0]!.y, 14)
+      expect(moved[line]!.mPoints[0]!.x).toBeCloseTo(
+        expectedPositions[line]![0]!.x,
+        14,
+      )
+      expect(moved[line]!.mPoints[0]!.y).toBeCloseTo(
+        expectedPositions[line]![0]!.y,
+        14,
+      )
     }
   }
 
@@ -120,7 +148,9 @@ test("MultiHead copper forces follow physical ownership while distinct via force
     mPoints: [{ x, y: 0, z1: 0, z2: 1 }],
   }))
   viaPair.push(third)
-  const solver = new MultiHeadPolyLineIntraNodeSolver2(makeParams(viaPair, "root"))
+  const solver = new MultiHeadPolyLineIntraNodeSolver2(
+    makeParams(viaPair, "root"),
+  )
   const actual = structuredClone(viaPair)
   const force = 0.16 * Math.exp(-6 * 0.2)
   const result = solver.applyForcesToPolyLines(actual)

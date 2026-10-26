@@ -1,4 +1,7 @@
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import type { EdgeInterval } from "./getSharedEdgePhysicalIntervals"
 import { getOrderedSharedEdgeSchedule } from "./getOrderedSharedEdgeSchedule"
 import {
@@ -12,7 +15,11 @@ import type {
 } from "./CoupledPortPlacementSolver"
 import type { PortPointWithOwnerPair, SharedEdge } from "./types"
 
-export type MovableSharedEdgeFamily = { edge: SharedEdge; ports: PortPointWithOwnerPair[]; movablePortIds: readonly string[] }
+export type MovableSharedEdgeFamily = {
+  edge: SharedEdge
+  ports: PortPointWithOwnerPair[]
+  movablePortIds: readonly string[]
+}
 type Event = {
   port: PortPoint
   owner: string | undefined
@@ -20,7 +27,10 @@ type Event = {
   family?: string
   variable: CoupledPortPlacementVariable
 }
-export type CoupledSharedEdgeJob = { input: CoupledPortPlacementInput; indices: number[] }
+export type CoupledSharedEdgeJob = {
+  input: CoupledPortPlacementInput
+  indices: number[]
+}
 type Input = {
   nodes: NodeWithPortPoints[]
   currentPorts: PortPointWithOwnerPair[]
@@ -36,54 +46,109 @@ export class CoupledSharedEdgePlacementPlan {
   private readonly named = new Map<string, number>()
   private readonly selected: number[] = []
   private readonly orders: CoupledPortPlacementConstraint[] = []
-  private readonly anchorOrders: { first: number; second: number; axis: "x" | "y" }[] = []
+  private readonly anchorOrders: {
+    first: number
+    second: number
+    axis: "x" | "y"
+  }[] = []
   private readonly distances: CoupledPortPlacementConstraint[] = []
   private readonly physical: PhysicalSharedEdgePlacement
 
   constructor({ nodes, currentPorts, families, physical }: Input) {
     this.physical = physical
     for (const port of currentPorts) {
-      if (!port.portPointId) throw new Error("A named shared-edge port has no identity")
+      if (!port.portPointId)
+        throw new Error("A named shared-edge port has no identity")
       const existing = this.named.get(port.portPointId)
       if (existing !== undefined) {
         const previous = this.events[existing]!
-        if (previous.owner !== physical.getOwner(port) || previous.port.z !== port.z ||
-          previous.port.x !== port.x || previous.port.y !== port.y)
-          throw new Error(`Conflicting copies of shared endpoint "${port.portPointId}"`)
+        if (
+          previous.owner !== physical.getOwner(port) ||
+          previous.port.z !== port.z ||
+          previous.port.x !== port.x ||
+          previous.port.y !== port.y
+        )
+          throw new Error(
+            `Conflicting copies of shared endpoint "${port.portPointId}"`,
+          )
         continue
       }
       this.named.set(port.portPointId, this.events.length)
-      this.events.push({ port, owner: physical.getOwner(port), width: physical.getWidth(port),
-        variable: { id: port.portPointId, x: port.x, y: port.y, dx: 0, dy: 0, domains: [[0, 0]], preferred: 0 } })
+      this.events.push({
+        port,
+        owner: physical.getOwner(port),
+        width: physical.getWidth(port),
+        variable: {
+          id: port.portPointId,
+          x: port.x,
+          y: port.y,
+          dx: 0,
+          dy: 0,
+          domains: [[0, 0]],
+          preferred: 0,
+        },
+      })
     }
     for (const { edge, ports, movablePortIds } of families) {
       const movable = new Set(movablePortIds)
       const layers = [...new Set(ports.map((port) => port.z))]
       for (const z of layers) {
-        const dx = (edge.x2 - edge.x1) / edge.length, dy = (edge.y2 - edge.y1) / edge.length
-        const ordered = ports.filter((port) => port.z === z).sort((a, b) =>
-          (edge.orientation === "horizontal" ? a.x - b.x : a.y - b.y) ||
-          (a.portPointId ?? "").localeCompare(b.portPointId ?? ""))
-        const members: { index: number; movable: boolean; distance: number; allowed: EdgeInterval[] }[] = []
+        const dx = (edge.x2 - edge.x1) / edge.length,
+          dy = (edge.y2 - edge.y1) / edge.length
+        const ordered = ports
+          .filter((port) => port.z === z)
+          .sort(
+            (a, b) =>
+              (edge.orientation === "horizontal" ? a.x - b.x : a.y - b.y) ||
+              (a.portPointId ?? "").localeCompare(b.portPointId ?? ""),
+          )
+        const members: {
+          index: number
+          movable: boolean
+          distance: number
+          allowed: EdgeInterval[]
+        }[] = []
         for (const port of ordered) {
           const index = this.named.get(port.portPointId!)
-          if (index === undefined) throw new Error("A shared-edge event disappeared")
+          if (index === undefined)
+            throw new Error("A shared-edge event disappeared")
           const event = this.events[index]!
           const distance = (port.x - edge.x1) * dx + (port.y - edge.y1) * dy
           const canMove = movable.has(port.portPointId!)
           if (!canMove) {
-            const normalRoundoff = Math.min(event.width * 1e-6,
-              Number.EPSILON * 8 * Math.max(1, Math.abs(port.x), Math.abs(port.y), Math.abs(edge.x1), Math.abs(edge.y1)))
-            const onFace = edge.orientation === "horizontal"
-              ? Math.abs(port.y - edge.y1) <= normalRoundoff && port.x >= Math.min(edge.x1, edge.x2) && port.x <= Math.max(edge.x1, edge.x2)
-              : Math.abs(port.x - edge.x1) <= normalRoundoff && port.y >= Math.min(edge.y1, edge.y2) && port.y <= Math.max(edge.y1, edge.y2)
+            const normalRoundoff = Math.min(
+              event.width * 1e-6,
+              Number.EPSILON *
+                8 *
+                Math.max(
+                  1,
+                  Math.abs(port.x),
+                  Math.abs(port.y),
+                  Math.abs(edge.x1),
+                  Math.abs(edge.y1),
+                ),
+            )
+            const onFace =
+              edge.orientation === "horizontal"
+                ? Math.abs(port.y - edge.y1) <= normalRoundoff &&
+                  port.x >= Math.min(edge.x1, edge.x2) &&
+                  port.x <= Math.max(edge.x1, edge.x2)
+                : Math.abs(port.x - edge.x1) <= normalRoundoff &&
+                  port.y >= Math.min(edge.y1, edge.y2) &&
+                  port.y <= Math.max(edge.y1, edge.y2)
             // A fixed point outside the face keeps its real XY. Its projection
             // cannot establish a physical boundary order; distance still applies.
             if (!onFace) continue
-            members.push({ index, movable: false, distance, allowed: [[distance, distance]] })
+            members.push({
+              index,
+              movable: false,
+              distance,
+              allowed: [[distance, distance]],
+            })
             continue
           }
-          if (event.family !== undefined) throw new Error("A port has multiple movable faces")
+          if (event.family !== undefined)
+            throw new Error("A port has multiple movable faces")
           event.family = `${edge.ownerPairKey}:${z}`
           event.variable = { id: port.portPointId!, x: edge.x1, y: edge.y1, dx, dy,
             domains: physical.getAllowedIntervals(edge, { owner: event.owner, width: event.width, z }),

@@ -1,15 +1,44 @@
 import { expect, test } from "bun:test"
-import { getCrossFaceEndpointFeasibility, type EndpointDomainEvent } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/getCrossFaceEndpointFeasibility"
+import {
+  getCrossFaceEndpointFeasibility,
+  type EndpointDomainEvent,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/getCrossFaceEndpointFeasibility"
 
 test("joint endpoint domains preserve alternatives and reject the actual thin-strip conjunction", (): void => {
-  const x = 193.25958363499996, y = 47.16780254000001
-  const width = .37731636500001287, height = .045996459999983585
+  const x = 193.25958363499996,
+    y = 47.16780254000001
+  const width = 0.37731636500001287,
+    height = 0.045996459999983585
   const events: EndpointDomainEvent[] = [
-    { portId: 4, faceKey: "horizontal276", owner: "276", z: 7, bounds: { minX: x, maxX: x+width, minY: y, maxY: y }, routeIds: [], candidate: true },
-    { portId: 3, faceKey: "left108", owner: "108", z: 7, bounds: { minX: x, maxX: x, minY: y, maxY: y+height }, routeIds: [1871], candidate: false },
-    { portId: 5, faceKey: "right108", owner: "108", z: 7, bounds: { minX: x+width, maxX: x+width, minY: y, maxY: y+height }, routeIds: [1871], candidate: false },
+    {
+      portId: 4,
+      faceKey: "horizontal276",
+      owner: "276",
+      z: 7,
+      bounds: { minX: x, maxX: x + width, minY: y, maxY: y },
+      routeIds: [],
+      candidate: true,
+    },
+    {
+      portId: 3,
+      faceKey: "left108",
+      owner: "108",
+      z: 7,
+      bounds: { minX: x, maxX: x, minY: y, maxY: y + height },
+      routeIds: [1871],
+      candidate: false,
+    },
+    {
+      portId: 5,
+      faceKey: "right108",
+      owner: "108",
+      z: 7,
+      bounds: { minX: x + width, maxX: x + width, minY: y, maxY: y + height },
+      routeIds: [1871],
+      candidate: false,
+    },
   ]
-  const input = { events, minimumSpacing: .195, slack: 1e-8 }
+  const input = { events, minimumSpacing: 0.195, slack: 1e-8 }
   const snapshot = structuredClone(input)
   expect(getCrossFaceEndpointFeasibility(input)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1871]] })
   expect(getCrossFaceEndpointFeasibility({ ...input, events: events.slice(0,2) })).toEqual({ feasible: true })

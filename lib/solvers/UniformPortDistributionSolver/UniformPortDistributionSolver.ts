@@ -142,7 +142,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
   _step(): void {
     this.stepPlacement()
     if (!this.solved && !this.failed && this.iterations >= this.MAX_ITERATIONS)
-      throw new Error("UNRESOLVED physical Uniform placement: phase budget exhausted")
+      throw new Error(
+        "UNRESOLVED physical Uniform placement: phase budget exhausted",
+      )
   }
 
   private stepPlacement(): void {
@@ -177,10 +179,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
         }
         const positions = this.coupledPlan.getValidatedPositions()
         for (const [key, family] of this.mapOfOwnerPairToPortPoints) {
-          this.mapOfOwnerPairToPortPoints.set(key, family.map((port) => {
-            const point = port.portPointId && positions.get(port.portPointId)
-            return point ? { ...port, ...point } : port
-          }))
+          this.mapOfOwnerPairToPortPoints.set(
+            key,
+            family.map((port) => {
+              const point = port.portPointId && positions.get(port.portPointId)
+              return point ? { ...port, ...point } : port
+            }),
+          )
         }
       }
       this.rebuildNodes()
@@ -241,8 +246,11 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
 
     if (this.physicalPlacement)
-      this.movableFamilies.push({ edge: sharedEdge, ports: familyRaw,
-        movablePortIds: family.map((port) => port.portPointId!) })
+      this.movableFamilies.push({
+        edge: sharedEdge,
+        ports: familyRaw,
+        movablePortIds: family.map((port) => port.portPointId!),
+      })
     const redistributed = this.physicalPlacement
       ? this.physicalPlacement.redistribute(sharedEdge, family)
       : redistributePortPointsOnSharedEdge({

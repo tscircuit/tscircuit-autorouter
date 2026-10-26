@@ -17,7 +17,10 @@ test("MultiHead through-via forces cover the same available layers as clearance 
         },
       }
       const solver = new MultiHeadPolyLineIntraNodeSolver2(params)
-      for (const [toZ, wireZ] of [[layerCount - 1, 1], [1, layerCount - 1]]) {
+      for (const [toZ, wireZ] of [
+        [layerCount - 1, 1],
+        [1, layerCount - 1],
+      ]) {
         const lines: PolyLine2[] = [
           {
             connectionName: "via-owner",
@@ -29,7 +32,9 @@ test("MultiHead through-via forces cover the same available layers as clearance 
             connectionName: "foreign-wire",
             start: { x: -scale, y: 0.01 * scale, z1: wireZ, z2: wireZ },
             end: { x: scale, y: 0.01 * scale, z1: wireZ, z2: wireZ },
-            mPoints: [{ x: 0.2 * scale, y: 0.01 * scale, z1: wireZ, z2: wireZ }],
+            mPoints: [
+              { x: 0.2 * scale, y: 0.01 * scale, z1: wireZ, z2: wireZ },
+            ],
           },
         ]
         const before = structuredClone(lines)
@@ -38,7 +43,9 @@ test("MultiHead through-via forces cover the same available layers as clearance 
         expect(result.lastStepMoved).toBe(true)
         expect(result.magForceApplied).toBeGreaterThan(0)
         expect(lines[0]!.mPoints[0]!.y).toBeLessThan(before[0]!.mPoints[0]!.y)
-        expect(lines[1]!.mPoints[0]!.y).toBeGreaterThan(before[1]!.mPoints[0]!.y)
+        expect(lines[1]!.mPoints[0]!.y).toBeGreaterThan(
+          before[1]!.mPoints[0]!.y,
+        )
         expect(lines.map(({ start, end }) => ({ start, end }))).toEqual(
           before.map(({ start, end }) => ({ start, end })),
         )
@@ -71,9 +78,11 @@ test("MultiHead through-via forces cover the same available layers as clearance 
       reference.applyForcesToPolyLines(expected),
     )
     expect(lines).toEqual(expected)
-    const workspace = (actualSolver as unknown as {
-      forceWorkspace: { geometry: { vias: { layers: number[] }[] }[] }
-    }).forceWorkspace
+    const workspace = (
+      actualSolver as unknown as {
+        forceWorkspace: { geometry: { vias: { layers: number[] }[] }[] }
+      }
+    ).forceWorkspace
     for (const geometry of workspace.geometry) {
       for (const via of geometry.vias) {
         expect(via.layers).toEqual(actualSolver.availableZ)

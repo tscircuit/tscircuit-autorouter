@@ -34,7 +34,9 @@ test("MultiHead receives and emits the routing stage's requested trace width", (
       traceWidth,
       traceWidth,
     ])
-    expect(solver.solvedRoutes.every((route) => route.vias.length === 0)).toBe(true)
+    expect(solver.solvedRoutes.every((route) => route.vias.length === 0)).toBe(
+      true,
+    )
   }
   const legacy = new MultiHeadPolyLineIntraNodeSolver3({
     nodeWithPortPoints: node,
@@ -42,7 +44,6 @@ test("MultiHead receives and emits the routing stage's requested trace width", (
   legacy.solve()
   expect(legacy.traceWidth).toBe(0.15)
   expect(legacy.solvedRoutes.map((route) => route.traceThickness)).toEqual([
-    0.15,
-    0.15,
+    0.15, 0.15,
   ])
 })

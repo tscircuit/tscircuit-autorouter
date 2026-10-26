@@ -35,7 +35,8 @@ function trimOutsideOpenStrip(
   const max = axis === "x" ? "maxX" : "maxY"
   if (low >= high || bounds[max] <= low || bounds[min] >= high)
     return "unchanged"
-  const left = bounds[min] <= low, right = bounds[max] >= high
+  const left = bounds[min] <= low,
+    right = bounds[max] >= high
   if (left && right) return "unchanged"
   if (!left && !right) return "empty"
   if (left) bounds[max] = low
@@ -44,57 +45,99 @@ function trimOutsideOpenStrip(
 }
 
 /** Combine necessary pair-distance bounds without choosing endpoint positions. */
-function contractEndpointDomains({ events, minimumSpacing, slack }: Input): TinyHyperGraphRegionSegmentFeasibilityResult {
+function contractEndpointDomains({
+  events,
+  minimumSpacing,
+  slack,
+}: Input): TinyHyperGraphRegionSegmentFeasibilityResult {
   if (events.length < 3) return { feasible: true }
-  const scale = events.reduce((maximum, event) => Math.max(maximum,
-    ...Object.values(event.bounds).map(Math.abs)), Math.max(1, minimumSpacing))
+  const scale = events.reduce(
+    (maximum, event) =>
+      Math.max(maximum, ...Object.values(event.bounds).map(Math.abs)),
+    Math.max(1, minimumSpacing),
+  )
   const error = Math.max(slack, 128 * Number.EPSILON * scale)
   const gap = minimumSpacing - error
   if (gap <= 0) return { feasible: true }
   const domains: WorkingDomain[] = events.map((event, index) => ({
-    event, bounds: { ...event.bounds }, proof: new Set([index]), candidateRelated: event.candidate,
+    event,
+    bounds: { ...event.bounds },
+    proof: new Set([index]),
+    candidateRelated: event.candidate,
   }))
   // Stopping early only leaves wider domains. Empty domains always carry the
   // exact endpoint-event obligations used to derive their necessary bounds.
   for (let pass = 0; pass < 2; pass++) {
     let changed = false
-    for (const first of domains) for (const second of domains) {
-      if (first === second || first.event.portId === second.event.portId ||
-        first.event.faceKey === second.event.faceKey || first.event.z !== second.event.z ||
-        first.event.owner === second.event.owner ||
-        (!first.candidateRelated && !second.candidateRelated))
-        continue
-      const minDX = Math.max(first.bounds.minX - second.bounds.maxX, second.bounds.minX - first.bounds.maxX, 0)
-      const minDY = Math.max(first.bounds.minY - second.bounds.maxY, second.bounds.minY - first.bounds.maxY, 0)
-      if (minDX * minDX + minDY * minDY >= minimumSpacing * minimumSpacing) continue
-      for (const axis of ["x", "y"] as const) {
-        const transverse = axis === "x"
-          ? Math.max(Math.abs(first.bounds.minY - second.bounds.maxY), Math.abs(first.bounds.maxY - second.bounds.minY))
-          : Math.max(Math.abs(first.bounds.minX - second.bounds.maxX), Math.abs(first.bounds.maxX - second.bounds.minX))
-        if (transverse >= gap) continue
-        const radius = gap * Math.sqrt(Math.max(0, 1 - (transverse / gap) ** 2)) - error
-        if (radius <= 0) continue
-        const low = (axis === "x" ? second.bounds.maxX : second.bounds.maxY) - radius
-        const high = (axis === "x" ? second.bounds.minX : second.bounds.minY) + radius
-        const result = trimOutsideOpenStrip(first.bounds, axis, low, high)
-        if (result === "unchanged") continue
-        first.candidateRelated ||= second.candidateRelated
-        for (const index of second.proof) first.proof.add(index)
-        if (result === "changed") { changed = true; continue }
-        const alternatives = new Map<string, number[]>()
-        for (const index of first.proof) {
-          const event = domains[index]!.event
-          if (event.candidate) continue
-          if (event.routeIds.length === 0)
-            throw new Error("A removable endpoint-domain obligation has no committed routes")
-          const routes = [...new Set(event.routeIds)].sort((a, b) => a - b)
-          alternatives.set(JSON.stringify(routes), routes)
+    for (const first of domains)
+      for (const second of domains) {
+        if (
+          first === second ||
+          first.event.portId === second.event.portId ||
+          first.event.faceKey === second.event.faceKey ||
+          first.event.z !== second.event.z ||
+          first.event.owner === second.event.owner ||
+          (!first.candidateRelated && !second.candidateRelated)
+        )
+          continue
+        const minDX = Math.max(
+          first.bounds.minX - second.bounds.maxX,
+          second.bounds.minX - first.bounds.maxX,
+          0,
+        )
+        const minDY = Math.max(
+          first.bounds.minY - second.bounds.maxY,
+          second.bounds.minY - first.bounds.maxY,
+          0,
+        )
+        if (minDX * minDX + minDY * minDY >= minimumSpacing * minimumSpacing)
+          continue
+        for (const axis of ["x", "y"] as const) {
+          const transverse =
+            axis === "x"
+              ? Math.max(
+                  Math.abs(first.bounds.minY - second.bounds.maxY),
+                  Math.abs(first.bounds.maxY - second.bounds.minY),
+                )
+              : Math.max(
+                  Math.abs(first.bounds.minX - second.bounds.maxX),
+                  Math.abs(first.bounds.maxX - second.bounds.minX),
+                )
+          if (transverse >= gap) continue
+          const radius =
+            gap * Math.sqrt(Math.max(0, 1 - (transverse / gap) ** 2)) - error
+          if (radius <= 0) continue
+          const low =
+            (axis === "x" ? second.bounds.maxX : second.bounds.maxY) - radius
+          const high =
+            (axis === "x" ? second.bounds.minX : second.bounds.minY) + radius
+          const result = trimOutsideOpenStrip(first.bounds, axis, low, high)
+          if (result === "unchanged") continue
+          first.candidateRelated ||= second.candidateRelated
+          for (const index of second.proof) first.proof.add(index)
+          if (result === "changed") {
+            changed = true
+            continue
+          }
+          const alternatives = new Map<string, number[]>()
+          for (const index of first.proof) {
+            const event = domains[index]!.event
+            if (event.candidate) continue
+            if (event.routeIds.length === 0)
+              throw new Error(
+                "A removable endpoint-domain obligation has no committed routes",
+              )
+            const routes = [...new Set(event.routeIds)].sort((a, b) => a - b)
+            alternatives.set(JSON.stringify(routes), routes)
+          }
+          return alternatives.size === 0
+            ? { feasible: false, blockerRouteIds: [] }
+            : {
+                feasible: false,
+                alternativeBlockerRouteIdSets: [...alternatives.values()],
+              }
         }
-        return alternatives.size === 0
-          ? { feasible: false, blockerRouteIds: [] }
-          : { feasible: false, alternativeBlockerRouteIdSets: [...alternatives.values()] }
       }
-    }
     if (!changed) break
   }
   return { feasible: true }
