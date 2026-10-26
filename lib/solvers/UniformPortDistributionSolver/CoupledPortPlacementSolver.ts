@@ -185,24 +185,39 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     }
   }
 
-  private forbiddenByPoint(index: number, point: { x: number; y: number }, radius: number): EdgeInterval | undefined {
+  private forbiddenByPoint(
+    index: number,
+    point: { x: number; y: number },
+    radius: number,
+  ): EdgeInterval | undefined {
     const variable = this.input.variables[index]!
     if (variable.dx === 0 && variable.dy === 0)
       return Math.hypot(variable.x - point.x, variable.y - point.y) < radius
-        ? [-Infinity, Infinity] : undefined
-    const normal = variable.dx === 0 ? Math.abs(variable.x - point.x) : Math.abs(variable.y - point.y)
+        ? [-Infinity, Infinity]
+        : undefined
+    const normal =
+      variable.dx === 0
+        ? Math.abs(variable.x - point.x)
+        : Math.abs(variable.y - point.y)
     if (normal >= radius) return undefined
-    const center = (point.x - variable.x) * variable.dx + (point.y - variable.y) * variable.dy
+    const center =
+      (point.x - variable.x) * variable.dx +
+      (point.y - variable.y) * variable.dy
     const reach = Math.sqrt(Math.max(0, radius * radius - normal * normal))
     return [center - reach, center + reach]
   }
 
   /** Axis-aligned scalar domains attain their farthest pair at outer ends. */
-  private maximumDistance(box: SearchBox, first: number, second: number): number {
+  private maximumDistance(
+    box: SearchBox,
+    first: number,
+    second: number,
+  ): number {
     let maximum = 0
     for (const a of [box[first]![0]![0], box[first]!.at(-1)![1]]) {
       for (const b of [box[second]![0]![0], box[second]!.at(-1)![1]]) {
-        const p = this.point(first, a), q = this.point(second, b)
+        const p = this.point(first, a),
+          q = this.point(second, b)
         const distance = Math.hypot(p.x - q.x, p.y - q.y)
         if (!Number.isFinite(distance)) return Infinity
         maximum = Math.max(maximum, distance)
@@ -211,18 +226,33 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     return maximum
   }
 
-  private contractDistance(box: SearchBox, first: number, second: number, gap: number): void {
+  private contractDistance(
+    box: SearchBox,
+    first: number,
+    second: number,
+    gap: number,
+  ): void {
     const peer = box[second]!
     if (peer.length === 0 || box[first]!.length === 0) return
     const radius = gap - this.numericGuard(first, second, gap)
     if (radius <= 0) return
-    const low = this.forbiddenByPoint(first, this.point(second, peer[0]![0]), radius)
-    const high = this.forbiddenByPoint(first, this.point(second, peer.at(-1)![1]), radius)
+    const low = this.forbiddenByPoint(
+      first,
+      this.point(second, peer[0]![0]),
+      radius,
+    )
+    const high = this.forbiddenByPoint(
+      first,
+      this.point(second, peer.at(-1)![1]),
+      radius,
+    )
     if (!low || !high) return
     // Squared distance is convex in the peer scalar. Only points within BOTH
     // endpoint discs are impossible for every choice in its whole domain.
-    const start = Math.max(low[0], high[0]), end = Math.min(low[1], high[1])
-    if (start < end) box[first] = subtractEdgeIntervals(box[first]!, [[start, end]])
+    const start = Math.max(low[0], high[0]),
+      end = Math.min(low[1], high[1])
+    if (start < end)
+      box[first] = subtractEdgeIntervals(box[first]!, [[start, end]])
   }
 
   private contractOrder(box: SearchBox): boolean {
@@ -235,26 +265,44 @@ export class CoupledPortPlacementSolver extends BaseSolver {
         // Use the exact final subtraction before outward-safe bound clipping.
         // A clipping guard cannot make an impossible closed order feasible.
         if (peer.at(-1)![1] - box[first]![0]![0] < constraint.gap) return false
-        const upper = peer.at(-1)![1] - constraint.gap + this.numericGuard(first, constraint.second, constraint.gap)
+        const upper =
+          peer.at(-1)![1] -
+          constraint.gap +
+          this.numericGuard(first, constraint.second, constraint.gap)
         box[first] = this.clip(box[first]!, -Infinity, upper)
       }
     }
     for (const first of this.order) {
       if (box[first]!.length === 0) return false
       for (const constraint of this.outgoing[first]!) {
-        const lower = box[first]![0]![0] + constraint.gap - this.numericGuard(first, constraint.second, constraint.gap)
-        box[constraint.second] = this.clip(box[constraint.second]!, lower, Infinity)
+        const lower =
+          box[first]![0]![0] +
+          constraint.gap -
+          this.numericGuard(first, constraint.second, constraint.gap)
+        box[constraint.second] = this.clip(
+          box[constraint.second]!,
+          lower,
+          Infinity,
+        )
       }
     }
     return box.every((domain) => domain.length > 0)
   }
 
-  private select(domains: EdgeInterval[], preferred: number, low: number, high: number): number | undefined {
-    let selected: number | undefined, bestDistance = Infinity
+  private select(
+    domains: EdgeInterval[],
+    preferred: number,
+    low: number,
+    high: number,
+  ): number | undefined {
+    let selected: number | undefined,
+      bestDistance = Infinity
     for (const [start, end] of domains) {
-      const first = Math.max(start, low), last = Math.min(end, high)
+      const first = Math.max(start, low),
+        last = Math.min(end, high)
       if (first > last) continue
-      const value = Math.min(last, Math.max(first, preferred)), distance = Math.abs(value - preferred)
+      const value = Math.min(last, Math.max(first, preferred)),
+        distance = Math.abs(value - preferred)
       if (selected === undefined || distance < bestDistance) {
         selected = value
         bestDistance = distance
@@ -263,7 +311,10 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     return selected
   }
 
-  private candidate(box: SearchBox, mode: "preferred" | "separated" | "interior" | "earliest" | "latest"): number[] | undefined {
+  private candidate(
+    box: SearchBox,
+    mode: "preferred" | "separated" | "interior" | "earliest" | "latest",
+  ): number[] | undefined {
     const positions = new Array<number>(box.length)
     const order = mode === "latest" ? [...this.order].reverse() : this.order
     for (const index of order) {
@@ -273,10 +324,14 @@ export class CoupledPortPlacementSolver extends BaseSolver {
         // These conditional exclusions construct ONE candidate, never contract
         // the search box. Other candidates and branches retain every solution.
         for (const constraint of this.distances[index]!) {
-          const peer = constraint.first === index ? constraint.second : constraint.first
+          const peer =
+            constraint.first === index ? constraint.second : constraint.first
           if (!Number.isFinite(positions[peer])) continue
-          const blocked = this.forbiddenByPoint(index, this.point(peer, positions[peer]!),
-            constraint.gap + this.numericGuard(index, peer, constraint.gap))
+          const blocked = this.forbiddenByPoint(
+            index,
+            this.point(peer, positions[peer]!),
+            constraint.gap + this.numericGuard(index, peer, constraint.gap),
+          )
           if (blocked) choices = subtractEdgeIntervals(choices, [blocked])
         }
       }

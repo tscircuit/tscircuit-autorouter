@@ -179,7 +179,14 @@ test("coupled placement preserves diagonal, disconnected, anchored and closed-do
   expect(budget.solved).toBe(false)
   expect(budget.iterations).toBe(1)
   expect(budget.error).toContain("UNRESOLVED")
-  expect(() => new CoupledPortPlacementSolver({
-    ...input, variables: [input.variables[0]!, { ...input.variables[1]!, id: "horizontal" }],
-  })).toThrow("identity")
+  expect(
+    () =>
+      new CoupledPortPlacementSolver({
+        ...input,
+        variables: [
+          input.variables[0]!,
+          { ...input.variables[1]!, id: "horizontal" },
+        ],
+      }),
+  ).toThrow("identity")
 })

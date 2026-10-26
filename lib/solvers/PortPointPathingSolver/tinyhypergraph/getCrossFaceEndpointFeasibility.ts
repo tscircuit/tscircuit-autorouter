@@ -203,6 +203,9 @@ export function getCrossFaceEndpointFeasibility({
     }
   }
   if (blockers.size > 0)
-    return { feasible: false, blockerRouteIds: [...blockers].sort((a, b) => a - b) }
+    return {
+      feasible: false,
+      blockerRouteIds: [...blockers].sort((a, b) => a - b),
+    }
   return contractEndpointDomains({ events: valid, minimumSpacing, slack })
 }

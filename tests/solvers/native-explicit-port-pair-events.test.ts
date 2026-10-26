@@ -30,7 +30,10 @@ test("native kernels preserve the two actual Net299 routing events and legacy st
   expect(native.unsolvedConnections.map((t) => t.points)).toEqual(expected)
   expect(native.MAX_ITERATIONS).toBe(legacy.MAX_ITERATIONS)
   const priority = new PriorityDagIntraNodeSolver(params)
-  const tasks: typeof native.unsolvedConnections = Reflect.get(priority, "tasks")
+  const tasks: typeof native.unsolvedConnections = Reflect.get(
+    priority,
+    "tasks",
+  )
   expect(tasks.map((task) => task.points).reverse()).toEqual(expected)
   expect(tasks.map((task) => task.routeEventId).sort()).toEqual([0, 1])
   native.unsolvedConnections = []

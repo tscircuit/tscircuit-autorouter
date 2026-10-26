@@ -51,7 +51,8 @@ export const precomputeIntraNodeRouteParams = (
     seenPoints.add(key)
     points.push({ x, y, z: layer })
   }
-  const connectionTasks: IntraNodeConnectionTask[] = node.portPointsInPairs?.length
+  const connectionTasks: IntraNodeConnectionTask[] = node.portPointsInPairs
+    ?.length
     ? node.portPointsInPairs.map(([start, end], routeEventId) => {
         if (start.connectionName !== end.connectionName)
           throw new Error(

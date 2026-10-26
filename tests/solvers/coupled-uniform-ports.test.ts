@@ -136,14 +136,17 @@ test("physical Uniform couples movable faces, preserves shared copies and never 
   expect(actual.failed).toBe(false)
   checkCopiesAndSpacing(actual.getOutput())
   expect(fixture).toEqual(snapshot)
-  const both = createTwoFaceInput(), bothSnapshot = structuredClone(both)
+  const both = createTwoFaceInput(),
+    bothSnapshot = structuredClone(both)
   const solver = new UniformPortDistributionSolver(both)
   solver.solve()
   expect(solver.solved).toBe(true)
   checkCopiesAndSpacing(solver.getOutput())
-  const middle = solver.getOutput().find((node) => node.capacityMeshNodeId === "middle")!
-  expect(middle.portPoints[0]!.y).toBeLessThan(-.05)
-  expect(middle.portPoints[1]!.y).toBeGreaterThan(.05)
+  const middle = solver
+    .getOutput()
+    .find((node) => node.capacityMeshNodeId === "middle")!
+  expect(middle.portPoints[0]!.y).toBeLessThan(-0.05)
+  expect(middle.portPoints[1]!.y).toBeGreaterThan(0.05)
   expect(both).toEqual(bothSnapshot)
   const limited = new UniformPortDistributionSolver(createTwoFaceInput())
   limited.MAX_ITERATIONS = 1

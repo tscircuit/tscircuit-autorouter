@@ -393,7 +393,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private queueConnectionForPostrouteRepair(connectionName: string) {
     const tasks = this.originalConnectionTasks.filter(
-      (task) => task.connectionName === connectionName && task.points.length >= 2,
+      (task) =>
+        task.connectionName === connectionName && task.points.length >= 2,
     )
     if (tasks.length === 0) return false
 

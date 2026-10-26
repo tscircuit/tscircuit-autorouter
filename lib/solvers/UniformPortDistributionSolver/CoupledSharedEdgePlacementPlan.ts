@@ -150,34 +150,87 @@ export class CoupledSharedEdgePlacementPlan {
           if (event.family !== undefined)
             throw new Error("A port has multiple movable faces")
           event.family = `${edge.ownerPairKey}:${z}`
-          event.variable = { id: port.portPointId!, x: edge.x1, y: edge.y1, dx, dy,
-            domains: physical.getAllowedIntervals(edge, { owner: event.owner, width: event.width, z }),
-            preferred: (event.port.x - edge.x1) * dx + (event.port.y - edge.y1) * dy }
-          members.push({ index, movable: true, distance, allowed: event.variable.domains })
+          event.variable = {
+            id: port.portPointId!,
+            x: edge.x1,
+            y: edge.y1,
+            dx,
+            dy,
+            domains: physical.getAllowedIntervals(edge, {
+              owner: event.owner,
+              width: event.width,
+              z,
+            }),
+            preferred:
+              (event.port.x - edge.x1) * dx + (event.port.y - edge.y1) * dy,
+          }
+          members.push({
+            index,
+            movable: true,
+            distance,
+            allowed: event.variable.domains,
+          })
         }
-        const rules = { length: edge.length,
+        const rules = {
+          length: edge.length,
           ports: members.map((member) => {
             const event = this.events[member.index]!
-            return { owner: event.owner, connectionName: event.port.connectionName, width: event.width, allowed: member.allowed }
-          }), traceClearance: physical.traceClearance, tolerance: TRACE_ENGINE_TOLERANCE }
-        const schedule = getOrderedSharedEdgeSchedule(rules)
-        const roundoff = Number.EPSILON * 64 * Math.max(1, Math.abs(edge.x1), Math.abs(edge.y1), Math.abs(edge.x2), Math.abs(edge.y2), edge.length)
-        const necessary = getOrderedSharedEdgeSchedule({ ...rules, proofSlack: roundoff })
-        if (!necessary.feasible) throw new Error(`No ordered physical domain on shared edge "${edge.ownerPairKey}"`)
-        for (let first = 0; first < members.length; first++) for (let second = first + 1; second < members.length; second++) {
-          const a = members[first]!, b = members[second]!, gap = schedule.gaps[first]![second]!
-          if (a.movable && b.movable) this.orders.push({ first: a.index, second: b.index, gap })
-          else if (a.movable || b.movable) {
-            this.anchorOrders.push({ first: a.index, second: b.index, axis: edge.orientation === "horizontal" ? "x" : "y" })
-            const member = a.movable ? a : b, event = this.events[member.index]!
-            const low = a.movable ? -Infinity : a.distance + gap - roundoff
-            const high = a.movable ? b.distance - gap + roundoff : Infinity
-            event.variable.domains = event.variable.domains.flatMap(([start, end]): EdgeInterval[] => {
-              const min = Math.max(start, low), max = Math.min(end, high)
-              return min <= max ? [[min, max]] : []
-            })
-          }
+            return {
+              owner: event.owner,
+              connectionName: event.port.connectionName,
+              width: event.width,
+              allowed: member.allowed,
+            }
+          }),
+          traceClearance: physical.traceClearance,
+          tolerance: TRACE_ENGINE_TOLERANCE,
         }
+        const schedule = getOrderedSharedEdgeSchedule(rules)
+        const roundoff =
+          Number.EPSILON *
+          64 *
+          Math.max(
+            1,
+            Math.abs(edge.x1),
+            Math.abs(edge.y1),
+            Math.abs(edge.x2),
+            Math.abs(edge.y2),
+            edge.length,
+          )
+        const necessary = getOrderedSharedEdgeSchedule({
+          ...rules,
+          proofSlack: roundoff,
+        })
+        if (!necessary.feasible)
+          throw new Error(
+            `No ordered physical domain on shared edge "${edge.ownerPairKey}"`,
+          )
+        for (let first = 0; first < members.length; first++)
+          for (let second = first + 1; second < members.length; second++) {
+            const a = members[first]!,
+              b = members[second]!,
+              gap = schedule.gaps[first]![second]!
+            if (a.movable && b.movable)
+              this.orders.push({ first: a.index, second: b.index, gap })
+            else if (a.movable || b.movable) {
+              this.anchorOrders.push({
+                first: a.index,
+                second: b.index,
+                axis: edge.orientation === "horizontal" ? "x" : "y",
+              })
+              const member = a.movable ? a : b,
+                event = this.events[member.index]!
+              const low = a.movable ? -Infinity : a.distance + gap - roundoff
+              const high = a.movable ? b.distance - gap + roundoff : Infinity
+              event.variable.domains = event.variable.domains.flatMap(
+                ([start, end]): EdgeInterval[] => {
+                  const min = Math.max(start, low),
+                    max = Math.min(end, high)
+                  return min <= max ? [[min, max]] : []
+                },
+              )
+            }
+          }
       }
     }
     const pairs = new Set<string>()
@@ -185,14 +238,31 @@ export class CoupledSharedEdgePlacementPlan {
       const indices = node.portPoints.map((port, pointIndex) => {
         if (port.portPointId) {
           const index = this.named.get(port.portPointId)
-          if (index === undefined) throw new Error(`Missing physical endpoint "${port.portPointId}"`)
-          const owner = physical.getOwner(port), event = this.events[index]!
-          if (owner !== event.owner) throw new Error(`Conflicting electrical owners for endpoint "${port.portPointId}"`)
+          if (index === undefined)
+            throw new Error(`Missing physical endpoint "${port.portPointId}"`)
+          const owner = physical.getOwner(port),
+            event = this.events[index]!
+          if (owner !== event.owner)
+            throw new Error(
+              `Conflicting electrical owners for endpoint "${port.portPointId}"`,
+            )
           return index
         }
         const index = this.events.length
-        this.events.push({ port, owner: physical.getOwner(port), width: physical.getWidth(port),
-          variable: { id: `fixed:${node.capacityMeshNodeId}:${pointIndex}`, x: port.x, y: port.y, dx: 0, dy: 0, domains: [[0, 0]], preferred: 0 } })
+        this.events.push({
+          port,
+          owner: physical.getOwner(port),
+          width: physical.getWidth(port),
+          variable: {
+            id: `fixed:${node.capacityMeshNodeId}:${pointIndex}`,
+            x: port.x,
+            y: port.y,
+            dx: 0,
+            dy: 0,
+            domains: [[0, 0]],
+            preferred: 0,
+          },
+        })
         return index
       })
       for (let first = 0; first < indices.length; first++) for (let second = first + 1; second < indices.length; second++) {
