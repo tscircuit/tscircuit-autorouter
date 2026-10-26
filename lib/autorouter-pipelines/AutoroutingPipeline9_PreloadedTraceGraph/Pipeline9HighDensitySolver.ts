@@ -328,7 +328,6 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacleMargin: number
   viaToPadClearance?: number
   viaKeepouts?: ViaKeepoutRegion[]
-  allowBlindAndBuriedVias?: boolean
   effort: number
   nodePfById:
     | Map<CapacityMeshNodeId, number | null>
@@ -352,7 +351,6 @@ export const createPipeline9RegularNodeSolver = ({
   obstacleMargin,
   viaToPadClearance,
   viaKeepouts,
-  allowBlindAndBuriedVias,
   effort,
   nodePfById,
   obstacles,
@@ -534,7 +532,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       viaToPadClearance: this.viaToPadClearance,
       viaKeepouts: this.viaKeepouts,
-      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
