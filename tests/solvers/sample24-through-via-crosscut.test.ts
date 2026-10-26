@@ -243,15 +243,30 @@ test("sample24 node61252 attributes an impossible full-stack via barrier to remo
   })
   // Existing owned multilayer copper makes the manufactured-via demand
   // uncertain, so this conservative proof leaves it to detailed routing.
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(query))
-    .toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({
-    ...context, physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true },
-  })!(query)).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true },
+    })!(query),
+  ).toEqual({ feasible: true })
   const preloaded = structuredClone(fixture.physicalSrj)
-  preloaded.traces = [{ type: "pcb_trace", pcb_trace_id: "fixed", connection_name: "source_net_altium_pcb_136",
-    route: [{ route_type: "wire", x: 140, y: 50, layer: "top", width: 0.1 }] }]
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: preloaded })!(query))
-    .toEqual({ feasible: true })
+  preloaded.traces = [
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "fixed",
+      connection_name: "source_net_altium_pcb_136",
+      route: [{ route_type: "wire", x: 140, y: 50, layer: "top", width: 0.1 }],
+    },
+  ]
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: preloaded })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })
