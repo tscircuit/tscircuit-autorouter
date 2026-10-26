@@ -19,7 +19,9 @@ test.failing(
       import.meta.url,
     )
     const rawInput = gunzipSync(Uint8Array.from(readFileSync(fixtureUrl)))
-    expect(createHash("sha256").update(rawInput).digest("hex")).toBe(
+    expect(
+      createHash("sha256").update(Uint8Array.from(rawInput)).digest("hex"),
+    ).toBe(
       "1966c316d2223d5c9f5a162dd00f3fdf61b811ab7ef707cac160a42fe1a4c01e",
     )
     const inputSrj = JSON.parse(rawInput.toString("utf8")) as SimpleRouteJson
