@@ -259,14 +259,55 @@ export function createPipeline9PhysicalRouteValidator({
     // Opaque unowned barriers have no declared copper role. Check overlap
     // without inventing pad clearance; typed pads and holes retain their rules.
     const unownedObstacles = srj.obstacles.filter(isOpaqueUnownedObstacle)
-    const otherObstacleSrj = { ...srj, obstacles: srj.obstacles.filter((obstacle) => !isOpaqueUnownedObstacle(obstacle)) }
-    if (getFixedObstacleViolations({ srj: otherObstacleSrj as any, routes: routes as any, traceClearance, viaClearance }).length > 0) return false
-    if (unownedObstacles.length > 0 && getFixedObstacleViolations({ srj: { ...srj, obstacles: unownedObstacles, defaultObstacleMargin: 0, minTraceToPadEdgeClearance: 0, minViaEdgeToPadEdgeClearance: 0 } as any, routes: routes as any, traceClearance: 0, viaClearance: 0 }).length > 0) return false
+    const otherObstacleSrj = {
+      ...srj,
+      obstacles: srj.obstacles.filter(
+        (obstacle) => !isOpaqueUnownedObstacle(obstacle),
+      ),
+    }
+    if (
+      getFixedObstacleViolations({
+        srj: otherObstacleSrj as any,
+        routes: routes as any,
+        traceClearance,
+        viaClearance,
+      }).length > 0
+    )
+      return false
+    if (
+      unownedObstacles.length > 0 &&
+      getFixedObstacleViolations({
+        srj: {
+          ...srj,
+          obstacles: unownedObstacles,
+          defaultObstacleMargin: 0,
+          minTraceToPadEdgeClearance: 0,
+          minViaEdgeToPadEdgeClearance: 0,
+        } as any,
+        routes: routes as any,
+        traceClearance: 0,
+        viaClearance: 0,
+      }).length > 0
+    )
+      return false
     for (const route of routes) {
       const geometry = getPipeline9RouteCopperGeometry(route, srj)
       for (const segment of geometry.wireSegments) {
-        if (!isPointInsideBoard(segment.start, segment.width / 2) || !isPointInsideBoard(segment.end, segment.width / 2)) return false
-        if (srj.outline && doesSegmentCrossPolygonBoundary({ start: segment.start, end: segment.end, polygon: srj.outline, margin: segment.width / 2 + boardEdgeClearance })) return false
+        if (
+          !isPointInsideBoard(segment.start, segment.width / 2) ||
+          !isPointInsideBoard(segment.end, segment.width / 2)
+        )
+          return false
+        if (
+          srj.outline &&
+          doesSegmentCrossPolygonBoundary({
+            start: segment.start,
+            end: segment.end,
+            polygon: srj.outline,
+            margin: segment.width / 2 + boardEdgeClearance,
+          })
+        )
+          return false
       }
       for (const via of geometry.viaSpans) {
         if (!isPointInsideBoard(via.center, via.diameter / 2)) return false

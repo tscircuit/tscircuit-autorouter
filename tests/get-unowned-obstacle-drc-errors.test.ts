@@ -113,15 +113,17 @@ test("unowned obstacle DRC catches sample24 raw barrier 2591 independently of it
   const sourceLessPadInput: SimpleRouteJson = {
     ...inputSrj,
     minViaEdgeToPadEdgeClearance: 0.1,
-    obstacles: [{
-      ...inputSrj.obstacles[0]!,
-      center: { x: x + 0.15 + 0.5334 / 2 + 0.02, y },
-      layers: ["top"],
-      circuitJsonMetadata: {
-        pcb_smtpad_id: "source-less-pad",
-        pcb_port_id: "source-less-port",
+    obstacles: [
+      {
+        ...inputSrj.obstacles[0]!,
+        center: { x: x + 0.15 + 0.5334 / 2 + 0.02, y },
+        layers: ["top"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "source-less-pad",
+          pcb_port_id: "source-less-port",
+        },
       },
-    }],
+    ],
   }
   const sourceLessPadResult = evaluateRelaxedDrc({
     inputSrj: sourceLessPadInput,
@@ -129,11 +131,13 @@ test("unowned obstacle DRC catches sample24 raw barrier 2591 independently of it
     routedTraces: [trace],
     drcOptions: { includeTraceContinuity: false },
   })
-  expect(getUnownedObstacleDrcErrors({
-    inputSrj: sourceLessPadInput,
-    jointTraces: [trace],
-    circuitJson: sourceLessPadResult.circuitJson,
-  })).toEqual([])
+  expect(
+    getUnownedObstacleDrcErrors({
+      inputSrj: sourceLessPadInput,
+      jointTraces: [trace],
+      circuitJson: sourceLessPadResult.circuitJson,
+    }),
+  ).toEqual([])
   const padErrors = sourceLessPadResult.errors.filter(
     (error) => error.type === "pcb_pad_pad_clearance_error",
   )
@@ -149,15 +153,22 @@ test("unowned obstacle DRC catches sample24 raw barrier 2591 independently of it
       ...inputSrj,
       obstacles: [{ ...inputSrj.obstacles[0]!, ...ownership }],
     }
-    const ownedOpaqueCircuitJson = convertToCircuitJson(ownedOpaqueInput, [trace])
-    expect(ownedOpaqueCircuitJson.some(
-      (element) => element.type === "pcb_smtpad" || element.type === "pcb_plated_hole",
-    )).toBe(false)
-    expect(getUnownedObstacleDrcErrors({
-      inputSrj: ownedOpaqueInput,
-      jointTraces: [trace],
-      circuitJson: ownedOpaqueCircuitJson,
-    })).toEqual([])
+    const ownedOpaqueCircuitJson = convertToCircuitJson(ownedOpaqueInput, [
+      trace,
+    ])
+    expect(
+      ownedOpaqueCircuitJson.some(
+        (element) =>
+          element.type === "pcb_smtpad" || element.type === "pcb_plated_hole",
+      ),
+    ).toBe(false)
+    expect(
+      getUnownedObstacleDrcErrors({
+        inputSrj: ownedOpaqueInput,
+        jointTraces: [trace],
+        circuitJson: ownedOpaqueCircuitJson,
+      }),
+    ).toEqual([])
   }
 
   const subdividedTrace: SimplifiedPcbTrace = {
@@ -221,11 +232,13 @@ test("unowned obstacle DRC catches sample24 raw barrier 2591 independently of it
       ...inputSrj,
       obstacles: [{ ...inputSrj.obstacles[0]!, obstacleId }],
     }
-    expect(getUnownedObstacleDrcErrors({
-      inputSrj: opaqueInput,
-      jointTraces: [nearKeepoutTrace],
-      circuitJson: convertToCircuitJson(opaqueInput, [nearKeepoutTrace]),
-    })).toEqual([])
+    expect(
+      getUnownedObstacleDrcErrors({
+        inputSrj: opaqueInput,
+        jointTraces: [nearKeepoutTrace],
+        circuitJson: convertToCircuitJson(opaqueInput, [nearKeepoutTrace]),
+      }),
+    ).toEqual([])
   }
   expect({ inputSrj, trace, circuitJson }).toEqual(snapshot)
 })

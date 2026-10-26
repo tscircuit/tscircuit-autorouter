@@ -72,9 +72,7 @@ test("reference obstacle DRC distinguishes completed fanout planning footprints 
     expect(
       errors.every((error) => error.srj_obstacle_index === planningIndex),
     ).toBe(true)
-    expect(errors.every((error) => error.actual_clearance === -0.05)).toBe(
-      true,
-    )
+    expect(errors.every((error) => error.actual_clearance === -0.05)).toBe(true)
   }
 
   const withPhysicalBarrier: SimpleRouteJson = {

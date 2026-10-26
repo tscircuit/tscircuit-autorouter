@@ -11,12 +11,20 @@ import {
   isPointInOrOnPolygon,
 } from "lib/utils/polygonContainment"
 import { getPipeline9PhysicalGeometryContext } from "./getPipeline9PhysicalGeometryContext"
-import { preparePipeline9PhysicalObstacle, type PhysicalObstacleShape, type PreparedPhysicalObstacle } from "./preparePipeline9PhysicalObstacle"
+import {
+  preparePipeline9PhysicalObstacle,
+  type PhysicalObstacleShape,
+  type PreparedPhysicalObstacle,
+} from "./preparePipeline9PhysicalObstacle"
 
 type Point = { x: number; y: number }
 const validators = new WeakMap<SimpleRouteJson, StaticSegmentValidator>()
 
-const shapeDistance = (a: Point, b: Point, shape: PhysicalObstacleShape): number => {
+const shapeDistance = (
+  a: Point,
+  b: Point,
+  shape: PhysicalObstacleShape,
+): number => {
   if (shape.kind === "rect")
     return segmentToBoundsMinDistance(a, b, {
       minX: -shape.width / 2,
@@ -115,20 +123,49 @@ export function createPipeline9StaticSegmentValidator(
       segment.rootConnectionName ??
       segment.connectionName
     const reach = radius + maximumClearance + 1e-6
-    for (const id of context.index?.search(Math.min(start.x, end.x) - reach, Math.min(start.y, end.y) - reach, Math.max(start.x, end.x) + reach, Math.max(start.y, end.y) + reach) ?? []) {
+    for (const id of context.index?.search(
+      Math.min(start.x, end.x) - reach,
+      Math.min(start.y, end.y) - reach,
+      Math.max(start.x, end.x) + reach,
+      Math.max(start.y, end.y) + reach,
+    ) ?? []) {
       let obstacle = prepared.get(id)
       if (!obstacle) {
         const raw = context.obstacles[id]!
         obstacle = preparePipeline9PhysicalObstacle(raw, connMap)
         prepared.set(id, obstacle)
       }
-      if (obstacle.owners.has(owner) || ![...obstacle.layers].some((z) => z >= minZ && z <= maxZ)) continue
-      const local = (point: Point): Point => ({ x: (point.x - obstacle!.x) * obstacle!.cosine + (point.y - obstacle!.y) * obstacle!.sine, y: -(point.x - obstacle!.x) * obstacle!.sine + (point.y - obstacle!.y) * obstacle!.cosine })
-      const a = local(start), b = local(end)
+      if (
+        obstacle.owners.has(owner) ||
+        ![...obstacle.layers].some((z) => z >= minZ && z <= maxZ)
+      )
+        continue
+      const local = (point: Point): Point => ({
+        x:
+          (point.x - obstacle!.x) * obstacle!.cosine +
+          (point.y - obstacle!.y) * obstacle!.sine,
+        y:
+          -(point.x - obstacle!.x) * obstacle!.sine +
+          (point.y - obstacle!.y) * obstacle!.cosine,
+      })
+      const a = local(start),
+        b = local(end)
       const clearance = via ? viaClearance : traceClearance
-      if (obstacle.engineShape && shapeDistance(a, b, obstacle.engineShape) - radius + 0.005 < clearance) return false
-      const rawClearance = obstacle.opaque ? 0 : !via && obstacle.nonPlatedHole ? srj.minTraceToHoleEdgeClearance ?? traceClearance : clearance
-      if (obstacle.rawShape && shapeDistance(a, b, obstacle.rawShape) - radius + 1e-8 < rawClearance) return false
+      if (
+        obstacle.engineShape &&
+        shapeDistance(a, b, obstacle.engineShape) - radius + 0.005 < clearance
+      )
+        return false
+      const rawClearance = obstacle.opaque
+        ? 0
+        : !via && obstacle.nonPlatedHole
+          ? (srj.minTraceToHoleEdgeClearance ?? traceClearance)
+          : clearance
+      if (
+        obstacle.rawShape &&
+        shapeDistance(a, b, obstacle.rawShape) - radius + 1e-8 < rawClearance
+      )
+        return false
     }
     return true
   }

@@ -11,7 +11,11 @@ import {
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import type { HighDensityRoute, NodeWithPortPoints, StaticRouteSegment } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+  StaticRouteSegment,
+} from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
 test("joint regional candidates retain the original board and declared owners across synthetic splice aliases", (): void => {
@@ -20,10 +24,38 @@ test("joint regional candidates retain the original board and declared owners ac
     layerCount: 8,
     minTraceWidth: 0.1,
     allowBlindAndBuriedVias: false,
-    connections: [{ name: "source_signal", pointsToConnect: [] }, { name: "source_foreign", pointsToConnect: [] }],
+    connections: [
+      { name: "source_signal", pointsToConnect: [] },
+      { name: "source_foreign", pointsToConnect: [] },
+    ],
     obstacles: [
-      { type: "rect", center: { x: -0.5, y: 0 }, width: 0.3, height: 0.3, layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"], connectedTo: ["source_signal", "pcb_plated_hole_own"], circuitJsonMetadata: { pcb_plated_hole_id: "pcb_plated_hole_own" } },
-      { type: "rect", center: { x: 0.5, y: 0 }, width: 0.3, height: 0.3, layers: ["inner4"], connectedTo: ["source_foreign", "pcb_smtpad_foreign"], circuitJsonMetadata: { pcb_smtpad_id: "pcb_smtpad_foreign" } },
+      {
+        type: "rect",
+        center: { x: -0.5, y: 0 },
+        width: 0.3,
+        height: 0.3,
+        layers: [
+          "top",
+          "inner1",
+          "inner2",
+          "inner3",
+          "inner4",
+          "inner5",
+          "inner6",
+          "bottom",
+        ],
+        connectedTo: ["source_signal", "pcb_plated_hole_own"],
+        circuitJsonMetadata: { pcb_plated_hole_id: "pcb_plated_hole_own" },
+      },
+      {
+        type: "rect",
+        center: { x: 0.5, y: 0 },
+        width: 0.3,
+        height: 0.3,
+        layers: ["inner4"],
+        connectedTo: ["source_foreign", "pcb_smtpad_foreign"],
+        circuitJsonMetadata: { pcb_smtpad_id: "pcb_smtpad_foreign" },
+      },
     ],
   }
   // Planning geometry is deliberately incomplete and routing aliases merge
@@ -34,17 +66,42 @@ test("joint regional candidates retain the original board and declared owners ac
     rootConnectionName: "connectivity_net_routing",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: -2, y, z: 0 }, { x: 2, y, z: 0 }],
+    route: [
+      { x: -2, y, z: 0 },
+      { x: 2, y, z: 0 },
+    ],
     vias: [],
   }))
-  const physicalRootConnectionNameByConnectionName = { pipeline9_preloaded_drc_0: "source_signal" }
-  const original = structuredClone({ physicalSrj, srj, routes, physicalRootConnectionNameByConnectionName })
+  const physicalRootConnectionNameByConnectionName = {
+    pipeline9_preloaded_drc_0: "source_signal",
+  }
+  const original = structuredClone({
+    physicalSrj,
+    srj,
+    routes,
+    physicalRootConnectionNameByConnectionName,
+  })
   const params = {
-    srj, physicalSrj, routes, physicalRootConnectionNameByConnectionName,
+    srj,
+    physicalSrj,
+    routes,
+    physicalRootConnectionNameByConnectionName,
     fixedObstacleRoutes: [],
-    connMap: new ConnectivityMap({ connectivity_net_routing: ["pipeline9_preloaded_drc_0", "source_signal", "source_foreign"] }),
-    colorMap: {}, viaDiameter: 0.3, viaHoleDiameter: 0.15, traceWidth: 0.1,
-    obstacleMargin: 0.15, effort: 1, center: { x: 0, y: 0 }, regionSize: 3,
+    connMap: new ConnectivityMap({
+      connectivity_net_routing: [
+        "pipeline9_preloaded_drc_0",
+        "source_signal",
+        "source_foreign",
+      ],
+    }),
+    colorMap: {},
+    viaDiameter: 0.3,
+    viaHoleDiameter: 0.15,
+    traceWidth: 0.1,
+    obstacleMargin: 0.15,
+    effort: 1,
+    center: { x: 0, y: 0 },
+    regionSize: 3,
   }
   const b01 = preparePipeline9RegionalB01Candidate({ ...params, routeIndex: 0 })
   expect(b01).toBeDefined()
@@ -54,21 +111,50 @@ test("joint regional candidates retain the original board and declared owners ac
     fixedRouteCopperSpatialIndex: createFixedRouteCopperSpatialIndex([], srj),
   })
   expect(regular).toBeDefined()
-  const nodeSolvers: HighDensitySolver[] = [b01!.solver.activeRegularSolver!, regular!.solver.highDensitySolver]
+  const nodeSolvers: HighDensitySolver[] = [
+    b01!.solver.activeRegularSolver!,
+    regular!.solver.highDensitySolver,
+  ]
   for (const solver of nodeSolvers) {
     expect(solver).toBeDefined()
     expect(solver.staticSegmentValidator).toBeFunction()
     expect(solver.growShrinkSolutionValidator).toBeFunction()
-    const connectionName = solver.unsolvedNodePortPoints[0]!.portPoints[0]!.connectionName
+    const connectionName =
+      solver.unsolvedNodePortPoints[0]!.portPoints[0]!.connectionName
     expect(connectionName).toBe("pipeline9_preloaded_drc_0_regional_0")
-    const edge: StaticRouteSegment = { connectionName, rootConnectionName: "connectivity_net_routing", traceThickness: 0.1, viaDiameter: 0.3, start: { x: -0.5, y: 0, z: 0 }, end: { x: -0.5, y: 0, z: 1 } }
-    const whole = (segment: StaticRouteSegment): boolean => solver.growShrinkSolutionValidator!([{ connectionName: segment.connectionName, rootConnectionName: segment.rootConnectionName, traceThickness: segment.traceThickness, viaDiameter: segment.viaDiameter, route: [segment.start, segment.end], vias: [{ x: segment.start.x, y: segment.start.y }] }])
+    const edge: StaticRouteSegment = {
+      connectionName,
+      rootConnectionName: "connectivity_net_routing",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      start: { x: -0.5, y: 0, z: 0 },
+      end: { x: -0.5, y: 0, z: 1 },
+    }
+    const whole = (segment: StaticRouteSegment): boolean =>
+      solver.growShrinkSolutionValidator!([
+        {
+          connectionName: segment.connectionName,
+          rootConnectionName: segment.rootConnectionName,
+          traceThickness: segment.traceThickness,
+          viaDiameter: segment.viaDiameter,
+          route: [segment.start, segment.end],
+          vias: [{ x: segment.start.x, y: segment.start.y }],
+        },
+      ])
     expect(solver.staticSegmentValidator!(edge)).toBe(true)
     expect(whole(edge)).toBe(true)
-    const foreign = { ...edge, start: { ...edge.start, x: 0.5 }, end: { ...edge.end, x: 0.5 } }
+    const foreign = {
+      ...edge,
+      start: { ...edge.start, x: 0.5 },
+      end: { ...edge.end, x: 0.5 },
+    }
     expect(solver.staticSegmentValidator!(foreign)).toBe(false)
     expect(whole(foreign)).toBe(false)
-    const offBoard = { ...edge, start: { ...edge.start, x: 4.9 }, end: { ...edge.end, x: 4.9 } }
+    const offBoard = {
+      ...edge,
+      start: { ...edge.start, x: 4.9 },
+      end: { ...edge.end, x: 4.9 },
+    }
     expect(solver.staticSegmentValidator!(offBoard)).toBe(false)
     expect(whole(offBoard)).toBe(false)
   }

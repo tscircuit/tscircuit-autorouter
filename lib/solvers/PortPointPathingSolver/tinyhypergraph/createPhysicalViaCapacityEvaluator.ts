@@ -52,7 +52,9 @@ type Evaluator = (
 ) => TinyHyperGraphRegionSegmentFeasibilityResult
 
 const boardCache = new WeakMap<SimpleRouteJson, PhysicalBoard>()
-const FEASIBLE: TinyHyperGraphRegionSegmentFeasibilityResult = { feasible: true }
+const FEASIBLE: TinyHyperGraphRegionSegmentFeasibilityResult = {
+  feasible: true,
+}
 
 function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
   const cached = boardCache.get(physicalSrj)
@@ -99,7 +101,8 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
     )
       continue
     const { x, y } = obstacle.center
-    if (![x, y, obstacle.width, obstacle.height].every(Number.isFinite)) continue
+    if (![x, y, obstacle.width, obstacle.height].every(Number.isFinite))
+      continue
     if (obstacle.__zLayers!.length > 1 && owners.size > 0) {
       const reach = Math.hypot(obstacle.width, obstacle.height) / 2
       conductors.push({
@@ -229,7 +232,8 @@ export function createPhysicalViaCapacityEvaluator({
     if (cached !== undefined) return cached
     caches.ports.set(portId, null)
     const regions = topology.incidentPortRegion[portId]
-    if (!regions || regions.length !== 2 || regions[0] === regions[1]) return null
+    if (!regions || regions.length !== 2 || regions[0] === regions[1])
+      return null
     const first = topology.regionMetadata?.[regions[0]!] as
       | CapacityMeshNode
       | undefined
@@ -445,11 +449,12 @@ export function createPhysicalViaCapacityEvaluator({
       if (!widths) edge.allowedByOwner.set(owner, (widths = new Map()))
       let allowed = widths.get(width)
       if (allowed === undefined) {
-        allowed = board.sharedEdgePlacement.getAllowedIntervals(edge.geometry, {
-          z: topology.portZ[portId]!,
-          owner,
-          width,
-        }).length > 0
+        allowed =
+          board.sharedEdgePlacement.getAllowedIntervals(edge.geometry, {
+            z: topology.portZ[portId]!,
+            owner,
+            width,
+          }).length > 0
         widths.set(width, allowed)
       }
       if (!allowed) return { feasible: false, blockerRouteIds: [] }

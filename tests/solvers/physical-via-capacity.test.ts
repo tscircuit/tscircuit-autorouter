@@ -321,15 +321,28 @@ test("actual61633 through-via capacity takes a global detour and preserves elect
       ids.map((id) => (id < 2 ? 1 - id : id)),
     ),
   }
-  expect(evaluate({
-    ...query,
-    topology: remappedTopology,
-    problem: remappedProblem,
-    regionId: 1,
-    routeId: 0,
-    regionSegments: [[1, 0, 1], [2, 0, 1]],
-  })).toEqual({ feasible: false, blockerRouteIds: [1, 2] })
-  expect(structuredClone({ physicalSrj: fixture.physicalSrj, freeRegionIds: [plain.capacityMeshNodeId] })).toEqual({ physicalSrj: fixture.physicalSrj, freeRegionIds: [plain.capacityMeshNodeId] })
+  expect(
+    evaluate({
+      ...query,
+      topology: remappedTopology,
+      problem: remappedProblem,
+      regionId: 1,
+      routeId: 0,
+      regionSegments: [
+        [1, 0, 1],
+        [2, 0, 1],
+      ],
+    }),
+  ).toEqual({ feasible: false, blockerRouteIds: [1, 2] })
+  expect(
+    structuredClone({
+      physicalSrj: fixture.physicalSrj,
+      freeRegionIds: [plain.capacityMeshNodeId],
+    }),
+  ).toEqual({
+    physicalSrj: fixture.physicalSrj,
+    freeRegionIds: [plain.capacityMeshNodeId],
+  })
   const blindEvaluator = createPhysicalViaCapacityEvaluator({
     physicalSrj: { ...fixture.physicalSrj, allowBlindAndBuriedVias: true },
     freeRegionIds: [fixture.capacityNode.capacityMeshNodeId],

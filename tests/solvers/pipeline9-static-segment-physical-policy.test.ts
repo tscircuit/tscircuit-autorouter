@@ -122,15 +122,57 @@ test("indexed static edges preserve physical span, ownership, typed clearances a
   }
   expect(compare(srj, wire)).toBe(false)
   expect(compare({ ...srj, minTraceWidth: 0.02 }, wire)).toBe(true)
-  const rotated = { ...srj, obstacles: [{ ...srj.obstacles[0]!, width: 4, height: 1, ccwRotationDegrees: 90 }] }
-  expect(compare(rotated, { ...via, start: { x: 0, y: 1.5, z: 0 }, end: { x: 0, y: 1.5, z: 7 } })).toBe(false)
-  expect(compare(rotated, { ...via, start: { x: 1.5, y: 0, z: 0 }, end: { x: 1.5, y: 0, z: 7 } })).toBe(true)
-  const hole = { ...srj, minTraceToHoleEdgeClearance: 0.1, obstacles: [{ ...srj.obstacles[0]!, width: 1, height: 1, shape: "circle" as const, isNonPlatedHole: true, connectedTo: [] }] }
-  const besideHole = { ...wire, traceThickness: 0.1, start: { x: -1, y: 0.65, z: 4 }, end: { x: 1, y: 0.65, z: 4 } }
+  const rotated = {
+    ...srj,
+    obstacles: [
+      { ...srj.obstacles[0]!, width: 4, height: 1, ccwRotationDegrees: 90 },
+    ],
+  }
+  expect(
+    compare(rotated, {
+      ...via,
+      start: { x: 0, y: 1.5, z: 0 },
+      end: { x: 0, y: 1.5, z: 7 },
+    }),
+  ).toBe(false)
+  expect(
+    compare(rotated, {
+      ...via,
+      start: { x: 1.5, y: 0, z: 0 },
+      end: { x: 1.5, y: 0, z: 7 },
+    }),
+  ).toBe(true)
+  const hole = {
+    ...srj,
+    minTraceToHoleEdgeClearance: 0.1,
+    obstacles: [
+      {
+        ...srj.obstacles[0]!,
+        width: 1,
+        height: 1,
+        shape: "circle" as const,
+        isNonPlatedHole: true,
+        connectedTo: [],
+      },
+    ],
+  }
+  const besideHole = {
+    ...wire,
+    traceThickness: 0.1,
+    start: { x: -1, y: 0.65, z: 4 },
+    end: { x: 1, y: 0.65, z: 4 },
+  }
   expect(compare(hole, besideHole)).toBe(true)
-  expect(compare({ ...hole, minTraceToHoleEdgeClearance: 0.15 }, besideHole)).toBe(false)
-  for (const x of [0, 0.15, 0.3, 0.395, 0.4, 0.45]) compare(srj, { ...via, start: { ...via.start, x }, end: { ...via.end, x } })
-  expect(createPipeline9StaticSegmentValidator(srj)).toBe(createPipeline9StaticSegmentValidator(srj))
-  expect(getPipeline9PhysicalGeometryContext(srj)).toBe(getPipeline9PhysicalGeometryContext(srj))
+  expect(
+    compare({ ...hole, minTraceToHoleEdgeClearance: 0.15 }, besideHole),
+  ).toBe(false)
+  for (const x of [0, 0.15, 0.3, 0.395, 0.4, 0.45])
+    compare(srj, { ...via, start: { ...via.start, x }, end: { ...via.end, x } })
+  expect(createPipeline9StaticSegmentValidator(srj)).toBe(
+    createPipeline9StaticSegmentValidator(srj),
+  )
+  expect(getPipeline9PhysicalGeometryContext(srj)).toBe(
+    getPipeline9PhysicalGeometryContext(srj),
+  )
   expect({ srj, via }).toEqual(original)
 })

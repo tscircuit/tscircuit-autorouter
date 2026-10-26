@@ -401,7 +401,8 @@ export const createPipeline9RegularNodeSolver = ({
               ] ??
               nodeWithPortPoints.portPoints.find(
                 (point) => point.connectionName === segment.connectionName,
-              )?.rootConnectionName ?? segment.connectionName,
+              )?.rootConnectionName ??
+              segment.connectionName,
           })
       : undefined,
     growShrinkSolutionValidator: physicalRouteValidator
@@ -415,7 +416,8 @@ export const createPipeline9RegularNodeSolver = ({
                 ] ??
                 nodeWithPortPoints.portPoints.find(
                   (point) => point.connectionName === route.connectionName,
-                )?.rootConnectionName ?? route.connectionName,
+                )?.rootConnectionName ??
+                route.connectionName,
             })),
           )
       : undefined,
@@ -809,7 +811,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         point.connectionName,
         this.params.physicalRootConnectionNameByConnectionName?.[
           point.connectionName
-        ] ?? point.rootConnectionName ?? point.connectionName,
+        ] ??
+          point.rootConnectionName ??
+          point.connectionName,
       ]),
     )
     const physicalConnMap = this.params.physicalSrj

@@ -653,7 +653,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly physicalRootConnectionNameByConnectionName: Record<string, string> = {}
+  readonly physicalRootConnectionNameByConnectionName: Record<string, string> =
+    {}
   exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private exactRepairParams?: ConstructorParameters<
     typeof GlobalDrcBranchPortfolioSolver
@@ -1034,7 +1035,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
     for (const route of this.fixedPreloadedObstacleRoutes) {
       this.physicalRootConnectionNameByConnectionName[route.connectionName] =
-        params.updatedPreloadedTraces[route.preloadedTraceIndex]!.connection_name
+        params.updatedPreloadedTraces[
+          route.preloadedTraceIndex
+        ]!.connection_name
     }
     const movableSectionIndexesByOriginalTraceId = new Map<string, number[]>()
     for (const [

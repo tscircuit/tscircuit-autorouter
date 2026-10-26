@@ -69,14 +69,14 @@ test("unowned barrier DRC uses the board layer normalization without losing phys
 
   const explicitBottom = structuredClone(srj)
   explicitBottom.obstacles[1]!.zLayers = [1]
-  expect(check(explicitBottom, traces).map((error) => error.pcb_trace_id)).toEqual([
-    "trace-bottom",
-  ])
+  expect(
+    check(explicitBottom, traces).map((error) => error.pcb_trace_id),
+  ).toEqual(["trace-bottom"])
   const canonicalTop = structuredClone(explicitBottom)
   canonicalTop.obstacles[1]!.__zLayers = [0]
-  expect(check(canonicalTop, traces).map((error) => error.pcb_trace_id)).toEqual([
-    "trace-top",
-  ])
+  expect(
+    check(canonicalTop, traces).map((error) => error.pcb_trace_id),
+  ).toEqual(["trace-top"])
 
   const fourLayerBoard = structuredClone(srj)
   fourLayerBoard.layerCount = 4
@@ -87,7 +87,9 @@ test("unowned barrier DRC uses the board layer normalization without losing phys
     route: traces[0]!.route.map((point) => ({ ...point, layer: "inner2" })),
   }
   const innerErrors = check(fourLayerBoard, [...traces, innerTrace])
-  expect(innerErrors.map((error) => error.pcb_trace_id)).toEqual(["trace-inner2"])
+  expect(innerErrors.map((error) => error.pcb_trace_id)).toEqual([
+    "trace-inner2",
+  ])
   expect(innerErrors[0]!.srj_obstacle_index).toBe(1)
 
   const invalidBoard = structuredClone(srj)
