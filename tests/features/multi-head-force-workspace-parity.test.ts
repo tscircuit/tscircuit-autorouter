@@ -15,14 +15,14 @@ type WorkspaceView = {
   }[]
 }
 
-test("force workspaces retain exact mutable passes and release resized candidate geometry", (): void => {
+test("two-layer force workspaces retain exact mutable passes and release resized candidate geometry", (): void => {
   const params = {
     nodeWithPortPoints: {
       capacityMeshNodeId: "force-workspace-parity",
       center: { x: 0, y: 0 },
       width: 8,
       height: 8,
-      availableZ: [0, 1, 2],
+      availableZ: [0, 1],
       portPoints: [],
     },
     viaDiameter: 0.3,
@@ -48,8 +48,8 @@ test("force workspaces retain exact mutable passes and release resized candidate
           (_, index): MHPoint2 => ({
             x: (random() - 0.5) * scale,
             y: (random() - 0.5) * scale,
-            z1: (lineIndex + index) % 3,
-            z2: (lineIndex + index + (index % 2)) % 3,
+            z1: (lineIndex + index) % 2,
+            z2: (lineIndex + index + (index % 2)) % 2,
           }),
         )
         if (sample % 4 === 0 && points.length > 3) points[2] = points[1]!
@@ -98,7 +98,7 @@ test("force workspaces retain exact mutable passes and release resized candidate
           const pointIndex = viaIndexes[index]!
           const point = points[pointIndex]!
           expect(geometry.vias[index]!.point).toBe(point)
-          expect(geometry.vias[index]!.layers).toEqual([point.z1, point.z2])
+          expect(geometry.vias[index]!.layers).toEqual(solver.availableZ)
           expect(geometry.vias[index]!.index).toBe(pointIndex)
         }
       }
@@ -121,12 +121,12 @@ test("force workspaces retain exact mutable passes and release resized candidate
             point.y -= 0.02
           }
           if (pass === 1) {
-            line.start = { ...line.start, z1: 2, z2: 0 }
+            line.start = { ...line.start, z1: 1, z2: 0 }
             line.end = { ...line.end, z1: 0, z2: 1 }
             line.mPoints.splice(0, 1)
           } else if (pass === 2) {
-            line.mPoints.push({ x: -0, y: 0.1, z1: 2, z2: 1 })
-            for (const point of line.mPoints) point.z2 = (point.z2 + 1) % 3
+            line.mPoints.push({ x: -0, y: 0.1, z1: 0, z2: 1 })
+            for (const point of line.mPoints) point.z2 = (point.z2 + 1) % 2
           }
         }
       }

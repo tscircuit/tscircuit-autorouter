@@ -130,15 +130,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           if (!via) {
             via = {
               point,
-              layers: [point.z1, point.z2],
+              layers: [...this.availableZ],
               index: pointIndex,
               force: forces[pointIndex - 1],
             }
             vias[viaCount] = via
           } else {
             via.point = point
-            via.layers[0] = point.z1
-            via.layers[1] = point.z2
+            via.layers.length = this.availableZ.length
+            for (let index = 0; index < this.availableZ.length; index++) {
+              via.layers[index] = this.availableZ[index]!
+            }
             via.index = pointIndex
             via.force = forces[pointIndex - 1]
           }

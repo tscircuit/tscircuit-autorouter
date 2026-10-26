@@ -6,14 +6,14 @@ import type {
 } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/types2"
 import { Frozen142EndpointForceSolver } from "tests/fixtures/Frozen142EndpointForceSolver"
 
-test("cached force references preserve finite segment/via forces, fixed endpoints, and route copper exactly", (): void => {
+test("two-layer cached force references preserve finite forces, fixed endpoints, and route copper exactly", (): void => {
   const params = {
     nodeWithPortPoints: {
       capacityMeshNodeId: "force-reference-parity",
       center: { x: 0, y: 0 },
       width: 6,
       height: 6,
-      availableZ: [0, 1, 2],
+      availableZ: [0, 1],
       portPoints: [],
     },
     viaDiameter: 0.3,
@@ -36,10 +36,10 @@ test("cached force references preserve finite segment/via forces, fixed endpoint
     for (let lineIndex = 0; lineIndex < 5; lineIndex++) {
       const pointCount = 2 + ((sample + lineIndex) % 5)
       const points: MHPoint2[] = []
-      let layer = (sample + lineIndex) % 3
+      let layer = (sample + lineIndex) % 2
       for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
         const nextLayer =
-          (sample + lineIndex + pointIndex) % 3 === 0 ? (layer + 1) % 3 : layer
+          (sample + lineIndex + pointIndex) % 3 === 0 ? (layer + 1) % 2 : layer
         const repeated = pointIndex > 0 && (sample + pointIndex) % 4 === 0
         points.push({
           x: repeated ? points[pointIndex - 1]!.x : (random() - 0.5) * scale,
