@@ -3,6 +3,50 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  cramped_port_search:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 60
+    env:
+      BUN_JSC_forceRAMSize: "2147483648"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare exact candidate paths and bounded adjacency work
+        run: |
+          mkdir -p results base/scripts/benchmarks base/tests/fixtures
+          cp head/scripts/benchmarks/measure-cramped-port-search.ts base/scripts/benchmarks/
+          cp head/tests/fixtures/createWideCrampedPortGraph.ts base/tests/fixtures/
+          for count in 64 4096 16384; do
+            (cd base && bun scripts/benchmarks/measure-cramped-port-search.ts "$count") > "results/base-$count.json"
+            (cd head && bun scripts/benchmarks/measure-cramped-port-search.ts "$count") > "results/head-$count.json"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for count in [64,4096,16384]:
+            a=json.loads(Path(f'results/base-{count}.json').read_text());b=json.loads(Path(f'results/head-{count}.json').read_text())
+            assert a['solved'] and b['solved'] and a['inputUnchanged'] and b['inputUnchanged']
+            assert a['inputSha256']==b['inputSha256'] and a['outputSha256']==b['outputSha256']
+            assert b['adjacencyListReads']<=13 and b['adjacencyEntriesRead']<=4*count+16
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cramped-port-search-comparison
+          path: results/
   pathing_effort:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
