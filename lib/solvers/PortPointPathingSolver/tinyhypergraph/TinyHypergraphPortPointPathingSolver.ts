@@ -275,6 +275,7 @@ const getTinyHyperGraphSolveGraphOptions = (
     // Native route attempts own the loaded topology and plain queued candidates.
     // Closed regional occurrences remain rejected until the native heap clears.
     OWNED_REGIONAL_HOP_FRONTIER: true,
+    USE_REGION_COST_LOOKUP: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
