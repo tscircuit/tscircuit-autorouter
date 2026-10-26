@@ -1,5 +1,6 @@
 type PriorityPoint = { x: number; y: number; z: number }
 export type PriorityTask = {
+  routeEventId?: number
   connectionName: string
   rootConnectionName?: string
   points: PriorityPoint[]
@@ -56,6 +57,9 @@ export function decomposePriorityTasks(
         Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6
       if (nearSameXY && (a.z === b.z || a.x !== b.x || a.y !== b.y)) return null
       tasks.push({
+        ...(connection.routeEventId === undefined
+          ? {}
+          : { routeEventId: connection.routeEventId }),
         connectionName: connection.connectionName,
         rootConnectionName: connection.rootConnectionName,
         points: [{ ...a }, { ...b }],

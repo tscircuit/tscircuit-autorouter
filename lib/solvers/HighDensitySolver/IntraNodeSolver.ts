@@ -16,6 +16,7 @@ import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import {
   precomputeIntraNodeRouteParams,
+  type IntraNodeConnectionTask,
   type PrecomputedIntraNodeRouteParams,
 } from "./precomputeIntraNodeRouteParams"
 
@@ -60,11 +61,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
-  unsolvedConnections: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }[]
+  unsolvedConnections: IntraNodeConnectionTask[]
+  private readonly originalConnectionTasks: IntraNodeConnectionTask[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
   rootConnectionNameByConnectionName: Map<string, string>
 
@@ -143,16 +141,16 @@ export class IntraNodeRouteSolver extends BaseSolver {
         ],
       ),
     )
-    this.unsolvedConnections = Array.from(
-      this.originalConnectionPointsByName
-        .entries()
-        .map(([connectionName, points]) => ({
-          connectionName,
-          rootConnectionName:
-            this.rootConnectionNameByConnectionName.get(connectionName),
-          points: [...points],
-        })),
+    this.originalConnectionTasks = precomputedParams.connectionTasks.map(
+      (task) => ({
+        ...task,
+        points: task.points.map((point) => ({ ...point })),
+      }),
     )
+    this.unsolvedConnections = this.originalConnectionTasks.map((task) => ({
+      ...task,
+      points: task.points.map((point) => ({ ...point })),
+    }))
     this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
@@ -175,7 +173,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
 
     this.totalConnections = this.unsolvedConnections.length
-    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
+    // Pair events retain the original electrical-group work allowance.
+    this.MAX_ITERATIONS =
+      1_000 * precomputedParams.connectionPointsByName.size ** 1.5
 
     this.minDistBetweenEnteringPoints =
       precomputedParams.minDistBetweenEnteringPoints
@@ -392,20 +392,20 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private queueConnectionForPostrouteRepair(connectionName: string) {
-    const points = this.originalConnectionPointsByName.get(connectionName)
-    if (!points || points.length < 2) {
-      return false
-    }
+    const tasks = this.originalConnectionTasks.filter(
+      (task) => task.connectionName === connectionName && task.points.length >= 2,
+    )
+    if (tasks.length === 0) return false
 
     this.solvedRoutes = this.solvedRoutes.filter(
       (route) => route.connectionName !== connectionName,
     )
-    this.unsolvedConnections.push({
-      connectionName,
-      rootConnectionName:
-        this.rootConnectionNameByConnectionName.get(connectionName),
-      points: points.map((point) => ({ ...point })),
-    })
+    this.unsolvedConnections.push(
+      ...tasks.map((task) => ({
+        ...task,
+        points: task.points.map((point) => ({ ...point })),
+      })),
+    )
     this.rerouteAttemptsByConnection.set(
       connectionName,
       (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,

@@ -226,16 +226,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
         this.nodeWithPortPoints,
       )
-      const groups = [
-        ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
-      ].map(([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName:
-          this.precomputedIntraNodeRouteParams!.rootConnectionNameByConnectionName.get(
-            connectionName,
-          ),
-        points,
-      }))
+      const groups = this.precomputedIntraNodeRouteParams.connectionTasks
       let preflightWork = 0
       const detailed = PriorityDagIntraNodeSolver.detailedWorkDiagnostics
       priorityEligible =
