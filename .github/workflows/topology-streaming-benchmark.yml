@@ -25,6 +25,11 @@ jobs:
         run: |
           (cd base && bun install)
           (cd head && bun install)
+      - name: Install the board's finite gap-fill prerequisite on both revisions
+        run: |
+          for revision in base head; do
+            (cd "$revision" && bun add @tscircuit/rectdiff@github:tscircuit/rectdiff#9f6800cbcd0fc6fb9e2afe7b7f8b4c48c1fdf20d)
+          done
       - name: Compile identical native allocation reproductions
         run: |
           mkdir -p results base/scripts/benchmarks base/tests/fixtures
