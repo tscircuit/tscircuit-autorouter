@@ -1,6 +1,7 @@
 import { HighDensitySolverA01, HighDensitySolverA03 } from "@tscircuit/high-density-a01"
 import { expect, test } from "bun:test"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import { SingleTransitionIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import fixture from "../fixtures/sample24-closed-form-foreign-bottom-via.json"
 
@@ -16,7 +17,7 @@ test("the actual C74 foreign-bottom via is rejected before any portfolio family 
     obstacleMargin: fixture.obstacleMargin,
   }
   const portfolio = new PortfolioSingleIntraNodeSolver(params)
-  const candidate = portfolio.generateSolver({ CLOSED_FORM_SINGLE_TRANSITION: true })
+  const candidate = new SingleTransitionIntraNodeSolver({ nodeWithPortPoints: params.nodeWithPortPoints, viaDiameter: 0.3, traceThickness: 0.1 }) as any
   const route = candidate.solvedRoutes[0]!
   expect(route.vias).toEqual([fixture.capturedVia])
   expect(params.nodeWithPortPoints.availableZ).toEqual([0, 1, 2, 3, 4, 5, 6])

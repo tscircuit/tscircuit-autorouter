@@ -697,6 +697,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
         traceThickness: this.constructorParams.traceWidth,
+        boardContext: this.constructorParams.layerCount === undefined ? undefined : {
+          obstacles: this.constructorParams.obstacles ?? [],
+          connMap: this.connMap,
+          layerCount: this.constructorParams.layerCount,
+          allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
+          viaToPadClearance: this.constructorParams.viaToPadClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
+          traceToPadClearance: this.constructorParams.obstacleMargin ?? 0.15,
+          boardGeometry: this.constructorParams.boardGeometry,
+          coordinateScale: this.constructorParams.priorityCoordinateScale ?? 1,
+        },
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {

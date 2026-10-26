@@ -7,6 +7,7 @@ import {
   PortPoint,
 } from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
+import { findSingleTransitionVia, type SingleTransitionBoardContext } from "./findSingleTransitionVia"
 
 type Route = {
   A: PortPoint
@@ -53,6 +54,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     viaDiameter?: number
     traceThickness?: number
     obstacleMargin?: number
+    boardContext?: SingleTransitionBoardContext
   }) {
     super()
 
@@ -84,7 +86,7 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
 
     const margin = this.viaDiameter / 2 + this.obstacleMargin
 
-    const viaPosition = {
+    let viaPosition: { x: number; y: number } | undefined = {
       x: clampWithFallback({
         value: (route.A.x + route.B.x) / 2,
         min: this.bounds.minX + margin,
@@ -95,6 +97,19 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
         min: this.bounds.minY + margin,
         max: this.bounds.maxY - margin,
       }),
+    }
+    if (params.boardContext) {
+      viaPosition = findSingleTransitionVia({
+        nominal: viaPosition, start: route.A, end: route.B,
+        connectionName: route.connectionName, center: this.nodeWithPortPoints.center,
+        viaDiameter: this.viaDiameter, traceThickness: this.traceThickness,
+        context: params.boardContext,
+      })
+      if (!viaPosition) {
+        this.failed = true
+        this.error = "No clear single-transition via among finite board-obstacle projections"
+        return
+      }
     }
     this.solvedRoutes.push(
       this.createTransitionRoute({

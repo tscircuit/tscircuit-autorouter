@@ -4,6 +4,7 @@ import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/Autorouting
 import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import { SingleTransitionIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver"
 import fixture from "../fixtures/sample24-closed-form-foreign-bottom-via.json"
 
 test("via acceptance preserves own copper, blind spans, clearance and actual grow/shrink coordinates", (): void => {
@@ -19,7 +20,7 @@ test("via acceptance preserves own copper, blind spans, clearance and actual gro
     viaToPadClearance: 0.1,
   }
   const publish = (owner: PortfolioSingleIntraNodeSolver): boolean => {
-    const candidate = owner.generateSolver({ CLOSED_FORM_SINGLE_TRANSITION: true })
+    const candidate = new SingleTransitionIntraNodeSolver({ nodeWithPortPoints: owner.nodeWithPortPoints, viaDiameter: 0.3, traceThickness: 0.1 }) as any
     owner.supervisedSolvers = [{ solver: candidate, hyperParameters: {}, f: 0, g: 0, h: 0 }]
     owner.step()
     return owner.solved
@@ -32,7 +33,7 @@ test("via acceptance preserves own copper, blind spans, clearance and actual gro
   expect(publish(new PortfolioSingleIntraNodeSolver({ ...params, obstacles: [] }))).toBe(true)
   expect(publish(new PortfolioSingleIntraNodeSolver({ ...params, obstacles: [{ ...ownPad, connectedTo: [] }] }))).toBe(false)
   const marked = new PortfolioSingleIntraNodeSolver(params)
-  const markedCandidate = marked.generateSolver({ CLOSED_FORM_SINGLE_TRANSITION: true })
+  const markedCandidate = new SingleTransitionIntraNodeSolver({ nodeWithPortPoints: marked.nodeWithPortPoints, viaDiameter: 0.3, traceThickness: 0.1 }) as any
   markedCandidate.solvedRoutes[0]!.route[1]!.toNextSegmentType = "through_obstacle"
   marked.supervisedSolvers = [{ solver: markedCandidate, hyperParameters: {}, f: 0, g: 0, h: 0 }]
   marked.step()
@@ -56,7 +57,7 @@ test("via acceptance preserves own copper, blind spans, clearance and actual gro
   const scaled = grow.activeSubSolver!
   expect(scaled.constructorParams.priorityCoordinateScale).toBe(8)
   expect(scaled.nodeWithPortPoints.center).toEqual(fixture.node.center)
-  const scaledCandidate = scaled.generateSolver({ CLOSED_FORM_SINGLE_TRANSITION: true })
+  const scaledCandidate = new SingleTransitionIntraNodeSolver({ nodeWithPortPoints: scaled.nodeWithPortPoints, viaDiameter: 0.3, traceThickness: 0.1 }) as any
   expect(scaledCandidate.solvedRoutes[0]!.vias[0]!.x).toBeGreaterThan(fixture.obstacle.center.x + fixture.obstacle.width / 2)
   scaled.supervisedSolvers = [{ solver: scaledCandidate, hyperParameters: {}, f: 0, g: 0, h: 0 }]
   scaled.step()
