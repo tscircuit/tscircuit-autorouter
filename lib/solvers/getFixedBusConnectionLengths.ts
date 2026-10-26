@@ -6,6 +6,7 @@ import type {
 
 type ConnectionName = SimpleRouteConnection["name"]
 type TraceId = SimplifiedPcbTrace["pcb_trace_id"]
+type FixedBusConnectionLengths = Partial<Record<ConnectionName, number>>
 
 type GetFixedBusConnectionLengthsParams = {
   buses: SimpleRouteBus[]
@@ -18,7 +19,7 @@ export const getFixedBusConnectionLengths = ({
   buses,
   connections,
   traces,
-}: GetFixedBusConnectionLengthsParams): Partial<Record<ConnectionName, number>> => {
+}: GetFixedBusConnectionLengthsParams): FixedBusConnectionLengths => {
   const busMembers = new Set(
     buses.flatMap((bus) =>
       bus.maxLengthSkew === undefined ? [] : bus.connectionNames,

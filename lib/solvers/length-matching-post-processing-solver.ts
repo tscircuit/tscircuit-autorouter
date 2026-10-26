@@ -41,13 +41,11 @@ type LogicalConnectionLengthParams = {
   fixedLengthByConnectionName: FixedLengthByConnectionName
 }
 
-const getLogicalConnectionLength = (
-  {
-    routes,
-    connectionName,
-    fixedLengthByConnectionName,
-  }: LogicalConnectionLengthParams,
-): number | undefined => {
+const getLogicalConnectionLength = ({
+  routes,
+  connectionName,
+  fixedLengthByConnectionName,
+}: LogicalConnectionLengthParams): number | undefined => {
   const matchingRoutes = routes.filter(
     (route) =>
       (route.rootConnectionName ?? route.connectionName) === connectionName,
@@ -69,13 +67,11 @@ const getLogicalConnectionLength = (
   )
 }
 
-const getBusLengthMatchingPairs = (
-  {
-    buses,
-    routes,
-    fixedLengthByConnectionName,
-  }: BusRouteLengthsParams,
-): DifferentialPair[] =>
+const getBusLengthMatchingPairs = ({
+  buses,
+  routes,
+  fixedLengthByConnectionName,
+}: BusRouteLengthsParams): DifferentialPair[] =>
   buses.flatMap((bus) => {
     const maxLengthSkew = bus.maxLengthSkew
     if (maxLengthSkew === undefined || bus.connectionNames.length < 2) return []
@@ -137,13 +133,11 @@ const getLogicalLengthMatchingConnections = (
   })
 }
 
-const assertBusLengthSkew = (
-  {
-    buses,
-    routes,
-    fixedLengthByConnectionName,
-  }: BusRouteLengthsParams,
-): void => {
+const assertBusLengthSkew = ({
+  buses,
+  routes,
+  fixedLengthByConnectionName,
+}: BusRouteLengthsParams): void => {
   for (const bus of buses) {
     if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
       continue
