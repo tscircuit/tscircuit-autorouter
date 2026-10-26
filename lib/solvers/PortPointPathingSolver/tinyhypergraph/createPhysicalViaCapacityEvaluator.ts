@@ -10,7 +10,10 @@ import type {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
-import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { getPipeline9PhysicalGeometryContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalGeometryContext"
+import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
+import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
+import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
@@ -23,7 +26,12 @@ export type PhysicalViaCapacityContext = {
 type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
 type PhysicalPad = Bounds & { owners: Set<string>; radius: number }
 type ExistingConductor = Bounds & { owners: Set<string> }
-type SharedEdge = { key: string }
+type SharedEdge = {
+  key: string
+  capacityOne: boolean
+  geometry: PhysicalSharedEdge | null
+  allowedByOwner: Map<string, Map<number, boolean>>
+}
 type PhysicalBoard = {
   pads: PhysicalPad[]
   index?: Flatbush
@@ -32,6 +40,7 @@ type PhysicalBoard = {
   maximumRadius: number
   minimumCenterSpacing: number
   minimumTraceCenterSpacing: number
+  sharedEdgePlacement: PhysicalSharedEdgePlacement
   connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
 }
 type RouteMetadata = {
@@ -48,10 +57,7 @@ const FEASIBLE: TinyHyperGraphRegionSegmentFeasibilityResult = { feasible: true 
 function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
   const cached = boardCache.get(physicalSrj)
   if (cached) return cached
-  const srj = createSrjWithBoardValidObstacleLayers(physicalSrj)
-  const connMap = getConnectivityMapFromSimpleRouteJson(srj, {
-    includeGeometricPointConnections: false,
-  })
+  const { srj, connMap } = getPipeline9PhysicalGeometryContext(physicalSrj)
   const dimensions = getViaDimensions(srj)
   let minimumPadDiameter = dimensions.padDiameter
   let minimumHoleDiameter = dimensions.holeDiameter
@@ -157,6 +163,7 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
       ) - 0.005,
     minimumTraceCenterSpacing:
       minimumTraceWidth + (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
+    sharedEdgePlacement: new PhysicalSharedEdgePlacement(physicalSrj),
   }
   boardCache.set(physicalSrj, board)
   return board
@@ -170,13 +177,6 @@ export function createPhysicalViaCapacityEvaluator({
   const throughViaCapacityEnabled =
     !physicalSrj.allowBlindAndBuriedVias && physicalSrj.layerCount >= 2
   const board = compilePhysicalBoard(physicalSrj)
-  if (
-    !(board.minimumTraceCenterSpacing > 0) &&
-    (!throughViaCapacityEnabled ||
-      !board.index ||
-      !(board.minimumCenterSpacing > 0))
-  )
-    return undefined
   const freeIds = new Set(freeRegionIds)
   const ownerByMetadata = new WeakMap<RouteMetadata, string | null>()
   const getOwner = (
@@ -211,17 +211,23 @@ export function createPhysicalViaCapacityEvaluator({
   }
   const edgesByTopology = new WeakMap<
     Readonly<TinyHyperGraphTopology>,
-    Map<number, SharedEdge | null>
+    {
+      ports: Map<number, SharedEdge | null>
+      faces: Map<string, SharedEdge | null>
+    }
   >()
   const getSharedEdge = (
     topology: Readonly<TinyHyperGraphTopology>,
     portId: number,
   ): SharedEdge | null => {
-    let cache = edgesByTopology.get(topology)
-    if (!cache) edgesByTopology.set(topology, (cache = new Map()))
-    const cached = cache.get(portId)
+    let caches = edgesByTopology.get(topology)
+    if (!caches) {
+      caches = { ports: new Map(), faces: new Map() }
+      edgesByTopology.set(topology, caches)
+    }
+    const cached = caches.ports.get(portId)
     if (cached !== undefined) return cached
-    cache.set(portId, null)
+    caches.ports.set(portId, null)
     const regions = topology.incidentPortRegion[portId]
     if (!regions || regions.length !== 2 || regions[0] === regions[1]) return null
     const first = topology.regionMetadata?.[regions[0]!] as
@@ -231,6 +237,13 @@ export function createPhysicalViaCapacityEvaluator({
       | CapacityMeshNode
       | undefined
     const z = topology.portZ[portId]!
+    const key = `${Math.min(...regions)}:${Math.max(...regions)}:${z}`
+    const shared = caches.faces.get(key)
+    if (shared !== undefined) {
+      caches.ports.set(portId, shared)
+      return shared
+    }
+    caches.faces.set(key, null)
     // Both identities come from the original producer whitelist. Missing role
     // metadata in a serialized graph must not turn a component into free space.
     if (
@@ -293,11 +306,21 @@ export function createPhysicalViaCapacityEvaluator({
       length + 2 * error,
       normalSeparation + 2 * error,
     )
-    const edge =
-      maximumSeparation < board.minimumTraceCenterSpacing
-        ? { key: `${Math.min(...regions)}:${Math.max(...regions)}:${z}` }
-        : null
-    cache.set(portId, edge)
+    const edge: SharedEdge = {
+      key,
+      capacityOne: maximumSeparation < board.minimumTraceCenterSpacing,
+      geometry: getSharedEdgeForNodePair({
+        nodeAId: first.capacityMeshNodeId,
+        nodeBId: second.capacityMeshNodeId,
+        nodeBounds: new Map([
+          [first.capacityMeshNodeId, a],
+          [second.capacityMeshNodeId, b],
+        ]),
+      }),
+      allowedByOwner: new Map(),
+    }
+    caches.faces.set(key, edge)
+    caches.ports.set(portId, edge)
     return edge
   }
   const boundsByTopology = new WeakMap<
@@ -410,7 +433,28 @@ export function createPhysicalViaCapacityEvaluator({
     if (sameLayer && !fromEdge && !toEdge) return FEASIBLE
     const owner = routeId === undefined ? undefined : getOwner(problem, routeId)
     if (owner === undefined) return FEASIBLE
-    if (fromEdge || toEdge) {
+    for (const [edge, portId] of [
+      [fromEdge, fromPortId],
+      [toEdge, toPortId],
+    ] as const) {
+      if (!edge?.geometry) continue
+      // Native routing permits neckdowns to the board minimum. A nominal
+      // connection width therefore cannot prove its boundary domain empty.
+      const width = physicalSrj.minTraceWidth
+      let widths = edge.allowedByOwner.get(owner)
+      if (!widths) edge.allowedByOwner.set(owner, (widths = new Map()))
+      let allowed = widths.get(width)
+      if (allowed === undefined) {
+        allowed = board.sharedEdgePlacement.getAllowedIntervals(edge.geometry, {
+          z: topology.portZ[portId]!,
+          owner,
+          width,
+        }).length > 0
+        widths.set(width, allowed)
+      }
+      if (!allowed) return { feasible: false, blockerRouteIds: [] }
+    }
+    if (fromEdge?.capacityOne || toEdge?.capacityOne) {
       const blockers = new Set<number>()
       for (const [otherRoute, first, second] of regionSegments) {
         if (ignoredRouteIds?.has(otherRoute)) continue
@@ -419,10 +463,10 @@ export function createPhysicalViaCapacityEvaluator({
         const firstEdge = getSharedEdge(topology, first)
         const secondEdge = getSharedEdge(topology, second)
         if (
-          (firstEdge &&
+          (firstEdge?.capacityOne &&
             (firstEdge.key === fromEdge?.key ||
               firstEdge.key === toEdge?.key)) ||
-          (secondEdge &&
+          (secondEdge?.capacityOne &&
             (secondEdge.key === fromEdge?.key ||
               secondEdge.key === toEdge?.key))
         ) {
