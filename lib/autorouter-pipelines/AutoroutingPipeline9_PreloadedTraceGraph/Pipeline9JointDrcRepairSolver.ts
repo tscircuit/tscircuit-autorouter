@@ -1333,8 +1333,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
                 ...params.originalSrj.connections,
               ],
             },
+        { includeGeometricPointConnections: false },
       ),
-      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs, {
+        includeGeometricPointConnections: false,
+      }),
     }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],

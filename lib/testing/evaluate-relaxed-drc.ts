@@ -23,6 +23,7 @@ export interface EvaluateRelaxedDrcInput {
   drcOptions?: GetDrcErrorsOptions
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
+  /** Cached declared ownership maps must omit geometric point connections. */
   connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
