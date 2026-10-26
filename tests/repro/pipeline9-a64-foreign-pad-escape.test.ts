@@ -9,7 +9,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import fixture from "../fixtures/assets/a64-foreign-pad-escape.json"
 
-test.failing("Pipeline9 repairs the A64 escape beside a foreign pad without PCB ids", async (): Promise<void> => {
+test("Pipeline9 repairs the A64 escape beside a foreign pad without PCB ids", async (): Promise<void> => {
   const srj = structuredClone(fixture.srj) as SimpleRouteJson
   const initialTrace = fixture.trace as SimplifiedPcbTrace
   const hdRoute: HighDensityRoute = {
@@ -84,6 +84,9 @@ test.failing("Pipeline9 repairs the A64 escape beside a foreign pad without PCB 
   expect(solver.failed, solver.error ?? "").toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(solver.stats.initialJointDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.getOutput()[0]!.route).not.toEqual(hdRoute.route)
+  expect(solver.getOutput()[0]!.route[0]).toEqual(expect.objectContaining(hdRoute.route[0]!))
+  expect(solver.getOutput()[0]!.route.at(-1)).toEqual(expect.objectContaining(hdRoute.route.at(-1)!))
   expect(reference.errors).toHaveLength(0)
   expect(checkViaPadClearance(reference.circuitJson, { minClearance: 0.1 })).toHaveLength(0)
   expect(srj).toEqual(fixture.srj)

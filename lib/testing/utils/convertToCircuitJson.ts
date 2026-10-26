@@ -14,6 +14,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { getSrjWithImportedPadPortIds } from "./getSrjWithImportedPadPortIds"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -714,7 +715,14 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
     if (circuitJsonMetadata.pcb_via_id) continue
 
-    const smtPadId = circuitJsonMetadata.pcb_smtpad_id
+    // An imported pad can belong to a net outside the current routing task.
+    // Its source identity still describes copper that DRC must retain.
+    const sourcePadId =
+      circuitJsonMetadata.source_component_name &&
+      circuitJsonMetadata.source_port_name
+        ? obstacle.obstacleId ?? `${circuitJsonMetadata.source_component_name}.${circuitJsonMetadata.source_port_name}`
+        : undefined
+    const smtPadId = circuitJsonMetadata.pcb_smtpad_id ?? sourcePadId
     const platedHoleId = circuitJsonMetadata.pcb_plated_hole_id
     const candidatePortIds = [
       ...new Set([
@@ -850,6 +858,20 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       addedSmtPadIds,
     )
     if (id === undefined) continue
+
+    if (obstacle.shape === "circle") {
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        layer: layers[0],
+        shape: "circle",
+        radius: width / 2,
+        x,
+        y,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      })
+      continue
+    }
 
     if (
       typeof rotationDegrees === "number" &&
@@ -1045,7 +1067,7 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
 }
 
 export function convertToCircuitJson(
-  srjWithPointPairs: SimpleRouteJson,
+  inputSrjWithPointPairs: SimpleRouteJson,
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   options: ConvertToCircuitJsonOptions = {},
 ): AnyCircuitElement[] {
@@ -1053,9 +1075,13 @@ export function convertToCircuitJson(
     minTraceWidth = 0.1,
     minViaDiameter,
     minViaHoleDiameter,
-    originalSrj,
+    originalSrj: inputOriginalSrj,
     includeOriginalConnections = false,
   } = options
+  const srjWithPointPairs = getSrjWithImportedPadPortIds(inputSrjWithPointPairs)
+  const originalSrj = inputOriginalSrj
+    ? getSrjWithImportedPadPortIds(inputOriginalSrj)
+    : undefined
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
   const requestedMinViaHoleDiameter =
