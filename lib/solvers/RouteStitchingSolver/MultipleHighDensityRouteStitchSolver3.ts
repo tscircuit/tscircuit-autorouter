@@ -45,6 +45,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
   private preferSameLayerTerminalEndpoints: boolean
+  private layerCount: number
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
@@ -65,6 +66,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+      layerCount: this.layerCount,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
@@ -157,6 +159,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
     this.preferSameLayerTerminalEndpoints = params.preferSameLayerTerminalEndpoints ?? false
+    this.layerCount = params.layerCount
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -461,6 +464,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       preferSameLayerTerminalEndpoints: this.preferSameLayerTerminalEndpoints,
+      layerCount: this.layerCount,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "prefer_clear",
