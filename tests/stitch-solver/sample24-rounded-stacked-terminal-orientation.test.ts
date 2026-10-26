@@ -30,7 +30,9 @@ test("rounded sample24 C14.1 and C12.1 fragments select their own terminal layer
       [route.startPcbPortId, route.route[0]!],
       [route.endPcbPortId, route.route.at(-1)!],
     ])
-    expect(new Set(endpointsById.keys())).toEqual(new Set(["pcb_port_altium_8622", "pcb_port_altium_7312"]))
+    expect(new Set(endpointsById.keys())).toEqual(
+      new Set(["pcb_port_altium_8622", "pcb_port_altium_7312"]),
+    )
     expect(endpointsById.get("pcb_port_altium_8622")!.z).toBe(7)
     expect(endpointsById.get("pcb_port_altium_7312")!.z).toBe(0)
     expect(route.vias).toEqual([{ x: 197.724, y: 122.295 }])

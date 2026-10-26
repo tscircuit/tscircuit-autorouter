@@ -3,16 +3,31 @@ import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchin
 
 test("same-layer terminal selection accepts every declared plated-terminal layer", () => {
   const solver = new MultipleHighDensityRouteStitchSolver3({
-    connections: [{ name: "signal", pointsToConnect: [
-      { x: 0, y: 0, layers: ["top", "bottom"], pcb_port_id: "plated" },
-      { x: 3, y: 0, layer: "top", pcb_port_id: "surface" },
-    ] }],
-    hdRoutes: [{
-      connectionName: "signal", traceThickness: 0.1, viaDiameter: 0.3,
-      startPcbPortId: "plated", endPcbPortId: "surface",
-      route: [{ x: 0, y: 0, z: 7 }, { x: 1, y: 0, z: 7 }, { x: 1, y: 0, z: 0 }, { x: 3, y: 0, z: 0 }],
-      vias: [{ x: 1, y: 0 }],
-    }],
+    connections: [
+      {
+        name: "signal",
+        pointsToConnect: [
+          { x: 0, y: 0, layers: ["top", "bottom"], pcb_port_id: "plated" },
+          { x: 3, y: 0, layer: "top", pcb_port_id: "surface" },
+        ],
+      },
+    ],
+    hdRoutes: [
+      {
+        connectionName: "signal",
+        traceThickness: 0.1,
+        viaDiameter: 0.3,
+        startPcbPortId: "plated",
+        endPcbPortId: "surface",
+        route: [
+          { x: 0, y: 0, z: 7 },
+          { x: 1, y: 0, z: 7 },
+          { x: 1, y: 0, z: 0 },
+          { x: 3, y: 0, z: 0 },
+        ],
+        vias: [{ x: 1, y: 0 }],
+      },
+    ],
     layerCount: 8,
     preserveTerminalPcbPortIds: true,
     preferSameLayerTerminalEndpoints: true,

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
-import type { HighDensityIntraNodeRoute, SimpleRouteConnection } from "lib/types"
+import type { SimpleRouteConnection } from "lib/types"
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 test("stitching keeps the distinct layers and identities of sample24 C14.2 and C12.2", () => {
   const bottomX = 197.9839449
@@ -8,7 +9,13 @@ test("stitching keeps the distinct layers and identities of sample24 C14.2 and C
   for (const topX of [197.98440972, bottomX]) {
     for (const reversed of [false, true]) {
       const terminals = [
-        { x: bottomX, y, layer: "bottom", pcb_port_id: "pcb_port_altium_8623", z: 7 },
+        {
+          x: bottomX,
+          y,
+          layer: "bottom",
+          pcb_port_id: "pcb_port_altium_8623",
+          z: 7,
+        },
         { x: topX, y, layer: "top", pcb_port_id: "pcb_port_altium_7313", z: 0 },
       ]
       if (reversed) terminals.reverse()
@@ -41,11 +48,23 @@ test("stitching keeps the distinct layers and identities of sample24 C14.2 and C
       expect(solver.failed).toBe(false)
       expect(solver.mergedHdRoutes).toHaveLength(1)
       const merged = solver.mergedHdRoutes[0]
-      const expectedLayer = new Map(terminals.map((terminal) => [terminal.pcb_port_id, terminal.z]))
-      expect(new Set([merged.startPcbPortId, merged.endPcbPortId])).toEqual(new Set(expectedLayer.keys()))
-      expect(merged.route[0].z).toBe(expectedLayer.get(merged.startPcbPortId!))
-      expect(merged.route.at(-1)!.z).toBe(expectedLayer.get(merged.endPcbPortId!))
-      expect(merged.route.some((point, index) => index > 0 && point.z !== merged.route[index - 1].z)).toBe(true)
+      const expectedLayer = new Map(
+        terminals.map((terminal) => [terminal.pcb_port_id, terminal.z]),
+      )
+      expect(new Set([merged.startPcbPortId, merged.endPcbPortId])).toEqual(
+        new Set(expectedLayer.keys()),
+      )
+      const expectedStartLayer = expectedLayer.get(merged.startPcbPortId!)
+      const expectedEndLayer = expectedLayer.get(merged.endPcbPortId!)
+      expect(expectedStartLayer).toBeDefined()
+      expect(expectedEndLayer).toBeDefined()
+      expect(merged.route[0].z).toBe(expectedStartLayer!)
+      expect(merged.route.at(-1)!.z).toBe(expectedEndLayer!)
+      expect(
+        merged.route.some(
+          (point, index) => index > 0 && point.z !== merged.route[index - 1].z,
+        ),
+      ).toBe(true)
     }
   }
 })

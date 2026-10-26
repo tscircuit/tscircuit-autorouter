@@ -4,22 +4,35 @@ import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingS
 test("an explicit plated-terminal endpoint keeps its declared alternative layer during initial route selection", (): void => {
   const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "signal",
-    start: { x: 0, y: 0, z: 0, layers: ["top", "bottom"], pcb_port_id: "plated" },
+    start: {
+      x: 0,
+      y: 0,
+      z: 0,
+      layers: ["top", "bottom"],
+      pcb_port_id: "plated",
+    },
     end: { x: 0.1, y: 0, z: 0, pcb_port_id: "surface" },
     layerCount: 8,
     preserveTerminalPcbPortIds: true,
     preferSameLayerTerminalEndpoints: true,
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-    hdRoutes: [{
-      connectionName: "signal",
-      startPcbPortId: "plated",
-      endPcbPortId: "surface",
-      traceThickness: 0.1,
-      viaDiameter: 0.3,
-      route: [{ x: 0, y: 0, z: 7 }, { x: 2, y: 0, z: 7 }, { x: 2, y: 0, z: 0 }, { x: 0.1, y: 0, z: 0 }],
-      vias: [{ x: 2, y: 0 }],
-    }],
+    hdRoutes: [
+      {
+        connectionName: "signal",
+        startPcbPortId: "plated",
+        endPcbPortId: "surface",
+        traceThickness: 0.1,
+        viaDiameter: 0.3,
+        route: [
+          { x: 0, y: 0, z: 7 },
+          { x: 2, y: 0, z: 7 },
+          { x: 2, y: 0, z: 0 },
+          { x: 0.1, y: 0, z: 0 },
+        ],
+        vias: [{ x: 2, y: 0 }],
+      },
+    ],
   })
   solver.solve()
 

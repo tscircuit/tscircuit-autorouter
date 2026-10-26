@@ -10,11 +10,19 @@ const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 const CONNECTIVITY_BRIDGE_QUERY_PADDING = 0.002
 const FREE_SPAN_EPSILON = 1e-10
 const GLOBAL_FREE_GEOMETRY_KEYS = new Set([
-  "capacityMeshNodeId", "center", "width", "height", "layer", "availableZ",
+  "capacityMeshNodeId",
+  "center",
+  "width",
+  "height",
+  "layer",
+  "availableZ",
 ])
 const EMPTY_GLOBAL_FREE_ROLE_KEYS = new Set([
-  "_containsObstacle", "_containsTarget", "_completelyInsideObstacle",
-  "_isComponentTopologyNode", "_isNarrowQfpPadGap",
+  "_containsObstacle",
+  "_containsTarget",
+  "_completelyInsideObstacle",
+  "_isComponentTopologyNode",
+  "_isNarrowQfpPadGap",
 ])
 
 type BridgeNodeIndex = {
@@ -27,12 +35,26 @@ type BridgeNodeWorkspace = {
 }
 
 function isPlainGlobalFreeNode(node: CapacityMeshNode): boolean {
-  if (node.availableZ.length === 0 || node.availableZ.some((z) => !Number.isInteger(z) || z < 0)) return false
-  if (![node.center.x, node.center.y, node.width, node.height].every(Number.isFinite) || node.width <= 0 || node.height <= 0) return false
+  if (
+    node.availableZ.length === 0 ||
+    node.availableZ.some((z) => !Number.isInteger(z) || z < 0)
+  )
+    return false
+  if (
+    ![node.center.x, node.center.y, node.width, node.height].every(
+      Number.isFinite,
+    ) ||
+    node.width <= 0 ||
+    node.height <= 0
+  )
+    return false
   // Unknown metadata can describe ownership, component gaps or offboard links.
   // Keep their subdivision behavior intact, even when the free-span floor is on.
-  return Object.entries(node).every(([key, value]) =>
-    GLOBAL_FREE_GEOMETRY_KEYS.has(key) || value === undefined || (EMPTY_GLOBAL_FREE_ROLE_KEYS.has(key) && value === false),
+  return Object.entries(node).every(
+    ([key, value]) =>
+      GLOBAL_FREE_GEOMETRY_KEYS.has(key) ||
+      value === undefined ||
+      (EMPTY_GLOBAL_FREE_ROLE_KEYS.has(key) && value === false),
   )
 }
 

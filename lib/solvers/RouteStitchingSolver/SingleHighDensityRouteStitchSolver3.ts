@@ -193,18 +193,40 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       { point: route.route.at(-1)!, pcbPortId: route.endPcbPortId },
     ])
     const getTerminalEndpoints = (terminal: StitchTerminal): RoutePoint[] => {
-      if (!opts.preferSameLayerTerminalEndpoints) return endpointEntries.map(({ point }) => point)
-      const allowedZ = terminal.layers && opts.layerCount !== undefined
-        ? terminal.layers.map((layer) => mapLayerNameToZ(layer, opts.layerCount!))
-        : [terminal.z]
-      const sameLayerEntries = endpointEntries.filter(({ point }) => allowedZ.includes(point.z))
-      const eligibleEntries = sameLayerEntries.length > 0 ? sameLayerEntries : endpointEntries
-      const matchingEntries = eligibleEntries.filter(({ pcbPortId }) => terminal.pcb_port_id && pcbPortId === terminal.pcb_port_id)
-      return (matchingEntries.length > 0 ? matchingEntries : eligibleEntries).map(({ point }) => point)
+      if (!opts.preferSameLayerTerminalEndpoints)
+        return endpointEntries.map(({ point }) => point)
+      const allowedZ =
+        terminal.layers && opts.layerCount !== undefined
+          ? terminal.layers.map((layer) =>
+              mapLayerNameToZ(layer, opts.layerCount!),
+            )
+          : [terminal.z]
+      const sameLayerEntries = endpointEntries.filter(({ point }) =>
+        allowedZ.includes(point.z),
+      )
+      const eligibleEntries =
+        sameLayerEntries.length > 0 ? sameLayerEntries : endpointEntries
+      const matchingEntries = eligibleEntries.filter(
+        ({ pcbPortId }) =>
+          terminal.pcb_port_id && pcbPortId === terminal.pcb_port_id,
+      )
+      return (
+        matchingEntries.length > 0 ? matchingEntries : eligibleEntries
+      ).map(({ point }) => point)
     }
-    const withEndpointLayer = (terminal: StitchTerminal, point: RoutePoint): StitchTerminal => {
-      if (!opts.preferSameLayerTerminalEndpoints || !terminal.layers || opts.layerCount === undefined) return terminal
-      const allowedZ = terminal.layers.map((layer) => mapLayerNameToZ(layer, opts.layerCount!))
+    const withEndpointLayer = (
+      terminal: StitchTerminal,
+      point: RoutePoint,
+    ): StitchTerminal => {
+      if (
+        !opts.preferSameLayerTerminalEndpoints ||
+        !terminal.layers ||
+        opts.layerCount === undefined
+      )
+        return terminal
+      const allowedZ = terminal.layers.map((layer) =>
+        mapLayerNameToZ(layer, opts.layerCount!),
+      )
       if (!allowedZ.includes(point.z)) return terminal
       return { ...terminal, z: point.z }
     }
@@ -215,10 +237,18 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const firstPoint = route.route[0]
       const lastPoint = route.route[route.route.length - 1]
 
-      const distStartToFirst = startEndpoints.has(firstPoint) ? distance(opts.start, firstPoint) : Infinity
-      const distStartToLast = startEndpoints.has(lastPoint) ? distance(opts.start, lastPoint) : Infinity
-      const distEndToFirst = endEndpoints.has(firstPoint) ? distance(opts.end, firstPoint) : Infinity
-      const distEndToLast = endEndpoints.has(lastPoint) ? distance(opts.end, lastPoint) : Infinity
+      const distStartToFirst = startEndpoints.has(firstPoint)
+        ? distance(opts.start, firstPoint)
+        : Infinity
+      const distStartToLast = startEndpoints.has(lastPoint)
+        ? distance(opts.start, lastPoint)
+        : Infinity
+      const distEndToFirst = endEndpoints.has(firstPoint)
+        ? distance(opts.end, firstPoint)
+        : Infinity
+      const distEndToLast = endEndpoints.has(lastPoint)
+        ? distance(opts.end, lastPoint)
+        : Infinity
 
       const minDist = Math.min(
         distStartToFirst,
@@ -262,23 +292,33 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteFirstPoint = firstRoute.route[0]
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const firstRouteEndpoints = [firstRouteFirstPoint, firstRouteLastPoint]
-    const terminalEndpoints = orientation === "start-to-end" ? startEndpoints : endEndpoints
-    const endpointCandidates = firstRouteEndpoints.filter((point) => terminalEndpoints.has(point))
-    const closestFirstRoutePoint = endpointCandidates.reduce((bestPoint, point) => {
-      const pointDistance = distance(this.start, point)
-      const bestDistance = distance(this.start, bestPoint)
-      return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE && comparePoints(point, bestPoint) < 0)
-        ? point
-        : bestPoint
-    })
+    const terminalEndpoints =
+      orientation === "start-to-end" ? startEndpoints : endEndpoints
+    const endpointCandidates = firstRouteEndpoints.filter((point) =>
+      terminalEndpoints.has(point),
+    )
+    const closestFirstRoutePoint = endpointCandidates.reduce(
+      (bestPoint, point) => {
+        const pointDistance = distance(this.start, point)
+        const bestDistance = distance(this.start, bestPoint)
+        return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
+            comparePoints(point, bestPoint) < 0)
+          ? point
+          : bestPoint
+      },
+    )
     const closestFirstRoutePcbPortId =
       closestFirstRoutePoint === firstRouteFirstPoint
         ? firstRoute.startPcbPortId
         : firstRoute.endPcbPortId
     this.start = withEndpointLayer(this.start, closestFirstRoutePoint)
-    const finalEndpoints = orientation === "start-to-end" ? endEndpoints : startEndpoints
-    const finalPoint = [...finalEndpoints].sort((a, b) => distance(this.end, a) - distance(this.end, b) || comparePoints(a, b))[0]!
+    const finalEndpoints =
+      orientation === "start-to-end" ? endEndpoints : startEndpoints
+    const finalPoint = [...finalEndpoints].sort(
+      (a, b) =>
+        distance(this.end, a) - distance(this.end, b) || comparePoints(a, b),
+    )[0]!
     this.end = withEndpointLayer(this.end, finalPoint)
     if (
       closestFirstRoutePcbPortId &&
