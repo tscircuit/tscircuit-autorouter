@@ -86,14 +86,22 @@ function precedesContact(
   second: CrosscutBoundaryContact,
 ): boolean {
   if (first.max <= second.min) return true
-  const a = first.movableOrder, b = second.movableOrder
-  if (!a || !b || a.sharedEdgeKey !== b.sharedEdgeKey ||
+  const a = first.movableOrder,
+    b = second.movableOrder
+  if (
+    !a ||
+    !b ||
+    a.sharedEdgeKey !== b.sharedEdgeKey ||
     a.serializedPortId === b.serializedPortId ||
-    ![a.position, b.position].every(Number.isFinite))
+    ![a.position, b.position].every(Number.isFinite)
+  )
     return false
   // Same comparator and event fields as getOrderedSharedEdgeFeasibility and
   // PhysicalSharedEdgePlacement; removing other events preserves this order.
-  return (a.position - b.position || a.serializedPortId.localeCompare(b.serializedPortId)) < 0
+  return (
+    (a.position - b.position ||
+      a.serializedPortId.localeCompare(b.serializedPortId)) < 0
+  )
 }
 
 /** Prove that a required via approach separates the other same-layer route. */
@@ -192,16 +200,22 @@ export function getViaApproachCrosscutFeasibility({
       const approachBelow = precedesContact(approach.contact, near)
       const approachAbove = precedesContact(near, approach.contact)
       const below =
-        reachesFar && approachAbove &&
+        reachesFar &&
+        approachAbove &&
         high + radius < Math.min(approach.contact.min, far.min) - slack
       const above =
-        reachesFar && approachBelow &&
+        reachesFar &&
+        approachBelow &&
         low - radius > Math.max(approach.contact.max, far.max) + slack
       const cellLow = verticalFace ? bounds.minY : bounds.minX
       const cellHigh = verticalFace ? bounds.maxY : bounds.maxX
-      const reachesHigh = approachBelow && low + radius > cellHigh + slack &&
+      const reachesHigh =
+        approachBelow &&
+        low + radius > cellHigh + slack &&
         far.max < cellHigh - slack
-      const reachesLow = approachAbove && high - radius < cellLow - slack &&
+      const reachesLow =
+        approachAbove &&
+        high - radius < cellLow - slack &&
         far.min > cellLow + slack
       if (!below && !above && !reachesHigh && !reachesLow) continue
       // The first barrel reached from this layer already supplies the forbidden

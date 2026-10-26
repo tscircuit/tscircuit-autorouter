@@ -989,12 +989,20 @@ export function createPhysicalViaCapacityEvaluator({
         normal: vertical ? face.geometry.x1 : face.geometry.y1,
         min: (vertical ? face.geometry.y1 : face.geometry.x1) + domain.min,
         max: (vertical ? face.geometry.y1 : face.geometry.x1) + domain.max,
-        movableOrder: isMovableFace(face, query) ? {
-          sharedEdgeKey: face.key,
-          position: face.geometry.orientation === "horizontal"
-            ? query.topology.portX[port]! : query.topology.portY[port]!,
-          serializedPortId: String(metadata?.serializedPortId ?? metadata?.portId ?? `tiny-port-${port}`),
-        } : undefined,
+        movableOrder: isMovableFace(face, query)
+          ? {
+              sharedEdgeKey: face.key,
+              position:
+                face.geometry.orientation === "horizontal"
+                  ? query.topology.portX[port]!
+                  : query.topology.portY[port]!,
+              serializedPortId: String(
+                metadata?.serializedPortId ??
+                  metadata?.portId ??
+                  `tiny-port-${port}`,
+              ),
+            }
+          : undefined,
       }
     }
     for (const [route, from, to] of assignments) {

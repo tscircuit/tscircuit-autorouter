@@ -172,14 +172,37 @@ test("sample24 node61154 preserves a first-barrel crosscut for the exact movable
       throughViaCrosscutEnabled: false,
     })!(query),
   ).toEqual({ feasible: true })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, movableSharedEdgeRegionIds: [] })!(query)).toEqual({ feasible: true })
+  expect(
+    createPhysicalViaCapacityEvaluator({
+      ...context,
+      movableSharedEdgeRegionIds: [],
+    })!(query),
+  ).toEqual({ feasible: true })
   const reversed = { ...topology, portY: topology.portY.slice() }
   reversed.portY[approach[0]] = 122.5
   expect(evaluate({ ...query, topology: reversed })).toEqual({ feasible: true })
   const plated = structuredClone(fixture.physicalSrj)
-  plated.obstacles.push({ type: "rect", center: { ...nodes[query.regionId]!.center }, width: .01, height: .01,
-    layers: ["top", "inner1", "inner2", "inner3", "inner4", "inner5", "inner6", "bottom"],
-    connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_112"] })
-  expect(createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(query)).toEqual({ feasible: true })
+  plated.obstacles.push({
+    type: "rect",
+    center: { ...nodes[query.regionId]!.center },
+    width: 0.01,
+    height: 0.01,
+    layers: [
+      "top",
+      "inner1",
+      "inner2",
+      "inner3",
+      "inner4",
+      "inner5",
+      "inner6",
+      "bottom",
+    ],
+    connectedTo: ["pcb_plated_hole_existing", "source_net_altium_pcb_112"],
+  })
+  expect(
+    createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: plated })!(
+      query,
+    ),
+  ).toEqual({ feasible: true })
   expect(fixture).toEqual(snapshot)
 })

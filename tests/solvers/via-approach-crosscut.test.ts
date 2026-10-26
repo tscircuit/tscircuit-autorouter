@@ -144,22 +144,92 @@ test("approach crosscuts preserve orientation, via escapes, ordered contacts and
     }),
   ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
   const orderedContact = {
-    side: "left" as const, normal: 0, min: 0, max: 1.5,
-    movableOrder: { sharedEdgeKey: "same-physical-face", position: 0.4, serializedPortId: "A" },
+    side: "left" as const,
+    normal: 0,
+    min: 0,
+    max: 1.5,
+    movableOrder: {
+      sharedEdgeKey: "same-physical-face",
+      position: 0.4,
+      serializedPortId: "A",
+    },
   }
   const topCap = { minX: 0, maxX: 0.25, minY: 1.8, maxY: 2 }
   const firstBarrel = {
-    ...input, bounds: { minX: 0, maxX: 0.25, minY: 0, maxY: 2 }, radius: 0.3,
-    approaches: [{ ...input.approaches[0]!, bounds: topCap, contact: orderedContact }],
-    wires: [{ ...input.wires[0]!, viaBounds: topCap,
-      first: { ...orderedContact, movableOrder: { ...orderedContact.movableOrder, position: 0.8, serializedPortId: "W" } },
-      second: { side: "right" as const, normal: 0.25, min: 0, max: 1.5 } }],
+    ...input,
+    bounds: { minX: 0, maxX: 0.25, minY: 0, maxY: 2 },
+    radius: 0.3,
+    approaches: [
+      { ...input.approaches[0]!, bounds: topCap, contact: orderedContact },
+    ],
+    wires: [
+      {
+        ...input.wires[0]!,
+        viaBounds: topCap,
+        first: {
+          ...orderedContact,
+          movableOrder: {
+            ...orderedContact.movableOrder,
+            position: 0.8,
+            serializedPortId: "W",
+          },
+        },
+        second: { side: "right" as const, normal: 0.25, min: 0, max: 1.5 },
+      },
+    ],
   }
-  expect(getViaApproachCrosscutFeasibility(firstBarrel)).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
-  expect(getViaApproachCrosscutFeasibility({ ...firstBarrel, minimumSameOwnerViaSpacing: 0.01 })).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
-  expect(getViaApproachCrosscutFeasibility({ ...firstBarrel, approaches: [{ ...firstBarrel.approaches[0]!, contact: { ...orderedContact, movableOrder: undefined } }] })).toEqual({ feasible: true })
-  expect(getViaApproachCrosscutFeasibility({ ...firstBarrel, approaches: [{ ...firstBarrel.approaches[0]!, contact: { ...orderedContact, movableOrder: { ...orderedContact.movableOrder, position: 1 } } }] })).toEqual({ feasible: true })
-  expect(getViaApproachCrosscutFeasibility({ ...firstBarrel, approaches: [{ ...firstBarrel.approaches[0]!, contact: { ...orderedContact, movableOrder: { ...orderedContact.movableOrder, sharedEdgeKey: "different-face" } } }] })).toEqual({ feasible: true })
+  expect(getViaApproachCrosscutFeasibility(firstBarrel)).toEqual({
+    feasible: false,
+    alternativeBlockerRouteIdSets: [[1, 4]],
+  })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...firstBarrel,
+      minimumSameOwnerViaSpacing: 0.01,
+    }),
+  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[1, 4]] })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...firstBarrel,
+      approaches: [
+        {
+          ...firstBarrel.approaches[0]!,
+          contact: { ...orderedContact, movableOrder: undefined },
+        },
+      ],
+    }),
+  ).toEqual({ feasible: true })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...firstBarrel,
+      approaches: [
+        {
+          ...firstBarrel.approaches[0]!,
+          contact: {
+            ...orderedContact,
+            movableOrder: { ...orderedContact.movableOrder, position: 1 },
+          },
+        },
+      ],
+    }),
+  ).toEqual({ feasible: true })
+  expect(
+    getViaApproachCrosscutFeasibility({
+      ...firstBarrel,
+      approaches: [
+        {
+          ...firstBarrel.approaches[0]!,
+          contact: {
+            ...orderedContact,
+            movableOrder: {
+              ...orderedContact.movableOrder,
+              sharedEdgeKey: "different-face",
+            },
+          },
+        },
+      ],
+    }),
+  ).toEqual({ feasible: true })
   const reflectBounds = (box: typeof bounds): typeof bounds => {
     return {
       ...box,

@@ -41,27 +41,46 @@ export function refineViaDomainByConvexCover({
   slack,
 }: Input): ViaDomainRectangle {
   if (![...Object.values(bounds), slack].every(Number.isFinite) || slack < 0)
-    throw new Error("Convex via-domain refinement requires finite geometry and nonnegative slack")
-  if (bounds.minX >= bounds.maxX || bounds.minY >= bounds.maxY || exclusions.length === 0)
+    throw new Error(
+      "Convex via-domain refinement requires finite geometry and nonnegative slack",
+    )
+  if (
+    bounds.minX >= bounds.maxX ||
+    bounds.minY >= bounds.maxY ||
+    exclusions.length === 0
+  )
     return bounds
   const guard = Math.max(
     slack,
     64 * Number.EPSILON * Math.max(1, ...Object.values(bounds).map(Math.abs)),
   )
-  const known = exclusions.filter((exclusion) =>
-    [exclusion.minX, exclusion.maxX, exclusion.minY, exclusion.maxY, exclusion.radius].every(Number.isFinite) &&
-    exclusion.minX <= exclusion.maxX && exclusion.minY <= exclusion.maxY &&
-    exclusion.radius > guard &&
-    Math.hypot(
-      Math.max(exclusion.minX - bounds.maxX, bounds.minX - exclusion.maxX, 0),
-      Math.max(exclusion.minY - bounds.maxY, bounds.minY - exclusion.maxY, 0),
-    ) < exclusion.radius - guard,
+  const known = exclusions.filter(
+    (exclusion) =>
+      [
+        exclusion.minX,
+        exclusion.maxX,
+        exclusion.minY,
+        exclusion.maxY,
+        exclusion.radius,
+      ].every(Number.isFinite) &&
+      exclusion.minX <= exclusion.maxX &&
+      exclusion.minY <= exclusion.maxY &&
+      exclusion.radius > guard &&
+      Math.hypot(
+        Math.max(exclusion.minX - bounds.maxX, bounds.minX - exclusion.maxX, 0),
+        Math.max(exclusion.minY - bounds.maxY, bounds.minY - exclusion.maxY, 0),
+      ) <
+        exclusion.radius - guard,
   )
   if (known.length === 0) return bounds
   const pending: ViaDomainRectangle[] = [bounds]
   const retained: ViaDomainRectangle[] = []
   let next = 0
-  for (let checks = 0; next < pending.length && checks < maximumCoverChecks; checks++) {
+  for (
+    let checks = 0;
+    next < pending.length && checks < maximumCoverChecks;
+    checks++
+  ) {
     const cell = pending[next++]!
     if (known.some((exclusion) => coversRectangle(cell, exclusion, guard)))
       continue
@@ -82,7 +101,12 @@ export function refineViaDomainByConvexCover({
   }
   retained.push(...pending.slice(next))
   if (retained.length === 0)
-    return { minX: bounds.maxX, maxX: bounds.minX, minY: bounds.maxY, maxY: bounds.minY }
+    return {
+      minX: bounds.maxX,
+      maxX: bounds.minX,
+      minY: bounds.maxY,
+      maxY: bounds.minY,
+    }
   return {
     minX: Math.min(...retained.map((cell) => cell.minX)),
     maxX: Math.max(...retained.map((cell) => cell.maxX)),
