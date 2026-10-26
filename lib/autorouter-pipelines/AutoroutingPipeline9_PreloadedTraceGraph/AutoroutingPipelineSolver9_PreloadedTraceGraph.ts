@@ -1,3 +1,4 @@
+import { canUseThroughViaCrosscut } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/canUseThroughViaCrosscut"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -550,6 +551,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             minViaPadDiameter: cms.viaDiameter,
             physicalViaCapacity: {
               physicalSrj: cms.originalSrj,
+              throughViaCrosscutEnabled: canUseThroughViaCrosscut({
+                originalSrj: cms.originalSrj,
+                planningSrj: cms.srj,
+                viaDiameter: cms.viaDiameter,
+                minTraceWidth: cms.minTraceWidth,
+              }),
               planningObstacles: cms.srj.obstacles,
               preserveSolitarySharedEdgePorts: Boolean(cms.srj.traces?.length),
               movableSharedEdgeRegionIds: cms.capacityNodes!

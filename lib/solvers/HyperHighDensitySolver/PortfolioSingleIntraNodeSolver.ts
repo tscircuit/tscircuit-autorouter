@@ -9,6 +9,7 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { minimumPortfolioBoundaryPadding } from "./minimumPortfolioBoundaryPadding"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
@@ -367,7 +368,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           {
             MULTI_HEAD_POLYLINE_SOLVER: true,
             SEGMENTS_PER_POLYLINE: 6,
-            BOUNDARY_PADDING: -0.05, // Allow vias/traces outside the boundary
+            BOUNDARY_PADDING: minimumPortfolioBoundaryPadding,
             ITERATION_PENALTY: 10000,
             MINIMUM_FINAL_ACCEPTANCE_GAP: 0.001,
           },

@@ -13,9 +13,15 @@ import type {
 } from "lib/types"
 import { createPipeline9StaticSegmentValidator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9StaticSegmentValidator"
 import { getPipeline9PhysicalGeometryContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PhysicalGeometryContext"
+import { canUseThroughViaCrosscut } from "./canUseThroughViaCrosscut"
 import { shouldIgnoreSharedEdge } from "lib/solvers/UniformPortDistributionSolver/shouldIgnoreSharedEdge"
 import type { EdgeInterval } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgePhysicalIntervals"
 import { getOrderedSharedEdgeFeasibility, type OrderedSharedEdgeEvent } from "./getOrderedSharedEdgeFeasibility"
+import {
+  getThroughViaCrosscutFeasibility,
+  type ThroughViaDemand,
+  type ThroughWireDemand,
+} from "./getThroughViaCrosscutFeasibility"
 import { PhysicalSharedEdgePlacement } from "lib/solvers/UniformPortDistributionSolver/PhysicalSharedEdgePlacement"
 import { getSharedEdgeForNodePair } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import type { SharedEdge as PhysicalSharedEdge } from "lib/solvers/UniformPortDistributionSolver/types"
@@ -32,6 +38,8 @@ export type PhysicalViaCapacityContext = {
   movableSharedEdgeRegionIds?: string[]
   planningObstacles?: Obstacle[]
   preserveSolitarySharedEdgePorts?: boolean
+  /** Caller certifies fresh routing and the native rectangular routing domain. */
+  throughViaCrosscutEnabled?: boolean
 }
 
 type Bounds = { minX: number; minY: number; maxX: number; maxY: number }
@@ -58,6 +66,8 @@ type PhysicalBoard = {
   minimumCenterSpacing: number
   minimumTraceCenterSpacing: number
   minimumTraceWidth: number
+  minimumViaPairSpacing: number
+  minimumViaTraceRadius: number
   sharedEdgePlacement: PhysicalSharedEdgePlacement
   sourceNameByOwner: Map<string, string>
   connMap: ReturnType<typeof getConnectivityMapFromSimpleRouteJson>
@@ -191,6 +201,12 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
     minimumTraceCenterSpacing:
       minimumTraceWidth + (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
     minimumTraceWidth,
+    minimumViaPairSpacing: Math.max(
+      minimumPadDiameter + (srj.minPadEdgeToPadEdgeClearance ?? 0.1),
+      minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
+    ) - 1e-6,
+    minimumViaTraceRadius: minimumPadDiameter / 2 + minimumTraceWidth / 2 +
+      (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
     sharedEdgePlacement: new PhysicalSharedEdgePlacement(physicalSrj),
     sourceNameByOwner,
   }
@@ -206,10 +222,18 @@ export function createPhysicalViaCapacityEvaluator({
   movableSharedEdgeRegionIds,
   planningObstacles,
   preserveSolitarySharedEdgePorts,
+  throughViaCrosscutEnabled,
 }: PhysicalViaCapacityContext): Evaluator | undefined {
   const throughViaCapacityEnabled =
     !physicalSrj.allowBlindAndBuriedVias && physicalSrj.layerCount >= 2
   const board = compilePhysicalBoard(physicalSrj)
+  const crosscutScopeEnabled = throughViaCrosscutEnabled === true &&
+    canUseThroughViaCrosscut({
+      originalSrj: physicalSrj,
+      planningSrj: physicalSrj,
+      viaDiameter: getViaDimensions(physicalSrj).padDiameter,
+      minTraceWidth: board.minimumTraceWidth,
+    })
   const freeIds = new Set(freeRegionIds)
   const sharedIds = new Set(sharedEdgeRegionIds ?? freeRegionIds)
   const movableIds = movableSharedEdgeRegionIds === undefined
@@ -646,12 +670,12 @@ export function createPhysicalViaCapacityEvaluator({
           Math.abs(original.minY) +
           Math.abs(original.maxY))
     const reach = board.maximumRadius
-    const nearby = board.index!.search(
+    const nearby = board.index?.search(
       original.minX - reach,
       original.minY - reach,
       original.maxX + reach,
       original.maxY + reach,
-    )
+    ) ?? []
     for (const id of nearby) {
       const pad = board.pads[id]!
       if (pad.owners.has(owner)) continue
@@ -686,6 +710,90 @@ export function createPhysicalViaCapacityEvaluator({
     }
     cache.set(owner, bounds)
     return bounds
+  }
+  const getCrosscutFeasibility = (
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
+  ): TinyHyperGraphRegionSegmentFeasibilityResult => {
+    if (!crosscutScopeEnabled || query.regionSegments.length < 2)
+      return FEASIBLE
+    const node = query.topology.regionMetadata?.[query.regionId] as CapacityMeshNode | undefined
+    if (!node?.center || !freeIds.has(node.capacityMeshNodeId)) return FEASIBLE
+    const bounds: Bounds = {
+      minX: node.center.x - node.width / 2, maxX: node.center.x + node.width / 2,
+      minY: node.center.y - node.height / 2, maxY: node.center.y + node.height / 2,
+    }
+    const vias = new Map<string, ThroughViaDemand>()
+    const segments = query.regionSegments.filter(([route]) => !query.ignoredRouteIds?.has(route))
+    const assignments = [...segments, [query.routeId!, query.fromPortId, query.toPortId] as const]
+    for (const [route, from, to] of assignments) {
+      if (query.topology.portZ[from] === query.topology.portZ[to]) continue
+      const owner = getOwner(query.problem, route)
+      if (owner === undefined) continue
+      const domain = getBounds(query.topology, query.regionId, owner)
+      // Existing plated copper can satisfy a transition outside this demand model.
+      if (!domain) continue
+      let demand = vias.get(owner)
+      if (!demand) {
+        demand = { owner, bounds: domain, routeIds: [], candidate: false }
+        vias.set(owner, demand)
+      }
+      demand.candidate ||= route === query.routeId
+      if (route !== query.routeId && !demand.routeIds.includes(route))
+        demand.routeIds.push(route)
+    }
+    if (vias.size < 2) return FEASIBLE
+    // Native families use the node-plus-port hull. Certify that projected
+    // movable faces and every fixed endpoint keep that hull inside this box.
+    for (const [, from, to] of assignments) {
+      for (const port of [from, to]) {
+        const face = getSharedEdge(query.topology, port)
+        if (face?.geometry && isMovableFace(face, query)) {
+          const edge = face.geometry
+          if (Math.min(edge.x1, edge.x2) < bounds.minX || Math.max(edge.x1, edge.x2) > bounds.maxX ||
+            Math.min(edge.y1, edge.y2) < bounds.minY || Math.max(edge.y1, edge.y2) > bounds.maxY)
+            return FEASIBLE
+          continue
+        }
+        const x = query.topology.portX[port]!, y = query.topology.portY[port]!
+        if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY)
+          return FEASIBLE
+      }
+    }
+    const wires = new Map<string, ThroughWireDemand>()
+    for (const [route, from, to] of assignments) {
+      const owner = getOwner(query.problem, route)
+      if (owner === undefined || (vias.size === 2 && vias.has(owner))) continue
+      if (!getBounds(query.topology, query.regionId, owner)) continue
+      const firstFace = getSharedEdge(query.topology, from)
+      const secondFace = getSharedEdge(query.topology, to)
+      if (!firstFace?.geometry || !secondFace?.geometry ||
+        !canUseSharedFace(query, from, firstFace) || !canUseSharedFace(query, to, secondFace))
+        continue
+      const firstSide = firstFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
+      const secondSide = secondFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
+      const axis = (firstSide === "left" && secondSide === "right") ||
+        (firstSide === "right" && secondSide === "left") ? "x"
+        : (firstSide === "top" && secondSide === "bottom") ||
+          (firstSide === "bottom" && secondSide === "top") ? "y" : undefined
+      if (!axis) continue
+      const key = JSON.stringify([owner, Math.min(from, to), Math.max(from, to)])
+      let wire = wires.get(key)
+      if (!wire) {
+        wire = { owner, axis, routeIds: [], candidate: false }
+        wires.set(key, wire)
+      }
+      wire.candidate ||= route === query.routeId
+      if (route !== query.routeId && !wire.routeIds.includes(route)) wire.routeIds.push(route)
+    }
+    if (wires.size === 0) return FEASIBLE
+    const slack = 1e-9 + Number.EPSILON * 128 *
+      Object.values(bounds).reduce((sum, coordinate) => sum + Math.abs(coordinate), 0)
+    return getThroughViaCrosscutFeasibility({
+      bounds, vias: [...vias.values()], wires: [...wires.values()],
+      radius: board.minimumViaTraceRadius - slack,
+      minimumViaSpacing: board.minimumViaPairSpacing - slack,
+      slack,
+    })
   }
   return (query): TinyHyperGraphRegionSegmentFeasibilityResult => {
     const {
@@ -768,6 +876,8 @@ export function createPhysicalViaCapacityEvaluator({
       const ordered = getOrderedFeasibility(edge, query, owner)
       if (!ordered.feasible) return ordered
     }
+    const crosscut = getCrosscutFeasibility(query)
+    if (!crosscut.feasible) return crosscut
     if (
       sameLayer ||
       !freeIds.has(regionNodeId) ||

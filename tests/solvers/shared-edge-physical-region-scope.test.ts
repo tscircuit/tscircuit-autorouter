@@ -109,6 +109,22 @@ test("trace domains use all real producer rectangles while via capacity retains 
   expect(params.physicalViaCapacity.movableSharedEdgeRegionIds).toEqual(["free", "parented"])
   expect(params.physicalViaCapacity.planningObstacles).toEqual(srj.obstacles)
   expect(params.physicalViaCapacity.preserveSolitarySharedEdgePorts).toBe(false)
+  expect(params.physicalViaCapacity.throughViaCrosscutEnabled).toBe(true)
+  for (const policy of [
+    { minTraceWidth: 0.05 },
+    { minViaPadDiameter: 0.08 },
+    { allowJumpers: true },
+  ]) {
+    const limited = new AutoroutingPipelineSolver9_PreloadedTraceGraph({ ...srj, ...policy }, { cacheProvider: null })
+    limited.capacityNodes = nodes
+    limited.srjWithPointPairs = { ...srj, connections: [] }
+    limited.sharedEdgeSegmentsWithNecessaryCrampedPortPoints = []
+    const stage = limited.pipelineDef.find((candidate) => candidate.solverName === "portPointPathingSolver")!
+    const input = stage.getConstructorParams(limited)[0] as {
+      physicalViaCapacity: PhysicalViaCapacityContext
+    }
+    expect(input.physicalViaCapacity.throughViaCrosscutEnabled).toBe(false)
+  }
   expect(structuredClone(params.physicalViaCapacity)).toEqual(
     params.physicalViaCapacity,
   )
