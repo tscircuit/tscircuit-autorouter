@@ -150,6 +150,28 @@ export type WorkerResult<
   routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
   finalSrj?: SimpleRouteJson
+  pathingDiagnostics?: {
+    datasetName: string
+    events: TinyFinalCompletionObservation[]
+  }
+}
+
+export type TinyFinalCompletionObservation = {
+  boundaryIndex: number
+  solverClass: string
+  iterations: number
+  maximumIterations: number
+  solved: boolean
+  failed: boolean
+  error: string | null
+  currentRouteId: number | null
+  currentConnectionId: string | number | null
+  pendingRouteCount: number
+  remainingRouteCount: number
+  remainingRouteIds: number[]
+  remainingConnectionIds: (string | number | null)[]
+  ripCount: number
+  stats: Record<string, string | number | boolean | null>
 }
 
 export type WorkerResultWithImage = WorkerResult<BenchmarkSnapshotWithImage>

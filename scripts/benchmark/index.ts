@@ -154,6 +154,45 @@ export const logCapturedFinalSrjs = (
   }
 }
 
+export const logCapturedPathingDiagnostics = (
+  results: WorkerResult[],
+  writeLine: (line: string) => void = console.log,
+): void => {
+  for (const [captureIndex, result] of results.entries()) {
+    if (!result.pathingDiagnostics) continue
+    const { benchmarkSnapshot, finalSrj, ...summary } = result
+    const raw = Buffer.from(JSON.stringify(summary), "utf8")
+    const compressed = gzipSync(raw)
+    const base64 = compressed.toString("base64")
+    const chunkSize = 4000
+    const chunkCount = Math.ceil(base64.length / chunkSize)
+    const sha256 = createHash("sha256").update(raw).digest("hex")
+    writeLine(
+      `BENCHMARK_PATHING_DIAGNOSTICS_BEGIN ${JSON.stringify({
+        version: 1,
+        captureIndex,
+        datasetName: result.pathingDiagnostics.datasetName,
+        solverName: result.solverName,
+        scenarioName: result.scenarioName,
+        sampleNumber: result.sampleNumber,
+        encoding: "gzip+base64",
+        rawBytes: raw.length,
+        gzipBytes: compressed.length,
+        chunkCount,
+        sha256,
+      })}`,
+    )
+    for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
+      writeLine(
+        `BENCHMARK_PATHING_DIAGNOSTICS_CHUNK ${captureIndex} ${chunkIndex + 1}/${chunkCount} ${base64.slice(chunkIndex * chunkSize, (chunkIndex + 1) * chunkSize)}`,
+      )
+    }
+    writeLine(
+      `BENCHMARK_PATHING_DIAGNOSTICS_END ${JSON.stringify({ captureIndex, sha256 })}`,
+    )
+  }
+}
+
 export const parseNetworkedCachePropagationDelayMs = (
   rawValue: string | undefined = process.env
     .BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS,
@@ -2432,7 +2471,10 @@ const main = async () => {
   }
   await Bun.write("benchmark-result.txt", output)
   await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2))
-  if (options.captureFinalSrj) logCapturedFinalSrjs(results)
+  if (options.captureFinalSrj) {
+    logCapturedFinalSrjs(results)
+    logCapturedPathingDiagnostics(results)
+  }
 
   console.log(`\nBenchmark Results (${effortLabel})\n`)
   console.log(table)

@@ -23,6 +23,7 @@ import {
   type PipelineStageTimingSource,
 } from "./benchmark-stage-timing"
 import { countDeterministicNetworkedValidationRejections } from "./countDeterministicNetworkedValidationRejections"
+import { observeTinyFinalCompletion } from "./observeTinyFinalCompletion"
 
 type SubSolverInstance = {
   progress?: number
@@ -634,7 +635,7 @@ const createBenchmarkSnapshot = async ({
   }
 }
 
-export const runTask = async (
+const runTaskWithoutPathingDiagnostics = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
 ): Promise<WorkerResultWithImage> => {
@@ -756,5 +757,22 @@ export const runTask = async (
       routingMetrics,
       error: error instanceof Error ? error.message : String(error),
     }
+  }
+}
+
+export const runTask = async (
+  task: BenchmarkTask,
+  options: RunTaskOptions = {},
+): Promise<WorkerResultWithImage> => {
+  if (!task.captureFinalSrj) return runTaskWithoutPathingDiagnostics(task, options)
+  const observer = observeTinyFinalCompletion()
+  try {
+    const result = await runTaskWithoutPathingDiagnostics(task, options)
+    return {
+      ...result,
+      pathingDiagnostics: { datasetName: task.datasetName, events: observer.events },
+    }
+  } finally {
+    observer.restore()
   }
 }
