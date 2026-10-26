@@ -8,9 +8,9 @@ import { Frozen142EndpointForceSolver } from "tests/fixtures/Frozen142EndpointFo
 test("MultiHead copper forces follow physical ownership while distinct via forces remain", () => {
   const third: PolyLine2 = {
     connectionName: "foreign",
-    start: { x: -1, y: 1, z1: 2, z2: 2 },
-    end: { x: 1, y: 1, z1: 2, z2: 2 },
-    mPoints: [{ x: 0, y: 1, z1: 2, z2: 2 }],
+    start: { x: -1, y: 40, z1: 2, z2: 2 },
+    end: { x: 1, y: 40, z1: 2, z2: 2 },
+    mPoints: [{ x: 0, y: 40, z1: 2, z2: 2 }],
   }
   const wire: PolyLine2 = {
     connectionName: "branch-b",
@@ -38,7 +38,7 @@ test("MultiHead copper forces follow physical ownership while distinct via force
       capacityMeshNodeId: "same-owner-force-control",
       center: { x: 0, y: 0 },
       width: 10,
-      height: 10,
+      height: 100,
       availableZ: [0, 1, 2],
       portPoints: lines.flatMap((line) => [line.start, line.end].map((point) => ({
         x: point.x,
