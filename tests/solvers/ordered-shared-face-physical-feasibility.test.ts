@@ -134,8 +134,16 @@ test("actual inherited-order and movable SOIC capacity conflicts expose port-eve
         { name: "A", __rootConnectionNames: ["A-root"], pointsToConnect: [] },
         { name: "B", __rootConnectionNames: ["B-root"], pointsToConnect: [] },
       ],
-      obstacles: [{ type: "rect", center: { x: 0, y: 0.5 }, width: 0.1, height: 2,
-        layers: ["top"], connectedTo: ["pcb_smtpad_B", "B"] }],
+      obstacles: [
+        {
+          type: "rect",
+          center: { x: 0, y: 0.5 },
+          width: 0.1,
+          height: 2,
+          layers: ["top"],
+          connectedTo: ["pcb_smtpad_B", "B"],
+        },
+      ],
     },
     planningObstacles: [],
   })
@@ -144,28 +152,43 @@ test("actual inherited-order and movable SOIC capacity conflicts expose port-eve
     const ids = fixture.nodes.map((node) => node.capacityMeshNodeId)
     const evaluate = createPhysicalViaCapacityEvaluator({
       physicalSrj: fixture.physicalSrj,
-      freeRegionIds: [], sharedEdgeRegionIds: ids, movableSharedEdgeRegionIds: ids,
-      planningObstacles: fixture.planningObstacles, preserveSolitarySharedEdgePorts: false,
+      freeRegionIds: [],
+      sharedEdgeRegionIds: ids,
+      movableSharedEdgeRegionIds: ids,
+      planningObstacles: fixture.planningObstacles,
+      preserveSolitarySharedEdgePorts: false,
     })!
     const query = getQuery(fixture)
     const result = evaluate(query)
     expect(result.feasible).toBe(false)
     if (result.feasible || !result.alternativeBlockerRouteIdSets)
       throw new Error(`Expected port-event alternatives for ${fixture.name}`)
-    expect(result.alternativeBlockerRouteIdSets).toEqual(fixture.ports.length === 2 ? [[0]] : [[1], [0]])
+    expect(result.alternativeBlockerRouteIdSets).toEqual(
+      fixture.ports.length === 2 ? [[0]] : [[1], [0]],
+    )
     for (const ids of result.alternativeBlockerRouteIdSets) {
-      expect(evaluate({ ...query, ignoredRouteIds: new Set(ids) })).toEqual({ feasible: true })
+      expect(evaluate({ ...query, ignoredRouteIds: new Set(ids) })).toEqual({
+        feasible: true,
+      })
     }
     if (fixture.name === "inherited-order") {
-      const reversed = { ...query.topology, portY: query.topology.portY.slice() }
+      const reversed = {
+        ...query.topology,
+        portY: query.topology.portY.slice(),
+      }
       reversed.portY.reverse()
-      expect(evaluate({ ...query, topology: reversed })).toEqual({ feasible: true })
+      expect(evaluate({ ...query, topology: reversed })).toEqual({
+        feasible: true,
+      })
     }
     const aliasId = fixture.ports.length
     const aliasProblem = {
       ...query.problem,
       routeCount: aliasId + 1,
-      routeMetadata: [...query.problem.routeMetadata!, query.problem.routeMetadata![0]],
+      routeMetadata: [
+        ...query.problem.routeMetadata!,
+        query.problem.routeMetadata![0],
+      ],
     }
     const aliased = evaluate({
       ...query,
@@ -174,36 +197,61 @@ test("actual inherited-order and movable SOIC capacity conflicts expose port-eve
     })
     expect(aliased).toEqual({
       feasible: false,
-      alternativeBlockerRouteIdSets: fixture.ports.length === 2 ? [[0, aliasId]] : [[1], [0, aliasId]],
+      alternativeBlockerRouteIdSets:
+        fixture.ports.length === 2 ? [[0, aliasId]] : [[1], [0, aliasId]],
     })
     const faceX = fixture.nodes[0]!.center.x + fixture.nodes[0]!.width / 2
     const boundaryObstacle: Obstacle = {
-      type: "rect", center: { x: faceX + 1, y: fixture.ports[0]!.y },
-      width: 2, height: 2, layers: ["bottom"], connectedTo: [],
+      type: "rect",
+      center: { x: faceX + 1, y: fixture.ports[0]!.y },
+      width: 2,
+      height: 2,
+      layers: ["bottom"],
+      connectedTo: [],
     }
     const boundary = createPhysicalViaCapacityEvaluator({
       physicalSrj: fixture.physicalSrj,
-      freeRegionIds: [], sharedEdgeRegionIds: ids, movableSharedEdgeRegionIds: ids,
-      planningObstacles: [boundaryObstacle], preserveSolitarySharedEdgePorts: true,
+      freeRegionIds: [],
+      sharedEdgeRegionIds: ids,
+      movableSharedEdgeRegionIds: ids,
+      planningObstacles: [boundaryObstacle],
+      preserveSolitarySharedEdgePorts: true,
     })!
     expect(boundary(query)).toEqual(result)
-    expect(boundary({ ...query, regionSegments: [] })).toEqual({ feasible: true })
+    expect(boundary({ ...query, regionSegments: [] })).toEqual({
+      feasible: true,
+    })
     if (fixture.name === "empty-existing-domain") {
-      expect(boundary({ ...query, routeId: 0, fromPortId: 0, toPortId: 0, regionSegments: [] }))
-        .toEqual({ feasible: true })
+      expect(
+        boundary({
+          ...query,
+          routeId: 0,
+          fromPortId: 0,
+          toPortId: 0,
+          regionSegments: [],
+        }),
+      ).toEqual({ feasible: true })
       const emptyCandidate = {
-        ...query, routeId: 0, fromPortId: 0, toPortId: 0,
+        ...query,
+        routeId: 0,
+        fromPortId: 0,
+        toPortId: 0,
         regionSegments: [[1, 1, 1]] as [number, number, number][],
       }
       expect(boundary(emptyCandidate)).toEqual({
-        feasible: false, alternativeBlockerRouteIdSets: [[1]],
+        feasible: false,
+        alternativeBlockerRouteIdSets: [[1]],
       })
-      expect(boundary({ ...emptyCandidate, ignoredRouteIds: new Set([1]) }))
-        .toEqual({ feasible: true })
+      expect(
+        boundary({ ...emptyCandidate, ignoredRouteIds: new Set([1]) }),
+      ).toEqual({ feasible: true })
     }
     const anchored = createPhysicalViaCapacityEvaluator({
-      physicalSrj: fixture.physicalSrj, freeRegionIds: [], sharedEdgeRegionIds: ids,
-      movableSharedEdgeRegionIds: [], planningObstacles: fixture.planningObstacles,
+      physicalSrj: fixture.physicalSrj,
+      freeRegionIds: [],
+      sharedEdgeRegionIds: ids,
+      movableSharedEdgeRegionIds: [],
+      planningObstacles: fixture.planningObstacles,
       preserveSolitarySharedEdgePorts: false,
     })!
     expect(anchored(query)).toEqual({ feasible: true })

@@ -207,12 +207,16 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
     minimumTraceCenterSpacing:
       minimumTraceWidth + (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
     minimumTraceWidth,
-    minimumViaPairSpacing: Math.max(
-      minimumPadDiameter + (srj.minPadEdgeToPadEdgeClearance ?? 0.1),
-      minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
-    ) - 1e-6,
-    minimumViaTraceRadius: minimumPadDiameter / 2 + minimumTraceWidth / 2 +
-      (srj.minTraceToPadEdgeClearance ?? 0.1) - 0.005,
+    minimumViaPairSpacing:
+      Math.max(
+        minimumPadDiameter + (srj.minPadEdgeToPadEdgeClearance ?? 0.1),
+        minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
+      ) - 1e-6,
+    minimumViaTraceRadius:
+      minimumPadDiameter / 2 +
+      minimumTraceWidth / 2 +
+      (srj.minTraceToPadEdgeClearance ?? 0.1) -
+      0.005,
     sharedEdgePlacement: new PhysicalSharedEdgePlacement(physicalSrj),
     sourceNameByOwner,
   }
@@ -233,7 +237,8 @@ export function createPhysicalViaCapacityEvaluator({
   const throughViaCapacityEnabled =
     !physicalSrj.allowBlindAndBuriedVias && physicalSrj.layerCount >= 2
   const board = compilePhysicalBoard(physicalSrj)
-  const crosscutScopeEnabled = throughViaCrosscutEnabled === true &&
+  const crosscutScopeEnabled =
+    throughViaCrosscutEnabled === true &&
     canUseThroughViaCrosscut({
       originalSrj: physicalSrj,
       planningSrj: physicalSrj,
@@ -642,12 +647,20 @@ export function createPhysicalViaCapacityEvaluator({
       })
     }
     const values = [...events.values()]
-    if (values.every((event) => event.owner === owner && event.allowed.length > 0))
+    if (
+      values.every((event) => event.owner === owner && event.allowed.length > 0)
+    )
       return FEASIBLE
     const family = values.sort((first, second) => first.portId - second.portId)
-    const key = JSON.stringify(family.map((event) => [
-      event.portId, event.owner, event.candidate, event.preservedAlone, event.routeIds.sort((first, second) => first - second),
-    ]))
+    const key = JSON.stringify(
+      family.map((event) => [
+        event.portId,
+        event.owner,
+        event.candidate,
+        event.preservedAlone,
+        event.routeIds.sort((first, second) => first - second),
+      ]),
+    )
     if (edge.lastOrdered?.key === key) return edge.lastOrdered.result
     const result = getOrderedSharedEdgeFeasibility({
       length: edge.geometry.length,
@@ -709,12 +722,13 @@ export function createPhysicalViaCapacityEvaluator({
           Math.abs(original.minY) +
           Math.abs(original.maxY))
     const reach = board.maximumRadius
-    const nearby = board.index?.search(
-      original.minX - reach,
-      original.minY - reach,
-      original.maxX + reach,
-      original.maxY + reach,
-    ) ?? []
+    const nearby =
+      board.index?.search(
+        original.minX - reach,
+        original.minY - reach,
+        original.maxX + reach,
+        original.maxY + reach,
+      ) ?? []
     for (const id of nearby) {
       const pad = board.pads[id]!
       if (pad.owners.has(owner)) continue
@@ -755,15 +769,24 @@ export function createPhysicalViaCapacityEvaluator({
   ): TinyHyperGraphRegionSegmentFeasibilityResult => {
     if (!crosscutScopeEnabled || query.regionSegments.length < 2)
       return FEASIBLE
-    const node = query.topology.regionMetadata?.[query.regionId] as CapacityMeshNode | undefined
+    const node = query.topology.regionMetadata?.[query.regionId] as
+      | CapacityMeshNode
+      | undefined
     if (!node?.center || !freeIds.has(node.capacityMeshNodeId)) return FEASIBLE
     const bounds: Bounds = {
-      minX: node.center.x - node.width / 2, maxX: node.center.x + node.width / 2,
-      minY: node.center.y - node.height / 2, maxY: node.center.y + node.height / 2,
+      minX: node.center.x - node.width / 2,
+      maxX: node.center.x + node.width / 2,
+      minY: node.center.y - node.height / 2,
+      maxY: node.center.y + node.height / 2,
     }
     const vias = new Map<string, ThroughViaDemand>()
-    const segments = query.regionSegments.filter(([route]) => !query.ignoredRouteIds?.has(route))
-    const assignments = [...segments, [query.routeId!, query.fromPortId, query.toPortId] as const]
+    const segments = query.regionSegments.filter(
+      ([route]) => !query.ignoredRouteIds?.has(route),
+    )
+    const assignments = [
+      ...segments,
+      [query.routeId!, query.fromPortId, query.toPortId] as const,
+    ]
     for (const [route, from, to] of assignments) {
       if (query.topology.portZ[from] === query.topology.portZ[to]) continue
       const owner = getOwner(query.problem, route)
@@ -788,13 +811,23 @@ export function createPhysicalViaCapacityEvaluator({
         const face = getSharedEdge(query.topology, port)
         if (face?.geometry && isMovableFace(face, query)) {
           const edge = face.geometry
-          if (Math.min(edge.x1, edge.x2) < bounds.minX || Math.max(edge.x1, edge.x2) > bounds.maxX ||
-            Math.min(edge.y1, edge.y2) < bounds.minY || Math.max(edge.y1, edge.y2) > bounds.maxY)
+          if (
+            Math.min(edge.x1, edge.x2) < bounds.minX ||
+            Math.max(edge.x1, edge.x2) > bounds.maxX ||
+            Math.min(edge.y1, edge.y2) < bounds.minY ||
+            Math.max(edge.y1, edge.y2) > bounds.maxY
+          )
             return FEASIBLE
           continue
         }
-        const x = query.topology.portX[port]!, y = query.topology.portY[port]!
-        if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY)
+        const x = query.topology.portX[port]!,
+          y = query.topology.portY[port]!
+        if (
+          x < bounds.minX ||
+          x > bounds.maxX ||
+          y < bounds.minY ||
+          y > bounds.maxY
+        )
           return FEASIBLE
       }
     }
@@ -805,15 +838,25 @@ export function createPhysicalViaCapacityEvaluator({
       if (!getBounds(query.topology, query.regionId, owner)) continue
       const firstFace = getSharedEdge(query.topology, from)
       const secondFace = getSharedEdge(query.topology, to)
-      if (!firstFace?.geometry || !secondFace?.geometry ||
-        !canUseSharedFace(query, from, firstFace) || !canUseSharedFace(query, to, secondFace))
+      if (
+        !firstFace?.geometry ||
+        !secondFace?.geometry ||
+        !canUseSharedFace(query, from, firstFace) ||
+        !canUseSharedFace(query, to, secondFace)
+      )
         continue
-      const firstSide = firstFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
-      const secondSide = secondFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
-      const axis = (firstSide === "left" && secondSide === "right") ||
-        (firstSide === "right" && secondSide === "left") ? "x"
-        : (firstSide === "top" && secondSide === "bottom") ||
-          (firstSide === "bottom" && secondSide === "top") ? "y" : undefined
+      const firstSide =
+        firstFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
+      const secondSide =
+        secondFace.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
+      const axis =
+        (firstSide === "left" && secondSide === "right") ||
+        (firstSide === "right" && secondSide === "left")
+          ? "x"
+          : (firstSide === "top" && secondSide === "bottom") ||
+              (firstSide === "bottom" && secondSide === "top")
+            ? "y"
+            : undefined
       if (!axis) continue
       const key = JSON.stringify([owner, Math.min(from, to), Math.max(from, to)])
       let wire = wires.get(key)

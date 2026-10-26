@@ -118,11 +118,16 @@ test("trace domains use all real producer rectangles while via capacity retains 
     { minViaPadDiameter: 0.08 },
     { allowJumpers: true },
   ]) {
-    const limited = new AutoroutingPipelineSolver9_PreloadedTraceGraph({ ...srj, ...policy }, { cacheProvider: null })
+    const limited = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      { ...srj, ...policy },
+      { cacheProvider: null },
+    )
     limited.capacityNodes = nodes
     limited.srjWithPointPairs = { ...srj, connections: [] }
     limited.sharedEdgeSegmentsWithNecessaryCrampedPortPoints = []
-    const stage = limited.pipelineDef.find((candidate) => candidate.solverName === "portPointPathingSolver")!
+    const stage = limited.pipelineDef.find(
+      (candidate) => candidate.solverName === "portPointPathingSolver",
+    )!
     const input = stage.getConstructorParams(limited)[0] as {
       physicalViaCapacity: PhysicalViaCapacityContext
     }

@@ -15,12 +15,19 @@ export function canUseThroughViaCrosscut({
   viaDiameter,
   minTraceWidth,
 }: Input): boolean {
-  return !originalSrj.allowBlindAndBuriedVias &&
-    !planningSrj.allowBlindAndBuriedVias && planningSrj.layerCount >= 2 &&
-    !originalSrj.traces?.length && !planningSrj.traces?.length &&
-    !originalSrj.jumpers?.length && !planningSrj.jumpers?.length &&
-    !originalSrj.allowJumpers && !planningSrj.allowJumpers &&
-    Number.isFinite(viaDiameter) && Number.isFinite(minTraceWidth) &&
+  return (
+    !originalSrj.allowBlindAndBuriedVias &&
+    !planningSrj.allowBlindAndBuriedVias &&
+    planningSrj.layerCount >= 2 &&
+    !originalSrj.traces?.length &&
+    !planningSrj.traces?.length &&
+    !originalSrj.jumpers?.length &&
+    !planningSrj.jumpers?.length &&
+    !originalSrj.allowJumpers &&
+    !planningSrj.allowJumpers &&
+    Number.isFinite(viaDiameter) &&
+    Number.isFinite(minTraceWidth) &&
     viaDiameter / 2 + minimumPortfolioBoundaryPadding >= 0 &&
     minTraceWidth / 2 + minimumPortfolioBoundaryPadding >= 0
+  )
 }
