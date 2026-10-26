@@ -20,7 +20,7 @@ const getPlanarTraceLength = (trace: SimplifiedPcbTrace): number => {
   return length
 }
 
-test.failing("bus matching includes retained CPU-to-escape copper", async (): Promise<void> => {
+test("bus matching includes retained CPU-to-escape copper", async (): Promise<void> => {
   const input = structuredClone(preloadedFanoutBusLengthInput)
   const original = structuredClone(input)
   const hdRoutes = structuredClone(preloadedFanoutBusLengthHdRoutes)
