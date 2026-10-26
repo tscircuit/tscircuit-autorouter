@@ -98,7 +98,10 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
     source: getConnectivityMapFromSimpleRouteJson(
       {
         ...inputSrj,
-        connections: [...srjWithPointPairs.connections, ...inputSrj.connections],
+        connections: [
+          ...srjWithPointPairs.connections,
+          ...inputSrj.connections,
+        ],
       },
       { includeGeometricPointConnections: false },
     ),

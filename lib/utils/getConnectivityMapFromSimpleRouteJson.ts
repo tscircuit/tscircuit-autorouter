@@ -26,7 +26,9 @@ export const getConnectivityMapFromSimpleRouteJson = (
     }
 
     for (const point of connection.pointsToConnect) {
-      const geometricPointId = `${pointHash(point)}:${getConnectionPointLayers(point)
+      const geometricPointId = `${pointHash(point)}:${getConnectionPointLayers(
+        point,
+      )
         .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
         .sort()
         .join("-")}`

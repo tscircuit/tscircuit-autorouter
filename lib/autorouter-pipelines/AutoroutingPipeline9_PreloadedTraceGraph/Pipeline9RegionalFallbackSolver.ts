@@ -143,13 +143,20 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private phase: RegionalFallbackPhase = "route"
-  private readonly physicalRouteValidator?: (routes: HighDensityRoute[]) => boolean
+  private readonly physicalRouteValidator?: (
+    routes: HighDensityRoute[],
+  ) => boolean
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
     this.params = params
     this.physicalRouteValidator = params.physicalSrj
-      ? createPipeline9PhysicalRouteValidator({ physicalSrj: params.physicalSrj, connMap: params.connMap, obstacleMargin: params.obstacleMargin, viaHoleDiameter: params.viaHoleDiameter })
+      ? createPipeline9PhysicalRouteValidator({
+          physicalSrj: params.physicalSrj,
+          connMap: params.connMap,
+          obstacleMargin: params.obstacleMargin,
+          viaHoleDiameter: params.viaHoleDiameter,
+        })
       : undefined
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
@@ -171,9 +178,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
-        this.physicalRouteValidator || (params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined)
+        this.physicalRouteValidator ||
+        (params.boardObstacles &&
+          params.movablePreloadedConnectionNames &&
+          params.viaToPadClearance !== undefined)
           ? (routes) => this.validateCandidateRoutes(routes)
           : undefined,
     })
@@ -186,9 +194,19 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
-    const physicalRoutes = routes.map((route) => ({ ...route, rootConnectionName: this.params.physicalRootConnectionNameByConnectionName?.[route.connectionName] ?? route.rootConnectionName }))
-    if (this.physicalRouteValidator && !this.physicalRouteValidator(physicalRoutes)) {
-      this.stats.physicalCandidateRejectionCount = Number(this.stats.physicalCandidateRejectionCount ?? 0) + 1
+    const physicalRoutes = routes.map((route) => ({
+      ...route,
+      rootConnectionName:
+        this.params.physicalRootConnectionNameByConnectionName?.[
+          route.connectionName
+        ] ?? route.rootConnectionName,
+    }))
+    if (
+      this.physicalRouteValidator &&
+      !this.physicalRouteValidator(physicalRoutes)
+    ) {
+      this.stats.physicalCandidateRejectionCount =
+        Number(this.stats.physicalCandidateRejectionCount ?? 0) + 1
       return false
     }
     const {

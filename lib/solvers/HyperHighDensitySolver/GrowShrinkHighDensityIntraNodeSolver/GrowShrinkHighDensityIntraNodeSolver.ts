@@ -201,8 +201,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator, solutionValidator, ...portfolioParams } =
-      this.constructorParams
+    const {
+      growShrinkSolutionValidator,
+      solutionValidator,
+      ...portfolioParams
+    } = this.constructorParams
     const scaleFactor = this.scaleFactor
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,

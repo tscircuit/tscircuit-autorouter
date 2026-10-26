@@ -37,7 +37,9 @@ test("actual Net13 node repair retains inner5 obstacles and physical stack conte
   expect(serial.stats.nodeClearanceInitialConflictCount).toBeGreaterThan(0)
   const runtime = createPipeline9TestRuntime(1)
   try {
-    const worker = new Pipeline4HighDensityRepairSolver(structuredClone(original))
+    const worker = new Pipeline4HighDensityRepairSolver(
+      structuredClone(original),
+    )
     await worker.solveAsync(runtime)
     expect(worker.solved).toBe(true)
     expect(worker.getOutput()).toEqual(serial.getOutput())

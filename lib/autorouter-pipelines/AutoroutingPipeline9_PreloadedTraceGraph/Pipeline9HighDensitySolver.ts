@@ -384,10 +384,16 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     growShrinkSolutionValidator: physicalRouteValidator
-      ? (routes) => physicalRouteValidator(routes.map((route) => ({
-          ...route,
-          rootConnectionName: nodeWithPortPoints.portPoints.find((point) => point.connectionName === route.connectionName)?.rootConnectionName ?? route.connectionName,
-        })))
+      ? (routes) =>
+          physicalRouteValidator(
+            routes.map((route) => ({
+              ...route,
+              rootConnectionName:
+                nodeWithPortPoints.portPoints.find(
+                  (point) => point.connectionName === route.connectionName,
+                )?.rootConnectionName ?? route.connectionName,
+            })),
+          )
       : undefined,
     captureSearchDebug: false,
     priorityDagSearch,
@@ -437,7 +443,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
-  private readonly physicalRouteValidator?: (routes: HighDensityRoute[]) => boolean
+  private readonly physicalRouteValidator?: (
+    routes: HighDensityRoute[],
+  ) => boolean
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -462,7 +470,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.physicalRouteValidator = params.physicalSrj
-      ? createPipeline9PhysicalRouteValidator({ physicalSrj: params.physicalSrj, connMap: this.connMap, obstacleMargin: this.obstacleMargin, viaHoleDiameter: params.viaHoleDiameter })
+      ? createPipeline9PhysicalRouteValidator({
+          physicalSrj: params.physicalSrj,
+          connMap: this.connMap,
+          obstacleMargin: this.obstacleMargin,
+          viaHoleDiameter: params.viaHoleDiameter,
+        })
       : undefined
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
@@ -775,7 +788,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaToPadClearance: this.viaToPadClearance,
       viaHoleDiameter: this.params.viaHoleDiameter,
       physicalSrj: this.params.physicalSrj,
-      physicalRootConnectionNameByConnectionName: Object.fromEntries(this.activeNode.portPoints.map((point) => [point.connectionName, point.rootConnectionName ?? point.connectionName])),
+      physicalRootConnectionNameByConnectionName: Object.fromEntries(
+        this.activeNode.portPoints.map((point) => [
+          point.connectionName,
+          point.rootConnectionName ?? point.connectionName,
+        ]),
+      ),
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })

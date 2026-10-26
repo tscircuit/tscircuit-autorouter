@@ -19,8 +19,10 @@ export function isConnectionPointOnObstacle(input: {
   const offsetX = input.point.x - input.obstacle.center.x
   const offsetY = input.point.y - input.obstacle.center.y
   const localPoint = {
-    x: offsetX * Math.cos(rotationRadians) - offsetY * Math.sin(rotationRadians),
-    y: offsetX * Math.sin(rotationRadians) + offsetY * Math.cos(rotationRadians),
+    x:
+      offsetX * Math.cos(rotationRadians) - offsetY * Math.sin(rotationRadians),
+    y:
+      offsetX * Math.sin(rotationRadians) + offsetY * Math.cos(rotationRadians),
   }
   if (
     pointToBoxDistance(localPoint, {

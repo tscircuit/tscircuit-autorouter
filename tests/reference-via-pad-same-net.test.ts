@@ -71,7 +71,9 @@ test("equivalent named aliases exempt own SMT and plated copper without exemptin
       drcOptions: { includeTraceContinuity: false },
     })
     expect(
-      own.errors.filter((error) => error.type === "pcb_pad_pad_clearance_error"),
+      own.errors.filter(
+        (error) => error.type === "pcb_pad_pad_clearance_error",
+      ),
     ).toHaveLength(0)
     const foreign = {
       ...trace,
