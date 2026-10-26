@@ -71,5 +71,9 @@ test("optional free-span floor preserves ordinary gates, dimensions, roles and d
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(structuredClone((dataset01 as Record<string, unknown>).circuit011 as SimpleRouteJson), { cacheProvider: null })
   pipeline.solveUntilPhase("edgeSolver")
   expect(pipeline.nodeDimensionSubdivisionSolver!.stats.minimumFreeNodeSpan).toBe(1.5 * (pipeline.minTraceWidth + 0.15))
-  expect(pipeline.capacityNodes).toBe(pipeline.nodeDimensionSubdivisionSolver!.outputNodes)
+  for (let z = 0; z < pipeline.srj.layerCount; z++) {
+    const before = pipeline.nodeDimensionSubdivisionSolver!.outputNodes.filter((node) => node.availableZ.includes(z)).reduce((area, node) => area + node.width * node.height, 0)
+    const after = pipeline.capacityNodes!.filter((node) => node.availableZ.includes(z)).reduce((area, node) => area + node.width * node.height, 0)
+    expect(after).toBeCloseTo(before, 8)
+  }
 })

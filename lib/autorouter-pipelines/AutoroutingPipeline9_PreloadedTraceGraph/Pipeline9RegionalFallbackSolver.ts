@@ -10,16 +10,18 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, SimpleRouteJson } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import { createPipeline9PhysicalRouteValidator } from "./createPipeline9PhysicalRouteValidator"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
   colorMap: Record<string, string>
   connMap: ConnectivityMap
   viaDiameter: number
+  viaHoleDiameter?: number
   traceWidth: number
   obstacleMargin: number
   effort: number
@@ -32,6 +34,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   viaToPadClearance?: number
   layerCount: number
   allowBlindAndBuriedVias?: boolean
+  physicalSrj?: SimpleRouteJson
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -139,10 +142,14 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
   private phase: RegionalFallbackPhase = "route"
+  private readonly physicalRouteValidator?: (routes: HighDensityRoute[]) => boolean
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
     super()
     this.params = params
+    this.physicalRouteValidator = params.physicalSrj
+      ? createPipeline9PhysicalRouteValidator({ physicalSrj: params.physicalSrj, connMap: params.connMap, obstacleMargin: params.obstacleMargin, viaHoleDiameter: params.viaHoleDiameter })
+      : undefined
     this.stats = {
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
@@ -163,9 +170,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator:
-        params.boardObstacles &&
+        this.physicalRouteValidator || (params.boardObstacles &&
         params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
+        params.viaToPadClearance !== undefined)
           ? (routes) => this.validateCandidateRoutes(routes)
           : undefined,
     })
@@ -178,6 +185,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+    if (this.physicalRouteValidator && !this.physicalRouteValidator(routes)) {
+      this.stats.physicalCandidateRejectionCount = Number(this.stats.physicalCandidateRejectionCount ?? 0) + 1
+      return false
+    }
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
