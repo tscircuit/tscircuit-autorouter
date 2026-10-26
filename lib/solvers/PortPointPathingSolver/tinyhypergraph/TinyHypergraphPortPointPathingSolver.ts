@@ -225,7 +225,6 @@ const asTinyPortMetadata = (metadata: unknown): TinyPortMetadata =>
 
 const TINY_TERMINAL_REGION_SIZE = 1e-6
 const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
-  PARTIAL_REGIONAL_EXPANSION: true,
   DISTANCE_TO_COST: 0.05,
   RIP_THRESHOLD_START: 0.05,
   RIP_THRESHOLD_END: 0.8,
