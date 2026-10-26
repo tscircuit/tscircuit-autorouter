@@ -691,23 +691,25 @@ export function createPhysicalViaCapacityEvaluator({
     return result
   }
   const getEndpointDomain = (
-    topology: Readonly<TinyHyperGraphTopology>,
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
     portId: number,
     owner: string,
   ): EndpointDomainEvent["bounds"] | undefined => {
+    const { topology } = query
     const edge = getSharedEdge(topology, portId)
     const face = edge?.geometry
     if (!edge || !face) return undefined
     const x = topology.portX[portId]!
     const y = topology.portY[portId]!
     const slack = edge.numericalSlack
-    // An anchored off-face alias can survive Solitary preservation. Skip it
-    // rather than treating its rectangle face as its only possible position.
+    // Certified movable aliases are projected onto this face by Uniform.
+    // Anchored off-face aliases retain the existing conservative abstention.
     if (
-      x < Math.min(face.x1, face.x2) - slack ||
-      x > Math.max(face.x1, face.x2) + slack ||
-      y < Math.min(face.y1, face.y2) - slack ||
-      y > Math.max(face.y1, face.y2) + slack
+      !isMovableFace(edge, query) &&
+      (x < Math.min(face.x1, face.x2) - slack ||
+        x > Math.max(face.x1, face.x2) + slack ||
+        y < Math.min(face.y1, face.y2) - slack ||
+        y > Math.max(face.y1, face.y2) + slack)
     )
       return undefined
     const domain = getTraceDomain(edge, owner, topology.portZ[portId]!)
@@ -759,7 +761,7 @@ export function createPhysicalViaCapacityEvaluator({
         return
       }
       const edge = getSharedEdge(query.topology, portId)
-      const bounds = getEndpointDomain(query.topology, portId, eventOwner)
+      const bounds = getEndpointDomain(query, portId, eventOwner)
       if (!edge || !bounds) {
         events.set(portId, null)
         return
