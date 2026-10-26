@@ -42,7 +42,9 @@ type PortfolioCandidate = NonNullable<
   PortfolioSingleIntraNodeSolver["supervisedSolvers"]
 >[number]
 
-type A03RoutingParams = ConstructorParameters<typeof HighDensityA03Solver>[0] & {
+type A03RoutingParams = ConstructorParameters<
+  typeof HighDensityA03Solver
+>[0] & {
   traceThickness: number
   traceMargin: number
 }

@@ -2,11 +2,9 @@ import { expect, test } from "bun:test"
 import { raceNode, ScriptedPortfolio } from "../fixtures/hdFamilyRace"
 
 test("preferred-family setup observes another family's complete proposal without charging native search work", (): void => {
-  const portfolio = new ScriptedPortfolio(
-    { nodeWithPortPoints: raceNode },
-    1,
-    { plans: { 1: { completeAfter: Infinity, budget: 5 } } },
-  )
+  const portfolio = new ScriptedPortfolio({ nodeWithPortPoints: raceNode }, 1, {
+    plans: { 1: { completeAfter: Infinity, budget: 5 } },
+  })
   const candidates = portfolio.supervisedSolvers!
   portfolio.supervisedSolvers = undefined
   portfolio.initializeSolvers = (): void => {
