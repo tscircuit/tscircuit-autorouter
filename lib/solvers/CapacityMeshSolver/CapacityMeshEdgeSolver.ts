@@ -1,3 +1,4 @@
+import { createTargetRoutingAccessChecker } from "./createTargetRoutingAccessChecker"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import type {
@@ -109,27 +110,17 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
       }
     }
 
+    const hasTargetRoutingAccess = createTargetRoutingAccessChecker({
+      nodeById,
+      edgesByTargetNodeId,
+      nodesHaveSharedLayer: (a, b) => this.doNodesHaveSharedLayer(a, b),
+    })
     for (const targetNode of targetNodes) {
       if (!targetNode._containsObstacle || !targetNode._targetConnectionName) {
         continue
       }
 
-      const hasRoutingEdge = edgesByTargetNodeId.get(targetNode.capacityMeshNodeId)!.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
-        const otherNode = nodeById.get(otherNodeId)
-        if (!otherNode) return false
-
-        return (
-          !otherNode._containsObstacle &&
-          !otherNode._containsTarget &&
-          this.doNodesHaveSharedLayer(targetNode, otherNode)
-        )
-      })
-      if (hasRoutingEdge) continue
+      if (hasTargetRoutingAccess(targetNode)) continue
 
       throw new Error(
         `Target obstacle region "${targetNode.capacityMeshNodeId}" for connection "${targetNode._targetConnectionName}" has no bordering routing edge`,

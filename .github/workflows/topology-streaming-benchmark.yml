@@ -176,3 +176,36 @@ jobs:
         with:
           name: target-edge-completion-comparison
           path: results/
+
+  owned_target_access:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: head
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - name: Install before timing
+        run: |
+          (cd base && bun install)
+          (cd head && bun install)
+      - name: Compare owned target access with identical graph geometry
+        run: |
+          mkdir -p results
+          for count in 1 128; do
+            bun head/scripts/benchmarks/measure-owned-target-routing-access.ts base results/base-$count.json $count
+            bun head/scripts/benchmarks/measure-owned-target-routing-access.ts head results/head-$count.json $count
+          done
+          bun -e 'for(const count of [1,128]) {const b=await Bun.file(`results/base-${count}.json`).json(),h=await Bun.file(`results/head-${count}.json`).json(); if(!h.solved||h.failed||!b.inputUnchanged||!h.inputUnchanged||b.inputSha256!==h.inputSha256||b.orderedEdgeSha256!==h.orderedEdgeSha256||h.edges!==count*3)throw Error("Owned target validation or graph geometry regression")}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owned-target-access-comparison
+          path: results/
