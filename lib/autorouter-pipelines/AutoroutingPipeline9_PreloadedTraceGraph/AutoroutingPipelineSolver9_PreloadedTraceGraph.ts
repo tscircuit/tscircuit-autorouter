@@ -679,6 +679,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
+          layerCount: cms.originalSrj.layerCount,
+          allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
           connMap: cms.connMap,
         },
       ],

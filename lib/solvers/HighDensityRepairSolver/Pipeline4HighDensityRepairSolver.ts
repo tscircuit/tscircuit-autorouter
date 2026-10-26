@@ -212,6 +212,8 @@ const getAdjacentObstacles = (
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
+  readonly layerCount?: number
+  readonly allowBlindAndBuriedVias?: boolean
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -232,12 +234,16 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
+    layerCount?: number
+    allowBlindAndBuriedVias?: boolean
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
     this.minimumTraceWidth = params.minimumTraceWidth
+    this.layerCount = params.layerCount
+    this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -272,12 +278,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
 
     const layeredObstacles = createObjectsWithZLayers(
       params.obstacles,
-      Math.max(
-        2,
-        ...params.nodeWithPortPoints.flatMap(
-          (node) => node.availableZ?.map((z) => z + 1) ?? [],
+      params.layerCount ??
+        Math.max(
+          2,
+          ...params.nodeWithPortPoints.flatMap(
+            (node) => node.availableZ?.map((z) => z + 1) ?? [],
+          ),
         ),
-      ),
     )
     const repairRoutes = params.hdRoutes.map((route) =>
       toRepairRoute(route, params.connMap, params.minimumTraceWidth),
@@ -324,6 +331,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           node,
           routeIndexes,
           sample: {
+            layerCount: params.layerCount,
+            allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
               center: node.center,
@@ -527,6 +536,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
+        layerCount: this.layerCount,
+        allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },

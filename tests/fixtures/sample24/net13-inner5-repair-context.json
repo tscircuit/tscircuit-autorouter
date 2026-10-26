@@ -1,0 +1,302 @@
+{
+  "layerCount": 8,
+  "allowBlindAndBuriedVias": false,
+  "nodeWithPortPoints": [
+    {
+      "capacityMeshNodeId": "topology_merge_57546",
+      "center": {
+        "x": 232.0036,
+        "y": 40.2502497
+      },
+      "width": 0.5334000000000003,
+      "height": 0.10949940000000424,
+      "portPoints": [
+        {
+          "portPointId": "ce208658_pp0_z0::0",
+          "x": 232.0036,
+          "y": 40.195499999999996,
+          "z": 0,
+          "connectionName": "source_net_altium_pcb_363_mst3",
+          "rootConnectionName": "source_net_altium_pcb_363",
+          "nextPortPointId": "ce208788_pp0_z0::0"
+        },
+        {
+          "portPointId": "ce208788_pp0_z0::0",
+          "x": 232.0036,
+          "y": 40.3049994,
+          "z": 0,
+          "connectionName": "source_net_altium_pcb_363_mst3",
+          "rootConnectionName": "source_net_altium_pcb_363",
+          "prevPortPointId": "ce208658_pp0_z0::0"
+        },
+        {
+          "portPointId": "ce208789_pp0_z0_cramped::0",
+          "x": 232.27030000000002,
+          "y": 40.2502497,
+          "z": 0,
+          "connectionName": "source_net_altium_pcb_13",
+          "rootConnectionName": "source_net_altium_pcb_13",
+          "nextPortPointId": "ce208667_pp0_z0_cramped::0"
+        },
+        {
+          "portPointId": "ce208667_pp0_z0_cramped::0",
+          "x": 231.7369,
+          "y": 40.2502497,
+          "z": 0,
+          "connectionName": "source_net_altium_pcb_13",
+          "rootConnectionName": "source_net_altium_pcb_13",
+          "prevPortPointId": "ce208789_pp0_z0_cramped::0"
+        }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "ce208658_pp0_z0::0",
+            "x": 232.0036,
+            "y": 40.195499999999996,
+            "z": 0,
+            "connectionName": "source_net_altium_pcb_363_mst3",
+            "rootConnectionName": "source_net_altium_pcb_363",
+            "nextPortPointId": "ce208788_pp0_z0::0"
+          },
+          {
+            "portPointId": "ce208788_pp0_z0::0",
+            "x": 232.0036,
+            "y": 40.3049994,
+            "z": 0,
+            "connectionName": "source_net_altium_pcb_363_mst3",
+            "rootConnectionName": "source_net_altium_pcb_363",
+            "prevPortPointId": "ce208658_pp0_z0::0"
+          }
+        ],
+        [
+          {
+            "portPointId": "ce208789_pp0_z0_cramped::0",
+            "x": 232.27030000000002,
+            "y": 40.2502497,
+            "z": 0,
+            "connectionName": "source_net_altium_pcb_13",
+            "rootConnectionName": "source_net_altium_pcb_13",
+            "nextPortPointId": "ce208667_pp0_z0_cramped::0"
+          },
+          {
+            "portPointId": "ce208667_pp0_z0_cramped::0",
+            "x": 231.7369,
+            "y": 40.2502497,
+            "z": 0,
+            "connectionName": "source_net_altium_pcb_13",
+            "rootConnectionName": "source_net_altium_pcb_13",
+            "prevPortPointId": "ce208789_pp0_z0_cramped::0"
+          }
+        ]
+      ],
+      "availableZ": [
+        0
+      ]
+    }
+  ],
+  "hdRoutes": [
+    {
+      "connectionName": "source_net_altium_pcb_363_mst3",
+      "rootConnectionName": "source_net_altium_pcb_363",
+      "regionId": "topology_merge_57546",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 232.004,
+          "y": 40.195,
+          "z": 0
+        },
+        {
+          "x": 231.995,
+          "y": 40.225,
+          "z": 0
+        },
+        {
+          "x": 231.98548314607592,
+          "y": 40.19550099999999,
+          "z": 0
+        },
+        {
+          "x": 232.002,
+          "y": 40.272,
+          "z": 0
+        },
+        {
+          "x": 232.004,
+          "y": 40.305,
+          "z": 0
+        }
+      ],
+      "vias": []
+    },
+    {
+      "connectionName": "source_net_altium_pcb_13",
+      "rootConnectionName": "source_net_altium_pcb_13",
+      "regionId": "topology_merge_57546",
+      "traceThickness": 0.1,
+      "viaDiameter": 0.3,
+      "route": [
+        {
+          "x": 232.27,
+          "y": 40.25,
+          "z": 0
+        },
+        {
+          "x": 232.27,
+          "y": 40.225,
+          "z": 0
+        },
+        {
+          "x": 232.252,
+          "y": 40.246,
+          "z": 0
+        },
+        {
+          "x": 232.253,
+          "y": 40.248,
+          "z": 0
+        },
+        {
+          "x": 232.257,
+          "y": 40.249,
+          "z": 0
+        },
+        {
+          "x": 232.253,
+          "y": 40.254,
+          "z": 0
+        },
+        {
+          "x": 232.2001473447531,
+          "y": 40.304998229863784,
+          "z": 0
+        },
+        {
+          "x": 232.2001473447531,
+          "y": 40.304998229863784,
+          "z": 1
+        },
+        {
+          "x": 232.174,
+          "y": 40.305,
+          "z": 1
+        },
+        {
+          "x": 232.108,
+          "y": 40.258,
+          "z": 1
+        },
+        {
+          "x": 232.074,
+          "y": 40.251,
+          "z": 1
+        },
+        {
+          "x": 232.046,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 232.019,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 231.994,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 231.969,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 231.946,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 231.924,
+          "y": 40.25,
+          "z": 1
+        },
+        {
+          "x": 231.909,
+          "y": 40.252,
+          "z": 1
+        },
+        {
+          "x": 231.9,
+          "y": 40.261,
+          "z": 1
+        },
+        {
+          "x": 231.80673045595643,
+          "y": 40.3049984,
+          "z": 1
+        },
+        {
+          "x": 231.80673045595643,
+          "y": 40.3049984,
+          "z": 0
+        },
+        {
+          "x": 231.737,
+          "y": 40.291,
+          "z": 0
+        },
+        {
+          "x": 231.737,
+          "y": 40.293,
+          "z": 0
+        },
+        {
+          "x": 231.737,
+          "y": 40.287,
+          "z": 0
+        },
+        {
+          "x": 231.737,
+          "y": 40.225,
+          "z": 0
+        },
+        {
+          "x": 231.737,
+          "y": 40.25,
+          "z": 0
+        }
+      ],
+      "vias": [
+        {
+          "x": 232.2,
+          "y": 40.305
+        },
+        {
+          "x": 231.807,
+          "y": 40.305
+        }
+      ]
+    }
+  ],
+  "obstacles": [
+    {
+      "obstacleId": "pcb_keepout_altium_arc_4604",
+      "type": "rect",
+      "layers": [
+        "inner5"
+      ],
+      "center": {
+        "x": 232.0036,
+        "y": 40.462199999999996
+      },
+      "width": 0.5334000000000098,
+      "height": 0.5334000000000098,
+      "connectedTo": []
+    }
+  ],
+  "minimumTraceWidth": 0.1,
+  "repairMargin": 0.2
+}
