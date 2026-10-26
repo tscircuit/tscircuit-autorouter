@@ -1,7 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
-import { getRawKeepoutDrcErrors } from "./getRawKeepoutDrcErrors"
+import { getUnownedObstacleDrcErrors } from "./getUnownedObstacleDrcErrors"
 import {
   getDrcErrors,
   type GetDrcErrorsOptions,
@@ -94,15 +94,15 @@ export const evaluateRelaxedDrc = ({
       inputSrj.minPadEdgeToPadEdgeClearance,
     ...drcOptions,
   })
-  const keepoutErrors = getRawKeepoutDrcErrors({
+  const unownedObstacleErrors = getUnownedObstacleDrcErrors({
     inputSrj,
     jointTraces,
     circuitJson,
   })
   return {
     circuitJson,
-    errors: [...drc.errors, ...keepoutErrors],
-    errorsWithCenters: [...drc.errorsWithCenters, ...keepoutErrors],
-    locationAwareErrors: [...drc.locationAwareErrors, ...keepoutErrors],
+    errors: [...drc.errors, ...unownedObstacleErrors],
+    errorsWithCenters: [...drc.errorsWithCenters, ...unownedObstacleErrors],
+    locationAwareErrors: [...drc.locationAwareErrors, ...unownedObstacleErrors],
   }
 }

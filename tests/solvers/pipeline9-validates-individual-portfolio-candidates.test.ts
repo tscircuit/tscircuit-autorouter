@@ -35,6 +35,7 @@ test("rejecting an invalid closed-form candidate preserves existing valid portfo
         height: 2,
         layers: ["inner3"],
         connectedTo: [],
+        circuitJsonMetadata: { pcb_smtpad_id: "foreign-pad" },
       },
     ],
     connections: [{ name: "signal", pointsToConnect: [] }],

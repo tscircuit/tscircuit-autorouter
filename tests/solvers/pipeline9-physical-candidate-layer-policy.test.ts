@@ -31,6 +31,7 @@ test("candidate checks preserve physical via spans, own plated copper, width flo
         height: 0.3,
         layers: ["bottom"],
         connectedTo: [],
+        circuitJsonMetadata: { pcb_smtpad_id: "foreign-pad" },
       },
     ],
     connections: [{ name: "signal", pointsToConnect: [] }],

@@ -12,6 +12,7 @@ import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { arePipeline9RoutesOnSameNet } from "./pipeline9FixedRouteCopper"
 
@@ -127,12 +128,12 @@ export function createPipeline9PhysicalRouteValidator({
         if (distance + 1e-6 < Math.max(drillDistance, copperDistance)) return false
       }
     }
-    // The fast engine omits unidentified keepouts and unconnected pads. The
-    // raw geometry validator supplies those checks, including full via spans.
-    const keepouts = srj.obstacles.filter((obstacle) => obstacle.obstacleId?.startsWith("pcb_keepout_") && obstacle.connectedTo.length === 0)
-    const padSrj = { ...srj, obstacles: srj.obstacles.filter((obstacle) => !keepouts.includes(obstacle)) }
-    if (getFixedObstacleViolations({ srj: padSrj as any, routes: routes as any, traceClearance, viaClearance }).length > 0) return false
-    if (keepouts.length > 0 && getFixedObstacleViolations({ srj: { ...srj, obstacles: keepouts, defaultObstacleMargin: 0, minTraceToPadEdgeClearance: 0, minViaEdgeToPadEdgeClearance: 0 } as any, routes: routes as any, traceClearance: 0, viaClearance: 0 }).length > 0) return false
+    // Opaque unowned barriers have no declared copper role. Check overlap
+    // without inventing pad clearance; typed pads and holes retain their rules.
+    const unownedObstacles = srj.obstacles.filter(isOpaqueUnownedObstacle)
+    const otherObstacleSrj = { ...srj, obstacles: srj.obstacles.filter((obstacle) => !isOpaqueUnownedObstacle(obstacle)) }
+    if (getFixedObstacleViolations({ srj: otherObstacleSrj as any, routes: routes as any, traceClearance, viaClearance }).length > 0) return false
+    if (unownedObstacles.length > 0 && getFixedObstacleViolations({ srj: { ...srj, obstacles: unownedObstacles, defaultObstacleMargin: 0, minTraceToPadEdgeClearance: 0, minViaEdgeToPadEdgeClearance: 0 } as any, routes: routes as any, traceClearance: 0, viaClearance: 0 }).length > 0) return false
     for (const route of routes) {
       const geometry = getPipeline9RouteCopperGeometry(route, srj)
       for (const segment of geometry.wireSegments) {
