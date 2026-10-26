@@ -222,7 +222,9 @@ function compilePhysicalBoard(physicalSrj: SimpleRouteJson): PhysicalBoard {
         minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1),
       ) - 1e-6,
     minimumSameOwnerViaSpacing:
-      minimumHoleDiameter + (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1) - 1e-6,
+      minimumHoleDiameter +
+      (srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1) -
+      1e-6,
     minimumViaTraceRadius:
       minimumPadDiameter / 2 +
       minimumTraceWidth / 2 +
@@ -744,38 +746,38 @@ export function createPhysicalViaCapacityEvaluator({
     // opposing pad constraints without approximating their nonrectangular union.
     for (let pass = 0; pass < (crosscutScopeEnabled ? 2 : 1); pass++) {
       for (const id of nearby) {
-      const constraintBounds = crosscutScopeEnabled ? bounds : original
-      const pad = board.pads[id]!
-      if (pad.owners.has(owner)) continue
-      const radius = pad.radius - slack
-      const maxDx = Math.max(
-        pad.minX - constraintBounds.minX,
-        constraintBounds.maxX - pad.maxX,
-        0,
-      )
-      if (maxDx < radius) {
-        // The furthest possible x distance gives a necessary y distance even
-        // beside a rounded offset corner. Clip only when one escape side is
-        // outside the original cell; every legal center remains enclosed.
-        const dy = Math.sqrt(radius * radius - maxDx * maxDx)
-        if (constraintBounds.minY >= pad.minY)
-          bounds.minY = Math.max(bounds.minY, pad.maxY + dy - slack)
-        if (constraintBounds.maxY <= pad.maxY)
-          bounds.maxY = Math.min(bounds.maxY, pad.minY - dy + slack)
+        const constraintBounds = crosscutScopeEnabled ? bounds : original
+        const pad = board.pads[id]!
+        if (pad.owners.has(owner)) continue
+        const radius = pad.radius - slack
+        const maxDx = Math.max(
+          pad.minX - constraintBounds.minX,
+          constraintBounds.maxX - pad.maxX,
+          0,
+        )
+        if (maxDx < radius) {
+          // The furthest possible x distance gives a necessary y distance even
+          // beside a rounded offset corner. Clip only when one escape side is
+          // outside the original cell; every legal center remains enclosed.
+          const dy = Math.sqrt(radius * radius - maxDx * maxDx)
+          if (constraintBounds.minY >= pad.minY)
+            bounds.minY = Math.max(bounds.minY, pad.maxY + dy - slack)
+          if (constraintBounds.maxY <= pad.maxY)
+            bounds.maxY = Math.min(bounds.maxY, pad.minY - dy + slack)
+        }
+        const maxDy = Math.max(
+          pad.minY - constraintBounds.minY,
+          constraintBounds.maxY - pad.maxY,
+          0,
+        )
+        if (maxDy < radius) {
+          const dx = Math.sqrt(radius * radius - maxDy * maxDy)
+          if (constraintBounds.minX >= pad.minX)
+            bounds.minX = Math.max(bounds.minX, pad.maxX + dx - slack)
+          if (constraintBounds.maxX <= pad.maxX)
+            bounds.maxX = Math.min(bounds.maxX, pad.minX - dx + slack)
+        }
       }
-      const maxDy = Math.max(
-        pad.minY - constraintBounds.minY,
-        constraintBounds.maxY - pad.maxY,
-        0,
-      )
-      if (maxDy < radius) {
-        const dx = Math.sqrt(radius * radius - maxDy * maxDy)
-        if (constraintBounds.minX >= pad.minX)
-          bounds.minX = Math.max(bounds.minX, pad.maxX + dx - slack)
-        if (constraintBounds.maxX <= pad.maxX)
-          bounds.maxX = Math.min(bounds.maxX, pad.minX - dx + slack)
-      }
-    }
     }
     cache.set(owner, bounds)
     return bounds
@@ -819,10 +821,12 @@ export function createPhysicalViaCapacityEvaluator({
       if (route !== query.routeId && !demand.routeIds.includes(route))
         demand.routeIds.push(route)
     }
-    const owners = new Set(assignments.flatMap(([route]) => {
-      const owner = getOwner(query.problem, route)
-      return owner === undefined ? [] : [owner]
-    }))
+    const owners = new Set(
+      assignments.flatMap(([route]) => {
+        const owner = getOwner(query.problem, route)
+        return owner === undefined ? [] : [owner]
+      }),
+    )
     if (owners.size < 2) return FEASIBLE
     // Native families use the node-plus-port hull. Certify that projected
     // movable faces and every fixed endpoint keep that hull inside this box.
@@ -853,16 +857,23 @@ export function createPhysicalViaCapacityEvaluator({
     }
     const approaches = new Map<string, ViaApproachDemand>()
     const planarWires = new Map<string, PlanarCrosscutDemand>()
-    const contactForPort = (port: number, owner: string): CrosscutBoundaryContact | undefined => {
+    const contactForPort = (
+      port: number,
+      owner: string,
+    ): CrosscutBoundaryContact | undefined => {
       const face = getSharedEdge(query.topology, port)
-      if (!face?.geometry || !canUseSharedFace(query, port, face)) return undefined
+      if (!face?.geometry || !canUseSharedFace(query, port, face))
+        return undefined
       const domain = getTraceDomain(face, owner, query.topology.portZ[port]!)
       if (!domain) return undefined
       const side = face.geometry.nodeSideByOwnerId[node.capacityMeshNodeId]
       const vertical = side === "left" || side === "right"
-      return { side, normal: vertical ? face.geometry.x1 : face.geometry.y1,
+      return {
+        side,
+        normal: vertical ? face.geometry.x1 : face.geometry.y1,
         min: (vertical ? face.geometry.y1 : face.geometry.x1) + domain.min,
-        max: (vertical ? face.geometry.y1 : face.geometry.x1) + domain.max }
+        max: (vertical ? face.geometry.y1 : face.geometry.x1) + domain.max,
+      }
     }
     for (const [route, from, to] of assignments) {
       if (query.topology.portZ[from] === query.topology.portZ[to]) continue
@@ -876,12 +887,19 @@ export function createPhysicalViaCapacityEvaluator({
         const key = JSON.stringify([owner, port])
         let approach = approaches.get(key)
         if (!approach) {
-          approach = { owner, bounds: domain, layer: query.topology.portZ[port]!, contact,
-            routeIds: [], candidate: false }
+          approach = {
+            owner,
+            bounds: domain,
+            layer: query.topology.portZ[port]!,
+            contact,
+            routeIds: [],
+            candidate: false,
+          }
           approaches.set(key, approach)
         }
         approach.candidate ||= route === query.routeId
-        if (route !== query.routeId && !approach.routeIds.includes(route)) approach.routeIds.push(route)
+        if (route !== query.routeId && !approach.routeIds.includes(route))
+          approach.routeIds.push(route)
       }
     }
     const wires = new Map<string, ThroughWireDemand>()
@@ -917,7 +935,8 @@ export function createPhysicalViaCapacityEvaluator({
         Math.max(from, to),
       ])
       if (query.topology.portZ[from] === query.topology.portZ[to]) {
-        const first = contactForPort(from, owner), second = contactForPort(to, owner)
+        const first = contactForPort(from, owner),
+          second = contactForPort(to, owner)
         if (!first || !second) continue
         let planar = planarWires.get(key)
         if (!planar) {
