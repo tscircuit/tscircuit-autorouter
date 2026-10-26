@@ -1,6 +1,7 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { NativeExploredNodeSet } from "lib/data-structures/NativeExploredNodeSet"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
@@ -11,7 +12,6 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   MISALIGNED_DIST_PENALTY_FACTOR = 5
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
-  COST_ALIGNED_HEURISTIC = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
@@ -23,8 +23,6 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
-  private readonly hasEvenAvailableLayer: boolean
-  private readonly hasOddAvailableLayer: boolean
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -49,25 +47,16 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
-    this.hasEvenAvailableLayer = this.availableZ.some(
-      (layer) => layer % 2 === 0,
-    )
-    this.hasOddAvailableLayer = this.availableZ.some((layer) => layer % 2 !== 0)
+    const gridKeys = this.gridWidth * this.gridHeight * this.layerCount
     if (
-      this.COST_ALIGNED_HEURISTIC &&
-      (!Number.isFinite(this.MISALIGNED_DIST_PENALTY_FACTOR) ||
-        this.MISALIGNED_DIST_PENALTY_FACTOR < 0 ||
-        !Number.isFinite(this.viaPenaltyDistance) ||
-        this.viaPenaltyDistance < 0)
+      opts.nativeExplorationBitmap &&
+      Number.isSafeInteger(gridKeys) &&
+      gridKeys > 0 &&
+      gridKeys <= 0x1_0000_0000
     ) {
-      throw new Error(
-        "Native movement penalties must be finite and nonnegative",
-      )
-    }
-    if (this.COST_ALIGNED_HEURISTIC) {
-      // Keep the linear estimate's search weight explicit when replacing the
-      // previous superlinear distance priority. This is a bounded policy trial.
-      this.GREEDY_MULTIPLER = 2.2
+      const exploredNodes = new NativeExploredNodeSet(gridKeys)
+      for (const key of this.exploredNodes) exploredNodes.add(key)
+      this.exploredNodes = exploredNodes
     }
   }
 
@@ -237,44 +226,17 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     return futureConnectionPenalty
   }
 
-  computeH(node: Node): number {
-    if (!this.COST_ALIGNED_HEURISTIC) {
-      return (
-        distance(node, this.B) ** 1.6 +
-        (node.z !== this.B.z ? this.viaPenaltyDistance : 0) +
-        this.getFutureConnectionPenalty(node, node.z !== node.parent?.z)
-      )
-    }
-    // The containing box relaxes the accepted goal disk, including clamped
-    // boundary steps that need not follow exact 45-degree diagonals.
-    const goalRadius = this.cellStep * Math.SQRT2
-    const dx = Math.max(0, Math.abs(node.x - this.B.x) - goalRadius)
-    const dy = Math.max(0, Math.abs(node.y - this.B.y) - goalRadius)
-    const euclideanDistance = Math.sqrt(dx * dx + dy * dy)
-    const misalignment = this.MISALIGNED_DIST_PENALTY_FACTOR
-    const interpolation = Math.min(1, misalignment)
-    const mixedOrientationCost =
-      (1 - interpolation) * euclideanDistance + interpolation * (dx + dy)
-    const currentLayerIsEven = node.z % 2 === 0
-    const goalLayerIsEven = this.B.z % 2 === 0
-    const prefersHorizontal =
-      currentLayerIsEven !== this.FLIP_TRACE_ALIGNMENT_DIRECTION
-    const directCost =
-      euclideanDistance + misalignment * (prefersHorizontal ? dy : dx)
-    const viaCost = this.viaPenaltyDistance
-    if (currentLayerIsEven !== goalLayerIsEven) {
-      return mixedOrientationCost + viaCost
-    }
-    const requiredViaCost = node.z === this.B.z ? 0 : viaCost
-    const oppositeOrientationAvailable = currentLayerIsEven
-      ? this.hasOddAvailableLayer
-      : this.hasEvenAvailableLayer
-    if (!oppositeOrientationAvailable) return directCost + requiredViaCost
+  computeH(node: Node) {
+    const goalDist = distance(node, this.B) ** 1.6
+    const goalDistRatio = goalDist / this.straightLineDistance
 
-    // Exploiting the other orientation and returning requires two vias.
-    return Math.min(
-      directCost + requiredViaCost,
-      mixedOrientationCost + 2 * viaCost,
+    // Base cost from original function
+    const baseCost =
+      goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+
+    return (
+      baseCost +
+      this.getFutureConnectionPenalty(node, node.z !== node.parent?.z)
     )
   }
 
@@ -324,17 +286,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
+    const goalDist = distance(node, this.B) ** 1.6
+    const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
     const futureConnectionPenalty = this.getFutureConnectionPenalty(
       node,
       node.z !== node.parent?.z,
     )
 
     node.g = baseG + futureConnectionPenalty
-    node.h = this.COST_ALIGNED_HEURISTIC
-      ? this.computeH(node)
-      : distance(node, this.B) ** 1.6 +
-        (node.z !== this.B.z ? this.viaPenaltyDistance : 0) +
-        futureConnectionPenalty
+    node.h = baseH + futureConnectionPenalty
     node.f = this.computeF(node.g, node.h)
   }
 }

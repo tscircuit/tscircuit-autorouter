@@ -69,10 +69,10 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
-  readonly costAlignedNativeHeuristic: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
+    nativeExplorationBitmap: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -117,8 +117,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
-    costAlignedNativeHeuristic = false,
     priorityDagSearch = false,
+    nativeExplorationBitmap = false,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -146,8 +146,8 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
-    costAlignedNativeHeuristic?: boolean
     priorityDagSearch?: boolean
+    nativeExplorationBitmap?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -182,10 +182,10 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.costAlignedNativeHeuristic = costAlignedNativeHeuristic
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
+      nativeExplorationBitmap,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,
@@ -446,7 +446,6 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
-      costAlignedNativeHeuristic: this.costAlignedNativeHeuristic,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

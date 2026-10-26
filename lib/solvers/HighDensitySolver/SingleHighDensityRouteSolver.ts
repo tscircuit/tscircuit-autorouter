@@ -122,6 +122,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    // Owned Native6 queries mutate exploredNodes through ordinary Set methods.
+    nativeExplorationBitmap?: boolean
   }) {
     super()
     this.bounds = opts.bounds

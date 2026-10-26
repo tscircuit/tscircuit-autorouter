@@ -12,7 +12,6 @@ export interface HighDensityHyperParameters {
   SHUFFLE_SEED: number
   CELL_SIZE_FACTOR: number
   FLIP_TRACE_ALIGNMENT_DIRECTION: boolean
-  COST_ALIGNED_HEURISTIC?: boolean
 
   // Hyper Parameters for Multi-Head Polyline Solver
   MULTI_HEAD_POLYLINE_SOLVER: boolean
