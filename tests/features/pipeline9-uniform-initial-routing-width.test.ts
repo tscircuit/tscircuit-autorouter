@@ -26,12 +26,13 @@ test("Pipeline 9 places initial shared ports at its actual routing width before 
     y: -14.399999999999999,
     z: 0,
   }
-  const nodes: NodeWithPortPoints[] = [
+  const nodes: (NodeWithPortPoints & { availableZ: number[] })[] = [
     {
       capacityMeshNodeId: ownerNodeIds[0]!,
       center: { x: -20.487499999999997, y: -13.849999999999998 },
       width: 3.5749999999999993,
       height: 1.0999999999999996,
+      availableZ: [0, 1, 2, 3],
       portPoints: [{ ...port }],
     },
     {
@@ -39,6 +40,7 @@ test("Pipeline 9 places initial shared ports at its actual routing width before 
       center: { x: -20, y: -14.549999999999999 },
       width: 0.6000000000000014,
       height: 0.3000000000000007,
+      availableZ: [0],
       portPoints: [{ ...port }],
     },
   ]
