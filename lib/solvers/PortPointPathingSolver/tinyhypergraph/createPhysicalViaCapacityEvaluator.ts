@@ -21,6 +21,10 @@ import {
   type OrderedSharedEdgeEvent,
 } from "./getOrderedSharedEdgeFeasibility"
 import {
+  getCrossFaceEndpointFeasibility,
+  type EndpointDomainEvent,
+} from "./getCrossFaceEndpointFeasibility"
+import {
   getThroughViaCrosscutFeasibility,
   type ThroughViaDemand,
   type ThroughWireDemand,
@@ -686,6 +690,107 @@ export function createPhysicalViaCapacityEvaluator({
     edge.lastOrdered = { key, result }
     return result
   }
+  const getEndpointDomain = (
+    topology: Readonly<TinyHyperGraphTopology>,
+    portId: number,
+    owner: string,
+  ): EndpointDomainEvent["bounds"] | undefined => {
+    const edge = getSharedEdge(topology, portId)
+    const face = edge?.geometry
+    if (!edge || !face) return undefined
+    const x = topology.portX[portId]!
+    const y = topology.portY[portId]!
+    const slack = edge.numericalSlack
+    // An anchored off-face alias can survive Solitary preservation. Skip it
+    // rather than treating its rectangle face as its only possible position.
+    if (
+      x < Math.min(face.x1, face.x2) - slack ||
+      x > Math.max(face.x1, face.x2) + slack ||
+      y < Math.min(face.y1, face.y2) - slack ||
+      y > Math.max(face.y1, face.y2) + slack
+    )
+      return undefined
+    const domain = getTraceDomain(edge, owner, topology.portZ[portId]!)
+    if (!domain) return undefined
+    const lowX = face.x1 + ((face.x2 - face.x1) * domain.min) / face.length
+    const highX = face.x1 + ((face.x2 - face.x1) * domain.max) / face.length
+    const lowY = face.y1 + ((face.y2 - face.y1) * domain.min) / face.length
+    const highY = face.y1 + ((face.y2 - face.y1) * domain.max) / face.length
+    // Full raw domains never depend on which peers are committed or ripped.
+    // Including the existing point also encloses every anchored/Solitary case.
+    return {
+      minX: Math.min(x, lowX, highX) - slack,
+      maxX: Math.max(x, lowX, highX) + slack,
+      minY: Math.min(y, lowY, highY) - slack,
+      maxY: Math.max(y, lowY, highY) + slack,
+    }
+  }
+  const getEndpointFeasibility = (
+    query: TinyHyperGraphRegionSegmentFeasibilityContext,
+    owner: string,
+  ): TinyHyperGraphRegionSegmentFeasibilityResult => {
+    const hasForeignPeer = query.regionSegments.some(([routeId]) => {
+      if (routeId === query.routeId || query.ignoredRouteIds?.has(routeId))
+        return false
+      const otherOwner = getOwner(query.problem, routeId)
+      return otherOwner !== undefined && otherOwner !== owner
+    })
+    if (!hasForeignPeer) return FEASIBLE
+    const events = new Map<number, EndpointDomainEvent | null>()
+    const add = (
+      portId: number,
+      eventOwner: string | undefined,
+      routeId: number,
+      candidate: boolean,
+    ): void => {
+      const existing = events.get(portId)
+      if (existing === null) return
+      if (
+        eventOwner === undefined ||
+        (existing && existing.owner !== eventOwner)
+      ) {
+        events.set(portId, null)
+        return
+      }
+      if (existing) {
+        existing.candidate ||= candidate
+        if (!candidate && !existing.routeIds.includes(routeId))
+          existing.routeIds.push(routeId)
+        return
+      }
+      const edge = getSharedEdge(query.topology, portId)
+      const bounds = getEndpointDomain(query.topology, portId, eventOwner)
+      if (!edge || !bounds) {
+        events.set(portId, null)
+        return
+      }
+      events.set(portId, {
+        portId,
+        faceKey: edge.key,
+        owner: eventOwner,
+        z: query.topology.portZ[portId]!,
+        bounds,
+        routeIds: candidate ? [] : [routeId],
+        candidate,
+      })
+    }
+    for (const [routeId, from, to] of query.regionSegments) {
+      if (routeId === query.routeId || query.ignoredRouteIds?.has(routeId))
+        continue
+      const otherOwner = getOwner(query.problem, routeId)
+      add(from, otherOwner, routeId, false)
+      add(to, otherOwner, routeId, false)
+    }
+    add(query.fromPortId, owner, query.routeId!, true)
+    add(query.toPortId, owner, query.routeId!, true)
+    return getCrossFaceEndpointFeasibility({
+      events: [...events.values()].filter(
+        (event): event is EndpointDomainEvent => event !== null,
+      ),
+      minimumSpacing: board.minimumTraceCenterSpacing,
+      slack: 1e-8,
+    })
+  }
   const boundsByTopology = new WeakMap<
     Readonly<TinyHyperGraphTopology>,
     Map<number, Map<string, Bounds | null>>
@@ -1063,6 +1168,8 @@ export function createPhysicalViaCapacityEvaluator({
       if (getPortDomain(query, portId, edge, owner) === null)
         return { feasible: false, blockerRouteIds: [] }
     }
+    const endpoint = getEndpointFeasibility(query, owner)
+    if (!endpoint.feasible) return endpoint
     if (fromEdge || toEdge) {
       const blockers = new Set<number>()
       for (const [otherRoute, first, second] of regionSegments) {

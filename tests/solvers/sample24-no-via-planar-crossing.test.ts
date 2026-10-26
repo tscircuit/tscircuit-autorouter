@@ -109,7 +109,7 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
   }
   expect(evaluate(query)).toEqual({
     feasible: false,
-    alternativeBlockerRouteIdSets: [[0]],
+    blockerRouteIds: [0],
   })
   expect(evaluate({ ...query, ignoredRouteIds: new Set([0]) })).toEqual({
     feasible: true,
@@ -123,7 +123,7 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
   }
   expect(evaluate(candidateWire)).toEqual({
     feasible: false,
-    alternativeBlockerRouteIdSets: [[1]],
+    blockerRouteIds: [1],
   })
   const aliased = {
     ...problem,
@@ -139,7 +139,7 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
         [2, ...wire],
       ],
     }),
-  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[0, 2]] })
+  ).toEqual({ feasible: false, blockerRouteIds: [0, 2] })
   expect(
     evaluate({
       ...query,
@@ -150,7 +150,7 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
       ],
       ignoredRouteIds: new Set([0]),
     }),
-  ).toEqual({ feasible: false, alternativeBlockerRouteIdSets: [[2]] })
+  ).toEqual({ feasible: false, blockerRouteIds: [2] })
   const sameOwner = {
     ...problem,
     routeMetadata: [problem.routeMetadata![0], problem.routeMetadata![0]],
@@ -161,16 +161,18 @@ test("sample24 node61420 is effectively single-layer for owners with no physical
     "pcb_smtpad_owned",
     "source_net_altium_pcb_136",
   ]
+  // This recorded assignment also has an independent endpoint-pitch conflict.
+  // Making vias possible or disabling the planar proof cannot clear that pair.
   expect(
     createPhysicalViaCapacityEvaluator({ ...context, physicalSrj: escape })!(
       query,
     ),
-  ).toEqual({ feasible: true })
+  ).toEqual({ feasible: false, blockerRouteIds: [0] })
   expect(
     createPhysicalViaCapacityEvaluator({
       ...context,
       throughViaCrosscutEnabled: false,
     })!(query),
-  ).toEqual({ feasible: true })
+  ).toEqual({ feasible: false, blockerRouteIds: [0] })
   expect(fixture).toEqual(snapshot)
 })
