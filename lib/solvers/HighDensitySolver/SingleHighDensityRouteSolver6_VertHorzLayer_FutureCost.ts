@@ -1,8 +1,11 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { HighDensityRouteScoreCache } from "./HighDensityRouteScoreCache"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
+let sharedScoreCache: HighDensityRouteScoreCache | undefined
+let nextScoreCacheTaskId = 1
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -22,6 +25,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   ).fill(-2)
   private cachedFutureConnectionPoints?: typeof this.futureConnectionPoints
   private cachedFutureConnectionPointCount = 0
+  private readonly scoreCache?: HighDensityRouteScoreCache
+  private readonly scoreCacheTaskId: number
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -46,6 +51,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    this.scoreCacheTaskId = nextScoreCacheTaskId++
+    if (opts.cacheNodeCosts)
+      this.scoreCache = sharedScoreCache ??= new HighDensityRouteScoreCache()
   }
 
   getClosestFutureConnectionPoint(node: Node) {
@@ -274,12 +282,32 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    const goalDist = distance(node, this.B) ** 1.6
-    const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
-    const futureConnectionPenalty = this.getFutureConnectionPenalty(
+    const isVia = node.z !== node.parent?.z
+    const cacheSlot = this.scoreCache?.findSlot(
+      this.scoreCacheTaskId,
+      this.getNodeKey(node),
       node,
-      node.z !== node.parent?.z,
+      isVia,
     )
+    let baseH: number
+    let futureConnectionPenalty: number
+    if (cacheSlot !== undefined && cacheSlot >= 0) {
+      baseH = this.scoreCache!.baseHeuristics[cacheSlot]!
+      futureConnectionPenalty = this.scoreCache!.futurePenalties[cacheSlot]!
+    } else {
+      const goalDist = distance(node, this.B) ** 1.6
+      baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+      futureConnectionPenalty = this.getFutureConnectionPenalty(node, isVia)
+      if (cacheSlot !== undefined)
+        this.scoreCache!.store(
+          ~cacheSlot,
+          this.scoreCacheTaskId,
+          node,
+          isVia,
+          baseH,
+          futureConnectionPenalty,
+        )
+    }
 
     node.g = baseG + futureConnectionPenalty
     node.h = baseH + futureConnectionPenalty

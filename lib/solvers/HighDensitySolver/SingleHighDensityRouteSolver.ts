@@ -122,6 +122,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    /** Internal tasks keep their scoring inputs fixed until the child finishes. */
+    cacheNodeCosts?: boolean
   }) {
     super()
     this.bounds = opts.bounds
