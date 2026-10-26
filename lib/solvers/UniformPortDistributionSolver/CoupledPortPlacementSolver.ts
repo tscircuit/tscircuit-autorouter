@@ -197,6 +197,20 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     return [center - reach, center + reach]
   }
 
+  /** Axis-aligned scalar domains attain their farthest pair at outer ends. */
+  private maximumDistance(box: SearchBox, first: number, second: number): number {
+    let maximum = 0
+    for (const a of [box[first]![0]![0], box[first]!.at(-1)![1]]) {
+      for (const b of [box[second]![0]![0], box[second]!.at(-1)![1]]) {
+        const p = this.point(first, a), q = this.point(second, b)
+        const distance = Math.hypot(p.x - q.x, p.y - q.y)
+        if (!Number.isFinite(distance)) return Infinity
+        maximum = Math.max(maximum, distance)
+      }
+    }
+    return maximum
+  }
+
   private contractDistance(box: SearchBox, first: number, second: number, gap: number): void {
     const peer = box[second]!
     if (peer.length === 0 || box[first]!.length === 0) return
@@ -218,6 +232,9 @@ export class CoupledPortPlacementSolver extends BaseSolver {
       for (const constraint of this.outgoing[first]!) {
         const peer = box[constraint.second]!
         if (peer.length === 0) return false
+        // Use the exact final subtraction before outward-safe bound clipping.
+        // A clipping guard cannot make an impossible closed order feasible.
+        if (peer.at(-1)![1] - box[first]![0]![0] < constraint.gap) return false
         const upper = peer.at(-1)![1] - constraint.gap + this.numericGuard(first, constraint.second, constraint.gap)
         box[first] = this.clip(box[first]!, -Infinity, upper)
       }
@@ -311,6 +328,7 @@ export class CoupledPortPlacementSolver extends BaseSolver {
     this.stats.boxesExamined++
     if (!this.contractOrder(box)) return
     for (const { first, second, gap } of this.input.distanceConstraints) {
+      if (this.maximumDistance(box, first, second) < gap) return
       this.contractDistance(box, first, second, gap)
       this.contractDistance(box, second, first, gap)
       if (box[first]!.length === 0 || box[second]!.length === 0) return
