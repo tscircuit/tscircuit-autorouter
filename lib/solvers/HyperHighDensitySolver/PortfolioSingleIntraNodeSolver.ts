@@ -31,6 +31,7 @@ import {
 } from "../HyperParameterSupervisorSolver"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { hasViaObstacleCollision } from "./hasViaObstacleCollision"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
@@ -695,6 +696,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
@@ -754,9 +756,33 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    const params = this.constructorParams
+    if (params.layerCount !== undefined && params.obstacles?.length &&
+      hasViaObstacleCollision({
+        routes: solvedRoutes,
+        obstacles: params.obstacles,
+        connMap: this.connMap,
+        layerCount: params.layerCount,
+        allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+        viaDiameter: params.viaDiameter,
+        viaToPadClearance: params.viaToPadClearance ?? params.obstacleMargin ?? 0.15,
+        center: this.nodeWithPortPoints.center,
+        coordinateScale: params.priorityCoordinateScale ?? 1,
+      })) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Candidate via violates foreign obstacle clearance"
+      this.solved = false
+      this.winningSolver = undefined
+      this.activeSubSolver = null
+      this.stats.rejectedViaObstacleCandidateCount =
+        (this.stats.rejectedViaObstacleCandidateCount ?? 0) + 1
+      return
+    }
+    this.solvedRoutes = solvedRoutes
   }
 }

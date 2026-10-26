@@ -55,6 +55,7 @@ export class HighDensitySolver extends BaseSolver {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: number
   obstacles: Obstacle[]
   layerCount: number
@@ -101,6 +102,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter,
     traceWidth,
     obstacleMargin,
+    viaToPadClearance,
     effort,
     nodePfById,
     obstacles,
@@ -128,6 +130,7 @@ export class HighDensitySolver extends BaseSolver {
     viaDiameter?: number
     traceWidth?: number
     obstacleMargin?: number
+    viaToPadClearance?: number
     effort?: number
     obstacles?: Obstacle[]
     layerCount?: number
@@ -163,6 +166,7 @@ export class HighDensitySolver extends BaseSolver {
     this.viaDiameter = viaDiameter ?? this.defaultViaDiameter
     this.traceWidth = traceWidth ?? this.defaultTraceThickness
     this.obstacleMargin = obstacleMargin ?? 0.15
+    this.viaToPadClearance = viaToPadClearance
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
@@ -433,6 +437,7 @@ export class HighDensitySolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,

@@ -111,6 +111,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
+    viaToPadClearance?: number
     precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   }) {
     const { nodeWithPortPoints, colorMap } = params
