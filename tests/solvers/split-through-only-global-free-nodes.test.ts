@@ -9,6 +9,7 @@ test("through-only planning splits partial free stacks without fabricating verti
     center: { x: 0, y: 0 },
     width: 1,
     height: 1,
+    layer: "z1,2,3,5",
     availableZ: [1, 2, 3, 5],
   }
   const full: CapacityMeshNode = {
@@ -16,6 +17,7 @@ test("through-only planning splits partial free stacks without fabricating verti
     center: { x: 1, y: 0 },
     width: 1,
     height: 1,
+    layer: "z0,1,2,3,4,5,6,7",
     availableZ: [0, 1, 2, 3, 4, 5, 6, 7],
   }
   const ownedPth: CapacityMeshNode = {
@@ -23,6 +25,7 @@ test("through-only planning splits partial free stacks without fabricating verti
     center: { x: 5, y: 0 },
     width: 1,
     height: 1,
+    layer: full.layer,
     availableZ: [...full.availableZ],
     _containsObstacle: true,
     _containsTarget: true,
