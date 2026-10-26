@@ -1,0 +1,469 @@
+{
+  "nodeWithPortPoints": [
+    {
+      "capacityMeshNodeId": "topology_merge_61358",
+      "center": {
+        "x": 280.19419958,
+        "y": 69.824599345
+      },
+      "width": 0.5999987999999803,
+      "height": 0.07760330999997223,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241110_pp0_z1_cramped::1",
+          "x": 280.49419897999996,
+          "y": 69.824599345,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "prevPortPointId": "ce241090_pp0_z1_cramped::1"
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61393",
+      "center": {
+        "x": 280.45992803,
+        "y": 69.58579809000001
+      },
+      "width": 0.06854189999995697,
+      "height": 0.39999919999999634,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241308_pp0_z1::1",
+          "x": 280.49419897999996,
+          "y": 69.58579809000001,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "prevPortPointId": "ce241170_pp0_z1::1"
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61420__sub_1_0",
+      "center": {
+        "x": 280.58492777999993,
+        "y": 69.54400024999998
+      },
+      "width": 0.18145759999998745,
+      "height": 0.6388014999999996,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241308_pp0_z1::1",
+          "x": 280.49419897999996,
+          "y": 69.58579809000001,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "nextPortPointId": "ce241542_pp0_z1_cramped::1"
+        },
+        {
+          "portPointId": "ce241542_pp0_z1_cramped::1",
+          "x": 280.6756565799999,
+          "y": 69.25650024999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "prevPortPointId": "ce241308_pp0_z1::1"
+        },
+        {
+          "portPointId": "ce241110_pp0_z1_cramped::1",
+          "x": 280.49419897999996,
+          "y": 69.824599345,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "nextPortPointId": "ce241550_pp0_z1::1"
+        },
+        {
+          "portPointId": "ce241550_pp0_z1::1",
+          "x": 280.6756565799999,
+          "y": 69.57590099999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "prevPortPointId": "ce241110_pp0_z1_cramped::1"
+        }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "ce241308_pp0_z1::1",
+            "x": 280.49419897999996,
+            "y": 69.58579809000001,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_136",
+            "rootConnectionName": "source_net_altium_pcb_136",
+            "nextPortPointId": "ce241542_pp0_z1_cramped::1"
+          },
+          {
+            "portPointId": "ce241542_pp0_z1_cramped::1",
+            "x": 280.6756565799999,
+            "y": 69.25650024999999,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_136",
+            "rootConnectionName": "source_net_altium_pcb_136",
+            "prevPortPointId": "ce241308_pp0_z1::1"
+          }
+        ],
+        [
+          {
+            "portPointId": "ce241110_pp0_z1_cramped::1",
+            "x": 280.49419897999996,
+            "y": 69.824599345,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_106",
+            "rootConnectionName": "source_net_altium_pcb_106",
+            "nextPortPointId": "ce241550_pp0_z1::1"
+          },
+          {
+            "portPointId": "ce241550_pp0_z1::1",
+            "x": 280.6756565799999,
+            "y": 69.57590099999999,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_106",
+            "rootConnectionName": "source_net_altium_pcb_106",
+            "prevPortPointId": "ce241110_pp0_z1_cramped::1"
+          }
+        ]
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61453",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.0509008
+      },
+      "width": 0.3999991999999679,
+      "height": 0.475000399999999,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241542_pp0_z1_cramped::1",
+          "x": 280.6756565799999,
+          "y": 69.25650024999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "nextPortPointId": "ce241991_pp0_z1::1"
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61461",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.57590099999999
+      },
+      "width": 0.3999991999999679,
+      "height": 0.5749999999999886,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241550_pp0_z1::1",
+          "x": 280.6756565799999,
+          "y": 69.57590099999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "nextPortPointId": "ce242003_pp0_z1::1"
+        }
+      ],
+      "portPointsInPairs": []
+    }
+  ],
+  "inputNodesWithPortPoints": [
+    {
+      "capacityMeshNodeId": "topology_merge_61358",
+      "center": {
+        "x": 280.19419958,
+        "y": 69.824599345
+      },
+      "width": 0.5999987999999803,
+      "height": 0.07760330999997223,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241110_pp0_z1_cramped::1",
+          "x": 280.49419897999996,
+          "y": 69.824599345,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "prevPortPointId": "ce241090_pp0_z1_cramped::1",
+          "connectionNodeIds": [
+            "topology_merge_61358",
+            "topology_merge_61420__sub_1_0"
+          ]
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61393",
+      "center": {
+        "x": 280.45992803,
+        "y": 69.58579809000001
+      },
+      "width": 0.06854189999995697,
+      "height": 0.39999919999999634,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241308_pp0_z1::1",
+          "x": 280.49419897999996,
+          "y": 69.58579809000001,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "prevPortPointId": "ce241170_pp0_z1::1",
+          "connectionNodeIds": [
+            "topology_merge_61393",
+            "topology_merge_61420__sub_1_0"
+          ]
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61420__sub_1_0",
+      "center": {
+        "x": 280.58492777999993,
+        "y": 69.54400024999998
+      },
+      "width": 0.18145759999998745,
+      "height": 0.6388014999999996,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241308_pp0_z1::1",
+          "x": 280.49419897999996,
+          "y": 69.58579809000001,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "nextPortPointId": "ce241542_pp0_z1_cramped::1",
+          "connectionNodeIds": [
+            "topology_merge_61393",
+            "topology_merge_61420__sub_1_0"
+          ]
+        },
+        {
+          "portPointId": "ce241542_pp0_z1_cramped::1",
+          "x": 280.6756565799999,
+          "y": 69.25650024999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "prevPortPointId": "ce241308_pp0_z1::1",
+          "connectionNodeIds": [
+            "topology_merge_61420__sub_1_0",
+            "topology_merge_61453"
+          ]
+        },
+        {
+          "portPointId": "ce241110_pp0_z1_cramped::1",
+          "x": 280.49419897999996,
+          "y": 69.824599345,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "nextPortPointId": "ce241550_pp0_z1::1",
+          "connectionNodeIds": [
+            "topology_merge_61358",
+            "topology_merge_61420__sub_1_0"
+          ]
+        },
+        {
+          "portPointId": "ce241550_pp0_z1::1",
+          "x": 280.6756565799999,
+          "y": 69.57590099999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "prevPortPointId": "ce241110_pp0_z1_cramped::1",
+          "connectionNodeIds": [
+            "topology_merge_61420__sub_1_0",
+            "topology_merge_61461"
+          ]
+        }
+      ],
+      "portPointsInPairs": [
+        [
+          {
+            "portPointId": "ce241308_pp0_z1::1",
+            "x": 280.49419897999996,
+            "y": 69.58579809000001,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_136",
+            "rootConnectionName": "source_net_altium_pcb_136",
+            "nextPortPointId": "ce241542_pp0_z1_cramped::1"
+          },
+          {
+            "portPointId": "ce241542_pp0_z1_cramped::1",
+            "x": 280.6756565799999,
+            "y": 69.25650024999999,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_136",
+            "rootConnectionName": "source_net_altium_pcb_136",
+            "prevPortPointId": "ce241308_pp0_z1::1"
+          }
+        ],
+        [
+          {
+            "portPointId": "ce241110_pp0_z1_cramped::1",
+            "x": 280.49419897999996,
+            "y": 69.824599345,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_106",
+            "rootConnectionName": "source_net_altium_pcb_106",
+            "nextPortPointId": "ce241550_pp0_z1::1"
+          },
+          {
+            "portPointId": "ce241550_pp0_z1::1",
+            "x": 280.6756565799999,
+            "y": 69.57590099999999,
+            "z": 1,
+            "connectionName": "source_net_altium_pcb_106",
+            "rootConnectionName": "source_net_altium_pcb_106",
+            "prevPortPointId": "ce241110_pp0_z1_cramped::1"
+          }
+        ]
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61453",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.0509008
+      },
+      "width": 0.3999991999999679,
+      "height": 0.475000399999999,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241542_pp0_z1_cramped::1",
+          "x": 280.6756565799999,
+          "y": 69.25650024999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_136",
+          "rootConnectionName": "source_net_altium_pcb_136",
+          "nextPortPointId": "ce241991_pp0_z1::1",
+          "connectionNodeIds": [
+            "topology_merge_61420__sub_1_0",
+            "topology_merge_61453"
+          ]
+        }
+      ],
+      "portPointsInPairs": []
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61461",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.57590099999999
+      },
+      "width": 0.3999991999999679,
+      "height": 0.5749999999999886,
+      "availableZ": [
+        1
+      ],
+      "portPoints": [
+        {
+          "portPointId": "ce241550_pp0_z1::1",
+          "x": 280.6756565799999,
+          "y": 69.57590099999999,
+          "z": 1,
+          "connectionName": "source_net_altium_pcb_106",
+          "rootConnectionName": "source_net_altium_pcb_106",
+          "nextPortPointId": "ce242003_pp0_z1::1",
+          "connectionNodeIds": [
+            "topology_merge_61420__sub_1_0",
+            "topology_merge_61461"
+          ]
+        }
+      ],
+      "portPointsInPairs": []
+    }
+  ],
+  "obstacles": [],
+  "layerCount": 8,
+  "useLayerAwareGeometry": true,
+  "preserveSolitaryPorts": false,
+  "physicalSrj": {
+    "layerCount": 8,
+    "minTraceWidth": 0.1,
+    "bounds": {
+      "minX": 0,
+      "maxX": 300,
+      "minY": 0,
+      "maxY": 200
+    },
+    "obstacles": [],
+    "connections": [
+      {
+        "name": "source_net_altium_pcb_136",
+        "pointsToConnect": []
+      },
+      {
+        "name": "source_net_altium_pcb_106",
+        "pointsToConnect": []
+      }
+    ],
+    "traces": []
+  },
+  "routingTraceWidth": 0.1
+}

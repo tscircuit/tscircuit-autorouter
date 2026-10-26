@@ -8,7 +8,7 @@ import type {
 import { isDeepStrictEqual } from "node:util"
 import { Frozen142EndpointForceSolver } from "../fixtures/Frozen142EndpointForceSolver"
 
-test("endpoint memo retains frozen forces, movement and complete solver decisions", (): void => {
+test("two-layer endpoint memo retains frozen forces, movement and complete solver decisions", (): void => {
   const params = {
     nodeWithPortPoints: {
       capacityMeshNodeId: "endpoint-memo-parity",
@@ -16,7 +16,7 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
       width: 8,
       height: 8,
       portPoints: [],
-      availableZ: [0, 1, 2],
+      availableZ: [0, 1],
     },
   }
   const frozen = new Frozen142EndpointForceSolver(params)
@@ -36,7 +36,7 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
     const lines: PolyLine2[] = []
     for (let lineIndex = 0; lineIndex < 5; lineIndex++) {
       const points: MHPoint2[] = []
-      let layer = sample % 4 === 0 ? 0 : lineIndex % 3
+      let layer = sample % 4 === 0 ? 0 : lineIndex % 2
       const pointCount = 2 + ((sample + lineIndex) % 7)
       for (let index = 0; index < pointCount; index++) {
         const nextLayer =
@@ -44,7 +44,7 @@ test("endpoint memo retains frozen forces, movement and complete solver decision
           index > 0 &&
           index < pointCount - 1 &&
           (sample + index + lineIndex) % 3 === 0
-            ? (layer + 1) % 3
+            ? (layer + 1) % 2
             : layer
         const previous = points[index - 1]
         const duplicate = previous && (sample + index) % 5 === 0

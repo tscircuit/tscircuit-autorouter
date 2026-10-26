@@ -1,6 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
+import { getUnownedObstacleDrcErrors } from "./getUnownedObstacleDrcErrors"
 import {
   getDrcErrors,
   type GetDrcErrorsOptions,
@@ -22,6 +23,7 @@ export interface EvaluateRelaxedDrcInput {
   drcOptions?: GetDrcErrorsOptions
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
+  /** Cached declared ownership maps must omit geometric point connections. */
   connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
@@ -84,12 +86,23 @@ export const evaluateRelaxedDrc = ({
     )
   }
 
+  const drc = getDrcErrors(circuitJson, {
+    ...RELAXED_DRC_OPTIONS,
+    holeClearance: inputSrj.minTraceToHoleEdgeClearance,
+    viaPadClearance:
+      inputSrj.minViaEdgeToPadEdgeClearance ??
+      inputSrj.minPadEdgeToPadEdgeClearance,
+    ...drcOptions,
+  })
+  const unownedObstacleErrors = getUnownedObstacleDrcErrors({
+    inputSrj,
+    jointTraces,
+    circuitJson,
+  })
   return {
     circuitJson,
-    ...getDrcErrors(circuitJson, {
-      ...RELAXED_DRC_OPTIONS,
-      holeClearance: inputSrj.minTraceToHoleEdgeClearance,
-      ...drcOptions,
-    }),
+    errors: [...drc.errors, ...unownedObstacleErrors],
+    errorsWithCenters: [...drc.errorsWithCenters, ...unownedObstacleErrors],
+    locationAwareErrors: [...drc.locationAwareErrors, ...unownedObstacleErrors],
   }
 }

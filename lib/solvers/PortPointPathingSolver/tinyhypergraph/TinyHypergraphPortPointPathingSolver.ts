@@ -39,6 +39,10 @@ import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
+  createPhysicalViaCapacityEvaluator,
+  type PhysicalViaCapacityContext,
+} from "./createPhysicalViaCapacityEvaluator"
+import {
   getSerializedPreloadedTraceStats,
   hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
@@ -919,6 +923,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    private readonly physicalViaCapacity?: PhysicalViaCapacityContext,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -954,6 +959,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
     applyTerminalRegionNetIds(loaded)
     clearPreloadedEndpointRegionNetIds(loaded)
+    if (this.physicalViaCapacity) {
+      loaded.topology.regionSegmentFeasibility =
+        createPhysicalViaCapacityEvaluator({
+          ...this.physicalViaCapacity,
+        })
+    }
     this.metadataPortPenaltyCount = Math.max(
       this.metadataPortPenaltyCount,
       metadataPortPenaltyCount,
@@ -1137,6 +1148,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.physicalViaCapacity,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1458,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.physicalViaCapacity,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

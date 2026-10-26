@@ -6,12 +6,13 @@ import {
   getLayerRange,
   getObstacleAvailableZ,
 } from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
+import { getObstacleTargetConnectionName } from "lib/solvers/BgaTopologyGeneratorSolver/getObstacleTargetConnectionName"
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
 } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 
 const MIN_REGION_SIDE = 1e-6
@@ -32,6 +33,7 @@ type SoicRoutingRegion = {
   regionType: "center" | "pad" | "pad-gap"
   obstacleZ?: number[]
   connectedTo?: string[]
+  targetConnectionName?: string
 }
 
 export interface SoicTopologyGeneratorSolverParams
@@ -69,6 +71,7 @@ function createMeshNodesForRegion({
   regionType,
   obstacleZ = [],
   connectedTo,
+  targetConnectionName,
 }: {
   nodeId: string
   bounds: Bounds
@@ -77,6 +80,7 @@ function createMeshNodesForRegion({
   regionType: SoicRoutingRegion["regionType"]
   obstacleZ?: number[]
   connectedTo?: string[]
+  targetConnectionName?: string
 }): CapacityMeshNode[] {
   if (!isValidBounds(bounds)) return []
 
@@ -115,6 +119,12 @@ function createMeshNodesForRegion({
     _soicRegionType: regionType,
     _containsObstacle: group.containsObstacle,
     _connectedTo: group.containsObstacle ? connectedTo : undefined,
+    ...(group.containsObstacle && targetConnectionName
+      ? {
+          _containsTarget: true,
+          _targetConnectionName: targetConnectionName,
+        }
+      : {}),
   }))
 }
 
@@ -223,13 +233,17 @@ function getInnerSoicBounds({
   }
 }
 
-function getPadRegions(obstacles: Obstacle[], layerCount: number) {
+function getPadRegions(
+  obstacles: Obstacle[],
+  srj: SimpleRouteJson,
+): SoicRoutingRegion[] {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
-    obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
+    obstacleZ: getObstacleAvailableZ(obstacle, srj.layerCount),
     connectedTo: [...obstacle.connectedTo],
+    targetConnectionName: getObstacleTargetConnectionName({ obstacle, srj }),
   }))
 }
 
@@ -345,7 +359,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(soicObstacles, layerCount),
+      ...getPadRegions(soicObstacles, this.inputProblem.inputSrj),
       ...activeSides.flatMap((side) =>
         createGapRegionsForSide({
           side,
@@ -364,6 +378,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         regionType: region.regionType,
         obstacleZ: region.obstacleZ,
         connectedTo: region.connectedTo,
+        targetConnectionName: region.targetConnectionName,
       }),
     )
 

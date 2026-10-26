@@ -1,0 +1,247 @@
+{
+  "provenance": {
+    "sourceUniformConstructorSha256": "329b041a0e20713363b40c70a852ff37a98454806e05e8f21c6ad2092acf097b",
+    "sourceUniformOutputSha256": "391cb695c989ba3040dc5f4459d71dbc400030f2144666c9ccedae28708de35d",
+    "rawObstacleCount": 4418,
+    "obstacleProjection": "All obstacles omitted to conservatively enlarge endpoint domains; actual source owner domains already span the complete faces.",
+    "maximumEndpointDistance": 0.1923473212706281
+  },
+  "nodeId": "topology_merge_61420__sub_1_0",
+  "nodes": [
+    {
+      "capacityMeshNodeId": "topology_merge_61352",
+      "center": {
+        "x": 280.19419958,
+        "y": 69.337099745
+      },
+      "width": 0.5999987999999803,
+      "height": 0.09739749000002007,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61393",
+      "center": {
+        "x": 280.45992803,
+        "y": 69.58579809000001
+      },
+      "width": 0.06854189999995697,
+      "height": 0.39999919999999634,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61420__sub_0_0",
+      "center": {
+        "x": 280.58492777999993,
+        "y": 68.90519874999998
+      },
+      "width": 0.18145759999998745,
+      "height": 0.6388014999999996,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61420__sub_1_0",
+      "center": {
+        "x": 280.58492777999993,
+        "y": 69.54400024999998
+      },
+      "width": 0.18145759999998745,
+      "height": 0.6388014999999996,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61453",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.0509008
+      },
+      "width": 0.3999991999999679,
+      "height": 0.475000399999999,
+      "availableZ": [
+        1
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "portId": "ce241308_pp0_z1::1",
+      "region1Id": "topology_merge_61393",
+      "region2Id": "topology_merge_61420__sub_1_0",
+      "d": {
+        "x": 280.49419897999996,
+        "y": 69.58579809000001,
+        "z": 1
+      }
+    },
+    {
+      "portId": "ce241542_pp0_z1_cramped::1",
+      "region1Id": "topology_merge_61420__sub_1_0",
+      "region2Id": "topology_merge_61453",
+      "d": {
+        "x": 280.6756565799999,
+        "y": 69.25650024999999,
+        "z": 1
+      }
+    },
+    {
+      "portId": "ce241076_pp0_z1_cramped::1",
+      "region1Id": "topology_merge_61352",
+      "region2Id": "topology_merge_61420__sub_1_0",
+      "d": {
+        "x": 280.49419897999996,
+        "y": 69.337099745,
+        "z": 1
+      }
+    },
+    {
+      "portId": "ce241541_pp0_z1_cramped::1",
+      "region1Id": "topology_merge_61420__sub_0_0",
+      "region2Id": "topology_merge_61420__sub_1_0",
+      "d": {
+        "x": 280.58492777999993,
+        "y": 69.22459949999998,
+        "z": 1
+      }
+    }
+  ],
+  "physicalSrj": {
+    "bounds": {
+      "minX": 16.57679492,
+      "maxX": 305.8762,
+      "minY": 37.96359746,
+      "maxY": 172.88179491999998
+    },
+    "layerCount": 8,
+    "allowBlindAndBuriedVias": false,
+    "minTraceWidth": 0.1,
+    "outline": [
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      },
+      {
+        "x": 304.8762,
+        "y": 38.96359746
+      },
+      {
+        "x": 304.8762,
+        "y": 171.88179491999998
+      },
+      {
+        "x": 17.57679492,
+        "y": 171.88179491999998
+      },
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      }
+    ],
+    "id": "sample024",
+    "sourceCircuitJson": "circuit-json/sample024-pmp22650-main.json",
+    "sourceName": "PMP22650 6.6 kW Bidirectional GaN Onboard Charger",
+    "sourceUrl": "https://www.ti.com/tool/PMP22650",
+    "sourceRepository": "Texas Instruments PMP22650",
+    "sourceLicense": "TI Terms of Use",
+    "sourceBoardFormat": "Altium PcbDoc",
+    "sourcePcbDocSha256": "bc20338d29b9323b5af9182f91041c14b192aa363cf2d7a323441a7f28210002",
+    "snapshotComparison": "snapshots/sample024-pmp22650-main-comparison.svg",
+    "obstacles": [],
+    "connections": [
+      {
+        "name": "source_net_altium_pcb_106",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 234.55940134,
+            "y": 40.004999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6280",
+            "pcb_port_id": "pcb_port_altium_6280",
+            "port_selector": "R217.2"
+          },
+          {
+            "x": 282.17565865999995,
+            "y": 69.33840081999999,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_7458",
+            "pcb_port_id": "pcb_port_altium_7458",
+            "port_selector": "U21.49"
+          }
+        ]
+      },
+      {
+        "name": "source_net_altium_pcb_136",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 234.53400134,
+            "y": 41.021,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6284",
+            "pcb_port_id": "pcb_port_altium_6284",
+            "port_selector": "R215.2"
+          },
+          {
+            "x": 282.82565736,
+            "y": 69.33840081999999,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_7459",
+            "pcb_port_id": "pcb_port_altium_7459",
+            "port_selector": "U21.48"
+          }
+        ]
+      }
+    ]
+  },
+  "freeRegionIds": [
+    "topology_merge_61352",
+    "topology_merge_61393",
+    "topology_merge_61420__sub_0_0",
+    "topology_merge_61420__sub_1_0",
+    "topology_merge_61453"
+  ],
+  "sharedEdgeRegionIds": [
+    "topology_merge_61352",
+    "topology_merge_61393",
+    "topology_merge_61420__sub_0_0",
+    "topology_merge_61420__sub_1_0",
+    "topology_merge_61453"
+  ],
+  "movableSharedEdgeRegionIds": [
+    "topology_merge_61352",
+    "topology_merge_61393",
+    "topology_merge_61420__sub_0_0",
+    "topology_merge_61420__sub_1_0",
+    "topology_merge_61453"
+  ]
+}

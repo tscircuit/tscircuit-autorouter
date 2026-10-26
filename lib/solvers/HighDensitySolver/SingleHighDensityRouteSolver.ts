@@ -6,7 +6,10 @@ import {
   Node,
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type {
+  HighDensityIntraNodeRoute,
+  StaticSegmentValidator,
+} from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
@@ -48,6 +51,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   viaDiameter: number
   traceThickness: number
   obstacleMargin: number
+  readonly staticSegmentValidator?: StaticSegmentValidator
   layerCount: number
   availableZ: number[]
   minCellSize = 0.05
@@ -122,6 +126,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    staticSegmentValidator?: StaticSegmentValidator
   }) {
     super()
     this.bounds = opts.bounds
@@ -145,6 +150,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.viaDiameter = opts.viaDiameter ?? 0.3
     this.traceThickness = opts.traceThickness ?? 0.15
     this.obstacleMargin = opts.obstacleMargin ?? 0.15
+    this.staticSegmentValidator = opts.staticSegmentValidator
     this.layerCount = opts.layerCount ?? 2
     this.availableZ =
       opts.availableZ && opts.availableZ.length > 0
@@ -247,7 +253,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   handleSimpleCases() {
-    this.solved = true
     const { A, B } = this
     const route =
       A.z === B.z
@@ -261,6 +266,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
+    if (
+      route.some(
+        (point, index) =>
+          index > 0 && !this.isStaticSegmentValid(route[index - 1], point),
+      )
+    )
+      return
+    this.solved = true
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -410,9 +423,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
-    const margin = isVia
-      ? this.viaDiameter / 2 + this.obstacleMargin / 2
-      : this.obstacleMargin / 2
+    // Cell partitions constrain route centers. With authoritative physical
+    // clearance, their artificial borders do not constrain copper overhang.
+    const margin = this.staticSegmentValidator
+      ? 0
+      : isVia
+        ? this.viaDiameter / 2 + this.obstacleMargin / 2
+        : this.obstacleMargin / 2
     const tooClose =
       node.x < this.bounds.minX + margin ||
       node.x > this.bounds.maxX - margin ||
@@ -436,6 +453,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ) {
     const parent = node.parent
     if (!parent) return false
+    if (!this.isStaticSegmentValid(parent, node)) return true
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
@@ -698,6 +716,23 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
+  isStaticSegmentValid(
+    start: { x: number; y: number; z: number },
+    end: { x: number; y: number; z: number },
+  ): boolean {
+    return (
+      !this.staticSegmentValidator ||
+      this.staticSegmentValidator({
+        start,
+        end,
+        connectionName: this.connectionName,
+        rootConnectionName: this.rootConnectionName,
+        traceThickness: this.traceThickness,
+        viaDiameter: this.viaDiameter,
+      })
+    )
+  }
+
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
@@ -786,6 +821,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
       if (
         !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
+        this.isStaticSegmentValid(node, viaNeighbor) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,

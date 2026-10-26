@@ -9,6 +9,7 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { minimumPortfolioBoundaryPadding } from "./minimumPortfolioBoundaryPadding"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import type { BaseSolver } from "../BaseSolver"
 import { decomposePriorityTasks } from "../HighDensitySolver/decomposePriorityTasks"
@@ -68,6 +69,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   readonly gridSearchSegmentWork: number
   readonly gridSearchWorkScale: number
   readonly rejectOverlappingTerminals: boolean
+  private readonly solutionValidator?: (
+    routes: HighDensityIntraNodeRoute[],
+  ) => boolean
   private precomputedIntraNodeRouteParams?: PrecomputedIntraNodeRouteParams
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
@@ -129,6 +133,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      solutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
     super()
@@ -140,6 +145,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
     this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.solutionValidator = opts.solutionValidator
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -220,16 +226,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.precomputedIntraNodeRouteParams ??= precomputeIntraNodeRouteParams(
         this.nodeWithPortPoints,
       )
-      const groups = [
-        ...this.precomputedIntraNodeRouteParams.connectionPointsByName.entries(),
-      ].map(([connectionName, points]) => ({
-        connectionName,
-        rootConnectionName:
-          this.precomputedIntraNodeRouteParams!.rootConnectionNameByConnectionName.get(
-            connectionName,
-          ),
-        points,
-      }))
+      const groups = this.precomputedIntraNodeRouteParams.connectionTasks
       let preflightWork = 0
       const detailed = PriorityDagIntraNodeSolver.detailedWorkDiagnostics
       priorityEligible =
@@ -362,7 +359,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           {
             MULTI_HEAD_POLYLINE_SOLVER: true,
             SEGMENTS_PER_POLYLINE: 6,
-            BOUNDARY_PADDING: -0.05, // Allow vias/traces outside the boundary
+            BOUNDARY_PADDING: minimumPortfolioBoundaryPadding,
             ITERATION_PENALTY: 10000,
             MINIMUM_FINAL_ACCEPTANCE_GAP: 0.001,
           },
@@ -675,6 +672,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         // has a good reproduction
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
+        staticSegmentValidator: this.constructorParams.staticSegmentValidator,
+        coordinateScale: this.constructorParams.staticSegmentValidator
+          ? (this.constructorParams.priorityCoordinateScale ?? 1)
+          : undefined,
         hyperParameters,
       })
       return solver as any
@@ -713,6 +714,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         connMap: this.connMap,
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
+        traceWidth: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.PRIORITY_DAG_FAMILY_SIZE) {
@@ -754,9 +756,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (this.solutionValidator && !this.solutionValidator(solvedRoutes)) {
+      // Reject this candidate while preserving the other existing candidates
+      // at the same scale. The supervisor already selected its provisional win.
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Portfolio candidate solution rejected by validator"
+      this.solved = false
+      this.winningSolver = undefined
+      this.stats.candidateValidationRejectionCount =
+        Number(this.stats.candidateValidationRejectionCount ?? 0) + 1
+      return
+    }
+    this.solvedRoutes = solvedRoutes
   }
 }

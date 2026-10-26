@@ -14,6 +14,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { PhysicalViaCapacityContext } from "../tinyhypergraph/createPhysicalViaCapacityEvaluator"
 
 export type RawPort = {
   portId: string
@@ -90,6 +91,7 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
+  physicalViaCapacity?: PhysicalViaCapacityContext
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>

@@ -1,3 +1,4 @@
+import { canUseThroughViaCrosscut } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/canUseThroughViaCrosscut"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -12,6 +13,10 @@ import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
+import {
+  isPlainGlobalFreeNode,
+  splitThroughOnlyGlobalFreeNodes,
+} from "lib/solvers/NodeDimensionSubdivisionSolver/splitThroughOnlyGlobalFreeNodes"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import {
   type ChangedPreloadedTraceSection,
@@ -429,10 +434,19 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         cms.maxNodeDimension,
         cms.maxNodeRatio,
         cms.minNodeArea,
+        // Match AvailableSegmentPointSolver's ordinary-port threshold.
+        1.5 * (cms.minTraceWidth + 0.15),
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
+          cms.capacityNodes = splitThroughOnlyGlobalFreeNodes(
+            cms.nodeDimensionSubdivisionSolver!.outputNodes,
+            {
+              layerCount: cms.originalSrj.layerCount,
+              allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
+              physicalSrj: cms.originalSrj,
+            },
+          )
         },
       },
     ),
@@ -535,6 +549,34 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            physicalViaCapacity: {
+              physicalSrj: cms.originalSrj,
+              throughViaCrosscutEnabled: canUseThroughViaCrosscut({
+                originalSrj: cms.originalSrj,
+                planningSrj: cms.srj,
+                viaDiameter: cms.viaDiameter,
+                minTraceWidth: cms.minTraceWidth,
+              }),
+              planningObstacles: cms.srj.obstacles,
+              preserveSolitarySharedEdgePorts: Boolean(cms.srj.traces?.length),
+              movableSharedEdgeRegionIds: cms
+                .capacityNodes!.filter(
+                  (node) =>
+                    !node._isVirtualOffboard &&
+                    !node._offBoardConnectionId &&
+                    !node._containsTarget,
+                )
+                .map((node) => node.capacityMeshNodeId),
+              sharedEdgeRegionIds: cms
+                .capacityNodes!.filter(
+                  (node) =>
+                    !node._isVirtualOffboard && !node._offBoardConnectionId,
+                )
+                .map((node) => node.capacityMeshNodeId),
+              freeRegionIds: cms
+                .capacityNodes!.filter(isPlainGlobalFreeNode)
+                .map((node) => node.capacityMeshNodeId),
+            },
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -575,7 +617,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
-          minTraceWidth: cms.minTraceWidth,
+          routingTraceWidth: cms.minTraceWidth,
+          physicalSrj: cms.originalSrj,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useLayerAwareGeometry: cms.srj.layerCount > 2,
@@ -626,6 +669,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
             },
             fixedHdRoutes,
+            physicalSrj: cms.originalSrj,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
@@ -677,6 +721,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
+          layerCount: cms.originalSrj.layerCount,
+          allowBlindAndBuriedVias: cms.originalSrj.allowBlindAndBuriedVias,
           connMap: cms.connMap,
         },
       ],

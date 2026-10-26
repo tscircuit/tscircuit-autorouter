@@ -392,6 +392,7 @@ function createSourceTraces(
       sourceConnectivityMap ??
         getConnectivityMapFromSimpleRouteJson(
           sourceSrj === srj ? srj : { ...sourceSrj, connections },
+          { includeGeometricPointConnections: false },
         ),
     )
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
@@ -448,7 +449,17 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+          // Copper contact cannot declare connectivity: a routed endpoint can
+          // overlap a foreign pad, including one on another layer.
+          if (
+            pointToBoxDistance(endpoint, obstacle) <= 0 &&
+            obstacle.connectedTo.some((id) =>
+              circuitJsonSourceTraceIdResolver.connMap.areIdsConnected(
+                connection.name,
+                id,
+              ),
+            )
+          ) {
             obstaclesContainingEndpoints.push(obstacle)
           }
         }
@@ -1006,6 +1017,7 @@ function extractViasFromRoutes(
  * @param srjWithPointPairs The SimpleRouteJson created by the NetToPointPairsSolver
  * @param routes The SimplifiedPcbTraces or HighDensityRoutes to convert
  */
+/** Declared ownership maps, without coordinate-based electrical unions. */
 export type CircuitJsonConnectivityMaps = {
   source: ConnectivityMap
   route: ConnectivityMap
@@ -1017,7 +1029,7 @@ export type ConvertToCircuitJsonOptions = {
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
-  /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
+  /** Reuse declared-only maps while SRJ connectivity is unchanged. */
   connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
@@ -1120,7 +1132,9 @@ export function convertToCircuitJson(
           ]
         : srjWithPointPairs.connections,
       options.connectivityMaps?.route ??
-        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs, {
+          includeGeometricPointConnections: false,
+        }),
     )
 
   // Process routes based on their type

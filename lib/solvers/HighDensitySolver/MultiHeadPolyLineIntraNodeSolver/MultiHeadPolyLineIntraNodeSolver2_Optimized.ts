@@ -130,15 +130,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
           if (!via) {
             via = {
               point,
-              layers: [point.z1, point.z2],
+              layers: [...this.availableZ],
               index: pointIndex,
               force: forces[pointIndex - 1],
             }
             vias[viaCount] = via
           } else {
             via.point = point
-            via.layers[0] = point.z1
-            via.layers[1] = point.z2
+            via.layers.length = this.availableZ.length
+            for (let index = 0; index < this.availableZ.length; index++) {
+              via.layers[index] = this.availableZ[index]!
+            }
             via.index = pointIndex
             via.force = forces[pointIndex - 1]
           }
@@ -336,13 +338,17 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       for (let j = i + 1; j < numPolyLines; j++) {
         const { segments: segments1, vias: vias1 } = geometry[i]!
         const { segments: segments2, vias: vias2 } = geometry[j]!
+        const sameOwner = this.areConnectionsConnected(
+          polyLines[i]!.connectionName,
+          polyLines[j]!.connectionName,
+        )
 
         // --- Interaction Calculations ---
 
         // a) Segment <-> Segment
         for (const seg1 of segments1) {
           for (const seg2 of segments2) {
-            if (seg1.layer === seg2.layer) {
+            if (!sameOwner && seg1.layer === seg2.layer) {
               // endpoints of s1 against s2
               endpointForce(seg1.p1, seg1.p1Idx, seg2, i, seg1.p1Force)
               endpointForce(seg1.p2, seg1.p2Idx, seg2, i, seg1.p2Force)
@@ -356,7 +362,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         // b) Via <-> Segment
         for (const via1 of vias1) {
           for (const seg2 of segments2) {
-            if (via1.layers.includes(seg2.layer)) {
+            if (!sameOwner && via1.layers.includes(seg2.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via1.point,
                 seg2.p1,
@@ -414,7 +420,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         }
         for (const via2 of vias2) {
           for (const seg1 of segments1) {
-            if (via2.layers.includes(seg1.layer)) {
+            if (!sameOwner && via2.layers.includes(seg1.layer)) {
               const closestPointOnSeg = pointToSegmentClosestPoint(
                 via2.point,
                 seg1.p1,

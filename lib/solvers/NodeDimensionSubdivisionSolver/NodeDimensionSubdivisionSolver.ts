@@ -8,6 +8,22 @@ const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
 const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 const CONNECTIVITY_BRIDGE_QUERY_PADDING = 0.002
+const FREE_SPAN_EPSILON = 1e-10
+const GLOBAL_FREE_GEOMETRY_KEYS = new Set([
+  "capacityMeshNodeId",
+  "center",
+  "width",
+  "height",
+  "layer",
+  "availableZ",
+])
+const EMPTY_GLOBAL_FREE_ROLE_KEYS = new Set([
+  "_containsObstacle",
+  "_containsTarget",
+  "_completelyInsideObstacle",
+  "_isComponentTopologyNode",
+  "_isNarrowQfpPadGap",
+])
 
 type BridgeNodeIndex = {
   index: Flatbush
@@ -16,6 +32,30 @@ type BridgeNodeIndex = {
 
 type BridgeNodeWorkspace = {
   bridgeNodeIndex?: BridgeNodeIndex
+}
+
+function isPlainGlobalFreeNode(node: CapacityMeshNode): boolean {
+  if (
+    node.availableZ.length === 0 ||
+    node.availableZ.some((z) => !Number.isInteger(z) || z < 0)
+  )
+    return false
+  if (
+    ![node.center.x, node.center.y, node.width, node.height].every(
+      Number.isFinite,
+    ) ||
+    node.width <= 0 ||
+    node.height <= 0
+  )
+    return false
+  // Unknown metadata can describe ownership, component gaps or offboard links.
+  // Keep their subdivision behavior intact, even when the free-span floor is on.
+  return Object.entries(node).every(
+    ([key, value]) =>
+      GLOBAL_FREE_GEOMETRY_KEYS.has(key) ||
+      value === undefined ||
+      (EMPTY_GLOBAL_FREE_ROLE_KEYS.has(key) && value === false),
+  )
 }
 
 const createBridgeNodeIndex = (nodes: CapacityMeshNode[]): BridgeNodeIndex => {
@@ -62,11 +102,16 @@ const createBridgeNodeIndex = (nodes: CapacityMeshNode[]): BridgeNodeIndex => {
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
 
+  /**
+   * The dimension limit has priority. Opting into minimumFreeNodeSpan makes
+   * the ratio limit best effort for plain global free cells on any layer set.
+   */
   constructor(
     private readonly nodes: CapacityMeshNode[],
     private readonly maxNodeDimension: number,
     private readonly maxNodeRatio: number = Number.POSITIVE_INFINITY,
     private readonly minNodeArea: number = DEFAULT_MIN_NODE_AREA,
+    private readonly minimumFreeNodeSpan: number = 0,
   ) {
     super()
     this.outputNodes = []
@@ -93,6 +138,10 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       : 1
 
     if (hasRatioLimit && node.width > 0 && node.height > 0) {
+      const preserveOrdinaryFreePorts =
+        Number.isFinite(this.minimumFreeNodeSpan) &&
+        this.minimumFreeNodeSpan > 0 &&
+        isPlainGlobalFreeNode(node)
       while (true) {
         const childWidth = node.width / cols
         const childHeight = node.height / rows
@@ -105,11 +154,19 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
           break
         }
 
-        if (childWidth >= childHeight) {
-          cols++
-        } else {
-          rows++
+        const nextCols = childWidth >= childHeight ? cols + 1 : cols
+        const nextRows = childWidth < childHeight ? rows + 1 : rows
+        // Aspect-only cuts must not turn a long free boundary into a row of
+        // cramped ports. Existing physical short gates remain short.
+        if (
+          preserveOrdinaryFreePorts &&
+          Math.max(node.width / nextCols, node.height / nextRows) <=
+            this.minimumFreeNodeSpan + FREE_SPAN_EPSILON
+        ) {
+          break
         }
+        cols = nextCols
+        rows = nextRows
       }
     }
 
@@ -250,6 +307,7 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
       minNodeArea: this.minNodeArea,
+      minimumFreeNodeSpan: this.minimumFreeNodeSpan,
     }
     this.solved = true
   }

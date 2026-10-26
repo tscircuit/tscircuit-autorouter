@@ -1,6 +1,6 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import { Obstacle, type SimpleRouteJson } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
@@ -20,6 +20,12 @@ import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
 import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
+import { PhysicalSharedEdgePlacement } from "./PhysicalSharedEdgePlacement"
+import { CoupledPortPlacementSolver } from "./CoupledPortPlacementSolver"
+import {
+  CoupledSharedEdgePlacementPlan,
+  type MovableSharedEdgeFamily,
+} from "./CoupledSharedEdgePlacementPlan"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
@@ -30,6 +36,10 @@ export interface UniformPortDistributionSolverInput {
   /** Redistribute using physical bounds and per-layer obstacles. */
   useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
+  /** Authoritative physical copper and declared ownership; coordinates are board-world millimetres. */
+  physicalSrj?: SimpleRouteJson
+  /** Width used by the current routing stage; otherwise use declared connection widths. */
+  routingTraceWidth?: number
 }
 
 /**
@@ -52,15 +62,27 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly physicalPlacement?: PhysicalSharedEdgePlacement
+  private readonly movableFamilies: MovableSharedEdgeFamily[] = []
+  private coupledPlan?: CoupledSharedEdgePlacementPlan
+  private coupledSolver?: CoupledPortPlacementSolver
+  private coupledJobIndex = 0
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.physicalPlacement =
+      input.physicalSrj === undefined
+        ? undefined
+        : new PhysicalSharedEdgePlacement(
+            input.physicalSrj,
+            input.routingTraceWidth,
+          )
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
-        !input.useLayerAwareGeometry
+        !input.useLayerAwareGeometry && !input.physicalSrj
           ? getBoundsFromNodeWithPortPoints(node)
           : {
               minX: node.center.x - node.width / 2,
@@ -117,8 +139,55 @@ export class UniformPortDistributionSolver extends BaseSolver {
     })
   }
 
-  step(): void {
+  _step(): void {
+    this.stepPlacement()
+    if (!this.solved && !this.failed && this.iterations >= this.MAX_ITERATIONS)
+      throw new Error(
+        "UNRESOLVED physical Uniform placement: phase budget exhausted",
+      )
+  }
+
+  private stepPlacement(): void {
     if (this.ownerPairsToProcess.length === 0) {
+      if (this.physicalPlacement) {
+        if (!this.coupledPlan) {
+          this.coupledPlan = new CoupledSharedEdgePlacementPlan({
+            nodes: this.input.nodeWithPortPoints,
+            currentPorts: [...this.mapOfOwnerPairToPortPoints.values()].flat(),
+            families: this.movableFamilies,
+            physical: this.physicalPlacement,
+          })
+        }
+        const job = this.coupledPlan.jobs[this.coupledJobIndex]
+        if (job) {
+          if (!this.coupledSolver)
+            this.coupledSolver = new CoupledPortPlacementSolver(job.input)
+          this.activeSubSolver = this.coupledSolver
+          this.coupledSolver.step()
+          if (this.coupledSolver.failed) {
+            this.failed = true
+            this.error = `UNRESOLVED coupled shared-edge placement: ${this.coupledSolver.error}`
+            return
+          }
+          if (this.coupledSolver.solved) {
+            this.coupledPlan.accept(job, this.coupledSolver.getOutput())
+            this.coupledJobIndex++
+            this.coupledSolver = undefined
+            this.activeSubSolver = undefined
+          }
+          return
+        }
+        const positions = this.coupledPlan.getValidatedPositions()
+        for (const [key, family] of this.mapOfOwnerPairToPortPoints) {
+          this.mapOfOwnerPairToPortPoints.set(
+            key,
+            family.map((port) => {
+              const point = port.portPointId && positions.get(port.portPointId)
+              return point ? { ...port, ...point } : port
+            }),
+          )
+        }
+      }
       this.rebuildNodes()
       this.solved = true
       return
@@ -134,7 +203,12 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       obstacles: this.input.obstacles,
     })
-    if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
+    if (
+      !this.physicalPlacement &&
+      !this.input.useLayerAwareGeometry &&
+      blockedOnAnotherLayer
+    )
+      return
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
@@ -149,17 +223,20 @@ export class UniformPortDistributionSolver extends BaseSolver {
       if (
         this.input.preserveSolitaryPorts &&
         blockedOnAnotherLayer &&
-        portCountByLayer.get(portPoint.z) === 1
+        portCountByLayer.get(portPoint.z) === 1 &&
+        (!this.physicalPlacement ||
+          this.physicalPlacement.isPortClear(portPoint))
       ) {
         continue
       }
       if (
-        !shouldIgnoreSharedEdge({
-          sharedEdge,
-          obstacles: this.input.obstacles,
-          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
-          layerCount: this.input.layerCount,
-        }) &&
+        (this.physicalPlacement ||
+          !shouldIgnoreSharedEdge({
+            sharedEdge,
+            obstacles: this.input.obstacles,
+            z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
+            layerCount: this.input.layerCount,
+          })) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
@@ -170,12 +247,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
       }
     }
 
-    const redistributed = redistributePortPointsOnSharedEdge({
-      sharedEdge,
-      portPoints: family,
-    })
+    if (this.physicalPlacement)
+      this.movableFamilies.push({
+        edge: sharedEdge,
+        ports: familyRaw,
+        movablePortIds: family.map((port) => port.portPointId!),
+      })
+    const redistributed = this.physicalPlacement
+      ? this.physicalPlacement.redistribute(sharedEdge, family)
+      : redistributePortPointsOnSharedEdge({
+          sharedEdge,
+          portPoints: family,
+        })
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    if (this.physicalPlacement) {
+      const positions = new Map(
+        redistributed.map((port) => [port.portPointId, port]),
+      )
+      this.mapOfOwnerPairToPortPoints.set(
+        ownerPairKey,
+        familyRaw.map((port) => positions.get(port.portPointId) ?? port),
+      )
+    } else this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }
 
   rebuildNodes(): void {

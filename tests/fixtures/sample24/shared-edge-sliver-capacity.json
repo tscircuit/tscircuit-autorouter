@@ -1,0 +1,250 @@
+{
+  "nodes": [
+    {
+      "capacityMeshNodeId": "cmn_540",
+      "center": {
+        "x": 253.1040748817116,
+        "y": 127.0826
+      },
+      "width": 6.765452176576787,
+      "height": 2.4000000000000057,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_58430__sub_0_0",
+      "center": {
+        "x": 256.48340098499995,
+        "y": 128.47809994875
+      },
+      "width": 0.006799970000088251,
+      "height": 0.3909998974999951,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "freeRegionIds": [
+    "cmn_540",
+    "topology_merge_58430__sub_0_0"
+  ],
+  "ports": [
+    {
+      "id": "ce219369_pp0_z0_cramped::0",
+      "regions": [
+        "cmn_540",
+        "topology_merge_58430__sub_0_0"
+      ],
+      "free": [
+        true,
+        true
+      ],
+      "d": {
+        "portId": "ce219369_pp0_z0_cramped::0",
+        "x": 256.48340098499995,
+        "y": 128.2826,
+        "z": 0,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true
+      }
+    },
+    {
+      "id": "ce219369_pp0_z0_cramped::0::dup1",
+      "regions": [
+        "cmn_540",
+        "topology_merge_58430__sub_0_0"
+      ],
+      "free": [
+        true,
+        true
+      ],
+      "d": {
+        "portId": "ce219369_pp0_z0_cramped::0",
+        "x": 256.481810618189,
+        "y": 128.28645121338255,
+        "z": 0,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "duplicatedFromPortId": "ce219369_pp0_z0_cramped::0",
+        "duplicateIndex": 1,
+        "duplicatePortUseCount": 12,
+        "duplicatePortProximity": 0.05,
+        "repairReason": "congested-port"
+      }
+    },
+    {
+      "id": "ce219369_pp0_z0_cramped::0::dup2",
+      "regions": [
+        "cmn_540",
+        "topology_merge_58430__sub_0_0"
+      ],
+      "free": [
+        true,
+        true
+      ],
+      "d": {
+        "portId": "ce219369_pp0_z0_cramped::0",
+        "x": 256.4802202513781,
+        "y": 128.29030242676507,
+        "z": 0,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "duplicatedFromPortId": "ce219369_pp0_z0_cramped::0",
+        "duplicateIndex": 2,
+        "duplicatePortUseCount": 12,
+        "duplicatePortProximity": 0.05,
+        "repairReason": "congested-port"
+      }
+    },
+    {
+      "id": "ce219369_pp0_z0_cramped::0::dup3",
+      "regions": [
+        "cmn_540",
+        "topology_merge_58430__sub_0_0"
+      ],
+      "free": [
+        true,
+        true
+      ],
+      "d": {
+        "portId": "ce219369_pp0_z0_cramped::0",
+        "x": 256.47862988456717,
+        "y": 128.2941536401476,
+        "z": 0,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "duplicatedFromPortId": "ce219369_pp0_z0_cramped::0",
+        "duplicateIndex": 3,
+        "duplicatePortUseCount": 12,
+        "duplicatePortProximity": 0.05,
+        "repairReason": "congested-port"
+      }
+    },
+    {
+      "id": "ce219369_pp0_z0_cramped::0::dup4",
+      "regions": [
+        "cmn_540",
+        "topology_merge_58430__sub_0_0"
+      ],
+      "free": [
+        true,
+        true
+      ],
+      "d": {
+        "portId": "ce219369_pp0_z0_cramped::0",
+        "x": 256.4770395177563,
+        "y": 128.29800485353016,
+        "z": 0,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "duplicatedFromPortId": "ce219369_pp0_z0_cramped::0",
+        "duplicateIndex": 4,
+        "duplicatePortUseCount": 12,
+        "duplicatePortProximity": 0.05,
+        "repairReason": "congested-port"
+      }
+    }
+  ],
+  "physicalSrj": {
+    "layerCount": 8,
+    "minTraceWidth": 0.1,
+    "bounds": {
+      "minX": 16.57679492,
+      "maxX": 305.8762,
+      "minY": 37.96359746,
+      "maxY": 172.88179491999998
+    },
+    "connections": [
+      {
+        "name": "source_net_altium_pcb_137",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 233.49260134,
+            "y": 136.144,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6295",
+            "pcb_port_id": "pcb_port_altium_6295",
+            "port_selector": "R210.2"
+          },
+          {
+            "x": 268.48019964,
+            "y": 122.22539944,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_8243",
+            "pcb_port_id": "pcb_port_altium_8243",
+            "port_selector": "U17.48"
+          }
+        ]
+      },
+      {
+        "name": "source_net_altium_pcb_142",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 233.44180134,
+            "y": 147.5994,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6289",
+            "pcb_port_id": "pcb_port_altium_6289",
+            "port_selector": "R213.2"
+          },
+          {
+            "x": 281.30719964,
+            "y": 122.22539944,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_8295",
+            "pcb_port_id": "pcb_port_altium_8295",
+            "port_selector": "U19.48"
+          }
+        ]
+      },
+      {
+        "name": "source_net_altium_pcb_178",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 230.48719967999997,
+            "y": 148.5773,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6532",
+            "pcb_port_id": "pcb_port_altium_6532",
+            "port_selector": "U18.6"
+          },
+          {
+            "x": 281.4731988,
+            "y": 117.856,
+            "layer": "top",
+            "pointId": "pcb_port_altium_7098",
+            "pcb_port_id": "pcb_port_altium_7098",
+            "port_selector": "R54.1"
+          }
+        ]
+      }
+    ],
+    "obstacles": []
+  }
+}

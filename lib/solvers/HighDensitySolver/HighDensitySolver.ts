@@ -8,6 +8,7 @@ import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
+  StaticSegmentValidator,
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
@@ -68,6 +69,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  readonly staticSegmentValidator?: StaticSegmentValidator
   captureSearchDebug: boolean
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
@@ -115,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
+    staticSegmentValidator,
     captureSearchDebug,
     priorityDagSearch = false,
     priorityDiagnostics,
@@ -143,6 +146,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    staticSegmentValidator?: StaticSegmentValidator
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
     priorityDiagnostics?: Record<string, number>
@@ -178,6 +182,7 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.staticSegmentValidator = staticSegmentValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
@@ -441,6 +446,7 @@ export class HighDensitySolver extends BaseSolver {
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      staticSegmentValidator: this.staticSegmentValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver

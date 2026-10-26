@@ -1,5 +1,17 @@
 import type { CircuitJsonMetadata } from "./srj-types"
 
+export type StaticRouteSegment = {
+  start: { x: number; y: number; z: number }
+  end: { x: number; y: number; z: number }
+  connectionName: string
+  rootConnectionName?: string
+  traceThickness: number
+  viaDiameter: number
+}
+
+/** Authoritative physical clearance in the caller's coordinate system. */
+export type StaticSegmentValidator = (segment: StaticRouteSegment) => boolean
+
 export type PortPoint = {
   connectionName: string
   rootConnectionName?: string

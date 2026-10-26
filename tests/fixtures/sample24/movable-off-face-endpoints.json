@@ -1,0 +1,238 @@
+{
+  "nodes": [
+    {
+      "capacityMeshNodeId": "topology_merge_43619__sub_1_0",
+      "center": {
+        "x": 157.86093639999999,
+        "y": 96.38397724557692
+      },
+      "width": 0.011912800000061452,
+      "height": 0.384553010384615,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_43619__sub_2_0",
+      "center": {
+        "x": 157.86093639999999,
+        "y": 96.76853025596154
+      },
+      "width": 0.011912800000061452,
+      "height": 0.384553010384615,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_43619__sub_3_0",
+      "center": {
+        "x": 157.86093639999999,
+        "y": 97.15308326634614
+      },
+      "width": 0.011912800000061452,
+      "height": 0.384553010384615,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_418__sub_0_0",
+      "center": {
+        "x": 158.9661714,
+        "y": 92.19079333333333
+      },
+      "width": 2.198557199999982,
+      "height": 8.809586666666666,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_418__sub_1_0",
+      "center": {
+        "x": 158.9661714,
+        "y": 101.00038
+      },
+      "width": 2.198557199999982,
+      "height": 8.809586666666666,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "portId": "ce137154_pp0_z0_cramped::0",
+      "region1Id": "topology_merge_43619__sub_1_0",
+      "region2Id": "topology_merge_43619__sub_2_0",
+      "d": {
+        "portPointId": "ce137154_pp0_z0_cramped::0",
+        "x": 157.86093639999999,
+        "y": 96.57625375076923,
+        "z": 0,
+        "connectionName": "source_net_altium_pcb_98",
+        "rootConnectionName": "source_net_altium_pcb_98",
+        "prevPortPointId": "ce137152_pp0_z0_cramped::0"
+      }
+    },
+    {
+      "portId": "ce137157_pp0_z0_cramped::0",
+      "region1Id": "topology_merge_43619__sub_2_0",
+      "region2Id": "topology_merge_43619__sub_3_0",
+      "d": {
+        "portPointId": "ce137157_pp0_z0_cramped::0",
+        "x": 157.86093639999999,
+        "y": 96.96080676115383,
+        "z": 0,
+        "connectionName": "source_net_altium_pcb_98",
+        "rootConnectionName": "source_net_altium_pcb_98",
+        "prevPortPointId": "ce137154_pp0_z0_cramped::0"
+      }
+    },
+    {
+      "portId": "ce137156_pp0_z0_cramped::0",
+      "region1Id": "cmn_418__sub_1_0",
+      "region2Id": "topology_merge_43619__sub_2_0",
+      "d": {
+        "portPointId": "ce137156_pp0_z0_cramped::0",
+        "x": 157.86689280000002,
+        "y": 96.77819671391026,
+        "z": 0,
+        "connectionName": "source_net_altium_pcb_93",
+        "rootConnectionName": "source_net_altium_pcb_93",
+        "nextPortPointId": "ce137155_pp0_z0_cramped::0::dup1"
+      }
+    },
+    {
+      "portId": "ce137155_pp0_z0_cramped::0::dup1",
+      "region1Id": "cmn_418__sub_0_0",
+      "region2Id": "topology_merge_43619__sub_2_0",
+      "d": {
+        "portPointId": "ce137155_pp0_z0_cramped::0::dup1",
+        "x": 157.88309395699312,
+        "y": 96.58983176721331,
+        "z": 0,
+        "connectionName": "source_net_altium_pcb_93",
+        "rootConnectionName": "source_net_altium_pcb_93",
+        "prevPortPointId": "ce137156_pp0_z0_cramped::0"
+      }
+    }
+  ],
+  "physicalSrj": {
+    "layerCount": 8,
+    "minTraceWidth": 0.1,
+    "bounds": {
+      "minX": 0,
+      "maxX": 300,
+      "minY": 0,
+      "maxY": 200
+    },
+    "obstacles": [],
+    "connections": [
+      {
+        "name": "source_net_altium_pcb_93",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 161.42739876,
+            "y": 110.1860001,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6769",
+            "pcb_port_id": "pcb_port_altium_6769",
+            "port_selector": "J26.63"
+          },
+          {
+            "x": 147.19979958,
+            "y": 89.39463706,
+            "layer": "top",
+            "pointId": "pcb_port_altium_7126",
+            "pcb_port_id": "pcb_port_altium_7126",
+            "port_selector": "R101.1"
+          }
+        ]
+      },
+      {
+        "name": "source_net_altium_pcb_98",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 144.71139968,
+            "y": 83.6549,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6334",
+            "pcb_port_id": "pcb_port_altium_6334",
+            "port_selector": "U36.13"
+          },
+          {
+            "x": 163.03680118,
+            "y": 103.16459936,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_7894",
+            "pcb_port_id": "pcb_port_altium_7894",
+            "port_selector": "R93.2"
+          }
+        ]
+      }
+    ],
+    "traces": []
+  },
+  "freeRegionIds": [
+    "cmn_418__sub_0_0",
+    "cmn_418__sub_1_0",
+    "topology_merge_43619__sub_1_0",
+    "topology_merge_43619__sub_2_0",
+    "topology_merge_43619__sub_3_0"
+  ],
+  "sharedEdgeRegionIds": [
+    "cmn_418__sub_0_0",
+    "cmn_418__sub_1_0",
+    "topology_merge_43619__sub_1_0",
+    "topology_merge_43619__sub_2_0",
+    "topology_merge_43619__sub_3_0"
+  ],
+  "movableSharedEdgeRegionIds": [
+    "cmn_418__sub_0_0",
+    "cmn_418__sub_1_0",
+    "topology_merge_43619__sub_1_0",
+    "topology_merge_43619__sub_2_0",
+    "topology_merge_43619__sub_3_0"
+  ]
+}

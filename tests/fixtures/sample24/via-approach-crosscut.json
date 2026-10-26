@@ -1,0 +1,387 @@
+{
+  "nodes": [
+    {
+      "capacityMeshNodeId": "topology_merge_61453",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.0509008
+      },
+      "width": 0.3999991999999679,
+      "height": 0.475000399999999,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61461",
+      "center": {
+        "x": 280.87565617999996,
+        "y": 69.57590099999999
+      },
+      "width": 0.3999991999999679,
+      "height": 0.5749999999999886,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61487",
+      "center": {
+        "x": 281.20065679999993,
+        "y": 69.22459949999998
+      },
+      "width": 0.2500020400000267,
+      "height": 1.2776029999999992,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61521",
+      "center": {
+        "x": 281.87572847499996,
+        "y": 69.41439999999999
+      },
+      "width": 1.1001413100000264,
+      "height": 0.2519979999999862,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61522",
+      "center": {
+        "x": 281.87572847499996,
+        "y": 69.41439999999999
+      },
+      "width": 1.1001413100000264,
+      "height": 0.2519979999999862,
+      "availableZ": [
+        2
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "portId": "ce241991_pp0_z1::1",
+      "region1Id": "topology_merge_61453",
+      "region2Id": "topology_merge_61487",
+      "d": {
+        "portId": "ce241991_pp0_z1::1",
+        "x": 281.0756557799999,
+        "y": 69.0509008,
+        "z": 1,
+        "distToCentermostPortOnZ": 0,
+        "cramped": false,
+        "portPointId": "ce241991_pp0_z1::1",
+        "connectionName": "source_net_altium_pcb_136",
+        "rootConnectionName": "source_net_altium_pcb_136",
+        "nextPortPointId": "ce242230_pp0_z1_cramped::1"
+      }
+    },
+    {
+      "portId": "ce242003_pp0_z1::1",
+      "region1Id": "topology_merge_61461",
+      "region2Id": "topology_merge_61487",
+      "d": {
+        "portId": "ce242003_pp0_z1::1",
+        "x": 281.0756557799999,
+        "y": 69.57590099999999,
+        "z": 1,
+        "distToCentermostPortOnZ": 0,
+        "cramped": false,
+        "portPointId": "ce242003_pp0_z1::1",
+        "connectionName": "source_net_altium_pcb_106",
+        "rootConnectionName": "source_net_altium_pcb_106",
+        "nextPortPointId": "ce242231_pp0_z2_cramped::2"
+      }
+    },
+    {
+      "portId": "ce242230_pp0_z1_cramped::1",
+      "region1Id": "topology_merge_61487",
+      "region2Id": "topology_merge_61521",
+      "d": {
+        "portId": "ce242230_pp0_z1_cramped::1",
+        "x": 281.32565781999995,
+        "y": 69.41439999999999,
+        "z": 1,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "portPointId": "ce242230_pp0_z1_cramped::1",
+        "connectionName": "source_net_altium_pcb_136",
+        "rootConnectionName": "source_net_altium_pcb_136",
+        "prevPortPointId": "ce241991_pp0_z1::1"
+      }
+    },
+    {
+      "portId": "ce242231_pp0_z2_cramped::2",
+      "region1Id": "topology_merge_61487",
+      "region2Id": "topology_merge_61522",
+      "d": {
+        "portId": "ce242231_pp0_z2_cramped::2",
+        "x": 281.32565781999995,
+        "y": 69.41439999999999,
+        "z": 2,
+        "distToCentermostPortOnZ": 0,
+        "tinyHypergraphPortPenalty": 1000,
+        "cramped": true,
+        "portPointId": "ce242231_pp0_z2_cramped::2",
+        "connectionName": "source_net_altium_pcb_106",
+        "rootConnectionName": "source_net_altium_pcb_106",
+        "prevPortPointId": "ce242003_pp0_z1::1"
+      }
+    }
+  ],
+  "physicalSrj": {
+    "bounds": {
+      "minX": 16.57679492,
+      "maxX": 305.8762,
+      "minY": 37.96359746,
+      "maxY": 172.88179491999998
+    },
+    "obstacles": [
+      {
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_altium_7456",
+          "pcb_port_id": "pcb_port_altium_7456",
+          "source_component_name": "U21",
+          "source_port_name": "51"
+        },
+        "componentId": "pcb_component_altium_154",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 280.87565617999996,
+          "y": 69.33840081999999
+        },
+        "width": 0.39999919999999994,
+        "height": 1.05000044,
+        "connectedTo": [
+          "pcb_smtpad_altium_7456",
+          "connectivity_net15763",
+          "pcb_via_altium_35237",
+          "pcb_via_altium_34594",
+          "pcb_via_altium_34592",
+          "pcb_via_altium_33962",
+          "pcb_via_altium_33961",
+          "pcb_via_altium_33960",
+          "pcb_via_altium_33959",
+          "pcb_trace_altium_32127",
+          "pcb_trace_altium_32126",
+          "pcb_trace_altium_31966",
+          "pcb_trace_altium_29205",
+          "pcb_trace_altium_29203",
+          "pcb_trace_altium_29202",
+          "pcb_trace_altium_29198",
+          "pcb_trace_altium_21900",
+          "pcb_trace_altium_21899",
+          "pcb_trace_altium_21898",
+          "pcb_trace_altium_21897",
+          "pcb_trace_altium_21694",
+          "pcb_trace_altium_21693",
+          "pcb_trace_altium_21692",
+          "pcb_trace_altium_21691",
+          "pcb_trace_altium_21690",
+          "pcb_trace_altium_21682",
+          "pcb_trace_altium_21681",
+          "pcb_trace_altium_21680",
+          "pcb_trace_altium_21669",
+          "pcb_trace_altium_21668",
+          "pcb_trace_altium_21667",
+          "pcb_trace_altium_21666",
+          "pcb_trace_altium_21665",
+          "pcb_trace_altium_21664",
+          "pcb_trace_altium_21663",
+          "pcb_trace_altium_21662",
+          "pcb_trace_altium_21517",
+          "pcb_trace_altium_21516",
+          "pcb_trace_altium_21515",
+          "pcb_trace_altium_21514",
+          "pcb_trace_altium_21513",
+          "pcb_trace_altium_21512",
+          "pcb_trace_altium_21065",
+          "pcb_smtpad_altium_7262",
+          "pcb_smtpad_altium_7256",
+          "pcb_smtpad_altium_7103",
+          "pcb_smtpad_altium_6925",
+          "pcb_smtpad_altium_6919",
+          "source_trace_altium_pcb_363",
+          "source_port_altium_6919",
+          "source_port_altium_6925",
+          "source_port_altium_7103",
+          "source_port_altium_7256",
+          "source_port_altium_7262",
+          "source_port_altium_7456",
+          "source_net_altium_pcb_363",
+          "pcb_port_altium_6919",
+          "pcb_port_altium_6925",
+          "pcb_port_altium_7103",
+          "pcb_port_altium_7256",
+          "pcb_port_altium_7262",
+          "pcb_port_altium_7456"
+        ]
+      },
+      {
+        "circuitJsonMetadata": {
+          "pcb_smtpad_id": "pcb_smtpad_altium_7457",
+          "pcb_port_id": "pcb_port_altium_7457",
+          "source_component_name": "U21",
+          "source_port_name": "50"
+        },
+        "componentId": "pcb_component_altium_154",
+        "type": "rect",
+        "layers": [
+          "bottom"
+        ],
+        "center": {
+          "x": 281.52565741999996,
+          "y": 69.33840081999999
+        },
+        "width": 0.39999919999999994,
+        "height": 1.05000044,
+        "connectedTo": [
+          "pcb_smtpad_altium_7457",
+          "connectivity_net15217",
+          "pcb_via_altium_34691",
+          "pcb_trace_altium_31571",
+          "pcb_trace_altium_21980",
+          "pcb_trace_altium_21979",
+          "pcb_trace_altium_21978",
+          "pcb_trace_altium_21977",
+          "pcb_trace_altium_21903",
+          "pcb_trace_altium_21902",
+          "pcb_trace_altium_21901",
+          "pcb_trace_altium_20920",
+          "pcb_trace_altium_20919",
+          "pcb_trace_altium_20918",
+          "pcb_trace_altium_20917",
+          "pcb_trace_altium_20916",
+          "pcb_trace_altium_20915",
+          "pcb_smtpad_altium_7102",
+          "pcb_smtpad_altium_7100",
+          "source_trace_altium_pcb_123",
+          "source_port_altium_7100",
+          "source_port_altium_7102",
+          "source_port_altium_7457",
+          "source_net_altium_pcb_123",
+          "pcb_port_altium_7100",
+          "pcb_port_altium_7102",
+          "pcb_port_altium_7457"
+        ]
+      }
+    ],
+    "connections": [
+      {
+        "name": "source_net_altium_pcb_106",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 234.55940134,
+            "y": 40.004999999999995,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6280",
+            "pcb_port_id": "pcb_port_altium_6280",
+            "port_selector": "R217.2"
+          },
+          {
+            "x": 282.17565865999995,
+            "y": 69.33840081999999,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_7458",
+            "pcb_port_id": "pcb_port_altium_7458",
+            "port_selector": "U21.49"
+          }
+        ]
+      },
+      {
+        "name": "source_net_altium_pcb_136",
+        "nominalTraceWidth": 0.1,
+        "width": 0.1,
+        "pointsToConnect": [
+          {
+            "x": 234.53400134,
+            "y": 41.021,
+            "layer": "top",
+            "pointId": "pcb_port_altium_6284",
+            "pcb_port_id": "pcb_port_altium_6284",
+            "port_selector": "R215.2"
+          },
+          {
+            "x": 282.82565736,
+            "y": 69.33840081999999,
+            "layer": "bottom",
+            "pointId": "pcb_port_altium_7459",
+            "pcb_port_id": "pcb_port_altium_7459",
+            "port_selector": "U21.48"
+          }
+        ]
+      }
+    ],
+    "layerCount": 8,
+    "allowBlindAndBuriedVias": false,
+    "minTraceWidth": 0.1,
+    "outline": [
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      },
+      {
+        "x": 304.8762,
+        "y": 38.96359746
+      },
+      {
+        "x": 304.8762,
+        "y": 171.88179491999998
+      },
+      {
+        "x": 17.57679492,
+        "y": 171.88179491999998
+      },
+      {
+        "x": 17.5768,
+        "y": 38.9636
+      }
+    ],
+    "id": "sample024",
+    "sourceCircuitJson": "circuit-json/sample024-pmp22650-main.json",
+    "sourceName": "PMP22650 6.6 kW Bidirectional GaN Onboard Charger",
+    "sourceUrl": "https://www.ti.com/tool/PMP22650",
+    "sourceRepository": "Texas Instruments PMP22650",
+    "sourceLicense": "TI Terms of Use",
+    "sourceBoardFormat": "Altium PcbDoc",
+    "sourcePcbDocSha256": "bc20338d29b9323b5af9182f91041c14b192aa363cf2d7a323441a7f28210002",
+    "snapshotComparison": "snapshots/sample024-pmp22650-main-comparison.svg"
+  },
+  "freeRegionIds": [
+    "topology_merge_61521",
+    "topology_merge_61487",
+    "topology_merge_61461",
+    "topology_merge_61453",
+    "topology_merge_61522"
+  ],
+  "sharedEdgeRegionIds": [
+    "topology_merge_61453",
+    "topology_merge_61461",
+    "topology_merge_61487",
+    "topology_merge_61521",
+    "topology_merge_61522"
+  ],
+  "movableSharedEdgeRegionIds": [
+    "topology_merge_61521",
+    "topology_merge_61487",
+    "topology_merge_61461",
+    "topology_merge_61453",
+    "topology_merge_61522"
+  ]
+}

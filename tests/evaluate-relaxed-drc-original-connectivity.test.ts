@@ -95,11 +95,19 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
   expect(errors).toHaveLength(0)
 
   const connectivityMaps = {
-    source: getConnectivityMapFromSimpleRouteJson({
-      ...inputSrj,
-      connections: [...srjWithPointPairs.connections, ...inputSrj.connections],
+    source: getConnectivityMapFromSimpleRouteJson(
+      {
+        ...inputSrj,
+        connections: [
+          ...srjWithPointPairs.connections,
+          ...inputSrj.connections,
+        ],
+      },
+      { includeGeometricPointConnections: false },
+    ),
+    route: getConnectivityMapFromSimpleRouteJson(srjWithPointPairs, {
+      includeGeometricPointConnections: false,
     }),
-    route: getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
   }
   for (const y of [0, 0.2]) {
     const candidate = structuredClone(routedTrace)

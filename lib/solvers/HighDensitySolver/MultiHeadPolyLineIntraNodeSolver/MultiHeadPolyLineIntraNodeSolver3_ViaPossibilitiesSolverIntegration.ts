@@ -7,10 +7,15 @@ import { MultiHeadPolyLineIntraNodeSolver2 } from "./MultiHeadPolyLineIntraNodeS
 
 const hashPolyLines = (polyLines: PolyLine2[]) => {
   return polyLines
-    .flatMap(
-      (pl) =>
-        `${pl.connectionName}-${pl.mPoints.map((mp) => `${mp.x.toFixed(2)},${mp.y.toFixed(2)},${mp.z1},${mp.z2}`)}`,
-    )
+    .flatMap((pl) => {
+      const repeatedConnection = polyLines.some(
+        (other) => other !== pl && other.connectionName === pl.connectionName,
+      )
+      const identity = repeatedConnection
+        ? (pl.portPairId ?? pl.connectionName)
+        : pl.connectionName
+      return `${identity}-${pl.mPoints.map((mp) => `${mp.x.toFixed(2)},${mp.y.toFixed(2)},${mp.z1},${mp.z2}`)}`
+    })
     .sort()
     .join("|")
 }
@@ -51,6 +56,8 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
         SHUFFLE_SEED: shuffleSeed,
       },
       viaDiameter: this.viaDiameter,
+      connMap: this.connMap,
+      portPairMap: this.portPairMap,
     })
 
     viaSolver.solve()
@@ -65,10 +72,8 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     const polyLines: PolyLine[] = []
     let totalViaCount = 0
 
-    for (const [
-      connectionName,
-      pathPoints,
-    ] of viaSolver.completedPaths.entries()) {
+    for (const [portPairId, pathPoints] of viaSolver.completedPaths.entries()) {
+      const connectionName = this.portPairMap.get(portPairId)!.connectionName
       if (pathPoints.length < 2) {
         console.warn(
           `Skipping connection "${connectionName}" due to insufficient points (${pathPoints.length}) in ViaPossibilitiesSolver2 path.`,
@@ -190,6 +195,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       // Create the final PolyLine object with potentially adjusted mPoints
       polyLines.push({
         connectionName,
+        portPairId,
         start: {
           // Use original start/end points from ViaSolver
           ...startPoint,

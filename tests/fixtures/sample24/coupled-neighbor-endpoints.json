@@ -1,0 +1,200 @@
+{
+  "nodes": [
+    {
+      "capacityMeshNodeId": "topology_merge_61261",
+      "center": {
+        "x": 279.56525724,
+        "y": 69.44675090999999
+      },
+      "width": 0.533399519999989,
+      "height": 0.31669982000001085,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61335__sub_1_0__single_z1",
+      "center": {
+        "x": 279.86307859,
+        "y": 69.22459949999998
+      },
+      "width": 0.062243179999995846,
+      "height": 0.42586766666666637,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61335__sub_2_0",
+      "center": {
+        "x": 279.86307859,
+        "y": 69.65046716666664
+      },
+      "width": 0.062243179999995846,
+      "height": 0.42586766666666637,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61356",
+      "center": {
+        "x": 279.95992903,
+        "y": 69.58579809000001
+      },
+      "width": 0.13145769999999857,
+      "height": 0.39999919999999634,
+      "availableZ": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_61372",
+      "center": {
+        "x": 280.22565748,
+        "y": 69.58579809000001
+      },
+      "width": 0.39999920000002476,
+      "height": 0.39999919999999634,
+      "availableZ": [
+        1
+      ]
+    }
+  ],
+  "events": [
+    {
+      "edge": {
+        "ownerNodeIds": [
+          "topology_merge_61335__sub_1_0__single_z1",
+          "topology_merge_61356"
+        ],
+        "ownerPairKey": "topology_merge_61335__sub_1_0__single_z1|topology_merge_61356",
+        "orientation": "vertical",
+        "x1": 279.89420018,
+        "y1": 69.38579849000001,
+        "x2": 279.89420018,
+        "y2": 69.43753333333332,
+        "center": {
+          "x": 279.89420018,
+          "y": 69.41166591166666
+        },
+        "length": 0.05173484333330691,
+        "nodeSideByOwnerId": {
+          "topology_merge_61335__sub_1_0__single_z1": "right",
+          "topology_merge_61356": "left"
+        }
+      },
+      "port": {
+        "portPointId": "ce240955_pp0_z1_cramped::1",
+        "x": 279.89420018,
+        "y": 69.41166591166666,
+        "z": 1,
+        "connectionName": "source_net_altium_pcb_136",
+        "rootConnectionName": "source_net_altium_pcb_136",
+        "prevPortPointId": "ce240281_pp0_z1_cramped::1"
+      },
+      "owner": "connectivity_net135",
+      "width": 0.1,
+      "allowed": [
+        [
+          0,
+          0.05173484333330691
+        ]
+      ]
+    },
+    {
+      "edge": {
+        "ownerNodeIds": [
+          "topology_merge_61261",
+          "topology_merge_61335__sub_2_0"
+        ],
+        "ownerPairKey": "topology_merge_61261|topology_merge_61335__sub_2_0",
+        "orientation": "vertical",
+        "x1": 279.831957,
+        "y1": 69.4375333333333,
+        "x2": 279.831957,
+        "y2": 69.60510081999999,
+        "center": {
+          "x": 279.831957,
+          "y": 69.52131707666665
+        },
+        "length": 0.16756748666668386,
+        "nodeSideByOwnerId": {
+          "topology_merge_61261": "right",
+          "topology_merge_61335__sub_2_0": "left"
+        }
+      },
+      "port": {
+        "portPointId": "ce240302_pp0_z1_cramped::1",
+        "x": 279.831957,
+        "y": 69.52131707666665,
+        "z": 1,
+        "connectionName": "source_net_altium_pcb_106",
+        "rootConnectionName": "source_net_altium_pcb_106",
+        "prevPortPointId": "ce240192_pp0_z1::1"
+      },
+      "owner": "connectivity_net105",
+      "width": 0.1,
+      "allowed": [
+        [
+          0,
+          0.16756748666668386
+        ]
+      ]
+    },
+    {
+      "edge": {
+        "ownerNodeIds": [
+          "topology_merge_61356",
+          "topology_merge_61372"
+        ],
+        "ownerPairKey": "topology_merge_61356|topology_merge_61372",
+        "orientation": "vertical",
+        "x1": 280.02565788000004,
+        "y1": 69.38579849000001,
+        "x2": 280.02565788000004,
+        "y2": 69.78579769000001,
+        "center": {
+          "x": 280.02565788000004,
+          "y": 69.58579809000001
+        },
+        "length": 0.39999919999999634,
+        "nodeSideByOwnerId": {
+          "topology_merge_61356": "right",
+          "topology_merge_61372": "left"
+        }
+      },
+      "port": {
+        "portPointId": "ce241099_pp0_z1::1",
+        "x": 280.02565788000004,
+        "y": 69.51378442270763,
+        "z": 1,
+        "connectionName": "source_net_altium_pcb_136",
+        "rootConnectionName": "source_net_altium_pcb_136",
+        "prevPortPointId": "ce240955_pp0_z1_cramped::1"
+      },
+      "owner": "connectivity_net135",
+      "width": 0.1,
+      "allowed": [
+        [
+          0,
+          0.39999919999999634
+        ]
+      ]
+    }
+  ]
+}

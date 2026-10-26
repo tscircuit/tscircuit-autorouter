@@ -24,8 +24,8 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-// Version 6 replaces typed object serialization with tagged JSON.
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
+// Version 7 retains authoritative routing-event pairing in cache identity.
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -47,6 +47,7 @@ export class CachedIntraNodeRouteSolver
     | CacheToIntraNodeSolverTransform
     | undefined
   initialUnsolvedConnections: {
+    routeEventId?: number
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
@@ -58,8 +59,9 @@ export class CachedIntraNodeRouteSolver
     },
   ) {
     super(params)
-    this.cacheProvider =
-      params.cacheProvider === undefined
+    this.cacheProvider = params.staticSegmentValidator
+      ? null
+      : params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
     this.initialUnsolvedConnections = this.unsolvedConnections.map(
@@ -102,7 +104,8 @@ export class CachedIntraNodeRouteSolver
   } {
     const center = this.nodeWithPortPoints.center
     const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, rootConnectionName, points }) => ({
+      ({ routeEventId, connectionName, rootConnectionName, points }) => ({
+        routeEventId,
         connectionName,
         rootConnectionName,
         points: points.map((point) => ({
@@ -168,6 +171,18 @@ export class CachedIntraNodeRouteSolver
         portPoints: normalizedPortPoints,
       },
       normalizedConnections,
+      explicitPortPointPairs: this.nodeWithPortPoints.portPointsInPairs?.length
+        ? this.nodeWithPortPoints.portPointsInPairs.map((pair) =>
+            pair.map((point) => ({
+              portPointId: point.portPointId,
+              connectionName: point.connectionName,
+              rootConnectionName: point.rootConnectionName,
+              x: roundCoord(point.x - center.x),
+              y: roundCoord(point.y - center.y),
+              z: point.z ?? 0,
+            })),
+          )
+        : undefined,
       normalizedHyperParameters,
       minDistBetweenEnteringPoints: roundCoord(
         this.minDistBetweenEnteringPoints,

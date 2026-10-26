@@ -34,6 +34,10 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { createPipeline9PhysicalRouteValidator } from "./createPipeline9PhysicalRouteValidator"
+import { createPipeline9StaticSegmentValidator } from "./createPipeline9StaticSegmentValidator"
+import { getPipeline9PhysicalGeometryContext } from "./getPipeline9PhysicalGeometryContext"
+import type { StaticSegmentValidator } from "lib/types/high-density-types"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -42,6 +46,8 @@ export type Pipeline9HighDensitySolverParams = {
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
+  physicalSrj?: SimpleRouteJson
+  physicalRootConnectionNameByConnectionName?: Record<string, string>
   layerCount: number
   allowBlindAndBuriedVias?: boolean
   viaDiameter: number
@@ -333,6 +339,9 @@ export type Pipeline9RegularNodeSolverParams = {
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
+  physicalRouteValidator?: (routes: HighDensityRoute[]) => boolean
+  staticSegmentValidator?: StaticSegmentValidator
+  physicalRootConnectionNameByConnectionName?: Record<string, string>
 }
 
 /**
@@ -357,6 +366,9 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   layerCount,
+  physicalRouteValidator,
+  staticSegmentValidator,
+  physicalRootConnectionNameByConnectionName,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -379,6 +391,36 @@ export const createPipeline9RegularNodeSolver = ({
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    staticSegmentValidator: staticSegmentValidator
+      ? (segment) =>
+          staticSegmentValidator({
+            ...segment,
+            rootConnectionName:
+              physicalRootConnectionNameByConnectionName?.[
+                segment.connectionName
+              ] ??
+              nodeWithPortPoints.portPoints.find(
+                (point) => point.connectionName === segment.connectionName,
+              )?.rootConnectionName ??
+              segment.connectionName,
+          })
+      : undefined,
+    growShrinkSolutionValidator: physicalRouteValidator
+      ? (routes) =>
+          physicalRouteValidator(
+            routes.map((route) => ({
+              ...route,
+              rootConnectionName:
+                physicalRootConnectionNameByConnectionName?.[
+                  route.connectionName
+                ] ??
+                nodeWithPortPoints.portPoints.find(
+                  (point) => point.connectionName === route.connectionName,
+                )?.rootConnectionName ??
+                route.connectionName,
+            })),
+          )
+      : undefined,
     captureSearchDebug: false,
     priorityDagSearch,
     priorityDiagnostics,
@@ -427,6 +469,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
 
   private asyncRunning = false
+  private readonly physicalRouteValidator?: (
+    routes: HighDensityRoute[],
+  ) => boolean
+  private readonly staticSegmentValidator?: StaticSegmentValidator
 
   constructor(private readonly params: Pipeline9HighDensitySolverParams) {
     super()
@@ -450,6 +496,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.includeBoardObstacles = params.includeBoardObstacles ?? false
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
+    this.physicalRouteValidator = params.physicalSrj
+      ? createPipeline9PhysicalRouteValidator({
+          physicalSrj: params.physicalSrj,
+          connMap: this.connMap,
+          obstacleMargin: this.obstacleMargin,
+          viaHoleDiameter: params.viaHoleDiameter,
+        })
+      : undefined
+    this.staticSegmentValidator = params.physicalSrj
+      ? createPipeline9StaticSegmentValidator(params.physicalSrj)
+      : undefined
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
@@ -684,6 +741,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
+      physicalRouteValidator: this.physicalRouteValidator,
+      staticSegmentValidator: this.staticSegmentValidator,
+      physicalRootConnectionNameByConnectionName:
+        this.params.physicalRootConnectionNameByConnectionName,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -745,6 +806,39 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
+    const physicalRoots = Object.fromEntries(
+      this.activeNode.portPoints.map((point) => [
+        point.connectionName,
+        this.params.physicalRootConnectionNameByConnectionName?.[
+          point.connectionName
+        ] ??
+          point.rootConnectionName ??
+          point.connectionName,
+      ]),
+    )
+    const physicalConnMap = this.params.physicalSrj
+      ? getPipeline9PhysicalGeometryContext(this.params.physicalSrj).connMap
+      : undefined
+    for (const section of fallbackProblem.fixedRouteSectionsByConnectionName.values()) {
+      for (const route of section.sourceRoutes) {
+        const sourceRoot =
+          this.params.physicalRootConnectionNameByConnectionName?.[
+            route.connectionName
+          ] ??
+          this.params.physicalSrj?.traces?.[route.preloadedTraceIndex]
+            ?.connection_name ??
+          (route.rootConnectionName &&
+          physicalConnMap?.getNetConnectedToId(route.rootConnectionName)
+            ? route.rootConnectionName
+            : undefined)
+        if (this.params.physicalSrj && !sourceRoot) {
+          throw new Error(
+            `Pipeline9 regional fixed route "${route.connectionName}" has no declared physical owner`,
+          )
+        }
+        if (sourceRoot) physicalRoots[route.connectionName] = sourceRoot
+      }
+    }
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
@@ -758,6 +852,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacles: this.obstacles,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
+      viaHoleDiameter: this.params.viaHoleDiameter,
+      physicalSrj: this.params.physicalSrj,
+      physicalRootConnectionNameByConnectionName: physicalRoots,
       layerCount: this.layerCount,
       allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })

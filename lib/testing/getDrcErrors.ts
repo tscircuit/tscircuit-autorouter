@@ -6,10 +6,12 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -28,12 +30,19 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_via_id: string
   pcb_trace_id: string
 }
+type ViaPadClearanceError = PcbPadPadClearanceError & {
+  pcb_via_id: string
+  pcb_via_ids: string[]
+  pcb_trace_id?: string
+  pcb_trace_ids?: string[]
+}
 
 type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | ViaPadClearanceError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -41,6 +50,7 @@ type LocationAwareDrcError = DrcError & { center: Point }
 
 export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
 export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
+const DEFAULT_VIA_TO_PAD_CLEARANCE = 0.1
 
 export interface GetDrcErrorsResult {
   errors: DrcError[]
@@ -51,6 +61,8 @@ export interface GetDrcErrorsResult {
 export interface GetDrcErrorsOptions {
   holeClearance?: number
   viaClearance?: number
+  /** Via annulus edge to foreign pad copper, independent of drill spacing. */
+  viaPadClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
@@ -76,6 +88,9 @@ export const getDrcErrors = (
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
+  const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
+  const board = circuitJson.find((element) => element.type === "pcb_board")
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
@@ -111,6 +126,27 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap,
+    minClearance:
+      options.viaPadClearance ??
+      board?.min_pad_edge_to_pad_edge_clearance ??
+      DEFAULT_VIA_TO_PAD_CLEARANCE,
+  }).map((error) => {
+    const viaId = error.pcb_pad_ids.find((id) => viasById.has(id))
+    if (!viaId) {
+      throw new Error("Via-pad clearance error is missing its evaluated via")
+    }
+    const via = viasById.get(viaId)!
+    const traceId =
+      typeof via.pcb_trace_id === "string" ? via.pcb_trace_id : undefined
+    return {
+      ...error,
+      pcb_via_id: viaId,
+      pcb_via_ids: [viaId],
+      ...(traceId ? { pcb_trace_id: traceId, pcb_trace_ids: [traceId] } : {}),
+    }
+  })
 
   const errors: DrcError[] = [
     ...traceErrors,
@@ -122,20 +158,8 @@ export const getDrcErrors = (
     ...padTraceErrors,
     ...holeTraceErrors,
     ...viaErrors,
+    ...viaPadErrors,
   ]
-
-  const vias = circuitJson.filter(
-    (
-      element,
-    ): element is CircuitJsonElement & {
-      type: "pcb_via"
-      pcb_via_id: string
-      x: number
-      y: number
-    } => element.type === "pcb_via",
-  )
-
-  const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
     if (

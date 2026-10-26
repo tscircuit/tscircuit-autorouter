@@ -3,7 +3,15 @@ import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnte
 
 export type IntraNodeConnectionPoint = { x: number; y: number; z: number }
 
+export type IntraNodeConnectionTask = {
+  routeEventId?: number
+  connectionName: string
+  rootConnectionName?: string
+  points: IntraNodeConnectionPoint[]
+}
+
 export type PrecomputedIntraNodeRouteParams = {
+  connectionTasks: readonly IntraNodeConnectionTask[]
   connectionPointsByName: ReadonlyMap<
     string,
     readonly IntraNodeConnectionPoint[]
@@ -43,7 +51,31 @@ export const precomputeIntraNodeRouteParams = (
     seenPoints.add(key)
     points.push({ x, y, z: layer })
   }
+  const connectionTasks: IntraNodeConnectionTask[] = node.portPointsInPairs
+    ?.length
+    ? node.portPointsInPairs.map(([start, end], routeEventId) => {
+        if (start.connectionName !== end.connectionName)
+          throw new Error(
+            "An intra-node port pair has conflicting connection IDs",
+          )
+        return {
+          routeEventId,
+          connectionName: start.connectionName,
+          rootConnectionName:
+            rootConnectionNameByConnectionName.get(start.connectionName) ??
+            start.rootConnectionName ??
+            end.rootConnectionName,
+          points: [start, end].map(({ x, y, z }) => ({ x, y, z: z ?? 0 })),
+        }
+      })
+    : [...connectionPointsByName].map(([connectionName, points]) => ({
+        connectionName,
+        rootConnectionName:
+          rootConnectionNameByConnectionName.get(connectionName),
+        points,
+      }))
   return {
+    connectionTasks,
     connectionPointsByName,
     rootConnectionNameByConnectionName,
     minDistBetweenEnteringPoints: getMinDistBetweenEnteringPoints(node),

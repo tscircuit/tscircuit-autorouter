@@ -45,6 +45,7 @@ export const computeViaCountVariants = (
   segmentsPerPolyline: number,
   maxViaCount: number,
   minViaCount: number,
+  areConnectionsConnected?: (first: string, second: string) => boolean,
 ): Array<number[]> => {
   const possibleViaCountsPerPolyline: number[][] = []
 
@@ -96,6 +97,13 @@ export const computeViaCountVariants = (
       if (portPairsEntries[i][1].start.z1 !== portPairsEntries[i][1].start.z2)
         continue
       for (let j = i + 1; j < portPairsEntries.length; j++) {
+        if (
+          areConnectionsConnected?.(
+            portPairsEntries[i][0],
+            portPairsEntries[j][0],
+          )
+        )
+          continue
         if (portPairsEntries[j][1].start.z1 !== portPairsEntries[j][1].start.z2)
           continue
 
