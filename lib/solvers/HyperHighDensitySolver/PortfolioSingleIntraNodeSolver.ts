@@ -76,7 +76,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private nodeSegmentCount?: number
   private totalCandidateWork = 0
   private dynamicExpansionWorkBudget = 1
-  private candidateToAdvance?: PortfolioCandidate
+  private candidateToAdvance?: PortfolioCandidate | typeof HighDensityA03Solver
   private candidateWorkBySolver = new WeakMap<
     BaseSolver,
     { iterations: number; maxIterations: number }
@@ -533,7 +533,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
   }
 
-  override _step() {
+  stepA03Candidate(): void {
+    if (this.solved || this.failed || this.candidateToAdvance) {
+      throw new Error("Cannot advance a family in an inactive portfolio")
+    }
+    this.candidateToAdvance = HighDensityA03Solver
+    try {
+      this.step()
+    } finally {
+      this.candidateToAdvance = undefined
+    }
+  }
+
+  override _step(): void {
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
@@ -543,7 +555,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    super._step(this.candidateToAdvance)
+    const selection = this.candidateToAdvance
+    if (typeof selection === "function") {
+      const candidates = this.supervisedSolvers!
+      const selected = candidates.find(
+        ({ solver }) => solver instanceof selection,
+      )
+      if (!selected) throw new Error("Portfolio is missing its A03 candidate")
+      // Observe any proposal completed during setup through ordinary onSolve.
+      if (candidates.some(({ solver }) => solver.solved)) super._step()
+      else if (selected.solver.failed) return
+      else super._step(selected)
+    } else {
+      super._step(selection)
+    }
 
     if (
       !this.negotiatedSearchStarted &&

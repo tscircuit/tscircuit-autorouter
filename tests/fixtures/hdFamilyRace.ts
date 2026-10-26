@@ -15,6 +15,7 @@ type PortfolioParams = ConstructorParameters<
 type HarnessOptions = {
   plans: Record<number, Plan>
   makeOtherBest?: boolean
+  otherCompleteAfter?: number
   onStep?: (scale: number, portfolio: ScriptedPortfolio) => void
   validator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   params?: Partial<
@@ -95,7 +96,11 @@ class ScriptedA03 extends HighDensitySolverA03 {
 }
 
 class ScriptedOther extends IntraNodeRouteSolver {
-  constructor(node: NodeWithPortPoints) {
+  constructor(
+    node: NodeWithPortPoints,
+    readonly completeAfter: number,
+    readonly proposal: HighDensityIntraNodeRoute[],
+  ) {
     super({ nodeWithPortPoints: node })
     this.MAX_ITERATIONS = 2
   }
@@ -105,7 +110,11 @@ class ScriptedOther extends IntraNodeRouteSolver {
     this.stats.visits = (this.stats.visits ?? 0) + 1
     this.stats.observedLimit = this.MAX_ITERATIONS
     this.stats.observedIterations = this.iterations
-    this.stats.neverAccepts = true
+    this.stats.neverAccepts = this.completeAfter === Infinity
+    if (this.iterations >= this.completeAfter) {
+      this.solved = true
+      this.solvedRoutes = this.proposal
+    }
   }
 }
 
@@ -124,7 +133,11 @@ export class ScriptedPortfolio extends PortfolioSingleIntraNodeSolver {
     if (!plan) throw new Error(`Missing scripted scale ${scale}`)
     this.native = new ScriptedA03(params.nodeWithPortPoints, plan)
     this.native.setup()
-    this.other = new ScriptedOther(params.nodeWithPortPoints)
+    this.other = new ScriptedOther(
+      params.nodeWithPortPoints,
+      options.otherCompleteAfter ?? Infinity,
+      this.native.getOutput(),
+    )
     this.MIN_SUBSTEPS = 1
     this.adaptiveSearchExpanded = true
     this.supervisedSolvers = [

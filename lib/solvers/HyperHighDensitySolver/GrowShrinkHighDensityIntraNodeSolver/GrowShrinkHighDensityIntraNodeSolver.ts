@@ -40,6 +40,8 @@ type ScaleSearch = {
   candidates: ScaleCandidate[]
   nextAttempt: number | null
   cursor: number
+  familyCursor: number
+  phase: "family" | "portfolio"
   incumbent?: ScaleCandidate
 }
 
@@ -285,6 +287,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           : Math.max(attempt + 1, this.minimumGrowthAttempts)
     }
     search.cursor = 0
+    search.familyCursor = 0
+    search.phase = "family"
   }
 
   private initializeScaleSearch(): ScaleSearch {
@@ -292,6 +296,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       candidates: [],
       nextAttempt: 0,
       cursor: 0,
+      familyCursor: 0,
+      phase: "family",
     }
     this.addScaleSearchWave(search)
     this.activeSubSolver = null
@@ -357,10 +363,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private stepScaleSearch(): void {
-    // Interleave the existing proposals; refine a successful family at smaller
-    // scales before accepting more geometric relaxation.
+    // Try the shared grid family first; refine successful proposals at smaller
+    // scales before spending work on the remaining routing families.
     const search = (this.scaleSearch ??= this.initializeScaleSearch())
     if (search.incumbent && this.stepScaleRefinement(search)) return
+    if (search.phase === "family" && this.stepA03Family(search)) return
 
     if (!search.candidates.some(({ solver }) => !solver.failed)) {
       if (search.nextAttempt === null) {
@@ -371,6 +378,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         return
       }
       this.addScaleSearchWave(search)
+      if (this.stepA03Family(search)) return
     }
     let candidate =
       search.candidates[search.cursor++ % search.candidates.length]!
@@ -381,6 +389,47 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.growthAttempts = candidate.growthAttempt
     this.activeSubSolver = candidate.solver
     candidate.solver.step()
+    this.finishScaleStep(search, candidate)
+  }
+
+  private stepA03Family(search: ScaleSearch): boolean {
+    for (let i = 0; i < search.candidates.length; i++) {
+      const candidate =
+        search.candidates[search.familyCursor++ % search.candidates.length]!
+      if (candidate.solver.failed) continue
+      const candidates = candidate.solver.supervisedSolvers
+      const supervised = candidates?.find(
+        ({ solver }) => solver instanceof HighDensitySolverA03,
+      )
+      if (candidates && !supervised) {
+        throw new Error("Scale portfolio is missing its A03 candidate")
+      }
+      if (supervised?.solver.failed) continue
+      this.scaleFactor = candidate.scaleFactor
+      this.growthAttempts = candidate.growthAttempt
+      this.activeSubSolver = candidate.solver
+      const before = supervised?.solver.iterations ?? 0
+      if (supervised?.solver.solved) candidate.solver.step()
+      else if (supervised) candidate.solver.stepCandidate(supervised)
+      else candidate.solver.stepA03Candidate()
+      const advanced =
+        supervised ??
+        candidate.solver.supervisedSolvers?.find(
+          ({ solver }) => solver instanceof HighDensitySolverA03,
+        )
+      if (!advanced) throw new Error("A03 candidate disappeared during setup")
+      this.stats.scaleFamilyNativeIterations =
+        (this.stats.scaleFamilyNativeIterations ?? 0) +
+        advanced.solver.iterations -
+        before
+      this.finishScaleStep(search, candidate)
+      return true
+    }
+    search.phase = "portfolio"
+    return false
+  }
+
+  private finishScaleStep(search: ScaleSearch, candidate: ScaleCandidate): void {
     if (candidate.solver.solved) {
       if (
         candidate.solver.winningSolver instanceof HighDensitySolverA03 &&
