@@ -157,7 +157,7 @@ const addAssignableViaRegions = (params: {
 export function buildHyperGraph(params: {
   simpleRouteJsonConnections: SimpleRouteConnection[]
   capacityMeshNodes: CapacityMeshNode[]
-  segmentPortPoints: SegmentPortPoint[]
+  segmentPortPoints: Iterable<SegmentPortPoint>
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
