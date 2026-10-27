@@ -1,6 +1,6 @@
 {
   "scope": "INDEPENDENT_CORRECTED_REFERENCE_EVALUATOR_OVERLAY_NOT_PRODUCTION_ROUTING",
-  "producerSource": "5d5ca622ad436cb0dac518cca5b3d5111c8ecd2d",
+  "producerSource": "75b2d5d061d28c861800d661c0963a56a818a57f",
   "referenceWorktree": "/workspace/sample24-physical-repair-integration",
   "referenceRevision": "53b1649066e1a386a45809a10040a9d5bf8cb8db",
   "visitedRuntimeImports": 20,

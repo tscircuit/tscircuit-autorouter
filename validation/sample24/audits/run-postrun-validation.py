@@ -9,22 +9,22 @@ import shutil
 import subprocess
 import sys
 
-COHORT = {'runId': 40500285904,
+COHORT = {'runId': 40506750618,
  'branch': 'fix/srj24-duplicate-port-bounds-20261027',
- 'transportCommit': '5f581d928ed6549091e19d692f0db60b04f01efb',
- 'source': '5d5ca622ad436cb0dac518cca5b3d5111c8ecd2d',
- 'rootLibTree': 'eb3d7f27006d9eb03d5e99d9570368390090123a',
+ 'transportCommit': 'ab63cb1bc6451cbc8009d39c533dc7ca265ca7f4',
+ 'source': '75b2d5d061d28c861800d661c0963a56a818a57f',
+ 'rootLibTree': 'ad47fe12a5b5d407b50b5969fd86c15bd828ddab',
  'rootPackageBlob': '3c44b8c73131ecb4c5048a0a0ed6a8863328aa32',
- 'runtimeReceiptSha256': '959f53b61f8049c5a16d8f3ed1d9b3d9c4927f940a2ce36521aff61704a725e0',
+ 'runtimeReceiptSha256': '73048f28fedeb2b0dc95621ea74bda690c051153b7b7a0b15dbc61c37ea5b8c9',
  'runtimeBundleSha256': 'ab9ab8e6ea120318b49f6a09898aa74fdf923e724313ac6561fdaa9d1e448a60',
- 'runtimeManifestSha256': '1e3e7eacf346f5fdb5d2f493b1e6c05ca03f78bf126c290d549d869b8c2fa079',
+ 'runtimeManifestSha256': '7124c01d7e97585edd2d52bd756ad572c38f1a1f583b76a99d9069ddfbfd8890',
  'originalInputSha256': 'ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7',
  'originalInputCanonicalSha256': '70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0',
  'artifactNames': ['sample24-final-srj',
                    'sample24-reviewed-runtime-proof',
                    'benchmark-result']}
-AUDITOR_MANIFEST_SHA = '407874665a5cda647334ea59f25d92469c1864cff437967f983ec45ccbe7d9c7'
-OVERLAY_MANIFEST_SHA = '034a5263be0cff39766f5ed6452735a2c071452b0c3ca75eafe14e2ec773667a'
+AUDITOR_MANIFEST_SHA = '7583ba608bd808e0ff26c0821eeba4e3a639bdd9a507da82c5e8badf3b4afc4d'
+OVERLAY_MANIFEST_SHA = '81688041cd562ef7b21dc0f6456e1632a4c51b2b40f62f2ec37a8692763f6e4f'
 SOLVER = 'AutoroutingPipelineSolver9_PreloadedTraceGraph'
 REQUIRED_ARGS = ['--pipeline', '9', '--dataset', '24', '--sample', '24', '--effort', '1',
                  '--concurrency', '1', '--threads', '1', '--sample-timeout', '7200s']

@@ -21,7 +21,7 @@ def read_one(root, name):
 def strings(value):
     if isinstance(value, str):
         return {value}
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         return set().union(*(strings(item) for item in value)) if value else set()
     if isinstance(value, dict):
         return strings(list(value.values()))
