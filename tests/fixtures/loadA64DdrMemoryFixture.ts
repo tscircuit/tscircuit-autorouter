@@ -62,10 +62,7 @@ export function loadA64DdrTopologyMemoryInput(): TopologyMergingSolverParams {
     gunzipSync(
       Uint8Array.from(
         readFileSync(
-          new URL(
-            "./assets/a64-ddr-topology-memory.json.gz",
-            import.meta.url,
-          ),
+          new URL("./assets/a64-ddr-topology-memory.json.gz", import.meta.url),
         ),
       ),
     ).toString(),
