@@ -3,7 +3,7 @@ import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolv
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { loadA64DdrRegionalMemoryParams } from "../fixtures/loadA64DdrMemoryFixture"
 
-test.failing(
+test(
   "A64 grow/shrink routing releases retired portfolios when debug capture is disabled",
   (): void => {
     const params = loadA64DdrRegionalMemoryParams()

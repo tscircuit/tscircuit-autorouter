@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { loadA64DdrHighDensityMemoryParams } from "../fixtures/loadA64DdrMemoryFixture"
 
-test.failing(
+test(
   "Pipeline9 keeps production regional routing free of search debug history",
   (): void => {
     const params = loadA64DdrHighDensityMemoryParams()
