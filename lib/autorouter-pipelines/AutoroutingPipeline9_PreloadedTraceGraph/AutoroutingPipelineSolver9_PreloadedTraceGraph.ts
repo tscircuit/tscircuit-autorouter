@@ -964,15 +964,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "busLayerRoutingSolver",
       BusLayerRoutingSolver,
-      (cms) => [{
-        srj: {
-          ...cms.srj,
-          connections: cms.srjWithPointPairs!.connections,
-          traces: cms.getUpdatedPreloadedTraces(),
+      (cms) => [
+        {
+          srj: {
+            ...cms.srj,
+            connections: cms.srjWithPointPairs!.connections,
+            traces: cms.getUpdatedPreloadedTraces(),
+          },
+          hdRoutes: cms.effortCleanupSolver!.getOutput(),
+          effort: cms.effort,
         },
-        hdRoutes: cms.effortCleanupSolver!.getOutput(),
-        effort: cms.effort,
-      }],
+      ],
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",

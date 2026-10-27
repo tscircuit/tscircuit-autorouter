@@ -24,7 +24,10 @@ type BusLayerRoutingInput = {
  * copper stay hard obstacles; generated routes may move to free a blocked exit.
  */
 export class BusLayerRoutingSolver extends BaseSolver {
-  private readonly allowedZByConnectionName = new Map<string, ReadonlySet<number>>()
+  private readonly allowedZByConnectionName = new Map<
+    string,
+    ReadonlySet<number>
+  >()
   private readonly configuredSearches = new WeakSet<FindClearancePathSolver>()
   private readonly negotiation?: NegotiateTraceClearanceSolver
   private output: HighDensityRoute[]
@@ -32,30 +35,43 @@ export class BusLayerRoutingSolver extends BaseSolver {
   constructor(private readonly input: BusLayerRoutingInput) {
     super()
     this.output = input.hdRoutes
-    const buses = input.srj.buses?.filter((bus) => bus.allowedLayers !== undefined)
+    const buses = input.srj.buses?.filter(
+      (bus) => bus.allowedLayers !== undefined,
+    )
     if (buses?.length) {
       const connMap = getConnectivityMapFromSimpleRouteJson(input.srj)
-      const netByConnectionName = getPipeline9NetByConnectionName(input.hdRoutes, connMap)
+      const netByConnectionName = getPipeline9NetByConnectionName(
+        input.hdRoutes,
+        connMap,
+      )
       const allowedByNet = new Map<string, Set<number>>()
       for (const bus of buses) {
         const busLayers = new Set(bus.allowedLayers)
         const allowed = new Set(
-          Array.from({ length: input.srj.layerCount }, (_, z): number => z)
-            .filter((z) => busLayers.has(mapZToLayerName(z, input.srj.layerCount))),
+          Array.from(
+            { length: input.srj.layerCount },
+            (_, z): number => z,
+          ).filter((z) =>
+            busLayers.has(mapZToLayerName(z, input.srj.layerCount)),
+          ),
         )
         for (const name of bus.connectionNames) {
           const net = connMap.getNetConnectedToId(name)
           if (net === undefined) continue
           const previous = allowedByNet.get(net)
-          allowedByNet.set(net, previous
-            ? new Set([...previous].filter((z) => allowed.has(z)))
-            : new Set(allowed))
+          allowedByNet.set(
+            net,
+            previous
+              ? new Set([...previous].filter((z) => allowed.has(z)))
+              : new Set(allowed),
+          )
         }
       }
       for (const route of input.hdRoutes) {
         const net = netByConnectionName.get(route.connectionName)
         const allowed = net === undefined ? undefined : allowedByNet.get(net)
-        if (allowed !== undefined) this.allowedZByConnectionName.set(route.connectionName, allowed)
+        if (allowed !== undefined)
+          this.allowedZByConnectionName.set(route.connectionName, allowed)
       }
     }
 
@@ -76,12 +92,15 @@ export class BusLayerRoutingSolver extends BaseSolver {
 
     const effort = input.effort ?? 1
     this.negotiation = new NegotiateTraceClearanceSolver({
-      srj: input.srj as ConstructorParameters<typeof NegotiateTraceClearanceSolver>[0]["srj"],
+      srj: input.srj as ConstructorParameters<
+        typeof NegotiateTraceClearanceSolver
+      >[0]["srj"],
       routes: input.hdRoutes,
       bounds: input.srj.bounds,
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
-        pointIndex === 0 || pointIndex === input.hdRoutes[routeIndex]!.route.length - 1,
+        pointIndex === 0 ||
+        pointIndex === input.hdRoutes[routeIndex]!.route.length - 1,
       allowLayerChanges: true,
       traceClearance: input.srj.minTraceToPadEdgeClearance ?? 0.1,
       viaClearance: input.srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1,
@@ -111,7 +130,10 @@ export class BusLayerRoutingSolver extends BaseSolver {
     // Negotiation exposes each path search before its first step. Add the
     // connection's layer rule to its existing congestion cost, including when
     // an initially legal blocker is ripped up and searched again.
-    if (search instanceof FindClearancePathSolver && !this.configuredSearches.has(search)) {
+    if (
+      search instanceof FindClearancePathSolver &&
+      !this.configuredSearches.has(search)
+    ) {
       const route = search.input.routes[search.input.routeIndex]!
       const allowed = this.allowedZByConnectionName.get(route.connectionName)
       const congestionCost = search.input.getAdditionalEdgeCost!
@@ -124,7 +146,10 @@ export class BusLayerRoutingSolver extends BaseSolver {
     negotiation.step()
     this.progress = negotiation.progress
     Object.assign(this.stats, negotiation.stats)
-    this.MAX_ITERATIONS = Math.max(this.MAX_ITERATIONS, negotiation.MAX_ITERATIONS + 1)
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      negotiation.MAX_ITERATIONS + 1,
+    )
     if (negotiation.failed) {
       this.failed = true
       this.error = negotiation.error
@@ -141,14 +166,17 @@ export class BusLayerRoutingSolver extends BaseSolver {
       this.output = candidate.routes
       this.stats.accepted = true
     }
-    this.stats.busLayerViolationsAfter = this.getViolatingRouteIndices(this.output).length
+    this.stats.busLayerViolationsAfter = this.getViolatingRouteIndices(
+      this.output,
+    ).length
     this.stats.candidateBusLayerViolations = remaining
     this.solved = true
     this.progress = 1
   }
 
   getOutput(): HighDensityRoute[] {
-    if (!this.solved) throw new Error("Bus layer routing output requested before completion")
+    if (!this.solved)
+      throw new Error("Bus layer routing output requested before completion")
     return this.output
   }
 
@@ -161,7 +189,10 @@ export class BusLayerRoutingSolver extends BaseSolver {
           type: "pcb_trace" as const,
           pcb_trace_id: `bus-route-${index}`,
           connection_name: route.rootConnectionName ?? route.connectionName,
-          route: convertHdRouteToSimplifiedRoute(route, this.input.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(
+            route,
+            this.input.srj.layerCount,
+          ),
         })),
       ],
     })

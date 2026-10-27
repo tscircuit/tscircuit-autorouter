@@ -7,7 +7,11 @@ test("bus layer routing reports an exhausted search without throwing or publishi
   const srj = createBusLayerInput()
   const routes = [createBusLayerHdRoute()]
   const original = structuredClone(routes)
-  const solver = new BusLayerRoutingSolver({ srj, hdRoutes: routes, effort: 0.000001 })
+  const solver = new BusLayerRoutingSolver({
+    srj,
+    hdRoutes: routes,
+    effort: 0.000001,
+  })
   expect(() => solver.solve()).not.toThrow()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
