@@ -1,0 +1,64 @@
+Whole-board obstacle-event visibility experiment (PR 3202)
+
+Select GeometryAutoroutingPipelineSolver explicitly. Pipeline 9 and the preserved
+KrtAutoroutingPipelineSolver are separate comparators; running Pipeline 9 does
+not exercise this experiment. Implementation: lib/testing/GeometryAutoroutingPipelineSolver.ts.
+
+The engine removes capacity meshes, boundary port assignments, per-cell routing,
+stitching, and post-route repair. It routes exact terminal branches on the whole
+board using A* over lazily exposed obstacle events. Its candidate coordinates
+come from inflated obstacle corners, pad escape events, capsule endpoints, and
+original terminals. It never allocates a board-sized raster. Flatbush supplies
+only collision candidates; exact segment/rotated-rectangle or segment/capsule
+distances decide clearance. Circular shapes use their enclosing circle and other
+nonrectangular pad types conservatively use their bounding rectangle. Through
+vias check all real board layers and the original pad/drill dimensions. Same-net
+copper is reusable; distinct same-net drills retain their spacing constraint.
+Existing same-net through-via centers are explicit candidates and changing layer
+through them carries no new-via cost. This preserves their identity and avoids
+creating extra drill holes near an already usable through via.
+
+When existing copper seals an unrouted branch, an explicit bounded order search
+moves the branch before a blocking routed owner, rolls back that suffix, and
+replays it. It records orders, replayed work and the last blocking-owner witness.
+Unexpected errors and physical qualification errors throw. Exhaustion is a failed
+solve, never a claimed partial solution or an automatic switch to Pipeline 9.
+Finite candidate exhaustion is not a proof that the continuous board is unroutable.
+
+Defaults: effort=1, viaCost=1 mm-equivalent, maxSearchNodes=20000 per branch,
+maxGeometryQueries=300000 per branch, at most 32 conflict-order transactions.
+Effort scales all three search budgets. Coordinate state identity rounds to 1e-7
+mm; collision decisions use unrounded coordinates. This finite graph and its
+state dominance rules do not provide continuous completeness or optimality.
+
+The engine uses the existing KRT adapter's branch preparation and original-input
+qualifier, without calling Rust or WASM. Unsupported features fail explicitly:
+preloaded traces, blind/buried vias, via-in-pad permission, jumpers, differential
+pairs/buses, typed pad/plated-hole rules, off-board connectivity and terminal-via
+hints. Original connection identities, terminals, requested widths, outline and
+rules remain the qualification inputs. Geometry creates arbitrary-angle segments;
+angle quality, wirelength and vias must be reported, not hidden in completion.
+
+Activation: solver.stats.backend is lazy-obstacle-visibility-v1;
+pipeline9StagesExecuted must be zero. geometryQueries/searchExpansions/
+obstacleEvents/noRouteStates/conflictReorders/replayedBranches measure all work.
+routedBranches and throughVias count successful branch-attempt work, including
+rolled-back work. acceptedBranches and acceptedThroughVias count final qualified
+output. acceptedUniqueThroughVias counts distinct physical positions and
+reusedViaTransitions records successful attempt transitions through existing vias.
+Output getters reject unsolved states. Stage timing is exposed under
+geometryVisibilitySolver, with start/end and cumulative elapsed phase time.
+
+Local reproduction:
+  source /workspace/.tools/autorouter-env.sh
+  bun test tests/solvers/geometry-visibility tests/solvers/krt --timeout 9999999
+  bun experiments/geometry-router/screen.ts 24 26
+  bun experiments/geometry-router/screen.ts 18 1
+
+The screen script is functional validation, not a controlled speed benchmark.
+Official comparison must match origin/main 637b6c581128238f6c61227a1c15be423d24baca,
+Pipeline 9 versus this explicitly selected class, identical frozen SRJ18 and
+SRJ24 inputs, effort, CPU, timeout, DRC checks and iteration/work accounting.
+Compare complete and physically qualified boards first; retain failed/time-out
+rows and route quality. Count preparation, search, rollback, qualification and
+all output conversion time. The old KRT selection may be an additional comparator.

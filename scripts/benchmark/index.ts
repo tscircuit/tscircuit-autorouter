@@ -919,6 +919,9 @@ const loadSolverNames = async (
   if (!uniqueSolverNames.includes("KrtAutoroutingPipelineSolver")) {
     uniqueSolverNames.push("KrtAutoroutingPipelineSolver")
   }
+  if (!uniqueSolverNames.includes("GeometryAutoroutingPipelineSolver")) {
+    uniqueSolverNames.push("GeometryAutoroutingPipelineSolver")
+  }
 
   if (!excludeAssignable) {
     return uniqueSolverNames

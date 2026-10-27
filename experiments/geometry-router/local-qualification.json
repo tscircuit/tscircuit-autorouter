@@ -1,0 +1,123 @@
+{
+  "purpose": "Local functional qualification; concurrent host load makes these times unsuitable for speed comparisons",
+  "mechanism": "GeometryAutoroutingPipelineSolver lazy-obstacle-visibility-v1 with explicit same-net through-via reuse",
+  "selection": "lib/testing/GeometryAutoroutingPipelineSolver.ts#GeometryAutoroutingPipelineSolver",
+  "options": {
+    "effort": 1,
+    "maxSearchNodes": 20000,
+    "maxGeometryQueries": 300000,
+    "viaCost": 1,
+    "maxConflictReorders": 32
+  },
+  "focusedTests": {
+    "passed": 19,
+    "failed": 0,
+    "assertions": 966
+  },
+  "typecheck": "passed",
+  "rows": [
+    {
+      "dataset": "24",
+      "sample": "16",
+      "solved": true,
+      "failed": false,
+      "ms": 1652.331961,
+      "stats": {
+        "backend": "lazy-obstacle-visibility-v1",
+        "geometryQueries": 40205,
+        "searchExpansions": 963,
+        "obstacleEvents": 3191,
+        "routedBranches": 34,
+        "throughVias": 16,
+        "reusedViaTransitions": 4,
+        "pipeline9StagesExecuted": 0,
+        "conflictReorders": 0,
+        "replayedBranches": 0,
+        "noRouteStates": 0,
+        "branchCount": 34,
+        "acceptedAgainstOriginalInput": true,
+        "acceptedBranches": 34,
+        "acceptedThroughVias": 16,
+        "acceptedUniqueThroughVias": 12
+      },
+      "traceCount": 34,
+      "inputSha256": "37d666104e74909c161e88a229f128e5c7bc97f6a010dfd53c0d891f04a3bda1"
+    },
+    {
+      "dataset": "24",
+      "sample": "25",
+      "solved": true,
+      "failed": false,
+      "ms": 183.530807,
+      "stats": {
+        "backend": "lazy-obstacle-visibility-v1",
+        "geometryQueries": 8843,
+        "searchExpansions": 313,
+        "obstacleEvents": 578,
+        "routedBranches": 57,
+        "throughVias": 20,
+        "reusedViaTransitions": 1,
+        "pipeline9StagesExecuted": 0,
+        "conflictReorders": 0,
+        "replayedBranches": 0,
+        "noRouteStates": 0,
+        "branchCount": 57,
+        "acceptedAgainstOriginalInput": true,
+        "acceptedBranches": 57,
+        "acceptedThroughVias": 20,
+        "acceptedUniqueThroughVias": 19
+      },
+      "traceCount": 57,
+      "inputSha256": "5722685c52be9417ff4d963430e4623f55f7a0a523031aa77bc388ead8479e4a"
+    },
+    {
+      "dataset": "24",
+      "sample": "26",
+      "solved": true,
+      "failed": false,
+      "ms": 629.999075,
+      "stats": {
+        "backend": "lazy-obstacle-visibility-v1",
+        "geometryQueries": 73117,
+        "searchExpansions": 1765,
+        "obstacleEvents": 6079,
+        "routedBranches": 75,
+        "throughVias": 46,
+        "reusedViaTransitions": 0,
+        "pipeline9StagesExecuted": 0,
+        "conflictReorders": 0,
+        "replayedBranches": 0,
+        "noRouteStates": 0,
+        "branchCount": 75,
+        "acceptedAgainstOriginalInput": true,
+        "acceptedBranches": 75,
+        "acceptedThroughVias": 46,
+        "acceptedUniqueThroughVias": 46
+      },
+      "traceCount": 75,
+      "inputSha256": "4fcd2ece603d1c69b44d8adb22850f3c239d781a5471f90b50af83a67f699279"
+    }
+  ],
+  "broaderFailure": {
+    "dataset": "18",
+    "sample": 4,
+    "status": "bounded candidate/order search exhausted",
+    "branchCount": 163,
+    "retainedBranches": 73,
+    "successfulBranchAttempts": 119,
+    "conflictReorders": 32,
+    "noRouteStates": 33,
+    "lastConnection": "source_net_2",
+    "lastBranch": "krt_branch_76",
+    "lastSearchExpansions": 3256,
+    "lastGeometryQueries": 261907,
+    "lastQueryBudgetExhausted": false,
+    "claimedSolved": false
+  },
+  "limitations": [
+    "Small-board qualification does not establish broad completion or a speed win",
+    "SRJ18/4 still exhausts planned search; no geometric infeasibility proof is claimed",
+    "Physical output contains arbitrary-angle segments; quality must be measured separately",
+    "Unsupported-feature gate is preserved; no automatic switch to another router"
+  ]
+}

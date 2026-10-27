@@ -5,6 +5,7 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
+import { GeometryAutoroutingPipelineSolver } from "../../lib/testing/GeometryAutoroutingPipelineSolver"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
 import type {
   SimpleRouteJson,
@@ -128,6 +129,9 @@ export const getBenchmarkSolverOptions = (
 }
 
 const getSolverConstructor = (solverName: string): SolverConstructor => {
+  if (solverName === "GeometryAutoroutingPipelineSolver") {
+    return GeometryAutoroutingPipelineSolver
+  }
   if (solverName === "KrtAutoroutingPipelineSolver") {
     return KrtAutoroutingPipelineSolver
   }
