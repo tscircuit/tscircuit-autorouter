@@ -1,3 +1,4 @@
+import Flatbush from "flatbush"
 import { clamp, pointToBoxDistance, pointToSegmentDistance, segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -10,7 +11,7 @@ import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { isOpaqueUnownedObstacle } from "lib/utils/isOpaqueUnownedObstacle"
 import { getPipeline9RouteCopperGeometry } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import { queryMandatoryPortPointIndex, type MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
-import { areCopperRoutesOnSameNet as sameElectricalNet } from "./completedCopperWorldIndex"
+import { areRoutesClearOfCompletedCopper, queryCompletedCopperWorldIndex, type RoutedPeerWorldIndex, areCopperRoutesOnSameNet as sameElectricalNet } from "./completedCopperWorldIndex"
 
 type Point = { x: number; y: number }
 export type SingleTransitionBoardContext = {
@@ -26,6 +27,7 @@ export type SingleTransitionBoardContext = {
   /** Complete planar copper that a new through barrel and wire legs must clear. */
   planarRoutes?: readonly HighDensityIntraNodeRoute[]
   routedPeerRoutes?: readonly HighDensityIntraNodeRoute[]
+  routedPeerWorldIndex?: RoutedPeerWorldIndex
   mandatoryPortPoints?: readonly PortPoint[]
   /** All cohort endpoints in WORLD coordinates, also during grow/shrink. */
   mandatoryPortPointIndex?: MandatoryPortPointIndex
@@ -162,7 +164,8 @@ export const areSingleTransitionPlanarRoutesClear = (params: {
       }
     }
   }
-  return true
+  return !context.routedPeerWorldIndex || areRoutesClearOfCompletedCopper({ routes,
+    routedPeerWorldIndex: context.routedPeerWorldIndex, connMap: context.connMap, center, coordinateScale: scale })
 }
 
 const toLocal = (point: Point, prepared: PreparedObstacle): Point => {
@@ -235,6 +238,19 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
         viaMargin: params.viaDiameter / 2 + (opaque ? 0 : context.viaToPadClearance),
         traceMargin: params.traceThickness / 2 + (opaque ? 0 : traceClearance) }
     })
+  // Broad phase only: every exact blocker remains in original input order.
+  const obstacleIndex = foreign.length ? new Flatbush(foreign.length) : undefined
+  for (const prepared of foreign) {
+    const { obstacle, cosine, sine } = prepared
+    const rx = obstacle.shape === "circle" ? obstacle.width / 2 :
+      (Math.abs(cosine) * obstacle.width + Math.abs(sine) * obstacle.height) / 2
+    const ry = obstacle.shape === "circle" ? obstacle.width / 2 :
+      (Math.abs(sine) * obstacle.width + Math.abs(cosine) * obstacle.height) / 2
+    const margin = Math.max(0, prepared.viaMargin, prepared.traceMargin)
+    obstacleIndex!.add(obstacle.center.x - rx - margin, obstacle.center.y - ry - margin,
+      obstacle.center.x + rx + margin, obstacle.center.y + ry + margin)
+  }
+  obstacleIndex?.finish()
   const minZ = context.allowBlindAndBuriedVias ? Math.min(params.start.z!, params.end.z!) : 0
   const maxZ = context.allowBlindAndBuriedVias ? Math.max(params.start.z!, params.end.z!) : context.layerCount - 1
   const viaRadius = params.viaDiameter / 2, traceRadius = params.traceThickness / 2
@@ -277,7 +293,11 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   }
   const blockers = (via: Point): PreparedObstacle[] => {
     const result: PreparedObstacle[] = []
-    for (const prepared of foreign) {
+    const ids = obstacleIndex?.search(Math.min(start.x, end.x, via.x), Math.min(start.y, end.y, via.y),
+      Math.max(start.x, end.x, via.x), Math.max(start.y, end.y, via.y)) ?? []
+    ids.sort((a, b) => a - b)
+    for (const id of ids) {
+      const prepared = foreign[id]!
       const blockedVia = prepared.layers.some((z) => z >= minZ && z <= maxZ) && obstacleDistance(via, via, prepared) + EPSILON < prepared.viaMargin
       const blockedStartWire = prepared.layers.includes(params.start.z!) && obstacleDistance(start, via, prepared) + EPSILON < prepared.traceMargin
       const blockedEndWire = prepared.layers.includes(params.end.z!) && obstacleDistance(end, via, prepared) + EPSILON < prepared.traceMargin
@@ -307,6 +327,12 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
     }
     for (const point of terminals) if (!terminalClear(via, point)) return false
     for (const point of indexedTerminals(via)) if (!terminalClear(via, point)) return false
+    if (context.routedPeerWorldIndex && !areRoutesClearOfCompletedCopper({
+      routes: [{ ...identity, traceThickness: params.traceThickness, viaDiameter: params.viaDiameter,
+        vias: [via], route: [{ ...start, z: params.start.z }, { ...via, z: params.start.z },
+          { ...via, z: params.end.z }, { ...end, z: params.end.z }] }],
+      routedPeerWorldIndex: context.routedPeerWorldIndex, connMap: context.connMap,
+    })) return false
     return true
   }
   const blocked = blockers(nominal)
@@ -331,6 +357,24 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       const world = { x: obstacle.center.x + point.x * prepared.cosine - point.y * prepared.sine,
         y: obstacle.center.y + point.x * prepared.sine + point.y * prepared.cosine }
       candidates.set(`${world.x},${world.y}`, world)
+    }
+  }
+  if (context.routedPeerWorldIndex) {
+    // Ledger features are already WORLD copper, including geometry along
+    // either proposed leg outside the original cell. Never unscale them again.
+    const points = [nominal, start, end, ...candidates.values()]
+    const traceClearance = Math.max(context.traceToPadClearance, context.routedPeerWorldIndex.traceClearance)
+    const margin = Math.max(viaRadius + Math.max(.1, traceClearance), traceRadius + traceClearance,
+      (context.viaHoleDiameter ?? params.viaDiameter) / 2 + context.routedPeerWorldIndex.minViaHoleEdgeToViaHoleEdgeClearance)
+    const bounds = { minX: Math.min(...points.map((p) => p.x)) - margin,
+      maxX: Math.max(...points.map((p) => p.x)) + margin,
+      minY: Math.min(...points.map((p) => p.y)) - margin,
+      maxY: Math.max(...points.map((p) => p.y)) + margin }
+    for (const feature of queryCompletedCopperWorldIndex(context.routedPeerWorldIndex, bounds)) {
+      if (sameElectricalNet(identity, feature.route, context.connMap)) continue
+      if (feature.kind === "wire") peers.push({ start: feature.start, end: feature.end, z: feature.z, radius: feature.width / 2 })
+      else peerVias.push({ center: feature.center, minZ: feature.minZ, maxZ: feature.maxZ,
+        radius: feature.diameter / 2, holeRadius: feature.holeDiameter / 2 })
     }
   }
   for (const peer of peers) {

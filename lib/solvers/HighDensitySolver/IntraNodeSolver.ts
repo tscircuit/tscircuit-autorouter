@@ -447,6 +447,20 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return true
   }
 
+  private reservePhysicalSearchIterations(childIterations = 0): void {
+    if (!this.physicalContext || !this.routingBounds) return
+    const pendingQueueSteps = this.unsolvedConnections.reduce(
+      (sum, connection) => sum + Math.max(1, connection.points.length),
+      0,
+    )
+    // Each child step is also a parent step. Keep the child's declared
+    // allowance plus the finite pending queue and completion bookkeeping.
+    this.MAX_ITERATIONS = Math.max(
+      this.MAX_ITERATIONS,
+      this.iterations + childIterations + pendingQueueSteps + 2,
+    )
+  }
+
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -492,6 +506,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
             viaTraceConflict.route.connectionName,
           )
         ) {
+          this.reservePhysicalSearchIterations()
           this.progress = this.computeProgress()
           return
         }
@@ -505,6 +520,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
     if (unsolvedConnection.points.length > 2) {
       if (this.queueExtraBranchesForMultiPointConnection(unsolvedConnection)) {
+        this.reservePhysicalSearchIterations()
         return
       }
     }
@@ -529,6 +545,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
         this.getSingleRouteSolverOpts(unsolvedConnection),
       )
+    this.reservePhysicalSearchIterations(this.activeSubSolver.MAX_ITERATIONS)
   }
 
   visualize(): GraphicsObject {

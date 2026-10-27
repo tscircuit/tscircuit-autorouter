@@ -63,6 +63,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
     routedPeerWorldIndex?: RoutedPeerWorldIndex
+    nativeGridOnly?: boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -136,6 +137,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
       routedPeerWorldIndex?: RoutedPeerWorldIndex
+      nativeGridOnly?: boolean
     },
   ) {
     super()
@@ -205,7 +207,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
-    return [
+    const groups = [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -220,6 +222,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["highDensityA03"],
       ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
     ]
+    if (!this.constructorParams.nativeGridOnly) return groups
+    const nativeGroups = new Set(["majorCombinations", "noVias", "orderings50", "flipTraceAlignmentDirection"])
+    return groups.filter(([name]) => nativeGroups.has(name!))
   }
 
   getHyperParameterDefs() {
@@ -493,6 +498,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (this.adaptiveSearchExpanded) return
 
     this.adaptiveSearchExpanded = true
+    if (this.constructorParams.nativeGridOnly) return
     for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
       this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
@@ -566,6 +572,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
               : candidate.MAX_ITERATIONS,
           )
         }
+        if (this.constructorParams.nativeGridOnly) this.refreshDynamicIterationLimit()
       }
     }
     if (

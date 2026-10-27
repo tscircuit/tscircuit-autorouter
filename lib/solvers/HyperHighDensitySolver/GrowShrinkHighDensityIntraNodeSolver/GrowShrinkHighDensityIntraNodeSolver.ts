@@ -207,11 +207,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-    // Only the physical grid consumes enlarged world bounds. The original
-    // portfolio has already tried the unchanged ports and geometric proposals.
-    const Solver = this.physicalWorldBounds && this.scaleFactor > 1 ? IntraNodeRouteSolver : PortfolioSingleIntraNodeSolver
+    // Enlarged physical domains still need the portfolio's existing task
+    // order and priority policies; a single fixed order can trap later tasks.
+    const Solver = PortfolioSingleIntraNodeSolver
     this.activeSubSolver = new Solver({
       ...portfolioParams,
+      nativeGridOnly: this.physicalWorldBounds && this.scaleFactor > 1 ? true : portfolioParams.nativeGridOnly,
       priorityCoordinateScale: this.physicalWorldBounds ? 1 :
         (portfolioParams.priorityCoordinateScale ?? 1) * this.scaleFactor,
       routingBounds: this.physicalWorldBounds ? {
