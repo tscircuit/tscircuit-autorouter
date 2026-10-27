@@ -130,9 +130,10 @@ const summary = {
   statusChanges: rows.filter((row) => row.threaded.solved !== row.serial.solved || row.threaded.failed !== row.serial.failed).length,
   serialTotalMs, threadedTotalMs, speedup: serialTotalMs / threadedTotalMs,
   targetSpeedup: 2, targetThreadedTotalMs: serialTotalMs / 2,
-  phaseTargetMet: serialTotalMs / threadedTotalMs >= 2 && rows.every((row) => row.threaded.solved && !row.threaded.failed && row.threaded.solved === row.serial.solved && row.threaded.failed === row.serial.failed),
+  phaseTargetMet: serialTotalMs / threadedTotalMs >= 2 && rows.every((row) => row.threaded.solved && !row.threaded.failed && row.threaded.solved === row.serial.solved && row.threaded.failed === row.serial.failed && row.threaded.hash === row.serial.hash && row.threaded.iterations === row.serial.iterations),
   qualityValidation: "Full-pipeline DRC validation requires the dataset benchmark",
   identicalOutputs: rows.filter((row) => row.serial.hash === row.threaded.hash).length,
+  identicalIterations: rows.filter((row) => row.serial.iterations === row.threaded.iterations).length,
   serialP50Ms: percentile(serialMs, 0.5), threadedP50Ms: percentile(threadedMs, 0.5),
   serialP95Ms: percentile(serialMs, 0.95), threadedP95Ms: percentile(threadedMs, 0.95),
   bunVersion: Bun.version,
@@ -140,4 +141,4 @@ const summary = {
 console.log(JSON.stringify({ summary }))
 if (readArg("--out")) await writeFile(readArg("--out")!, JSON.stringify({ summary, rows }, null, 2))
 
-if (summary.statusChanges > 0 || summary.completed !== rows.length) process.exitCode = 1
+if (summary.statusChanges > 0 || summary.completed !== rows.length || summary.identicalOutputs !== rows.length || summary.identicalIterations !== rows.length) process.exitCode = 1
