@@ -99,6 +99,7 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  allowBlindAndBuriedVias?: boolean
   createPortReservations?: (model: PortReservationModel) => Int32Array
   flags: {
     FORCE_CENTER_FIRST: boolean

@@ -557,6 +557,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias ?? false,
             createPortReservations: (model) => createPortReservationNetIds({
               ...model, context: portReservationContext,
             }),
