@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "7afea819030d521a80f1357b2527299cb2faa515",
+  "rootSource": "f47ccb1c0cd4b51f357f002d8c66eb39b174bf4f",
   "rootLibTree": "416dd7809310919cb77e0dce488189eb0bdaab11",
-  "rootPackageBlob": "327eeecbab617b0de3d3631d85ceed28df54192a",
-  "localRuntimeReceiptSha256": "06ef3e90fcb5f3a1bfb91dc287eefbdb5690abd608787f3d83fab6f158516779",
+  "rootPackageBlob": "6ae64b6db2e5a4fe7b548e960c818f8f5d987d8d",
+  "localRuntimeReceiptSha256": "10db144dc1ca566bae470b54e793e4b548ca9314f737944bad796b951e58f37c",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "78f53c77e44a028608c3a85cf3091557af017fa0",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#78f53c77e44a028608c3a85cf3091557af017fa0",
+      "revision": "7de5f77125cf472755910f09d58215b63f6175a8",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#7de5f77125cf472755910f09d58215b63f6175a8",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -237,9 +237,9 @@
         },
         {
           "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "gitBlobSha1": "49e28705762dc0129f93a319fe73d62440f01f5e",
-          "sha256": "b1b9ecc6faaa80b4097fa16df5fec3075682f1608fe30aadcc5701808f5911c6",
-          "bytes": 34689
+          "gitBlobSha1": "b1549f65fc593a11438df372450697d5fc61dd7c",
+          "sha256": "c44e0d9bb93b1d358c548374ad861e76c4011c7e0f5c0e54630b8fbaf40c24d5",
+          "bytes": 35064
         },
         {
           "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
@@ -1378,5 +1378,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "6f5289e793e4e0f1d221fefefc83ee3214bc955698912b71bd0df035050a2b60"
+  "bundleSha256": "848399b3ffd0f8226560a55570f2a909203f1fd231bbddb42c9add51250028ca"
 }
