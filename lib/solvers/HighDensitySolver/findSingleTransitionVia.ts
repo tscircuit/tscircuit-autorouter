@@ -2,7 +2,7 @@ import { clamp, pointToBoxDistance, pointToSegmentDistance, segmentToBoxMinDista
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
-import type { PortPoint } from "lib/types/high-density-types"
+import type { HighDensityIntraNodeRoute, PortPoint } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
@@ -20,6 +20,8 @@ export type SingleTransitionBoardContext = {
   traceToHoleClearance?: number
   boardGeometry?: HighDensityBoardGeometry
   coordinateScale: number
+  /** Complete planar copper that a new through barrel and wire legs must clear. */
+  planarRoutes?: readonly HighDensityIntraNodeRoute[]
 }
 type Input = {
   nominal: Point
@@ -33,6 +35,75 @@ type Input = {
 }
 type PreparedObstacle = { obstacle: Obstacle; layers: number[]; cosine: number; sine: number; viaMargin: number; traceMargin: number }
 const EPSILON = 1e-9
+
+const sameElectricalNet = (a: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">,
+  b: Pick<HighDensityIntraNodeRoute, "connectionName" | "rootConnectionName">, connMap?: ConnectivityMap): boolean => {
+  const canonical = new Set(Object.keys(connMap?.netMap ?? {}))
+  const owner = (route: typeof a): string => {
+    if (route.rootConnectionName !== undefined && canonical.has(route.rootConnectionName)) {
+      return JSON.stringify(["registered", route.rootConnectionName])
+    }
+    if (canonical.has(route.connectionName)) return JSON.stringify(["registered", route.connectionName])
+    const registered = connMap?.getNetConnectedToId(route.connectionName)
+    if (registered !== undefined) return JSON.stringify(["registered", registered])
+    const root = route.rootConnectionName ?? route.connectionName
+    const net = canonical.has(root) ? root : connMap?.getNetConnectedToId(root)
+    return JSON.stringify(net === undefined ? ["literal", root] : ["registered", net])
+  }
+  return owner(a) === owner(b)
+}
+
+/** Certifies the fixed planar part before using it as a peer obstacle. */
+export const areSingleTransitionPlanarRoutesClear = (params: {
+  routes: readonly HighDensityIntraNodeRoute[]
+  context: SingleTransitionBoardContext
+  center: Point
+}): boolean => {
+  const { routes, context, center } = params
+  const scale = context.coordinateScale
+  if (!Number.isFinite(scale) || scale <= 0) throw new Error("Invalid transition coordinate scale")
+  const world = (p: Point): Point => ({ x: center.x + (p.x - center.x) / scale, y: center.y + (p.y - center.y) / scale })
+  for (let i = 0; i < routes.length; i++) {
+    const route = routes[i]!, radius = route.traceThickness / 2
+    if (route.vias.length > 0) return false
+    for (let j = 1; j < route.route.length; j++) {
+      const start = route.route[j - 1]!, end = route.route[j]!
+      if (start.z !== end.z) return false
+      const a = world(start), b = world(end), board = context.boardGeometry
+      if (board) {
+        const margin = radius + (board.minBoardEdgeClearance ?? 0)
+        if ([a, b].some((p) => p.x < board.bounds.minX + margin - EPSILON || p.x > board.bounds.maxX - margin + EPSILON ||
+          p.y < board.bounds.minY + margin - EPSILON || p.y > board.bounds.maxY - margin + EPSILON)) return false
+        if (board.outline?.length) {
+          if (![a, b].every((p) => isPointInOrOnPolygon(p, board.outline!))) return false
+          for (let k = 0; k < board.outline.length; k++) {
+            if (minimumDistanceBetweenSegments(a, b, board.outline[k]!, board.outline[(k + 1) % board.outline.length]!) + EPSILON < margin) return false
+          }
+        }
+      }
+      for (const obstacle of context.obstacles) {
+        if (isObstacleConnectedToRoute(obstacle, route, context.connMap)) continue
+        const layers = obstacle.zLayers ?? obstacle.__zLayers ?? obstacle.layers.map((layer) => mapLayerNameToZ(layer, context.layerCount))
+        if (!layers.includes(start.z)) continue
+        const angle = (obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
+        const clearance = isOpaqueUnownedObstacle(obstacle) ? 0 : obstacle.isNonPlatedHole
+          ? context.traceToHoleClearance ?? context.traceToPadClearance : context.traceToPadClearance
+        const prepared = { obstacle, layers, cosine: Math.cos(angle), sine: Math.sin(angle), viaMargin: 0, traceMargin: radius + clearance }
+        if (obstacleDistance(a, b, prepared) + EPSILON < prepared.traceMargin) return false
+      }
+      for (let k = 0; k < i; k++) {
+        const peer = routes[k]!
+        if (sameElectricalNet(route, peer, context.connMap)) continue
+        for (let l = 1; l < peer.route.length; l++) {
+          const c = peer.route[l - 1]!, d = peer.route[l]!
+          if (c.z !== start.z) continue
+          if (minimumDistanceBetweenSegments(a, b, world(c), world(d)) + EPSILON < radius + peer.traceThickness / 2 + context.traceToPadClearance) return false
+        }
+      }
+    }
+  }
+  return true
+}
 
 const toLocal = (point: Point, prepared: PreparedObstacle): Point => {
   const dx = point.x - prepared.obstacle.center.x
@@ -67,6 +138,12 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
   const start = toWorld(params.start), end = toWorld(params.end)
   const nominal = toWorld(params.nominal)
   const identity = { connectionName: params.connectionName, rootConnectionName: params.start.rootConnectionName ?? params.end.rootConnectionName }
+  const peers = (context.planarRoutes ?? []).filter((route) => !sameElectricalNet(identity, route, context.connMap))
+    .flatMap((route) => route.route.slice(1).map((end, index) => {
+      const start = route.route[index]!
+      if (start.z !== end.z || route.vias.length > 0) throw new Error("Transition peer must be planar copper")
+      return { start: toWorld(start), end: toWorld(end), z: start.z, radius: route.traceThickness / 2 }
+    }))
   const foreign: PreparedObstacle[] = context.obstacles
     .filter((obstacle) => !isObstacleConnectedToRoute(obstacle, identity, context.connMap))
     .map((obstacle) => {
@@ -118,8 +195,15 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
     }
     return result
   }
+  const peerClear = (via: Point): boolean => peers.every((peer) => {
+    if (peer.z >= minZ && peer.z <= maxZ && pointToSegmentDistance(via, peer.start, peer.end) + EPSILON < viaRadius + peer.radius + context.traceToPadClearance) return false
+    const wireMargin = traceRadius + peer.radius + context.traceToPadClearance
+    if (peer.z === params.start.z && minimumDistanceBetweenSegments(start, via, peer.start, peer.end) + EPSILON < wireMargin) return false
+    if (peer.z === params.end.z && minimumDistanceBetweenSegments(end, via, peer.start, peer.end) + EPSILON < wireMargin) return false
+    return true
+  })
   const blocked = blockers(nominal)
-  if (blocked.length === 0 && boardClear(nominal)) return params.nominal
+  if (blocked.length === 0 && boardClear(nominal) && peerClear(nominal)) return params.nominal
   const candidates = new Map<string, Point>()
   for (const prepared of blocked) {
     const obstacle = prepared.obstacle
@@ -142,7 +226,29 @@ export const findSingleTransitionVia = (params: Input): Point | undefined => {
       candidates.set(`${world.x},${world.y}`, world)
     }
   }
-  const legal = [...candidates.values()].filter((via) => boardClear(via) && blockers(via).length === 0)
+  for (const peer of peers) {
+    if (peer.z < minZ || peer.z > maxZ) continue
+    const dx = peer.end.x - peer.start.x, dy = peer.end.y - peer.start.y
+    const length = Math.hypot(dx, dy), ux = length > EPSILON ? dx / length : 1, uy = length > EPSILON ? dy / length : 0
+    const margin = viaRadius + peer.radius + context.traceToPadClearance + 1e-6
+    const points: Point[] = []
+    for (const query of [nominal, start, end]) {
+      const t = clamp((query.x - peer.start.x) * ux + (query.y - peer.start.y) * uy, 0, length)
+      const base = { x: peer.start.x + t * ux, y: peer.start.y + t * uy }
+      points.push({ x: base.x - uy * margin, y: base.y + ux * margin }, { x: base.x + uy * margin, y: base.y - ux * margin })
+    }
+    for (const endpoint of [peer.start, peer.end]) {
+      for (const direction of [{ x: ux, y: uy }, { x: -ux, y: -uy }, { x: -uy, y: ux }, { x: uy, y: -ux }]) {
+        points.push({ x: endpoint.x + direction.x * margin, y: endpoint.y + direction.y * margin })
+      }
+      for (const query of [nominal, start, end]) {
+        const qx = query.x - endpoint.x, qy = query.y - endpoint.y, distance = Math.hypot(qx, qy)
+        if (distance > EPSILON) points.push({ x: endpoint.x + qx / distance * margin, y: endpoint.y + qy / distance * margin })
+      }
+    }
+    for (const point of points) candidates.set(`${point.x},${point.y}`, point)
+  }
+  const legal = [...candidates.values()].filter((via) => boardClear(via) && blockers(via).length === 0 && peerClear(via))
     .map((via) => ({ via, length: Math.hypot(via.x - start.x, via.y - start.y) + Math.hypot(via.x - end.x, via.y - end.y) }))
   legal.sort((a, b) => a.length - b.length || a.via.x - b.via.x || a.via.y - b.via.y)
   const chosen = legal[0]?.via

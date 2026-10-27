@@ -18,6 +18,8 @@ import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHea
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
+import { SingleTransitionWithPlanarRoutesSolver } from "../HighDensitySolver/SingleTransitionWithPlanarRoutesSolver"
+import type { SingleTransitionBoardContext } from "../HighDensitySolver/findSingleTransitionVia"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
 import {
   precomputeIntraNodeRouteParams,
@@ -45,6 +47,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | TwoCrossingRoutesHighDensitySolver
   | SingleTransitionCrossingRouteSolver
   | SingleTransitionIntraNodeSolver
+  | SingleTransitionWithPlanarRoutesSolver
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
@@ -208,6 +211,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["orderings50"],
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
+      ["closedFormTransitionWithPlanarPeers"],
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
@@ -351,6 +355,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             CLOSED_FORM_SINGLE_TRANSITION: true,
           },
         ],
+      },
+      {
+        name: "closedFormTransitionWithPlanarPeers",
+        possibleValues: [{ CLOSED_FORM_TRANSITION_WITH_PLANAR_PEERS: true }],
       },
       {
         name: "multiHeadPolyLine",
@@ -587,6 +595,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return 1 - (solver.progress || 0)
   }
 
+  private getSingleTransitionBoardContext(): SingleTransitionBoardContext | undefined {
+    const params = this.constructorParams
+    if (params.layerCount === undefined) return undefined
+    return {
+      obstacles: params.obstacles ?? [], connMap: this.connMap, layerCount: params.layerCount,
+      allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
+      viaToPadClearance: params.viaToPadClearance ?? params.obstacleMargin ?? 0.15,
+      traceToPadClearance: params.traceToPadClearance ?? params.obstacleMargin ?? 0.15,
+      traceToHoleClearance: params.traceToHoleClearance ?? params.obstacleMargin ?? 0.15,
+      boardGeometry: params.boardGeometry, coordinateScale: params.priorityCoordinateScale ?? 1,
+    }
+  }
+
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
     // Each grow/shrink attempt owns a distinct node and portfolio. Keep this
     // shared data local so later attempts and caller edits are recomputed.
@@ -692,22 +713,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter,
       }) as any
     }
+    if (hyperParameters.CLOSED_FORM_TRANSITION_WITH_PLANAR_PEERS) {
+      return new SingleTransitionWithPlanarRoutesSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter,
+        traceThickness: this.constructorParams.traceWidth,
+        boardContext: this.getSingleTransitionBoardContext(),
+      }) as any
+    }
     if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
         traceThickness: this.constructorParams.traceWidth,
-        boardContext: this.constructorParams.layerCount === undefined ? undefined : {
-          obstacles: this.constructorParams.obstacles ?? [],
-          connMap: this.connMap,
-          layerCount: this.constructorParams.layerCount,
-          allowBlindAndBuriedVias: this.constructorParams.allowBlindAndBuriedVias,
-          viaToPadClearance: this.constructorParams.viaToPadClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
-          traceToPadClearance: this.constructorParams.traceToPadClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
-          traceToHoleClearance: this.constructorParams.traceToHoleClearance ?? this.constructorParams.obstacleMargin ?? 0.15,
-          boardGeometry: this.constructorParams.boardGeometry,
-          coordinateScale: this.constructorParams.priorityCoordinateScale ?? 1,
-        },
+        boardContext: this.getSingleTransitionBoardContext(),
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
