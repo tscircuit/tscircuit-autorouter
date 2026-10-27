@@ -139,8 +139,14 @@ def main():
     destination.mkdir(parents=True, exist_ok=False)
     (destination / "failed-hdr-diagnostic.json").write_text(json.dumps(output, indent=2) + "\n")
     print("[sample24-failed-hdr-tasks] " + json.dumps({"failedNode": node, "bounds": bounds,
-          "portPairCount": len(pairs), "matchingConnMapEntries": selected}, separators=(",", ":")))
-    print("[sample24-failed-hdr-diagnostic] " + json.dumps(output, separators=(",", ":")))
+          "portPairCount": len(pairs)}, separators=(",", ":")))
+    print("[sample24-failed-hdr-diagnostic] " + json.dumps(
+        {key: value for key, value in output.items() if key not in {"matchingConnMapEntries", "nearbyObstacles"}},
+        separators=(",", ":")))
+    for entry in selected:
+        print("[sample24-failed-hdr-conn-entry] " + json.dumps(entry, separators=(",", ":")))
+    for obstacle in nearby[:128]:
+        print("[sample24-failed-hdr-nearby-obstacle] " + json.dumps(obstacle, separators=(",", ":")))
 
 
 if __name__ == "__main__":
