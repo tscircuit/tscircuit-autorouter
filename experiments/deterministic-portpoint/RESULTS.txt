@@ -25,3 +25,7 @@ Build, full TypeScript check, eleven focused tests, and built Node package
 four-worker full-pipeline parity/cleanup pass. The PR discussion contains the
 separate full-dataset Blacksmith comparison, completion/DRC, and full-pipeline
 timings. The initial snapshot-batch results are superseded and remain in Git history.
+
+The implementation subsequently moved to tiny-hypergraph PR #297 without
+algorithm changes. The timings above and the linked Blacksmith comparison
+measure the implementation before extraction, not a new timing run.

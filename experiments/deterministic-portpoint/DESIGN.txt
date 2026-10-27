@@ -14,6 +14,18 @@ Single-layer crossings still receive the native infinite cost. Native handling
 remains responsible for route initialization, partial/outside-in searches,
 commits, rerips, and timeout acceptance.
 
+Package ownership
+-----------------
+
+The graph implementation and its isolated determinism tests live in
+tscircuit/tiny-hypergraph PR #297, pinned by the autorouter to commit
+ec80c91ccbf6529bfd9ae5b205c1d24c7f40bef1. This repository owns the
+pipeline adapter, runtime worker registrations, and integration tests.
+The tiny-hypergraph package exports PreparedPortPointRoutingSolver and
+RegionDistancePreparationSolver from lib/index.ts. Worker entrypoints import
+tiny-hypergraph/lib/prepared/RegionDistancePreparationSolver before listening.
+There is no local copy or dependency patch.
+
 SolverRuntime
 -------------
 
