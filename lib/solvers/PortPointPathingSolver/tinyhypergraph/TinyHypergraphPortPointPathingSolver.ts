@@ -1,5 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
+import { SnapshotBatchSolver } from "./snapshot/SnapshotBatchSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
@@ -919,6 +921,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useSnapshotBatchRouting = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -938,7 +941,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         )
       }
       solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        useSnapshotBatchRouting
+          ? SnapshotBatchSolver
+          : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -1051,6 +1056,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
+  private asyncRunning = false
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1137,6 +1143,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.flags.USE_SNAPSHOT_BATCH_ROUTING === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1446,6 +1453,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.flags.USE_SNAPSHOT_BATCH_ROUTING === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
@@ -1498,6 +1506,32 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             : this.tinyPipelineSolver.progress
     this.statsSnapshotDirty = true
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+  }
+
+  async solveAsync(runtime?: SolverRuntimeExecutor, stopAtIteration = Infinity): Promise<void> {
+    if (this.asyncRunning) throw new Error("Port-point solveAsync is already running")
+    this.asyncRunning = true
+    try {
+      while (!this.solved && !this.failed && this.iterations < stopAtIteration) {
+        const phase = this.tinyPipelineSolver.activeSubSolver
+        if (runtime && phase instanceof SnapshotBatchSolver) {
+          const previousIterations = phase.iterations
+          await phase.solveAsync(runtime, previousIterations + Math.max(0, stopAtIteration - this.iterations))
+          const terminal = phase.solved || phase.failed
+          const consumed = Math.max(0, phase.iterations - previousIterations - (terminal ? 1 : 0))
+          this.tinyPipelineSolver.iterations += consumed
+          this.iterations += consumed
+          if (this.iterations >= stopAtIteration) break
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = `Port-point asynchronous solve failed: ${error}`
+      throw error
+    } finally {
+      this.asyncRunning = false
+    }
   }
 
   private getStatsSnapshot(): Record<string, any> {

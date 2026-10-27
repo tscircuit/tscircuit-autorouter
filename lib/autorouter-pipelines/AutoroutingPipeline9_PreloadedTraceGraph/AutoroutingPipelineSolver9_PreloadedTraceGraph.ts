@@ -539,6 +539,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_SNAPSHOT_BATCH_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -1152,6 +1153,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {

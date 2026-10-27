@@ -1,0 +1,72 @@
+Deterministic snapshot routing through SolverRuntime
+
+Pipeline9 enables USE_SNAPSHOT_BATCH_ROUTING in its portPointPathingSolver.
+Other pipelines keep their existing solver unless they opt in. Both serial
+solve()/step() and solveAsync(runtime) execute the same revised algorithm.
+The flag requires the existing USE_SELECTIVE_RERIP_ROUTING option.
+
+Algorithm
+1. Take the first eight pending routes, independent of physical worker count.
+2. Freeze port ownership, region intersections, and congestion costs.
+3. Search each route against that snapshot with a private search workspace.
+4. Reconcile all proposals in original route order, never completion order.
+   Commit compatible proposals; defer stale conflicts to the next wave.
+5. Apply the existing selective blocker/rip-up logic to the first failed route.
+6. Update congestion and completed checkpoints using the existing solver logic.
+
+This changes serial semantics: routes within a wave see stale costs, deliberately.
+Serial execution searches all proposals before committing any. The coordinator
+alone mutates the committed state and performs floating-point aggregation.
+
+Each search has an effort-scaled 100,000-iteration budget. The original
+2,000,000-iteration budget becomes the threshold for accepting an existing
+completed checkpoint. Without one, the solver may continue to 8,000,000 proposal
+iterations, checked between waves, then fails explicitly. There is also a
+10,000-wave bound. No decision depends on wall time or worker count. Partial
+outside-in rerouting and greedy final-route optimization are disabled.
+
+SolverRuntime convention
+SnapshotRouteBatchSolver is registered with SolverRuntime and imported by both
+Bun and Node worker entrypoints. Pipeline9 delegates port-point work to its
+caller's existing pool, which is also used by downstream routing stages. The
+algorithm does not create or dispose a pool or implement a Worker protocol.
+
+Every task includes all inputs needed to run on any worker. SolverRuntime does
+not provide worker affinity, so each execution isolate has a bounded one-entry
+cache of static graph/search state. A random graph ID identifies that cache;
+it has no influence on route order, costs, or output. Every new wave supplies
+the complete occupancy snapshot; initial assignments remain in the coordinator.
+
+Static adjacency is packed as numeric offsets/values. Populated intersection
+caches are packed into numeric arrays, preserving float64 costs. Immutable
+buffers use SharedArrayBuffer when available and ArrayBuffer otherwise. This
+avoids repeated structured cloning of thousands of graph/cache objects through
+the runtime. Buffers are copied on the host once and never mutated after packing.
+There are eight logical jobs per full wave, dynamically scheduled on the pool.
+
+Reproduction (Bun, from repository root)
+  bun experiments/deterministic-portpoint/run.ts 6 original
+  bun experiments/deterministic-portpoint/run.ts 6 new1
+  bun experiments/deterministic-portpoint/run.ts 6 new4
+  bun experiments/deterministic-portpoint/benchmark.ts 6 3
+
+The benchmark rotates execution order, launches a fresh process for every trial,
+and verifies exact output bytes and logical work across all revised trials.
+Results default to work/. The original mode disables only the new flag, using
+the original graph solver, graph preparation, and section pipeline. Stage time
+includes graph construction, duplicate-port prepass, runtime startup/disposal,
+snapshot packing, search, ordered reconciliation, and section completion. Input
+loading, external output extraction, validation, and file writing are excluded
+equally. Internal solveGraph metrics now measure actual execution, not replay.
+
+Set PROTOTYPE_DOWNSTREAM=1 when running run.ts to finish the pipeline with four
+workers and evaluate relaxed DRC. Graph validation independently checks every
+route's connectivity, disconnected fragments, incidence, port ownership, region
+reservations, and forbidden single-layer crossings. Graph validity alone does
+not establish downstream routing quality. The dataset-wide /benchmark command
+is needed to assess solve rate and downstream cost, beyond this tuned sample.
+
+Focused tests cover real one/four-worker execution, pool reuse, reversed task
+completion, prefix/resume, rejection without partial commits, and concurrent
+solve rejection. The native benchmark-runtime test covers full-pipeline parity
+and cleanup. No dependency source is patched.

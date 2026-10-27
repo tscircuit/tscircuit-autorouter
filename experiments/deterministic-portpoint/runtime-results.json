@@ -1,0 +1,823 @@
+{
+  "sample": 6,
+  "repeats": 3,
+  "batchSize": 8,
+  "densityFactor": 0,
+  "revision": "fb6c0f57b026a16a0ad1ad2c08a662714c9f3dd9",
+  "runtime": "1.4.4",
+  "platform": "linux",
+  "architecture": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cpuQuota": "400000 100000",
+  "summary": {
+    "original": {
+      "medianMs": 22139.528139,
+      "runsMs": [
+        22139.528139,
+        22382.795227,
+        21730.237134
+      ]
+    },
+    "new1": {
+      "medianMs": 25927.322549,
+      "runsMs": [
+        26190.904028999998,
+        25927.322549,
+        24629.812914
+      ]
+    },
+    "new4": {
+      "medianMs": 15669.698356,
+      "runsMs": [
+        14530.322623999999,
+        15844.323084,
+        15669.698356
+      ]
+    }
+  },
+  "originalToNew4Speedup": 1.4128879596793686,
+  "revisedThreadSpeedup": 1.6546152937955125,
+  "revisedSerialTimeRatio": 1.171087404673616,
+  "exactParity": true,
+  "revisedOutputHash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+  "reports": [
+    {
+      "sample": 6,
+      "mode": "original",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 22139.528139,
+      "cpuMs": 24892.873,
+      "setupMs": 1045.1135320000003,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 32.550661414050566,
+        "downstreamNodePfSquaredSum": 25.661628766934466,
+        "downstreamNodePfMax": 2.4329200193579688,
+        "downstreamSquaredNodePortPointCount": 38424,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 2000000,
+        "timeMs": 20554.175348,
+        "bestMaxRegionCost": 19.599999999999866,
+        "bestTotalRegionCost": 162.44490649471732,
+        "finalMaxRegionSegmentCount": 29,
+        "finalSquaredRegionSegmentCount": 9606,
+        "finalSegmentCount": 2766,
+        "finalLayerChangeCount": 247,
+        "outsideInCompletedRouteCount": 0,
+        "outsideInFallbackRouteCount": 0,
+        "outsideInForwardExpansionCount": 0,
+        "outsideInReverseExpansionCount": 0
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2766,
+        "initiallyRoutedRouteCount": 255
+      },
+      "repeat": 0
+    },
+    {
+      "sample": 6,
+      "mode": "new1",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 26190.904028999998,
+      "cpuMs": 28777.015,
+      "setupMs": 1196.69403,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 24503.511911999998,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 0
+    },
+    {
+      "sample": 6,
+      "mode": "new4",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 577,
+      "elapsedMs": 14530.322623999999,
+      "cpuMs": 37036.126,
+      "setupMs": 1058.8387629999997,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 12950.190708999999,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 0
+    },
+    {
+      "sample": 6,
+      "mode": "new4",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 577,
+      "elapsedMs": 15844.323084,
+      "cpuMs": 40995.614,
+      "setupMs": 997.575034,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 14301.411357999998,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 1
+    },
+    {
+      "sample": 6,
+      "mode": "original",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 22382.795227,
+      "cpuMs": 25147.495,
+      "setupMs": 1046.803476,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 32.550661414050566,
+        "downstreamNodePfSquaredSum": 25.661628766934466,
+        "downstreamNodePfMax": 2.4329200193579688,
+        "downstreamSquaredNodePortPointCount": 38424,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 2000000,
+        "timeMs": 20826.177532,
+        "bestMaxRegionCost": 19.599999999999866,
+        "bestTotalRegionCost": 162.44490649471732,
+        "finalMaxRegionSegmentCount": 29,
+        "finalSquaredRegionSegmentCount": 9606,
+        "finalSegmentCount": 2766,
+        "finalLayerChangeCount": 247,
+        "outsideInCompletedRouteCount": 0,
+        "outsideInFallbackRouteCount": 0,
+        "outsideInForwardExpansionCount": 0,
+        "outsideInReverseExpansionCount": 0
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2766,
+        "initiallyRoutedRouteCount": 255
+      },
+      "repeat": 1
+    },
+    {
+      "sample": 6,
+      "mode": "new1",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 25927.322549,
+      "cpuMs": 28425.03,
+      "setupMs": 1066.01314,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 24342.850636,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 1
+    },
+    {
+      "sample": 6,
+      "mode": "new1",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 24629.812914,
+      "cpuMs": 27225.362,
+      "setupMs": 933.5770219999999,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 23207.826506999998,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 2
+    },
+    {
+      "sample": 6,
+      "mode": "new4",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 577,
+      "elapsedMs": 15669.698356,
+      "cpuMs": 40107.236,
+      "setupMs": 1170.280013,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 30.348377898019017,
+        "downstreamNodePfSquaredSum": 23.498399759146896,
+        "downstreamNodePfMax": 2.053460548077823,
+        "downstreamSquaredNodePortPointCount": 39144,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 77,
+        "timeMs": 13944.422411,
+        "ripCount": 10,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641,
+        "finalMaxRegionSegmentCount": 31,
+        "finalSquaredRegionSegmentCount": 9786,
+        "finalSegmentCount": 2762,
+        "finalLayerChangeCount": 246
+      },
+      "batchStats": {
+        "waves": 76,
+        "proposals": 577,
+        "accepted": 518,
+        "stale": 48,
+        "expansions": 7124509
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2762,
+        "initiallyRoutedRouteCount": 255
+      },
+      "coordinatorStats": {
+        "snapshotBatch": {
+          "waves": 76,
+          "proposals": 577,
+          "accepted": 518,
+          "stale": 48,
+          "expansions": 7124509
+        },
+        "selectiveRipCount": 9,
+        "selectivelyRippedRouteCount": 9,
+        "globalReripCount": 1,
+        "alternateBlockerSearchCount": 0,
+        "alternateOwnerCount": 0,
+        "failedOwnerPairCount": 5,
+        "maxFailedOwnerPairCount": 1,
+        "failedOwnerPairs": [
+          {
+            "failedRouteId": 202,
+            "ownerRouteId": 204,
+            "count": 1
+          },
+          {
+            "failedRouteId": 204,
+            "ownerRouteId": 94,
+            "count": 1
+          },
+          {
+            "failedRouteId": 226,
+            "ownerRouteId": 65,
+            "count": 1
+          },
+          {
+            "failedRouteId": 228,
+            "ownerRouteId": 202,
+            "count": 1
+          },
+          {
+            "failedRouteId": 230,
+            "ownerRouteId": 228,
+            "count": 1
+          }
+        ],
+        "lastDirectOwnerRouteIds": [
+          94
+        ],
+        "lastRepeatedOwnerRouteIds": [],
+        "lastAlternateOwnerRouteIds": [],
+        "lastRippedRouteIds": [
+          94
+        ],
+        "lastRelaxedSearchExpandedLabelCount": 17266,
+        "lastAlternateSearchExpandedLabelCount": 0,
+        "lastFailedRouteId": 204,
+        "ripCount": 10,
+        "maxRegionCost": 15.599999999999895,
+        "maxRegionCostBeforeRip": 8.79999999999995,
+        "reripReason": "out_of_candidates",
+        "globalReripReason": "failed_owner_cycle",
+        "currentRipThreshold": 0.8,
+        "hotRegionCount": 45,
+        "totalRegionCost": 152.2028984985641,
+        "bestMaxRegionCost": 15.599999999999895,
+        "bestTotalRegionCost": 152.2028984985641
+      },
+      "repeat": 2
+    },
+    {
+      "sample": 6,
+      "mode": "original",
+      "batchSize": 8,
+      "densityFactor": 0,
+      "dispatched": 0,
+      "elapsedMs": 21730.237134,
+      "cpuMs": 24431.315,
+      "setupMs": 973.8016809999999,
+      "routeCount": 255,
+      "portCount": 34790,
+      "regionCount": 14058,
+      "hash": "b6d233e9f40324bacc9393ce4038ec8ec155cc91433b083d49a392546681e860",
+      "metrics": {
+        "routeCount": 255,
+        "traceDensityCandidateEvaluated": false,
+        "traceDensityCandidateSelected": false,
+        "downstreamNodePfSum": 32.550661414050566,
+        "downstreamNodePfSquaredSum": 25.661628766934466,
+        "downstreamNodePfMax": 2.4329200193579688,
+        "downstreamSquaredNodePortPointCount": 38424,
+        "changedPreloadedTraceSectionCount": 0,
+        "iterations": 2000000,
+        "timeMs": 20240.881902,
+        "bestMaxRegionCost": 19.599999999999866,
+        "bestTotalRegionCost": 162.44490649471732,
+        "finalMaxRegionSegmentCount": 29,
+        "finalSquaredRegionSegmentCount": 9606,
+        "finalSegmentCount": 2766,
+        "finalLayerChangeCount": 247,
+        "outsideInCompletedRouteCount": 0,
+        "outsideInFallbackRouteCount": 0,
+        "outsideInForwardExpansionCount": 0,
+        "outsideInReverseExpansionCount": 0
+      },
+      "stateStats": {
+        "initialAssignmentCount": 2766,
+        "initiallyRoutedRouteCount": 255
+      },
+      "repeat": 2
+    }
+  ],
+  "implementation": "SolverRuntime snapshot batching working tree; revision identifies the original base commit"
+}

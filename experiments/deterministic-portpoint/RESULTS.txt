@@ -1,0 +1,93 @@
+Current SolverRuntime integration: dataset18 sample006
+
+Three fresh-process trials per mode, rotated order, four-CPU cgroup quota.
+Stage medians: original 22.140s; revised serial 25.927s; revised four workers 15.670s.
+Revised four-worker speedup over original: 1.413x (29.22% lower latency).
+Revised serial slowdown: 17.11%. Revised serial-to-four-worker speedup: 1.655x.
+All six revised outputs are byte-identical, with identical logical work counts.
+Raw reports and environment metadata: runtime-results.json.
+The revision field identifies the original base; changes were in the working tree.
+Dataset-wide CI benchmark results belong to the pull request discussion.
+
+Historical custom-worker prototype measurements (before SolverRuntime integration)
+
+These measurements document the initial experiment, not the current implementation.
+The original experiment injected a completed graph and used a private worker pool.
+Current SolverRuntime results are recorded separately in runtime-results.json.
+
+Dataset 18 sample006: deterministic parallel port-point prototype
+
+Base revision: fb6c0f57b026a16a0ad1ad2c08a662714c9f3dd9
+Runtime: Bun 1.4.4; linux/x64
+CPU: AMD EPYC 9V74 80-Core Processor; cgroup quota 400000 100000 (four CPU equivalents)
+Sample: dataset-srj18 sample006, effort 1, cacheProvider null
+Graph: 255 routes, 34,790 ports, 14,058 regions
+Configuration: logical batch size 8, density factor 0, one inline executor or four native Bun workers
+
+PortPointPathingSolver stage comparison
+-------------------------------------
+Three fresh-process repetitions per configuration, rotated order, no competing
+solver runs. Includes graph preparation, duplicate-port prepass, worker startup,
+snapshot copying, search, deterministic reconciliation, and section completion.
+
+Original median:       21.543 seconds
+Revised serial median: 24.995 seconds
+Revised 4T median:     14.748 seconds
+
+Original -> revised 4T speedup: 1.461x
+Stage latency reduction: 31.54%
+Revised serial slowdown versus original: 16.02%
+Revised serial -> revised 4T speedup: 1.695x
+
+Raw elapsed milliseconds:
+Original: [21183.918916000002, 21543.239643, 22643.214987]
+New 1T:   [25153.835611, 24894.984864, 24994.910684]
+New 4T:   [15283.314476999998, 14748.385900000001, 14293.183164999999]
+
+Determinism and validity
+------------------------
+All six revised outputs matched byte for byte (including object/array order,
+coordinates and metadata); no rounding or normalization was used.
+SHA-256: c023f6d254f11ebb85e0b3f47b927d0afa5c3cc86c8bbb49b37e19fd8d8a5b9e
+Each revised run used exactly 76 waves, 577 proposals, 518 route commits
+(including rerouting), 48 stale proposals, and 7,124,509 search expansions.
+Every original and revised stage output passed independent route connectivity,
+disconnected-fragment, graph incidence, port-ownership, region-reservation, and
+forbidden-single-layer-crossing checks.
+
+Full-pipeline quality and timing check
+-------------------------------------
+One controlled sequential pair; four existing routing workers for downstream
+stages in both runs. Earlier diagnostic runs overlapped type checking and are
+excluded from these numbers. Input module loading, validation and file writing
+are excluded equally from the summed solver time below.
+
+Original pipeline: 44.858 seconds
+Revised pipeline:  42.710 seconds
+Original downstream-only: 21.000 seconds
+Revised downstream-only:  25.906 seconds
+Both completed 255 routed traces with zero relaxed DRC errors.
+
+The overall reduction was 4.79% in this single pair,
+much smaller than the stage improvement because high-density routing became
+slower. This is not a repeated full-pipeline performance claim.
+
+Other measured configurations
+----------------------------
+A 16-route batch achieved 2.181x stage speedup over its original control:
+22.064s original, 18.167s revised serial, 10.116s revised 4T (medians, three runs).
+It also passed exact parity and graph validity checks, but one full-pipeline
+check showed the downstream penalty erased the stage savings. Therefore eight
+is the default despite its smaller stage-only speedup.
+
+An exploratory density factor of 0.5 with batch 16 increased downstream repair
+time substantially and was rejected. It is not used by the default prototype.
+
+Limits
+------
+This was developed and tuned on one sample. The prototype changes routing
+semantics and work budgets; it does not reproduce the original routing output.
+It does reproduce the revised output exactly at one and four workers. At the time of these historical runs, production
+pipeline files and dependency code were unchanged. The nested metrics.timeMs in
+raw reports is the existing integration replay counter for the injected solver;
+use top-level elapsedMs for performance comparisons.
