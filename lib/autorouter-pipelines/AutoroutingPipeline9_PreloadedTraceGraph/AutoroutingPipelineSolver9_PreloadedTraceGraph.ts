@@ -91,6 +91,10 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import {
+  coarsenPipeline9OrdinaryNodes,
+  type Pipeline9FlexibleBoundaryStats,
+} from "./coarsenPipeline9OrdinaryNodes"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -105,6 +109,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
+  flexibleBoundaries?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -306,6 +311,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  flexibleBoundaryStats?: Pipeline9FlexibleBoundaryStats
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -597,8 +603,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-        const nodePortPointsSource =
+        const originalNodes =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+        const coarsened = coarsenPipeline9OrdinaryNodes({
+          nodes: originalNodes,
+          hasPreloadedTraces: Boolean(cms.originalSrj.traces?.length),
+          enabled: cms.opts.flexibleBoundaries !== false,
+        })
+        const nodePortPointsSource = coarsened.nodes
+        cms.flexibleBoundaryStats = coarsened.stats
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
         const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
