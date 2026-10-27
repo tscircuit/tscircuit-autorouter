@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "f47ccb1c0cd4b51f357f002d8c66eb39b174bf4f",
+  "rootSource": "eaeaae9b8936022a854bc4751837c205331654d4",
   "rootLibTree": "416dd7809310919cb77e0dce488189eb0bdaab11",
-  "rootPackageBlob": "6ae64b6db2e5a4fe7b548e960c818f8f5d987d8d",
-  "localRuntimeReceiptSha256": "10db144dc1ca566bae470b54e793e4b548ca9314f737944bad796b951e58f37c",
+  "rootPackageBlob": "646e0a37356211c05c169ce50081bc5cc38fd109",
+  "localRuntimeReceiptSha256": "f4cc1f6c902ecbbfa47fd91e7bcf6c327e255028211ea25d83118fdd47062c45",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "7de5f77125cf472755910f09d58215b63f6175a8",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#7de5f77125cf472755910f09d58215b63f6175a8",
+      "revision": "27a204b177d9bac2df164339927e1b52e094ff37",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#27a204b177d9bac2df164339927e1b52e094ff37",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -237,9 +237,15 @@
         },
         {
           "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "gitBlobSha1": "b1549f65fc593a11438df372450697d5fc61dd7c",
-          "sha256": "c44e0d9bb93b1d358c548374ad861e76c4011c7e0f5c0e54630b8fbaf40c24d5",
-          "bytes": 35064
+          "gitBlobSha1": "297c0ecbf6e128ef1dfb31f8ca1bcc30b8b112e0",
+          "sha256": "fe2b88fb9a0a202ee59c88f1accea81eab1d527906974b7332ddd25e5627f214",
+          "bytes": 36454
+        },
+        {
+          "path": "lib/selective-rerip/certifyMinimumTwoBlockerOwners.ts",
+          "sha256": "9b6d779207c2ea3c20d103c86044c3a82f13b12fc2a42c24a10df3b99ed779e4",
+          "bytes": 7262,
+          "gitBlobSha1": "968edf00ce7db6990e716be9c1ac29375300a9c3"
         },
         {
           "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
@@ -1378,5 +1384,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "848399b3ffd0f8226560a55570f2a909203f1fd231bbddb42c9add51250028ca"
+  "bundleSha256": "229def2a6061157249b6aef90fff61b83e050518e73203151d72ce73c2c4bedd"
 }

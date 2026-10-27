@@ -94,6 +94,6 @@ const report = {
   },
   boardSolved: false,
 }
-if (report.runtimeSourceFiles !== 215 || actualImportCount !== 25 || !Array.isArray(report.preloadResolutions)) throw new Error("Runtime source/import proof incomplete")
+if (report.runtimeSourceFiles !== 216 || actualImportCount !== 25 || !Array.isArray(report.preloadResolutions)) throw new Error("Runtime source/import proof incomplete")
 writeFileSync(resolve(import.meta.dir, "runtime-verification.json"), JSON.stringify(report, null, 2) + "\n")
-console.log(JSON.stringify({ ready: true, runtimeSourceFiles: 215, actualNestedImports: 25, totalMemoryBytes: totalmem() }))
+console.log(JSON.stringify({ ready: true, runtimeSourceFiles: 216, actualNestedImports: 25, totalMemoryBytes: totalmem() }))
