@@ -72,7 +72,6 @@ export class HighDensitySolver extends BaseSolver {
   readonly benchmarkDiagnosticCounters: Record<string, number>
   readonly priorityDagOptions: {
     priorityDagSearch: boolean
-    nativeViaSiblingClearance: boolean
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
     allowBlindAndBuriedVias?: boolean
@@ -118,7 +117,6 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator,
     captureSearchDebug,
     priorityDagSearch = false,
-    nativeViaSiblingClearance = false,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -147,7 +145,6 @@ export class HighDensitySolver extends BaseSolver {
     ) => boolean
     captureSearchDebug?: boolean
     priorityDagSearch?: boolean
-    nativeViaSiblingClearance?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -185,7 +182,6 @@ export class HighDensitySolver extends BaseSolver {
     this.benchmarkDiagnosticCounters = priorityDiagnostics ?? {}
     this.priorityDagOptions = {
       priorityDagSearch,
-      nativeViaSiblingClearance,
       viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance,
       allowBlindAndBuriedVias,

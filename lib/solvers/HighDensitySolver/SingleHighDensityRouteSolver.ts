@@ -59,9 +59,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  protected reuseViaSiblingClearance = false
-  protected certifyViaSiblingClearance?: () => boolean
-
   exploredNodes: Set<number>
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
@@ -125,7 +122,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
-    nativeViaSiblingClearance?: boolean
   }) {
     super()
     this.bounds = opts.bounds
@@ -702,9 +698,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
-  getNeighbors(node: Node): Node[] {
-    const reuseViaClearance = this.certifyViaSiblingClearance?.() ?? false
-    this.reuseViaSiblingClearance = reuseViaClearance
+  getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let sharedPlanarObstacleQuery: PlanarObstacleQuery | undefined
     let queriedPlanarNeighbors = false
@@ -776,9 +770,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    // The owned Native6 path may share target-independent clearance, but each
-    // destination retains its original key, cost and queue position.
-    let viaBlocked: boolean | undefined
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
@@ -793,19 +784,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         parent: node,
       }
 
-      if (this.exploredNodes.has(this.getNodeKey(viaNeighbor))) continue
-      const blocked =
-        reuseViaClearance && viaBlocked !== undefined
-          ? viaBlocked
-          : this.isNodeTooCloseToObstacle(
-              viaNeighbor,
-              this.viaDiameter / 2 + this.obstacleMargin / 2,
-              true,
-            ) || this.isNodeTooCloseToEdge(viaNeighbor, true)
-      viaBlocked = blocked
-      if (blocked) continue
-      this.setNodeCosts(viaNeighbor)
-      neighbors.push(viaNeighbor)
+      if (
+        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
+        !this.isNodeTooCloseToObstacle(
+          viaNeighbor,
+          this.viaDiameter / 2 + this.obstacleMargin / 2,
+          true,
+        ) &&
+        !this.isNodeTooCloseToEdge(viaNeighbor, true)
+      ) {
+        this.setNodeCosts(viaNeighbor)
+
+        neighbors.push(viaNeighbor)
+      }
     }
 
     return neighbors
@@ -1242,16 +1233,3 @@ function getPointToPrecomputedSegmentDistanceSquared(
   const dy = point.y - projectionY
   return dx * dx + dy * dy
 }
-
-/** Immutable built-in identities for the owned target-independent via path. */
-export const nativeViaClearanceBaseMethods = Object.freeze({
-  obstacle: SingleHighDensityRouteSolver.prototype.isNodeTooCloseToObstacle,
-  edge: SingleHighDensityRouteSolver.prototype.isNodeTooCloseToEdge,
-  history: SingleHighDensityRouteSolver.prototype.getViasInNodePath,
-  key: SingleHighDensityRouteSolver.prototype.getNodeKey,
-  priority: SingleHighDensityRouteSolver.prototype.computeF,
-  viaPenalty: Object.getOwnPropertyDescriptor(
-    SingleHighDensityRouteSolver.prototype,
-    "viaPenaltyDistance",
-  )!.get,
-})

@@ -76,7 +76,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
-  readonly nativeViaSiblingClearance: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -108,7 +107,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     layerCount?: number
     priorityCoordinateScale?: number
     priorityDagSearch?: boolean
-    nativeViaSiblingClearance?: boolean
     priorityDiagnostics?: Record<string, number>
     viaHoleDiameter?: number
     minViaHoleEdgeToViaHoleEdgeClearance?: number
@@ -127,7 +125,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
-    this.nativeViaSiblingClearance = params.nativeViaSiblingClearance ?? false
     const precomputedParams =
       params.precomputedIntraNodeRouteParams ??
       precomputeIntraNodeRouteParams(nodeWithPortPoints)
@@ -267,7 +264,6 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
-      nativeViaSiblingClearance: this.nativeViaSiblingClearance,
     }
   }
 

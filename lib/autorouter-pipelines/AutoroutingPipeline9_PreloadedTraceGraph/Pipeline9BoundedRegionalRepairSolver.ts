@@ -487,6 +487,7 @@ export class Pipeline9BoundedRegionalRepairSolver extends BaseSolver {
       allowance.maxCandidateAttempts - this.result.candidateAttemptCount,
     )
     const solver = new NegotiateTraceClearanceSolver({
+      useCausalWorklist: true,
       srj: region.srj,
       routes: region.routes,
       bounds: region.mutableBounds,

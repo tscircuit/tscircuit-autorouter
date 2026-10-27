@@ -1,15 +1,10 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
-import {
-  nativeViaClearanceBaseMethods,
-  SingleHighDensityRouteSolver,
-} from "./SingleHighDensityRouteSolver"
+import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
 const CLOSEST_FUTURE_POINT_CACHE_SLOTS = 256
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
-  private readonly nativeViaSiblingClearance: boolean
-
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
   FUTURE_CONNECTION_PROXIMITY_VD = 10
@@ -37,10 +32,6 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         opts.nearbySegmentClearance ??
         (opts.traceThickness ?? 0.15) / 2 + (opts.obstacleMargin ?? 0.15),
     })
-    this.nativeViaSiblingClearance = opts.nativeViaSiblingClearance ?? false
-    if (this.nativeViaSiblingClearance && this.availableZ.length > 2) {
-      this.certifyViaSiblingClearance = this.canReuseViaSiblingClearance
-    }
     for (const key in opts.hyperParameters) {
       // @ts-ignore
       this[key] = opts.hyperParameters[key]
@@ -54,36 +45,6 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       0.3 * (viasThatCanFitHorz / routeCount) * this.VIA_PENALTY_FACTOR_2
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
-    )
-  }
-
-  private canReuseViaSiblingClearance(): boolean {
-    // The option is outside hyperparameters so DAG work accounting is unchanged.
-    // Custom hooks keep their original per-destination invocation semantics.
-    return (
-      this.nativeViaSiblingClearance &&
-      this.availableZ.length > 2 &&
-      Object.getPrototypeOf(this) === nativePrototype &&
-      this.isNodeTooCloseToObstacle === originalViaMethods.obstacle &&
-      SingleHighDensityRouteSolver.prototype.isNodeTooCloseToObstacle ===
-        originalViaMethods.baseObstacle &&
-      this.isNodeTooCloseToEdge === originalViaMethods.edge &&
-      this.getViasInNodePath === originalViaMethods.history &&
-      this.isViaTooCloseToFutureConnectionTrace === originalViaMethods.future &&
-      this.getFutureConnectionSegments === originalViaMethods.segments &&
-      this.getNodeKey === originalViaMethods.key &&
-      this.setNodeCosts === originalViaMethods.costs &&
-      this.getFutureConnectionPenalty === originalViaMethods.penalty &&
-      this.getClosestFutureConnectionPoint === originalViaMethods.closest &&
-      this.computeF === originalViaMethods.priority &&
-      Object.getOwnPropertyDescriptor(this, "viaPenaltyDistance") ===
-        undefined &&
-      Object.getOwnPropertyDescriptor(nativePrototype, "viaPenaltyDistance") ===
-        undefined &&
-      Object.getOwnPropertyDescriptor(
-        SingleHighDensityRouteSolver.prototype,
-        "viaPenaltyDistance",
-      )?.get === originalViaMethods.viaPenalty
     )
   }
 
@@ -330,22 +291,4 @@ type FutureConnectionSegment = {
   connectionName: string
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
-}
-
-// Capture immutable function identities before any instance/prototype override.
-const nativePrototype =
-  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
-const originalViaMethods = {
-  obstacle: nativePrototype.isNodeTooCloseToObstacle,
-  baseObstacle: nativeViaClearanceBaseMethods.obstacle,
-  edge: nativeViaClearanceBaseMethods.edge,
-  history: nativeViaClearanceBaseMethods.history,
-  future: nativePrototype.isViaTooCloseToFutureConnectionTrace,
-  segments: nativePrototype.getFutureConnectionSegments,
-  key: nativeViaClearanceBaseMethods.key,
-  costs: nativePrototype.setNodeCosts,
-  penalty: nativePrototype.getFutureConnectionPenalty,
-  closest: nativePrototype.getClosestFutureConnectionPoint,
-  priority: nativeViaClearanceBaseMethods.priority,
-  viaPenalty: nativeViaClearanceBaseMethods.viaPenalty,
 }

@@ -308,7 +308,6 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
-      nativeViaSiblingClearance: this.nativeViaSiblingClearance,
     }
   }
 
