@@ -1,0 +1,18 @@
+{
+  "runId": 40459675145,
+  "branch": "fix/srj24-duplicate-port-bounds-20261027",
+  "transportCommit": "c847478703fff0024becbf4a531f3cf642875c07",
+  "source": "eaeaae9b8936022a854bc4751837c205331654d4",
+  "rootLibTree": "416dd7809310919cb77e0dce488189eb0bdaab11",
+  "rootPackageBlob": "646e0a37356211c05c169ce50081bc5cc38fd109",
+  "runtimeReceiptSha256": "f4cc1f6c902ecbbfa47fd91e7bcf6c327e255028211ea25d83118fdd47062c45",
+  "runtimeBundleSha256": "229def2a6061157249b6aef90fff61b83e050518e73203151d72ce73c2c4bedd",
+  "runtimeManifestSha256": "4524dd5d3c1fee5835c4f267167a6887f602848f3ca2d2f823ff942a05d0cb52",
+  "originalInputSha256": "ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7",
+  "originalInputCanonicalSha256": "70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0",
+  "artifactNames": [
+    "sample24-final-srj",
+    "sample24-reviewed-runtime-proof",
+    "benchmark-result"
+  ]
+}
