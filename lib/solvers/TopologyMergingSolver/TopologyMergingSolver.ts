@@ -98,6 +98,7 @@ export class TopologyMergingSolver extends BaseSolver {
     })
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.compactedRegionCount = compactedRegions.length
+    this.releaseConstructionWorkspace()
     this.solved = true
   }
 
@@ -165,7 +166,17 @@ export class TopologyMergingSolver extends BaseSolver {
     this.stats.compactedRegionCount = 0
     this.stats.outputNodeCount = this.outputNodes.length
     this.stats.passthroughNodeCount = this.outputNodes.length
+    this.releaseConstructionWorkspace()
     this.solved = true
+  }
+
+  private releaseConstructionWorkspace(): void {
+    this.preparedNodes.length = 0
+    this.preparedNodeBySourceKey.clear()
+    this.xCoordinates.length = 0
+    this.atomicRegions.length = 0
+    this.outputProvenance.groupIndexesByNodeId.clear()
+    this.outputProvenance.sourceKeysByNodeId.clear()
   }
 
   private processCurrentXSlab(): void {
