@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test"
-import { NativeExploredNodeSet } from "lib/data-structures/NativeExploredNodeSet"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
-test("owned Native bitmap searches preserve every queue and closure step", (): void => {
+test("owned Native via sharing preserves every queue and closure step", (): void => {
   for (const offset of [0, -12.37]) {
     for (const targetLayer of [0, 1, 3]) {
       const options = {
@@ -42,9 +41,9 @@ test("owned Native bitmap searches preserve every queue and closure step", (): v
         captureSearchDebug: false,
       }
       const reference = new Native(options)
-      const mirrored = new Native({ ...options, nativeExplorationBitmap: true })
+      const mirrored = new Native({ ...options, nativeViaSiblingClearance: true })
       expect(reference.exploredNodes.constructor).toBe(Set)
-      expect(mirrored.exploredNodes).toBeInstanceOf(NativeExploredNodeSet)
+      expect(mirrored.exploredNodes.constructor).toBe(Set)
       while (
         !reference.solved &&
         !reference.failed &&

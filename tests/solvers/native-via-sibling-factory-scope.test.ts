@@ -9,7 +9,7 @@ import { PriorityDagIntraNodeSolver } from "lib/solvers/HighDensitySolver/Priori
 import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { priorityParams } from "./priorityDagTestUtils"
 
-test("only owned Pipeline9 Native factories opt into bitmap membership without changing hyperparameter work", (): void => {
+test("only owned Pipeline9 Native factories share via clearance without changing hyperparameter work", (): void => {
   const params = priorityParams()
   const connMap = new ConnectivityMap({})
   const shared = createPipeline9RegularNodeSolver({
@@ -24,7 +24,7 @@ test("only owned Pipeline9 Native factories opt into bitmap membership without c
     obstacles: [],
     layerCount: 2,
   })
-  expect(shared.priorityDagOptions.nativeExplorationBitmap).toBe(false)
+  expect(shared.priorityDagOptions.nativeViaSiblingClearance).toBe(false)
   const owned = new Pipeline9HighDensitySolver({
     nodePortPoints: [params.nodeWithPortPoints],
     connMap,
@@ -39,12 +39,12 @@ test("only owned Pipeline9 Native factories opt into bitmap membership without c
   })
   owned.step()
   expect(
-    owned.activeRegularSolver?.priorityDagOptions.nativeExplorationBitmap,
+    owned.activeRegularSolver?.priorityDagOptions.nativeViaSiblingClearance,
   ).toBe(true)
   const control = new PriorityDagIntraNodeSolver(params)
   const mirrored = new PriorityDagIntraNodeSolver({
     ...params,
-    nativeExplorationBitmap: true,
+    nativeViaSiblingClearance: true,
   })
   expect(mirrored.hyperParameters).toEqual(control.hyperParameters)
   expect(mirrored.iterations).toBe(control.iterations)
@@ -56,7 +56,7 @@ test("only owned Pipeline9 Native factories opt into bitmap membership without c
   expect(mirrored.solvedRoutes).toEqual(control.solvedRoutes)
   const portfolio = new PortfolioSingleIntraNodeSolver({
     ...params,
-    nativeExplorationBitmap: true,
+    nativeViaSiblingClearance: true,
   })
   const plain = portfolio.generateSolver({ CELL_SIZE_FACTOR: 2 })
   const dag = portfolio.generateSolver({
@@ -65,6 +65,6 @@ test("only owned Pipeline9 Native factories opt into bitmap membership without c
   })
   expect(plain).toBeInstanceOf(IntraNodeRouteSolver)
   expect(dag).toBeInstanceOf(PriorityDagIntraNodeSolver)
-  expect((plain as IntraNodeRouteSolver).nativeExplorationBitmap).toBe(true)
-  expect((dag as PriorityDagIntraNodeSolver).nativeExplorationBitmap).toBe(true)
+  expect((plain as IntraNodeRouteSolver).nativeViaSiblingClearance).toBe(true)
+  expect((dag as PriorityDagIntraNodeSolver).nativeViaSiblingClearance).toBe(true)
 })

@@ -331,7 +331,7 @@ export type Pipeline9RegularNodeSolverParams = {
   boardGeometry?: HighDensityBoardGeometry
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
-  nativeExplorationBitmap?: boolean
+  nativeViaSiblingClearance?: boolean
   priorityDiagnostics?: Record<string, number>
   layerCount: number
 }
@@ -351,7 +351,7 @@ export const createPipeline9RegularNodeSolver = ({
   allowBlindAndBuriedVias,
   priorityDiagnostics,
   priorityDagSearch = false,
-  nativeExplorationBitmap = false,
+  nativeViaSiblingClearance = false,
   traceWidth,
   obstacleMargin,
   effort,
@@ -383,7 +383,7 @@ export const createPipeline9RegularNodeSolver = ({
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
     priorityDagSearch,
-    nativeExplorationBitmap,
+    nativeViaSiblingClearance,
     priorityDiagnostics,
     viaHoleDiameter,
     minViaHoleEdgeToViaHoleEdgeClearance,
@@ -687,7 +687,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       priorityDiagnostics: this.benchmarkDiagnosticCounters,
       priorityDagSearch: true,
-      nativeExplorationBitmap: true,
+      nativeViaSiblingClearance: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
