@@ -177,8 +177,11 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     const edgeMargin = (this.minPortSpacing * 3) / 4 // this.edgeMargin + segmentLength * 0.1
     const effectiveLength = Math.max(0, segmentLength - edgeMargin * 2)
 
+    // Extra corner padding must not discard a face that fits one port spacing.
+    // A single midpoint still fits even when the padded effective length is zero.
     if (
       effectiveLength <= 0 &&
+      segmentLength < this.minPortSpacing &&
       !node1._containsTarget &&
       !node2._containsTarget
     ) {

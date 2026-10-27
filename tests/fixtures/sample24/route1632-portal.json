@@ -1,0 +1,806 @@
+{
+  "graphSha256": "1549e911494d56af30444c0fa8376ad01939a06fe9d7e6386d0f7dc5a4d6789b",
+  "nodes": [
+    {
+      "capacityMeshNodeId": "topology_merge_41615",
+      "center": {
+        "x": 147.69119149999997,
+        "y": 108.630998425
+      },
+      "width": 0.9332850000000121,
+      "height": 0.42579485000003103,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41616",
+      "center": {
+        "x": 147.69119149999997,
+        "y": 108.630998425
+      },
+      "width": 0.9332850000000121,
+      "height": 0.42579485000003103,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41617",
+      "center": {
+        "x": 147.69119149999997,
+        "y": 108.630998425
+      },
+      "width": 0.9332850000000121,
+      "height": 0.42579485000003103,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41618",
+      "center": {
+        "x": 147.69119149999997,
+        "y": 108.630998425
+      },
+      "width": 0.9332850000000121,
+      "height": 0.42579485000003103,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "new-cmn_372-3868",
+      "center": {
+        "x": 147.80864947499998,
+        "y": 109.04389545000001
+      },
+      "width": 1.1682009500000277,
+      "height": 0.3999991999999679,
+      "availableZ": [
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_4740",
+      "center": {
+        "x": 147.52454874,
+        "y": 108.44389538000001
+      },
+      "width": 0.5999987999999803,
+      "height": 0.8000009400000181,
+      "availableZ": [
+        7
+      ],
+      "_containsObstacle": true,
+      "_containsTarget": true,
+      "netId": 153
+    },
+    {
+      "capacityMeshNodeId": "cmn_1108__sub_0_0",
+      "center": {
+        "x": 147.72581631499997,
+        "y": 107.868321
+      },
+      "width": 0.8640353700000105,
+      "height": 2.6176519999999925,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41662",
+      "center": {
+        "x": 147.81087277999995,
+        "y": 107.70169542500001
+      },
+      "width": 1.0341482999999698,
+      "height": 2.2844008500000257,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "new-cmn_162-2692__sub_0_0",
+      "center": {
+        "x": 147.7873167,
+        "y": 107.868321
+      },
+      "width": 0.7410345999999777,
+      "height": 2.6176519999999925,
+      "availableZ": [
+        0
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41665",
+      "center": {
+        "x": 147.7873167,
+        "y": 108.23099795499999
+      },
+      "width": 0.7410345999999777,
+      "height": 0.37420608999998706,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41666",
+      "center": {
+        "x": 147.7873167,
+        "y": 108.23099795499999
+      },
+      "width": 0.7410345999999777,
+      "height": 0.37420608999998706,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41667",
+      "center": {
+        "x": 147.7873167,
+        "y": 108.23099795499999
+      },
+      "width": 0.7410345999999777,
+      "height": 0.37420608999998706,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41668",
+      "center": {
+        "x": 147.7873167,
+        "y": 108.23099795499999
+      },
+      "width": 0.7410345999999777,
+      "height": 0.37420608999998706,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41669",
+      "center": {
+        "x": 147.7873167,
+        "y": 109.646396925
+      },
+      "width": 0.7410345999999777,
+      "height": 1.6050021499999758,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41670",
+      "center": {
+        "x": 147.7873167,
+        "y": 110.319347425
+      },
+      "width": 0.7410345999999777,
+      "height": 2.9509031499999594,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41671",
+      "center": {
+        "x": 147.7873167,
+        "y": 110.319347425
+      },
+      "width": 0.7410345999999777,
+      "height": 2.9509031499999594,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41672",
+      "center": {
+        "x": 147.904774675,
+        "y": 109.04389545000001
+      },
+      "width": 0.9759505499999932,
+      "height": 0.3999991999999679,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41673",
+      "center": {
+        "x": 147.904774675,
+        "y": 109.04389545000001
+      },
+      "width": 0.9759505499999932,
+      "height": 0.3999991999999679,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "new-cmn_4740-6775",
+      "center": {
+        "x": 148.07624753499996,
+        "y": 108.44389538000001
+      },
+      "width": 0.5033987899999488,
+      "height": 0.8000009400000181,
+      "availableZ": [
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41750__sub_2_0",
+      "center": {
+        "x": 148.24289046499996,
+        "y": 108.46316237500002
+      },
+      "width": 0.1701129299999593,
+      "height": 0.7614669500000085,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41751__sub_2_0",
+      "center": {
+        "x": 148.24289046499996,
+        "y": 108.46316237500002
+      },
+      "width": 0.1701129299999593,
+      "height": 0.7614669500000085,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41752__sub_2_0",
+      "center": {
+        "x": 148.24289046499996,
+        "y": 108.46316237500002
+      },
+      "width": 0.1701129299999593,
+      "height": 0.7614669500000085,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41753__sub_1_0",
+      "center": {
+        "x": 148.24289046499996,
+        "y": 108.4831461375
+      },
+      "width": 0.1701129299999593,
+      "height": 0.7214994250000117,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41754",
+      "center": {
+        "x": 148.24289046499996,
+        "y": 108.44389538000001
+      },
+      "width": 0.1701129299999593,
+      "height": 0.8000009400000181,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41755",
+      "center": {
+        "x": 148.275291975,
+        "y": 109.06059531500001
+      },
+      "width": 0.23491595000001553,
+      "height": 0.4333989299999814,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41756",
+      "center": {
+        "x": 148.275291975,
+        "y": 109.06059531500001
+      },
+      "width": 0.23491595000001553,
+      "height": 0.4333989299999814,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41757",
+      "center": {
+        "x": 148.275291975,
+        "y": 109.06059531500001
+      },
+      "width": 0.23491595000001553,
+      "height": 0.4333989299999814,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41758",
+      "center": {
+        "x": 148.275291975,
+        "y": 109.06059531500001
+      },
+      "width": 0.23491595000001553,
+      "height": 0.4333989299999814,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_3357",
+      "center": {
+        "x": 148.66583423999998,
+        "y": 108.92489772
+      },
+      "width": 1.0159999999999627,
+      "height": 3.048000000000002,
+      "availableZ": [
+        0
+      ],
+      "_containsObstacle": true,
+      "_containsTarget": true,
+      "netId": 0
+    },
+    {
+      "capacityMeshNodeId": "new-cmn_4736-6772",
+      "center": {
+        "x": 148.72794739999995,
+        "y": 107.74339513
+      },
+      "width": 0.8000009400000181,
+      "height": 1.167803100000043,
+      "availableZ": [
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41819",
+      "center": {
+        "x": 148.92794699999996,
+        "y": 107.86409684
+      },
+      "width": 1.2000001400000428,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41820",
+      "center": {
+        "x": 148.92794699999996,
+        "y": 107.86409684
+      },
+      "width": 1.2000001400000428,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41821",
+      "center": {
+        "x": 148.92794699999996,
+        "y": 107.86409684
+      },
+      "width": 1.2000001400000428,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41822",
+      "center": {
+        "x": 148.92794699999996,
+        "y": 107.86409684
+      },
+      "width": 1.2000001400000428,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41823",
+      "center": {
+        "x": 148.92794699999996,
+        "y": 107.86409684
+      },
+      "width": 1.2000001400000428,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41824",
+      "center": {
+        "x": 149.03182396499997,
+        "y": 107.86409684
+      },
+      "width": 1.4077540700000668,
+      "height": 0.9263996800000172,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41825__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41825__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41826__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41826__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41827__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41827__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41828__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41828__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        4
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41829__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41829__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41830__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41830__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "new-new-cmn_372-3868-709__sub_0_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.45644647250002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "new-new-cmn_372-3868-709__sub_1_0",
+      "center": {
+        "x": 148.36034843999997,
+        "y": 108.71474605750002
+      },
+      "width": 0.06480302000005622,
+      "height": 0.25829958500000316,
+      "availableZ": [
+        7
+      ]
+    },
+    {
+      "capacityMeshNodeId": "cmn_4982",
+      "center": {
+        "x": 148.89275021999998,
+        "y": 108.62729608000001
+      },
+      "width": 1.0000005399999736,
+      "height": 0.5999987999999803,
+      "availableZ": [
+        7
+      ],
+      "_containsObstacle": true,
+      "_containsTarget": true,
+      "netId": 153
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41834",
+      "center": {
+        "x": 149.064225475,
+        "y": 108.80229573000001
+      },
+      "width": 1.3429510500000106,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        1
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41835",
+      "center": {
+        "x": 149.064225475,
+        "y": 108.80229573000001
+      },
+      "width": 1.3429510500000106,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        2
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41836",
+      "center": {
+        "x": 149.064225475,
+        "y": 108.80229573000001
+      },
+      "width": 1.3429510500000106,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        3
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41837",
+      "center": {
+        "x": 149.064225475,
+        "y": 108.80229573000001
+      },
+      "width": 1.3429510500000106,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        6
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41838",
+      "center": {
+        "x": 149.287773975,
+        "y": 108.80229573000001
+      },
+      "width": 1.7900480499999958,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        5
+      ]
+    },
+    {
+      "capacityMeshNodeId": "topology_merge_41839",
+      "center": {
+        "x": 150.194174465,
+        "y": 108.80229573000001
+      },
+      "width": 3.6028490300000158,
+      "height": 0.9499980999999877,
+      "availableZ": [
+        4
+      ]
+    }
+  ],
+  "connection": {
+    "connectionId": "source_net_altium_pcb_171_mst0",
+    "mutuallyConnectedNetworkId": "connectivity_net238",
+    "startRegionId": "cmn_4740",
+    "endRegionId": "cmn_4982",
+    "simpleRouteConnection": {
+      "name": "source_net_altium_pcb_171_mst0",
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
+      "pointsToConnect": [
+        {
+          "x": 147.52454874,
+          "y": 108.44389538,
+          "layer": "bottom",
+          "pointId": "pcb_port_altium_8085",
+          "pcb_port_id": "pcb_port_altium_8085",
+          "port_selector": "R83.1"
+        },
+        {
+          "x": 148.89275021999998,
+          "y": 108.62729608000001,
+          "layer": "bottom",
+          "pointId": "pcb_port_altium_8341",
+          "pcb_port_id": "pcb_port_altium_8341",
+          "port_selector": "U26.4"
+        }
+      ],
+      "__rootConnectionNames": [
+        "source_net_altium_pcb_171"
+      ]
+    }
+  },
+  "terminalRegions": [
+    {
+      "regionId": "tiny-terminal:start-region:source_net_altium_pcb_171_mst0",
+      "pointIds": [
+        "tiny-terminal:start-port:source_net_altium_pcb_171_mst0"
+      ],
+      "d": {
+        "capacityMeshNodeId": "tiny-terminal:start-region:source_net_altium_pcb_171_mst0",
+        "center": {
+          "x": 147.52454874,
+          "y": 108.44389538
+        },
+        "width": 1e-06,
+        "height": 1e-06,
+        "availableZ": [
+          7
+        ],
+        "_containsTarget": true,
+        "_tinyTerminal": true,
+        "_tinyTerminalNetId": "connectivity_net238",
+        "netId": 153
+      }
+    },
+    {
+      "regionId": "tiny-terminal:end-region:source_net_altium_pcb_171_mst0",
+      "pointIds": [
+        "tiny-terminal:end-port:source_net_altium_pcb_171_mst0"
+      ],
+      "d": {
+        "capacityMeshNodeId": "tiny-terminal:end-region:source_net_altium_pcb_171_mst0",
+        "center": {
+          "x": 148.89275021999998,
+          "y": 108.62729608000001
+        },
+        "width": 1e-06,
+        "height": 1e-06,
+        "availableZ": [
+          7
+        ],
+        "_containsTarget": true,
+        "_tinyTerminal": true,
+        "_tinyTerminalNetId": "connectivity_net238",
+        "netId": 153
+      }
+    }
+  ],
+  "terminalPorts": [
+    {
+      "portId": "tiny-terminal:start-port:source_net_altium_pcb_171_mst0",
+      "region1Id": "cmn_4740",
+      "region2Id": "tiny-terminal:start-region:source_net_altium_pcb_171_mst0",
+      "d": {
+        "portId": "tiny-terminal:start-port:source_net_altium_pcb_171_mst0",
+        "x": 147.52454874,
+        "y": 108.44389538,
+        "z": 7,
+        "distToCentermostPortOnZ": 0,
+        "_tinyTerminal": true,
+        "pcb_port_id": "pcb_port_altium_8085"
+      }
+    },
+    {
+      "portId": "tiny-terminal:end-port:source_net_altium_pcb_171_mst0",
+      "region1Id": "cmn_4982",
+      "region2Id": "tiny-terminal:end-region:source_net_altium_pcb_171_mst0",
+      "d": {
+        "portId": "tiny-terminal:end-port:source_net_altium_pcb_171_mst0",
+        "x": 148.89275021999998,
+        "y": 108.62729608000001,
+        "z": 7,
+        "distToCentermostPortOnZ": 0,
+        "_tinyTerminal": true,
+        "pcb_port_id": "pcb_port_altium_8341"
+      }
+    }
+  ]
+}
