@@ -2,7 +2,11 @@ import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
-import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import {
+  RacingTinyHyperGraphSolver,
+  TINY_HYPERGRAPH_RACE_STEPS_PER_ROUND,
+  TinyHyperGraphSolver,
+} from "tiny-hypergraph/lib/index"
 
 test("Pipeline9 completes the pedometer graph at low effort", async () => {
   const srj: SimpleRouteJson = await Bun.file(
@@ -32,7 +36,16 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
   }
   expect(tinySolver.failed).toBe(false)
   expect(tinySolver.solved).toBe(true)
-  expect(tinySolver.iterations).toBe(tinySolver.MAX_ITERATIONS)
+  expect(tinySolver).toBeInstanceOf(RacingTinyHyperGraphSolver)
+  const race = tinySolver as RacingTinyHyperGraphSolver
+  expect(race.stats.raceWinningCandidateIndex).toBe(0)
+  expect(race.stats.raceWinningIterations).toBe(race.raceOptions.MAX_ITERATIONS)
+  expect(race.iterations).toBe(
+    Math.ceil(
+      Number(race.stats.raceWinningIterations) /
+        TINY_HYPERGRAPH_RACE_STEPS_PER_ROUND,
+    ),
+  )
   expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).toBe(true)
   expect(tinySolver.getOutput().solvedRoutes).toHaveLength(230)
   expect(tinySolver.state.unroutedRoutes).toEqual([])

@@ -1,4 +1,5 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
+import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -26,6 +27,8 @@ import {
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
   TinyHyperGraphSolver,
+  RacingTinyHyperGraphSolver,
+  type TinyHyperGraphRaceOptions,
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
@@ -919,6 +922,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useDeterministicRace = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
@@ -928,7 +932,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
-    if (useSelectiveReripRouting) {
+    if (useSelectiveReripRouting || useDeterministicRace) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
@@ -937,10 +941,18 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = useDeterministicRace
+        ? RacingTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
+  }
+
+  override getSolveGraphOptions(): TinyHyperGraphRaceOptions {
+    return {
+      ...super.getSolveGraphOptions(),
+      raceUseSelectiveRerip: this.useSelectiveReripRouting,
+    }
   }
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
@@ -1051,8 +1063,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private readonly originalPreloadedSegmentKeysByConnectionId: PreloadedTraceSegmentBaseline
   private statsSnapshot: Record<string, any> = {}
   private statsSnapshotDirty = false
+  private asyncRunning = false
 
-  constructor(private params: HgPortPointPathingSolverParams) {
+  constructor(
+    private params: HgPortPointPathingSolverParams & {
+      useDeterministicRace?: boolean
+    },
+  ) {
     super()
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
@@ -1137,6 +1154,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        params.useDeterministicRace === true,
       )
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
@@ -1386,6 +1404,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       changedPreloadedTraceSectionCount:
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
+      raceCandidateCount: solveGraphStats.raceCandidateCount,
+      raceWinningCandidateIndex: solveGraphStats.raceWinningCandidateIndex,
+      raceWinningIterations: solveGraphStats.raceWinningIterations,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
@@ -1424,6 +1445,60 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  async solveAsync(
+    runtime?: SolverRuntimeExecutor,
+    stopAtIteration = Infinity,
+  ): Promise<void> {
+    if (this.asyncRunning) {
+      throw new Error("Port-point pathing solveAsync is already running")
+    }
+    this.asyncRunning = true
+    try {
+      while (
+        !this.solved &&
+        !this.failed &&
+        this.iterations < stopAtIteration
+      ) {
+        const pipeline = this.tinyPipelineSolver
+        const race = pipeline.activeSubSolver
+        if (race instanceof RacingTinyHyperGraphSolver) {
+          const previousIterations = race.iterations
+          const budget = Math.min(
+            stopAtIteration - this.iterations,
+            pipeline.MAX_ITERATIONS - pipeline.iterations,
+            this.MAX_ITERATIONS - this.iterations,
+          )
+          await race.solveAsync(
+            runtime,
+            previousIterations + Math.max(0, budget),
+          )
+          const consumed = Math.max(
+            0,
+            race.iterations -
+              previousIterations -
+              (race.solved || race.failed ? 1 : 0),
+          )
+          this.iterations += consumed
+          pipeline.iterations += consumed
+          if (
+            !race.solved &&
+            !race.failed &&
+            this.iterations >= stopAtIteration
+          ) {
+            break
+          }
+        }
+        this.step()
+      }
+    } catch (error) {
+      this.failed = true
+      this.error = "Asynchronous port-point pathing failed: " + error
+      throw error
+    } finally {
+      this.asyncRunning = false
+    }
+  }
+
   _step() {
     this.tinyPipelineSolver.step()
 
@@ -1446,6 +1521,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           new TinyHyperGraphSectionPipelineWithTerminalNetIds(
             this.alternativeTinyPipelineInput!,
             this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            this.params.useDeterministicRace === true,
           )
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"

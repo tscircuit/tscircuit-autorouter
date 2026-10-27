@@ -1,4 +1,5 @@
 import { SolverRuntime } from "@tscircuit/solver-utils/runtime/node"
+import "tiny-hypergraph/lib/racing-tiny-hypergraph-solver"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityBatchSolver"
 import "../../lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSampleSolver"
 import "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityForceImproveSampleSolver"

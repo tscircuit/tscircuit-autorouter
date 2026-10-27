@@ -534,6 +534,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             layerCount: cms.srj.layerCount,
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
+            useDeterministicRace: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,
@@ -1152,6 +1153,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof
+            TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {
