@@ -692,7 +692,14 @@ export const runTask = async (
         "Cannot lint a solved benchmark without routed SimpleRouteJson",
       )
     }
-    const traceLinter = runTraceLinting(solver.getOutputSimpleRouteJson())
+    const finalSrj = solver.getOutputSimpleRouteJson()
+    if (process.env.BENCHMARK_FINAL_SRJ_DIR) {
+      await Bun.write(
+        `${process.env.BENCHMARK_FINAL_SRJ_DIR}/${task.solverName}-${task.scenarioName}.srj.json`,
+        JSON.stringify(finalSrj),
+      )
+    }
+    const traceLinter = runTraceLinting(finalSrj)
     const traceLintIssueCounts: Record<string, number> = Object.fromEntries(
       Object.keys(TRACE_LINT_LABELS).map((type) => [type, 0]),
     )

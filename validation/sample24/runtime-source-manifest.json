@@ -1375,8 +1375,7 @@
     "--threads",
     "1",
     "--sample-timeout",
-    "3600s",
-    "--capture-final-srj"
+    "3600s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
   "bundleSha256": "6f5289e793e4e0f1d221fefefc83ee3214bc955698912b71bd0df035050a2b60"

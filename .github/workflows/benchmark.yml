@@ -416,6 +416,7 @@ jobs:
 
       - name: Run benchmark
         env:
+          BENCHMARK_FINAL_SRJ_DIR: ${{ inputs.sample24_source_bundle && 'benchmark-final-srj' || '' }}
           BENCHMARK_ARGS_JSON: ${{ steps.parse.outputs.benchmark_args_json }}
           BENCHMARK_CONCURRENCY: ${{ steps.parse.outputs.benchmark_concurrency }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
@@ -521,6 +522,14 @@ jobs:
           fi
           cp benchmark-result.txt benchmark-result-pr.txt
           cp benchmark-result.json benchmark-result-pr.json
+
+      - name: Preserve final sample24 routing output
+        if: always() && inputs.sample24_source_bundle == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample24-final-srj
+          path: benchmark-final-srj
+          if-no-files-found: warn
 
       - name: Write raw benchmark execution metadata
         env:
