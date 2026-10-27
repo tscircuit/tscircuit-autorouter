@@ -1,0 +1,83 @@
+import { getConnectionPointLayers } from "./connection-point-utils"
+import { SimpleRouteJson } from "lib/types"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { mapLayerNameToZ } from "./mapLayerNameToZ"
+
+const pointHash = (point: { x: number; y: number }) =>
+  `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
+
+/** Coordinate aliases support routing; omit them for electrical ownership. */
+export const getConnectivityMapFromSimpleRouteJson = (
+  srj: SimpleRouteJson,
+  {
+    includeGeometricPointConnections = true,
+  }: { includeGeometricPointConnections?: boolean } = {},
+) => {
+  const connMap = new ConnectivityMap({})
+  for (const connection of srj.connections) {
+    for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
+      connMap.addConnections([[connection.name, rootConnectionName]])
+    }
+    // Also link the connection name to its overall netConnectionName if available
+    if (connection.__netConnectionName) {
+      connMap.addConnections([
+        [connection.name, connection.__netConnectionName],
+      ])
+    }
+
+    for (const point of connection.pointsToConnect) {
+      const geometricPointId = `${pointHash(point)}:${getConnectionPointLayers(
+        point,
+      )
+        .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+        .sort()
+        .join("-")}`
+      if (includeGeometricPointConnections) {
+        connMap.addConnections([[connection.name, geometricPointId]])
+      }
+      if ("pcb_port_id" in point && point.pcb_port_id) {
+        connMap.addConnections([[connection.name, point.pcb_port_id as string]])
+      }
+      if (point.pointId) {
+        connMap.addConnections([[connection.name, point.pointId]])
+      }
+    }
+  }
+  for (const obstacle of srj.obstacles) {
+    const offBoardConnections = obstacle.offBoardConnectsTo ?? []
+    const geometricPointId = `${pointHash(obstacle.center)}:${obstacle.layers
+      .map((l) => mapLayerNameToZ(l, srj.layerCount))
+      .sort()
+      .join("-")}`
+    const connectionGroup = Array.from(
+      new Set(
+        [
+          obstacle.obstacleId!,
+          ...obstacle.connectedTo,
+          ...offBoardConnections,
+          ...(includeGeometricPointConnections ? [geometricPointId] : []),
+        ].filter(Boolean),
+      ),
+    )
+
+    if (connectionGroup.length > 0) {
+      connMap.addConnections([connectionGroup])
+    }
+  }
+  for (const trace of srj.traces ?? []) {
+    const connectionGroup = Array.from(
+      new Set(
+        [
+          trace.pcb_trace_id,
+          trace.connection_name,
+          ...(trace.connectsTo ?? []),
+        ].filter(Boolean),
+      ),
+    )
+
+    if (connectionGroup.length > 0) {
+      connMap.addConnections([connectionGroup])
+    }
+  }
+  return connMap
+}
