@@ -9,18 +9,19 @@ parallel routed output.
 
 Exactly four tiny-hypergraph searches run per solveGraph invocation. Candidate
 zero retains the baseline input, heuristic, ordering, and step budget. The three
-alternatives use reverse, shortest-first, and longest-first order, distance
-heuristic multipliers of 4, 10, and 20, and one eighth of the original search-step
-budget. The native timeout acceptance criteria and congestion thresholds remain
-unchanged; accepting a complete graph earlier can still change downstream route
-quality.
+alternatives use distance heuristic multipliers of 4, 4, and 10, with only the
+first reversing the initial order, and one eighth of the original search-step
+budget. Alternatives require native completion; only the original candidate
+retains its native timeout acceptance. Congestion thresholds remain unchanged.
+Preloaded-copper inputs retain the original heuristic/order in all four lanes,
+with distinct strict alternative budgets of 1/8, 1/10, and 1/12.
 
 Choose the completed candidate with the fewest logical steps; break ties by
 index. Workers share an atomic best-completion-step bound. All candidates run
 through the winning step before a tie can be ruled out. Scheduling changes the
 amount of discarded speculative work, never the routed winner.
 
-Serial execution interleaves one step per lane. With all alternatives failing,
+Serial execution batches 128 native steps per lane. With all alternatives failing,
 their search steps add at most 37.5% of the original budget, excluding ceiling
 rounding, setup, and native timeout finalization. This is not a wall-time bound.
 
@@ -79,3 +80,47 @@ phase time only; run the standard PR benchmark for end-to-end completion:
 ```
 
 No dataset-wide 40% speedup or serial slowdown limit has been established yet.
+
+## First remote benchmark: phase win, rejected routing quality
+
+The requested command completed on snapshot `15c9475`:
+https://github.com/tscircuit/tscircuit-autorouter/pull/3303#issuecomment-6431466504
+
+| Metric | Original | Prototype | Change |
+| --- | ---: | ---: | ---: |
+| Serial port-point aggregate | 140.038s | 106.489s | -24.0% |
+| Four-thread port-point aggregate | 152.051s | 60.603s | -60.1% |
+| Four-thread completion | 100% | 93.8% | Regression |
+| Four-thread relaxed DRC pass | 100% | 87.5% | Regression |
+| Four-thread DRC issues | 0 | 257 | Regression |
+| Four-thread total recorded stage time | 554.172s | 1077.994s | +94.5% |
+
+Samples 12 and 15 regressed in both execution modes. The isolated phase target
+was met, but end-to-end correctness/performance regressed. This is not a
+successful implementation of the broader routing goal.
+
+## Current revision: strict speculative completion
+
+Current candidates use distance multipliers 1/4/4/10. Only candidate 1 reverses
+the initial order; candidates 2/3 preserve it. Synchronous execution batches
+128 native steps per lane, preserving the minimum-native-step/index winner.
+
+Speculative candidates cannot use timeout acceptance. Only the unchanged
+original candidate retains the caller's native timeout policy. Preloaded-copper
+inputs retain the original heuristic/order in all four candidates, with distinct
+strict alternative budgets of 1/8, 1/10, and 1/12; candidate zero wins equal
+native completions. All modes still instantiate exactly four candidates.
+
+Before another workspace disconnection, the conservative-order/batched
+prototype passed all five race unit tests, restored zero DRC errors for SRJ18
+sample 9, and preserved the SRJ23 sample 21 repair residue. The local sample 9
+test had a stale repair-path assertion; the current repository test already
+permits initial bounded regional acceptance and independently requires zero
+physical DRC errors. The Muse fixture had zero DRC errors but its visual helper
+expected a via no longer present in the new topology.
+
+The conservative prototype's first 11 local phase samples summed to about
+33.29s original, 27.12s new serial, and 13.19s new four-worker execution, with
+complete port-point output parity in every completed pair. These measurements
+precede the latest strict timeout policy and do not validate its speed.
+A fresh full PR benchmark is required.
