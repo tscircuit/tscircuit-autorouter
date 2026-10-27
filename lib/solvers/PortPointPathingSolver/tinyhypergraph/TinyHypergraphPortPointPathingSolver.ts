@@ -35,7 +35,10 @@ import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
-import { shareConnectedTerminalPorts, type TerminalPortIdentity } from "./shareConnectedTerminalPorts"
+import {
+  shareConnectedTerminalPorts,
+  type TerminalPortIdentity,
+} from "./shareConnectedTerminalPorts"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
@@ -276,7 +279,6 @@ const getTinyHyperGraphSolveGraphOptions = (
     // Native route attempts own the loaded topology and plain queued candidates.
     // Closed regional occurrences remain rejected until the native heap clears.
     OWNED_REGIONAL_HOP_FRONTIER: true,
-    DYNAMIC_CONNECTED_NET_TREES: true,
     USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
@@ -613,18 +615,33 @@ const buildSerializedTinyGraph = (
     endRegion?.pointIds.push(endTerminalPortId)
 
     for (const endpoint of [
-      { point: startPoint, portId: startTerminalPortId, terminalRegionId: startTerminalRegionId,
-        hostRegion: connection.startRegion, z: startZ },
-      { point: endPoint, portId: endTerminalPortId, terminalRegionId: endTerminalRegionId,
-        hostRegion: connection.endRegion, z: endZ },
+      {
+        point: startPoint,
+        portId: startTerminalPortId,
+        terminalRegionId: startTerminalRegionId,
+        hostRegion: connection.startRegion,
+        z: startZ,
+      },
+      {
+        point: endPoint,
+        portId: endTerminalPortId,
+        terminalRegionId: endTerminalRegionId,
+        hostRegion: connection.endRegion,
+        z: endZ,
+      },
     ]) {
       const physicalTerminalId = endpoint.point?.pcb_port_id
         ? `pcb-port:${endpoint.point.pcb_port_id}`
-        : endpoint.point?.pointId ? `point:${endpoint.point.pointId}` : undefined
+        : endpoint.point?.pointId
+          ? `point:${endpoint.point.pointId}`
+          : undefined
       terminalIdentities.push({
-        portId: endpoint.portId, terminalRegionId: endpoint.terminalRegionId,
-        physicalTerminalId, netId: connection.mutuallyConnectedNetworkId,
-        hostRegionId: endpoint.hostRegion.regionId, z: endpoint.z,
+        portId: endpoint.portId,
+        terminalRegionId: endpoint.terminalRegionId,
+        physicalTerminalId,
+        netId: connection.mutuallyConnectedNetworkId,
+        hostRegionId: endpoint.hostRegion.regionId,
+        z: endpoint.z,
         x: endpoint.point?.x ?? endpoint.hostRegion.d.center.x,
         y: endpoint.point?.y ?? endpoint.hostRegion.d.center.y,
       })
@@ -644,7 +661,12 @@ const buildSerializedTinyGraph = (
     connections,
     solvedRoutes,
   } satisfies SerializedHyperGraph
-  shareConnectedTerminalPorts({ graph: serializedHyperGraph, terminals: terminalIdentities })
+  if (params.flags.USE_DYNAMIC_CONNECTED_NET_TREES === true) {
+    shareConnectedTerminalPorts({
+      graph: serializedHyperGraph,
+      terminals: terminalIdentities,
+    })
+  }
   serializePreloadedTraceAssignments(serializedHyperGraph)
   return serializedHyperGraph
 }
@@ -1155,6 +1177,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
+    tinyPipelineInput.solveGraphOptions = {
+      ...tinyPipelineInput.solveGraphOptions,
+      DYNAMIC_CONNECTED_NET_TREES:
+        params.flags.USE_DYNAMIC_CONNECTED_NET_TREES === true,
+    }
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
@@ -1407,13 +1434,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         selectedCandidateSummary?.squaredNodePortPointCount,
       changedPreloadedTraceSectionCount:
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
-      connectedTreeReversedAttempts: solveGraphStats.connectedTreeReversedAttempts,
+      connectedTreeReversedAttempts:
+        solveGraphStats.connectedTreeReversedAttempts,
       connectedTreeRouteAttempts: solveGraphStats.connectedTreeRouteAttempts,
-      connectedTreeExpandedGoalAttempts: solveGraphStats.connectedTreeExpandedGoalAttempts,
-      connectedTreeInteriorAttachments: solveGraphStats.connectedTreeInteriorAttachments,
-      connectedTreeCopiedSegmentCount: solveGraphStats.connectedTreeCopiedSegmentCount,
+      connectedTreeExpandedGoalAttempts:
+        solveGraphStats.connectedTreeExpandedGoalAttempts,
+      connectedTreeInteriorAttachments:
+        solveGraphStats.connectedTreeInteriorAttachments,
+      connectedTreeCopiedSegmentCount:
+        solveGraphStats.connectedTreeCopiedSegmentCount,
       connectedTreeCopiedDistance: solveGraphStats.connectedTreeCopiedDistance,
-      connectedTreeCopiedLayerChangeCount: solveGraphStats.connectedTreeCopiedLayerChangeCount,
+      connectedTreeCopiedLayerChangeCount:
+        solveGraphStats.connectedTreeCopiedLayerChangeCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
@@ -1634,7 +1666,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       connectionName,
       rootConnectionName,
       ...(this.params.preserveTerminalPcbPortIds &&
-      (portMetadata?._tinyTerminal !== true ||
+      (this.params.flags.USE_DYNAMIC_CONNECTED_NET_TREES !== true ||
         portId === solvedTinySolver.problem.routeStartPort[routeId] ||
         portId === solvedTinySolver.problem.routeEndPort[routeId]) &&
       typeof portMetadata?.pcb_port_id === "string"

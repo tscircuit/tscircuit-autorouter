@@ -22,8 +22,12 @@ export const shareConnectedTerminalPorts = (args: {
   for (const terminal of args.terminals) {
     if (!terminal.physicalTerminalId) continue
     const key = JSON.stringify([
-      terminal.netId, terminal.physicalTerminalId, terminal.hostRegionId,
-      terminal.z, terminal.x, terminal.y,
+      terminal.netId,
+      terminal.physicalTerminalId,
+      terminal.hostRegionId,
+      terminal.z,
+      terminal.x,
+      terminal.y,
     ])
     const canonical = canonicalByIdentity.get(key)
     if (!canonical) {
@@ -34,10 +38,20 @@ export const shareConnectedTerminalPorts = (args: {
     removedRegionIds.add(terminal.terminalRegionId)
   }
   if (replacementByPortId.size === 0) return
-  args.graph.regions = args.graph.regions.filter((region) => !removedRegionIds.has(region.regionId))
-  args.graph.ports = args.graph.ports.filter((port) => !replacementByPortId.has(port.portId))
+  args.graph.regions = args.graph.regions.filter(
+    (region) => !removedRegionIds.has(region.regionId),
+  )
+  args.graph.ports = args.graph.ports.filter(
+    (port) => !replacementByPortId.has(port.portId),
+  )
   for (const region of args.graph.regions) {
-    region.pointIds = [...new Set(region.pointIds.map((portId) => replacementByPortId.get(portId) ?? portId))]
+    region.pointIds = [
+      ...new Set(
+        region.pointIds.map(
+          (portId) => replacementByPortId.get(portId) ?? portId,
+        ),
+      ),
+    ]
   }
   for (const route of args.graph.solvedRoutes ?? []) {
     for (const point of route.path) {

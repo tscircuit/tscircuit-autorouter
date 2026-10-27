@@ -102,6 +102,8 @@ export interface HgPortPointPathingSolverParams {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
     USE_SELECTIVE_RERIP_ROUTING?: boolean
+    /** Share proven terminal identity and attach whole routes to committed trees. */
+    USE_DYNAMIC_CONNECTED_NET_TREES?: boolean
     /** Count preloaded assignments when applying partial-rip scale bounds. */
     USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
   }

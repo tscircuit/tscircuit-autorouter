@@ -9,6 +9,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
+import { scopeBorrowedRouteTerminals } from "./scopeBorrowedRouteTerminals"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
@@ -25,8 +26,8 @@ import {
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: Point3 & { pcb_port_id?: string }
+  end: Point3 & { pcb_port_id?: string }
 }
 
 type ConnectionName = string
@@ -46,6 +47,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
+  private readonly useConnectedNetTreeRouting: boolean
 
   private canStitchBetweenTerminals(params: {
     connectionName: string
@@ -98,8 +100,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     rootConnectionName?: string
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
+    start: Point3 & { pcb_port_id?: string }
+    end: Point3 & { pcb_port_id?: string }
   }) {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
@@ -117,7 +119,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const pathRoutes = selectRoutesAlongEndpointPath({
       connectionName: params.connectionName,
-      hdRoutes: sameRootRoutes,
+      hdRoutes: this.useConnectedNetTreeRouting
+        ? scopeBorrowedRouteTerminals({
+            routes: sameRootRoutes,
+            ownedRoutes: currentRouteSet,
+            terminals: [params.start, params.end],
+          })
+        : sameRootRoutes,
       start: params.start,
       end: params.end,
       endpointIndex: this.endpointIndex,
@@ -145,6 +153,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    /** Keep shared-tree terminal roles scoped to the original demand. */
+    useConnectedNetTreeRouting?: boolean
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -154,6 +164,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.useConnectedNetTreeRouting = params.useConnectedNetTreeRouting === true
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({

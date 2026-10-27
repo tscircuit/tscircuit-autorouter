@@ -1,0 +1,587 @@
+{
+  "solved": true,
+  "failed": false,
+  "output": {
+    "nodesWithPortPoints": [
+      {
+        "capacityMeshNodeId": "bl",
+        "center": {
+          "x": -4,
+          "y": -2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "tiny-terminal:start-port:bridge-repro",
+            "x": -4,
+            "y": -3,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "pcb_port_id": "pcb_port_start",
+            "nextPortPointId": "p0"
+          },
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "prevPortPointId": "tiny-terminal:start-port:bridge-repro"
+          },
+          {
+            "portPointId": "tiny-terminal:start-port:bridge-repro_shared",
+            "x": -4,
+            "y": -3,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "pcb_port_id": "pcb_port_start",
+            "nextPortPointId": "p0"
+          },
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "prevPortPointId": "tiny-terminal:start-port:bridge-repro_shared"
+          }
+        ],
+        "portPointsInPairs": [
+          [
+            {
+              "portPointId": "tiny-terminal:start-port:bridge-repro",
+              "x": -4,
+              "y": -3,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "pcb_port_id": "pcb_port_start",
+              "nextPortPointId": "p0"
+            },
+            {
+              "portPointId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "prevPortPointId": "tiny-terminal:start-port:bridge-repro"
+            }
+          ],
+          [
+            {
+              "portPointId": "tiny-terminal:start-port:bridge-repro_shared",
+              "x": -4,
+              "y": -3,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "pcb_port_id": "pcb_port_start",
+              "nextPortPointId": "p0"
+            },
+            {
+              "portPointId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "prevPortPointId": "tiny-terminal:start-port:bridge-repro_shared"
+            }
+          ]
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "left-bridge",
+        "center": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 6,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "nextPortPointId": "p5"
+          },
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "prevPortPointId": "p0"
+          },
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "nextPortPointId": "p5"
+          },
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "prevPortPointId": "p0"
+          }
+        ],
+        "portPointsInPairs": [
+          [
+            {
+              "portPointId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "nextPortPointId": "p5"
+            },
+            {
+              "portPointId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "prevPortPointId": "p0"
+            }
+          ],
+          [
+            {
+              "portPointId": "p0",
+              "x": -3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "nextPortPointId": "p5"
+            },
+            {
+              "portPointId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "prevPortPointId": "p0"
+            }
+          ]
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "br",
+        "center": {
+          "x": 4,
+          "y": -2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "nextPortPointId": "tiny-terminal:end-port:bridge-repro"
+          },
+          {
+            "portPointId": "tiny-terminal:end-port:bridge-repro",
+            "x": 4,
+            "y": -3,
+            "z": 0,
+            "connectionName": "bridge-repro",
+            "rootConnectionName": "bridge-repro",
+            "pcb_port_id": "pcb_port_end",
+            "prevPortPointId": "p5"
+          },
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "nextPortPointId": "tiny-terminal:end-port:bridge-repro_shared"
+          },
+          {
+            "portPointId": "tiny-terminal:end-port:bridge-repro_shared",
+            "x": 4,
+            "y": -3,
+            "z": 0,
+            "connectionName": "bridge-repro_shared",
+            "rootConnectionName": "bridge-repro",
+            "pcb_port_id": "pcb_port_end",
+            "prevPortPointId": "p5"
+          }
+        ],
+        "portPointsInPairs": [
+          [
+            {
+              "portPointId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "nextPortPointId": "tiny-terminal:end-port:bridge-repro"
+            },
+            {
+              "portPointId": "tiny-terminal:end-port:bridge-repro",
+              "x": 4,
+              "y": -3,
+              "z": 0,
+              "connectionName": "bridge-repro",
+              "rootConnectionName": "bridge-repro",
+              "pcb_port_id": "pcb_port_end",
+              "prevPortPointId": "p5"
+            }
+          ],
+          [
+            {
+              "portPointId": "p5",
+              "x": 3,
+              "y": -1,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "nextPortPointId": "tiny-terminal:end-port:bridge-repro_shared"
+            },
+            {
+              "portPointId": "tiny-terminal:end-port:bridge-repro_shared",
+              "x": 4,
+              "y": -3,
+              "z": 0,
+              "connectionName": "bridge-repro_shared",
+              "rootConnectionName": "bridge-repro",
+              "pcb_port_id": "pcb_port_end",
+              "prevPortPointId": "p5"
+            }
+          ]
+        ],
+        "availableZ": [
+          0
+        ]
+      }
+    ],
+    "inputNodeWithPortPoints": [
+      {
+        "capacityMeshNodeId": "bl",
+        "center": {
+          "x": -4,
+          "y": -2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionNodeIds": [
+              "bl",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p0::dup1",
+            "x": -3.011180339887499,
+            "y": -0.9776393202250021,
+            "z": 0,
+            "connectionNodeIds": [
+              "bl",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "left-bridge",
+        "center": {
+          "x": 0,
+          "y": 0
+        },
+        "width": 6,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p0",
+            "x": -3,
+            "y": -1,
+            "z": 0,
+            "connectionNodeIds": [
+              "bl",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p0::dup1",
+            "x": -3.011180339887499,
+            "y": -0.9776393202250021,
+            "z": 0,
+            "connectionNodeIds": [
+              "bl",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p1",
+            "x": -2,
+            "y": 1,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "top-left"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p4",
+            "x": 2,
+            "y": 1,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-right",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "br"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p5::dup1",
+            "x": 3.011180339887499,
+            "y": -0.9776393202250021,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "br"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "top-left",
+        "center": {
+          "x": -2,
+          "y": 2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p1",
+            "x": -2,
+            "y": 1,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "top-left"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p2",
+            "x": -1,
+            "y": 2,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-left",
+              "top-mid"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "top-mid",
+        "center": {
+          "x": 0,
+          "y": 2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p2",
+            "x": -1,
+            "y": 2,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-left",
+              "top-mid"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p3",
+            "x": 1,
+            "y": 2,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-mid",
+              "top-right"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "top-right",
+        "center": {
+          "x": 2,
+          "y": 2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p3",
+            "x": 1,
+            "y": 2,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-mid",
+              "top-right"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p4",
+            "x": 2,
+            "y": 1,
+            "z": 0,
+            "connectionNodeIds": [
+              "top-right",
+              "left-bridge"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      },
+      {
+        "capacityMeshNodeId": "br",
+        "center": {
+          "x": 4,
+          "y": -2
+        },
+        "width": 2,
+        "height": 2,
+        "portPoints": [
+          {
+            "portPointId": "p5",
+            "x": 3,
+            "y": -1,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "br"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          },
+          {
+            "portPointId": "p5::dup1",
+            "x": 3.011180339887499,
+            "y": -0.9776393202250021,
+            "z": 0,
+            "connectionNodeIds": [
+              "left-bridge",
+              "br"
+            ],
+            "distToCentermostPortOnZ": 0,
+            "cramped": false,
+            "connectsToOffBoardNode": false
+          }
+        ],
+        "availableZ": [
+          0
+        ]
+      }
+    ],
+    "changedPreloadedTraceSections": []
+  }
+}
