@@ -5,6 +5,7 @@ import {
 } from "../scripts/benchmark/benchmark-run-task"
 import type { BenchmarkTask } from "../scripts/benchmark/benchmark-types"
 import type { NodeWithPortPoints } from "../lib/types/high-density-types"
+import { JointComponentEscapePlannerSolver } from "../lib/solvers/JointComponentEscapePlannerSolver/JointComponentEscapePlannerSolver"
 
 test("the harness applies the same sample budget to existing networked constructors without changing local repair or remote defaults", (): void => {
   const task: BenchmarkTask = {
@@ -28,6 +29,21 @@ test("the harness applies the same sample budget to existing networked construct
     },
   }
   const nodePortPoints: NodeWithPortPoints[] = []
+  const jointEscapePlanner = new JointComponentEscapePlannerSolver({
+    nodesWithPortPoints: nodePortPoints,
+    inputNodesWithPortPoints: [],
+    capacityNodes: [],
+    componentAreas: [],
+    connections: [],
+    obstacles: [],
+    layerCount: 2,
+    traceWidth: 0.15,
+    obstacleMargin: 0.15,
+    traceClearance: 0.1,
+    padClearance: 0.1,
+  })
+  jointEscapePlanner.solve()
+  expect(jointEscapePlanner.solved).toBeTrue()
   const pathingStub = {
     getOutput(): {
       nodesWithPortPoints: NodeWithPortPoints[]
@@ -42,7 +58,10 @@ test("the harness applies the same sample budget to existing networked construct
   }
   for (const networkedCachePass of ["cold", "hot"] as const) {
     const solver = createSolverForTask({ ...task, networkedCachePass })
-    Object.assign(solver, { portPointPathingSolver: pathingStub })
+    Object.assign(solver, {
+      portPointPathingSolver: pathingStub,
+      jointComponentEscapePlannerSolver: jointEscapePlanner,
+    })
     const routeStep = solver.pipelineDef.find(
       (step) => step.solverName === "highDensityRouteSolver",
     )!
@@ -65,7 +84,10 @@ test("the harness applies the same sample budget to existing networked construct
     },
   }
   const ordinaryRemoteSolver = createSolverForTask(ordinaryRemoteTask)
-  Object.assign(ordinaryRemoteSolver, { portPointPathingSolver: pathingStub })
+  Object.assign(ordinaryRemoteSolver, {
+    portPointPathingSolver: pathingStub,
+    jointComponentEscapePlannerSolver: jointEscapePlanner,
+  })
   const defaultRouteStep = ordinaryRemoteSolver.pipelineDef.find(
     (step) => step.solverName === "highDensityRouteSolver",
   )!
