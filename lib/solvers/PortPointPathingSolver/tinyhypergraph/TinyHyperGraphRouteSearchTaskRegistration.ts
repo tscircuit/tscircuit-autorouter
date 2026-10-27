@@ -1,5 +1,5 @@
 import { SolverRuntime } from "@tscircuit/solver-utils"
-import { WasmRouteTask, WasmRouteReadyTask } from "tiny-hypergraph/lib/parallel/WasmRouteTask"
+import { RouteSearchTask, RouteSearchReadyTask } from "tiny-hypergraph/lib/core-parallel"
 
-SolverRuntime.registerSolver(WasmRouteTask)
-SolverRuntime.registerSolver(WasmRouteReadyTask)
+SolverRuntime.registerSolver(RouteSearchTask)
+SolverRuntime.registerSolver(RouteSearchReadyTask)

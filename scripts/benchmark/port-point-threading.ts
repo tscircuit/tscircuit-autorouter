@@ -127,7 +127,7 @@ const threadedMs = rows.map((row) => row.threaded.ms)
 const serialTotalMs = serialMs.reduce((a, b) => a + b, 0)
 const threadedTotalMs = threadedMs.reduce((a, b) => a + b, 0)
 const summary = {
-  dataset: "srj18", processIsolation: isolated, threads, referenceThreads, referenceBackend: referenceThreads ? "compiled" : "javascript", repeats, sampleCount: scenarios.length,
+  dataset: "srj18", processIsolation: isolated, threads, referenceThreads, referenceBackend: referenceThreads ? "typescript-worker" : "typescript-serial", repeats, sampleCount: scenarios.length,
   completed: rows.filter((row) => row.threaded.solved).length,
   statusChanges: rows.filter((row) => row.threaded.solved !== row.serial.solved || row.threaded.failed !== row.serial.failed).length,
   serialTotalMs, threadedTotalMs, speedup: serialTotalMs / threadedTotalMs,

@@ -1,3 +1,4 @@
+import { solveWithParallelRoutes, RouteSearchReadyTask } from "tiny-hypergraph/lib/core-parallel"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
@@ -21,10 +22,8 @@ import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossing
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
-  solveWithWasmRoutes,
   OutsideInPartialRipTinyHyperGraphSolver,
   DuplicateCongestedPortSolver,
-  WasmRouteReadyTask,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -1195,7 +1194,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private async initializeAsync(runtime: SolverRuntimeExecutor): Promise<void> {
-    const startup = runtime.executeAsync(WasmRouteReadyTask, {}).then(
+    const startup = runtime.executeAsync(RouteSearchReadyTask, {}).then(
       () => undefined, (error: unknown) => ({ error }),
     )
     // Allow pool startup to begin before synchronous graph preparation.
@@ -1425,18 +1424,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       parallelRouteWorkers: solveGraphStats.parallelRouteWorkers,
-      wasmRouteSearches: solveGraphStats.wasmRouteSearches,
-      wasmRouteExpansions: solveGraphStats.wasmRouteExpansions,
-      wasmRouteWaves: solveGraphStats.wasmRouteWaves,
-      parallelOwnerSearches: solveGraphStats.parallelOwnerSearches,
-      parallelOwnerGraphRows: solveGraphStats.parallelOwnerGraphRows,
-      parallelOwnerSearchMs: solveGraphStats.parallelOwnerSearchMs,
-      parallelRegionCostTables: solveGraphStats.parallelRegionCostTables,
-      parallelPortMasks: solveGraphStats.parallelPortMasks,
-      parallelConnectivityChecks: solveGraphStats.parallelConnectivityChecks,
-      parallelConnectivitySavedExpansions: solveGraphStats.parallelConnectivitySavedExpansions,
-      parallelGeometryPairs: solveGraphStats.parallelGeometryPairs,
-      geometryPairs: solveGraphStats.geometryPairs,
+      parallelRouteSearches: solveGraphStats.parallelRouteSearches,
+      parallelRouteExpansions: solveGraphStats.parallelRouteExpansions,
+      speculativeRouteSearches: solveGraphStats.speculativeRouteSearches,
+      staleRouteSearches: solveGraphStats.staleRouteSearches,
+      speculativeRouteExpansions: solveGraphStats.speculativeRouteExpansions,
+      maximumConcurrentRouteSearches: solveGraphStats.maximumConcurrentRouteSearches,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
@@ -1499,7 +1492,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.MAX_ITERATIONS - this.iterations,
             pipeline.MAX_ITERATIONS - pipeline.iterations,
           )
-          await solveWithWasmRoutes(search, runtime, previousIterations + remaining)
+          await solveWithParallelRoutes(search, runtime, previousIterations + remaining)
           const terminal = search.solved || search.failed
           const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
           pipeline.iterations += consumed
