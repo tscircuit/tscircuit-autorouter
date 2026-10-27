@@ -12,8 +12,28 @@ test("same-path drill occupancy survives same-net copper exemptions", (): void =
     ...sparseOptions,
     allowBlindAndBuriedVias: true,
   })
-  expect(blind.isSparseEdgeLegal({ start: via, end: { ...via, z: 2 }, parent: via })).toBe(false)
-  expect(solver.isSparseEdgeLegal({ start: wire, end: { ...wire, z: 0 }, parent: wire })).toBe(false)
-  expect(solver.isSparseEdgeLegal({ start: { ...wire, x: 5 + 1e-10 }, end: { ...wire, x: 5 + 1e-10, z: 0 }, parent: wire })).toBe(false)
-  expect(solver.isSparseEdgeLegal({ start: { ...wire, x: 6 }, end: { ...wire, x: 6, z: 0 }, parent: wire })).toBe(true)
+  expect(
+    blind.isSparseEdgeLegal({ start: via, end: { ...via, z: 2 }, parent: via }),
+  ).toBe(false)
+  expect(
+    solver.isSparseEdgeLegal({
+      start: wire,
+      end: { ...wire, z: 0 },
+      parent: wire,
+    }),
+  ).toBe(false)
+  expect(
+    solver.isSparseEdgeLegal({
+      start: { ...wire, x: 5 + 1e-10 },
+      end: { ...wire, x: 5 + 1e-10, z: 0 },
+      parent: wire,
+    }),
+  ).toBe(false)
+  expect(
+    solver.isSparseEdgeLegal({
+      start: { ...wire, x: 6 },
+      end: { ...wire, x: 6, z: 0 },
+      parent: wire,
+    }),
+  ).toBe(true)
 })

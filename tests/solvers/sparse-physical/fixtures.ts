@@ -1,7 +1,9 @@
 import type { SparsePhysicalSingleRouteSolver } from "lib/solvers/HighDensitySolver/SparsePhysicalSingleRouteSolver"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
-export const sparseOptions: ConstructorParameters<typeof SparsePhysicalSingleRouteSolver>[0] = {
+export const sparseOptions: ConstructorParameters<
+  typeof SparsePhysicalSingleRouteSolver
+>[0] = {
   connectionName: "a",
   minDistBetweenEnteringPoints: 0.2,
   bounds: { minX: 0, maxX: 10, minY: 0, maxY: 10 },
@@ -21,7 +23,10 @@ export const crossingWire: HighDensityIntraNodeRoute = {
   connectionName: "b",
   traceThickness: 0.8,
   viaDiameter: 0.4,
-  route: [{ x: 5, y: 3, z: 0 }, { x: 5, y: 7, z: 0 }],
+  route: [
+    { x: 5, y: 3, z: 0 },
+    { x: 5, y: 7, z: 0 },
+  ],
   vias: [],
 }
 
@@ -29,6 +34,9 @@ export const throughVia: HighDensityIntraNodeRoute = {
   connectionName: "b",
   traceThickness: 0.2,
   viaDiameter: 0.4,
-  route: [{ x: 5, y: 5, z: 0 }, { x: 5, y: 5, z: 1 }],
+  route: [
+    { x: 5, y: 5, z: 0 },
+    { x: 5, y: 5, z: 1 },
+  ],
   vias: [{ x: 5, y: 5 }],
 }

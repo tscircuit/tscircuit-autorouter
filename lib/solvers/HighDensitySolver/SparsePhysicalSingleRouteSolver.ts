@@ -14,7 +14,13 @@ type Options = ConstructorParameters<typeof Native>[0] & {
   allowBlindAndBuriedVias?: boolean
   onWork?: (count: number) => void
 }
-type Wire = { start: Point; end: Point; z: number; width: number; connected: boolean }
+type Wire = {
+  start: Point
+  end: Point
+  z: number
+  width: number
+  connected: boolean
+}
 type Via = {
   center: { x: number; y: number }
   minZ: number
@@ -75,7 +81,9 @@ export class SparsePhysicalSingleRouteSolver extends Native {
   private compileScene(): void {
     for (const route of this.obstacleRoutes) {
       const currentNet = this.connMap?.getNetConnectedToId(this.connectionName)
-      const obstacleNet = this.connMap?.getNetConnectedToId(route.connectionName)
+      const obstacleNet = this.connMap?.getNetConnectedToId(
+        route.connectionName,
+      )
       const connected =
         route.connectionName === this.connectionName ||
         (currentNet !== undefined && currentNet === obstacleNet)
@@ -153,7 +161,7 @@ export class SparsePhysicalSingleRouteSolver extends Native {
         1e-6
       for (const center of [wire.start, wire.end]) {
         for (let i = 0; i < 8; i++) {
-          const angle = i * Math.PI / 4
+          const angle = (i * Math.PI) / 4
           xy.push({
             x: center.x + (Math.cos(angle) * radius) / Math.cos(Math.PI / 8),
             y: center.y + (Math.sin(angle) * radius) / Math.cos(Math.PI / 8),
@@ -169,7 +177,7 @@ export class SparsePhysicalSingleRouteSolver extends Native {
           this.sparseViaHoleDiameter + this.holeGap,
         ) + 1e-6
       for (let i = 0; i < 8; i++) {
-        const angle = i * Math.PI / 4
+        const angle = (i * Math.PI) / 4
         xy.push({
           x: via.center.x + (Math.cos(angle) * radius) / Math.cos(Math.PI / 8),
           y: via.center.y + (Math.sin(angle) * radius) / Math.cos(Math.PI / 8),
@@ -342,7 +350,10 @@ export class SparsePhysicalSingleRouteSolver extends Native {
       const next = this.vertices[nextId]
       this.sparseOptions.onWork?.(1)
       if (this.exploredNodes.has(nextId)) continue
-      if (next.z !== current.z && (next.x !== current.x || next.y !== current.y))
+      if (
+        next.z !== current.z &&
+        (next.x !== current.x || next.y !== current.y)
+      )
         continue
       const via = next.z !== current.z
       const g =
@@ -351,7 +362,10 @@ export class SparsePhysicalSingleRouteSolver extends Native {
         (via ? this.viaPenaltyDistance : 0)
       if (g >= (this.best.get(nextId) ?? Infinity)) continue
       this.sparseDiagnostics.edges++
-      if (!this.isSparseEdgeLegal({ start: current, end: next, parent: current })) continue
+      if (
+        !this.isSparseEdgeLegal({ start: current, end: next, parent: current })
+      )
+        continue
       const h =
         Math.hypot(next.x - this.B.x, next.y - this.B.y) +
         (next.z === this.B.z ? 0 : this.viaPenaltyDistance)

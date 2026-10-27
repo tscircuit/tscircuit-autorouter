@@ -376,7 +376,9 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         })
       : new Native(opts)
     this.record(
-      this.sparsePhysicalSearch ? "prioritySparseSearches" : "priorityNativeSearches",
+      this.sparsePhysicalSearch
+        ? "prioritySparseSearches"
+        : "priorityNativeSearches",
     )
   }
 
