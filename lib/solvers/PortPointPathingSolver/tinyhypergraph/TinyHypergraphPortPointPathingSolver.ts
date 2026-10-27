@@ -36,6 +36,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { splitPartialLayerRegions } from "./splitPartialLayerRegions"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -1074,7 +1075,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         connection.simpleRouteConnection.__rootConnectionNames?.[0],
       ]),
     )
-    const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const serializedGraph = splitPartialLayerRegions(
+      buildSerializedTinyGraph({ ...params, connections }),
+      { layerCount: params.layerCount, allowBlindAndBuriedVias: params.allowBlindAndBuriedVias },
+    )
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1161,12 +1165,29 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
       (this.alternativeTinyPipelineInput ? 2 : 1)
 
+    const splitRegionsByOriginalId = new Map<string, SerializedHyperGraph["regions"]>()
+    for (const region of graphForTiny.regions) {
+      const originalId = region.d?._noBlindOriginalRegionId
+      if (typeof originalId !== "string") continue
+      const copies = splitRegionsByOriginalId.get(originalId) ?? []
+      copies.push(region)
+      splitRegionsByOriginalId.set(originalId, copies)
+    }
+    const routingRegions = params.graph.regions.flatMap((region) => {
+      const copies = splitRegionsByOriginalId.get(region.regionId)
+      if (!copies) return [region]
+      return copies.map((copy) => ({ ...region, regionId: copy.regionId,
+        d: { ...region.d, capacityMeshNodeId: copy.regionId,
+          availableZ: copy.d.availableZ, _noBlindOriginalRegionId: region.regionId },
+        ports: region.ports.filter((port) => copy.d.availableZ.includes(port.d.z)),
+      }))
+    })
     this.originalRegionById = new Map(
-      params.graph.regions.map((region) => [region.regionId, region]),
+      routingRegions.map((region) => [region.regionId, region]),
     )
     this.originalRegionIds = new Set(this.originalRegionById.keys())
     this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
-      params,
+      { ...params, graph: { ...params.graph, regions: routingRegions } },
       graphForTiny,
     )
     // Most routing steps have no stats consumer. Build the same snapshot when
@@ -1291,7 +1312,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         }
       }
 
-      const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
+      const originalRegionId = regionMetadata[regionId]?._noBlindOriginalRegionId === undefined
+        ? regionMetadata[regionId]?.capacityMeshNodeId
+        : regionMetadata[regionId]?.serializedRegionId
       if (!originalRegionId || !this.originalRegionIds.has(originalRegionId)) {
         continue
       }
@@ -1639,7 +1662,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.getChangedPreloadedRouteIds(solvedTinySolver)
 
     for (let regionId = 0; regionId < regionSegments.length; regionId++) {
-      const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
+      const originalRegionId = regionMetadata[regionId]?._noBlindOriginalRegionId === undefined
+        ? regionMetadata[regionId]?.capacityMeshNodeId
+        : regionMetadata[regionId]?.serializedRegionId
       if (!originalRegionId || !this.originalRegionIds.has(originalRegionId)) {
         continue
       }

@@ -557,6 +557,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: Math.min(1, cms.effort),
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias ?? false,
             createPortReservations: (model) => createPortReservationNetIds({
               ...model, context: portReservationContext,
             }),
@@ -672,7 +673,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             traceToPadClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
             traceToHoleClearance: cms.originalSrj.minTraceToHoleEdgeClearance ?? 0.2,
-            viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
+            viaToPadClearance:
+              cms.originalSrj.minViaEdgeToPadEdgeClearance ??
+              cms.originalSrj.minPadEdgeToPadEdgeClearance ?? 0.1,
             effort: Math.min(1, cms.effort),
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
@@ -702,8 +705,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
             viaDiameter: cms.viaDiameter,
             viaToPadClearance:
-              cms.srj.minViaEdgeToPadEdgeClearance ??
-              cms.srj.defaultObstacleMargin ?? 0.15,
+              cms.originalSrj.minViaEdgeToPadEdgeClearance ??
+              cms.originalSrj.minPadEdgeToPadEdgeClearance ?? 0.1,
             connectivityNetMap: cms.connMap.netMap,
           },
         },
