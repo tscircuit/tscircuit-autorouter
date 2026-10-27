@@ -334,6 +334,10 @@ jobs:
         if: inputs.sample24_source_bundle == true
         run: bun validation/sample24/verify-runtime.ts
 
+      - name: Verify original sample24 benchmark input
+        if: inputs.sample24_source_bundle == true
+        run: bun validation/sample24/verify-input.ts
+
       - name: Preserve reviewed sample24 runtime proof
         if: always() && inputs.sample24_source_bundle == true
         uses: actions/upload-artifact@v4
@@ -342,6 +346,7 @@ jobs:
           path: |
             validation/sample24/runtime-source-manifest.json
             validation/sample24/runtime-verification.json
+            validation/sample24/input-verification.json
           if-no-files-found: error
 
       - name: Verify production Pipeline9 network cache support

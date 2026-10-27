@@ -1,0 +1,14 @@
+{
+  "authoritativeOriginalRawSha256": "ba157c96251e5c53964a7fb529981fc19347865c82379558bf820fcdef6b52a7",
+  "routingInputEvidence": {
+    "routingFieldsCanonicalSha256": "70df1fe5a2ea2ee48e20566a5e2cfad7b34d6c8adb1ff9b30a80d5610e88ace0",
+    "netCount": 409,
+    "uniquePcbTerminalCount": 2343,
+    "obstacleComponentCount": 620,
+    "obstacleCount": 4418,
+    "layerCount": 8,
+    "minTraceWidth": 0.1,
+    "allowBlindAndBuriedVias": false
+  },
+  "sourceBoardComponentCount": 633
+}

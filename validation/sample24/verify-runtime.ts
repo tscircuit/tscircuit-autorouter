@@ -68,7 +68,8 @@ for (const context of packages) {
     unlinkSync(probe)
   }
 }
-const cgroupMaxPath = "/sys/fs/cgroup/memory.max"
+const cgroupLimitPaths = ["/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"]
+const cgroupLimitPath = cgroupLimitPaths.find((path) => existsSync(path))
 const report = {
   ready: true,
   kind: "REVIEWED_SAMPLE24_BLACKSMITH_RUNTIME",
@@ -85,7 +86,12 @@ const report = {
   transitiveVersions,
   simplifierNestedConnectivity: { version: nestedPkg.version, entry: nestedEntry, sha256: hash(nestedEntry), actualImportEntry: actualNestedConnectivityEntry },
   preloadResolutions: (globalThis as any).__sample24RuntimeResolutions,
-  resources: { totalMemoryBytes: totalmem(), cgroupMemoryMax: readFileSync(cgroupMaxPath, "utf8").trim() },
+  resources: {
+    totalMemoryBytes: totalmem(),
+    cgroupMemoryLimit: cgroupLimitPath
+      ? { path: cgroupLimitPath, value: readFileSync(cgroupLimitPath, "utf8").trim() }
+      : { path: null, value: null, observation: "This host does not expose a cgroup memory limit" },
+  },
   boardSolved: false,
 }
 if (report.runtimeSourceFiles !== 215 || actualImportCount !== 25 || !Array.isArray(report.preloadResolutions)) throw new Error("Runtime source/import proof incomplete")
