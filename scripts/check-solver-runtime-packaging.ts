@@ -135,9 +135,11 @@ const input = ${JSON.stringify(input)}
 const serial = new Pipeline9(structuredClone(input), {effort: 0.1, cacheProvider: null})
 serial.solve()
 assert.equal(serial.solved, true)
-const runtime = createAutorouterSolverRuntime({workerCount: 2, requireWorker: true})
+const runtime = createAutorouterSolverRuntime({workerCount: 4, requireWorker: true})
+assert.equal(runtime.persistentWorkerCount, 4)
 let dispatchCount = 0
 const countingRuntime = {
+  persistentWorkerCount: runtime.persistentWorkerCount,
   executeAsync(Solver, input) { dispatchCount++; return runtime.executeAsync(Solver, input) },
 }
 try {
@@ -145,6 +147,9 @@ try {
   await solver.solveAsync(countingRuntime)
   assert.equal(solver.solved, true)
   assert.ok(dispatchCount > 0, "Test must actually dispatch registered solver tasks")
+  const metrics = solver.portPointPathingSolver.getSolveGraphBenchmarkMetrics()
+  assert.equal(metrics.parallelRouteWorkers, 3)
+  assert.ok(metrics.wasmRouteSearches > 0, "Packed consumer must run the WASM route search")
   assert.equal(JSON.stringify(solver.getOutputSimpleRouteJson()), JSON.stringify(serial.getOutputSimpleRouteJson()))
   assert.equal(solver.iterations, serial.iterations)
   assert.deepEqual(solver.highDensityRouteSolver.stats, serial.highDensityRouteSolver.stats)
