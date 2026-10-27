@@ -2,8 +2,8 @@
 
 `am3352-ddr-layer-routing.json.gz` captures the real reference board's native
 Pipeline9 output immediately before length matching. It is not a synthetic BGA
-or a hand-routed replacement. The reproduction measures and snapshots this saved
-checkpoint without adding a routing stage or claiming a DDR timing solution.
+or a hand-routed replacement. The test replays the layer-routing stage on this
+checkpoint; it does not claim to solve the full board's DDR timing constraints.
 
 Source board: [tscircuit/am3352-dev-board at e3d915e3df52023763f1ea85ebe4c20401b52790](https://github.com/tscircuit/am3352-dev-board/tree/e3d915e3df52023763f1ea85ebe4c20401b52790).
 The four-layer DDR routing input preserves all 907 board obstacles, including
@@ -44,12 +44,12 @@ bun test --timeout 9999999 tests/repro/pipeline9-am3352-ddr-bus-layers.test.ts
 The regression checks all 47 source connections against emitted continuous
 centerlines/vias, checks unchanged endpoints and input data, and independently
 runs relaxed DRC. Before: 20 illegal-layer fragments, zero relaxed DRC errors,
-47 connected signals. This test intentionally asserts the existing violation
-count so the reproduction passes before the fix. These are layer/geometry checks, not DDR timing,
+47 connected signals. After: zero illegal-layer fragments, zero relaxed DRC
+errors, 47 connected signals. These are layer/geometry checks, not DDR timing,
 impedance, or manufacturing sign-off.
 
-Two checked-in SVG snapshots show the full-board geometry and DDR escape
-region. The stacked fix updates these same files, giving a direct image diff. Only drawing primitives are cropped for the close-up; routing and
+Two checked-in SVG snapshots show the repaired full-board geometry and DDR
+escape region. They update the reproduction PR's same files for a direct image diff. Only drawing primitives are cropped for the close-up; routing and
 DRC always use the full input. The plots show actual pads, emitted traces and vias
 with the repository's layer styling. Through-via barrels may cross inner1;
 entering, exiting, or routing a wire on inner1 is prohibited by these buses.

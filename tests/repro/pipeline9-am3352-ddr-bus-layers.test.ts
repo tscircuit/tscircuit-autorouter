@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
+import { BusLayerRoutingSolver } from "lib/solvers/BusLayerRoutingSolver"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -10,7 +11,7 @@ import { assertBusAllowedLayers } from "../fixtures/assertBusAllowedLayers"
 import { countConnectedAm3352Signals } from "../fixtures/countConnectedAm3352Signals"
 import { getAm3352BusLayerSnapshot } from "../fixtures/getAm3352BusLayerSnapshot"
 
-test("AM3352 DDR checkpoint reproduces prohibited routing layers with all real-board obstacles", async (): Promise<void> => {
+test("AM3352 DDR paths negotiate legal layers while retaining all real-board obstacles", async (): Promise<void> => {
   const raw = gunzipSync(
     Uint8Array.from(
       readFileSync(
@@ -32,9 +33,10 @@ test("AM3352 DDR checkpoint reproduces prohibited routing layers with all real-b
   expect(srj.obstacles).toHaveLength(907)
   expect(srj.connections).toHaveLength(47)
   expect(srj.layerCount).toBe(4)
-  // Capture current behavior; the stacked fix routes this same checkpoint.
-  const output = routes
-  const stage = "before" as const
+  const solver = new BusLayerRoutingSolver({ srj, hdRoutes: routes })
+  solver.solve()
+  const output = solver.getOutput()
+  const stage = "after" as const
   const traces: SimplifiedPcbTraces = output.map((route, index) => ({
     type: "pcb_trace",
     pcb_trace_id: `ddr-${stage}-${index}`,
@@ -73,7 +75,12 @@ test("AM3352 DDR checkpoint reproduces prohibited routing layers with all real-b
   }
   expect(drc.errors).toHaveLength(0)
   expect(connectedSignals).toBe(47)
-  expect(illegalRouteCount).toBe(20)
+  expect(illegalRouteCount).toBe(0)
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  expect(solver.stats.busLayerViolationsBefore).toBe(20)
+  expect(solver.stats.accepted).toBe(true)
+  expect(solver.stats.unresolvedSpanCount).toBe(0)
   expect({ srj, routes }).toEqual(original)
   expect(output.map((route) => [route.route[0], route.route.at(-1)])).toEqual(
     routes.map((route) => [route.route[0], route.route.at(-1)]),
