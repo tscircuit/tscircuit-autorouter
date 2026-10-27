@@ -1,27 +1,17 @@
-# Parallel port-point scoring
+# Parallel port-point search
 
-The optional TypeScript backend is isolated in `tiny-hypergraph/lib/core-parallel`. The normal library entry excludes worker code. No WASM kernels, binary payloads or native build tools are used.
+The optional TypeScript backend is isolated in `tiny-hypergraph/lib/core-parallel`; its implementation and worker protocol live under `lib/parallel/`. The ordinary entry excludes worker code. No WASM kernels, binary payloads or native build tools are used.
 
-## Work distribution
+Four persistent workers divide a route's directed-hop A* frontier. Each hop has one owner, with a private indexed heap and cost labels. Workers exchange improved candidates in bounded batches. During expansion, published labels and the routing graph are frozen; barriers separate expansion, message delivery and global termination checks. Improved closed hops can reopen. The search stops when every frontier lower bound reaches the best goal cost, or the global expansion budget is exhausted.
 
-Four persistent workers prepare exact region transition-cost tables. The original TypeScript A* queue and route commits run on the caller, preserving route order, paths and logical iteration budgets. This avoids speculative route searches and their invalidation/rework.
+Routes still commit in their original order. Parallel expansion changes tie-breaking and iteration counts; exact serial replay is not part of this backend's contract. The coordinator charges the combined worker expansions against one iteration budget, rather than multiplying the budget by four. Existing partial-route searches keep their serial implementation. Completion candidates use the same asynchronous backend.
 
-For each eligible region, workers compute a symmetric matrix of the marginal region cost of every pair of incident ports. The matrix is keyed by region version and by the current route net when that net already occurs in the region; other nets share the same route-independent table. It includes intersection, layer-transition and density costs; the caller adds congestion, port penalties and distance in the original arithmetic order. Dense regions are split into independent 16-row chunks. A 256 MiB arena bounds quadratic storage, allocating smaller regions first; any region beyond that budget keeps its ordinary scorer.
+Runtime leases reserve the full persistent worker group to prevent barrier deadlocks between concurrent solves. Workers are released before later pipeline stages. Bun and Node workers explicitly register the tasks; the runtime's verified persistent worker count enables this backend. Worker failures propagate.
 
-Tables are cached by region version. Region changes queue new preparation work; unchanged tables are reused across routes and nets. Workers claim disjoint region jobs from a shared queue, and each worker receives an initial job when sufficient work exists. The coordinator waits for all workers before searching or mutating graph state. Shared cache arrays remain read-only until the barrier completes.
+`parallelRouteWorkers` records acknowledged workers. `maximumParticipatingSearchWorkers` records workers that actually expand candidates in a route. Metrics include combined expansions, messages, batches and coordinator search wall time.
 
-The serial solver exposes only an optional generic region-cost provider. The parallel pool and worker protocol remain under `lib/parallel/`. Runtime leases prevent competing solves from overcommitting persistent workers, and all workers are released before the later high-density stages. Completion candidates reuse tables when topology, problem and scoring settings match.
+Validation covers single-route cost parity on weighted cyclic graphs, reconstructed segment validity, overlapping nets, global budgets, completion, transport errors, shared runtimes and entry-point isolation. The autorouter integration checks its bundled Bun and Node consumers.
 
-## Verification
+The prior region-table prototype regressed on the full dataset18 comparison: 145.262s to 227.340s for summed port-point phase time, with 16/16 solved and DRC passing on both revisions (Blacksmith run 40468865215). That result does not describe the distributed frontier implementation. A new comparison is required; no speedup is claimed while it is pending. The target remains 2x faster summed `portPointPathingSolver` time against base at four threads, with unchanged solve/DRC outcomes.
 
-`parallelRouteWorkers` records acknowledged workers. `maximumParticipatingCostWorkers` records workers that actually compute tables during a round. Metrics expose tables/cells prepared, worker and preparation time, cache hits/misses and caller search time.
-
-All 168 tiny-hypergraph tests pass, including exact scoring parity for owned nets, single-layer crossings, port penalties, congestion, density and cache changes. Twelve overlapping-net cases compare exact routes and iteration budgets. Tests also cover completion, failures, shared runtimes and module isolation. Bundled Bun and Node consumers are checked in the autorouter.
-
-## Performance status
-
-The WASM-assisted results do not apply and were removed. The first TypeScript route-speculation prototype regressed 23.2% on dataset18 despite correct outcomes and four active workers. Prioritizing commits and refreshing snapshots reduced wasted work but remained 6.7% slower on sample 6. Those results motivated moving parallel work to independent region scoring instead.
-
-The first region-table prototype excluded dense and owned-net regions and regressed 20.3% on sample 6. The current revision covers both and divides dense work among workers; its performance is pending. The region-scoring backend requires a fresh `/benchmark --dataset 18 --threads 4`. No speedup is claimed until that comparison completes. The target remains 2x faster summed `portPointPathingSolver` time against base at four threads, with unchanged outcomes.
-
-The phase-only harness is `scripts/benchmark/port-point-threading.ts`; `--reference-threads 0` selects ordinary serial TypeScript, and `--reference-threads 1` selects one scoring worker. Run benchmarks on Blacksmith per repository policy.
+Run performance measurements on Blacksmith per repository policy. `/benchmark --dataset 18 --threads 4` compares both revisions on the same machine. The phase-only harness is `scripts/benchmark/port-point-threading.ts`; it reports output hashes and iteration counts, which may differ between serial and parallel searches.

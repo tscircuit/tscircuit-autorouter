@@ -1,4 +1,4 @@
-import { solveWithParallelCosts, RegionCostReadyTask } from "tiny-hypergraph/lib/core-parallel"
+import { solveWithParallelSearch, DistributedSearchReadyTask } from "tiny-hypergraph/lib/core-parallel"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
@@ -1194,7 +1194,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private async initializeAsync(runtime: SolverRuntimeExecutor): Promise<void> {
-    const startup = runtime.executeAsync(RegionCostReadyTask, {}).then(
+    const startup = runtime.executeAsync(DistributedSearchReadyTask, {}).then(
       () => undefined, (error: unknown) => ({ error }),
     )
     // Allow pool startup to begin before synchronous graph preparation.
@@ -1424,14 +1424,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       parallelRouteWorkers: solveGraphStats.parallelRouteWorkers,
-      parallelCostTables: solveGraphStats.parallelCostTables,
-      parallelCostCells: solveGraphStats.parallelCostCells,
-      parallelCostWorkerMs: solveGraphStats.parallelCostWorkerMs,
-      parallelCostPrepareMs: solveGraphStats.parallelCostPrepareMs,
-      parallelCostCacheHits: solveGraphStats.parallelCostCacheHits,
-      parallelCostCacheMisses: solveGraphStats.parallelCostCacheMisses,
-      parallelOriginalSearchMs: solveGraphStats.parallelOriginalSearchMs,
-      maximumParticipatingCostWorkers: solveGraphStats.maximumParticipatingCostWorkers,
+      parallelSearchMs: solveGraphStats.parallelSearchMs,
+      parallelRouteSearches: solveGraphStats.parallelRouteSearches,
+      parallelRouteExpansions: solveGraphStats.parallelRouteExpansions,
+      parallelSearchMessages: solveGraphStats.parallelSearchMessages,
+      parallelSearchBatches: solveGraphStats.parallelSearchBatches,
+      maximumParticipatingSearchWorkers: solveGraphStats.maximumParticipatingSearchWorkers,
       ripCount: solveGraphStats.ripCount,
       partialRipCount: solveGraphStats.partialRipCount,
       partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
@@ -1494,7 +1492,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             this.MAX_ITERATIONS - this.iterations,
             pipeline.MAX_ITERATIONS - pipeline.iterations,
           )
-          await solveWithParallelCosts(search, runtime, previousIterations + remaining)
+          await solveWithParallelSearch(search, runtime, previousIterations + remaining)
           const terminal = search.solved || search.failed
           const consumed = Math.max(0, search.iterations - previousIterations - (terminal ? 1 : 0))
           pipeline.iterations += consumed
