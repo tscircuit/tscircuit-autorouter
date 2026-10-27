@@ -79,7 +79,9 @@ class KrtAutorouterSolver extends BaseSolver {
         ) - edgeInset,
     }
     if (bounds.minX >= bounds.maxX || bounds.minY >= bounds.maxY) {
-      throw new Error("KRT has no routing bounds after original edge constraints")
+      throw new Error(
+        "KRT has no routing bounds after original edge constraints",
+      )
     }
     this.stats.preparationMs = performance.now() - preparationStarted
     this.stats.gridStep = gridStep

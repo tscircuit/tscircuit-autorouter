@@ -17,8 +17,14 @@ test("direct KRT normalization retains close terminals and does not mutate origi
   const prepared = prepareKrtBranches(original)
   expect(original).toEqual(before)
   expect(prepared.branches).toHaveLength(2)
-  expect(prepared.branches.some((branch) => branch.points.some((point) => point.x === 0.01))).toBe(true)
+  expect(
+    prepared.branches.some((branch) =>
+      branch.points.some((point) => point.x === 0.01),
+    ),
+  ).toBe(true)
   expect(prepared.srj.obstacles[0].connectedTo.length).toBeGreaterThan(1)
-  const aliases = prepared.srj.connections.flatMap((connection) => connection.pointsToConnect.map((point) => point.pointId))
+  const aliases = prepared.srj.connections.flatMap((connection) =>
+    connection.pointsToConnect.map((point) => point.pointId),
+  )
   expect(new Set(aliases).size).toBe(aliases.length)
 })

@@ -13,7 +13,9 @@ test("direct KRT presents one canonical copper owner for every same-net pad and 
     connectedTo: ["c"],
   })
   const prepared = prepareKrtBranches(original)
-  const owners = prepared.srj.connections.map((connection) => connection.sourceTraceId)
+  const owners = prepared.srj.connections.map(
+    (connection) => connection.sourceTraceId,
+  )
   expect(new Set(owners).size).toBe(1)
   expect(prepared.srj.obstacles[0].connectedTo).toContain(owners[0])
   expect(original.obstacles[0].connectedTo).toEqual(["c"])

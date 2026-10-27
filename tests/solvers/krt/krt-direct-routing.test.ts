@@ -12,6 +12,8 @@ test("direct backend produces an originally accepted multi-terminal board throug
   expect(solver.getOutputSimplifiedPcbTraces()).toHaveLength(2)
   expect(solver.krtAutorouterSolver?.stats.gridStep).toBe(0.1)
   expect(original).toEqual(before)
-  expect(solver.getOutputSimpleRouteJson().connections).toEqual(before.connections)
+  expect(solver.getOutputSimpleRouteJson().connections).toEqual(
+    before.connections,
+  )
   expect(solver.getOutputSimpleRouteJson().outline).toEqual(before.outline)
 })

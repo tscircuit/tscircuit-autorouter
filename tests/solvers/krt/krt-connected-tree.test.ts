@@ -18,11 +18,24 @@ test("direct KRT preserves all terminal and root references in a connected tree"
       layer: "top",
     })),
   }))
-  const accepted = acceptKrtBranches({ original, branches, proposed, gridStep: 0.1 })
+  const accepted = acceptKrtBranches({
+    original,
+    branches,
+    proposed,
+    gridStep: 0.1,
+  })
   expect(accepted).toHaveLength(2)
   expect(accepted.every((trace) => trace.connection_name === "tree")).toBe(true)
-  expect(accepted.every((trace) => trace.connectsTo?.includes("original_net"))).toBe(true)
+  expect(
+    accepted.every((trace) => trace.connectsTo?.includes("original_net")),
+  ).toBe(true)
   const referenced = new Set(accepted.flatMap((trace) => trace.connectsTo))
   expect(["a", "b", "c"].every((id) => referenced.has(id))).toBe(true)
-  expect(accepted.every((trace) => trace.route[0].route_type === "wire" && trace.route[0].start_pcb_port_id)).toBe(true)
+  expect(
+    accepted.every(
+      (trace) =>
+        trace.route[0].route_type === "wire" &&
+        trace.route[0].start_pcb_port_id,
+    ),
+  ).toBe(true)
 })

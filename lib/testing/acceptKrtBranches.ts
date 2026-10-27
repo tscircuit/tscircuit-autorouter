@@ -59,7 +59,8 @@ export const acceptKrtBranches = ({
   const traces: SimplifiedPcbTraces = []
   for (const trace of parsed) {
     const branch = remaining.get(trace.connection_name)
-    if (!branch) throw new Error(`Unexpected KRT branch ${trace.connection_name}`)
+    if (!branch)
+      throw new Error(`Unexpected KRT branch ${trace.connection_name}`)
     remaining.delete(trace.connection_name)
     if (
       trace.route.some((point) =>
@@ -68,7 +69,9 @@ export const acceptKrtBranches = ({
           : !layers.has(point.from_layer) || !layers.has(point.to_layer),
       )
     ) {
-      throw new Error(`KRT used a layer outside the original board: ${branch.name}`)
+      throw new Error(
+        `KRT used a layer outside the original board: ${branch.name}`,
+      )
     }
     const first = trace.route[0]
     const last = trace.route.at(-1)
@@ -92,8 +95,7 @@ export const acceptKrtBranches = ({
     if (
       trace.route.some(
         (point) =>
-          point.route_type === "wire" &&
-          point.width + 1e-9 < requestedWidth,
+          point.route_type === "wire" && point.width + 1e-9 < requestedWidth,
       )
     ) {
       throw new Error(`KRT did not preserve requested width for ${branch.name}`)
@@ -128,7 +130,9 @@ export const acceptKrtBranches = ({
         Math.abs(endpoint.x - terminal.x) > gridStep / 2 + 1e-9 ||
         Math.abs(endpoint.y - terminal.y) > gridStep / 2 + 1e-9
       ) {
-        throw new Error(`KRT endpoint is not its terminal grid cell: ${branch.name}`)
+        throw new Error(
+          `KRT endpoint is not its terminal grid cell: ${branch.name}`,
+        )
       }
     }
     // Keep the actual path and its layer transitions intact. These short
@@ -163,8 +167,7 @@ export const acceptKrtBranches = ({
               ...(index === 0 && branch.points[0].pcb_port_id
                 ? { start_pcb_port_id: branch.points[0].pcb_port_id }
                 : {}),
-              ...(index === route.length - 1 &&
-              branch.points[1].pcb_port_id
+              ...(index === route.length - 1 && branch.points[1].pcb_port_id
                 ? { end_pcb_port_id: branch.points[1].pcb_port_id }
                 : {}),
             },
@@ -203,7 +206,9 @@ export const acceptKrtBranches = ({
       )
         continue
       if (distance + 1e-9 < dimensions.holeDiameter + drillClearance) {
-        throw new Error(`KRT drill clearance violation between vias ${a} and ${b}`)
+        throw new Error(
+          `KRT drill clearance violation between vias ${a} and ${b}`,
+        )
       }
     }
   }

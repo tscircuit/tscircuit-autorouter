@@ -7,5 +7,7 @@ test("direct KRT cannot claim completion after omitting a terminal branch", (): 
   const original = krtTestBoard()
   const { branches } = prepareKrtBranches(original)
   expect(branches).toHaveLength(2)
-  expect(() => acceptKrtBranches({ original, branches, proposed: [], gridStep: 0.1 })).toThrow("omitted 2")
+  expect(() =>
+    acceptKrtBranches({ original, branches, proposed: [], gridStep: 0.1 }),
+  ).toThrow("omitted 2")
 })
