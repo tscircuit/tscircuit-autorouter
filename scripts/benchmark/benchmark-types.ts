@@ -69,6 +69,11 @@ export type WorkerProgress = {
 
 export type TinyHypergraphBenchmarkMetrics = {
   parallelRouteWorkers?: number
+  parallelWorkerSearchMs?: number
+  parallelWorkerSnapshotMs?: number
+  parallelGraphSyncMs?: number
+  parallelWaitForRouteMs?: number
+  parallelCoordinatorSerialMs?: number
   parallelRouteSearches?: number
   parallelRouteExpansions?: number
   speculativeRouteSearches?: number

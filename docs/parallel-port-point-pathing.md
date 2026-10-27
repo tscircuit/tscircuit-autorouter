@@ -4,7 +4,7 @@ Pipeline9 enables the optional TypeScript worker backend when the runtime requir
 
 ## Work distribution
 
-Four persistent routing workers search different upcoming routes concurrently. The coordinator commits results in the original route order. Every worker copies a consistent graph snapshot using a shared epoch, then works on private assignment, congestion and intersection-cache data. Static topology and problem data are sent once when a worker starts. Shared versioned cache rows avoid sending the entire graph for every route.
+Four persistent routing workers search different upcoming routes concurrently. The coordinator commits results in the original route order. Every worker copies a consistent graph snapshot using a shared epoch, then works on private assignment, congestion and intersection-cache data. It can refresh unread regions while searching if its entire existing read set remains unchanged. Static topology and problem data are sent once when a worker starts. Shared versioned cache rows avoid sending the entire graph for every route.
 
 A tracking candidate queue records every region expanded by a search. Before accepting a result, the coordinator checks that every recorded region still has the same version. Versions cover port assignments, congestion and region intersection caches. A stale result is discarded and the route is searched again against the current graph. This is optimistic concurrency control, not a recovery path for worker errors; transport or solver errors reject the solve.
 
@@ -20,6 +20,6 @@ Tests cover overlapping routes, stale-result rejection, exact route/iteration pa
 
 ## Performance
 
-The previous WASM-assisted measurements do not apply to this implementation and have been removed. The TypeScript worker backend needs a fresh Blacksmith comparison with `/benchmark --dataset 18 --threads 4`. The target remains a 2x improvement in summed `portPointPathingSolver` time against the base at four threads, while retaining outcomes and iteration accounting.
+The previous WASM-assisted measurements do not apply to this implementation and have been removed. The first TypeScript prototype regressed by 18.4% on sample 6 despite correct output and four active workers. Commit-priority scheduling, early invalidation and safe refresh of unread regions address the observed wasted work; their performance is pending a new measurement. The TypeScript worker backend needs a fresh Blacksmith comparison with `/benchmark --dataset 18 --threads 4`. The target remains a 2x improvement in summed `portPointPathingSolver` time against the base at four threads, while retaining outcomes and iteration accounting.
 
 A phase-only diagnostic harness is available at `scripts/benchmark/port-point-threading.ts`. `--reference-threads 0` selects the serial TypeScript solver; `--reference-threads 1` selects one TypeScript routing worker. Follow the repository policy requiring Blacksmith for benchmark runs.
