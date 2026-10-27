@@ -10,8 +10,8 @@ test.failing(
     expect(params.layerCount).toBe(6)
     const solver = new Pipeline9HighDensitySolver(params)
     while (
-      solver.activeFallbackSolver?.params.nodeWithPortPoints.capacityMeshNodeId !==
-        "new-cmn_55-603__sub_0_0" &&
+      solver.activeFallbackSolver?.params.nodeWithPortPoints
+        .capacityMeshNodeId !== "new-cmn_55-603__sub_0_0" &&
       !solver.solved &&
       !solver.failed &&
       solver.iterations < 100_000
