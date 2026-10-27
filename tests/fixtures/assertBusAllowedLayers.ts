@@ -39,7 +39,9 @@ export function assertBusAllowedLayers(
       const net = connMap.getNetConnectedToId(trace.connection_name)
       const memberName = bus.connectionNames.includes(trace.connection_name)
         ? trace.connection_name
-        : net === undefined ? undefined : memberNamesByNet.get(net)
+        : net === undefined
+          ? undefined
+          : memberNamesByNet.get(net)
       if (memberName === undefined) continue
 
       for (const point of trace.route) {

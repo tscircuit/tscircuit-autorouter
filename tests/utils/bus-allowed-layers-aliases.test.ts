@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import { assertBusAllowedLayers } from "../fixtures/assertBusAllowedLayers"
-import { createBusLayerInput, createBusLayerTrace } from "../fixtures/bus-layer-input"
+import {
+  createBusLayerInput,
+  createBusLayerTrace,
+} from "../fixtures/bus-layer-input"
 
 test("bus layer checks resolve root aliases and intersect overlapping bus restrictions", (): void => {
   const srj = createBusLayerInput()
