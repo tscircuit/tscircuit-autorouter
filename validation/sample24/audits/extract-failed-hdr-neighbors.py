@@ -91,7 +91,8 @@ def main():
     report = {"kind": "ACTUAL_FAILED_HDR_NEIGHBOR_AND_GEOMETRY_HASH_DIAGNOSTIC",
               "captureSha256": hashlib.sha256(raw).hexdigest(), "failedNodeId": failed["capacityMeshNodeId"],
               "referencePointForNeighborhoodOnly": proposed, "neighborPortMargin": margin, "selectionBounds": bounds,
-              "selectionRule": "All actual constructor nodes with any actual port inside failed-node/proposed-via union expanded by the explicitly configured margin; every selected node retains all of its ports and pairs.",
+              "referencePointsForNeighborhoodOnly": config.get("referencePointsForNeighborhoodOnly", []),
+              "selectionRule": "All actual constructor nodes with any actual port inside selectionBounds, using the explicit requested box when configured; every selected node retains all of its ports and pairs.",
               "selectedNodeCount": len(selected), "selectedActualNodes": selected,
               "requestedSubregions": regions,
               "selectedNodeIdsByRequestedSubregion": {region["name"]: [node["capacityMeshNodeId"] for node in selected
