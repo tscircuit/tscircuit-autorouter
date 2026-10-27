@@ -1,3 +1,4 @@
+import { preparePipeline9RepairAsync } from "./preparePipeline9RepairAsync"
 import type { SolverRuntimeExecutor } from "@tscircuit/solver-utils"
 import { Pipeline9EffortCleanupSolver } from "./Pipeline9EffortCleanupSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -1169,6 +1170,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           this.iterations += Math.max(
             0,
             phase.iterations - previousIterations - (terminal ? 1 : 0),
+          )
+        }
+        if (this.activeSubSolver instanceof Pipeline9JointDrcRepairSolver) {
+          await preparePipeline9RepairAsync(
+            this.activeSubSolver,
+            runtime,
+            this.MAX_ITERATIONS - this.iterations,
           )
         }
         this.step()
