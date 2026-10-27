@@ -90,8 +90,6 @@ export type RegionMemoryPfMap = Map<RegionId, number>
 export type RegionRipCountMap = Map<RegionId, number>
 
 export interface HgPortPointPathingSolverParams {
-  /** Initialize on the first solve, allowing independent port-use searches to use a runtime. */
-  deferInitialization?: boolean
   graph: HyperGraphHg
   connections: ConnectionHgWithNetId[]
   colorMap?: Record<string, string>

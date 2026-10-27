@@ -105,7 +105,7 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
-  /** Uses the accelerated backend by default with a verified four-worker runtime. */
+  /** Uses parallel TypeScript search by default with a verified four-worker runtime. */
   parallelPortPointPathing?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
@@ -531,7 +531,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
         return [
           {
-            deferInitialization: true,
             graph,
             connections,
             layerCount: cms.srj.layerCount,
