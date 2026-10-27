@@ -33,7 +33,7 @@ test("actual caller drill gap protects own-route and same-owner sites independen
         { x: 2.7, y: 2.2, z: 0 },
       ],
     }
-    const witness = { route, ancestors: [] }
+    const witness = { id: 0, task: 0, route, ancestors: [] }
     const state = {
       ancestors: [new Set(), new Set(), new Set()],
       witnesses: [witness, undefined, undefined],
@@ -53,8 +53,9 @@ test("actual caller drill gap protects own-route and same-owner sites independen
       false,
     )
     expect(solver.priorityDiagnostics.priorityFinalDrillPairs).toBe(1)
-    const left = { route: { ...route, vias: [route.vias[0]] }, ancestors: [] }
+    const left = { id: 0, task: 0, route: { ...route, vias: [route.vias[0]] }, ancestors: [] }
     const right = {
+      id: 1, task: 1,
       route: { ...route, connectionName: "b", vias: [route.vias[1]] },
       ancestors: [],
     }

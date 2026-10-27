@@ -1,0 +1,45 @@
+Local functional evidence; no corpus timing claim
+
+Same branch, effort 1, cache disabled, identical input hashes and original DRC:
+
+SRJ18 sample 1: disabled and enabled both solved, 205 traces, zero relaxed DRC.
+Enabled oracle executes 70 searches and archives 14 routes. No simultaneous
+compatibility search completes/starts in this board's portfolio schedule.
+
+SRJ24 sample 25: disabled and enabled both solved, 57 traces, zero relaxed DRC.
+Enabled oracle executes 48 searches, archives 32 routes, checks 24 physical
+pairs and learns 8 conflicts. No simultaneous search starts. Constructor counts
+alone are not evidence of execution or benefit.
+
+Captured SRJ18 sample002 large node, one native family at physical size:
+Disabled: UNKNOWN at 495685 of 496919 allowed work units.
+Enabled: UNKNOWN at 496558 of the SAME 496919 allowed work units. Actual native
+geometry provides 64 archived alternatives; 26 conflicts are learned from 183
+physical pair checks; 45 simultaneous searches execute, with 712 fact hits and
+47 learned-conflict rejections. No complete compatible assignment is found.
+This establishes mechanism activation on real captured geometry, not a solve
+improvement. No output routes exist and this case is not counted as DRC-clean.
+
+Captured A13 SRJ18 hard node:
+Both disabled and enabled finish UNKNOWN before the unchanged 795449 cap.
+Enabled generates 12 alternatives versus 3 before the unpriced-oracle policy,
+but one low-level search remains UNKNOWN before complete domains exist.
+
+The earlier archive-only replay (before unpriced generation), invalid initial
+A/B option-wiring precheck, and cancelled large local checks are retained as
+explicitly labeled JSON artifacts. SRJ24 sample1 and SRJ18 sample2 full-board
+checks were cancelled to free memory after shared-environment OOM evidence;
+they supply no result or timing conclusion. Official full-corpus execution
+belongs on isolated Blacksmith hardware.
+
+Synthetic physical integration verifies a simultaneous assignment revises TWO
+earlier route geometries, passes the original Native validation, and publishes
+the clear alternatives. Negative tests cover incompatible restricted domains,
+choice/aggregate caps with no output, immutable physical facts, changed-geometry
+cache misses, and retained hard future-trace via guards. The existing owner,
+blind-via/span, hole-clearance, ancestor-context, family budget, and async ledger
+tests retain all original assertions.
+
+Build (workers, ESM, declarations) passes. Required performance evidence remains
+the common-base versus candidate Blacksmith runs for datasets18 and24, plus
+same-branch option A/B when evaluating attribution.

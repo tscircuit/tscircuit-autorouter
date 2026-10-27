@@ -1,0 +1,148 @@
+{
+  "results": [
+    {
+      "fixture": "a13-srj18-hard-node",
+      "enabled": false,
+      "inputSha256": "ce02198bc3623de4225f1f0fff3e642fcf3c4cb4dfef50b2ba01616844d5ec16",
+      "sourceRules": {
+        "traceWidth": 0.1,
+        "viaDiameter": 0.3,
+        "viaHoleDiameter": 0.15,
+        "obstacleMargin": 0.15,
+        "minHoleGap": 0.1,
+        "layerCount": 2
+      },
+      "solved": false,
+      "failed": true,
+      "error": "Priority DAG candidate UNKNOWN: bounded priority policy exhausted; no physical impossibility proven",
+      "iterations": 57233,
+      "maxIterations": 795449,
+      "routeCount": 0,
+      "copperConflicts": 0,
+      "diagnostics": {
+        "priorityInstances": 1,
+        "priorityRemovedNativeCandidates": 6,
+        "priorityAllocatedWorkUnits": 795449,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 1,
+        "priorityScaledInstances": 0,
+        "priorityCompletedCandidates": 1,
+        "prioritySolvedCandidates": 0,
+        "priorityUnknownCandidates": 1,
+        "priorityCompletedWorkUnits": 57233
+      }
+    },
+    {
+      "fixture": "a13-srj18-hard-node",
+      "enabled": true,
+      "inputSha256": "ce02198bc3623de4225f1f0fff3e642fcf3c4cb4dfef50b2ba01616844d5ec16",
+      "sourceRules": {
+        "traceWidth": 0.1,
+        "viaDiameter": 0.3,
+        "viaHoleDiameter": 0.15,
+        "obstacleMargin": 0.15,
+        "minHoleGap": 0.1,
+        "layerCount": 2
+      },
+      "solved": false,
+      "failed": true,
+      "error": "Priority DAG candidate UNKNOWN: bounded priority policy exhausted; no physical impossibility proven",
+      "iterations": 107358,
+      "maxIterations": 795449,
+      "routeCount": 0,
+      "copperConflicts": 0,
+      "diagnostics": {
+        "priorityInstances": 1,
+        "priorityRemovedNativeCandidates": 6,
+        "priorityAllocatedWorkUnits": 795449,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 1,
+        "priorityScaledInstances": 0,
+        "copperCandidateInstances": 1,
+        "copperCandidateUnpricedNativeSearches": 13,
+        "copperCandidateRoutesArchived": 12,
+        "priorityCompletedCandidates": 1,
+        "prioritySolvedCandidates": 0,
+        "priorityUnknownCandidates": 1,
+        "priorityCompletedWorkUnits": 107358
+      }
+    },
+    {
+      "fixture": "srj18-sample002-large-node",
+      "enabled": false,
+      "inputSha256": "9264db807b195536105835d907f174400a004b9ce61ccdc4b49ed3aa2aafde02",
+      "sourceRules": {
+        "traceWidth": 0.1,
+        "viaDiameter": 0.3,
+        "viaHoleDiameter": 0.15,
+        "obstacleMargin": 0.15,
+        "minHoleGap": 0.1,
+        "layerCount": 2
+      },
+      "solved": false,
+      "failed": true,
+      "error": "Priority DAG candidate UNKNOWN: aggregate family work allowance exhausted",
+      "iterations": 495685,
+      "maxIterations": 496919,
+      "routeCount": 0,
+      "copperConflicts": 0,
+      "diagnostics": {
+        "priorityInstances": 1,
+        "priorityRemovedNativeCandidates": 6,
+        "priorityAllocatedWorkUnits": 496919,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 1,
+        "priorityScaledInstances": 0,
+        "priorityCompletedCandidates": 1,
+        "prioritySolvedCandidates": 0,
+        "priorityUnknownCandidates": 1,
+        "priorityCompletedWorkUnits": 495685
+      }
+    },
+    {
+      "fixture": "srj18-sample002-large-node",
+      "enabled": true,
+      "inputSha256": "9264db807b195536105835d907f174400a004b9ce61ccdc4b49ed3aa2aafde02",
+      "sourceRules": {
+        "traceWidth": 0.1,
+        "viaDiameter": 0.3,
+        "viaHoleDiameter": 0.15,
+        "obstacleMargin": 0.15,
+        "minHoleGap": 0.1,
+        "layerCount": 2
+      },
+      "solved": false,
+      "failed": true,
+      "error": "Priority DAG candidate UNKNOWN: aggregate family work allowance exhausted",
+      "iterations": 496558,
+      "maxIterations": 496919,
+      "routeCount": 0,
+      "copperConflicts": 0,
+      "diagnostics": {
+        "priorityInstances": 1,
+        "priorityRemovedNativeCandidates": 6,
+        "priorityAllocatedWorkUnits": 496919,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 1,
+        "priorityScaledInstances": 0,
+        "copperCandidateInstances": 1,
+        "copperCandidateUnpricedNativeSearches": 80,
+        "copperCandidateRoutesArchived": 64,
+        "copperCandidatePhysicalPairChecks": 183,
+        "copperCandidateConflictsLearned": 26,
+        "copperCandidateSearches": 45,
+        "copperCandidateConflictFactHits": 712,
+        "copperCandidateSelectionAttempts": 207,
+        "copperCandidateRejectedChoices": 45,
+        "copperCandidateRestrictedExhaustions": 45,
+        "copperCandidateLearnedConflictRejects": 47,
+        "copperCandidateDuplicateRoutes": 8,
+        "copperCandidateArchiveEvictions": 1,
+        "priorityCompletedCandidates": 1,
+        "prioritySolvedCandidates": 0,
+        "priorityUnknownCandidates": 1,
+        "priorityCompletedWorkUnits": 496558
+      }
+    }
+  ]
+}

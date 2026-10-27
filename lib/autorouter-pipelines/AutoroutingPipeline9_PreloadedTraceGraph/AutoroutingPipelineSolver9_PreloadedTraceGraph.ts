@@ -114,6 +114,8 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /** Experiment: select compatible archived native copper alternatives. */
+  copperCandidateSearch?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -539,6 +541,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -642,6 +645,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             includeBoardObstacles: true,
             nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
+            copperCandidateSearch: cms.opts.copperCandidateSearch,
           },
         ]
       },
@@ -1152,6 +1156,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof
+            TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {

@@ -8,14 +8,17 @@ import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWith
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Native } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import { extendPriorityDag, type PriorityDagState } from "./priorityDagState"
+import {
+  CopperCandidateCompatibilitySearch,
+  type CopperRouteCandidate,
+} from "./CopperCandidateCompatibilitySearch"
 
 import {
   decomposePriorityTasks,
   type PriorityTask as Task,
 } from "./decomposePriorityTasks"
 
-type Witness = {
-  route: HighDensityIntraNodeRoute
+type Witness = CopperRouteCandidate & {
   ancestors: Array<[number, Witness]>
 }
 type State = PriorityDagState<Witness>
@@ -71,10 +74,20 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
   } = { minX: 0, maxX: 0, minY: 0, maxY: 0 }
   private readonly allowedLayers: number[] = []
   private readonly regionId: string = ""
+  readonly copperCandidateSearch: boolean
+  private readonly candidateDomains: CopperRouteCandidate[][] = []
+  private readonly candidateKeys: Map<string, CopperRouteCandidate>[] = []
+  private readonly candidatePairConflicts = new Map<string, boolean>()
+  private candidateCount = 0
+  private candidateRevision = 0
+  private searchedCandidateRevision = 0
+  private candidateSearch?: CopperCandidateCompatibilitySearch
+  private validatingCandidateAssignment = false
 
   constructor(params: Params) {
     super(params)
     this.aggregate = params.priorityDiagnostics
+    this.copperCandidateSearch = params.copperCandidateSearch ?? false
     this.coordinateScale = params.priorityCoordinateScale ?? 1
     if (!Number.isFinite(this.coordinateScale) || this.coordinateScale <= 0)
       throw new Error("Invalid priority coordinate scale")
@@ -153,6 +166,12 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
       if (!tasks)
         throw new Error("Priority DAG requires nondegenerate native star tasks")
       this.tasks = tasks
+      if (this.copperCandidateSearch) {
+        this.charge("priorityCandidateArchiveSetup", tasks.length * 2)
+        this.candidateDomains = tasks.map(() => [])
+        this.candidateKeys = tasks.map(() => new Map())
+        this.recordCandidate("copperCandidateInstances")
+      }
       this.charge("priorityLayerExtentUpperBound", this.tasks.length * 2)
       this.board = {
         layerCount:
@@ -200,6 +219,14 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
 
   private record(name: string, count = 1): void {
     if (!this.detailedWorkDiagnosticsEnabled) return
+    this.priorityDiagnostics[name] =
+      (this.priorityDiagnostics[name] ?? 0) + count
+    if (this.aggregate) {
+      this.aggregate[name] = (this.aggregate[name] ?? 0) + count
+    }
+  }
+
+  private recordCandidate(name: string, count = 1): void {
     this.priorityDiagnostics[name] =
       (this.priorityDiagnostics[name] ?? 0) + count
     if (this.aggregate) {
@@ -272,6 +299,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     this.pairRight = 1
     this.finalTask = 0
     this.readyToValidate = false
+    this.validatingCandidateAssignment = false
   }
 
   private getOptions(
@@ -323,6 +351,18 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
 
   private startTask(task: number, state: State): void {
     const opts = this.getOptions(task, state)
+    if (this.copperCandidateSearch) {
+      // The geometry selector handles actual competition between columns.
+      // Its oracle does not price speculative future endpoints. Keep the FULL
+      // future list: Native also uses it as a hard via-to-future-trace guard.
+      // Publication still uses the original, unmodified getOptions context.
+      this.charge("priorityCandidateOraclePriceCopies", Object.keys(this.hyperParameters).length + 2)
+      opts.hyperParameters = {
+        ...this.hyperParameters,
+        FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR: 0,
+        FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR: 0,
+      }
+    }
     const setupPrimitives =
       1 +
       opts.obstacleRoutes.reduce(
@@ -363,6 +403,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     this.charge("priorityNativeSetupPrimitives", setupPrimitives)
     this.activeSubSolver = new Native(opts)
     this.record("priorityNativeSearches")
+    if (this.copperCandidateSearch)
+      this.recordCandidate("copperCandidateUnpricedNativeSearches")
   }
 
   private storeRoute(
@@ -401,8 +443,9 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     Object.freeze(copy.route)
     Object.freeze(copy.vias)
     Object.freeze(copy)
+    const candidate = this.archiveCandidate(task, copy)
     state.witnesses[task] = {
-      route: copy,
+      ...candidate,
       ancestors: [...state.ancestors[task]].map((i) => {
         const witness = state.witnesses[i]
         if (!witness) throw new Error("Missing priority route context")
@@ -411,21 +454,128 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
     }
   }
 
+  private archiveCandidate(
+    task: number,
+    route: HighDensityIntraNodeRoute,
+  ): CopperRouteCandidate {
+    // IDs belong to this immutable node/owner/layer/clearance context only.
+    // Exact primitive data, rather than a rounded hash, identifies geometry.
+    if (!this.copperCandidateSearch) {
+      return { id: this.candidateCount++, task, route }
+    }
+    this.charge("priorityCandidateGeometryKeys", 1 + route.route.length + route.vias.length)
+    const key = JSON.stringify([route.route, route.vias])
+    const existing = this.candidateKeys[task].get(key)
+    if (existing) {
+      this.recordCandidate("copperCandidateDuplicateRoutes")
+      return existing
+    }
+    const candidate = { id: this.candidateCount++, task, route }
+    // The archive is a bounded proposal domain, not all physically legal paths.
+    // We keep the latest alternatives because they incorporate recent conflicts.
+    const domain = this.candidateDomains[task]
+    if (domain.length === 8) {
+      this.charge("priorityCandidateEvictionSlots", domain.length)
+      const removed = domain.shift()!
+      this.charge("priorityCandidateEvictionKeys", 1 + removed.route.route.length + removed.route.vias.length)
+      this.candidateKeys[task].delete(JSON.stringify([removed.route.route, removed.route.vias]))
+      this.recordCandidate("copperCandidateArchiveEvictions")
+    }
+    domain.push(candidate)
+    this.candidateKeys[task].set(key, candidate)
+    this.candidateRevision++
+    this.recordCandidate("copperCandidateRoutesArchived")
+    return candidate
+  }
+
+  private stepCandidateSearch(): boolean {
+    if (!this.copperCandidateSearch) return false
+    if (!this.candidateSearch) {
+      if (this.candidateRevision === this.searchedCandidateRevision) return false
+      this.searchedCandidateRevision = this.candidateRevision
+      this.charge("priorityCandidateDomainEligibility", this.tasks.length * 2)
+      if (
+        this.candidateDomains.some((domain) => domain.length === 0) ||
+        this.candidateDomains.every((domain) => domain.length === 1)
+      ) return false
+      this.candidateSearch = new CopperCandidateCompatibilitySearch({
+        domains: this.candidateDomains,
+        maxAttempts: 256,
+        charge: this.charge,
+        conflict: (left, right) => this.candidateConflict(left, right),
+      })
+      this.recordCandidate("copperCandidateSearches")
+    }
+    const search = this.candidateSearch
+    search.step()
+    if (search.status === "searching") return true
+    this.recordCandidate("copperCandidateSelectionAttempts", search.attempts)
+    this.recordCandidate("copperCandidateRejectedChoices", search.rejected)
+    this.candidateSearch = undefined
+    if (search.status === "found") {
+      if (!search.solution) throw new Error("Missing compatible candidate solution")
+      this.charge("priorityCandidateRevisionComparisons", this.tasks.length)
+      const revised = search.solution.filter((candidate, task) =>
+        this.current?.witnesses[task]?.id !== candidate.id).length
+      this.recordCandidate("copperCandidateRevisedSelections", revised)
+      this.charge("priorityCandidateAssignmentCopies", this.tasks.length * 3)
+      // This is a NEW physical proposal, not native-context memoization. Soft
+      // future costs and old priorities do not constrain its legality. Every
+      // pair and every native path guard is checked again before publication.
+      this.acceptState({
+        ancestors: this.tasks.map(() => new Set()),
+        witnesses: search.solution.map((candidate) => ({ ...candidate, ancestors: [] })),
+      })
+      this.validatingCandidateAssignment = true
+      this.recordCandidate("copperCandidateAssignmentsFound")
+    } else {
+      // Restricted-domain exhaustion and work limits leave geometric
+      // feasibility UNKNOWN. The same policy keeps generating native columns.
+      this.recordCandidate(search.status === "limited"
+        ? "copperCandidateLimitedSearches"
+        : "copperCandidateRestrictedExhaustions")
+    }
+    return true
+  }
+
   private pairConflict(left: number, right: number, state: State): boolean {
     this.charge("priorityPairChecks")
-    const a = state.witnesses[left]?.route,
-      b = state.witnesses[right]?.route
+    const a = state.witnesses[left], b = state.witnesses[right]
     if (!a || !b) throw new Error("Missing priority pair witness")
+    return this.candidateConflict(a, b)
+  }
+
+  private candidateConflict(left: CopperRouteCandidate, right: CopperRouteCandidate): boolean {
+    if (this.copperCandidateSearch) {
+      this.charge("priorityCandidateConflictLookups")
+      const key = left.id < right.id ? `${left.id}:${right.id}` : `${right.id}:${left.id}`
+      const known = this.candidatePairConflicts.get(key)
+      if (known !== undefined) {
+        this.recordCandidate("copperCandidateConflictFactHits")
+        if (known) this.recordCandidate("copperCandidateLearnedConflictRejects")
+        return known
+      }
+      const conflict = this.physicalCandidateConflict(left, right)
+      this.candidatePairConflicts.set(key, conflict)
+      this.recordCandidate("copperCandidatePhysicalPairChecks")
+      if (conflict) this.recordCandidate("copperCandidateConflictsLearned")
+      return conflict
+    }
+    return this.physicalCandidateConflict(left, right)
+  }
+
+  private physicalCandidateConflict(left: CopperRouteCandidate, right: CopperRouteCandidate): boolean {
+    const a = left.route, b = right.route
     // Drill clearance is owner-independent; only an identical same-net site
     // denotes reuse. Never replace the actual drill gap by annulus clearance.
     for (const va of a.vias)
       for (const vb of b.vias) {
         this.charge("priorityDrillPairChecks")
         const distance = Math.hypot(va.x - vb.x, va.y - vb.y)
-        if (distance === 0 && this.owner[left] === this.owner[right]) continue
+        if (distance === 0 && this.owner[left.task] === this.owner[right.task]) continue
         if (distance < this.viaHoleDiameter + this.minimumHoleGap) return true
       }
-    if (this.owner[left] === this.owner[right]) return false
+    if (this.owner[left.task] === this.owner[right.task]) return false
     this.charge(
       "priorityGeometrySetupUpperBound",
       a.route.length + a.vias.length + b.route.length + b.vias.length,
@@ -571,6 +721,7 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         }
         return
       }
+      if (this.stepCandidateSearch()) return
       if (!this.current) {
         const state = this.stack.pop()
         if (!state) {
@@ -624,6 +775,8 @@ export class PriorityDagIntraNodeSolver extends IntraNodeRouteSolver {
         vias: w!.route.vias.map((v) => ({ ...v })),
       }))
       this.solved = true
+      if (this.validatingCandidateAssignment)
+        this.recordCandidate("copperCandidateAssignmentsPublished")
       this.recordTerminal(true)
     } catch (error) {
       if (!(error instanceof PriorityWorkLimitReached)) throw error

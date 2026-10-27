@@ -1,0 +1,50 @@
+Experiment: simultaneous selection of archived physical copper
+
+The previous PR3201 repair04 causal-worklist pin and option are replaced by the
+current main dependency and a local geometric candidate-selection mechanism.
+The earlier experiment remains in Git history.
+
+Owned Pipeline9 routing enables copperCandidateSearch by default. Passing
+{ copperCandidateSearch: false } to Pipeline9 disables just this mechanism for
+same-branch functional and performance attribution. Shared/network regular-node
+factories keep it disabled unless explicitly requested with full drill context.
+Worker inputs propagate the owned Pipeline9 setting.
+
+Each eligible priority solver archives up to eight distinct immutable Native
+routes per task. Exact route and via primitive data identify an alternative;
+there is no rounding or cross-node cache. A physical witness-pair fact includes
+owner-independent drill spacing and the existing layer-aware copper predicate.
+Facts remain within one immutable owner/layer/clearance context and are indexed
+by candidate identities. Different geometry receives a different identity.
+The candidate-generation oracle does not price speculative future endpoints;
+the simultaneous selector resolves actual competing geometry. Only its soft
+future proximity penalty factors are zeroed. The complete future list remains
+in Native, preserving its hard via-to-future-trace guard, route count, and all
+terminal/obstacle geometry. Publication uses original Native options.
+
+Whenever a new alternative expands complete domains,
+a bounded search chooses mutually compatible routes simultaneously. It explores
+at most 256 candidate choices per domain revision, using learned physical
+conflicts to reject incompatible choices. This can revise earlier geometry
+without reproducing its original Native ancestor context or routing order.
+The result is explicitly a new physical proposal, not exact-context memoization.
+Before publication, the existing pair checks and Native per-path guards still
+run. Native generation, archive work, choice search, pair checks, and validation
+all consume the unchanged aggregate allowance of the replaced Native family.
+
+Restricted-domain exhaustion and work limits do not prove physical impossibility.
+They leave the underlying geometry question UNKNOWN. The integrated generator
+can generate more Native alternatives through its existing priority decisions.
+No routing rule, publication guard, DRC validator, or work budget is relaxed.
+
+Unconditional copperCandidate* diagnostic counters report archive activation,
+physical facts, learned-conflict hits, simultaneous searches, revised selections,
+restricted exhaustion/limits, found assignments, and published assignments.
+Only the physical witness-pair facts are reusable proofs. A failed heuristic
+route search is never turned into an infeasibility clause.
+
+This is a bounded local path-selection experiment, not an implementation of a
+complete SAT/SMT solver, Benders cuts across pipeline stages, or exact global
+column generation. Success needs actual corpus activation and independent DRC
+under the common benchmark rules. Functional A/B script: bun
+experiments/copper-candidate-compatibility/validate.ts srj18 1 (and srj24 1).

@@ -1,0 +1,19 @@
+{
+  "checks": [
+    {
+      "dataset": "srj24",
+      "sample": 1,
+      "enabled": false,
+      "status": "cancelled-before-first-arm-finished",
+      "lastObservedRssKiB": 3236020
+    },
+    {
+      "dataset": "srj18",
+      "sample": 2,
+      "enabled": false,
+      "status": "cancelled-before-first-arm-finished",
+      "lastObservedRssKiB": 1681192
+    }
+  ],
+  "reason": "Shared 16GiB environment had an OOM during concurrent large functional boards. Parent requested small local checks and isolated official Blacksmith corpus execution. No routing result or timing conclusion is drawn."
+}

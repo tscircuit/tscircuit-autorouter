@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.1010",
+  "version": "0.0.1012",
   "type": "module",
   "repository": {
     "type": "git",
@@ -65,7 +65,7 @@
     "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#ab0071efa0be5d5a9cdaf60a6729512ee47c6645",
     "@tscircuit/rectdiff": "0.0.56",
-    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/084736529557ee519b09ba342d0a68a6d8a4f218",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/88504e8908a3f2e35ad9805162757ef94357d717",
     "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#054d77a1a9a200478736062e1abe4fdb8dc163df",
     "@types/bun": "^1.2.23",
     "@types/fast-json-stable-stringify": "^2.1.2",
@@ -100,7 +100,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#a1d4d22e73900a6522cac4cfc8b7d50d39fbbb56",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#ec80c91ccbf6529bfd9ae5b205c1d24c7f40bef1",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "tscircuit-for-pipeline9-fixtures": "npm:tscircuit@0.0.2467",

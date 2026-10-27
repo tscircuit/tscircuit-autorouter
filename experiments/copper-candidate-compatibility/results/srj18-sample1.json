@@ -1,0 +1,87 @@
+{
+  "results": [
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "enabled": false,
+      "effort": 1,
+      "inputSha256": "f02a0cfeb4a217c187c642677c7deed7794473b0b643611e4566e9390df387d0",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "phase": "none",
+      "effectiveHighDensityMode": false,
+      "traceCount": 205,
+      "drcIssueCount": 0,
+      "drcErrors": [],
+      "highDensityDiagnostics": {
+        "priorityInstances": 2376,
+        "priorityRemovedNativeCandidates": 18414,
+        "priorityAllocatedWorkUnits": 105220304,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 2376,
+        "priorityScaledInstances": 0
+      },
+      "highDensityStats": {
+        "nodeCount": 583,
+        "solvedNodeCount": 583,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 1,
+        "regularNodeCount": 583,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      }
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "enabled": true,
+      "effort": 1,
+      "inputSha256": "f02a0cfeb4a217c187c642677c7deed7794473b0b643611e4566e9390df387d0",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "phase": "none",
+      "effectiveHighDensityMode": true,
+      "traceCount": 205,
+      "drcIssueCount": 0,
+      "drcErrors": [],
+      "highDensityDiagnostics": {
+        "priorityInstances": 2376,
+        "priorityRemovedNativeCandidates": 18414,
+        "priorityAllocatedWorkUnits": 105220304,
+        "priorityDetailedInstances": 0,
+        "priorityCoordinateScaleSum": 2376,
+        "priorityScaledInstances": 0,
+        "copperCandidateInstances": 2376,
+        "copperCandidateUnpricedNativeSearches": 70,
+        "copperCandidateRoutesArchived": 14
+      },
+      "highDensityStats": {
+        "nodeCount": 583,
+        "solvedNodeCount": 583,
+        "fixedObstacleCount": 0,
+        "fixedObstacleUses": 0,
+        "boardObstacleUses": 0,
+        "fallbackNodeCount": 1,
+        "regularNodeCount": 583,
+        "b01NodeCount": 0,
+        "reroutedFixedRouteCount": 0,
+        "reroutedFixedRouteSectionCount": 0,
+        "promotedFallbackAttemptCount": 0,
+        "promotedFixedRouteCount": 0,
+        "regionalPreloadedViaCandidateRejectionCount": 0,
+        "regionalForceImproveCandidateRejectionCount": 0,
+        "regionalRepairCandidateRejectionCount": 0
+      }
+    }
+  ]
+}

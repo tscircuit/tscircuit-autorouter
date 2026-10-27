@@ -43,8 +43,8 @@ test("priority pair guards use full via span, exact registered owners, and stric
       const state = {
         ancestors: [new Set(), new Set(), new Set()],
         witnesses: [
-          { route: wire, ancestors: [] },
-          { route: via, ancestors: [] },
+          { id: 0, task: 0, route: wire, ancestors: [] },
+          { id: 1, task: 1, route: via, ancestors: [] },
           undefined,
         ],
       }
@@ -62,8 +62,8 @@ test("priority pair guards use full via span, exact registered owners, and stric
     const crossing = {
       ancestors: [new Set(), new Set(), new Set()],
       witnesses: [
-        { route: wire, ancestors: [] },
-        { route: { ...wire, connectionName: "b" }, ancestors: [] },
+        { id: 0, task: 0, route: wire, ancestors: [] },
+        { id: 1, task: 1, route: { ...wire, connectionName: "b" }, ancestors: [] },
         undefined,
       ],
     }

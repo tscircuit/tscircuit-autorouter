@@ -31,8 +31,8 @@ test("indexed owner membership is charged and canonical net names never alias un
       ancestors: [new Set(), new Set(), new Set()],
       witnesses: [
         undefined,
-        { route: wire, ancestors: [] },
-        { route: { ...wire, connectionName: "net0" }, ancestors: [] },
+        { id: 0, task: 1, route: wire, ancestors: [] },
+        { id: 1, task: 2, route: { ...wire, connectionName: "net0" }, ancestors: [] },
       ],
     }
     expect(Reflect.get(solver, "pairConflict").call(solver, 1, 2, state)).toBe(
