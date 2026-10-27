@@ -20,6 +20,7 @@ import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighD
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionWithPlanarRoutesSolver } from "../HighDensitySolver/SingleTransitionWithPlanarRoutesSolver"
 import { areRoutesClearOfMandatoryPorts, type SingleTransitionBoardContext } from "../HighDensitySolver/findSingleTransitionVia"
+import { areRoutesClearOfCompletedCopper, type RoutedPeerWorldIndex } from "../HighDensitySolver/completedCopperWorldIndex"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
 import {
   precomputeIntraNodeRouteParams,
@@ -61,6 +62,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    routedPeerWorldIndex?: RoutedPeerWorldIndex
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -133,6 +135,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       gridSearchWorkScale?: number
       rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      routedPeerWorldIndex?: RoutedPeerWorldIndex
     },
   ) {
     super()
@@ -598,17 +601,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private getSingleTransitionBoardContext(): SingleTransitionBoardContext | undefined {
     const params = this.constructorParams
     if (params.layerCount === undefined) return undefined
-    return {
+    const context = {
       obstacles: params.obstacles ?? [], connMap: this.connMap, layerCount: params.layerCount,
       allowBlindAndBuriedVias: params.allowBlindAndBuriedVias,
       viaToPadClearance: params.viaToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToPadClearance: params.traceToPadClearance ?? params.obstacleMargin ?? 0.15,
       traceToHoleClearance: params.traceToHoleClearance ?? params.obstacleMargin ?? 0.15,
       mandatoryPortPointIndex: params.mandatoryPortPointIndex,
+      routedPeerWorldIndex: params.routedPeerWorldIndex,
       viaHoleDiameter: params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
       boardGeometry: params.boardGeometry, coordinateScale: params.priorityCoordinateScale ?? 1,
     }
+    return context
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
@@ -826,6 +831,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.winningSolver = undefined
       this.activeSubSolver = null
       this.stats.rejectedMandatoryPortCandidateCount = (this.stats.rejectedMandatoryPortCandidateCount ?? 0) + 1
+      return
+    }
+    if (!areRoutesClearOfCompletedCopper({ routes: solvedRoutes,
+      routedPeerWorldIndex: params.routedPeerWorldIndex, connMap: this.connMap,
+      center: this.nodeWithPortPoints.center, coordinateScale: params.priorityCoordinateScale ?? 1 })) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "Candidate copper violates completed world copper clearance"
+      this.solved = false
+      this.winningSolver = undefined
+      this.activeSubSolver = null
+      this.stats.rejectedCompletedCopperCandidateCount = (this.stats.rejectedCompletedCopperCandidateCount ?? 0) + 1
       return
     }
     this.solvedRoutes = solvedRoutes

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   CompletedCopperWorldIndex,
+  areCopperRoutesOnSameNet,
   areRoutesClearOfCompletedCopper,
   queryCompletedCopperWorldIndex,
 } from "../../lib/solvers/HighDensitySolver/completedCopperWorldIndex"
@@ -62,6 +63,14 @@ test("completed WORLD copper rejects foreign interior crossings and full barrels
   expect(check([wire("new", { x: -1, y: 0.4, z: 0 }, { x: 1, y: 0.4, z: 0 })], larger)).toBe(true)
 
   const connMap = new ConnectivityMap({ "0": ["oldAlias", "newAlias"], "1": ["0", "foreignAlias"] })
+  // Numeric runtime labels follow ordinary alias lookup, as Set(Object.keys(...)).has(0) was false.
+  const numericLabel = { connectionName: 0 as unknown as string }
+  expect(areCopperRoutesOnSameNet(numericLabel, { connectionName: "foreignAlias", rootConnectionName: "1" }, connMap)).toBe(true)
+  expect(areCopperRoutesOnSameNet(numericLabel, { connectionName: "oldAlias", rootConnectionName: "0" }, connMap)).toBe(false)
+  const legacyConnMap = { getNetConnectedToId: (id: string) =>
+    id === "legacyA" || id === "legacyB" ? "legacyNet" : undefined } as unknown as ConnectivityMap
+  expect(areCopperRoutesOnSameNet({ connectionName: "legacyA" }, { connectionName: "legacyB" }, legacyConnMap)).toBe(true)
+  expect(areCopperRoutesOnSameNet({ connectionName: "legacyA" }, { connectionName: "unknown" }, legacyConnMap)).toBe(false)
   const owned = new CompletedCopperWorldIndex(options)
   owned.addRoutes([wire("oldAlias", long.route[0]!, long.route[1]!, "0")])
   expect(check([{ ...crossing, connectionName: "newAlias", rootConnectionName: "0" }], owned, { connMap })).toBe(true)

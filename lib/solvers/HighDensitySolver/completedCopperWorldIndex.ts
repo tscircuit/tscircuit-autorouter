@@ -34,8 +34,8 @@ const EPSILON = 1e-9
 const MINIMUM_VIA_EDGE_CLEARANCE = 0.1
 
 function owner(route: Identity, connMap?: ConnectivityMap): string {
-  const registered = (key: string): boolean =>
-    connMap !== undefined && Object.prototype.propertyIsEnumerable.call(connMap.netMap, key)
+  const registered = (key: unknown): boolean =>
+    typeof key === "string" && Object.prototype.propertyIsEnumerable.call(connMap?.netMap ?? {}, key)
   if (route.rootConnectionName !== undefined && registered(route.rootConnectionName)) {
     return JSON.stringify(["registered", route.rootConnectionName])
   }

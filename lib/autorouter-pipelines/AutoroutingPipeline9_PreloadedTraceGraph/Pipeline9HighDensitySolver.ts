@@ -22,6 +22,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import { createMandatoryPortPointIndex, type MandatoryPortPointIndex } from "../../solvers/HighDensitySolver/mandatoryPortPointIndex"
+import { CompletedCopperWorldIndex, areRoutesClearOfCompletedCopper, type RoutedPeerWorldIndex } from "../../solvers/HighDensitySolver/completedCopperWorldIndex"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -337,6 +338,7 @@ export type Pipeline9RegularNodeSolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   mandatoryPortPointIndex?: MandatoryPortPointIndex
+  routedPeerWorldIndex?: RoutedPeerWorldIndex
   allowBlindAndBuriedVias?: boolean
   priorityDagSearch?: boolean
   priorityDiagnostics?: Record<string, number>
@@ -368,6 +370,7 @@ export const createPipeline9RegularNodeSolver = ({
   obstacles,
   boardGeometry,
   mandatoryPortPointIndex,
+  routedPeerWorldIndex,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
@@ -393,6 +396,7 @@ export const createPipeline9RegularNodeSolver = ({
     rejectOverlappingTerminals: layerCount > 2,
     boardGeometry,
     mandatoryPortPointIndex,
+    routedPeerWorldIndex,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
@@ -415,6 +419,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly obstacles: Obstacle[]
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly mandatoryPortPointIndex: MandatoryPortPointIndex
+  readonly completedCopperWorldIndex: CompletedCopperWorldIndex
   readonly layerCount: number
   readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
@@ -463,6 +468,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.traceToPadClearance = params.traceToPadClearance
     this.traceToHoleClearance = params.traceToHoleClearance
     this.viaToPadClearance = params.viaToPadClearance
+    this.completedCopperWorldIndex = new CompletedCopperWorldIndex({
+      layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
+      traceClearance: params.traceToPadClearance ?? 0.1,
+      viaHoleDiameter: params.viaHoleDiameter,
+      minViaHoleEdgeToViaHoleEdgeClearance: params.minViaHoleEdgeToViaHoleEdgeClearance,
+    })
     this.effort = params.effort
     this.nodePfById =
       params.nodePfById instanceof Map
@@ -514,7 +526,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         else this.solveUntilIteration(stopAtIteration)
         return
       }
-      if (this.fixedHdRoutes.length > 0) {
+      // Escaping wires/vias make different cells physically dependent. The
+      // existing serial path keeps each accepted node visible to the next one.
+      if (this.fixedHdRoutes.length > 0 || this.completedCopperWorldIndex) {
         this.solveUntilIteration(stopAtIteration)
         return
       }
@@ -671,11 +685,25 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
-    this.routes.push(
-      ...(this.preserveTerminalPcbPortIds && this.activeNode
+    const acceptedRoutes = this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
-        : solvedRoutes),
-    )
+        : solvedRoutes
+    if (!areRoutesClearOfCompletedCopper({ routes: acceptedRoutes,
+      routedPeerWorldIndex: this.completedCopperWorldIndex, connMap: this.connMap })) {
+      const reason = "Candidate copper conflicts with completed world copper or its own routes"
+      if (this.activeFallbackSolver || !this.enableRegionalFallback) {
+        this.error = reason
+        this.failed = true
+      } else {
+        this.activeRegularSolver = null
+        this.activeB01Solver = null
+        this.activeFallbackReason = reason
+        this.startRegionalFallback()
+      }
+      return
+    }
+    this.completedCopperWorldIndex.addRoutes(acceptedRoutes)
+    this.routes.push(...acceptedRoutes)
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
     this.activeRegularSolver = null
@@ -704,6 +732,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       mandatoryPortPointIndex: this.mandatoryPortPointIndex,
+      routedPeerWorldIndex: this.completedCopperWorldIndex,
       layerCount: this.layerCount,
       viaHoleDiameter: this.params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance:
@@ -785,6 +814,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       boardObstacles: this.obstacles,
       boardGeometry: this.boardGeometry,
       mandatoryPortPointIndex: this.mandatoryPortPointIndex,
+      routedPeerWorldIndex: this.completedCopperWorldIndex,
       viaHoleDiameter: this.params.viaHoleDiameter,
       minViaHoleEdgeToViaHoleEdgeClearance: this.params.minViaHoleEdgeToViaHoleEdgeClearance,
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
@@ -951,6 +981,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       }
       this.startRegionalFallback(promotedConnectionNames)
+      return
+    }
+
+    if (!areRoutesClearOfCompletedCopper({ routes: candidateRoutes,
+      routedPeerWorldIndex: this.completedCopperWorldIndex, connMap: this.connMap })) {
+      this.error = "Regional candidate copper conflicts with completed world copper or its own routes"
+      this.failed = true
       return
     }
 

@@ -21,6 +21,7 @@ import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 import { areRoutesClearOfMandatoryPorts } from "./findSingleTransitionVia"
 import { createMandatoryPortPointIndex, type MandatoryPortPointIndex } from "./mandatoryPortPointIndex"
+import { areRoutesClearOfCompletedCopper, type RoutedPeerWorldIndex } from "./completedCopperWorldIndex"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
@@ -70,6 +71,7 @@ export class HighDensitySolver extends BaseSolver {
   rejectOverlappingTerminals: boolean
   boardGeometry?: HighDensityBoardGeometry
   readonly mandatoryPortPointIndex: MandatoryPortPointIndex
+  readonly routedPeerWorldIndex?: RoutedPeerWorldIndex
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -121,6 +123,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals = false,
     boardGeometry,
     mandatoryPortPointIndex,
+    routedPeerWorldIndex,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -151,6 +154,7 @@ export class HighDensitySolver extends BaseSolver {
     rejectOverlappingTerminals?: boolean
     boardGeometry?: HighDensityBoardGeometry
     mandatoryPortPointIndex?: MandatoryPortPointIndex
+    routedPeerWorldIndex?: RoutedPeerWorldIndex
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -188,6 +192,7 @@ export class HighDensitySolver extends BaseSolver {
     this.rejectOverlappingTerminals = rejectOverlappingTerminals
     this.boardGeometry = boardGeometry
     this.mandatoryPortPointIndex = mandatoryPortPointIndex ?? createMandatoryPortPointIndex(nodePortPoints)
+    this.routedPeerWorldIndex = routedPeerWorldIndex
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -412,6 +417,15 @@ export class HighDensitySolver extends BaseSolver {
         this.activeSubSolver.failed = true
         this.activeSubSolver.error = "Candidate copper violates mandatory port clearance"
       }
+      if (this.activeSubSolver.solved && !areRoutesClearOfCompletedCopper({
+        routes: this.activeSubSolver.solvedRoutes,
+        routedPeerWorldIndex: this.routedPeerWorldIndex,
+        connMap: this.connMap,
+      })) {
+        this.activeSubSolver.solved = false
+        this.activeSubSolver.failed = true
+        this.activeSubSolver.error = "Candidate copper violates completed world copper clearance"
+      }
       if (this.activeSubSolver.solved) {
         this.routes.push(
           ...(this.preserveTerminalPcbPortIds
@@ -460,6 +474,7 @@ export class HighDensitySolver extends BaseSolver {
       rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       boardGeometry: this.boardGeometry,
       mandatoryPortPointIndex: this.mandatoryPortPointIndex,
+      routedPeerWorldIndex: this.routedPeerWorldIndex,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
