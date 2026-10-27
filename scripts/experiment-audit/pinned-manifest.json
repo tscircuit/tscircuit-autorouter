@@ -48,7 +48,7 @@
     },
     {
       "pr": 3199,
-      "candidateSha": null,
+      "candidateSha": "3fb0b2f65271634e177f691136366a6776c3e14b",
       "label": "joint-component-escape",
       "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -64,7 +64,7 @@
     },
     {
       "pr": 3200,
-      "candidateSha": null,
+      "candidateSha": "2edba2358329963aa6ea3a41eda8973fc0321a0a",
       "label": "ordered-sliding-portals",
       "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -81,7 +81,7 @@
     },
     {
       "pr": 3201,
-      "candidateSha": null,
+      "candidateSha": "32c17c49f095860a487d8f95f381b958b639ed6f",
       "label": "copper-conflict-learning",
       "solverName": "AutoroutingPipelineSolver9_PreloadedTraceGraph",
       "solverModule": "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph.ts",
@@ -110,7 +110,8 @@
     }
   ],
   "runPrNumbers": [
-    3198,
-    3202
+    3199,
+    3200,
+    3201
   ]
 }
