@@ -15,10 +15,13 @@ test("parallel port-point routing works with bundled Bun and Node workers and re
   for (const createRuntime of [createBunRuntime, createNodeRuntime]) {
     const solver = new Pipeline9(structuredClone(input), { effort: 0.1, cacheProvider: null })
     const runtime = createRuntime({ workerCount: 4, requireWorker: true })
+    expect(runtime.persistentWorkerCount).toBe(4)
     try { await solver.solveAsync(runtime) } finally { await runtime.dispose() }
     expect(solver.failed).toBe(false); expect(solver.solved).toBe(true)
     expect(solver.getOutputSimpleRouteJson()).toEqual(baseline.getOutputSimpleRouteJson())
     expect(solver.iterations).toBe(baseline.iterations)
-    expect(solver.portPointPathingSolver!.getSolveGraphBenchmarkMetrics()!.wasmRouteSearches).toBeGreaterThan(0)
+    const metrics = solver.portPointPathingSolver!.getSolveGraphBenchmarkMetrics()!
+    expect(metrics.wasmRouteSearches).toBeGreaterThan(0)
+    expect(metrics.parallelRouteWorkers).toBe(3)
   }
 })

@@ -21,14 +21,12 @@ try {
 }
 ```
 
-The implementation spans the coordinated autorouter and tiny-hypergraph working
-trees. The autorouter's current dependency pin predates the new library APIs;
-update it to the corresponding tiny-hypergraph revision when publishing these
-changes. Local validation links that checkout into `node_modules/tiny-hypergraph`.
+The implementation depends on [tiny-hypergraph PR #295](https://github.com/tscircuit/tiny-hypergraph/pull/295). The dependency pins commit `fd1b884fcdf4a569bc08305a3b0dcb6d31368e07`, which includes the worker task classes and embedded kernels. Normal installation fetches that commit; no local checkout link is required.
 
 ## Work distribution
 
 Four active execution threads comprise the caller and three persistent helpers.
+`parallelRouteWorkers: 3` in the benchmark metrics confirms that all three helpers acknowledged startup before a route search began.
 They use the host's existing worker runtime, with no nested pools. Helpers sleep
 between jobs and return their worker slots before subsequent pipeline stages.
 Port-point phases sharing a runtime acquire a lease to avoid reserving overlapping
@@ -203,7 +201,7 @@ Measured working trees are based on autorouter `72d3d4ce` and tiny-hypergraph `b
 Validation covers weighted route parity, exact owner/resource paths and insertion
 order, single-layer crossings, section masks, endpoint and region reservations,
 cache versions, completion budgets, shared-runtime leases, and error propagation.
-All 163 tiny-hypergraph tests pass; subprocess tests require Bun on `PATH`.
+All 170 tiny-hypergraph tests pass; subprocess tests require Bun on `PATH`.
 Bun and Node worker bundles and autorouter declarations build successfully.
 Integration tests compare complete Pipeline9 outputs with both transports, and
 actual Node 24 full-pipeline and parallel-connectivity smoke tests also pass. Full-dataset validation compares

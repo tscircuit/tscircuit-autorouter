@@ -1424,6 +1424,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         selectedCandidateSummary?.changedPreloadedTraceSectionCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
+      parallelRouteWorkers: solveGraphStats.parallelRouteWorkers,
       wasmRouteSearches: solveGraphStats.wasmRouteSearches,
       wasmRouteExpansions: solveGraphStats.wasmRouteExpansions,
       wasmRouteWaves: solveGraphStats.wasmRouteWaves,
