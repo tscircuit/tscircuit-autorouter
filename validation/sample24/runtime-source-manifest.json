@@ -1,15 +1,15 @@
 {
   "kind": "SAMPLE24_REVIEWED_RUNTIME_SOURCE_BUNDLE",
-  "rootSource": "97587ed38ba9e63f09058588f80b36e496be5dd7",
-  "rootLibTree": "e7d50fd867c7a68b17fe52e7506b85ffa537d087",
-  "rootPackageBlob": "aaa0f8bfe7cccaa4da92946ac2ecb3dc244d8e37",
-  "localRuntimeReceiptSha256": "6d172a0d0d47aec8749372a8406c07baf63c49f02faa7933e5d7c2e7bd07d7e9",
+  "rootSource": "22b42e135da168c73bbb36edf5ff0716a739a853",
+  "rootLibTree": "af74d48e9a17b8fb409432ef8d96b007bbb304ad",
+  "rootPackageBlob": "ef15b59ad1381b22a7c33fd97bed173b90ba768b",
+  "localRuntimeReceiptSha256": "b362ac912e0fa9c9f52bd3ff8c04546c86634bf7caf2dd68d89d15d238fac2d8",
   "bunVersion": "1.4.3",
   "packages": [
     {
       "name": "tiny-hypergraph",
-      "revision": "dd18032b6ec1e210e476583d84ba39c73d68d8d0",
-      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#dd18032b6ec1e210e476583d84ba39c73d68d8d0",
+      "revision": "6272e5e2822ed8bd2b4019191f90a092687d1097",
+      "declaredPin": "git+https://github.com/tscircuit/tiny-hypergraph.git#6272e5e2822ed8bd2b4019191f90a092687d1097",
       "entrySpecifier": "tiny-hypergraph/lib/core",
       "bundleRoot": "validation/sample24/runtime-src/tiny-hypergraph",
       "runtimeFiles": [
@@ -39,9 +39,9 @@
         },
         {
           "path": "lib/bus-solver/TinyHyperGraphBusSolver.ts",
-          "gitBlobSha1": "978cbe015ed1188b3e9c2931006247a42bbfbc3f",
-          "sha256": "bcb3a2febfc65d523d637e3df8c7bc5d07cf7867dd033c8261975d20e9e5cc5f",
-          "bytes": 69504
+          "gitBlobSha1": "3bf802308327e452d1a1d9a87d8ec5ef3fe71f1a",
+          "sha256": "2a2b6eef41fd26f9e2f3297a85dd64e979dcfb0926616560e1c137cfd5ad5642",
+          "bytes": 70846
         },
         {
           "path": "lib/bus-solver/busGoalSearch.ts",
@@ -111,9 +111,9 @@
         },
         {
           "path": "lib/core.ts",
-          "gitBlobSha1": "c9ff3821ec919f2ebb0d259c6ce73cdebdc32fd9",
-          "sha256": "5091e8be059c05babe9cf26bc9510f69a93a72f0fe5b196d4fd75da61265c914",
-          "bytes": 77242
+          "gitBlobSha1": "955085b1132c856606e4d0d8d9bf813e24bd1715",
+          "sha256": "6ceaf0feb038b097b97fe845115d31b3f0d797554e9d8c57ca7a553c902d112b",
+          "bytes": 79258
         },
         {
           "path": "lib/countIntersectionsFromAnglePairsDynamic.ts",
@@ -153,9 +153,9 @@
         },
         {
           "path": "lib/initialAssignments.ts",
-          "gitBlobSha1": "418b9290b96185318d5e0c231b6fc2cbd4b10631",
-          "sha256": "ae60b856ce32a175599857fec6e263c0ae5229ab582c8fc9893b7760dc1a2948",
-          "bytes": 6203
+          "gitBlobSha1": "6680848da24bf4ca35d4d2e7dbd95202eeea276d",
+          "sha256": "896419c38d05aa2d3044f5a4a2bb280f959bee2ff051cb46ef64983e27258e28",
+          "bytes": 7094
         },
         {
           "path": "lib/layerLabels.ts",
@@ -171,9 +171,9 @@
         },
         {
           "path": "lib/outside-in-partial-rip-tiny-hypergraph-solver.ts",
-          "gitBlobSha1": "2508190d1f2093a96f7ea60dedf3c9f1b24f8e43",
-          "sha256": "60405de18b045b285ffc2459ea4c5798f52b0ef608f9da8e9ea3f2ec0a4d8a89",
-          "bytes": 41720
+          "gitBlobSha1": "75bdf05fb419179ff3741ac82647e80db81863e5",
+          "sha256": "76767c2e0a89e5a7e6fe7dd65dc49c4e6f2420b999d1425e86fe8322407f462d",
+          "bytes": 42108
         },
         {
           "path": "lib/poly-types.ts",
@@ -188,10 +188,16 @@
           "bytes": 34122
         },
         {
+          "path": "lib/port-conflicts.ts",
+          "gitBlobSha1": "1031e40a70d26f062b3cfbc5b49eea14d4ea4586",
+          "sha256": "858ff48ea3638740f8e730a0bf08ce70f42dcf4c425b1b6d2fdd206be4231fcd",
+          "bytes": 4206
+        },
+        {
           "path": "lib/port-reservations.ts",
+          "gitBlobSha1": "2397f68a0b294128469e036249c7f0c1f3af22d2",
           "sha256": "e0c73180e2e8ad8a23e5d0d3a6b48ed6b2cc9cb804c6d5df4cbb2769cf32e3e1",
-          "bytes": 1160,
-          "gitBlobSha1": "2397f68a0b294128469e036249c7f0c1f3af22d2"
+          "bytes": 1160
         },
         {
           "path": "lib/region-graph/filterPortPointPathingSolverInputByConnectionPatches.ts",
@@ -225,15 +231,15 @@
         },
         {
           "path": "lib/section-solver/TinyHyperGraphSectionPipelineSolver.ts",
-          "gitBlobSha1": "438fa349a8371c78d2583f93f99df31570465825",
-          "sha256": "46677d011f029433fd8a67d5f0f300de8288be0a3c7d319a319639c9bd1992c8",
-          "bytes": 16956
+          "gitBlobSha1": "1d6f06dd938b6a0dfdc99f776291c20fe58fbaa0",
+          "sha256": "cde6feed7c8dfec0d853d7c737a9e119c009e2c681d19cb3003609f6949d2cbe",
+          "bytes": 17172
         },
         {
           "path": "lib/section-solver/index.ts",
-          "gitBlobSha1": "a1867671fea5a233913865291efc728c4b255a76",
-          "sha256": "0b57d105d90c6fecb8b7ea4d250ba713ab0989cd4635a479be3deedb6a3df252",
-          "bytes": 35067
+          "gitBlobSha1": "f1a503078739e96de838086ed110720a95bb25fe",
+          "sha256": "aa6b742e9570d5fc48073fcad3c78a3b2ea8e2921554099cf7ee503107a0afce",
+          "bytes": 36479
         },
         {
           "path": "lib/section-solver/sectionCandidateFamilies.ts",
@@ -243,15 +249,15 @@
         },
         {
           "path": "lib/selective-rerip-tiny-hyper-graph-solver.ts",
-          "gitBlobSha1": "90b7b64648f75ce4b18652c6152f826301d28dc4",
-          "sha256": "48ec125da25e3a9b64161d2ec6290a637c0148236c2712ef635c9aee824056c3",
-          "bytes": 36559
+          "gitBlobSha1": "aa1bc5429ec0ec31c003dcaf635291a0f370f753",
+          "sha256": "c1339e970c323d8ce3fe99ea1fa215f11648f840479ed3cf2e117175f8906333",
+          "bytes": 37169
         },
         {
           "path": "lib/selective-rerip/certifyMinimumTwoBlockerOwners.ts",
+          "gitBlobSha1": "968edf00ce7db6990e716be9c1ac29375300a9c3",
           "sha256": "9b6d779207c2ea3c20d103c86044c3a82f13b12fc2a42c24a10df3b99ed779e4",
-          "bytes": 7262,
-          "gitBlobSha1": "968edf00ce7db6990e716be9c1ac29375300a9c3"
+          "bytes": 7262
         },
         {
           "path": "lib/selective-rerip/inspectRelaxedBlockerReachability.ts",
@@ -273,9 +279,9 @@
         },
         {
           "path": "lib/static-reachability.ts",
-          "gitBlobSha1": "3c437df929e0b2ed585ca933b96ca36d768794f3",
-          "sha256": "b82e1d4a6b264d0d2034ddabc1bbc743f652381c4711b5bb6562d6c7095cf16b",
-          "bytes": 7927
+          "gitBlobSha1": "7561285f6647a4dc91d13e5deef2bbbfae6c1973",
+          "sha256": "2095b27d21be0c5e2abf3fbbde737d9042dd99d40b6b261a163676fb20ff0a66",
+          "bytes": 8765
         },
         {
           "path": "lib/types.ts",
@@ -1390,5 +1396,5 @@
     "7200s"
   ],
   "simplifierNestedConnectivityEntrySha256": "ef18082e9a93c3bc3f6eda1f28a64f1a239d1090be7cfe9a67209d130634b585",
-  "bundleSha256": "440adf260a538d9b5cecde4e08716f9b087d6b67873f43cd5a397c842c99d519"
+  "bundleSha256": "00bdb31ce62461bfa48e00507fe303d960f5251aac2cadefb019cad1353b8ff5"
 }
