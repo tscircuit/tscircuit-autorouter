@@ -658,6 +658,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     typeof GlobalDrcBranchPortfolioSolver
   >[0]
   clearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
+  finalClearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -780,6 +781,27 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       },
       onSolved: (): void => this.finishBoundedRegionalRepair(),
     },
+    {
+      solverName: "finalClearanceProjectionSolver",
+      createSolver: (): BaseSolver => {
+        if (!this.combinedOutput || !this.cachedReferenceDrcEvaluator) {
+          throw new Error("Pipeline9 final clearance is missing its input")
+        }
+        this.finalClearanceProjectionSolver =
+          new Pipeline9ClearanceProjectionSolver({
+            originalSrj: this.params.originalSrj,
+            routes: this.combinedOutput,
+            drcEvaluator: this.cachedReferenceDrcEvaluator,
+          })
+        return this.finalClearanceProjectionSolver
+      },
+      onSolved: (): void => {
+        if (!this.finalClearanceProjectionSolver?.solved) {
+          throw new Error("Pipeline9 final clearance must solve before output")
+        }
+        this.combinedOutput = this.finalClearanceProjectionSolver.getOutput()
+      },
+    },
   ]
   boundedRegionalRepairSolver?: Pipeline9BoundedRegionalRepairSolver
   regionalB01RepairSolver?: Pipeline9RegionalB01RepairSolver
@@ -832,6 +854,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const traceClearance =
       params.originalSrj.minTraceToPadEdgeClearance ??
+      params.originalSrj.defaultObstacleMargin ??
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
     // The indexed engine applies one copper gap to both same-net and
@@ -2016,7 +2039,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
-    this.solved = true
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

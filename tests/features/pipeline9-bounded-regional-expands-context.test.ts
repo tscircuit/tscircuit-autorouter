@@ -44,7 +44,8 @@ test("bounded regional repair clears coupled contacts within its shared work bud
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   const result = solver.getResult()
-  expect(result.initialDrcIssueCount).toBe(4)
+  // The reference check also includes the two existing via-pad clearances.
+  expect(result.initialDrcIssueCount).toBe(6)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeGreaterThan(0)

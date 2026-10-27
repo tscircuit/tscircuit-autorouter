@@ -98,6 +98,7 @@ export class Pipeline9ClearanceProjectionSolver extends BaseSolver {
         allowViaMovement: !params.allowPartialRepair,
         traceClearance:
           (params.originalSrj.minTraceToPadEdgeClearance ??
+            params.originalSrj.defaultObstacleMargin ??
             RELAXED_DRC_OPTIONS.traceClearance!) +
           (params.allowPartialRepair || params.usePrecisionMargin
             ? CLEARANCE_PRECISION_MARGIN

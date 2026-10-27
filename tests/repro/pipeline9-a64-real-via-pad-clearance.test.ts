@@ -48,7 +48,7 @@ beforeAll(async (): Promise<void> => {
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 })
 
-test.failing(
+test(
   "fresh real A64 byte-zero routing preserves via copper clearance to every foreign pad",
   (): void => {
     expect(

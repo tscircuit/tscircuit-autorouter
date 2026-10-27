@@ -68,6 +68,7 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "@tscircuit/trace-simplification-solver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
+import { Pipeline9ClearanceProjectionSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9ClearanceProjectionSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -228,6 +229,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  copperClearanceProjectionSolver?: Pipeline9ClearanceProjectionSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -703,6 +705,21 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
+    // Close physical copper clearance with coupled wire/via projection before
+    // measuring lengths. The operator validates both fixed geometry and DRC.
+    definePipelineStep(
+      "copperClearanceProjectionSolver",
+      Pipeline9ClearanceProjectionSolver,
+      (cms) => [
+        {
+          originalSrj: cms.originalSrj,
+          routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          drcEvaluator:
+            cms.exactGeometryDrcForceImproveSolver!.params.drcEvaluator!,
+          usePrecisionMargin: true,
+        },
+      ],
+    ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
@@ -732,7 +749,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
+        const hdRoutes = cms.copperClearanceProjectionSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1179,6 +1196,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.copperClearanceProjectionSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
