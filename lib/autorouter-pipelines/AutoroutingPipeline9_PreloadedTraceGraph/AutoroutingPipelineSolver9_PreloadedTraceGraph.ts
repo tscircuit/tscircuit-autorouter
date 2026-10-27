@@ -1152,6 +1152,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {
