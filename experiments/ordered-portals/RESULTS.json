@@ -1,0 +1,241 @@
+{
+  "baseMain": "637b6c58",
+  "v1Checkpoint": "c7ce224ecc60ef5cf75f1cb09d68a7894e9b8ee8",
+  "mechanism": "Bounded ordered portal allocation accepted only with a constructive finite-width straight-copper witness for both owners and nearby prior certified cells.",
+  "focusedTests": {
+    "pass": 17,
+    "fail": 0,
+    "assertions": 3337
+  },
+  "build": "Final source ESM and DTS passed; serialized with /workspace/experiment-audit/build.lock.",
+  "validation": "Functional local screens; no controlled runtime comparison or speedup over main claimed. Native routing rules, budgets and DRC unchanged.",
+  "screens": [
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "sliding-only",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "iterations": 59013,
+      "highDensityIterations": 898,
+      "orderedPortalStats": {
+        "sharedSeamCount": 213,
+        "eligiblePortalCount": 71,
+        "movedPortalCount": 36,
+        "acceptedRunCount": 36,
+        "blockedPortalCount": 226,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 5.931897923381268,
+        "straightLengthBefore": 115.93586573288822,
+        "straightLengthAfter": 113.16029736184996,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 232.57813886704,
+        "totalPairLengthAfter": 229.80257049600183,
+        "certifiedRunCount": 36,
+        "certifiedCellCount": 48,
+        "certificateRejectedRunCount": 32,
+        "certificateRejectionReasons": {
+          "layer": 10,
+          "obstacle": 4,
+          "copper": 1,
+          "pairing": 4,
+          "bounds": 13
+        }
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 202,
+        "candidatePairCount": 0,
+        "mergedPairCount": 0,
+        "removedPortCount": 0,
+        "mergedNodeIds": []
+      },
+      "drcErrorCount": 0
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "enabled",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "iterations": 59004,
+      "highDensityIterations": 894,
+      "orderedPortalStats": {
+        "sharedSeamCount": 213,
+        "eligiblePortalCount": 71,
+        "movedPortalCount": 36,
+        "acceptedRunCount": 36,
+        "blockedPortalCount": 226,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 5.931897923381268,
+        "straightLengthBefore": 115.93586573288822,
+        "straightLengthAfter": 113.16029736184996,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 232.57813886704,
+        "totalPairLengthAfter": 229.80257049600183,
+        "certifiedRunCount": 36,
+        "certifiedCellCount": 48,
+        "certificateRejectedRunCount": 32,
+        "certificateRejectionReasons": {
+          "layer": 10,
+          "obstacle": 4,
+          "copper": 1,
+          "pairing": 4,
+          "bounds": 13
+        },
+        "witnessNeighborCellChecks": 70
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 202,
+        "candidatePairCount": 1,
+        "mergedPairCount": 1,
+        "removedPortCount": 4,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_62\",\"topology_merge_447\"]"
+        ]
+      },
+      "drcErrorCount": 0
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "mode": "enabled",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "iterations": 269294,
+      "highDensityIterations": 4231,
+      "orderedPortalStats": {
+        "sharedSeamCount": 774,
+        "eligiblePortalCount": 322,
+        "movedPortalCount": 79,
+        "acceptedRunCount": 73,
+        "blockedPortalCount": 824,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 15.633123125857523,
+        "straightLengthBefore": 1830.3117612139447,
+        "straightLengthAfter": 1824.9635261248477,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 2133.722699612226,
+        "totalPairLengthAfter": 2128.3744645231286,
+        "certifiedRunCount": 73,
+        "certifiedCellCount": 98,
+        "certificateRejectedRunCount": 185,
+        "certificateRejectionReasons": {
+          "layer": 77,
+          "copper": 45,
+          "obstacle": 36,
+          "pairing": 27
+        },
+        "witnessNeighborCellChecks": 292
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 583,
+        "candidatePairCount": 6,
+        "mergedPairCount": 4,
+        "removedPortCount": 28,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_0__sub_0_1\",\"cmn_0__sub_1_1\"]",
+          "flexible-boundary:[\"cmn_117__sub_0_0\",\"cmn_117__sub_1_0\"]",
+          "flexible-boundary:[\"cmn_94__sub_0_0\",\"cmn_94__sub_0_1\"]",
+          "flexible-boundary:[\"cmn_108\",\"cmn_94__sub_0_2\"]"
+        ]
+      },
+      "drcErrorCount": 0
+    }
+  ],
+  "workComparisons": [
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "coarsen-only",
+      "hdIterations": 896,
+      "version": "v1 unchanged inactive-witness path"
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "sliding-only",
+      "v1HdIterations": 3597,
+      "v2HdIterations": 898
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "enabled",
+      "v1HdIterations": 3593,
+      "v2HdIterations": 894
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "mode": "enabled",
+      "v1HdIterations": 34036,
+      "v2HdIterations": 4231
+    }
+  ],
+  "largeBoardStageReplay": {
+    "dataset": "srj24",
+    "sample": 1,
+    "nodeCount": 3520,
+    "stats": {
+      "sharedSeamCount": 4545,
+      "eligiblePortalCount": 1556,
+      "movedPortalCount": 278,
+      "acceptedRunCount": 270,
+      "blockedPortalCount": 8676,
+      "physicalTerminalCount": 0,
+      "insufficientWidthRunCount": 40,
+      "displacement": 58.02941607080085,
+      "straightLengthBefore": 5130.498365328094,
+      "straightLengthAfter": 5105.416306522865,
+      "nominalWidthPortalCount": 0,
+      "maxReservedTraceWidth": 0.1,
+      "widthRepairRunCount": 0,
+      "boardClearanceRejectedRunCount": 0,
+      "totalPairLengthBefore": 11118.573597007724,
+      "totalPairLengthAfter": 11093.491538202496,
+      "certifiedRunCount": 270,
+      "certifiedCellCount": 423,
+      "certificateRejectedRunCount": 917,
+      "certificateRejectionReasons": {
+        "pairing": 383,
+        "layer": 334,
+        "copper": 146,
+        "obstacle": 47,
+        "bounds": 7
+      },
+      "witnessNeighborCellChecks": 1966
+    },
+    "matchesRecordedHighDensityInput": false,
+    "maxRecordedCoordinateDelta": 3.8956300000000006,
+    "changedRecordedPortCount": 2306
+  },
+  "largeBoardEndToEnd": {
+    "dataset": "srj24",
+    "sample": 1,
+    "status": "unqualified-infrastructure-kill",
+    "exitCode": 137,
+    "reason": "Shared cgroup memory contention; root observed OOM_kill1. Not an algorithm failure or successful completion."
+  },
+  "limits": [
+    "Local witnesses certify finite-width straight copper, not arbitrary unprocessed regions requiring bends or vias. Final native DRC remains necessary.",
+    "Later transactions preserve nearby previously accepted witnesses, including across older seams; this is not a complete global routing certificate.",
+    "Projected skeleton length is not routed copper length or runtime.",
+    "SRJ24 sample1 end-to-end remains unqualified after shared-host OOM.",
+    "Complete dataset18/24 immutable-main versus final-candidate Blacksmith runs are still required."
+  ]
+}

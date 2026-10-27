@@ -1,0 +1,105 @@
+Ordered sliding portals for Pipeline 9
+
+Problem
+Uniform boundary coordinates become fixed high-density routing endpoints even
+when neighboring regions would admit a shorter, less cramped crossing. Removing
+selected seams only reaches a handful of region pairs. This experiment retains
+the mesh and jointly allocates the crossings that both owners share.
+
+Mechanism
+After uniform distribution, find two-owner rectangular seams, including partial
+overlaps. Keep the existing boundary permutation, layer, net identity and physical
+terminals fixed. Each ordinary same-layer crossing has a straight-through target
+defined by the remote endpoints of its two adjacent local connections.
+
+For every contiguous movable run, subtract cumulative required center separations
+and solve a bounded isotonic least-squares problem using pool-adjacent-violators.
+Separations use half of each neighboring net's requested nominal width plus the
+existing obstacle margin. Per-portal lower/upper bounds incorporate expanded
+obstacles, fixed neighboring contacts and seam endpoints. Both owners' port arrays
+and pair copies receive identical committed coordinates.
+
+This stage reserves nominal widths conservatively and does not assume that a
+later neckdown is permitted. A requested-width deficit is repaired when the
+contract is feasible; otherwise a candidate allocation is committed only if its
+actual two-cell straight-segment sum decreases. The quadratic target objective is
+a proposal mechanism, not a claim to minimize the final route length.
+
+Before committing an allocation, v2 constructs finite-width straight copper for
+every connection in both owner cells. The complete joint witness must pass the
+native copper-conflict guard, including opposite sides of the seam, exact rotated
+obstacle/circle clearance, physical board clearance and foreign future terminal
+reservations. Complete matching pairs, identical pair/contact copies, real board
+layers and in-bounds endpoints are required. Cells needing a bend or via are
+outside this witness's scope. Rejected proposals are counted by explicit reason.
+
+Later transactions also include all previously certified cells within a copper-
+clearance neighborhood of the changed owners, preventing a BC update from
+invalidating an earlier AB witness. This retains compatibility among accepted
+local witnesses; it does not prove compatibility with arbitrary unprocessed
+cells whose detailed geometry still requires native routing.
+
+Safety and scope
+Physical contacts are detected using PCB labels and original terminal coordinates.
+Preloaded-trace inputs disable this experiment. Third-owner contacts, cross-layer
+connections, incomplete pairings and boundary-following connections remain fixed.
+Obstacle intervals are conservative rotated bounding boxes, with declared NPTH
+hole clearance respected. Swept portal movement must stay within physical board
+clearance. Boundary order cannot change, so this stage cannot solve an existing
+topological crossing by swapping nets. It does not certify whole-board routability.
+All native routing, width selection, DRC, work budgets and validators remain.
+
+An infeasible proposed allocation is an ordinary rejected optimization candidate;
+it does not convert a failed router into success or invent replacement copper.
+
+Ablation controls
+new Pipeline9(srj, { flexibleBoundaries: false }): original main behavior.
+new Pipeline9(srj, { orderedPortals: false }): prior seam-coarsening experiment.
+new Pipeline9(srj, { coarsenBoundaries: false }): new sliding mechanism only.
+new Pipeline9(srj): combined experiment.
+Add { requireStraightCellWitness: false } to reproduce v1 centerline-only
+allocation. Its immutable checkpoint is c7ce224ecc60ef5cf75f1cb09d68a7894e9b8ee8.
+Pipeline9 is AutoroutingPipelineSolver9_PreloadedTraceGraph.
+
+Activation evidence
+orderedPortalStats reports inspected seams, eligible/moved contacts, accepted
+allocations, width repair/rejection, physical locks and board rejection counts.
+totalPairLengthBefore/After counts every local pair exactly once. It measures the
+straight skeleton, not final copper length. straightLengthBefore/After instead
+sums the local objectives evaluated during allocation; affected pairs may occur
+in multiple requests and those numbers must not be called total wire length.
+
+Validation
+source /workspace/.tools/autorouter-env.sh
+bun test --timeout 9999999 tests/pipeline9/ordered-portal*.test.ts tests/pipeline9/flexible-boundary*.test.ts
+bun run build
+bun experiments/ordered-portals/screen.ts srj18 1 enabled /tmp/ordered-portals
+bun experiments/ordered-portals/screen.ts srj24 25 sliding-only /tmp/ordered-portals
+
+screen.ts accepts enabled, sliding-only, coarsen-only and disabled modes. It saves
+the actual pre-HD input so replay.ts can isolate allocation from downstream
+router failures. Local timings are diagnostics only; controlled corpus comparisons
+belong on Blacksmith with immutable main/candidate commits and identical budgets.
+
+Current evidence
+V1 reduced projected skeleton length but increased native work. V2 adds the
+actual missing geometric contract rather than tuning a scalar penalty. On SRJ24
+sample25, v1 sliding-only uses 3597 HD iterations, v2 uses 898; the old coarsening-
+only screen uses 896. Combined v1 uses 3593, combined v2 uses 894. V2 still moves 36
+portals across 48 certified cells, with 70 prior-neighbor witness checks. On SRJ18
+sample1, combined v1 uses 34036 HD iterations and v2 uses 4231 while moving 79 portals
+across 98 certified cells, with 292 prior-neighbor checks. All these local functional
+screens have zero relaxed DRC errors. These are work counts, not a controlled
+runtime result or proof of improvement over main.
+
+The large SRJ24 sample1 local run was killed by shared-host memory pressure and
+remains unqualified end to end. Its captured input supports isolated stage replay.
+Blacksmith must qualify the final immutable candidate against current main on
+both complete datasets. No production speedup is claimed by this checkpoint.
+
+Research context
+This is an architectural prototype, not a new mathematical claim. Topological
+sketches and their physical legalization have substantial prior literature:
+https://doi.org/10.1145/22145.22153
+https://doi.org/10.1145/127601.127622
+https://link.springer.com/article/10.1007/BF01942604

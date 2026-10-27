@@ -1,0 +1,297 @@
+{
+  "baseMain": "637b6c58",
+  "previousExperimentHead": "95a56c56",
+  "validation": "Local functional screens only. No performance qualification or speedup claimed. All native rules, budgets and validators unchanged.",
+  "focusedTests": {
+    "pass": 12,
+    "fail": 0,
+    "assertions": 3306
+  },
+  "build": "bun run build: ESM and DTS passed",
+  "screens": [
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "mode": "coarsen-only",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 0,
+        "eligiblePortalCount": 0,
+        "movedPortalCount": 0,
+        "acceptedRunCount": 0,
+        "blockedPortalCount": 0,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 0,
+        "straightLengthBefore": 0,
+        "straightLengthAfter": 0,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 583,
+        "candidatePairCount": 6,
+        "mergedPairCount": 4,
+        "removedPortCount": 28,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_0__sub_0_1\",\"cmn_0__sub_1_1\"]",
+          "flexible-boundary:[\"cmn_117__sub_0_0\",\"cmn_117__sub_1_0\"]",
+          "flexible-boundary:[\"cmn_94__sub_0_0\",\"cmn_94__sub_0_1\"]",
+          "flexible-boundary:[\"cmn_108\",\"cmn_94__sub_0_2\"]"
+        ]
+      },
+      "drcErrorCount": 0
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "mode": "sliding-only",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 774,
+        "eligiblePortalCount": 322,
+        "movedPortalCount": 314,
+        "acceptedRunCount": 259,
+        "blockedPortalCount": 823,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 142.5188024218499,
+        "straightLengthBefore": 1822.9508412286102,
+        "straightLengthAfter": 1778.0799681527326,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 583,
+        "candidatePairCount": 0,
+        "mergedPairCount": 0,
+        "removedPortCount": 0,
+        "mergedNodeIds": []
+      },
+      "drcErrorCount": 0
+    },
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "mode": "enabled",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 774,
+        "eligiblePortalCount": 322,
+        "movedPortalCount": 314,
+        "acceptedRunCount": 259,
+        "blockedPortalCount": 823,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 142.5188024218499,
+        "straightLengthBefore": 1822.9508412286102,
+        "straightLengthAfter": 1778.0799681527326,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 583,
+        "candidatePairCount": 6,
+        "mergedPairCount": 4,
+        "removedPortCount": 28,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_0__sub_0_1\",\"cmn_0__sub_1_1\"]",
+          "flexible-boundary:[\"cmn_117__sub_0_0\",\"cmn_117__sub_1_0\"]",
+          "flexible-boundary:[\"cmn_94__sub_0_0\",\"cmn_94__sub_0_1\"]",
+          "flexible-boundary:[\"cmn_108\",\"cmn_94__sub_0_2\"]"
+        ]
+      },
+      "drcErrorCount": 0,
+      "iterations": 300984,
+      "highDensityIterations": 34036
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "coarsen-only",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 0,
+        "eligiblePortalCount": 0,
+        "movedPortalCount": 0,
+        "acceptedRunCount": 0,
+        "blockedPortalCount": 0,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 0,
+        "straightLengthBefore": 0,
+        "straightLengthAfter": 0,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 0,
+        "totalPairLengthAfter": 0
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 202,
+        "candidatePairCount": 1,
+        "mergedPairCount": 1,
+        "removedPortCount": 4,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_62\",\"topology_merge_447\"]"
+        ]
+      },
+      "drcErrorCount": 0,
+      "iterations": 59031,
+      "highDensityIterations": 896
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "sliding-only",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 213,
+        "eligiblePortalCount": 71,
+        "movedPortalCount": 71,
+        "acceptedRunCount": 69,
+        "blockedPortalCount": 226,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 12.967475458276265,
+        "straightLengthBefore": 115.91187934796088,
+        "straightLengthAfter": 109.94846870015306,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 232.57813886704,
+        "totalPairLengthAfter": 226.61472821923226
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 202,
+        "candidatePairCount": 0,
+        "mergedPairCount": 0,
+        "removedPortCount": 0,
+        "mergedNodeIds": []
+      },
+      "drcErrorCount": 0,
+      "iterations": 61787,
+      "highDensityIterations": 3597
+    },
+    {
+      "dataset": "srj24",
+      "sample": 25,
+      "mode": "enabled",
+      "solved": true,
+      "failed": false,
+      "error": null,
+      "orderedPortalStats": {
+        "sharedSeamCount": 213,
+        "eligiblePortalCount": 71,
+        "movedPortalCount": 71,
+        "acceptedRunCount": 69,
+        "blockedPortalCount": 226,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 12.967475458276265,
+        "straightLengthBefore": 115.91187934796088,
+        "straightLengthAfter": 109.94846870015306,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 232.57813886704,
+        "totalPairLengthAfter": 226.61472821923226
+      },
+      "flexibleBoundaryStats": {
+        "originalNodeCount": 202,
+        "candidatePairCount": 1,
+        "mergedPairCount": 1,
+        "removedPortCount": 4,
+        "mergedNodeIds": [
+          "flexible-boundary:[\"cmn_62\",\"topology_merge_447\"]"
+        ]
+      },
+      "drcErrorCount": 0,
+      "iterations": 61778,
+      "highDensityIterations": 3593
+    }
+  ],
+  "finalStageReplays": [
+    {
+      "dataset": "srj18",
+      "sample": 1,
+      "nodeCount": 583,
+      "stats": {
+        "sharedSeamCount": 774,
+        "eligiblePortalCount": 322,
+        "movedPortalCount": 314,
+        "acceptedRunCount": 259,
+        "blockedPortalCount": 823,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 0,
+        "displacement": 142.5188024218499,
+        "straightLengthBefore": 1822.9508412286102,
+        "straightLengthAfter": 1778.0799681527326,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 2133.722699612226,
+        "totalPairLengthAfter": 2088.851826536349
+      },
+      "matchesRecordedHighDensityInput": true
+    },
+    {
+      "dataset": "srj24",
+      "sample": 1,
+      "nodeCount": 3520,
+      "stats": {
+        "sharedSeamCount": 4545,
+        "eligiblePortalCount": 1556,
+        "movedPortalCount": 1367,
+        "acceptedRunCount": 1194,
+        "blockedPortalCount": 8653,
+        "physicalTerminalCount": 0,
+        "insufficientWidthRunCount": 40,
+        "displacement": 383.05254765477133,
+        "straightLengthBefore": 5113.443395838878,
+        "straightLengthAfter": 4959.863189052892,
+        "nominalWidthPortalCount": 0,
+        "maxReservedTraceWidth": 0.1,
+        "widthRepairRunCount": 0,
+        "boardClearanceRejectedRunCount": 0,
+        "totalPairLengthBefore": 11118.573597007724,
+        "totalPairLengthAfter": 10964.993390221722
+      },
+      "matchesRecordedHighDensityInput": false,
+      "maxRecordedCoordinateDelta": 4.440892098500626e-16,
+      "changedRecordedPortCount": 12
+    }
+  ],
+  "largeBoardScreen": {
+    "dataset": "srj24",
+    "sample": 1,
+    "status": "unqualified-infrastructure-kill",
+    "exitCode": 137,
+    "reason": "Shared cgroup memory contention; root observed OOM_kill1. Not an algorithm failure or successful completion."
+  },
+  "limitations": [
+    "Projected pair length is a surrogate, not routed copper length or runtime.",
+    "SRJ24 sample25 deterministic HD iterations increase from896 old-coarsening-only to3597 sliding-only and3593 combined.",
+    "Seam width constraints do not certify clearance between angled outgoing segments; native geometry checks remain essential.",
+    "SRJ24 sample1 generalized projection differs from the early screen at12 port copies by at most4.44e-16mm; final-SHA benchmark required.",
+    "SRJ18 ablations preceded board-guard additions; guard-inclusive combined screen is clean and final replay matches its recorded HD input."
+  ]
+}

@@ -97,6 +97,10 @@ import {
   coarsenPipeline9OrdinaryNodes,
   type Pipeline9FlexibleBoundaryStats,
 } from "./coarsenPipeline9OrdinaryNodes"
+import {
+  slidePipeline9OrderedPortals,
+  type Pipeline9OrderedPortalStats,
+} from "./slidePipeline9OrderedPortals"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -112,6 +116,9 @@ import {
 
 interface CapacityMeshSolverOptions {
   flexibleBoundaries?: boolean
+  orderedPortals?: boolean
+  coarsenBoundaries?: boolean
+  requireStraightCellWitness?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -314,6 +321,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
   flexibleBoundaryStats?: Pipeline9FlexibleBoundaryStats
+  orderedPortalStats?: Pipeline9OrderedPortalStats
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -547,6 +555,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_PREPARED_PORT_POINT_ROUTING: true,
               USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES: true,
             },
             weights: {
@@ -610,21 +619,52 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const flexibleBoundariesEnabled =
           cms.opts.flexibleBoundaries !== false &&
           !cms.originalSrj.traces?.length
-        const coarsened = coarsenPipeline9OrdinaryNodes({
-          nodes: originalNodes,
-          hasPreloadedTraces: Boolean(cms.originalSrj.traces?.length),
-          enabled: flexibleBoundariesEnabled,
-          physicalTerminals: flexibleBoundariesEnabled
+        const physicalTerminals = flexibleBoundariesEnabled
             ? cms.originalSrj.connections.flatMap((connection) =>
                 connection.pointsToConnect.flatMap((point) =>
                   getConnectionPointLayers(point).map((layer) => ({
                     x: point.x,
                     y: point.y,
                     z: mapLayerNameToZ(layer, cms.originalSrj.layerCount),
+                    connectionName: connection.name,
+                    rootConnectionName: connection.rootConnectionName,
                   })),
                 ),
               )
-            : [],
+            : []
+        // Reserve requested nominal widths at portals. Later width selection
+        // may neck down, but this stage never assumes that narrowing is legal.
+        const traceWidthByConnectionName = new Map<string, number>()
+        for (const connection of [...cms.originalSrj.connections, ...cms.srj.connections]) {
+          const width = Math.max(cms.minTraceWidth, connection.nominalTraceWidth ?? connection.width ?? cms.originalSrj.nominalTraceWidth ?? cms.minTraceWidth)
+          for (const name of [connection.name, connection.rootConnectionName]) {
+            if (name) traceWidthByConnectionName.set(name, Math.max(width, traceWidthByConnectionName.get(name) ?? 0))
+          }
+        }
+        const ordered = slidePipeline9OrderedPortals({
+          nodes: originalNodes,
+          obstacles: cms.srj.obstacles,
+          physicalTerminals,
+          layerCount: cms.srj.layerCount,
+          traceWidth: cms.minTraceWidth,
+          traceWidthByConnectionName,
+          clearance: cms.srj.defaultObstacleMargin ?? 0.15,
+          minTraceToHoleEdgeClearance: cms.originalSrj.minTraceToHoleEdgeClearance,
+          boardGeometry: {
+            bounds: cms.originalSrj.bounds,
+            outline: cms.originalSrj.outline,
+            minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
+          },
+          connMap: cms.connMap,
+          requireStraightCellWitness: cms.opts.requireStraightCellWitness !== false,
+          enabled: flexibleBoundariesEnabled && cms.opts.orderedPortals !== false,
+        })
+        cms.orderedPortalStats = ordered.stats
+        const coarsened = coarsenPipeline9OrdinaryNodes({
+          nodes: ordered.nodes,
+          hasPreloadedTraces: Boolean(cms.originalSrj.traces?.length),
+          enabled: flexibleBoundariesEnabled && cms.opts.coarsenBoundaries !== false,
+          physicalTerminals,
         })
         const nodePortPointsSource = coarsened.nodes
         cms.flexibleBoundaryStats = coarsened.stats
@@ -1181,6 +1221,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       while (!this.solved && !this.failed) {
         if (
           this.activeSubSolver instanceof Pipeline9HighDensitySolver ||
+          this.activeSubSolver instanceof
+            TinyHypergraphPortPointPathingSolver ||
           this.activeSubSolver instanceof Pipeline4HighDensityRepairSolver ||
           this.activeSubSolver instanceof Pipeline9HighDensityForceImproveSolver
         ) {
