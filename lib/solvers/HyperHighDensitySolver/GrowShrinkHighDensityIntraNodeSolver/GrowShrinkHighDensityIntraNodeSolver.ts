@@ -28,6 +28,22 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     ) => boolean
   }
 
+type ScaleCandidate = {
+  growthAttempt: number
+  scaleFactor: number
+  solver: PortfolioSingleIntraNodeSolver
+  failedRecorded: boolean
+}
+
+type ScaleSearch = {
+  candidates: ScaleCandidate[]
+  nextAttempt: number | null
+  cursor: number
+  familyCursor: number
+  phase: "family" | "portfolio"
+  incumbent?: ScaleCandidate
+}
+
 const scalePoint = <T extends { x: number; y: number }>(
   point: T,
   center: { x: number; y: number },
@@ -114,6 +130,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   growthAttempts = 0
   maxGrowthAttempts: number
   minimumGrowthAttempts: number
+  private readonly raceGrowthAttempts: boolean
+  private scaleSearch?: ScaleSearch
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -173,6 +191,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     )
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
+    this.raceGrowthAttempts =
+      !params.fallbackToInvalidGeometryOnFailure &&
+      PortfolioSingleIntraNodeSolver.shouldRaceScales(params)
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       if (!params.fallbackToInvalidGeometryOnFailure) {
@@ -198,6 +219,173 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
   getConstructorParams() {
     return this.constructorParams
+  }
+
+  private createScaleCandidate(growthAttempt: number): ScaleCandidate {
+    this.growthAttempts = growthAttempt
+    this.scaleFactor = 2 ** growthAttempt
+    this.createActiveSubSolver()
+    this.stats.scaleSearchCandidateCount =
+      (this.stats.scaleSearchCandidateCount ?? 0) + 1
+    return {
+      growthAttempt,
+      scaleFactor: this.scaleFactor,
+      solver: this.activeSubSolver!,
+      failedRecorded: false,
+    }
+  }
+
+  private addScaleSearchWave(search: ScaleSearch): void {
+    for (
+      let i = 0;
+      i < DEFAULT_MAX_GROWTH_ATTEMPTS && search.nextAttempt !== null;
+      i++
+    ) {
+      const attempt = search.nextAttempt
+      search.candidates.push(this.createScaleCandidate(attempt))
+      search.nextAttempt =
+        attempt >= this.maxGrowthAttempts
+          ? null
+          : Math.max(attempt + 1, this.minimumGrowthAttempts)
+    }
+    search.cursor = 0
+    search.familyCursor = 0
+    search.phase = "family"
+  }
+
+  private initializeScaleSearch(): ScaleSearch {
+    const search: ScaleSearch = {
+      candidates: [],
+      nextAttempt: 0,
+      cursor: 0,
+      familyCursor: 0,
+      phase: "family",
+    }
+    this.addScaleSearchWave(search)
+    this.activeSubSolver = null
+    return search
+  }
+
+  private recordScaleFailure(candidate: ScaleCandidate): void {
+    if (!candidate.solver.failed || candidate.failedRecorded) return
+    candidate.failedRecorded = true
+    this.failedSolvers.push(candidate.solver)
+    this.error = candidate.solver.error
+    this.activeSubSolver = null
+  }
+
+  private acceptScaleCandidate(candidate: ScaleCandidate): boolean {
+    this.scaleFactor = candidate.scaleFactor
+    this.growthAttempts = candidate.growthAttempt
+    this.activeSubSolver = candidate.solver
+    if (!this.acceptSolution(candidate.solver)) {
+      this.recordScaleFailure(candidate)
+      return false
+    }
+    this.activeSubSolver = null
+    this.scaleSearch = undefined
+    return true
+  }
+
+  private stepScaleRefinement(search: ScaleSearch): boolean {
+    const incumbent = search.incumbent!
+    for (const candidate of search.candidates) {
+      if (
+        candidate.scaleFactor >= incumbent.scaleFactor ||
+        candidate.solver.failed
+      ) {
+        continue
+      }
+      const family = candidate.solver.getPreferredFamilyState()
+      if (family.status === "uninitialized" || family.status === "failed") {
+        continue
+      }
+      this.scaleFactor = candidate.scaleFactor
+      this.growthAttempts = candidate.growthAttempt
+      this.activeSubSolver = candidate.solver
+      const advanced = candidate.solver.stepPreferredFamily()
+      this.stats.scaleRefinementNativeIterations =
+        (this.stats.scaleRefinementNativeIterations ?? 0) + advanced
+      if (candidate.solver.solved && this.acceptScaleCandidate(candidate)) {
+        return true
+      }
+      this.recordScaleFailure(candidate)
+      return true
+    }
+    search.incumbent = undefined
+    return this.acceptScaleCandidate(incumbent)
+  }
+
+  private stepScaleSearch(): void {
+    // Try the shared grid family first; refine successful proposals at smaller
+    // scales before spending work on the remaining routing families.
+    const search = (this.scaleSearch ??= this.initializeScaleSearch())
+    if (search.incumbent && this.stepScaleRefinement(search)) return
+    if (search.phase === "family" && this.stepPreferredFamily(search)) return
+
+    if (!search.candidates.some(({ solver }) => !solver.failed)) {
+      if (search.nextAttempt === null) {
+        this.failed = true
+        this.activeSubSolver = null
+        this.scaleSearch = undefined
+        this.error = `GrowShrinkHighDensityIntraNodeSolver exhausted all scale portfolios. Last error: ${this.error}`
+        return
+      }
+      this.addScaleSearchWave(search)
+      if (this.stepPreferredFamily(search)) return
+    }
+    let candidate =
+      search.candidates[search.cursor++ % search.candidates.length]!
+    while (candidate.solver.failed) {
+      candidate = search.candidates[search.cursor++ % search.candidates.length]!
+    }
+    this.scaleFactor = candidate.scaleFactor
+    this.growthAttempts = candidate.growthAttempt
+    this.activeSubSolver = candidate.solver
+    candidate.solver.step()
+    this.finishScaleStep(search, candidate)
+  }
+
+  private stepPreferredFamily(search: ScaleSearch): boolean {
+    for (let i = 0; i < search.candidates.length; i++) {
+      const candidate =
+        search.candidates[search.familyCursor++ % search.candidates.length]!
+      if (candidate.solver.failed) continue
+      if (candidate.solver.getPreferredFamilyState().status === "failed") {
+        continue
+      }
+      this.scaleFactor = candidate.scaleFactor
+      this.growthAttempts = candidate.growthAttempt
+      this.activeSubSolver = candidate.solver
+      const advanced = candidate.solver.stepPreferredFamily()
+      this.stats.scaleFamilyNativeIterations =
+        (this.stats.scaleFamilyNativeIterations ?? 0) + advanced
+      this.finishScaleStep(search, candidate)
+      return true
+    }
+    search.phase = "portfolio"
+    return false
+  }
+
+  private finishScaleStep(
+    search: ScaleSearch,
+    candidate: ScaleCandidate,
+  ): void {
+    if (candidate.solver.solved) {
+      if (
+        candidate.solver.getPreferredFamilyState().won &&
+        search.candidates.some(
+          (other) =>
+            other.scaleFactor < candidate.scaleFactor && !other.solver.failed,
+        )
+      ) {
+        search.incumbent = candidate
+        this.stats.scaleSearchIncumbentFactor = candidate.scaleFactor
+        return
+      }
+      if (this.acceptScaleCandidate(candidate)) return
+    }
+    this.recordScaleFailure(candidate)
   }
 
   private createActiveSubSolver() {
@@ -250,14 +438,36 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   computeProgress() {
-    return Math.min(
+    const progress = Math.min(
       0.99,
       (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
         (this.maxGrowthAttempts + 1),
     )
+    return this.raceGrowthAttempts
+      ? Math.max(this.progress, progress)
+      : progress
+  }
+
+  override tryFinalAcceptance(): void {
+    if (this.iterations <= this.MAX_ITERATIONS || !this.scaleSearch) return
+    const incumbent = this.scaleSearch.incumbent
+    try {
+      if (incumbent?.solver.solved) this.acceptScaleCandidate(incumbent)
+    } finally {
+      this.scaleSearch = undefined
+    }
   }
 
   _step() {
+    if (this.raceGrowthAttempts) {
+      try {
+        this.stepScaleSearch()
+      } catch (error) {
+        this.scaleSearch = undefined
+        throw error
+      }
+      return
+    }
     if (!this.activeSubSolver) {
       this.createActiveSubSolver()
     }
